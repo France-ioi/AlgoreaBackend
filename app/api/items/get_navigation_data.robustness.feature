@@ -16,16 +16,16 @@ Background:
     | 73 | 13                | 13             | 1       |
     | 74 | 13                | 11             | 0       |
   And the database has the following table 'items':
-    | id  | type     | teams_editable | no_score |
-    | 190 | Category | false          | false    |
-    | 200 | Category | false          | false    |
+    | id  | type    | teams_editable | no_score | default_language_tag |
+    | 190 | Chapter | false          | false    | fr                   |
+    | 200 | Chapter | false          | false    | fr                   |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 13       | 190     | none                     |
     | 13       | 200     | content_with_descendants |
   And the database has the following table 'items_strings':
-    | id | item_id | language_id | title      |
-    | 53 | 200     | 1           | Category 1 |
+    | item_id | language_tag | title      |
+    | 200     | en           | Category 1 |
 
   Scenario: Should fail when the user doesn't have access to the root item
     Given I am the user with id "11"

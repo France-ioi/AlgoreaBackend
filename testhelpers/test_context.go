@@ -160,28 +160,7 @@ func (ctx *TestContext) emptyDB() error {
 	db := ctx.db()
 
 	dbName := ctx.application.Config.Database.Connection.DBName
-	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
-                         FROM   information_schema.tables
-                         WHERE  table_type   = 'BASE TABLE'
-                           AND  table_schema = '` + dbName + `'
-                           AND  table_name  != 'gorp_migrations'`)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = rows.Close() }()
-
-	for rows.Next() {
-		var tableName string
-		if scanErr := rows.Scan(&tableName); scanErr != nil {
-			return scanErr
-		}
-		// DELETE is MUCH faster than TRUNCATE on empty tables
-		_, err := db.Exec("DELETE FROM " + tableName)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return emptyDB(db, dbName)
 }
 
 func (ctx *TestContext) initDB() error {
@@ -198,16 +177,19 @@ func (ctx *TestContext) initDB() error {
 		}
 		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
 		if err != nil {
+			_ = tx.Rollback()
 			return err
 		}
 		for _, query := range ctx.featureQueries {
 			_, err = tx.Exec(query.sql, query.values)
 			if err != nil {
+				_ = tx.Rollback()
 				return err
 			}
 		}
 		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 		if err != nil {
+			_ = tx.Rollback()
 			return err
 		}
 		err = tx.Commit()

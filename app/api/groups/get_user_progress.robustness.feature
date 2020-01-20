@@ -16,10 +16,10 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
     And the database has the following table 'items':
-      | id  | type     |
-      | 200 | Category |
-      | 210 | Chapter  |
-      | 211 | Task     |
+      | id  | type    | default_language_tag |
+      | 200 | Course  | fr                   |
+      | 210 | Chapter | fr                   |
+      | 211 | Task    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 211     | info               |

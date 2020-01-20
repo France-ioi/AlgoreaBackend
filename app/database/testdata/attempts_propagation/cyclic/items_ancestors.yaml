@@ -1,4 +1,4 @@
-- { id: 111, ancestor_item_id: 1, child_item_id: 1}
-- { id: 121, ancestor_item_id: 2, child_item_id: 1}
-- { id: 122, ancestor_item_id: 2, child_item_id: 2}
-- { id: 112, ancestor_item_id: 1, child_item_id: 2}
+- { ancestor_item_id: 1, child_item_id: 1}
+- { ancestor_item_id: 2, child_item_id: 1}
+- { ancestor_item_id: 2, child_item_id: 2}
+- { ancestor_item_id: 1, child_item_id: 2}

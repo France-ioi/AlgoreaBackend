@@ -43,8 +43,8 @@ func (conn *DB) WhereItemsAreVisible(user *User) *DB {
 func (conn *DB) JoinsUserAndDefaultItemStrings(user *User) *DB {
 	return conn.
 		Joins(
-			`LEFT JOIN items_strings default_strings FORCE INDEX (item_id)
-         ON default_strings.item_id = items.id AND default_strings.language_id = items.default_language_id`).
+			`LEFT JOIN items_strings default_strings
+         ON default_strings.item_id = items.id AND default_strings.language_tag = items.default_language_tag`).
 		Joins(`LEFT JOIN items_strings user_strings
-         ON user_strings.item_id=items.id AND user_strings.language_id = ?`, user.DefaultLanguageID)
+         ON user_strings.item_id=items.id AND user_strings.language_tag = ?`, user.DefaultLanguage)
 }

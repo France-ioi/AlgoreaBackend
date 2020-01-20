@@ -1,18 +1,18 @@
 # lev 1 items
-- { id: 190 }
-- { id: 191 }
-- { id: 192 }
-- { id: 193 }
-- { id: 194 }
+- { id: 190, default_language_tag: fr }
+- { id: 191, default_language_tag: fr }
+- { id: 192, default_language_tag: fr }
+- { id: 193, default_language_tag: fr }
+- { id: 194, default_language_tag: fr }
 # lev 2, their children
-- { id: 1900 }
-- { id: 1901 }
-- { id: 1902 }
-- { id: 1903 }
-- { id: 1904 }
+- { id: 1900, default_language_tag: fr }
+- { id: 1901, default_language_tag: fr }
+- { id: 1902, default_language_tag: fr }
+- { id: 1903, default_language_tag: fr }
+- { id: 1904, default_language_tag: fr }
 # lev 3, their grand-children
-- { id: 19000 }
-- { id: 19001 }
-- { id: 19002 }
-- { id: 19003 }
-- { id: 19004 }
+- { id: 19000, default_language_tag: fr }
+- { id: 19001, default_language_tag: fr }
+- { id: 19002, default_language_tag: fr }
+- { id: 19003, default_language_tag: fr }
+- { id: 19004, default_language_tag: fr }

@@ -12,7 +12,7 @@ import (
 
 type itemStringCommon struct {
 	// required: true
-	LanguageID int64 `json:"language_id,string"`
+	LanguageTag string `json:"language_tag"`
 	// Nullable
 	// required: true
 	Title *string `json:"title"`
@@ -52,7 +52,7 @@ type itemCommonFields struct {
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
-	// enum: Root,Category,Chapter,Task,Course
+	// enum: Chapter,Task,Course
 	Type string `json:"type"`
 	// required: true
 	DisplayDetailsInParent bool `json:"display_details_in_parent"`
@@ -219,7 +219,7 @@ type rawItem struct {
 	HintsAllowed    bool    // only if not a chapter
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
-	StringLanguageID  int64   `sql:"column:language_id"`
+	StringLanguageTag string  `sql:"column:language_tag"`
 	StringTitle       *string `sql:"column:title"`
 	StringImageURL    *string `sql:"column:image_url"`
 	StringSubtitle    *string `sql:"column:subtitle"`
@@ -250,7 +250,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.has_attempts,
 		items.duration,
 		items.no_score,
-		items.default_language_id,
+		items.default_language_tag,
 		items.group_code_enter, `
 
 	rootItemQuery := s.ByID(rootID).Select(
@@ -290,12 +290,12 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.no_score,
 			items.group_code_enter,
 
-			COALESCE(user_strings.language_id, default_strings.language_id) AS language_id,
-			IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS title,
-			IF(user_strings.language_id IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
-			IF(user_strings.language_id IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
-			IF(user_strings.language_id IS NULL, default_strings.description, user_strings.description) AS description,
-			IF(user_strings.language_id IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
+			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
+			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
+			IF(user_strings.language_tag IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
+			IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
+			IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description,
+			IF(user_strings.language_tag IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
 
 			items.child_order AS child_order,
 			items.category AS category,
@@ -350,9 +350,9 @@ func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *d
 
 func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
 	return &itemStringCommon{
-		LanguageID: rawData.StringLanguageID,
-		Title:      rawData.StringTitle,
-		ImageURL:   rawData.StringImageURL,
+		LanguageTag: rawData.StringLanguageTag,
+		Title:       rawData.StringTitle,
+		ImageURL:    rawData.StringImageURL,
 	}
 }
 

@@ -558,6 +558,31 @@ func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db 
 	return err
 }
 
+func (conn *DB) withForeignKeyChecksDisabled(blockFunc func(*DB) error) (err error) {
+	defer recoverPanics(&err)
+
+	innerFunc := func(db *DB) error {
+		mustNotBeError(
+			db.Exec(`
+				SET @foreign_key_checks_stack_count = IFNULL(@foreign_key_checks_stack_count, 0) + 1,
+				    FOREIGN_KEY_CHECKS = IF(IFNULL(@foreign_key_checks_stack_count, 0) = 0, 0, @@SESSION.FOREIGN_KEY_CHECKS)`).
+				Error())
+		defer func() {
+			mustNotBeError(
+				db.Exec(`
+					SET @foreign_key_checks_stack_count = @foreign_key_checks_stack_count - 1,
+					    FOREIGN_KEY_CHECKS = IF(@foreign_key_checks_stack_count = 1, 1, @@SESSION.FOREIGN_KEY_CHECKS)`).
+					Error())
+		}()
+		return blockFunc(db)
+	}
+	if !conn.isInTransaction() {
+		return conn.inTransaction(innerFunc)
+	} // else {
+	return innerFunc(conn)
+	//}
+}
+
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)

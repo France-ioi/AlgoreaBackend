@@ -35,7 +35,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			db := setupDB()
 			defer func() { _ = db.Close() }()
 
-			user := &database.User{GroupID: 11, DefaultLanguageID: 2}
+			user := &database.User{GroupID: 11, DefaultLanguage: "en"}
 			dataStore := database.NewDataStore(db)
 			itemStore := dataStore.Items()
 
@@ -208,10 +208,10 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {login: 5, group_id: 105}
 			- {login: 6, group_id: 106}
 		items:
-			- {id: 12, contest_participants_group_id: 200}
-			- {id: 13, contest_participants_group_id: 300}
-			- {id: 14, duration: 10:00:00, contest_participants_group_id: 400}
-			- {id: 15, contest_participants_group_id: 500}
+			- {id: 12, contest_participants_group_id: 200, default_language_tag: fr}
+			- {id: 13, contest_participants_group_id: 300, default_language_tag: fr}
+			- {id: 14, duration: 10:00:00, contest_participants_group_id: 400, default_language_tag: fr}
+			- {id: 15, contest_participants_group_id: 500, default_language_tag: fr}
 		groups_ancestors:
 			- {ancestor_group_id: 101, child_group_id: 101}
 			- {ancestor_group_id: 102, child_group_id: 102}
@@ -273,7 +273,7 @@ type itemsTest struct {
 
 func TestItemStore_CanGrantViewContentOnAll(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 11}, {id: 12}, {id: 13}]
+		items: [{id: 11, default_language_tag: fr}, {id: 12, default_language_tag: fr}, {id: 13, default_language_tag: fr}]
 		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
 		users: [{login: 1, group_id: 100}, {login: 2, group_id: 110}]
 		groups_groups:
@@ -319,7 +319,7 @@ func TestItemStore_CanGrantViewContentOnAll(t *testing.T) {
 
 func TestItemStore_AreAllVisible(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 11}, {id: 12}, {id: 13}]
+		items: [{id: 11, default_language_tag: fr}, {id: 12, default_language_tag: fr}, {id: 13, default_language_tag: fr}]
 		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
 		users: [{login: 1, group_id: 100}, {login: 2, group_id: 110}]
 		groups_groups:
@@ -365,7 +365,7 @@ func TestItemStore_AreAllVisible(t *testing.T) {
 
 func TestItemStore_GetAccessDetailsForIDs(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 11}, {id: 12}, {id: 13}]
+		items: [{id: 11, default_language_tag: fr}, {id: 12, default_language_tag: fr}, {id: 13, default_language_tag: fr}]
 		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
 		users: [{login: 1, group_id: 100}, {login: 2, group_id: 110}]
 		groups_groups:

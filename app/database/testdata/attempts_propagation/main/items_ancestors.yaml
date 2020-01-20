@@ -1,15 +1,15 @@
-- { id: 111, ancestor_item_id: 1, child_item_id: 1}
-- { id: 121, ancestor_item_id: 2, child_item_id: 1}
-- { id: 122, ancestor_item_id: 2, child_item_id: 2}
-- { id: 131, ancestor_item_id: 3, child_item_id: 1}
-- { id: 132, ancestor_item_id: 3, child_item_id: 2}
-- { id: 133, ancestor_item_id: 3, child_item_id: 3}
-- { id: 141, ancestor_item_id: 4, child_item_id: 1}
-- { id: 142, ancestor_item_id: 4, child_item_id: 2}
-- { id: 143, ancestor_item_id: 4, child_item_id: 3}
-- { id: 144, ancestor_item_id: 4, child_item_id: 4}
-- { id: 151, ancestor_item_id: 5, child_item_id: 1}
-- { id: 152, ancestor_item_id: 5, child_item_id: 2}
-- { id: 153, ancestor_item_id: 5, child_item_id: 3}
-- { id: 154, ancestor_item_id: 5, child_item_id: 4}
-- { id: 155, ancestor_item_id: 5, child_item_id: 5}
+- { ancestor_item_id: 1, child_item_id: 1}
+- { ancestor_item_id: 2, child_item_id: 1}
+- { ancestor_item_id: 2, child_item_id: 2}
+- { ancestor_item_id: 3, child_item_id: 1}
+- { ancestor_item_id: 3, child_item_id: 2}
+- { ancestor_item_id: 3, child_item_id: 3}
+- { ancestor_item_id: 4, child_item_id: 1}
+- { ancestor_item_id: 4, child_item_id: 2}
+- { ancestor_item_id: 4, child_item_id: 3}
+- { ancestor_item_id: 4, child_item_id: 4}
+- { ancestor_item_id: 5, child_item_id: 1}
+- { ancestor_item_id: 5, child_item_id: 2}
+- { ancestor_item_id: 5, child_item_id: 3}
+- { ancestor_item_id: 5, child_item_id: 4}
+- { ancestor_item_id: 5, child_item_id: 5}

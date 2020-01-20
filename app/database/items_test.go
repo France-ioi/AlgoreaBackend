@@ -11,13 +11,13 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{GroupID: 2, DefaultLanguageID: 4}
+	mockUser := &User{GroupID: 2, DefaultLanguage: "sl"}
 
 	mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT `items`.* FROM `items` LEFT JOIN items_strings default_strings FORCE INDEX (item_id) " +
-			"ON default_strings.item_id = items.id AND default_strings.language_id = items.default_language_id " +
-			"LEFT JOIN items_strings user_strings ON user_strings.item_id=items.id AND user_strings.language_id = ?")).
-		WithArgs(4).
+		"SELECT `items`.* FROM `items` LEFT JOIN items_strings default_strings " +
+			"ON default_strings.item_id = items.id AND default_strings.language_tag = items.default_language_tag " +
+			"LEFT JOIN items_strings user_strings ON user_strings.item_id=items.id AND user_strings.language_tag = ?")).
+		WithArgs("sl").
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
@@ -30,7 +30,7 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{GroupID: 2, DefaultLanguageID: 4}
+	mockUser := &User{GroupID: 2, DefaultLanguage: "en"}
 
 	clearAllPermissionEnums()
 	mockPermissionEnumQueries(mock)

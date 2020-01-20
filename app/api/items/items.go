@@ -31,7 +31,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/attempts/{attempt_id}/task-token", service.AppHandler(srv.getTaskToken).ServeHTTP)
 	router.Get("/items/{item_id}/attempts", service.AppHandler(srv.getAttempts).ServeHTTP)
 	router.Post("/items/{item_id}/attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
-	router.Put("/items/{item_id}/strings/{language_id}", service.AppHandler(srv.updateItemString).ServeHTTP)
+	router.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
 	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
 	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 }
@@ -134,17 +134,17 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 	var values = make([]interface{}, 0, len(spec)*9)
 
 	for index := range spec {
-		values = append(values, store.NewID(),
+		values = append(values,
 			spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order, spec[index].ContentViewPropagation,
 			spec[index].UpperViewLevelsPropagation, spec[index].GrantViewPropagation, spec[index].WatchPropagation,
 			spec[index].EditPropagation)
 	}
 
-	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?)"
 	// nolint:gosec
 	query :=
 		`INSERT INTO items_items (
-			id, parent_item_id, child_item_id, child_order,
+			parent_item_id, child_item_id, child_order,
 			content_view_propagation, upper_view_levels_propagation, grant_view_propagation,
 			watch_propagation, edit_propagation) VALUES ` + valuesMarks
 	service.MustNotBeError(store.Exec(query, values...).Error())

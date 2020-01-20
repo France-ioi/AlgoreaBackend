@@ -1,10 +1,10 @@
-- {id: 3}
-- {id: 4}
+- {id: 3, default_language_tag: fr}
+- {id: 4, default_language_tag: fr}
 
-- {id: 1001}
-- {id: 1002}
-- {id: 2001}
-- {id: 2002}
-- {id: 4001}
-- {id: 4002}
-- {id: 4003}
+- {id: 1001, default_language_tag: fr}
+- {id: 1002, default_language_tag: fr}
+- {id: 2001, default_language_tag: fr}
+- {id: 2002, default_language_tag: fr}
+- {id: 4001, default_language_tag: fr}
+- {id: 4002, default_language_tag: fr}
+- {id: 4003, default_language_tag: fr}

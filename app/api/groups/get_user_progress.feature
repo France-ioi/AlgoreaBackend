@@ -132,50 +132,50 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 20                | 21             | 0       |
       | 21                | 21             | 1       |
     And the database has the following table 'items':
-      | id  | type     |
-      | 200 | Category |
-      | 210 | Chapter  |
-      | 211 | Task     |
-      | 212 | Task     |
-      | 213 | Task     |
-      | 214 | Task     |
-      | 215 | Task     |
-      | 216 | Task     |
-      | 217 | Task     |
-      | 218 | Task     |
-      | 219 | Task     |
-      | 220 | Chapter  |
-      | 221 | Task     |
-      | 222 | Task     |
-      | 223 | Task     |
-      | 224 | Task     |
-      | 225 | Task     |
-      | 226 | Task     |
-      | 227 | Task     |
-      | 228 | Task     |
-      | 229 | Task     |
-      | 300 | Category |
-      | 310 | Chapter  |
-      | 311 | Task     |
-      | 312 | Task     |
-      | 313 | Task     |
-      | 314 | Task     |
-      | 315 | Task     |
-      | 316 | Task     |
-      | 317 | Task     |
-      | 318 | Task     |
-      | 319 | Task     |
-      | 400 | Category |
-      | 410 | Chapter  |
-      | 411 | Task     |
-      | 412 | Task     |
-      | 413 | Task     |
-      | 414 | Task     |
-      | 415 | Task     |
-      | 416 | Task     |
-      | 417 | Task     |
-      | 418 | Task     |
-      | 419 | Task     |
+      | id  | type    | default_language_tag |
+      | 200 | Chapter | fr                   |
+      | 210 | Chapter | fr                   |
+      | 211 | Task    | fr                   |
+      | 212 | Task    | fr                   |
+      | 213 | Task    | fr                   |
+      | 214 | Task    | fr                   |
+      | 215 | Task    | fr                   |
+      | 216 | Task    | fr                   |
+      | 217 | Task    | fr                   |
+      | 218 | Task    | fr                   |
+      | 219 | Task    | fr                   |
+      | 220 | Chapter | fr                   |
+      | 221 | Task    | fr                   |
+      | 222 | Task    | fr                   |
+      | 223 | Task    | fr                   |
+      | 224 | Task    | fr                   |
+      | 225 | Task    | fr                   |
+      | 226 | Task    | fr                   |
+      | 227 | Task    | fr                   |
+      | 228 | Task    | fr                   |
+      | 229 | Task    | fr                   |
+      | 300 | Course  | fr                   |
+      | 310 | Chapter | fr                   |
+      | 311 | Task    | fr                   |
+      | 312 | Task    | fr                   |
+      | 313 | Task    | fr                   |
+      | 314 | Task    | fr                   |
+      | 315 | Task    | fr                   |
+      | 316 | Task    | fr                   |
+      | 317 | Task    | fr                   |
+      | 318 | Task    | fr                   |
+      | 319 | Task    | fr                   |
+      | 400 | Chapter | fr                   |
+      | 410 | Chapter | fr                   |
+      | 411 | Task    | fr                   |
+      | 412 | Task    | fr                   |
+      | 413 | Task    | fr                   |
+      | 414 | Task    | fr                   |
+      | 415 | Task    | fr                   |
+      | 416 | Task    | fr                   |
+      | 417 | Task    | fr                   |
+      | 418 | Task    | fr                   |
+      | 419 | Task    | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |

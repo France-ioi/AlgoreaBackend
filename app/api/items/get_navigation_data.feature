@@ -8,8 +8,8 @@ Feature: Get item for tree navigation
       | 16 | info_mid  |         | -2    | UserSelf |
       | 18 | french    |         | -2    | UserSelf |
     And the database has the following table 'languages':
-      | id | code |
-      | 2  | fr   |
+      | tag |
+      | fr  |
     And the database has the following table 'users':
       | login     | temp_user | group_id | default_language |
       | jdoe      | 0         | 11       |                  |
@@ -28,15 +28,15 @@ Feature: Get item for tree navigation
       | 76 | 16                | 16             | 1       |
       | 77 | 18                | 18             | 1       |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score |
-      | 200 | Category | false          | false    |
-      | 210 | Chapter  | false          | false    |
-      | 220 | Chapter  | false          | false    |
-      | 230 | Chapter  | false          | false    |
-      | 211 | Task     | false          | false    |
-      | 231 | Task     | false          | false    |
-      | 232 | Task     | false          | false    |
-      | 250 | Task     | false          | false    |
+      | id  | type    | default_language_tag | teams_editable | no_score |
+      | 200 | Course  | en                   | false          | false    |
+      | 210 | Chapter | en                   | false          | false    |
+      | 220 | Chapter | en                   | false          | false    |
+      | 230 | Chapter | en                   | false          | false    |
+      | 211 | Task    | en                   | false          | false    |
+      | 231 | Task    | en                   | false          | false    |
+      | 232 | Task    | en                   | false          | false    |
+      | 250 | Task    | en                   | false          | false    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | content_with_descendants |
@@ -69,26 +69,26 @@ Feature: Get item for tree navigation
       | 18       | 231     | content                  |
       | 18       | 232     | content                  |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order | content_view_propagation | difficulty |
-      | 54 | 200            | 210           | 3           | none                     | 0          |
-      | 55 | 200            | 220           | 2           | as_info                  | 0          |
-      | 56 | 200            | 230           | 1           | as_content               | 0          |
-      | 57 | 210            | 211           | 1           | none                     | 0          |
-      | 58 | 230            | 231           | 2           | none                     | 0          |
-      | 59 | 230            | 232           | 1           | none                     | 0          |
+      | parent_item_id | child_item_id | child_order | content_view_propagation | difficulty |
+      | 200            | 210           | 3           | none                     | 0          |
+      | 200            | 220           | 2           | as_info                  | 0          |
+      | 200            | 230           | 1           | as_content               | 0          |
+      | 210            | 211           | 1           | none                     | 0          |
+      | 230            | 231           | 2           | none                     | 0          |
+      | 230            | 232           | 1           | none                     | 0          |
     And the database has the following table 'items_strings':
-      | id | item_id | language_id | title       |
-      | 53 | 200     | 1           | Category 1  |
-      | 54 | 210     | 1           | Chapter A   |
-      | 55 | 220     | 1           | Chapter B   |
-      | 56 | 230     | 1           | Chapter C   |
-      | 57 | 211     | 1           | Task 1      |
-      | 58 | 231     | 1           | Task 2      |
-      | 59 | 232     | 1           | Task 3      |
-      | 63 | 200     | 2           | Catégorie 1 |
-      | 64 | 210     | 2           | Chapitre A  |
-      | 66 | 230     | 2           | Chapitre C  |
-      | 67 | 211     | 2           | Tâche 1     |
+      | item_id | language_tag | title       |
+      | 200     | en           | Category 1  |
+      | 210     | en           | Chapter A   |
+      | 220     | en           | Chapter B   |
+      | 230     | en           | Chapter C   |
+      | 211     | en           | Task 1      |
+      | 231     | en           | Task 2      |
+      | 232     | en           | Task 3      |
+      | 200     | fr           | Catégorie 1 |
+      | 210     | fr           | Chapitre A  |
+      | 230     | fr           | Chapitre C  |
+      | 211     | fr           | Tâche 1     |
     And the database has the following table 'attempts':
       | id  | group_id | item_id | order | score_computed | submissions | finished | started_at          | validated_at        |
       | 101 | 11       | 200     | 1     | 91             | 11          | true     | 2019-01-30 09:26:41 | null                |
@@ -108,7 +108,7 @@ Feature: Get item for tree navigation
       """
       {
         "id": "200",
-        "type": "Category",
+        "type": "Course",
         "string": {
           "title": "Category 1"
         },
@@ -295,7 +295,7 @@ Feature: Get item for tree navigation
       """
       {
         "id": "200",
-        "type": "Category",
+        "type": "Course",
         "string": {
           "title": "Category 1"
         },
@@ -316,7 +316,7 @@ Feature: Get item for tree navigation
       """
       {
         "id": "200",
-        "type": "Category",
+        "type": "Course",
         "string": {
           "title": "Category 1"
         },
@@ -383,7 +383,7 @@ Feature: Get item for tree navigation
       """
       {
         "id": "200",
-        "type": "Category",
+        "type": "Course",
         "string": {
           "title": "Catégorie 1"
         },

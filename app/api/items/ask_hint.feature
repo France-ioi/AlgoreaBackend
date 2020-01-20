@@ -13,9 +13,9 @@ Feature: Ask for a hint
       | id | uses_tokens | regexp                                            | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
     And the database has the following table 'items':
-      | id | platform_id | url                                                                     |
-      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 |
-      | 10 | null        | null                                                                    |
+      | id | platform_id | url                                                                     | default_language_tag |
+      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | fr                   |
+      | 10 | null        | null                                                                    | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 0           |

@@ -39,8 +39,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition |
-      | 50 | 00:00:00 | 0            | <entering_condition>       |
+      | id | duration | has_attempts | contest_entering_condition | default_language_tag |
+      | 50 | 00:00:00 | 0            | <entering_condition>       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
@@ -65,8 +65,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: State is ready for an individual contest
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition |
-      | 50 | 00:00:00 | 0            | <entering_condition>       |
+      | id | duration | has_attempts | contest_entering_condition | default_language_tag |
+      | 50 | 00:00:00 | 0            | <entering_condition>       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
@@ -94,8 +94,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Team-only contest when no one can enter
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -137,8 +137,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Team-only contest when one member can enter
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -185,8 +185,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Team-only contest when half of members can enter
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -232,8 +232,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Team-only contest when all members can enter
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -280,8 +280,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Team-only contest when all members can enter, but the team is too large
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | 2                     |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 2                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -331,8 +331,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
-      | 50 | 00:00:00 | 0            | <entering_condition>       | 0                     | 100                           |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 50 | 00:00:00 | 0            | <entering_condition>       | 0                     | 100                           | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -369,8 +369,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | 0                     | 100                           |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 0                     | 100                           | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -421,8 +421,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
-      | 50 | 00:00:00 | 0            | None                       | 0                     | 100                           |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 50 | 00:00:00 | 0            | None                       | 0                     | 100                           | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -453,8 +453,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
-      | 60 | 00:00:00 | 1            | None                       | 3                     | 100                           |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1            | None                       | 3                     | 100                           | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |

@@ -4,17 +4,17 @@ Feature: Add item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id | teams_editable | no_score |
-      | 4  | false          | false    |
-      | 21 | false          | false    |
-      | 22 | false          | false    |
-      | 23 | false          | false    |
+      | id | teams_editable | no_score | default_language_tag |
+      | 4  | false          | false    | fr                   |
+      | 21 | false          | false    | fr                   |
+      | 22 | false          | false    | fr                   |
+      | 23 | false          | false    | fr                   |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order |
-      | 1  | 4              | 21            | 0           |
+      | parent_item_id | child_item_id | child_order |
+      | 4              | 21            | 0           |
     And the database has the following table 'items_ancestors':
-      | id | ancestor_item_id | child_item_id |
-      | 1  | 4                | 21            |
+      | ancestor_item_id | child_item_id |
+      | 4                | 21            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 4       | solution           | children           |
@@ -29,15 +29,15 @@ Feature: Add item - robustness
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
     And the database has the following table 'languages':
-      | id |
-      | 3  |
+      | tag |
+      | sl  |
 
   Scenario: Missing type
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
       {
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -62,7 +62,7 @@ Feature: Add item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: Missing language_id
+  Scenario: Missing language_tag
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
@@ -81,7 +81,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "language_id": ["missing field"]
+          "language_tag": ["missing field"]
         }
       }
       """
@@ -98,7 +98,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Chapter",
-        "language_id": "3",
+        "language_tag": "sl",
         "parent_item_id": "21",
         "order": 100
       }
@@ -128,7 +128,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Chapter",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "order": 100
       }
@@ -152,13 +152,13 @@ Feature: Add item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: language_id is not a number
+  Scenario: language_tag is not a string
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
-        "language_id": "sewrwer3",
+        "language_tag": 123,
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -172,7 +172,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "language_id": ["decoding error: strconv.ParseInt: parsing \"sewrwer3\": invalid syntax"]
+          "language_tag": ["expected type 'string', got unconvertible type 'float64'"]
         }
       }
       """
@@ -183,13 +183,13 @@ Feature: Add item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: language_id doesn't exist
+  Scenario: language_tag doesn't exist
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
-        "language_id": "404",
+        "language_tag": "unknown",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -203,7 +203,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "language_id": ["no such language"]
+          "language_tag": ["no such language"]
         }
       }
       """
@@ -221,7 +221,7 @@ Feature: Add item - robustness
       {
         "id": "2",
         "type": "Course",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "sfaewr20",
         "order": 100
@@ -252,7 +252,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Course",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "404",
         "order": 100
@@ -283,7 +283,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Course",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "<parent_item>",
         "order": 100
@@ -318,7 +318,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Course",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -340,7 +340,7 @@ Feature: Add item - robustness
       {
         "type": "Course",
         "full_screen": "wrong value",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -371,7 +371,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Wrong",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -385,7 +385,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "type": ["type must be one of [Root Category Chapter Task Course]"]
+          "type": ["type must be one of [Chapter Task Course]"]
         }
       }
       """
@@ -403,7 +403,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "validation_type": "Wrong",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -435,7 +435,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "contest_entering_condition": "Wrong",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -467,7 +467,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "duration": "12:34",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -499,7 +499,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "duration": "-1:34:56",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -531,7 +531,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "duration": "839:34:56",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -563,7 +563,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "duration": "99:-1:56",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -595,7 +595,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "duration": "99:60:56",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -627,7 +627,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "duration": "99:59:-1",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -659,7 +659,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "duration": "99:59:60",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100
@@ -690,7 +690,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Chapter",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "4",
         "order": 100,
@@ -725,7 +725,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Chapter",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100,
@@ -760,7 +760,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Chapter",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100,
@@ -784,7 +784,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Chapter",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
         "order": 100,

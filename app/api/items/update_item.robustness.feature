@@ -4,20 +4,20 @@ Feature: Update item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id |
-      | 4  |
-      | 21 |
-      | 22 |
-      | 50 |
-      | 60 |
+      | id | default_language_tag |
+      | 4  | fr                   |
+      | 21 | fr                   |
+      | 22 | fr                   |
+      | 50 | fr                   |
+      | 60 | fr                   |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order |
-      | 1  | 4              | 21            | 0           |
-      | 2  | 21             | 50            | 0           |
+      | parent_item_id | child_item_id | child_order |
+      | 4              | 21            | 0           |
+      | 21             | 50            | 0           |
     And the database has the following table 'items_ancestors':
-      | id | ancestor_item_id | child_item_id |
-      | 1  | 4                | 21            |
-      | 2  | 21               | 50            |
+      | ancestor_item_id | child_item_id |
+      | 4                | 21            |
+      | 21               | 50            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
       | 11       | 21      | solution           | none               | false              |
@@ -33,15 +33,15 @@ Feature: Update item - robustness
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
     And the database has the following table 'languages':
-      | id |
-      | 3  |
+      | tag |
+      | sl  |
 
-  Scenario: default_language_id is not a number
+  Scenario: default_language_tag is not a string
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "default_language_id": "sewrwer3"
+        "default_language_tag": 1234
       }
       """
     Then the response code should be 400
@@ -52,7 +52,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "default_language_id": ["decoding error: strconv.ParseInt: parsing \"sewrwer3\": invalid syntax"]
+          "default_language_tag": ["expected type 'string', got unconvertible type 'float64'"]
         }
       }
       """
@@ -62,12 +62,12 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "permissions_granted" should stay unchanged
 
-  Scenario: default_language_id doesn't exist
+  Scenario: default_language_tag is too long
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "default_language_id": "404"
+        "default_language_tag": "unknown"
       }
       """
     Then the response code should be 400
@@ -78,7 +78,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "default_language_id": ["default language should exist and there should be item's strings in this language"]
+          "default_language_tag": ["default_language_tag must be a maximum of 6 characters in length"]
         }
       }
       """
@@ -88,12 +88,12 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "permissions_granted" should stay unchanged
 
-  Scenario: No strings in default_language_id
+  Scenario: default_language_tag is too short
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "default_language_id": "3"
+        "default_language_tag": ""
       }
       """
     Then the response code should be 400
@@ -104,7 +104,59 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "default_language_id": ["default language should exist and there should be item's strings in this language"]
+          "default_language_tag": ["default_language_tag must be at least 1 character in length"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+
+  Scenario: default_language_tag doesn't exist
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50" with the following body:
+      """
+      {
+        "default_language_tag": "unknow"
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "default_language_tag": ["default language should exist and there should be item's strings in this language"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+
+  Scenario: No strings in default_language_tag
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50" with the following body:
+      """
+      {
+        "default_language_tag": "sl"
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "default_language_tag": ["default language should exist and there should be item's strings in this language"]
         }
       }
       """
@@ -220,7 +272,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "type": ["type must be one of [Root Category Chapter Task Course]"]
+          "type": ["type must be one of [Chapter Task Course]"]
         }
       }
       """

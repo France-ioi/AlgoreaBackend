@@ -170,7 +170,7 @@ func TestAttemptStore_ComputeAllAttempts_Validated(t *testing.T) {
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, attemptStore *database.AttemptStore) {
 				assert.NoError(t, attemptStore.Where("id IN (11,13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
-				assert.NoError(t, attemptStore.ItemItems().Where("id IN (23,24)").
+				assert.NoError(t, attemptStore.ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
 					UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
@@ -186,7 +186,8 @@ func TestAttemptStore_ComputeAllAttempts_Validated(t *testing.T) {
 				itemStore := attemptStore.Items()
 				assert.NoError(t, itemStore.Where("id=4").UpdateColumn("no_score", true).Error())
 				assert.NoError(t, attemptStore.Where("id IN (11,13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
-				assert.NoError(t, attemptStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
+				assert.NoError(t, attemptStore.ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
+					UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: true, 13: true, 14: false,
@@ -200,7 +201,8 @@ func TestAttemptStore_ComputeAllAttempts_Validated(t *testing.T) {
 			prepareFunc: func(t *testing.T, attemptStore *database.AttemptStore) {
 				itemStore := attemptStore.Items()
 				assert.NoError(t, itemStore.Where("id=1").UpdateColumn("no_score", true).Error())
-				assert.NoError(t, attemptStore.ItemItems().Where("id=21").UpdateColumn("category", "Validation").Error())
+				assert.NoError(t, attemptStore.ItemItems().Where("parent_item_id = 2 AND child_item_id = 1").
+					UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: false, 12: false,
@@ -213,7 +215,8 @@ func TestAttemptStore_ComputeAllAttempts_Validated(t *testing.T) {
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, attemptStore *database.AttemptStore) {
 				assert.NoError(t, attemptStore.Where("id IN (13,14)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
-				assert.NoError(t, attemptStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
+				assert.NoError(t, attemptStore.ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
+					UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: false, 12: true, 13: true, 14: true,

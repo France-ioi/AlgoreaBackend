@@ -160,6 +160,14 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	})
 }
 
+// WithForeignKeyChecksDisabled executes the given function with foreign keys checking disabled
+// (wraps it up in a transaction if no transaction started)
+func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) error) error {
+	return s.withForeignKeyChecksDisabled(func(db *DB) error {
+		return blockFunc(NewDataStoreWithTable(db, s.tableName))
+	})
+}
+
 // WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK
 func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
 	return s.withNamedLock(lockName, timeout, func(db *DB) error {

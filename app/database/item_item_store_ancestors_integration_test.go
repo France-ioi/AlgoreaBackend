@@ -48,6 +48,7 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	var propagateResult []itemPropagateResultRow
 	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
+		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},

@@ -1,5 +1,5 @@
-- {id: 11, read_only: 0}
-- {id: 12, read_only: 1}
-- {id: 13, read_only: 0}
-- {id: 14, read_only: 0}
-- {id: 114, read_only: 1, duration: 00:00:01}
+- {id: 11, read_only: 0, default_language_tag: fr}
+- {id: 12, read_only: 1, default_language_tag: fr}
+- {id: 13, read_only: 0, default_language_tag: fr}
+- {id: 14, read_only: 0, default_language_tag: fr}
+- {id: 114, read_only: 1, duration: 00:00:01, default_language_tag: fr}

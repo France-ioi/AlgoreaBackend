@@ -21,7 +21,7 @@ import (
 //
 //
 //   Restrictions:
-//     * the list of item IDs should be a valid path from a root item (`type`=’Root’), otherwise the 'bad request'
+//     * the list of item IDs should be a valid path from a root item (`is_root`=1), otherwise the 'bad request'
 //       error is returned)
 //     * the user should have at least 'content' access on each listed item except the last one through that path,
 //       and at least 'info' access on the last item, otherwise the 'forbidden' error is returned.
@@ -44,10 +44,9 @@ import (
 //             format: int64
 //           title:
 //             type: string
-//           language_id:
+//           language_tag:
 //             type: string
-//             format: int64
-//         required: [item_id, title, language_id]
+//         required: [item_id, title, language_tag]
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -86,7 +85,7 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	service.MustNotBeError(srv.Store.Items().Select(`
 			items.id AS item_id,
 			COALESCE(user_strings.title, default_strings.title) AS title,
-			COALESCE(user_strings.language_id, default_strings.language_id) AS language_id`).
+			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag`).
 		JoinsUserAndDefaultItemStrings(user).
 		Where("items.id IN (?)", ids).
 		Order(gorm.Expr("FIELD(items.id"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).

@@ -30,15 +30,15 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 1         | 2017-05-29 06:38:38 | 100   |
       | 2         | 2017-05-29 06:38:38 | 100   |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score |
-      | 200 | Category | false          | false    |
+      | id  | type    | teams_editable | no_score | default_language_tag |
+      | 200 | Chapter | false          | false    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 21       | 200     | content_with_descendants |
       | 23       | 200     | none                     |
     And the database has the following table 'items_ancestors':
-      | id | ancestor_item_id | child_item_id |
-      | 1  | 200              | 200           |
+      | ancestor_item_id | child_item_id |
+      | 200              | 200           |
 
   Scenario: Wrong group
     Given I am the user with id "23"

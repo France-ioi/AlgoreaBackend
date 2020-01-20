@@ -169,6 +169,15 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 	mustNotBeInProdEnv()
 
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+	if err != nil {
+		panic(err)
+	}
+
 	for _, row := range data {
 		var attributes []string
 		var valueMarks []string
@@ -181,16 +190,24 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 		// nolint:gosec
 		query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)",
 			tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", "))
-		_, err := db.Exec(query, values...)
+		_, err = tx.Exec(query, values...)
 		if err != nil {
 			panic(err)
 		}
 	}
 
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+	if err != nil {
+		panic(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // nolint: gosec
-func emptyDB(db *sql.DB, dbName string) {
+func emptyDB(db *sql.DB, dbName string) error {
 	mustNotBeInProdEnv()
 
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
@@ -199,28 +216,52 @@ func emptyDB(db *sql.DB, dbName string) {
                            AND  table_schema = '` + dbName + `'
                            AND  table_name  != 'gorp_migrations'`)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer func() { _ = rows.Close() }()
 
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
 	for rows.Next() {
 		var tableName string
-		if err = rows.Scan(&tableName); err != nil {
-			panic(err)
+		if scanErr := rows.Scan(&tableName); scanErr != nil {
+			_ = tx.Rollback()
+			return scanErr
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
-		_, err = db.Exec("DELETE FROM " + tableName)
+		_, err = tx.Exec("DELETE FROM " + tableName)
 		if err != nil {
-			panic(err)
+			_ = tx.Rollback()
+			return err
 		}
 	}
+
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 // EmptyDB empties all tables of the database specified in the config
 func EmptyDB(db *sql.DB) {
 	mustNotBeInProdEnv()
 	conf := config.Load()
-	emptyDB(db, conf.Database.Connection.DBName)
+	err := emptyDB(db, conf.Database.Connection.DBName)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func mustNotBeInProdEnv() {

@@ -48,22 +48,22 @@ Feature: Get recent activity for group_id and item_id
       | 7         | 2017-05-29 06:38:38 | 98    |
       | 8         | 2017-05-30 06:38:38 | 100   |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score |
-      | 200 | Category | false          | false    |
+      | id  | type    | teams_editable | no_score | default_language_tag |
+      | 200 | Chapter | false          | false    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 200     | info               |
       | 31       | 200     | info               |
     And the database has the following table 'items_ancestors':
-      | id | ancestor_item_id | child_item_id |
-      | 1  | 200              | 200           |
+      | ancestor_item_id | child_item_id |
+      | 200              | 200           |
     And the database has the following table 'items_strings':
-      | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    |
-      | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
-      | 63 | 200     | 2           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+      | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
+      | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 200     | fr           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
     And the database has the following table 'languages':
-      | id | code |
-      | 2  | fr   |
+      | tag |
+      | fr  |
 
   Scenario: User is a manager of the group and there are visible descendants of the item
     This spec also checks:
@@ -83,7 +83,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "created_at": "2017-05-30T06:38:38Z",
@@ -100,7 +100,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 99,
         "created_at": "2017-05-29T06:38:38Z",
@@ -117,7 +117,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "created_at": "2017-05-29T06:38:38Z",
@@ -144,7 +144,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "created_at": "2017-05-30T06:38:38Z",
@@ -171,7 +171,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 99,
         "created_at": "2017-05-29T06:38:38Z",
@@ -188,7 +188,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "created_at": "2017-05-29T06:38:38Z",
@@ -215,7 +215,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "created_at": "2017-05-29T06:38:38Z",
@@ -242,7 +242,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "created_at": "2017-05-30T06:38:38Z",
@@ -259,7 +259,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "created_at": "2017-05-29T06:38:38Z",
@@ -286,7 +286,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Catégorie 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 99,
         "created_at": "2017-05-29T06:38:38Z",
@@ -314,7 +314,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Category 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "user": {
@@ -341,7 +341,7 @@ Feature: Get recent activity for group_id and item_id
           "string": {
             "title": "Category 1"
           },
-          "type": "Category"
+          "type": "Chapter"
         },
         "score": 100,
         "user": {

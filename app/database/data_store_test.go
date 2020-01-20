@@ -179,6 +179,90 @@ func TestDataStore_InTransaction_DBError(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^SET").WillReturnError(expectedError)
+	mock.ExpectRollback()
+
+	store := NewDataStore(db)
+	gotError := store.WithForeignKeyChecksDisabled(func(*DataStore) error {
+		assert.Fail(t, "should not be called")
+		return nil
+	})
+
+	assert.Equal(t, expectedError, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnCommittingTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^SET").WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectQuery("^SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectExec("^SET").WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectCommit().WillReturnError(expectedError)
+
+	store := NewDataStore(db)
+	gotError := store.WithForeignKeyChecksDisabled(func(s *DataStore) error {
+		var result []interface{}
+		return s.Raw("SELECT 1").Scan(&result).Error()
+	})
+
+	assert.Equal(t, expectedError, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithForeignKeyChecksDisabled_DBErrorInsideTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^SET").WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectExec("^SET").WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectRollback()
+
+	store := NewDataStore(db)
+	gotError := store.WithForeignKeyChecksDisabled(func(*DataStore) error {
+		return expectedError
+	})
+
+	assert.Equal(t, expectedError, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithForeignKeyChecksDisabled_DBErrorWithoutTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^SET").WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectExec("^SET").WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectRollback()
+
+	store := NewDataStore(db)
+	gotError := store.InTransaction(func(innerStore *DataStore) error {
+		return innerStore.WithForeignKeyChecksDisabled(func(*DataStore) error {
+			return expectedError
+		})
+	})
+
+	assert.Equal(t, expectedError, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDataStore_WithNamedLock(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
