@@ -267,15 +267,15 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	itemMap := formData.ConstructPartialMapForDB("itemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
-	service.MustNotBeError(store.Exec("SET FOREIGN_KEY_CHECKS = 0").Error())
-	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
-		itemID = s.NewID()
+	service.MustNotBeError(store.WithForeignKeyChecksDisabled(func(fkStore *database.DataStore) error {
+		return fkStore.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
+			itemID = s.NewID()
 
-		itemMap["id"] = itemID
-		itemMap["default_language_tag"] = newItemRequest.LanguageTag
-		return s.Items().InsertMap(itemMap)
+			itemMap["id"] = itemID
+			itemMap["default_language_tag"] = newItemRequest.LanguageTag
+			return s.Items().InsertMap(itemMap)
+		})
 	}))
-	service.MustNotBeError(store.Exec("SET FOREIGN_KEY_CHECKS = 0").Error())
 
 	if itemMap["duration"] != nil {
 		participantsGroupID := createContestParticipantsGroup(store, itemID)
