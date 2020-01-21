@@ -103,7 +103,7 @@ Feature: Save grading result
       | 123       | 100   | 1                                                |
     And the table "attempts" should be:
       | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
-      | 100 | 100            | 1           | 1         | done                     | 2019-05-30 11:00:00 | 2017-05-29 06:38:38  | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
+      | 100 | 100            | 1           | 1         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
       | 101 | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null                |
       | 102 | 50             | 1           | 1         | done                     | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
 
@@ -172,7 +172,7 @@ Feature: Save grading result
       | 123       | <score> | 1                                                |
     And the table "attempts" should be:
       | id  | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
-      | 100 | <score_computed> | 1           | 0         | done                     | 2019-05-30 11:00:00 | 2017-05-29 06:38:38  | 2017-05-29 06:38:38 | null         |
+      | 100 | <score_computed> | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
       | 101 | 0                | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null         |
       | 102 | <parent_score>   | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | null                | null         |
   Examples:
@@ -248,7 +248,7 @@ Feature: Save grading result
       | 124       | 99    | 1                                                |
     And the table "attempts" should be:
       | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
-      | 100 | 99             | 1           | 0         | done                     | 2019-05-30 11:00:00 | 2017-05-29 06:38:38  | 2017-05-29 06:38:38 | null         |
+      | 100 | 99             | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
       | 101 | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
 
   Scenario Outline: Should keep previous score if it is greater
@@ -329,12 +329,12 @@ Feature: Save grading result
       | 20    | diff            | -1               |
       | 15    | diff            | -80              |
 
-  Scenario: Should keep previous validated_at & latest_submission_at if they are earlier
+  Scenario: Should keep previous validated_at if it is earlier
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | validated_at        | latest_submission_at | order |
-      | 100 | 101      | 50      | 2016-05-29 06:38:37 | 2018-05-29 06:38:37  | 1     |
-      | 101 | 101      | 60      | 2018-05-29 06:38:37 | 2018-05-29 06:38:37  | 2     |
+      | id  | group_id | item_id | validated_at        | order |
+      | 100 | 101      | 50      | 2016-05-29 06:38:37 | 1     |
+      | 101 | 101      | 60      | 2018-05-29 06:38:37 | 2     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
