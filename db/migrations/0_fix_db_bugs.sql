@@ -32,7 +32,29 @@ DELETE `items_items` FROM `items_items`
 DELETE `items_ancestors` FROM `items_ancestors`
     JOIN `items` on `items`.`ID` = `items_ancestors`.`idItemAncestor` AND `items`.`sType` = 'Task';
 
+UPDATE `groups_attempts` JOIN (
+    SELECT `ID`, ROW_NUMBER() OVER (PARTITION BY `idGroup`, `idItem` ORDER BY `iOrder`, `sStartDate`, `sValidationDate`) AS `iOrder`
+    FROM `groups_attempts`
+        JOIN (
+            SELECT `idItem`, `idGroup` FROM `groups_attempts` AS `a1`
+            WHERE EXISTS(
+                    SELECT `ID` from `groups_attempts` AS `a2`
+                    WHERE `a2`.idItem = `a1`.`idItem` AND `a2`.`idGroup` = `a1`.`idGroup` AND `a1`.`iOrder`=`a2`.`iOrder` AND `a1`.`id` > `a2`.`id`
+                ) OR iOrder = 0
+            GROUP BY `idGroup`, `idItem`
+        ) AS `duplicates` USING (`idGroup`, `idItem`)
+    ) AS `orders` USING (`ID`)
+SET `groups_attempts`.`iOrder` = `orders`.`iOrder`;
+
+ALTER TABLE `groups_attempts`
+    ADD UNIQUE INDEX `group_id_item_id_order`(`idGroup`, `idItem`, `iOrder`),
+    ADD CONSTRAINT `cs_attempts_order` CHECK (`iOrder` > 0);
+
 -- +migrate Down
+ALTER TABLE `groups_attempts`
+    DROP INDEX `group_id_item_id_order`,
+    DROP CHECK `cs_attempts_order`;
+
 ALTER TABLE `history_groups_attempts` MODIFY COLUMN `bDeleted` tinyint(1) NOT NULL;
 
 UPDATE `items` SET `sType` = 'Course' WHERE `ID` = 4029;
