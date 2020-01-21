@@ -36,8 +36,8 @@ Background:
     | 41       | 200     | content_with_descendants |
   And the database has the following table 'attempts':
     | id  | group_id | item_id | order |
-    | 100 | 11       | 200     | 0     |
-    | 101 | 11       | 200     | 0     |
+    | 100 | 11       | 200     | 1     |
+    | 101 | 11       | 200     | 2     |
     | 102 | 11       | 210     | 1     |
   And the database has the following table 'answers':
     | id | author_id | attempt_id | type       | state   | created_at          |

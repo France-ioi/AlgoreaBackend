@@ -35,9 +35,9 @@ Feature: Get groups attempts for current user and item_id
       | 23       | 210     | content_with_descendants |
     And the database has the following table 'attempts':
       | id  | group_id | item_id | score_computed | order | validated_at        | started_at          | creator_id |
-      | 150 | 11       | 200     | 100            | 1     | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 21         |
-      | 151 | 11       | 200     | 99             | 0     | null                | 2018-05-29 06:38:38 | null       |
-      | 250 | 23       | 210     | 99             | 0     | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 11         |
+      | 150 | 11       | 200     | 100            | 2     | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 21         |
+      | 151 | 11       | 200     | 99             | 1     | null                | 2018-05-29 06:38:38 | null       |
+      | 250 | 23       | 210     | 99             | 1     | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 11         |
 
   Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id
     Given I am the user with id "11"
@@ -48,7 +48,7 @@ Feature: Get groups attempts for current user and item_id
     [
       {
         "id": "151",
-        "order": 0,
+        "order": 1,
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
@@ -56,7 +56,7 @@ Feature: Get groups attempts for current user and item_id
       },
       {
         "id": "150",
-        "order": 1,
+        "order": 2,
         "score_computed": 100,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
@@ -78,7 +78,7 @@ Feature: Get groups attempts for current user and item_id
     [
       {
         "id": "151",
-        "order": 0,
+        "order": 1,
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
@@ -96,7 +96,7 @@ Feature: Get groups attempts for current user and item_id
     [
       {
         "id": "150",
-        "order": 1,
+        "order": 2,
         "score_computed": 100,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
@@ -108,7 +108,7 @@ Feature: Get groups attempts for current user and item_id
       },
       {
         "id": "151",
-        "order": 0,
+        "order": 1,
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
@@ -126,7 +126,7 @@ Feature: Get groups attempts for current user and item_id
     [
       {
         "id": "151",
-        "order": 0,
+        "order": 1,
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
@@ -144,7 +144,7 @@ Feature: Get groups attempts for current user and item_id
     [
       {
         "id": "250",
-        "order": 0,
+        "order": 1,
         "score_computed": 99,
         "started_at": "2019-05-29T06:38:38Z",
         "user_creator": {

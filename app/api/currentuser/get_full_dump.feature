@@ -71,9 +71,9 @@ Feature: Export the current user's data
       | 405 | fr                   |
     And the database has the following table 'attempts':
       | id  | group_id | item_id | order | latest_activity_at  |
-      | 111 | 11       | 404     | 0     | 2019-05-30 11:00:00 |
-      | 112 | 2        | 404     | 0     | 2019-05-29 11:00:00 |
-      | 113 | 1        | 405     | 0     | 2019-05-28 11:00:00 |
+      | 111 | 11       | 404     | 1     | 2019-05-30 11:00:00 |
+      | 112 | 2        | 404     | 1     | 2019-05-29 11:00:00 |
+      | 113 | 1        | 405     | 1     | 2019-05-28 11:00:00 |
     And the database has the following table 'answers':
       | id | author_id | attempt_id | created_at          |
       | 1  | 11        | 111        | 2019-07-09 21:02:28 |
@@ -104,7 +104,7 @@ Feature: Export the current user's data
       "attempts": [
         {
           "id": "111", "validated": 0,
-          "order": 0, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
+          "order": 1, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
           "group_id": "11", "item_id": "404", "creator_id": null,
           "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "result_propagation_state": "done",
@@ -115,7 +115,7 @@ Feature: Export the current user's data
         },
         {
           "id": "112", "validated": 0,
-          "order": 0, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
+          "order": 1, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
           "group_id": "2", "item_id": "404", "creator_id": null,
           "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "result_propagation_state": "done",

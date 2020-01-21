@@ -68,7 +68,7 @@ func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		{
 			name: "okay (full access)",
 			fixture: `
-				attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]`,
+				attempts: [{id: 100, group_id: 111, item_id: 50, order: 1}]`,
 			attemptID:      100,
 			userID:         111,
 			expectedFound:  true,
@@ -77,7 +77,7 @@ func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		{
 			name: "okay (content access)",
 			fixture: `
-				attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
+				attempts: [{id: 100, group_id: 101, item_id: 50, order: 1}]`,
 			attemptID:      100,
 			userID:         101,
 			expectedFound:  true,
@@ -89,13 +89,13 @@ func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			attemptID: 200,
 			fixture: `
 				attempts:
-					- {id: 200, group_id: 102, item_id: 60, order: 0}`,
+					- {id: 200, group_id: 102, item_id: 60, order: 1}`,
 			expectedFound:  true,
 			expectedItemID: 60,
 		},
 		{
 			name:          "user not found",
-			fixture:       `attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
+			fixture:       `attempts: [{id: 100, group_id: 121, item_id: 50, order: 1}]`,
 			userID:        404,
 			attemptID:     100,
 			expectedFound: false,
@@ -105,7 +105,7 @@ func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    121,
 			attemptID: 100,
 			fixture: `
-				attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
+				attempts: [{id: 100, group_id: 121, item_id: 50, order: 1}]`,
 			expectedFound: false,
 		},
 		{
@@ -120,7 +120,7 @@ func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    101,
 			attemptID: 100,
 			fixture: `
-				attempts: [{id: 100, group_id: 101, item_id: 51, order: 0}]`,
+				attempts: [{id: 100, group_id: 101, item_id: 51, order: 1}]`,
 			expectedFound: false,
 		},
 		{
@@ -128,7 +128,7 @@ func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    101,
 			attemptID: 100,
 			fixture: `
-				attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
+				attempts: [{id: 100, group_id: 103, item_id: 60, order: 1}]`,
 			expectedFound: false,
 		},
 	}

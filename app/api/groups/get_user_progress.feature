@@ -258,21 +258,21 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 20       | 419     | none                     |
     And the database has the following table 'attempts':
       | group_id | item_id | order | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
-      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
-      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | 2017-05-29 06:38:58 | 2018-05-29 06:38:38 | # min(validated_at) for 51, 211 comes from this line (from a team)
-      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-31 06:58:38 | 2018-05-28 06:38:38 | # hints_cached & submissions for 51, 211 come from this line (the best attempt is made by a team)
-      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50             | 2017-05-30 06:38:38 | 10           | 20          | null                | 2018-05-27 06:38:38 |
-      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-26 06:38:38 |
-      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-25 06:38:38 |
-      | 16       | 212     | 0     | 2018-12-01 00:00:00 | 10             | 2017-05-30 06:38:38 | 0            | 0           | null                | 2019-06-01 00:00:00 | # started_at for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
-      | 67       | 212     | 0     | 2019-01-01 00:00:00 | 20             | 2017-06-30 06:38:38 | 1            | 2           | null                | 2019-06-01 00:00:00 | # hints_cached & submissions for 67, 212 come from this line (the best attempt is made by a user)
-      | 67       | 212     | 1     | 2019-01-01 00:00:00 | 10             | 2017-05-30 06:38:38 | 6            | 7           | null                | 2019-07-01 00:00:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
-      | 67       | 213     | 0     | 2018-11-01 00:00:00 | 0              | null                | 0            | 0           | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
-      | 67       | 214     | 0     | 2017-05-29 06:38:38 | 15             | 2017-05-29 06:38:48 | 10           | 11          | 2017-05-29 06:38:48 | 2017-05-30 06:38:48 | # min(validated_at) for 67, 214 comes from this line (from a user)
-      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-24 06:38:38 |
-      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-23 06:38:38 |
-      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100            | null                | 0            | 0           | null                | 2018-05-22 06:38:38 |
-      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-21 06:38:38 |
+      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
+      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | 2017-05-29 06:38:58 | 2018-05-29 06:38:38 | # min(validated_at) for 51, 211 comes from this line (from a team)
+      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-31 06:58:38 | 2018-05-28 06:38:38 | # hints_cached & submissions for 51, 211 come from this line (the best attempt is made by a team)
+      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 50             | 2017-05-30 06:38:38 | 10           | 20          | null                | 2018-05-27 06:38:38 |
+      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-26 06:38:38 |
+      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-25 06:38:38 |
+      | 16       | 212     | 1     | 2018-12-01 00:00:00 | 10             | 2017-05-30 06:38:38 | 0            | 0           | null                | 2019-06-01 00:00:00 | # started_at for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
+      | 67       | 212     | 1     | 2019-01-01 00:00:00 | 20             | 2017-06-30 06:38:38 | 1            | 2           | null                | 2019-06-01 00:00:00 | # hints_cached & submissions for 67, 212 come from this line (the best attempt is made by a user)
+      | 67       | 212     | 2     | 2019-01-01 00:00:00 | 10             | 2017-05-30 06:38:38 | 6            | 7           | null                | 2019-07-01 00:00:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
+      | 67       | 213     | 1     | 2018-11-01 00:00:00 | 0              | null                | 0            | 0           | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
+      | 67       | 214     | 1     | 2017-05-29 06:38:38 | 15             | 2017-05-29 06:38:48 | 10           | 11          | 2017-05-29 06:38:48 | 2017-05-30 06:38:48 | # min(validated_at) for 67, 214 comes from this line (from a user)
+      | 14       | 211     | 5     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-24 06:38:38 |
+      | 15       | 211     | 2     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-23 06:38:38 |
+      | 15       | 212     | 2     | 2017-03-29 06:38:38 | 100            | null                | 0            | 0           | null                | 2018-05-22 06:38:38 |
+      | 14       | 211     | 6     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-21 06:38:38 |
 
   Scenario: Get progress of the second and the third users (checks sorting, from.*, and limit)
     Given I am the user with id "21"

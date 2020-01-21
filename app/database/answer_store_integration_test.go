@@ -72,7 +72,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (full access)",
 			fixture: `
-				attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]
+				attempts: [{id: 100, group_id: 111, item_id: 50, order: 1}]
 				answers: [{id: 200, author_id: 111, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
 			answerID:      200,
 			userID:        111,
@@ -81,7 +81,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (content access)",
 			fixture: `
-				attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]
+				attempts: [{id: 100, group_id: 101, item_id: 50, order: 1}]
 				answers: [{id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
 			answerID:      200,
 			userID:        101,
@@ -93,7 +93,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			answerID: 200,
 			fixture: `
 				attempts:
-					- {id: 100, group_id: 102, item_id: 60, order: 0}
+					- {id: 100, group_id: 102, item_id: 60, order: 1}
 				answers:
 					- {id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}`,
 			expectedFound: true,
@@ -101,7 +101,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 		{
 			name: "user not found",
 			fixture: `
-				attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]
+				attempts: [{id: 100, group_id: 121, item_id: 50, order: 1}]
 				answers: [{id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
 			userID:        404,
 			answerID:      100,
@@ -112,7 +112,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   121,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 200, group_id: 121, item_id: 50, order: 0}]
+				attempts: [{id: 200, group_id: 121, item_id: 50, order: 1}]
 				answers: [{id: 100, author_id: 121, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
@@ -121,7 +121,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   101,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 200, group_id: 101, item_id: 51, order: 0}]
+				attempts: [{id: 200, group_id: 101, item_id: 51, order: 1}]
 				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
@@ -130,7 +130,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   101,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
+				attempts: [{id: 100, group_id: 101, item_id: 50, order: 1}]`,
 			expectedFound: false,
 		},
 		{
@@ -138,7 +138,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   101,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 200, group_id: 103, item_id: 60, order: 0}]
+				attempts: [{id: 200, group_id: 103, item_id: 60, order: 1}]
 				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},

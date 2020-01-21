@@ -17,7 +17,7 @@ Feature: Update the 'current' answer
       | 101      | 50      | content            |
     And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
-      | 200 | 101      | 50      | 0     |
+      | 200 | 101      | 50      | 1     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 100 | 101       | 200        | 2017-05-29 06:38:38 |
