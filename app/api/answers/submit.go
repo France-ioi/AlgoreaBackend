@@ -88,11 +88,13 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		service.MustNotBeError(
 			attemptsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
 
-		return attemptsScope.UpdateColumn(map[string]interface{}{
-			"submissions":          gorm.Expr("submissions + 1"),
-			"latest_submission_at": database.Now(),
-			"latest_activity_at":   database.Now(),
-		}).Error()
+		service.MustNotBeError(attemptsScope.UpdateColumn(map[string]interface{}{
+			"submissions":              gorm.Expr("submissions + 1"),
+			"latest_submission_at":     database.Now(),
+			"latest_activity_at":       database.Now(),
+			"result_propagation_state": "changed",
+		}).Error())
+		return store.Attempts().ComputeAllAttempts()
 	})
 
 	if apiError != service.NoError {
