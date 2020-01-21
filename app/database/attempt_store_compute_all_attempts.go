@@ -15,7 +15,7 @@ const computeAllAttemptsLockTimeout = 10 * time.Second
 //  its item_id is an ancestor of the original row's item_id).
 // 2. We process all objects that are marked as 'to_be_recomputed' and that have no children marked as 'to_be_recomputed'.
 //  Then, if an object has children, we update
-//    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated_at.
+//    latest_activity_at, tasks_tried, tasks_with_help, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new permissions_granted for each unlocked item according to corresponding item_unlocking_rules.
 func (s *AttemptStore) ComputeAllAttempts() (err error) {
@@ -77,7 +77,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 			// For every object marked as 'processing', we compute all the characteristics based on the children:
 			//  - latest_activity_at as the max of children's
-			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's per-item maximums
+			//  - tasks_with_help, tasks_tried as the sum of children's per-item maximums
 			//  - children_validated as the number of children items with validated == 1
 			//  - validated, depending on the items_items.category and items.validation_type
 			//    (an item should have at least one validated child to become validated itself by the propagation)
@@ -90,7 +90,6 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 							MAX(aggregated_children_attempts.latest_activity_at) AS latest_activity_at,
 							SUM(aggregated_children_attempts.tasks_tried) AS tasks_tried,
 							SUM(aggregated_children_attempts.tasks_with_help) AS tasks_with_help,
-							SUM(aggregated_children_attempts.tasks_solved) AS tasks_solved,
 							SUM(aggregated_children_attempts.validated) AS children_validated,
 							SUM(IFNULL(NOT aggregated_children_attempts.validated, 1)) AS children_non_validated,
 							SUM(items_items.category = 'Validation' AND IFNULL(NOT aggregated_children_attempts.validated, 1))
@@ -111,7 +110,6 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 								MAX(latest_activity_at) AS latest_activity_at,
 								MAX(tasks_tried) AS tasks_tried,
 								MAX(tasks_with_help) AS tasks_with_help,
-								MAX(tasks_solved) AS tasks_solved,
 								MAX(score_computed) AS score_computed
 							FROM attempts AS children_attempts
 							WHERE children_attempts.group_id = target_attempts.group_id AND
@@ -131,8 +129,6 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 							target_attempts.latest_activity_at),
 						target_attempts.tasks_tried = IFNULL(children_stats.tasks_tried, 0),
 						target_attempts.tasks_with_help = IFNULL(children_stats.tasks_with_help, 0),
-						target_attempts.tasks_solved = IFNULL(children_stats.tasks_solved, 0),
-						target_attempts.children_validated = IFNULL(children_stats.children_validated, 0),
 						target_attempts.validated_at = CASE
 							WHEN children_stats.id IS NULL THEN NULL
 							WHEN items.validation_type = 'Categories' AND children_stats.children_non_validated_categories = 0

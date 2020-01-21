@@ -205,7 +205,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 31       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
     And the database has the following table 'attempts':
-      | group_id | item_id | entered_at          | order |
+      | group_id | item_id | started_at          | order |
       | 31       | 50      | 2019-05-29 11:00:00 | 1     |
     And I am the user with id "31"
     When I send a POST request to "/contests/50/groups/31"
@@ -234,7 +234,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
     And the database has the following table 'attempts':
-      | group_id | item_id | entered_at          | order |
+      | group_id | item_id | started_at          | order |
       | 11       | 60      | 2019-05-29 11:00:00 | 1     |
     And I am the user with id "31"
     When I send a POST request to "/contests/60/groups/11"

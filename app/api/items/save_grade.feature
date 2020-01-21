@@ -40,10 +40,10 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a high score and attempt_id
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
-      | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
-      | 102 | 101      | 10      | null                   | 1     |
+      | id  | group_id | item_id | latest_activity_at  | hints_requested        | order |
+      | 100 | 101      | 50      | 2019-05-30 11:00:00 | [0,  1, "hint" , null] | 1     |
+      | 101 | 101      | 60      | 2019-05-29 11:00:00 | [0,  1, "hint" , null] | 2     |
+      | 102 | 101      | 10      | 2019-05-30 11:00:00 | null                   | 1     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
@@ -102,18 +102,18 @@ Feature: Save grading result
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 100   | 1                                                |
     And the table "attempts" should be:
-      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at        |
-      | 100 | 100            | 1           | 1         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
-      | 101 | 0              | 0           | 0         | done                     | null               | null                | null                | null                |
-      | 102 | 50             | 1           | 1         | done                     | null               | null                | null                | 2017-05-29 06:38:38 |
+      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
+      | 100 | 100            | 1           | 1         | done                     | 2019-05-30 11:00:00 | 2017-05-29 06:38:38  | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
+      | 101 | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null                |
+      | 102 | 50             | 1           | 1         | done                     | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | order | score_edit_rule   | score_edit_value   |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     | <score_edit_rule> | <score_edit_value> |
-      | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     | null              | null               |
-      | 102 | 101      | 10      | null                   | 1     | null              | null               |
+      | id  | group_id | item_id | hints_requested        | latest_activity_at  | order | score_edit_rule   | score_edit_value   |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 | 1     | <score_edit_rule> | <score_edit_value> |
+      | 101 | 101      | 60      | [0,  1, "hint" , null] | 2019-05-29 11:00:00 | 2     | null              | null               |
+      | 102 | 101      | 10      | null                   | 2019-05-30 11:00:00 | 1     | null              | null               |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
@@ -171,10 +171,10 @@ Feature: Save grading result
       | answer_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | <score> | 1                                                |
     And the table "attempts" should be:
-      | id  | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
-      | 100 | <score_computed> | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
-      | 101 | 0                | 0           | 0         | done                     | null               | null                | null                | null         |
-      | 102 | <parent_score>   | 1           | 0         | done                     | null               | null                | null                | null         |
+      | id  | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
+      | 100 | <score_computed> | 1           | 0         | done                     | 2019-05-30 11:00:00 | 2017-05-29 06:38:38  | 2017-05-29 06:38:38 | null         |
+      | 101 | 0                | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null         |
+      | 102 | <parent_score>   | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | null                | null         |
   Examples:
     | score | score_edit_rule | score_edit_value | score_computed | parent_score |
     | 99    | null            | null             | 99             | 49.5         |
@@ -187,9 +187,9 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | score_obtained_at   | order |
-      | 100 | 101      | 50      | 2017-04-29 06:38:38 | 1     |
-      | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2     |
+      | id  | group_id | item_id | score_obtained_at   | latest_activity_at  | order |
+      | 100 | 101      | 50      | 2017-04-29 06:38:38 | 2019-05-30 11:00:00 | 1     |
+      | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 | 2     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
@@ -247,9 +247,9 @@ Feature: Save grading result
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 99    | 1                                                |
     And the table "attempts" should be:
-      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
-      | 100 | 99             | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
-      | 101 | 0              | 0           | 0         | done                     | null               | null                | 2017-05-29 06:38:38 | null         |
+      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
+      | 100 | 99             | 1           | 0         | done                     | 2019-05-30 11:00:00 | 2017-05-29 06:38:38  | 2017-05-29 06:38:38 | null         |
+      | 101 | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
 
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
@@ -329,12 +329,12 @@ Feature: Save grading result
       | 20    | diff            | -1               |
       | 15    | diff            | -80              |
 
-  Scenario: Should keep previous validated_at & latest_answer_at if they are earlier
+  Scenario: Should keep previous validated_at & latest_submission_at if they are earlier
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | validated_at        | latest_answer_at    | order |
-      | 100 | 101      | 50      | 2016-05-29 06:38:37 | 2018-05-29 06:38:37 | 1     |
-      | 101 | 101      | 60      | 2018-05-29 06:38:37 | 2018-05-29 06:38:37 | 2     |
+      | id  | group_id | item_id | validated_at        | latest_submission_at | order |
+      | 100 | 101      | 50      | 2016-05-29 06:38:37 | 2018-05-29 06:38:37  | 1     |
+      | 101 | 101      | 60      | 2018-05-29 06:38:37 | 2018-05-29 06:38:37  | 2     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |

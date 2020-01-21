@@ -7,7 +7,7 @@ type AttemptStore struct {
 	*DataStore
 }
 
-// CreateNew creates inserts a new row into attempts with group_id=groupID, item_id=itemID.
+// CreateNew inserts a new row into attempts with group_id=groupID, item_id=itemID, creator_id=creatorID.
 // It also sets order, started_at, latest_activity_at
 func (s *AttemptStore) CreateNew(groupID, itemID, creatorID int64) (newID int64, err error) {
 	s.mustBeInTransaction()
@@ -21,7 +21,8 @@ func (s *AttemptStore) CreateNew(groupID, itemID, creatorID int64) (newID int64,
 		store := NewDataStore(db)
 		newID = store.NewID()
 		return store.db.Exec(`
-			INSERT INTO attempts (id, group_id, item_id, creator_id, `+"`order`)"+`VALUES (?, ?, ?, ?, @maxIOrder+1)`,
+			INSERT INTO attempts (id, group_id, item_id, creator_id, `+"`order`"+`, started_at, latest_activity_at)
+			VALUES (?, ?, ?, ?, @maxIOrder+1, NOW(), NOW())`,
 			newID, groupID, itemID, creatorID).Error
 	}))
 	return newID, nil

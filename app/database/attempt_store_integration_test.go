@@ -4,6 +4,7 @@ package database_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -23,6 +24,9 @@ func TestAttemptStore_CreateNew(t *testing.T) {
 			- {id: 3, group_id: 20, item_id: 20, order: 4}`)
 	defer func() { _ = db.Close() }()
 
+	testhelpers.MockDBTime("2019-05-30 11:00:00")
+	defer testhelpers.RestoreDBTime()
+
 	var newID int64
 	var err error
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
@@ -31,19 +35,24 @@ func TestAttemptStore_CreateNew(t *testing.T) {
 	}))
 	assert.True(t, newID > 0)
 	type resultType struct {
-		GroupID   int64
-		ItemID    int64
-		CreatorID int64
-		Order     int32
+		GroupID          int64
+		ItemID           int64
+		CreatorID        int64
+		StartedAt        *database.Time
+		LatestActivityAt database.Time
+		Order            int32
 	}
 	var result resultType
+	expectedTime := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
 	assert.NoError(t, database.NewDataStore(db).Attempts().ByID(newID).
-		Select("group_id, item_id, creator_id, `order`").Take(&result).Error())
+		Select("group_id, item_id, creator_id, started_at, latest_activity_at, `order`").Take(&result).Error())
 	assert.Equal(t, resultType{
-		GroupID:   10,
-		ItemID:    20,
-		CreatorID: 100,
-		Order:     2,
+		GroupID:          10,
+		ItemID:           20,
+		CreatorID:        100,
+		StartedAt:        &expectedTime,
+		LatestActivityAt: expectedTime,
+		Order:            2,
 	}, result)
 }
 

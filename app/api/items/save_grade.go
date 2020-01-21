@@ -89,7 +89,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	// Build query to update attempts
 	columnsToUpdate := []string{
 		"tasks_tried",
-		"latest_answer_at",
+		"latest_submission_at",
 		"score_obtained_at",
 		"score_computed",
 		"result_propagation_state",
@@ -104,7 +104,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	values := []interface{}{
 		requestData.ScoreToken.Converted.UserAnswerID, // for join
 		1, // tasks_tried
-		gorm.Expr("GREATEST(answers.created_at, IFNULL(latest_answer_at, answers.created_at))"), // latest_answer_at
+		gorm.Expr("GREATEST(answers.created_at, IFNULL(latest_submission_at, answers.created_at))"), // latest_submission_at
 		// for score_computed we compare patched scores
 		gorm.Expr(`
 			CASE

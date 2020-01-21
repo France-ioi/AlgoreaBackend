@@ -22,7 +22,7 @@ import (
 //
 //
 //                `groups_groups.expires_at` of affected `items.contest_participants_group_id` members is set to
-//                `attempts.entered_at` + `items.duration` + total additional time.
+//                `attempts.started_at` + `items.duration` + total additional time.
 //
 //
 //                Restrictions:
@@ -160,7 +160,7 @@ func setAdditionalTimeForGroupInContest(
 			Joins(`
 				JOIN attempts AS contest_participations
 					ON contest_participations.group_id = groups_groups_active.child_group_id AND
-						contest_participations.entered_at IS NOT NULL AND
+						contest_participations.started_at IS NOT NULL AND
 						contest_participations.item_id = ?`, itemID).
 			// ... we get all the ancestors to calculate the total additional time
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id").
@@ -179,12 +179,12 @@ func setAdditionalTimeForGroupInContest(
 		UPDATE groups_groups
 		JOIN attempts AS contest_participations
 			ON contest_participations.group_id = groups_groups.child_group_id AND
-				contest_participations.item_id = ? AND contest_participations.entered_at IS NOT NULL AND
-				contest_participations.entered_at IS NOT NULL
+				contest_participations.item_id = ? AND contest_participations.started_at IS NOT NULL AND
+				contest_participations.started_at IS NOT NULL
 		JOIN total_additional_times
 			ON total_additional_times.child_group_id = groups_groups.child_group_id
 		SET groups_groups.expires_at = DATE_ADD(
-			contest_participations.entered_at,
+			contest_participations.started_at,
 			INTERVAL (? + total_additional_times.total_additional_time) SECOND
 		)
 		WHERE NOW() < groups_groups.expires_at AND groups_groups.parent_group_id = ?`,

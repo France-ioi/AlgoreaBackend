@@ -290,7 +290,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 func (s *ItemStore) getActiveContestItemIDForUser(user *User) *int64 {
 	// Get id of the item if the user has already started it, but hasn't finished yet
 	// Note: the current API doesn't allow users to have more than one active contest
-	// Note: attempts rows with 'entered_at' should exist to make this function return the info
+	// Note: attempts rows with 'started_at' should exist to make this function return the info
 	var itemID int64
 
 	err := s.
@@ -304,9 +304,9 @@ func (s *ItemStore) getActiveContestItemIDForUser(user *User) *int64 {
 					groups_groups_active.child_group_id = groups_ancestors_active.child_group_id`).
 		Joins(`JOIN attempts AS contest_participations ON contest_participations.item_id = items.id AND
 			contest_participations.group_id = groups_ancestors_active.ancestor_group_id AND
-			contest_participations.entered_at IS NOT NULL`).
+			contest_participations.started_at IS NOT NULL`).
 		Group("items.id").
-		Order("MIN(contest_participations.entered_at) DESC").
+		Order("MIN(contest_participations.started_at) DESC").
 		PluckFirst("items.id", &itemID).Error()
 
 	if gorm.IsRecordNotFoundError(err) {

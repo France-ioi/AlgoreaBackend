@@ -55,7 +55,7 @@ type contestGetQualificationStateResponse struct {
 //
 //                The qualification state is one of:
 //                  * 'already_started' if the participant has a `attempts` row for the item
-//                    with non-null `entered_at` and is an active member of the item's "contest participants" group;
+//                    with non-null `started_at` and is an active member of the item's "contest participants" group;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -73,7 +73,7 @@ type contestGetQualificationStateResponse struct {
 //                      * "Half": same but half of the members (ceil-rounded) of the team;
 //
 //                  * 'not_ready' if the participant has an `attempts` row for the item
-//                    with non-null `entered_at` and is NOT an active member of the item's "contest participants" group
+//                    with non-null `started_at` and is NOT an active member of the item's "contest participants" group
 //                    while the item's `has_attempts` is false;
 //
 //                  * 'ready' otherwise.
@@ -159,7 +159,7 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 					groups_groups_active.child_group_id = attempts.group_id`).
 		Where("item_id = ?", itemID).
 		Where("attempts.group_id = ?", groupID).
-		Where("entered_at IS NOT NULL")
+		Where("started_at IS NOT NULL")
 	if lock {
 		contestParticipationQuery = contestParticipationQuery.WithWriteLock()
 	}

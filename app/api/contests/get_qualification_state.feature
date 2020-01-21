@@ -340,7 +340,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | entered_at          | order |
+      | group_id | item_id | started_at          | order |
       | 31       | 50      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
@@ -376,7 +376,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | entered_at          | order |
+      | group_id | item_id | started_at          | order |
       | 11       | 60      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
@@ -430,7 +430,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | entered_at          | order |
+      | group_id | item_id | started_at          | order |
       | 31       | 50      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
@@ -460,7 +460,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | entered_at          | order |
+      | group_id | item_id | started_at          | order |
       | 11       | 60      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
