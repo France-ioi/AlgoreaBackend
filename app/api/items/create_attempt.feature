@@ -43,8 +43,8 @@ Feature: Create an attempt for an item
       }
       """
     And the table "attempts" should be:
-      | id                  | group_id | item_id | score_computed | tasks_tried | result_propagation_state | latest_activity_at | latest_answer_at | score_obtained_at | validated_at | started_at |
-      | 5577006791947779410 | 111      | 50      | 0              | 0           | done                     | null               | null             | null              | null         | null       |
+      | id                  | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 5577006791947779410 | 111      | 50      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
 
   Scenario: User is able to create an attempt as a team
     Given I am the user with id "101"
@@ -57,5 +57,5 @@ Feature: Create an attempt for an item
       }
       """
     And the table "attempts" should be:
-      | id                  | group_id | item_id | score_computed | tasks_tried | result_propagation_state | latest_activity_at | latest_answer_at | score_obtained_at | validated_at | started_at |
-      | 5577006791947779410 | 102      | 60      | 0              | 0           | done                     | null               | null             | null              | null         | null       |
+      | id                  | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 5577006791947779410 | 102      | 60      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |

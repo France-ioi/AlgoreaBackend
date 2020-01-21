@@ -11,13 +11,21 @@ Feature: Submit a new answer
       | 15 | 22              | 13             |
     And the database has the following table 'items':
       | id | default_language_tag |
+      | 10 | fr                   |
       | 50 | fr                   |
+    And the database has the following table 'items_items':
+      | parent_item_id | child_item_id | child_order |
+      | 10             | 50            | 1           |
+    And the database has the following table 'items_ancestors':
+      | ancestor_item_id | child_item_id |
+      | 10               | 50            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | order |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 0     |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | result_propagation_state | order |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | done                     | 0     |
+      | 101 | 101      | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | done                     | 0     |
 
   Scenario: User is able to submit a new answer
     Given I am the user with id "101"
@@ -66,8 +74,9 @@ Feature: Submit a new answer
       | author_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 100        | Submission | print 1 | 1                                                 |
     And the table "attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |
+      | 101 | 101      | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with id "101"
@@ -120,5 +129,6 @@ Feature: Submit a new answer
       | author_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 100        | Submission | print(2) | 1                                                 |
     And the table "attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |
+      | 101 | 101      | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |

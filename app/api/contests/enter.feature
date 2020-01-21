@@ -61,8 +61,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | entered_at          | order |
-      | 31       | 50      | 3019-10-10 10:10:10 | 1     |
+      | group_id | item_id | started_at          | creator_id | order |
+      | 31       | 50      | 3019-10-10 10:10:10 | 31         | 1     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |
@@ -111,8 +111,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | entered_at          | order |
-      | 11       | 60      | 3019-10-10 10:10:10 | 1     |
+      | group_id | item_id | started_at          | creator_id | order |
+      | 11       | 60      | 3019-10-10 10:10:10 | 31         | 1     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |
@@ -151,7 +151,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
     And the database has the following table 'attempts':
-      | group_id | item_id | entered_at          | order |
+      | group_id | item_id | started_at          | order |
       | 11       | 60      | 2019-05-29 11:00:00 | 1     |
     And I am the user with id "31"
     When I send a POST request to "/contests/60/groups/11"
@@ -168,9 +168,9 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | entered_at          | order |
-      | 11       | 60      | 2019-05-29 11:00:00 | 1     |
-      | 11       | 60      | 3019-10-10 10:10:10 | 2     |
+      | group_id | item_id | started_at          | creator_id | order |
+      | 11       | 60      | 2019-05-29 11:00:00 | null       | 1     |
+      | 11       | 60      | 3019-10-10 10:10:10 | 31         | 2     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |
@@ -221,8 +221,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | entered_at          | order |
-      | 31       | 50      | 3019-10-10 10:10:10 | 1     |
+      | group_id | item_id | started_at          | creator_id | order |
+      | 31       | 50      | 3019-10-10 10:10:10 | 31         | 1     |
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And logs should contain:
