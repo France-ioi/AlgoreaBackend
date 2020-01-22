@@ -1,5 +1,5 @@
 groups: [{id: 17}, {id: 26}, {id: 300}]
-items: [{id: 114, duration: 00:00:01, has_attempts: 1, contest_participants_group_id: 300, default_language_tag: fr}]
+items: [{id: 114, duration: 00:00:01, allows_multiple_attempts: 1, contest_participants_group_id: 300, default_language_tag: fr}]
 users: [{group_id: 17, login: 7}]
 groups_groups: [{parent_group_id: 26, child_group_id: 17}]
 groups_ancestors:

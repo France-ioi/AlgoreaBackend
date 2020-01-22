@@ -78,7 +78,6 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	user := srv.GetUser(r)
 
 	var itemInfo struct {
-		HasAttempts       bool
 		AccessSolutions   bool
 		HintsAllowed      bool
 		TextID            *string
@@ -123,7 +122,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 			Where("items.type IN('Task','Course')").
 			Select(`
 					can_view_generated_value = ? AS access_solutions,
-					has_attempts, hints_allowed, text_id, url, supported_lang_prog`,
+					hints_allowed, text_id, url, supported_lang_prog`,
 				store.PermissionsGranted().ViewIndexByName("solution")).
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) {

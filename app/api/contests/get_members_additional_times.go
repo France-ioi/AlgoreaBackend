@@ -15,7 +15,7 @@ import (
 // description: >
 //                For all
 //
-//                  * descendant teams linked to the item via `team_item_id` if `items.has_attempts`
+//                  * descendant teams linked to the item via `team_item_id` if `items.allows_multiple_attempts`
 //                  * end-users groups otherwise
 //
 //                having at least 'info' access to the item, the service returns their

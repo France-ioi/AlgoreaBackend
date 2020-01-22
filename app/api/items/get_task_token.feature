@@ -19,10 +19,10 @@ Feature: Get a task token with a refreshed attempt for an item
       | 102               | 102            | 1       |
       | 111               | 111            | 1       |
     And the database has the following table 'items':
-      | id | url                                                                     | type    | has_attempts | hints_allowed | text_id | supported_lang_prog | default_language_tag |
-      | 10 | null                                                                    | Chapter | 0            | 0             | null    | null                | fr                   |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0            | 1             | task1   | null                | fr                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1            | 0             | null    | c,python            | fr                   |
+      | id | url                                                                     | type    | allows_multiple_attempts | hints_allowed | text_id | supported_lang_prog | default_language_tag |
+      | 10 | null                                                                    | Chapter | 0                        | 0             | null    | null                | fr                   |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0                        | 1             | task1   | null                | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | 0             | null    | c,python            | fr                   |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 10               | 60            |

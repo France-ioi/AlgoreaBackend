@@ -74,13 +74,13 @@ type contestGetQualificationStateResponse struct {
 //
 //                  * 'not_ready' if the participant has an `attempts` row for the item
 //                    with non-null `started_at` and is NOT an active member of the item's "contest participants" group
-//                    while the item's `has_attempts` is false;
+//                    while the item's `allows_multiple_attempts` is false;
 //
 //                  * 'ready' otherwise.
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * `group_id` should be either the current user's self group (if the item's `has_attempts` is false) or
+//                  * `group_id` should be either the current user's self group (if the item's `allows_multiple_attempts` is false) or
 //                     a team with `team_item_id` = `item_id` (otherwise);
 //                  * the authenticated user should have at least 'info' access to the item;
 //                  * the authenticated user should be a member of the `group_id` (if it is a team).
@@ -134,12 +134,12 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	}
 
 	var contestInfo struct {
-		IsTeamContest            bool `gorm:"column:has_attempts"`
+		IsTeamContest            bool `gorm:"column:allows_multiple_attempts"`
 		ContestMaxTeamSize       int32
 		ContestEnteringCondition string
 	}
 	err = store.Items().VisibleByID(user, itemID).Where("items.duration IS NOT NULL").
-		Select("items.has_attempts, items.contest_max_team_size, items.contest_entering_condition").
+		Select("items.allows_multiple_attempts, items.contest_max_team_size, items.contest_entering_condition").
 		Take(&contestInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, service.InsufficientAccessRightsError

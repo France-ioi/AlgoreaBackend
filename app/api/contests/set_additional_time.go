@@ -29,7 +29,7 @@ import (
 //                  * `item_id` should be a timed contest;
 //                  * the authenticated user should have at least `content_with_descendants` access on the input item;
 //                  * the authenticated user should own the `group_id`;
-//                  * if the contest is team-only (`items.has_attempts` = 1), then the group should not be a user group.
+//                  * if the contest is team-only (`items.allows_multiple_attempts` = 1), then the group should not be a user group.
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
@@ -84,7 +84,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		err = store.Items().ContestManagedByUser(itemID, user).WithWriteLock().
 			Select(`
 			TIME_TO_SEC(items.duration) AS duration_in_seconds,
-			items.has_attempts AS is_team_only_contest,
+			items.allows_multiple_attempts AS is_team_only_contest,
 			items.contest_participants_group_id`).
 			Take(&contestInfo).Error()
 		if gorm.IsRecordNotFoundError(err) || (contestInfo.IsTeamOnlyContest && groupType == "UserSelf") {

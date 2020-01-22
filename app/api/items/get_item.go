@@ -67,7 +67,7 @@ type itemCommonFields struct {
 	// required: true
 	ContestMaxTeamSize int32 `json:"contest_max_team_size"`
 	// required: true
-	HasAttempts bool `json:"has_attempts"`
+	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	// Nullable
@@ -204,7 +204,7 @@ type rawItem struct {
 	ContestEnteringCondition string
 	TeamsEditable            bool
 	ContestMaxTeamSize       int32
-	HasAttempts              bool
+	AllowsMultipleAttempts   bool
 	Duration                 *string
 	NoScore                  bool
 	GroupCodeEnter           *bool
@@ -247,7 +247,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.contest_entering_condition,
 		items.teams_editable,
 		items.contest_max_team_size,
-		items.has_attempts,
+		items.allows_multiple_attempts,
 		items.duration,
 		items.no_score,
 		items.default_language_tag,
@@ -285,7 +285,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.contest_entering_condition,
 			items.teams_editable,
 			items.contest_max_team_size,
-			items.has_attempts,
+			items.allows_multiple_attempts,
 			items.duration,
 			items.no_score,
 			items.group_code_enter,
@@ -375,7 +375,7 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		ContestEnteringCondition: rawData.ContestEnteringCondition,
 		TeamsEditable:            rawData.TeamsEditable,
 		ContestMaxTeamSize:       rawData.ContestMaxTeamSize,
-		HasAttempts:              rawData.HasAttempts,
+		AllowsMultipleAttempts:   rawData.AllowsMultipleAttempts,
 		Duration:                 rawData.Duration,
 		NoScore:                  rawData.NoScore,
 		GroupCodeEnter:           rawData.GroupCodeEnter,

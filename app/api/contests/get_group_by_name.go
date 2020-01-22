@@ -22,7 +22,7 @@ import (
 //                If there are several groups or users matching, returns the first one (by `id`).
 //
 //
-//                If the contest is a team-only contest (`teams.has_attempts` is true) and the name matches an end-user,
+//                If the contest is a team-only contest (`items.allows_multiple_attempts` is true) and the name matches an end-user,
 //                returns his team instead of user’s 'selfgroup'.
 //
 //

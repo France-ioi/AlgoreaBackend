@@ -82,10 +82,10 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: group_id is not a self group of the current user while the item's has_attempts = false
+  Scenario: group_id is not a self group of the current user while the item's allows_multiple_attempts = false
     Given the database has the following table 'items':
-      | id | duration | has_attempts | default_language_tag |
-      | 50 | 00:00:00 | false        | fr                   |
+      | id | duration | allows_multiple_attempts | default_language_tag |
+      | 50 | 00:00:00 | false                    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -97,10 +97,10 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: group_id is not a team related to the item while the item's has_attempts = true
+  Scenario: group_id is not a team related to the item while the item's allows_multiple_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts | default_language_tag |
-      | 60 | 00:00:00 | true         | fr                   |
+      | id | duration | allows_multiple_attempts | default_language_tag |
+      | 60 | 00:00:00 | true                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -110,10 +110,10 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: group_id is a user self group while the item's has_attempts = true
+  Scenario: group_id is a user self group while the item's allows_multiple_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts | default_language_tag |
-      | 60 | 00:00:00 | true         | fr                   |
+      | id | duration | allows_multiple_attempts | default_language_tag |
+      | 60 | 00:00:00 | true                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -123,10 +123,10 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The current user is not a member of group_id while the item's has_attempts = true
+  Scenario: The current user is not a member of group_id while the item's allows_multiple_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts | default_language_tag |
-      | 60 | 00:00:00 | true         | fr                   |
+      | id | duration | allows_multiple_attempts | default_language_tag |
+      | 60 | 00:00:00 | true                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
