@@ -22,10 +22,10 @@ Feature: Create an attempt for an item - robustness
       | 104               | 101            | 0       |
       | 104               | 104            | 1       |
     And the database has the following table 'items':
-      | id | url                                                                     | type    | has_attempts | default_language_tag |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0            | fr                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1            | fr                   |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | 1            | fr                   |
+      | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0                        | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | fr                   |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | 1                        | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |
@@ -101,7 +101,7 @@ Feature: Create an attempt for an item - robustness
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "attempts" should stay unchanged
 
-  Scenario: There is an attempt for the (group, item) pair already, but items.has_attempts = 0
+  Scenario: There is an attempt for the (group, item) pair already, but items.allows_multiple_attempts = 0
     Given I am the user with id "101"
     And the database table 'permissions_generated' has also the following row:
       | group_id | item_id | can_view_generated |

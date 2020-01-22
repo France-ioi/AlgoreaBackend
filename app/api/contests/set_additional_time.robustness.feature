@@ -21,13 +21,13 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21                | 21             | 1       |
       | 31                | 31             | 1       |
     And the database has the following table 'items':
-      | id | duration | has_attempts | default_language_tag |
-      | 50 | 00:00:00 | 0            | fr                   |
-      | 60 | null     | 0            | fr                   |
-      | 10 | 00:00:02 | 0            | fr                   |
-      | 70 | 00:00:03 | 0            | fr                   |
-      | 80 | 00:00:04 | 1            | fr                   |
-      | 90 | 00:00:04 | 1            | fr                   |
+      | id | duration | allows_multiple_attempts | default_language_tag |
+      | 50 | 00:00:00 | 0                        | fr                   |
+      | 60 | null     | 0                        | fr                   |
+      | 10 | 00:00:02 | 0                        | fr                   |
+      | 70 | 00:00:03 | 0                        | fr                   |
+      | 80 | 00:00:04 | 1                        | fr                   |
+      | 90 | 00:00:04 | 1                        | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 50      | content                  |

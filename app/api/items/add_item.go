@@ -39,7 +39,7 @@ type item struct {
 	ContestEnteringCondition string `json:"contest_entering_condition" validate:"oneof=All Half One None"`
 	ContestMaxTeamSize       int32  `json:"contest_max_team_size"`
 	TitleBarVisible          bool   `json:"title_bar_visible"`
-	HasAttempts              bool   `json:"has_attempts"`
+	AllowsMultipleAttempts   bool   `json:"allows_multiple_attempts"`
 	// Nullable
 	//
 	// MySQL time (max value is 838:59:59)

@@ -31,7 +31,7 @@ import (
 //   otherwise the 'forbidden' error is returned.
 //
 //
-//   If there is already an attempt for the (item, group) pair, `items.has_attempts` should be true, otherwise
+//   If there is already an attempt for the (item, group) pair, `items.allows_multiple_attempts` should be true, otherwise
 //   the "unprocessable entity" error is returned.
 // parameters:
 // - name: item_id
@@ -79,10 +79,10 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		}
 	}
 
-	var hasAttempts bool
+	var allowsMultipleAttempts bool
 	err = srv.Store.Items().ByID(itemID).WhereGroupHasViewPermissionOnItems(groupID, "content").
 		Where("items.type IN('Task','Course')").
-		PluckFirst("items.has_attempts", &hasAttempts).Error()
+		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -92,7 +92,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		attemptStore := store.Attempts()
-		if !hasAttempts {
+		if !allowsMultipleAttempts {
 			var found bool
 			found, err = attemptStore.
 				Where("group_id = ?", groupID).Where("item_id = ?", itemID).WithWriteLock().HasRows()
