@@ -19,6 +19,8 @@ type rawNavigationItem struct {
 	UserBestScore float32 `sql:"column:best_score"`
 	UserValidated bool    `sql:"column:validated"`
 
+	UserHasAttempts bool `sql:"column:has_attempts"`
+
 	// items_items
 	ParentItemID int64
 	Order        int32 `sql:"column:child_order"`
@@ -55,6 +57,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			COALESCE(user_strings.title, default_strings.title) AS title,
 			IFNULL(best_scores.best_score, 0) AS best_score,
 			IFNULL(best_scores.validated, 0) AS validated,
+			IFNULL(best_scores.has_attempts, 0) AS has_attempts,
 			items.child_order AS child_order,
 			items.content_view_propagation,
 			items.parent_item_id AS parent_item_id,
@@ -65,7 +68,8 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 		Joins(`
 			LEFT JOIN LATERAL (
 				SELECT MAX(attempts.score_computed) AS best_score,
-				       MAX(attempts.validated) AS validated
+				       MAX(attempts.validated) AS validated,
+				       COUNT(*) > 0 AS has_attempts
 				FROM attempts
 				WHERE attempts.item_id = items.id AND attempts.group_id = ?
 				GROUP by attempts.group_id, attempts.item_id

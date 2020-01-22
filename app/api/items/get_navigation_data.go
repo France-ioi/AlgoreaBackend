@@ -33,6 +33,9 @@ type navigationItemCommonFields struct {
 	BestScore float32 `json:"best_score"`
 	Validated bool    `json:"validated"`
 
+	// whether the current user has at least one attempt for this item
+	HasAttempts bool `json:"has_attempts"`
+
 	AccessRights navigationItemAccessRights `json:"access_rights"`
 
 	Children []navigationItemChild `json:"children"`
@@ -114,11 +117,12 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 
 func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
 	result := &navigationItemCommonFields{
-		ID:        rawData.ID,
-		Type:      rawData.Type,
-		String:    navigationItemString{Title: rawData.Title},
-		BestScore: rawData.UserBestScore,
-		Validated: rawData.UserValidated,
+		ID:          rawData.ID,
+		Type:        rawData.Type,
+		String:      navigationItemString{Title: rawData.Title},
+		BestScore:   rawData.UserBestScore,
+		Validated:   rawData.UserValidated,
+		HasAttempts: rawData.UserHasAttempts,
 		AccessRights: navigationItemAccessRights{
 			CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
 		},
