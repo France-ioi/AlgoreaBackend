@@ -23,18 +23,20 @@ INSERT INTO `groups_attempts` (
 SELECT
     (FLOOR(RAND(1) * 1000000000) + FLOOR(RAND(2) * 1000000000) * 1000000000 + `groups_to_insert`.`id` + `items`.`id`) % 9223372036854775806 + 1,
     `groups_to_insert`.`id`, `items`.`id`,
-    `users`.`id`,
-    (SELECT IFNULL(MAX(`order`)+1, 1) FROM `groups_attempts` WHERE `group_id` = `users`.`self_group_id` AND `groups_attempts`.`item_id` = `users_items`.`item_id`),
-    `users_items`.`score`,`users_items`.`score_computed`,`users_items`.`score_reeval`,
-    `users_items`.`score_diff_manual`,`users_items`.`score_diff_comment`,
-    `users_items`.`submissions_attempts`,`users_items`.`tasks_tried`,`users_items`.`tasks_solved`,
-    `users_items`.`children_validated`,`users_items`.`validated`,`users_items`.`finished`,
-    `users_items`.`key_obtained`,`users_items`.`tasks_with_help`,`users_items`.`hints_requested`,
-    `users_items`.`hints_cached`,`users_items`.`corrections_read`,`users_items`.`precision`,
-    `users_items`.`autonomy`,`users_items`.`started_at`,`users_items`.`validated_at`,
-    `users_items`.`finished_at`,`users_items`.`latest_activity_at`,`users_items`.`thread_started_at`,
-    `users_items`.`best_answer_at`,`users_items`.`latest_answer_at`,`users_items`.`latest_hint_at`,
-    `users_items`.`ranked`,`users_items`.`all_lang_prog`,
+    IF(`items`.`type` = 'Task', MAX(`users`.`id`), NULL),
+    1,
+    # For tasks MAX(...) are computed among one single row for each (group_id, item_id) pair.
+    # For items of other kinds the values will be recomputed during attempts propagation.
+    MAX(`users_items`.`score`),MAX(`users_items`.`score_computed`),MAX(`users_items`.`score_reeval`),
+    MAX(`users_items`.`score_diff_manual`),MAX(`users_items`.`score_diff_comment`),
+    MAX(`users_items`.`submissions_attempts`),MAX(`users_items`.`tasks_tried`),MAX(`users_items`.`tasks_solved`),
+    MAX(`users_items`.`children_validated`),MAX(`users_items`.`validated`),MAX(`users_items`.`finished`),
+    MAX(`users_items`.`key_obtained`),MAX(`users_items`.`tasks_with_help`),MAX(`users_items`.`hints_requested`),
+    MAX(`users_items`.`hints_cached`),MAX(`users_items`.`corrections_read`),MAX(`users_items`.`precision`),
+    MAX(`users_items`.`autonomy`),MAX(`users_items`.`started_at`),MAX(`users_items`.`validated_at`),
+    MAX(`users_items`.`finished_at`),MAX(`users_items`.`latest_activity_at`),MAX(`users_items`.`thread_started_at`),
+    MAX(`users_items`.`best_answer_at`),MAX(`users_items`.`latest_answer_at`),MAX(`users_items`.`latest_hint_at`),
+    MAX(`users_items`.`ranked`),MAX(`users_items`.`all_lang_prog`),
     'todo'
 FROM `users_items`
     JOIN `users` ON `users`.`id` = `users_items`.`user_id`
@@ -71,6 +73,7 @@ FROM `users_items`
     LEFT JOIN `groups_attempts` AS `existing_attempts`
         ON `existing_attempts`.`group_id` = `groups_to_insert`.`id` AND `existing_attempts`.`item_id` = `items`.`id`
     WHERE `existing_attempts`.`id` IS NULL
+GROUP BY `groups_to_insert`.`id`, `items`.`id`
 ORDER BY `groups_to_insert`.`id`, `items`.`id`;
 
 ALTER TABLE `groups_attempts` ADD KEY `item_id_creator_user_id_latest_activity_at_desc` (`item_id`, `creator_user_id`, `latest_activity_at` DESC);

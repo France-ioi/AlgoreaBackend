@@ -32,7 +32,7 @@ Feature: Save grading result - robustness
       | 101      | 80      | content            |
     And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |

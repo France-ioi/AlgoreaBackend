@@ -31,8 +31,8 @@ Background:
   And the database has the following table 'attempts':
     | id  | group_id | item_id | order |
     | 100 | 13       | 190     | 1     |
-    | 110 | 13       | 210     | 2     |
-    | 120 | 13       | 200     | 0     |
+    | 110 | 13       | 210     | 1     |
+    | 120 | 13       | 200     | 1     |
 
   Scenario: Should fail when the user has only info access to the item
     Given I am the user with id "11"

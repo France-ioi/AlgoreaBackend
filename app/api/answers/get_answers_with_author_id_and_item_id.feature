@@ -43,10 +43,10 @@ Background:
     | 23       | 210     | info                     |
   And the database has the following table 'attempts':
     | id | group_id | item_id | order |
-    | 1  | 11       | 200     | 0     |
-    | 2  | 11       | 200     | 0     |
+    | 1  | 11       | 200     | 1     |
+    | 2  | 11       | 200     | 2     |
     | 3  | 11       | 210     | 1     |
-    | 4  | 13       | 200     | 0     |
+    | 4  | 13       | 200     | 1     |
   And the database has the following table 'answers':
     | id | author_id | attempt_id | type       | state   | created_at          |
     | 1  | 11        | 1          | Submission | Current | 2017-05-29 06:37:38 |

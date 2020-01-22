@@ -92,8 +92,8 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 	db := testhelpers.SetupDBWithFixtureString(`
 			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}]`, `
 			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 7000}]
-			attempts: [{id: 2000, group_id: 5000, item_id: 1, order: 0}, {id: 2001, group_id: 5001, item_id: 1, order: 0},
-			           {id: 2002, group_id: 5002, item_id: 1, order: 0}]
+			attempts: [{id: 2000, group_id: 5000, item_id: 1, order: 1}, {id: 2001, group_id: 5001, item_id: 1, order: 1},
+			           {id: 2002, group_id: 5002, item_id: 1, order: 1}]
 			users:
 				- {temp_user: 1, login: 500, group_id: 5000} # should be deleted
 				- {login: 501, temp_user: 1, group_id: 5001}

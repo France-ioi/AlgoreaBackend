@@ -31,8 +31,8 @@ Feature: Ask for a hint
     Given I am the user with id "101"
     And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | hints_cached | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 0     |
-      | 200 | 101      | 10      | null                   | 0            | 0     |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 1     |
+      | 200 | 101      | 10      | null                   | 0            | 1     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -90,8 +90,8 @@ Feature: Ask for a hint
     Given I am the user with id "101"
     And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
-      | 200 | 101      | 10      | null                   | 0     |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
+      | 200 | 101      | 10      | null                   | 1     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -149,8 +149,8 @@ Feature: Ask for a hint
     Given I am the user with id "101"
     And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
-      | 200 | 101      | 10      | null                   | 0     |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
+      | 200 | 101      | 10      | null                   | 1     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -208,8 +208,8 @@ Feature: Ask for a hint
     Given I am the user with id "101"
     And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested | order |
-      | 100 | 101      | 50      | not an array    | 0     |
-      | 200 | 101      | 10      | null            | 0     |
+      | 100 | 101      | 50      | not an array    | 1     |
+      | 200 | 101      | 10      | null            | 1     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

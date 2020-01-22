@@ -38,10 +38,10 @@ Feature: Get a task token with a refreshed attempt for an item
     Given I am the user with id "101"
     And the database has the following table 'attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
-      | 1  | 101      | 50      | 0     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 2  | 101      | 50      | 1     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
-      | 3  | 102      | 50      | 0     | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 4  | 101      | 51      | 0     | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 1  | 101      | 50      | 1     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 2  | 101      | 50      | 2     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
+      | 3  | 102      | 50      | 1     | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 4  | 101      | 51      | 1     | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
     When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -75,10 +75,10 @@ Feature: Get a task token with a refreshed attempt for an item
     Given I am the user with id "101"
     And the database has the following table 'attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
-      | 1  | 102      | 60      | 0     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 2  | 102      | 60      | 1     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
-      | 3  | 101      | 60      | 0     | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 4  | 102      | 61      | 0     | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 1  | 102      | 60      | 1     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 2  | 102      | 60      | 2     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
+      | 3  | 101      | 60      | 1     | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 4  | 102      | 61      | 1     | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
     When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -112,7 +112,7 @@ Feature: Get a task token with a refreshed attempt for an item
     Given I am the user with id "101"
     And the database has the following table 'attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
-      | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | 2  | 101      | 50      | 1     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
     When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:

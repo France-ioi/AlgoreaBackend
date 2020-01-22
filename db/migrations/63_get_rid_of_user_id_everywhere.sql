@@ -9,9 +9,10 @@ UPDATE `groups` JOIN `users` ON `users`.`self_group_id` = `groups`.`id` SET `gro
 DELETE `groups` FROM `groups` LEFT JOIN `users` ON `users`.`self_group_id` = `groups`.`id`
     WHERE `groups`.`type` = 'UserSelf' AND `users`.`id` IS NULL;
 
-DELETE `groups_attempts` FROM `groups_attempts`
+UPDATE `groups_attempts`
     LEFT JOIN `users` ON `users`.`id` = `groups_attempts`.`creator_user_id`
-    WHERE `users`.id IS NULL;
+SET `groups_attempts`.`creator_user_id` = NULL
+WHERE `groups_attempts`.`creator_user_id` IS NOT NULL AND `users`.id IS NULL;
 
 DELETE `filters` FROM `filters` LEFT JOIN `users` ON `users`.`id` = `filters`.`user_id` WHERE `users`.`id` IS NULL;
 
