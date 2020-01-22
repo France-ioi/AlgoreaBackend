@@ -114,7 +114,6 @@ Feature: Get item for tree navigation
         },
         "best_score": 91,
         "validated": true,
-        "has_attempts": true,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -129,7 +128,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 95,
             "validated": true,
-            "has_attempts": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -144,7 +142,6 @@ Feature: Get item for tree navigation
                 },
                 "best_score": 97,
                 "validated": true,
-                "has_attempts": true,
                 "access_rights": {
                   "can_view": "content_with_descendants"
                 },
@@ -160,7 +157,6 @@ Feature: Get item for tree navigation
                 },
                 "best_score": 96,
                 "validated": true,
-                "has_attempts": true,
                 "access_rights": {
                   "can_view": "content_with_descendants"
                 },
@@ -178,7 +174,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 94,
             "validated": true,
-            "has_attempts": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -194,7 +189,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 92,
             "validated": true,
-            "has_attempts": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -209,7 +203,6 @@ Feature: Get item for tree navigation
                 },
                 "best_score": 93,
                 "validated": false,
-                "has_attempts": true,
                 "access_rights": {
                   "can_view": "content_with_descendants"
                 },
@@ -235,7 +228,6 @@ Feature: Get item for tree navigation
         },
         "best_score": 97,
         "validated": true,
-        "has_attempts": true,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -257,7 +249,6 @@ Feature: Get item for tree navigation
         },
         "best_score": 95,
         "validated": true,
-        "has_attempts": true,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -272,7 +263,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 97,
             "validated": true,
-            "has_attempts": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -288,7 +278,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 96,
             "validated": true,
-            "has_attempts": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -312,7 +301,6 @@ Feature: Get item for tree navigation
         },
         "best_score": 0,
         "validated": false,
-        "has_attempts": false,
         "access_rights": {
           "can_view": "info"
         },
@@ -334,7 +322,6 @@ Feature: Get item for tree navigation
         },
         "best_score": 0,
         "validated": false,
-        "has_attempts": false,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -349,7 +336,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 0,
             "validated": false,
-            "has_attempts": false,
             "access_rights": {
               "can_view": "info"
             },
@@ -365,7 +351,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 0,
             "validated": false,
-            "has_attempts": false,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -381,7 +366,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 0,
             "validated": false,
-            "has_attempts": false,
             "access_rights": {
               "can_view": "info"
             },
@@ -405,7 +389,6 @@ Feature: Get item for tree navigation
         },
         "best_score": 0,
         "validated": false,
-        "has_attempts": false,
         "access_rights": {
           "can_view": "content"
         },
@@ -420,7 +403,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 0,
             "validated": false,
-            "has_attempts": false,
             "access_rights": {
               "can_view": "content"
             },
@@ -435,7 +417,6 @@ Feature: Get item for tree navigation
                 },
                 "best_score": 0,
                 "validated": false,
-                "has_attempts": false,
                 "access_rights": {
                   "can_view": "content"
                 },
@@ -451,7 +432,6 @@ Feature: Get item for tree navigation
                 },
                 "best_score": 0,
                 "validated": false,
-                "has_attempts": false,
                 "access_rights": {
                   "can_view": "content"
                 },
@@ -469,7 +449,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 0,
             "validated": false,
-            "has_attempts": false,
             "access_rights": {
               "can_view": "content"
             },
@@ -485,7 +464,6 @@ Feature: Get item for tree navigation
             },
             "best_score": 0,
             "validated": false,
-            "has_attempts": false,
             "access_rights": {
               "can_view": "content"
             },
@@ -500,7 +478,6 @@ Feature: Get item for tree navigation
                 },
                 "best_score": 0,
                 "validated": false,
-                "has_attempts": false,
                 "access_rights": {
                   "can_view": "content"
                 },
