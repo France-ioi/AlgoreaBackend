@@ -25,8 +25,8 @@ CREATE TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH
     FROM `permissions_generated`
     WHERE `permissions_generated`.`item_id` = NEW.`parent_item_id`;
 
-    UPDATE `attempts` SET `result_propagation_state` = 'to_be_recomputed'
-    WHERE `item_id` = NEW.`parent_item_id`;
+    UPDATE `attempts` SET `result_propagation_state` = 'changed'
+    WHERE `item_id` = NEW.`child_item_id`;
 END
 -- +migrate StatementEnd
 
@@ -70,13 +70,14 @@ CREATE TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EA
         INSERT IGNORE INTO `items_propagate` (id, ancestors_computation_state)
         VALUES (NEW.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
 
-        UPDATE `attempts` SET `result_propagation_state` = 'to_be_recomputed'
-        WHERE `item_id` = OLD.`parent_item_id`;
+        UPDATE `attempts` SET `result_propagation_state` = 'changed'
+        WHERE `item_id` = OLD.`child_item_id` OR `item_id` = NEW.`child_item_id`;
 
-        IF (OLD.`parent_item_id` != NEW.`parent_item_id`) THEN
-            UPDATE `attempts` SET `result_propagation_state` = 'to_be_recomputed'
-            WHERE `item_id` = NEW.`parent_item_id`;
-        END IF;
+        DELETE FROM `attempts` WHERE (`item_id` = OLD.parent_item_id OR `item_id` = NEW.parent_item_id OR
+                                      `item_id` IN (
+                                          SELECT `ancestor_item_id` FROM `items_ancestors`
+                                          WHERE `child_item_id` = OLD.parent_item_id OR `child_item_id` = NEW.parent_item_id
+                                    )) AND `order` = 1 AND `creator_id` IS NULL;
     END IF;
 END
 -- +migrate StatementEnd
@@ -121,7 +122,13 @@ CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EA
     FROM `permissions_generated`
     WHERE `permissions_generated`.`item_id` = OLD.`parent_item_id`;
 
-    UPDATE `attempts` SET `result_propagation_state` = 'to_be_recomputed'
+    DELETE FROM `attempts` WHERE (`item_id` = OLD.parent_item_id OR
+                                  `item_id` IN (
+                                      SELECT `ancestor_item_id` FROM `items_ancestors`
+                                      WHERE `child_item_id` = OLD.parent_item_id
+                                  )) AND `order` = 1 AND `creator_id` IS NULL;
+
+    UPDATE `attempts` SET `result_propagation_state` = 'changed'
     WHERE `item_id` = OLD.`parent_item_id`;
 END
 -- +migrate StatementEnd

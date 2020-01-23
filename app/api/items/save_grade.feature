@@ -247,9 +247,10 @@ Feature: Save grading result
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 99    | 1                                                |
     And the table "attempts" should be:
-      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
-      | 100 | 99             | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
-      | 101 | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
+      | group_id | item_id | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
+      | 101      | 10      | 49.5           | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | null                | null         |
+      | 101      | 50      | 99             | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
+      | 101      | 60      | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
 
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
@@ -263,9 +264,10 @@ Feature: Save grading result
       | 123       | 5     | 2018-05-29 06:38:38 |
       | 125       | 20    | 2018-05-29 06:38:38 |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | score_computed | score_obtained_at   | order | score_edit_rule   | score_edit_value   |
-      | 100 | 101      | 50      | 20             | 2018-05-29 06:38:38 | 1     | <score_edit_rule> | <score_edit_value> |
-      | 101 | 101      | 60      | 20             | 2018-05-29 06:38:38 | 2     | null              | null               |
+      | group_id | item_id | score_computed | score_obtained_at   | order | score_edit_rule   | score_edit_value   |
+      | 101      | 10      | 20             | 2018-05-29 06:38:38 | 1     | null              | null               |
+      | 101      | 50      | 20             | 2018-05-29 06:38:38 | 1     | <score_edit_rule> | <score_edit_value> |
+      | 101      | 60      | 20             | 2018-05-29 06:38:38 | 1     | null              | null               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -332,9 +334,10 @@ Feature: Save grading result
   Scenario: Should keep previous validated_at if it is earlier
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | validated_at        | order |
-      | 100 | 101      | 50      | 2016-05-29 06:38:37 | 1     |
-      | 101 | 101      | 60      | 2018-05-29 06:38:37 | 2     |
+      | group_id | item_id | validated_at        | order |
+      | 101      | 10      | 2016-05-29 06:38:37 | 1     |
+      | 101      | 50      | 2016-05-29 06:38:37 | 1     |
+      | 101      | 60      | 2018-05-29 06:38:37 | 1     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |

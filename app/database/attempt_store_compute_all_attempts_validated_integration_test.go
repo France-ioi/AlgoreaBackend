@@ -147,6 +147,9 @@ func TestAttemptStore_ComputeAllAttempts_Validated(t *testing.T) {
 			prepareFunc: func(t *testing.T, attemptStore *database.AttemptStore) {
 				assert.NoError(t, attemptStore.ItemItems().Delete("parent_item_id=2").Error())
 				assert.NoError(t, attemptStore.Delete("item_id=1").Error())
+				assert.NoError(t, attemptStore.InsertMap(map[string]interface{}{
+					"id": 22, "item_id": 2, "group_id": 102, "order": 1, "result_propagation_state": "to_be_recomputed",
+				}))
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				12: false,

@@ -26,7 +26,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(computeAllAttemptsLockName, computeAllAttemptsLockTimeout, func(ds *DataStore) error {
-		// We mark as 'todo' all ancestors of objects marked as 'todo'
+		// We mark as 'to_be_recomputed' all ancestors of objects marked as 'to_be_recomputed'/'changed'
 		// (this query can take more than 50 seconds to run when executed for the first time after the db migration)
 		mustNotBeError(ds.db.Exec(
 			`UPDATE attempts AS ancestors
@@ -36,14 +36,39 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				descendants.group_id = ancestors.group_id
 			)
 			SET ancestors.result_propagation_state = 'to_be_recomputed'
-			WHERE descendants.result_propagation_state IN ('to_be_recomputed', 'changed')`).Error)
+			WHERE ancestors.result_propagation_state != 'to_be_recomputed' AND
+				(descendants.result_propagation_state = 'to_be_recomputed' OR
+				 descendants.result_propagation_state = 'changed')`).Error)
+
+		// Insert missing attempts for chapters & courses having descendants marked as 'to_be_recomputed'/'changed'
+		// (this query can take more than 25 seconds when executed for the first time after the db migration)
+		mustNotBeError(ds.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
+			return retryStore.Exec(`
+				INSERT INTO attempts (id, group_id, item_id, ` + "`order`, " + `result_propagation_state)
+				SELECT
+					FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000,
+					descendants.group_id, items_ancestors.ancestor_item_id, 1, 'to_be_recomputed'
+				FROM attempts AS descendants
+				JOIN items_ancestors ON items_ancestors.child_item_id = descendants.item_id
+				LEFT JOIN attempts AS existing ON (
+					existing.group_id = descendants.group_id AND
+					existing.item_id = items_ancestors.ancestor_item_id
+				)
+				WHERE (
+					descendants.result_propagation_state = 'to_be_recomputed' OR
+					descendants.result_propagation_state = 'changed'
+				) AND existing.id IS NULL
+				GROUP BY descendants.group_id, items_ancestors.ancestor_item_id
+			`).Error()
+		}))
 
 		hasChanges := true
 
 		var markAsProcessingStatement, updateStatement *sql.Stmt
 
 		for hasChanges {
-			// We mark as "processing" all objects that were marked as 'todo' and that have no children not marked as 'done'
+			// We mark as "processing" all objects that were marked as 'to_be_recomputed' and
+			// that have no children marked as 'to_be_recomputed'.
 			// This way we prevent infinite looping as we never process items that are ancestors of themselves
 			if markAsProcessingStatement == nil {
 				const markAsProcessingQuery = `
