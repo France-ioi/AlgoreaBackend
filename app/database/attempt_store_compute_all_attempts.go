@@ -40,7 +40,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				(descendants.result_propagation_state = 'to_be_recomputed' OR
 				 descendants.result_propagation_state = 'changed')`).Error)
 
-		// Insert missing attempts for chapters & courses having descendants marked as 'to_be_recomputed'/'changed'
+		// Insert missing attempts for chapters having descendants marked as 'to_be_recomputed'/'changed'
 		// (this query can take more than 25 seconds when executed for the first time after the db migration)
 		mustNotBeError(ds.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 			return retryStore.Exec(`
