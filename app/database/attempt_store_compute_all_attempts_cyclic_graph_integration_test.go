@@ -12,7 +12,8 @@ import (
 )
 
 type stateResultRow struct {
-	ID                     int64
+	GroupID                int64
+	ItemID                 int64
 	ResultPropagationState string
 }
 
@@ -28,11 +29,14 @@ func TestAttemptStore_ComputeAllAttempts_WithCyclicGraph(t *testing.T) {
 	assert.NoError(t, err)
 
 	var result []stateResultRow
-	assert.NoError(t, attemptStore.Select("id, result_propagation_state").Order("id").Scan(&result).Error())
+	assert.NoError(t, attemptStore.Select("group_id, item_id, result_propagation_state").
+		Order("group_id, item_id, `order`").Scan(&result).Error())
 	assert.Equal(t, []stateResultRow{
-		{ID: 11, ResultPropagationState: "to_be_recomputed"},
-		{ID: 12, ResultPropagationState: "to_be_recomputed"},
+		{GroupID: 101, ItemID: 1, ResultPropagationState: "to_be_recomputed"},
+		{GroupID: 101, ItemID: 2, ResultPropagationState: "to_be_recomputed"},
 		// another user
-		{ID: 22, ResultPropagationState: "done"},
+		{GroupID: 102, ItemID: 1, ResultPropagationState: "to_be_recomputed"},
+		{GroupID: 102, ItemID: 2, ResultPropagationState: "to_be_recomputed"},
+		{GroupID: 102, ItemID: 3, ResultPropagationState: "done"},
 	}, result)
 }
