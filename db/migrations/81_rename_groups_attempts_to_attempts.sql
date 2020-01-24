@@ -33,48 +33,7 @@ END
 -- +migrate StatementBegin
 CREATE TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EACH ROW BEGIN
     IF (OLD.child_item_id != NEW.child_item_id OR OLD.parent_item_id != NEW.parent_item_id) THEN
-        INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`)
-        VALUES (OLD.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
-        INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`)
-        VALUES (OLD.parent_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
-        INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`)
-            (
-                SELECT `items_ancestors`.`child_item_id`, 'todo'
-                FROM `items_ancestors`
-                WHERE `items_ancestors`.`ancestor_item_id` = OLD.`child_item_id`
-            ) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
-        DELETE `items_ancestors` from `items_ancestors`
-        WHERE `items_ancestors`.`child_item_id` = OLD.`child_item_id` AND
-                `items_ancestors`.`ancestor_item_id` = OLD.`parent_item_id`;
-        DELETE `bridges` FROM `items_ancestors` `child_descendants`
-                                  JOIN `items_ancestors` `parent_ancestors`
-                                  JOIN `items_ancestors` `bridges` ON (
-                    `bridges`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id` AND
-                    `bridges`.`child_item_id` = `child_descendants`.`child_item_id`
-            )
-        WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id` AND
-                `child_descendants`.`ancestor_item_id` = OLD.`child_item_id`;
-        DELETE `child_ancestors` FROM `items_ancestors` `child_ancestors`
-                                          JOIN  `items_ancestors` `parent_ancestors` ON (
-                    `child_ancestors`.`child_item_id` = OLD.`child_item_id` AND
-                    `child_ancestors`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id`
-            )
-        WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id`;
-        DELETE `parent_ancestors` FROM `items_ancestors` `parent_ancestors`
-                                           JOIN  `items_ancestors` `child_ancestors` ON (
-                    `parent_ancestors`.`ancestor_item_id` = OLD.`parent_item_id` AND
-                    `child_ancestors`.`child_item_id` = `parent_ancestors`.`child_item_id`
-            )
-        WHERE `child_ancestors`.`ancestor_item_id` = OLD.`child_item_id`;
-
-        INSERT IGNORE INTO `items_propagate` (id, ancestors_computation_state)
-        VALUES (NEW.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
-
-        UPDATE `attempts` SET `result_propagation_state` = 'to_be_recomputed'
-        WHERE `item_id` = OLD.`parent_item_id`;
-
-        UPDATE `attempts` SET `result_propagation_state` = 'changed'
-        WHERE `item_id` = OLD.`child_item_id` OR `item_id` = NEW.`child_item_id`;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Unable to change immutable items_items.parent_item_id and/or items_items.child_item_id';
     END IF;
 END
 -- +migrate StatementEnd
@@ -118,6 +77,8 @@ CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EA
     SELECT `permissions_generated`.`group_id`, `permissions_generated`.`item_id`, 'children' as `propagate_to`
     FROM `permissions_generated`
     WHERE `permissions_generated`.`item_id` = OLD.`parent_item_id`;
+
+    DELETE FROM `attempts` WHERE `item_id` = OLD.`parent_item_id` AND `started_at` IS NULL AND `score_edit_rule` IS NULL;
 
     UPDATE `attempts` SET `result_propagation_state` = 'to_be_recomputed'
     WHERE `item_id` = OLD.`parent_item_id`;
