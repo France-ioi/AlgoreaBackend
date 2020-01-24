@@ -15,29 +15,43 @@ type GetItemRequest struct {
 }
 
 type navigationItemAccessRights struct {
+	// required: true
+	// enum: none,info,content,content_with_descendants,solution
 	CanView string `json:"can_view"`
 }
 
 type navigationItemString struct {
-	// title (from items_strings) in the user’s default language or (if not available) default language of the item
+	// [Nullable] Title (from `items_strings`) in the user’s default language or (if not available) default language of the item
+	// required: true
 	Title *string `json:"title"`
 }
 
 type navigationItemCommonFields struct {
-	ID   int64  `json:"id,string"`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	// enum: Chapter,Task,Course
 	Type string `json:"type"`
 
+	// required: true
 	String navigationItemString `json:"string"`
 
 	// max among all the user's attempts
+	// required: true
 	BestScore float32 `json:"best_score"`
-	Validated bool    `json:"validated"`
+	// max among all the user's attempts
+	// required: true
+	Validated bool `json:"validated"`
 
+	// required: true
 	AccessRights navigationItemAccessRights `json:"access_rights"`
 
+	// Nullable
+	// required: true
 	Children []navigationItemChild `json:"children"`
 }
 
+// swagger:model itemsNavigationDataResponse
 type navigationDataResponse struct {
 	*navigationItemCommonFields
 }
@@ -45,7 +59,12 @@ type navigationDataResponse struct {
 type navigationItemChild struct {
 	*navigationItemCommonFields
 
-	Order                  int32  `json:"order"`
+	// `items_items.child_order`
+	// required: true
+	Order int32 `json:"order"`
+	// from `items_items`
+	// required: true
+	// enum: none,as_info,as_content
 	ContentViewPropagation string `json:"content_view_propagation"`
 }
 
@@ -59,6 +78,36 @@ func (req *GetItemRequest) Bind(r *http.Request) error {
 	return nil
 }
 
+// swagger:operation GET /items/{item_id}/as-nav-tree items itemsNavigationData
+// ---
+// summary: Get navigation data
+// description: >
+//
+//   Returns data needed to display the navigation menu (for `item_id`, its children, and its grandchildren), only items
+//   visible to the current user are shown.
+//
+//
+//   * If the specified `item_id` doesn't exist or is not visible to the current user,
+//     the 'forbidden' response is returned.
+// parameters:
+// - name: item_id
+//   in: path
+//   type: integer
+//   format: int64
+//   required: true
+// responses:
+//   "200":
+//     description: OK. Navigation data
+//     schema:
+//       "$ref": "#/definitions/itemsNavigationDataResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	req := &GetItemRequest{}
 	if err := req.Bind(httpReq); err != nil {
