@@ -183,17 +183,6 @@ func TestItemStore_ValidateUserAccess_FailsOnDBError(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestItemStore_CheckSubmissionRights_MustBeInTransaction(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_, _, _ = NewDataStore(db).Items().CheckSubmissionRights(12, &User{GroupID: 14})
-	})
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
-}
-
 func TestItemStore_ContestManagedByUser(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()

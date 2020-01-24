@@ -92,23 +92,22 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		return apiError
 	}
 
+	var hasAccess bool
+	var reason error
+	hasAccess, reason, err = srv.Store.Items().CheckSubmissionRights(requestData.TaskToken.Converted.LocalItemID, user)
+	service.MustNotBeError(err)
+
+	if !hasAccess {
+		return service.ErrForbidden(reason)
+	}
+
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		var hasAccess bool
-		var reason error
-		hasAccess, reason, err = store.Items().CheckSubmissionRights(requestData.TaskToken.Converted.LocalItemID, user)
-		service.MustNotBeError(err)
-
-		if !hasAccess {
-			apiError = service.ErrForbidden(reason)
-			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
-		}
-
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []formdata.Anything
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, user, r)
 		if err == gorm.ErrRecordNotFound {
 			apiError = service.ErrNotFound(errors.New("can't find previously requested hints info"))
-			return nil // commit
+			return apiError.Error // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -156,7 +155,8 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
 	user *database.User, r *http.Request) ([]formdata.Anything, error) {
 	var hintsRequested *string
-	err := store.Attempts().ByID(taskToken.Converted.AttemptID).PluckFirst("hints_requested", &hintsRequested).Error()
+	err := store.Attempts().ByID(taskToken.Converted.AttemptID).WithWriteLock().
+		PluckFirst("hints_requested", &hintsRequested).Error()
 	var hintsRequestedParsed []formdata.Anything
 	if err == nil && hintsRequested != nil {
 		hintsErr := json.Unmarshal([]byte(*hintsRequested), &hintsRequestedParsed)
