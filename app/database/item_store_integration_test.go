@@ -76,13 +76,10 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			err := database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-				hasAccess, reason, err := store.Items().CheckSubmissionRights(test.itemID, user)
-				assert.Equal(t, test.wantHasAccess, hasAccess)
-				assert.Equal(t, test.wantReason, reason)
-				assert.Equal(t, test.wantError, err)
-				return nil
-			})
+			hasAccess, reason, err := database.NewDataStore(db).Items().CheckSubmissionRights(test.itemID, user)
+			assert.Equal(t, test.wantHasAccess, hasAccess)
+			assert.Equal(t, test.wantReason, reason)
+			assert.Equal(t, test.wantError, err)
 			assert.NoError(t, err)
 		})
 	}

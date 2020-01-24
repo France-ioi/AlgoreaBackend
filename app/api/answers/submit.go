@@ -77,7 +77,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 		if !hasAccess {
 			apiError = service.ErrForbidden(reason)
-			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
+			return apiError.Error // rollback
 		}
 
 		answerID, err = store.Answers().SubmitNewAnswer(

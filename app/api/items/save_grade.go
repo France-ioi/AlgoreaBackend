@@ -47,7 +47,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 		if !hasAccess {
 			apiError = service.ErrForbidden(reason)
-			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
+			return apiError.Error // rollback
 		}
 
 		validated, ok = saveGradingResultsIntoDB(store, user, &requestData)
