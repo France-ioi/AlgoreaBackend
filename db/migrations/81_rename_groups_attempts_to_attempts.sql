@@ -78,7 +78,8 @@ CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EA
     FROM `permissions_generated`
     WHERE `permissions_generated`.`item_id` = OLD.`parent_item_id`;
 
-    DELETE FROM `attempts` WHERE `item_id` = OLD.`parent_item_id` AND `started_at` IS NULL AND `score_edit_rule` IS NULL;
+    -- Some attempts' ancestors should probably be removed
+    -- DELETE FROM `attempts` WHERE ...
 
     UPDATE `attempts` SET `result_propagation_state` = 'to_be_recomputed'
     WHERE `item_id` = OLD.`parent_item_id`;

@@ -215,7 +215,9 @@ Background:
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "attempts" should stay unchanged but the row with item_id "50"
-    And the table "attempts" should not contain item_id "50"
+    And the table "attempts" at item_id "50" should be:
+      | group_id | item_id | score_computed | order | result_propagation_state |
+      | 11       | 50      | 0              | 1     | done                     |
 
   Scenario: Keep existing contest participants group
     Given I am the user with id "11"
