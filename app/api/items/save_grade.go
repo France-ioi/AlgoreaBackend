@@ -185,7 +185,6 @@ type saveGradeRequest struct {
 	ScoreToken  formdata.Anything  `json:"score_token"`
 	Score       *float64           `json:"score"`
 	AnswerToken *formdata.Anything `json:"answer_token"`
-	AnswerID    *string            `json:"answer_id"`
 }
 
 // UnmarshalJSON unmarshals the items/saveGrade request data from JSON
