@@ -35,8 +35,7 @@ func TestAttemptStore_ComputeAllAttempts_WithCyclicGraph(t *testing.T) {
 		{GroupID: 101, ItemID: 1, ResultPropagationState: "to_be_recomputed"},
 		{GroupID: 101, ItemID: 2, ResultPropagationState: "to_be_recomputed"},
 		// another user
-		{GroupID: 102, ItemID: 1, ResultPropagationState: "to_be_recomputed"},
-		{GroupID: 102, ItemID: 2, ResultPropagationState: "to_be_recomputed"},
+		{GroupID: 102, ItemID: 2, ResultPropagationState: "done"},
 		{GroupID: 102, ItemID: 3, ResultPropagationState: "done"},
 	}, result)
 }
