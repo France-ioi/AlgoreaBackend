@@ -178,4 +178,7 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 	permissionGrantedStore := s.PermissionsGranted()
 	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate))
 	service.MustNotBeError(permissionGrantedStore.After())
+	if dbMap["can_view"] != nil && dbMap["can_view"] != "none" {
+		service.MustNotBeError(s.Attempts().ComputeAllAttempts())
+	}
 }

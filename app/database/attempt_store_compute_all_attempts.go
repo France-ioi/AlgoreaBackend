@@ -230,7 +230,8 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		return s.PermissionsGranted().After()
+		mustNotBeError(s.PermissionsGranted().After())
+		return s.ComputeAllAttempts() // we should compute attempts again as new permissions were set
 	}
 	return nil
 }

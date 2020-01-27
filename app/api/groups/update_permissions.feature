@@ -50,6 +50,9 @@ Feature: Change item access rights for a group
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | source_group_id | latest_update_on    |
       | 23       | 100     | content  | 23              | 2019-05-30 11:00:00 |
+    And the database has the following table 'attempts':
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 103     | 1     | done                     |
 
   Scenario Outline: Create a new permissions_granted row
     Given I am the user with id "21"
@@ -80,6 +83,10 @@ Feature: Change item access rights for a group
       | 23       | 101     | info                  | none                     | none                | none               |
       | 23       | 102     | <can_view>            | none                     | none                | none               |
       | 23       | 103     | <propagated_can_view> | none                     | none                | none               |
+    And the table "attempts" should be:
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 102     | 1     | done                     |
+      | 21       | 103     | 1     | done                     |
   Examples:
     | can_view | propagated_can_view |
     | solution | content             |
@@ -115,6 +122,10 @@ Feature: Change item access rights for a group
       | 23       | 101     | info               | none                     | none                | none               |
       | 23       | 102     | solution           | none                     | none                | none               |
       | 23       | 103     | content            | none                     | none                | none               |
+    And the table "attempts" should be:
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 102     | 1     | done                     |
+      | 21       | 103     | 1     | done                     |
 
   Scenario: Create a new permissions_granted row (the group has only 'content' access on the item's parent)
     Given I am the user with id "21"
@@ -153,6 +164,10 @@ Feature: Change item access rights for a group
       | 31       | 101     | content            | none                     | none                | none               | 0                  |
       | 31       | 102     | solution           | none                     | none                | none               | 0                  |
       | 31       | 103     | content            | none                     | none                | none               | 0                  |
+    And the table "attempts" should be:
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 102     | 1     | done                     |
+      | 21       | 103     | 1     | done                     |
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has full access to the item itself)
     Given I am the user with id "21"
@@ -197,6 +212,12 @@ Feature: Change item access rights for a group
       | 31       | 101     | info               | 0                  |
       | 31       | 102     | none               | 0                  |
       | 31       | 103     | none               | 0                  |
+    And the table "attempts" should be:
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 100     | 1     | done                     |
+      | 21       | 101     | 1     | done                     |
+      | 21       | 102     | 1     | done                     |
+      | 21       | 103     | 1     | done                     |
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has 'content' access to the item itself)
     Given I am the user with id "21"
@@ -241,6 +262,12 @@ Feature: Change item access rights for a group
       | 31       | 101     | info               | 0                  |
       | 31       | 102     | none               | 0                  |
       | 31       | 103     | none               | 0                  |
+    And the table "attempts" should be:
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 100     | 1     | done                     |
+      | 21       | 101     | 1     | done                     |
+      | 21       | 102     | 1     | done                     |
+      | 21       | 103     | 1     | done                     |
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has info access to the item itself)
     Given I am the user with id "21"
@@ -285,3 +312,9 @@ Feature: Change item access rights for a group
       | 31       | 101     | info               | 0                  |
       | 31       | 102     | none               | 0                  |
       | 31       | 103     | none               | 0                  |
+    And the table "attempts" should be:
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 100     | 1     | done                     |
+      | 21       | 101     | 1     | done                     |
+      | 21       | 102     | 1     | done                     |
+      | 21       | 103     | 1     | done                     |
