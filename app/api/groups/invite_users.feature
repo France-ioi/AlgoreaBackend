@@ -22,6 +22,23 @@ Feature: Invite users
       | 101               | 101            | 1       |
       | 102               | 102            | 1       |
       | 103               | 103            | 1       |
+    And the database has the following table 'items':
+      | id | default_language_tag |
+      | 20 | fr                   |
+      | 30 | fr                   |
+    And the database has the following table 'items_ancestors':
+      | ancestor_item_id | child_item_id |
+      | 20               | 30            |
+    And the database has the following table 'items_items':
+      | parent_item_id | child_item_id | child_order |
+      | 20             | 30            | 1           |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 555      | 20      | content            |
+      | 101      | 30      | content            |
+    And the database has the following table 'attempts':
+      | group_id | item_id | order | result_propagation_state |
+      | 101      | 30      | 1     | done                     |
 
   Scenario: Successfully invite users
     Given I am the user with id "21"
@@ -63,6 +80,7 @@ Feature: Invite users
       | 13       | 101       | invitation_created | 21           | 1                                         |
       | 13       | 102       | invitation_created | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
     Given I am the user with id "21"
@@ -104,6 +122,7 @@ Feature: Invite users
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Convert join-requests into invitations or make them accepted depending on approvals
     Given I am the user with id "21"
@@ -155,3 +174,7 @@ Feature: Invite users
       | 444               | 444            | 1       |
       | 555               | 101            | 0       |
       | 555               | 555            | 1       |
+    And the table "attempts" should be:
+      | group_id | item_id | result_propagation_state |
+      | 101      | 20      | done                     |
+      | 101      | 30      | done                     |
