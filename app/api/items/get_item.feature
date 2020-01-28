@@ -53,6 +53,11 @@ Feature: Get item view information
     And the database has the following table 'languages':
       | tag |
       | fr  |
+    And the database has the following table 'attempts':
+      | group_id | item_id | order |
+      | 11       | 200     | 1     |
+      | 11       | 220     | 1     |
+      | 13       | 210     | 1     |
 
   Scenario: Full access on all items
     Given I am the user with id "11"
@@ -71,7 +76,9 @@ Feature: Get item view information
       "allows_multiple_attempts": true,
       "duration": "10:20:30",
       "no_score": true,
+      "default_language_tag": "en",
       "group_code_enter": true,
+      "has_attempts": true,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -106,7 +113,9 @@ Feature: Get item view information
           "allows_multiple_attempts": true,
           "duration": "10:20:32",
           "no_score": true,
+          "default_language_tag": "en",
           "group_code_enter": true,
+          "has_attempts": true,
 
           "string": {
             "language_tag": "en",
@@ -132,7 +141,9 @@ Feature: Get item view information
           "allows_multiple_attempts": true,
           "duration": "10:20:31",
           "no_score": true,
+          "default_language_tag": "en",
           "group_code_enter": true,
+          "has_attempts": false,
 
           "string": {
             "language_tag": "en",
@@ -163,7 +174,9 @@ Feature: Get item view information
       "allows_multiple_attempts": true,
       "duration": "10:20:31",
       "no_score": true,
+      "default_language_tag": "en",
       "group_code_enter": true,
+      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -200,7 +213,9 @@ Feature: Get item view information
       "allows_multiple_attempts": true,
       "duration": "10:20:31",
       "no_score": true,
+      "default_language_tag": "en",
       "group_code_enter": true,
+      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -236,7 +251,9 @@ Feature: Get item view information
       "allows_multiple_attempts": true,
       "duration": "10:20:30",
       "no_score": true,
+      "default_language_tag": "en",
       "group_code_enter": true,
+      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -271,7 +288,9 @@ Feature: Get item view information
           "allows_multiple_attempts": true,
           "duration": "10:20:32",
           "no_score": true,
+          "default_language_tag": "en",
           "group_code_enter": true,
+          "has_attempts": false,
 
           "string": {
             "language_tag": "fr",
@@ -297,7 +316,9 @@ Feature: Get item view information
           "allows_multiple_attempts": true,
           "duration": "10:20:31",
           "no_score": true,
+          "default_language_tag": "en",
           "group_code_enter": true,
+          "has_attempts": false,
 
           "string": {
             "language_tag": "fr",
@@ -328,7 +349,9 @@ Feature: Get item view information
       "allows_multiple_attempts": true,
       "duration": "10:20:30",
       "no_score": true,
+      "default_language_tag": "en",
       "group_code_enter": true,
+      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -363,7 +386,9 @@ Feature: Get item view information
           "allows_multiple_attempts": true,
           "duration": "10:20:32",
           "no_score": true,
+          "default_language_tag": "en",
           "group_code_enter": true,
+          "has_attempts": false,
 
           "string": {
             "language_tag": "en",
@@ -387,7 +412,9 @@ Feature: Get item view information
           "allows_multiple_attempts": true,
           "duration": "10:20:31",
           "no_score": true,
+          "default_language_tag": "en",
           "group_code_enter": true,
+          "has_attempts": false,
 
           "string": {
             "language_tag": "en",

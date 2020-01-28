@@ -75,9 +75,14 @@ type itemCommonFields struct {
 	Duration *string `json:"duration"`
 	// required: true
 	NoScore bool `json:"no_score"`
+	// required: true
+	DefaultLanguageTag string `json:"default_language_tag"`
 	// Nullable
 	// required: true
 	GroupCodeEnter *bool `json:"group_code_enter"`
+	// Whether the current user made at least one attempt to solve the item
+	// required: true
+	HasAttempts bool `json:"has_attempts"`
 }
 
 type itemRootNodeNotChapterFields struct {
@@ -140,7 +145,7 @@ type itemResponse struct {
 // summary: Get an item
 // description: Returns data related to the specified item, its children,
 //              and the current user's interactions with them
-//              (from tables `items`, `items_items`, `items_string`).
+//              (from tables `items`, `items_items`, `items_string`, `attempts`).
 //
 //
 //              * If the specified item is not visible by the current user, the 'not found' response is returned.
@@ -207,7 +212,9 @@ type rawItem struct {
 	AllowsMultipleAttempts   bool
 	Duration                 *string
 	NoScore                  bool
+	DefaultLanguageTag       string
 	GroupCodeEnter           *bool
+	HasAttempts              bool
 
 	// root node only
 	TitleBarVisible bool
@@ -251,17 +258,18 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.duration,
 		items.no_score,
 		items.default_language_tag,
-		items.group_code_enter, `
+		items.group_code_enter,
+		EXISTS(SELECT 1 FROM attempts WHERE group_id = ? AND item_id = items.id) AS has_attempts, `
 
 	rootItemQuery := s.ByID(rootID).Select(
-		commonColumns + `items.title_bar_visible,
+		commonColumns+`items.title_bar_visible,
 		items.read_only,
 		items.full_screen,
 		items.show_user_infos,
 		items.url,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
-		NULL AS child_order, NULL AS category, NULL AS content_view_propagation`)
+		NULL AS child_order, NULL AS category, NULL AS content_view_propagation`, user.GroupID)
 
 	childrenQuery := s.Select(
 		commonColumns+`NULL AS title_bar_visible,
@@ -271,24 +279,14 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		NULL AS url,
 		NULL AS uses_api,
 		NULL AS hints_allowed,
-		child_order, category, content_view_propagation`).
+		child_order, category, content_view_propagation`, user.GroupID).
 		Joins("JOIN items_items ON items.id=child_item_id AND parent_item_id=?", rootID)
 
 	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	query := s.Raw(`
 		SELECT
-			items.id,
-			items.type,
-			items.display_details_in_parent,
-			items.validation_type,
-			items.contest_entering_condition,
-			items.teams_editable,
-			items.contest_max_team_size,
-			items.allows_multiple_attempts,
-			items.duration,
-			items.no_score,
-			items.group_code_enter,
+			`+commonColumns+`
 
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
@@ -309,7 +307,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.uses_api,
 			items.hints_allowed,
 			access_rights.can_view_generated_value
-		FROM ? items `, unionQuery.SubQuery()).
+		FROM ? items `, user.GroupID, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id", accessRights.SubQuery()).
 		Order("child_order")
@@ -378,7 +376,9 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		AllowsMultipleAttempts:   rawData.AllowsMultipleAttempts,
 		Duration:                 rawData.Duration,
 		NoScore:                  rawData.NoScore,
+		DefaultLanguageTag:       rawData.DefaultLanguageTag,
 		GroupCodeEnter:           rawData.GroupCodeEnter,
+		HasAttempts:              rawData.HasAttempts,
 	}
 	return result
 }
