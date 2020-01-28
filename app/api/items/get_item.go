@@ -259,7 +259,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.no_score,
 		items.default_language_tag,
 		items.group_code_enter,
-		EXISTS(SELECT 1 FROM attempts WHERE group_id = ? AND item_id = items.id) AS has_attempts, `
+		EXISTS(SELECT 1 FROM attempts WHERE group_id = ? AND item_id = items.id AND started_at IS NOT NULL) AS has_attempts, `
 
 	rootItemQuery := s.ByID(rootID).Select(
 		commonColumns+`items.title_bar_visible,

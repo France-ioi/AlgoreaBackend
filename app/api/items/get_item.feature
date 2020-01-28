@@ -54,10 +54,12 @@ Feature: Get item view information
       | tag |
       | fr  |
     And the database has the following table 'attempts':
-      | group_id | item_id | order |
-      | 11       | 200     | 1     |
-      | 11       | 220     | 1     |
-      | 13       | 210     | 1     |
+      | group_id | item_id | order | started_at          |
+      | 11       | 200     | 1     | 2019-05-30 11:00:00 |
+      | 11       | 210     | 1     | null                |
+      | 11       | 220     | 1     | 2019-05-30 11:00:00 |
+      | 13       | 210     | 1     | 2019-05-30 11:00:00 |
+      | 13       | 220     | 1     | null                |
 
   Scenario: Full access on all items
     Given I am the user with id "11"
