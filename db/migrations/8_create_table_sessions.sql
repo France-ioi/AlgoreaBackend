@@ -7,7 +7,7 @@ CREATE TABLE `sessions` (
   `sIssuer` ENUM('backend', 'login-module'),
   PRIMARY KEY (`sAccessToken`),
   KEY `sExpirationDate` (`sExpirationDate`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT 'Access tokens (short lifetime) distributed to users';
 
 -- +migrate Down
 DROP TABLE `sessions`;
