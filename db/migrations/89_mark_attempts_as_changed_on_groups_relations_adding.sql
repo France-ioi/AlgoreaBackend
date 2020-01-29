@@ -32,7 +32,10 @@ END
 DROP TRIGGER `before_update_groups_groups`;
 -- +migrate StatementBegin
 CREATE TRIGGER `before_update_groups_groups` BEFORE UPDATE ON `groups_groups` FOR EACH ROW BEGIN
-    IF (OLD.child_group_id != NEW.child_group_id OR OLD.parent_group_id != NEW.parent_group_id OR OLD.expires_at != NEW.expires_at) THEN
+    IF OLD.`parent_group_id` != NEW.`parent_group_id` OR OLD.`child_group_id` != NEW.`child_group_id` THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Unable to change immutable groups_groups.parent_group_id and/or groups_groups.child_group_id';
+    END IF;
+    IF OLD.expires_at != NEW.expires_at THEN
         IF NEW.`expires_at` > NOW() THEN
             UPDATE `attempts`
                 JOIN `groups_ancestors_active` ON `groups_ancestors_active`.`child_group_id` = `attempts`.`group_id` AND

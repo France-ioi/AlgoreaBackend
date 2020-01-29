@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -179,29 +180,6 @@ const groupGroupMarksAttemptsAsChangedFixture = `
 		- {parent_group_id: 104, child_group_id: 105, child_order: 1}
 		- {parent_group_id: 107, child_group_id: 105, child_order: 1}
 		- {parent_group_id: 108, child_group_id: 104, child_order: 1, expires_at: 2019-05-30 11:00:00}
-	groups_ancestors:
-		- {ancestor_group_id: 101, child_group_id: 101}
-		- {ancestor_group_id: 101, child_group_id: 102}
-		- {ancestor_group_id: 101, child_group_id: 103}
-		- {ancestor_group_id: 101, child_group_id: 104}
-		- {ancestor_group_id: 101, child_group_id: 105}
-		- {ancestor_group_id: 102, child_group_id: 102}
-		- {ancestor_group_id: 102, child_group_id: 103}
-		- {ancestor_group_id: 103, child_group_id: 103}
-		- {ancestor_group_id: 104, child_group_id: 104}
-		- {ancestor_group_id: 104, child_group_id: 105}
-		- {ancestor_group_id: 105, child_group_id: 105}
-		- {ancestor_group_id: 106, child_group_id: 106}
-		- {ancestor_group_id: 107, child_group_id: 101}
-		- {ancestor_group_id: 107, child_group_id: 102}
-		- {ancestor_group_id: 107, child_group_id: 103}
-		- {ancestor_group_id: 107, child_group_id: 104}
-		- {ancestor_group_id: 107, child_group_id: 105}
-		- {ancestor_group_id: 107, child_group_id: 106}
-		- {ancestor_group_id: 107, child_group_id: 107}
-		- {ancestor_group_id: 108, child_group_id: 104, expires_at: 2019-05-30 11:00:00}
-		- {ancestor_group_id: 108, child_group_id: 105, expires_at: 2019-05-30 11:00:00}
-		- {ancestor_group_id: 108, child_group_id: 108}
 	permissions_generated:
 		- {group_id: 102, item_id: 1, can_view_generated: info}
 		- {group_id: 101, item_id: 1, can_view_generated: none}
@@ -284,6 +262,10 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
+			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+				store.GroupGroups().CreateNewAncestors()
+				return nil
+			}))
 			assert.NoError(t, dataStore.GroupGroups().InsertMap(map[string]interface{}{
 				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID, "expires_at": test.expiresAt, "child_order": 1,
 			}))
@@ -295,92 +277,83 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T)
 
 func TestGroupGroupStore_TriggerBeforeUpdate_MarksAttemptsAsChanged(t *testing.T) {
 	for _, test := range []struct {
-		name             string
-		parentGroupID    int64
-		childGroupID     int64
-		newParentGroupID int64
-		newChildGroupID  int64
-		expiresAt        string
-		expectedChanged  []groupItemPair
-		noChanges        bool
+		name            string
+		parentGroupID   int64
+		childGroupID    int64
+		expiresAt       string
+		expectedChanged []groupItemPair
+		doNotSetExpired bool
+		noChanges       bool
 	}{
 		{
-			name:             "group joins another group",
-			parentGroupID:    101,
-			childGroupID:     102,
-			newParentGroupID: 103,
-			newChildGroupID:  104,
-			expiresAt:        "9999-12-31 23:59:59",
-			expectedChanged:  []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
+			name:            "restore an expired relation",
+			parentGroupID:   103,
+			childGroupID:    104,
+			expiresAt:       "9999-12-31 23:59:59",
+			expectedChanged: []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
 		},
 		{
-			name:             "group joins a group, but the relation is expired",
-			parentGroupID:    101,
-			childGroupID:     102,
-			newParentGroupID: 103,
-			newChildGroupID:  104,
-			expiresAt:        "2019-05-30 11:00:00",
-			expectedChanged:  []groupItemPair{},
+			name:            "expire the relation",
+			parentGroupID:   103,
+			childGroupID:    104,
+			doNotSetExpired: true,
+			expiresAt:       "2019-05-30 11:00:00",
+			expectedChanged: []groupItemPair{},
 		},
 		{
-			name:             "group having no attempts joins another group",
-			parentGroupID:    101,
-			childGroupID:     102,
-			newParentGroupID: 105,
-			newChildGroupID:  103,
-			expiresAt:        "9999-12-31 23:59:59",
-			expectedChanged:  []groupItemPair{},
+			name:            "group having no attempts joins another group",
+			parentGroupID:   105,
+			childGroupID:    103,
+			expiresAt:       "9999-12-31 23:59:59",
+			expectedChanged: []groupItemPair{},
 		},
 		{
-			name:             "parent group has no permissions on ancestor items",
-			parentGroupID:    101,
-			childGroupID:     102,
-			newParentGroupID: 106,
-			newChildGroupID:  104,
-			expiresAt:        "9999-12-31 23:59:59",
-			expectedChanged:  []groupItemPair{},
+			name:            "parent group has no permissions on ancestor items",
+			parentGroupID:   106,
+			childGroupID:    104,
+			expiresAt:       "9999-12-31 23:59:59",
+			expectedChanged: []groupItemPair{},
 		},
 		{
-			name:             "no new visible item ancestors after joining a group",
-			parentGroupID:    101,
-			childGroupID:     102,
-			newParentGroupID: 105,
-			newChildGroupID:  102,
-			expiresAt:        "9999-12-31 23:59:59",
-			expectedChanged:  []groupItemPair{},
+			name:            "no new visible item ancestors after joining a group",
+			parentGroupID:   105,
+			childGroupID:    102,
+			expiresAt:       "9999-12-31 23:59:59",
+			expectedChanged: []groupItemPair{},
 		},
 		{
-			name:             "no changes",
-			parentGroupID:    101,
-			childGroupID:     102,
-			newParentGroupID: 101,
-			newChildGroupID:  102,
-			expiresAt:        "9999-12-31 23:59:59",
-			expectedChanged:  []groupItemPair{},
-			noChanges:        true,
-		},
-		{
-			name:             "restore expired",
-			parentGroupID:    108,
-			childGroupID:     104,
-			newParentGroupID: 108,
-			newChildGroupID:  104,
-			expiresAt:        "9999-12-31 23:59:59",
-			expectedChanged:  []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
+			name:            "no changes",
+			parentGroupID:   10,
+			childGroupID:    102,
+			doNotSetExpired: true,
+			expiresAt:       "9999-12-31 23:59:59",
+			expectedChanged: []groupItemPair{},
+			noChanges:       true,
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksAttemptsAsChangedFixture)
+			expiresAt := "2019-05-30 11:00:00"
+			if test.doNotSetExpired {
+				expiresAt = maxDateTime
+			}
+			db := testhelpers.SetupDBWithFixtureString(
+				fmt.Sprintf("groups_groups: [{parent_group_id: %d, child_group_id: %d, expires_at: %s}]",
+					test.parentGroupID, test.childGroupID, expiresAt),
+				groupGroupMarksAttemptsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
-			result := dataStore.GroupGroups().Where("parent_group_id = ?", test.parentGroupID).
-				Where("child_group_id = ?", test.childGroupID).UpdateColumn(map[string]interface{}{
-				"parent_group_id": test.newParentGroupID,
-				"child_group_id":  test.newChildGroupID,
-				"expires_at":      test.expiresAt,
-			})
+			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+				store.GroupGroups().CreateNewAncestors()
+				return nil
+			}))
+			groupGroupStore := dataStore.GroupGroups()
+			result := groupGroupStore.Where("parent_group_id = ?", test.parentGroupID).
+				Where("child_group_id = ?", test.childGroupID).
+				UpdateColumn(map[string]interface{}{
+					"expires_at": test.expiresAt,
+				})
 			assert.NoError(t, result.Error())
 			if test.noChanges {
 				assert.Zero(t, result.RowsAffected())
@@ -390,6 +363,24 @@ func TestGroupGroupStore_TriggerBeforeUpdate_MarksAttemptsAsChanged(t *testing.T
 			assertAttemptsMarkedAsChanged(t, dataStore, test.expectedChanged)
 		})
 	}
+}
+
+func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChildGroupID(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups_groups: [{parent_group_id: 1, child_group_id: 2}]
+	`)
+	defer func() { _ = db.Close() }()
+
+	const expectedErrorMessage = "Error 1644: Unable to change immutable " +
+		"groups_groups.parent_group_id and/or groups_groups.child_group_id"
+
+	groupGroupStore := database.NewDataStore(db).GroupGroups()
+	result := groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
+		UpdateColumn("parent_group_id", 3)
+	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	result = groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
+		UpdateColumn("child_group_id", 3)
+	assert.EqualError(t, result.Error(), expectedErrorMessage)
 }
 
 type groupItemPair struct {

@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,6 +62,10 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *t
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
+			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+				store.GroupGroups().CreateNewAncestors()
+				return nil
+			}))
 			assert.NoError(t, dataStore.InsertMap(map[string]interface{}{
 				"group_id": test.groupID, "item_id": test.itemID, "can_view_generated": test.canView,
 			}))
@@ -78,6 +83,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 		canView         string
 		expectedChanged []groupItemPair
 		noChanges       bool
+		updateExisting  bool
 	}{
 		{
 			name:            "make a parent item visible",
@@ -99,6 +105,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			itemID:          1,
 			canView:         "none",
 			expectedChanged: []groupItemPair{},
+			updateExisting:  true,
 		},
 		{
 			name:            "make an item visible",
@@ -108,15 +115,14 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			expectedChanged: []groupItemPair{},
 		},
 		{
-			name:    "switch from invisible to visible",
-			groupID: 107,
-			itemID:  1,
-			canView: "info",
+			name:           "switch ancestor from invisible to visible",
+			groupID:        107,
+			itemID:         1,
+			canView:        "info",
+			updateExisting: true,
 			expectedChanged: []groupItemPair{
-				{101, 2}, {101, 3}, {102, 2}, {102, 3},
-				{103, 2}, {103, 3}, {104, 2}, {104, 3},
-				{105, 2}, {105, 3}, {105, 3}, {106, 2},
-				{106, 3}, {107, 2}, {107, 3}},
+				{105, 2}, {105, 3},
+				{107, 2}, {107, 3}},
 		},
 		{
 			name:            "make a parent item visible for an expired membership",
@@ -130,21 +136,27 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			groupID:         102,
 			itemID:          1,
 			canView:         "info",
+			updateExisting:  true,
 			expectedChanged: []groupItemPair{},
 			noChanges:       true,
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksAttemptsAsChangedFixture, `
-				permissions_generated:
-					- {group_id: 104, item_id: 1}
-					- {group_id: 104, item_id: 2}
-					- {group_id: 104, item_id: 3}
-					- {group_id: 108, item_id: 2}`)
+			fixures := make([]string, 0, 2)
+			if !test.updateExisting {
+				fixures = append(fixures,
+					fmt.Sprintf("permissions_generated: [{group_id: %d, item_id: %d}]", test.groupID, test.itemID))
+			}
+			fixures = append(fixures, groupGroupMarksAttemptsAsChangedFixture)
+			db := testhelpers.SetupDBWithFixtureString(fixures...)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
+			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+				store.GroupGroups().CreateNewAncestors()
+				return nil
+			}))
 			result := dataStore.Where("group_id = ?", test.groupID).
 				Where("item_id = ?", test.itemID).UpdateColumn(map[string]interface{}{
 				"can_view_generated": test.canView,
