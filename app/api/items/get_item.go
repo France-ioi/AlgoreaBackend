@@ -80,7 +80,7 @@ type itemCommonFields struct {
 	// Nullable
 	// required: true
 	GroupCodeEnter *bool `json:"group_code_enter"`
-	// Whether the current user made at least one attempt to solve the item
+	// Whether the current user (or the `as_team_id` team) made at least one attempt to solve the item
 	// required: true
 	HasAttempts bool `json:"has_attempts"`
 }
@@ -144,19 +144,27 @@ type itemResponse struct {
 // ---
 // summary: Get an item
 // description: Returns data related to the specified item, its children,
-//              and the current user's interactions with them
+//              and the current user's (or the team's given in `as_team_id`) interactions with them
 //              (from tables `items`, `items_items`, `items_string`, `attempts`).
 //
 //
-//              * If the specified item is not visible by the current user, the 'not found' response is returned.
+//              * If the specified item is not visible by the current user (or the team given in `as_team_id`),
+//                the 'not found' response is returned.
 //
-//              * If the current user has only 'info' access on the specified item, the 'forbidden' error is returned.
+//              * If the current user (or the team given in `as_team_id`) has only 'info' access on the specified item,
+//                the 'forbidden' error is returned.
+//
+//              * If `as_team_id` is given, it should be a user's parent team group,
+//                otherwise the "forbidden" error is returned.
 // parameters:
 // - name: item_id
 //   in: path
 //   type: integer
 //   format: int64
 //   required: true
+// - name: as_team_id
+//   in: query
+//   type: integer
 // responses:
 //   "200":
 //     description: OK. Success response with item data
@@ -173,15 +181,32 @@ type itemResponse struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	req := &GetItemRequest{}
-	if err := req.Bind(httpReq); err != nil {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(httpReq)
-	rawData := getRawItemData(srv.Store.Items(), req.ID, user)
+	groupID := user.GroupID
+	if len(httpReq.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(httpReq, "as_team_id")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
 
-	if len(rawData) == 0 || rawData[0].ID != req.ID {
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).Where("type = 'Team'").
+			Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id").
+			Where("groups_groups_active.child_group_id = ?", user.GroupID).HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
+		}
+	}
+
+	rawData := getRawItemData(srv.Store.Items(), itemID, groupID, user)
+
+	if len(rawData) == 0 || rawData[0].ID != itemID {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
@@ -242,10 +267,10 @@ type rawItem struct {
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
-func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []rawItem {
+func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database.User) []rawItem {
 	var result []rawItem
 
-	accessRights := s.Permissions().WithViewPermissionForUser(user, "info")
+	accessRights := s.Permissions().WithViewPermissionForGroup(groupID, "info")
 
 	commonColumns := `items.id AS id,
 		items.type,
@@ -269,7 +294,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.url,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
-		NULL AS child_order, NULL AS category, NULL AS content_view_propagation`, user.GroupID)
+		NULL AS child_order, NULL AS category, NULL AS content_view_propagation`, groupID)
 
 	childrenQuery := s.Select(
 		commonColumns+`NULL AS title_bar_visible,
@@ -279,7 +304,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		NULL AS url,
 		NULL AS uses_api,
 		NULL AS hints_allowed,
-		child_order, category, content_view_propagation`, user.GroupID).
+		child_order, category, content_view_propagation`, groupID).
 		Joins("JOIN items_items ON items.id=child_item_id AND parent_item_id=?", rootID)
 
 	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
@@ -307,7 +332,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.uses_api,
 			items.hints_allowed,
 			access_rights.can_view_generated_value
-		FROM ? items `, user.GroupID, unionQuery.SubQuery()).
+		FROM ? items `, groupID, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id", accessRights.SubQuery()).
 		Order("child_order")

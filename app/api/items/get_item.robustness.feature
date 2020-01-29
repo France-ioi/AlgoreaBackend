@@ -6,6 +6,7 @@ Background:
     | 13 | Group B |         | -2    | Class    |
     | 14 | info    |         | -2    | Class    |
     | 16 | Group C |         | -2    | Class    |
+    | 17 | Team    |         | -2    | Team     |
   And the database has the following table 'users':
     | login | temp_user | group_id |
     | jdoe  | 0         | 11       |
@@ -64,3 +65,20 @@ Background:
     Then the response code should be 403
     And the response error message should contain "Only 'info' access to the item"
 
+  Scenario: Should fail when as_team_id is invalid
+    Given I am the user with id "14"
+    When I send a GET request to "/items/200?as_team_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+
+  Scenario: Should fail when as_team_id is not a team
+    Given I am the user with id "14"
+    When I send a GET request to "/items/200?as_team_id=16"
+    Then the response code should be 403
+    And the response error message should contain "Can't use given as_team_id as a user's team"
+
+  Scenario: Should fail when the current user is not a member of as_team_id
+    Given I am the user with id "14"
+    When I send a GET request to "/items/200?as_team_id=17"
+    Then the response code should be 403
+    And the response error message should contain "Can't use given as_team_id as a user's team"
