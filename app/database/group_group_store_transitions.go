@@ -431,6 +431,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 		if shouldCreateNewAncestors {
 			dataStore.GroupGroups().createNewAncestors()
+			mustNotBeError(dataStore.Attempts().ComputeAllAttempts())
 		}
 		return nil
 	}))

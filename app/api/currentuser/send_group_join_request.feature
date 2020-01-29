@@ -17,6 +17,23 @@ Feature: User sends a request to join a group
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | at                  |
       | 14       | 21        | join_request | 2019-05-30 11:00:00 |
+    And the database has the following table 'items':
+      | id | default_language_tag |
+      | 20 | fr                   |
+      | 30 | fr                   |
+    And the database has the following table 'items_ancestors':
+      | ancestor_item_id | child_item_id |
+      | 20               | 30            |
+    And the database has the following table 'items_items':
+      | parent_item_id | child_item_id | child_order |
+      | 20             | 30            | 1           |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 11       | 20      | content            |
+      | 21       | 30      | content            |
+    And the database has the following table 'attempts':
+      | group_id | item_id | order | result_propagation_state |
+      | 21       | 30      | 1     | done                     |
 
   Scenario: Successfully send a request
     Given I am the user with id "21"
@@ -38,6 +55,7 @@ Feature: User sends a request to join a group
       | group_id | member_id | action               | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 11       | 21        | join_request_created | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Try to recreate a request that already exists
     Given I am the user with id "21"
@@ -53,6 +71,7 @@ Feature: User sends a request to join a group
     """
     And the table "group_pending_requests" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Automatically accepts the request if the user can manage group memberships
     Given I am the user with id "21"
@@ -85,3 +104,7 @@ Feature: User sends a request to join a group
       | 14                | 14             | 1       |
       | 14                | 21             | 0       |
       | 21                | 21             | 1       |
+    And the table "attempts" should be:
+      | group_id | item_id | result_propagation_state |
+      | 21       | 20      | done                     |
+      | 21       | 30      | done                     |

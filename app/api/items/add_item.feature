@@ -89,6 +89,9 @@ Feature: Add item
       | group_id | item_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
       | 11       | 12      | content_with_descendants | solution       | answer    | all      | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 34      | solution                 | transfer       | transfer  | transfer | 0        | 11              | 2019-05-30 11:00:00 |
+    And the database table 'attempts' has also the following rows:
+      | group_id | item_id | order | result_propagation_state |
+      | 11       | 12      | 1     | done                     |
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -171,6 +174,11 @@ Feature: Add item
       | 8674665223082153551 | 12                  | info                     | none                     | none                | none               | 0                  |
       | 8674665223082153551 | 34                  | info                     | none                     | none                | none               | 0                  |
       | 8674665223082153551 | 5577006791947779410 | content                  | none                     | none                | none               | 0                  |
+    And the table "attempts" should be:
+      | group_id | item_id             | result_propagation_state |
+      | 11       | 12                  | done                     |
+      | 11       | 21                  | done                     |
+      | 11       | 5577006791947779410 | done                     |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"
@@ -215,3 +223,4 @@ Feature: Add item
       | 11       | 21                  | solution           | none                     | none                | children           | 0                  |
       | 11       | 5577006791947779410 | solution           | transfer                 | transfer            | transfer           | 1                  |
     And the table "groups" should stay unchanged
+    And the table "attempts" should stay unchanged

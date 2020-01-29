@@ -144,7 +144,7 @@ func setAdditionalTimeForGroupInContest(
 
 	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS total_additional_times").Error())
 	service.MustNotBeError(store.Exec(`
-		CREATE TEMPORARY TABLE total_additional_times (
+		CREATE TEMPORARY TABLE new_expires_at (
 			PRIMARY KEY child_group_id (child_group_id)
 		)
 		?`,
@@ -171,27 +171,23 @@ func setAdditionalTimeForGroupInContest(
 			Group("groups_groups_active.child_group_id").
 			Select(`
 				groups_groups_active.child_group_id,
-				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
+				DATE_ADD(
+					MIN(contest_participations.started_at),
+					INTERVAL (? + IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)) SECOND
+				) AS expires_at`, durationInSeconds).
 			WithWriteLock().QueryExpr()).Error())
 
 	//nolint:gosec
 	result := store.Exec(`
 		UPDATE groups_groups
-		JOIN attempts AS contest_participations
-			ON contest_participations.group_id = groups_groups.child_group_id AND
-				contest_participations.item_id = ? AND contest_participations.started_at IS NOT NULL AND
-				contest_participations.started_at IS NOT NULL
-		JOIN total_additional_times
-			ON total_additional_times.child_group_id = groups_groups.child_group_id
-		SET groups_groups.expires_at = DATE_ADD(
-			contest_participations.started_at,
-			INTERVAL (? + total_additional_times.total_additional_time) SECOND
-		)
+		JOIN new_expires_at
+			ON new_expires_at.child_group_id = groups_groups.child_group_id
+		SET groups_groups.expires_at = new_expires_at.expires_at
 		WHERE NOW() < groups_groups.expires_at AND groups_groups.parent_group_id = ?`,
-		itemID, durationInSeconds, participantsGroupID)
+		participantsGroupID)
 	service.MustNotBeError(result.Error())
 	if result.RowsAffected() > 0 {
 		service.MustNotBeError(store.GroupGroups().After())
 	}
-	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE total_additional_times").Error())
+	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 }
