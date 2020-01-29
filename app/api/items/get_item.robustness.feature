@@ -12,15 +12,19 @@ Background:
     | jdoe  | 0         | 11       |
     | info  | 0         | 14       |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id |
-    | 61 | 13              | 11             |
-    | 62 | 16              | 14             |
+    | parent_group_id | child_group_id |
+    | 13              | 11             |
+    | 16              | 14             |
+    | 17              | 14             |
   And the database has the following table 'groups_ancestors':
-    | id | ancestor_group_id | child_group_id | is_self |
-    | 71 | 11                | 11             | 1       |
-    | 73 | 13                | 13             | 1       |
-    | 74 | 13                | 11             | 0       |
-    | 75 | 16                | 14             | 0       |
+    | ancestor_group_id | child_group_id | is_self |
+    | 11                | 11             | 1       |
+    | 13                | 13             | 1       |
+    | 13                | 11             | 0       |
+    | 16                | 14             | 0       |
+    | 16                | 16             | 1       |
+    | 17                | 14             | 0       |
+    | 17                | 17             | 1       |
   And the database has the following table 'items':
     | id  | type    | teams_editable | no_score | default_language_tag |
     | 190 | Chapter | false          | false    | fr                   |
@@ -31,6 +35,7 @@ Background:
     | 13       | 200     | content_with_descendants |
     | 16       | 190     | info                     |
     | 16       | 200     | content_with_descendants |
+    | 17       | 190     | info                     |
   And the database has the following table 'items_strings':
     | item_id | language_tag | title      |
     | 200     | fr           | Category 1 |
@@ -79,6 +84,12 @@ Background:
 
   Scenario: Should fail when the current user is not a member of as_team_id
     Given I am the user with id "14"
-    When I send a GET request to "/items/200?as_team_id=17"
+    When I send a GET request to "/items/200?as_team_id=11"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
+
+  Scenario: Should fail when the team has only info access rights to the root item
+    Given I am the user with id "14"
+    When I send a GET request to "/items/190?as_team_id=17"
+    Then the response code should be 403
+    And the response error message should contain "Only 'info' access to the item"

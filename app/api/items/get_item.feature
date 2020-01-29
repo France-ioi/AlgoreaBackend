@@ -34,6 +34,7 @@ Feature: Get item view information
       | 13              | 11             |
       | 13              | 17             |
       | 15              | 14             |
+      | 26              | 11             |
       | 26              | 22             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
@@ -42,6 +43,7 @@ Feature: Get item view information
       | 13                | 11             | 0       |
       | 15                | 14             | 0       |
       | 13                | 17             | 0       |
+      | 26                | 11             | 0       |
       | 26                | 22             | 0       |
       | 26                | 26             | 1       |
     And the database has the following table 'items_items':
@@ -534,7 +536,7 @@ Feature: Get item view information
     """
 
   Scenario: Info access on children (as team)
-    Given I am the user with id "22"
+    Given I am the user with id "11"
     When I send a GET request to "/items/200?as_team_id=26"
     Then the response code should be 200
     And the response body should be, in JSON:
