@@ -75,72 +75,60 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 		name            string
 		groupID         int64
 		itemID          int64
-		newGroupID      int64
-		newItemID       int64
 		canView         string
 		expectedChanged []groupItemPair
 		noChanges       bool
 	}{
 		{
 			name:            "make a parent item visible",
-			groupID:         102,
-			itemID:          1,
-			newGroupID:      104,
-			newItemID:       2,
+			groupID:         104,
+			itemID:          2,
 			canView:         "info",
 			expectedChanged: []groupItemPair{{104, 3}, {105, 3}},
 		},
 		{
 			name:            "make an ancestor item visible",
-			groupID:         102,
+			groupID:         104,
 			itemID:          1,
-			newGroupID:      104,
-			newItemID:       1,
 			canView:         "info",
 			expectedChanged: []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
 		},
 		{
-			name:            "make a parent item invisible",
-			groupID:         102,
+			name:            "make an ancestor item invisible",
+			groupID:         108,
 			itemID:          1,
-			newGroupID:      104,
-			newItemID:       2,
 			canView:         "none",
 			expectedChanged: []groupItemPair{},
 		},
 		{
 			name:            "make an item visible",
-			groupID:         107,
-			itemID:          1,
-			newGroupID:      104,
-			newItemID:       3,
+			groupID:         104,
+			itemID:          3,
 			canView:         "info",
 			expectedChanged: []groupItemPair{},
 		},
 		{
-			name:            "switch from invisible to visible",
-			groupID:         107,
-			itemID:          1,
-			newGroupID:      107,
-			newItemID:       1,
-			canView:         "info",
-			expectedChanged: []groupItemPair{{101, 2}, {101, 3}, {102, 2}, {102, 3}, {103, 2}, {103, 3}, {104, 2}, {104, 3}, {105, 2}, {105, 3}},
+			name:    "switch from invisible to visible",
+			groupID: 107,
+			itemID:  1,
+			canView: "info",
+			expectedChanged: []groupItemPair{
+				{101, 2}, {101, 3}, {102, 2}, {102, 3},
+				{103, 2}, {103, 3}, {104, 2}, {104, 3},
+				{105, 2}, {105, 3}, {105, 3}, {106, 2},
+				{106, 3}, {107, 2}, {107, 3}},
 		},
 		{
 			name:            "make a parent item visible for an expired membership",
-			groupID:         102,
-			itemID:          1,
-			newGroupID:      108,
-			newItemID:       2,
-			canView:         "none",
-			expectedChanged: []groupItemPair{},
+			groupID:         108,
+			itemID:          2,
+			canView:         "info",
+			expectedChanged: []groupItemPair{{108, 3}},
 		},
 		{
 			name:            "no changes",
-			groupID:         104,
-			itemID:          3,
-			newGroupID:      104,
-			newItemID:       3,
+			groupID:         102,
+			itemID:          1,
 			canView:         "info",
 			expectedChanged: []groupItemPair{},
 			noChanges:       true,
@@ -148,14 +136,17 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksAttemptsAsChangedFixture)
+			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksAttemptsAsChangedFixture, `
+				permissions_generated:
+					- {group_id: 104, item_id: 1}
+					- {group_id: 104, item_id: 2}
+					- {group_id: 104, item_id: 3}
+					- {group_id: 108, item_id: 2}`)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
 			result := dataStore.Where("group_id = ?", test.groupID).
 				Where("item_id = ?", test.itemID).UpdateColumn(map[string]interface{}{
-				"group_id":           test.newGroupID,
-				"item_id":            test.newItemID,
 				"can_view_generated": test.canView,
 			})
 			assert.NoError(t, result.Error())
@@ -168,4 +159,24 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			assertAttemptsMarkedAsChanged(t, dataStore, test.expectedChanged)
 		})
 	}
+}
+
+func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrItemID(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1}]
+		items: [{id: 2, default_language_tag: 2}]
+		permissions_generated: [{group_id: 1, item_id: 2, can_view_generated: none}]
+	`)
+	defer func() { _ = db.Close() }()
+
+	const expectedErrorMessage = "Error 1644: Unable to change immutable " +
+		"permissions_generated.group_id and/or permissions_generated.child_item_id"
+
+	dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
+	result := dataStore.Where("group_id = 1 AND item_id = 2").
+		UpdateColumn("group_id", 3)
+	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	result = dataStore.Where("group_id = 1 AND item_id = 2").
+		UpdateColumn("item_id", 3)
+	assert.EqualError(t, result.Error(), expectedErrorMessage)
 }

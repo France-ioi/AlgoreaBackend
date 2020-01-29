@@ -191,6 +191,7 @@ const groupGroupMarksAttemptsAsChangedFixture = `
 		- {ancestor_group_id: 104, child_group_id: 104}
 		- {ancestor_group_id: 104, child_group_id: 105}
 		- {ancestor_group_id: 105, child_group_id: 105}
+		- {ancestor_group_id: 106, child_group_id: 106}
 		- {ancestor_group_id: 107, child_group_id: 101}
 		- {ancestor_group_id: 107, child_group_id: 102}
 		- {ancestor_group_id: 107, child_group_id: 103}
@@ -213,16 +214,25 @@ const groupGroupMarksAttemptsAsChangedFixture = `
 		- {group_id: 103, item_id: 1, order: 1}
 		- {group_id: 104, item_id: 1, order: 1}
 		- {group_id: 105, item_id: 1, order: 1}
+		- {group_id: 106, item_id: 1, order: 1}
+		- {group_id: 107, item_id: 1, order: 1}
+		- {group_id: 108, item_id: 1, order: 1}
 		- {group_id: 101, item_id: 2, order: 1}
 		- {group_id: 102, item_id: 2, order: 1}
 		- {group_id: 103, item_id: 2, order: 1}
 		- {group_id: 104, item_id: 2, order: 1}
 		- {group_id: 105, item_id: 2, order: 1}
+		- {group_id: 106, item_id: 2, order: 1}
+		- {group_id: 107, item_id: 2, order: 1}
+		- {group_id: 108, item_id: 2, order: 1}
 		- {group_id: 101, item_id: 3, order: 1}
 		- {group_id: 102, item_id: 3, order: 1}
 		- {group_id: 103, item_id: 3, order: 1}
 		- {group_id: 104, item_id: 3, order: 1}
-		- {group_id: 105, item_id: 3, order: 1}`
+		- {group_id: 105, item_id: 3, order: 1}
+		- {group_id: 106, item_id: 3, order: 1}
+		- {group_id: 107, item_id: 3, order: 1}
+		- {group_id: 108, item_id: 3, order: 1}`
 
 func TestGroupGroupStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T) {
 	for _, test := range []struct {

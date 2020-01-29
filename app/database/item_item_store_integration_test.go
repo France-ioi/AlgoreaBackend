@@ -22,6 +22,7 @@ func TestItemItemStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T) {
 
 	assertAttemptsMarkedAsChanged(t, dataStore, []groupItemPair{
 		{101, 2}, {102, 2}, {103, 2},
-		{104, 2}, {105, 2},
+		{104, 2}, {105, 2}, {106, 2},
+		{107, 2}, {108, 2},
 	})
 }
