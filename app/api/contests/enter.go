@@ -14,16 +14,14 @@ import (
 // ---
 // summary: Enter the contest
 // description: >
-//                Allows to enter a contest as a group (user self or team).
+//                Allows to enter a contest as a user or as a team (if `as_team_id` is given).
 //
 //
 //                Restrictions:
 //                  * `item_id` should be a contest;
-//                  * `group_id` should be either the current user's self group (if the item's `allows_multiple_attempts` is false) or
-//                     a team with `team_item_id` = `item_id` (otherwise);
-//                  * the authenticated user should have at least 'info' access to the item;
-//                  * the authenticated user should be a member of the `group_id` (if it is a team);
-//                  * the group must be qualified for the contest (contestGetQualificationState returns "ready")
+//                  * `as_team_id` (if given) should be the current user's team;
+//                  * the authenticated user (or his team) should have at least 'info' access to the item;
+//                  * the group (the user or his team) must be qualified for the contest (contestGetQualificationState returns "ready").
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
@@ -33,11 +31,10 @@ import (
 //   type: integer
 //   format: int64
 //   required: true
-// - name: group_id
-//   in: path
+// - name: as_team_id
+//   in: query
 //   type: integer
 //   format: int64
-//   required: true
 // responses:
 //   "201":
 //     "$ref": "#/responses/contestEnterResponse"
