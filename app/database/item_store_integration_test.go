@@ -35,13 +35,13 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			db := setupDB()
 			defer func() { _ = db.Close() }()
 
-			user := &database.User{GroupID: 11, DefaultLanguage: "en"}
+			groupID := int64(11)
 			dataStore := database.NewDataStore(db)
 			itemStore := dataStore.Items()
 
 			var result []int64
 			parameters := make([]reflect.Value, 0, len(testCase.args)+1)
-			parameters = append(parameters, reflect.ValueOf(user))
+			parameters = append(parameters, reflect.ValueOf(groupID))
 			for _, arg := range testCase.args {
 				parameters = append(parameters, reflect.ValueOf(arg))
 			}

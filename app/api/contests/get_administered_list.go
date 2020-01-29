@@ -123,7 +123,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		}
 		service.MustNotBeError(srv.Store.Items().
 			Joins("JOIN items_items ON items_items.parent_item_id = items.id AND items_items.child_item_id IN (?)", itemIDs).
-			WhereItemsAreVisible(user).
+			WhereItemsAreVisible(user.GroupID).
 			JoinsUserAndDefaultItemStrings(user).
 			Group("items_items.parent_item_id, items_items.child_item_id").
 			Order("COALESCE(MAX(user_strings.title), MAX(default_strings.title))").

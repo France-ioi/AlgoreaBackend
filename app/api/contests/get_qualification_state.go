@@ -138,7 +138,7 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		ContestMaxTeamSize       int32
 		ContestEnteringCondition string
 	}
-	err = store.Items().VisibleByID(user, itemID).Where("items.duration IS NOT NULL").
+	err = store.Items().VisibleByID(user.GroupID, itemID).Where("items.duration IS NOT NULL").
 		Select("items.allows_multiple_attempts, items.contest_max_team_size, items.contest_entering_condition").
 		Take(&contestInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
