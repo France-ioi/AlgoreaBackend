@@ -40,7 +40,9 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				(descendants.result_propagation_state = 'to_be_recomputed' OR
 				 descendants.result_propagation_state = 'changed')`).Error)
 
-		// Insert missing attempts for chapters having descendants marked as 'to_be_recomputed'/'changed'
+		// Insert missing attempts for chapters having descendants with attempts marked as 'to_be_recomputed'/'changed'.
+		// We only create attempts for chapters which are (or have ancestors which are) visible to the group that attempted
+		// to solve the descendant items.
 		// (this query can take more than 25 seconds when executed for the first time after the db migration)
 		mustNotBeError(ds.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 			return retryStore.Exec(`
