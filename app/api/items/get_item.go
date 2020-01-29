@@ -187,21 +187,9 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID := user.GroupID
-	if len(httpReq.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(httpReq, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().ByID(groupID).Where("type = 'Team'").
-			Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id").
-			Where("groups_groups_active.child_group_id = ?", user.GroupID).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
+	groupID, apiError := srv.chooseBetweenUserAndAsTeamID(httpReq, user)
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	rawData := getRawItemData(srv.Store.Items(), itemID, groupID, user)
