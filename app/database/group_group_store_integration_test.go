@@ -275,7 +275,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T)
 	}
 }
 
-func TestGroupGroupStore_TriggerBeforeUpdate_MarksAttemptsAsChanged(t *testing.T) {
+func TestGroupGroupStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T) {
 	for _, test := range []struct {
 		name            string
 		parentGroupID   int64
