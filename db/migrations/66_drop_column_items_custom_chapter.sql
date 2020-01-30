@@ -1,8 +1,8 @@
 -- +migrate Up
-INSERT INTO `groups` (`id`,`name`, `description`, `type`)
+INSERT INTO `groups` (`id`,`name`, `description`, `type`, `created_at`)
     VALUES (777, 'Former task owners',
             'Contains all the task owners from AlgoreaPlatform and has can_edit=children permission on former custom chapters',
-            'Other');
+            'Other', NOW());
 SELECT @group_id := id FROM `groups`  WHERE `type` = 'Other' AND `name` = 'Former task owners' LIMIT 1;
 INSERT INTO groups_groups (`id`, `parent_group_id`, `child_group_id`, `type`, `child_order`)
     SELECT (@group_id + `children`.`group_id`) % 9223372036854775806 + 1,

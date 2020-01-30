@@ -3,9 +3,9 @@
 ALTER TABLE `groups` MODIFY COLUMN `type` enum('Class','Team','Club','Friends','Other','UserSelf','Base','ContestParticipants') NOT NULL;
 
 # create a "contest participants" group for each contest
-INSERT INTO `groups` (`id`, `name`, `type`, `team_item_id`)
+INSERT INTO `groups` (`id`, `name`, `type`, `team_item_id`, `created_at`)
     SELECT FLOOR(RAND(3) * 1000000000) + FLOOR(RAND(4) * 1000000000) * 1000000000,
-           CONCAT(`items`.`id`, '-participants'), 'ContestParticipants', `items`.`id`
+           CONCAT(`items`.`id`, '-participants'), 'ContestParticipants', `items`.`id`, NOW()
     FROM `items`
     WHERE `duration` IS NOT NULL
     ORDER BY `items`.`id`;
