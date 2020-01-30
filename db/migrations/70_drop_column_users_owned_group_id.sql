@@ -69,8 +69,8 @@ ALTER TABLE `users`
 ALTER TABLE `groups` MODIFY COLUMN `type` enum('Class','Team','Club','Friends','Other','UserSelf','UserAdmin','Base') NOT NULL;
 
 # Restore `groups` with `type` = 'UserAdmin' (use `team_item_id` as a temporary storage)
-INSERT INTO `groups` (`name`, `type`, `team_item_id`)
-    SELECT CONCAT(`name`, '-admin'), 'UserAdmin', `user_groups`.`id`
+INSERT INTO `groups` (`name`, `type`, `team_item_id`, `created_at`)
+    SELECT CONCAT(`name`, '-admin'), 'UserAdmin', `user_groups`.`id`, NOW()
     FROM `groups` AS `user_groups` WHERE `user_groups`.`type` = 'UserSelf';
 
 UPDATE `users`
