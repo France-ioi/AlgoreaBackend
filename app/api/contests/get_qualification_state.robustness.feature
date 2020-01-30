@@ -39,15 +39,15 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: Wrong item_id
     Given I am the user with id "31"
-    When I send a GET request to "/contests/abc/groups/31/qualification-state"
+    When I send a GET request to "/contests/abc/qualification-state"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
-  Scenario: Wrong group_id
+  Scenario: Wrong as_team_id
     Given I am the user with id "31"
-    When I send a GET request to "/contests/50/groups/abc/qualification-state"
+    When I send a GET request to "/contests/50/qualification-state?as_team_id=abc"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for group_id (should be int64)"
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
 
   Scenario: The item is not visible to the current user (can_view = none)
     Given I am the user with id "21"
@@ -57,7 +57,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 50      | none               |
-    When I send a GET request to "/contests/50/groups/21/qualification-state"
+    When I send a GET request to "/contests/50/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -66,7 +66,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     And the database has the following table 'items':
       | id | duration | default_language_tag |
       | 50 | 00:00:01 | fr                   |
-    When I send a GET request to "/contests/50/groups/21/qualification-state"
+    When I send a GET request to "/contests/50/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -78,11 +78,11 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | group_id | item_id | can_view_generated |
       | 21       | 50      | info               |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/groups/31/qualification-state"
+    When I send a GET request to "/contests/50/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: group_id is not a self group of the current user while the item's allows_multiple_attempts = false
+  Scenario: as_team_id is given while the item's allows_multiple_attempts = false
     Given the database has the following table 'items':
       | id | duration | allows_multiple_attempts | default_language_tag |
       | 50 | 00:00:00 | false                    | fr                   |
@@ -93,11 +93,11 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/groups/21/qualification-state"
+    When I send a GET request to "/contests/50/qualification-state?as_team_id=21"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: group_id is not a team related to the item while the item's allows_multiple_attempts = true
+  Scenario: as_team_id is not a team related to the item while the item's allows_multiple_attempts = true
     Given the database has the following table 'items':
       | id | duration | allows_multiple_attempts | default_language_tag |
       | 60 | 00:00:00 | true                     | fr                   |
@@ -106,24 +106,11 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/groups/10/qualification-state"
+    When I send a GET request to "/contests/60/qualification-state?as_team_id=10"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: group_id is a user self group while the item's allows_multiple_attempts = true
-    Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 60 | 00:00:00 | true                     | fr                   |
-    And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 11       | 60      | info                     |
-      | 21       | 60      | content_with_descendants |
-    And I am the user with id "31"
-    When I send a GET request to "/contests/60/groups/31/qualification-state"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
-  Scenario: The current user is not a member of group_id while the item's allows_multiple_attempts = true
+  Scenario: The current user is not a member of as_team_id while the item's allows_multiple_attempts = true
     Given the database has the following table 'items':
       | id | duration | allows_multiple_attempts | default_language_tag |
       | 60 | 00:00:00 | true                     | fr                   |
@@ -132,6 +119,6 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/11/qualification-state"
+    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

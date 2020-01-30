@@ -2,7 +2,9 @@
 package items
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -171,4 +173,25 @@ func createContestParticipantsGroup(store *database.DataStore, itemID int64) int
 		"can_view":        "content",
 	}))
 	return participantsGroupID
+}
+
+func (srv *Service) getParticipantIDFromRequest(httpReq *http.Request, user *database.User) (int64, service.APIError) {
+	groupID := user.GroupID
+	var err error
+	if len(httpReq.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(httpReq, "as_team_id")
+		if err != nil {
+			return 0, service.ErrInvalidRequest(err)
+		}
+
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).Where("type = 'Team'").
+			Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id").
+			Where("groups_groups_active.child_group_id = ?", user.GroupID).HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return 0, service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
+		}
+	}
+	return groupID, service.NoError
 }

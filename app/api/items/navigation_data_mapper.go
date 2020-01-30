@@ -29,7 +29,7 @@ type rawNavigationItem struct {
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
-func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *database.User) ([]rawNavigationItem, error) {
+func getRawNavigationData(dataStore *database.DataStore, rootID, groupID int64, user *database.User) ([]rawNavigationItem, error) {
 	var result []rawNavigationItem
 	items := dataStore.Items()
 
@@ -37,13 +37,13 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 
 	commonAttributes := "items.id, items.type, items.default_language_tag, " +
 		"can_view_generated_value"
-	itemQ := items.VisibleByID(user, rootID).Select(
+	itemQ := items.VisibleByID(groupID, rootID).Select(
 		commonAttributes + ", NULL AS parent_item_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS content_view_propagation")
 	service.MustNotBeError(itemQ.Error())
-	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(
+	childrenQ := items.VisibleChildrenOfID(groupID, rootID).Select(
 		commonAttributes + ",	parent_item_id, NULL AS item_grandparent_id, child_order, content_view_propagation")
 	service.MustNotBeError(childrenQ.Error())
-	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(
+	gChildrenQ := items.VisibleGrandChildrenOfID(groupID, rootID).Select(
 		commonAttributes + ", ii1.parent_item_id, ii2.parent_item_id AS item_grandparent_id, ii1.child_order, ii1.content_view_propagation")
 
 	service.MustNotBeError(gChildrenQ.Error())
@@ -69,7 +69,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 				FROM attempts
 				WHERE attempts.item_id = items.id AND attempts.group_id = ?
 				GROUP by attempts.group_id, attempts.item_id
-			) AS best_scores ON 1`, user.GroupID).
+			) AS best_scores ON 1`, groupID).
 		Order("item_grandparent_id, parent_item_id, child_order")
 
 	if err := query.Scan(&result).Error(); err != nil {

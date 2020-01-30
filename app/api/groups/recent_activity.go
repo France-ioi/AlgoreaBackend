@@ -149,7 +149,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		JoinsUserAndDefaultItemStrings(user).
 		Where("attempts.item_id IN ?", itemDescendants.SubQuery()).
 		Where("answers.type='Submission'").
-		WhereItemsAreVisible(user).
+		WhereItemsAreVisible(user.GroupID).
 		WhereUsersAreDescendantsOfGroup(groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)

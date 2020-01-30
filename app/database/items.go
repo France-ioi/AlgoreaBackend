@@ -32,9 +32,9 @@ func (conn *DB) WhereGroupHasPermissionOnItems(groupID int64, permissionKind, ne
 	return conn.Joins("JOIN ? AS permissions ON permissions.item_id = items.id", itemsPerms.SubQuery())
 }
 
-// WhereItemsAreVisible returns a subview of the visible items for the given user basing on the given view
-func (conn *DB) WhereItemsAreVisible(user *User) *DB {
-	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().VisibleToUser(user)
+// WhereItemsAreVisible returns a subview of the visible items for the given group basing on the given view
+func (conn *DB) WhereItemsAreVisible(groupID int64) *DB {
+	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().VisibleToGroup(groupID)
 	return conn.Joins("JOIN ? as visible ON visible.item_id = items.id", visibleItemsPerms.SubQuery())
 }
 

@@ -14,29 +14,29 @@ type ItemStore struct {
 	*DataStore
 }
 
-// Visible returns a view of the visible items for the given user
-func (s *ItemStore) Visible(user *User) *DB {
-	return s.WhereItemsAreVisible(user)
+// Visible returns a view of the visible items for the given participant
+func (s *ItemStore) Visible(groupID int64) *DB {
+	return s.WhereItemsAreVisible(groupID)
 }
 
-// VisibleByID returns a view of the visible item identified by itemID, for the given user
-func (s *ItemStore) VisibleByID(user *User, itemID int64) *DB {
-	return s.Visible(user).Where("items.id = ?", itemID)
+// VisibleByID returns a view of the visible item identified by itemID, for the given participant
+func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
+	return s.Visible(groupID).Where("items.id = ?", itemID)
 }
 
-// VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleChildrenOfID(user *User, itemID int64) *DB {
+// VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given participant
+func (s *ItemStore) VisibleChildrenOfID(groupID, itemID int64) *DB {
 	return s.
-		Visible(user).
+		Visible(groupID).
 		Joins("JOIN ? ii ON items.id=child_item_id", s.ItemItems().SubQuery()).
 		Where("ii.parent_item_id = ?", itemID)
 }
 
-// VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
+// VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given participant
+func (s *ItemStore) VisibleGrandChildrenOfID(groupID, itemID int64) *DB {
 	return s.
 		// visible items are the leaves (potential grandChildren)
-		Visible(user).
+		Visible(groupID).
 		// get their parents' IDs (ii1)
 		Joins("JOIN ? ii1 ON items.id = ii1.child_item_id", s.ItemItems().SubQuery()).
 		// get their grand parents' IDs (ii2)
@@ -221,7 +221,7 @@ func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess b
 	recoverPanics(&err)
 
 	var readOnly bool
-	err = s.Visible(user).WherePermissionIsAtLeast("view", "content").
+	err = s.Visible(user.GroupID).WherePermissionIsAtLeast("view", "content").
 		Where("id = ?", itemID).
 		PluckFirst("read_only", &readOnly).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -254,7 +254,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 		FullAccess bool
 	}
 
-	mustNotBeError(s.Visible(user).
+	mustNotBeError(s.Visible(user.GroupID).
 		Select("items.id AS item_id, can_view_generated_value >= ? AS full_access",
 			s.PermissionsGranted().ViewIndexByName("content_with_descendants")).
 		Joins("JOIN items_ancestors ON items_ancestors.ancestor_item_id = items.id").

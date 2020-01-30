@@ -9,11 +9,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// GetItemRequest wraps the id parameter
-type GetItemRequest struct {
-	ID int64 `json:"id"`
-}
-
 type navigationItemAccessRights struct {
 	// required: true
 	// enum: none,info,content,content_with_descendants,solution
@@ -36,10 +31,10 @@ type navigationItemCommonFields struct {
 	// required: true
 	String navigationItemString `json:"string"`
 
-	// max among all the user's attempts
+	// max among all attempts of the user (or of the team given in `as_team_id`)
 	// required: true
 	BestScore float32 `json:"best_score"`
-	// max among all the user's attempts
+	// max among all attempts of the user (or of the team given in `as_team_id`)
 	// required: true
 	Validated bool `json:"validated"`
 
@@ -68,33 +63,30 @@ type navigationItemChild struct {
 	ContentViewPropagation string `json:"content_view_propagation"`
 }
 
-// Bind binds req.ID to URLParam("item_id")
-func (req *GetItemRequest) Bind(r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
-	if err != nil {
-		return err
-	}
-	req.ID = itemID
-	return nil
-}
-
 // swagger:operation GET /items/{item_id}/as-nav-tree items itemsNavigationData
 // ---
 // summary: Get navigation data
 // description: >
 //
 //   Returns data needed to display the navigation menu (for `item_id`, its children, and its grandchildren), only items
-//   visible to the current user are shown.
+//   visible to the current user (or to the `as_team_id` team) are shown.
 //
 //
-//   * If the specified `item_id` doesn't exist or is not visible to the current user,
+//   * If the specified `item_id` doesn't exist or is not visible to the current user (or to the `as_team_id` team),
 //     the 'forbidden' response is returned.
+//
+//
+//   * If `as_team_id` is given, it should be a user's parent team group,
+//     otherwise the "forbidden" error is returned.
 // parameters:
 // - name: item_id
 //   in: path
 //   type: integer
 //   format: int64
 //   required: true
+// - name: as_team_id
+//   in: query
+//   type: integer
 // responses:
 //   "200":
 //     description: OK. Navigation data
@@ -109,16 +101,21 @@ func (req *GetItemRequest) Bind(r *http.Request) error {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	req := &GetItemRequest{}
-	if err := req.Bind(httpReq); err != nil {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(httpReq)
-	rawData, err := getRawNavigationData(srv.Store, req.ID, user)
+	groupID, apiError := srv.getParticipantIDFromRequest(httpReq, user)
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	rawData, err := getRawNavigationData(srv.Store, itemID, groupID, user)
 	service.MustNotBeError(err)
 
-	if len(rawData) == 0 || rawData[0].ID != req.ID {
+	if len(rawData) == 0 || rawData[0].ID != itemID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
@@ -129,7 +126,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	for index := range rawData {
 		idMap[rawData[index].ID] = &rawData[index]
 	}
-	idsToResponseData := map[int64]*navigationItemCommonFields{req.ID: response.navigationItemCommonFields}
+	idsToResponseData := map[int64]*navigationItemCommonFields{itemID: response.navigationItemCommonFields}
 	srv.fillNavigationSubtreeWithChildren(rawData, idMap, idsToResponseData)
 
 	render.Respond(rw, httpReq, response)

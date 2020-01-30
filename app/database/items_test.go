@@ -30,8 +30,6 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{GroupID: 2, DefaultLanguage: "en"}
-
 	clearAllPermissionEnums()
 	mockPermissionEnumQueries(mock)
 	defer clearAllPermissionEnums()
@@ -54,7 +52,7 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := db.Table("items").WhereItemsAreVisible(mockUser).Scan(&result).Error()
+	err := db.Table("items").WhereItemsAreVisible(2).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

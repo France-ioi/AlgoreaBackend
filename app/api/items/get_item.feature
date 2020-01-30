@@ -4,12 +4,12 @@ Feature: Get item view information
     Given the database has the following table 'groups':
       | id | name       | text_id | grade | type     |
       | 11 | jdoe       |         | -2    | UserSelf |
-      | 13 | Group B    |         | -2    | Class    |
+      | 13 | Group B    |         | -2    | Team     |
       | 14 | nosolution |         | -2    | UserSelf |
       | 15 | Group C    |         | -2    | Class    |
       | 17 | fr         |         | -2    | UserSelf |
       | 22 | info       |         | -2    | UserSelf |
-      | 26 | info-group |         | -2    | Club     |
+      | 26 | team       |         | -2    | Team     |
     And the database has the following table 'users':
       | login      | temp_user | group_id | default_language |
       | jdoe       | 0         | 11       |                  |
@@ -29,14 +29,23 @@ Feature: Get item view information
       | 200     | fr           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
       | 210     | fr           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire |
       | 220     | fr           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
+      | 13              | 17             |
+      | 15              | 14             |
+      | 26              | 11             |
+      | 26              | 22             |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 71 | 11                | 11             | 1       |
-      | 73 | 13                | 13             | 1       |
-      | 74 | 13                | 11             | 0       |
-      | 75 | 15                | 14             | 0       |
-      | 76 | 13                | 17             | 0       |
-      | 77 | 26                | 22             | 0       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 11                | 11             | 1       |
+      | 13                | 13             | 1       |
+      | 13                | 11             | 0       |
+      | 15                | 14             | 0       |
+      | 13                | 17             | 0       |
+      | 26                | 11             | 0       |
+      | 26                | 22             | 0       |
+      | 26                | 26             | 1       |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
       | 200            | 210           | 2           | Discovery | as_info                  |
@@ -61,7 +70,7 @@ Feature: Get item view information
       | 13       | 210     | 1     | 2019-05-30 11:00:00 |
       | 13       | 220     | 1     | null                |
 
-  Scenario: Full access on all items
+  Scenario: Full access on all items (as user)
     Given I am the user with id "11"
     When I send a GET request to "/items/200"
     Then the response code should be 200
@@ -159,7 +168,7 @@ Feature: Get item view information
     }
     """
 
-  Scenario: Chapter as a root node (full access)
+  Scenario: Chapter as a root node (full access, as user)
     Given I am the user with id "11"
     When I send a GET request to "/items/210"
     Then the response code should be 200
@@ -198,7 +207,7 @@ Feature: Get item view information
     }
     """
 
-  Scenario: Chapter as a root node (without solution access)
+  Scenario: Chapter as a root node (without solution access, as user)
     Given I am the user with id "14"
     When I send a GET request to "/items/210"
     Then the response code should be 200
@@ -236,7 +245,7 @@ Feature: Get item view information
     }
     """
 
-  Scenario: Full access on all items (with user language)
+  Scenario: Full access on all items (with user language, as user)
     Given I am the user with id "17"
     When I send a GET request to "/items/200"
     Then the response code should be 200
@@ -334,9 +343,201 @@ Feature: Get item view information
     }
     """
 
-  Scenario: Info access on children
+  Scenario: Info access on children (as user)
     Given I am the user with id "22"
     When I send a GET request to "/items/200"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "200",
+      "type": "Course",
+      "display_details_in_parent": true,
+      "validation_type": "All",
+      "contest_entering_condition": "All",
+      "teams_editable": true,
+      "contest_max_team_size": 10,
+      "allows_multiple_attempts": true,
+      "duration": "10:20:30",
+      "no_score": true,
+      "default_language_tag": "en",
+      "group_code_enter": true,
+      "has_attempts": false,
+
+      "title_bar_visible": true,
+      "read_only": true,
+      "full_screen": "forceYes",
+      "show_user_infos": true,
+      "url": "http://someurl",
+      "uses_api": true,
+      "hints_allowed": true,
+
+      "string": {
+        "language_tag": "en",
+        "title": "Category 1",
+        "image_url": "http://example.com/my0.jpg",
+        "subtitle": "Subtitle 0",
+        "description": "Description 0",
+        "edu_comment": "Some comment"
+      },
+
+      "children": [
+        {
+          "id": "220",
+          "order": 1,
+          "category": "Discovery",
+          "content_view_propagation": "as_info",
+
+          "type": "Chapter",
+          "display_details_in_parent": true,
+          "validation_type": "All",
+          "contest_entering_condition": "All",
+          "teams_editable": true,
+          "contest_max_team_size": 10,
+          "allows_multiple_attempts": true,
+          "duration": "10:20:32",
+          "no_score": true,
+          "default_language_tag": "en",
+          "group_code_enter": true,
+          "has_attempts": false,
+
+          "string": {
+            "language_tag": "en",
+            "title": "Chapter B",
+            "image_url": "http://example.com/my2.jpg"
+          }
+        },
+        {
+          "id": "210",
+
+          "order": 2,
+          "category": "Discovery",
+          "content_view_propagation": "as_info",
+
+          "type": "Chapter",
+          "display_details_in_parent": true,
+          "validation_type": "All",
+          "contest_entering_condition": "All",
+          "teams_editable": true,
+          "contest_max_team_size": 10,
+          "allows_multiple_attempts": true,
+          "duration": "10:20:31",
+          "no_score": true,
+          "default_language_tag": "en",
+          "group_code_enter": true,
+          "has_attempts": false,
+
+          "string": {
+            "language_tag": "en",
+            "title": "Chapter A",
+            "image_url": "http://example.com/my1.jpg"
+          }
+        }
+      ]
+    }
+    """
+
+  Scenario: Full access on all items (as team)
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200?as_team_id=13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "200",
+      "type": "Course",
+      "display_details_in_parent": true,
+      "validation_type": "All",
+      "contest_entering_condition": "All",
+      "teams_editable": true,
+      "contest_max_team_size": 10,
+      "allows_multiple_attempts": true,
+      "duration": "10:20:30",
+      "no_score": true,
+      "default_language_tag": "en",
+      "group_code_enter": true,
+      "has_attempts": false,
+
+      "title_bar_visible": true,
+      "read_only": true,
+      "full_screen": "forceYes",
+      "show_user_infos": true,
+      "url": "http://someurl",
+      "uses_api": true,
+      "hints_allowed": true,
+
+      "string": {
+        "language_tag": "en",
+        "title": "Category 1",
+        "image_url": "http://example.com/my0.jpg",
+        "subtitle": "Subtitle 0",
+        "description": "Description 0",
+        "edu_comment": "Some comment"
+      },
+
+      "children": [
+        {
+          "id": "220",
+          "order": 1,
+          "category": "Discovery",
+          "content_view_propagation": "as_info",
+
+          "type": "Chapter",
+          "display_details_in_parent": true,
+          "validation_type": "All",
+          "contest_entering_condition": "All",
+          "teams_editable": true,
+          "contest_max_team_size": 10,
+          "allows_multiple_attempts": true,
+          "duration": "10:20:32",
+          "no_score": true,
+          "default_language_tag": "en",
+          "group_code_enter": true,
+          "has_attempts": false,
+
+          "string": {
+            "language_tag": "en",
+            "title": "Chapter B",
+            "image_url": "http://example.com/my2.jpg",
+            "subtitle": "Subtitle 2",
+            "description": "Description 2"
+          }
+        },
+        {
+          "id": "210",
+
+          "order": 2,
+          "category": "Discovery",
+          "content_view_propagation": "as_info",
+
+          "type": "Chapter",
+          "display_details_in_parent": true,
+          "validation_type": "All",
+          "contest_entering_condition": "All",
+          "teams_editable": true,
+          "contest_max_team_size": 10,
+          "allows_multiple_attempts": true,
+          "duration": "10:20:31",
+          "no_score": true,
+          "default_language_tag": "en",
+          "group_code_enter": true,
+          "has_attempts": true,
+
+          "string": {
+            "language_tag": "en",
+            "title": "Chapter A",
+            "image_url": "http://example.com/my1.jpg",
+            "subtitle": "Subtitle 1",
+            "description": "Description 1"
+          }
+        }
+      ]
+    }
+    """
+
+  Scenario: Info access on children (as team)
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200?as_team_id=26"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

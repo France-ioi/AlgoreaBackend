@@ -3,10 +3,11 @@ Feature: Get item for tree navigation
     Given the database has the following table 'groups':
       | id | name      | text_id | grade | type     |
       | 11 | jdoe      |         | -2    | UserSelf |
-      | 13 | Group B   |         | -2    | Class    |
+      | 13 | Group B   |         | -2    | Team     |
       | 14 | info_root |         | -2    | UserSelf |
       | 16 | info_mid  |         | -2    | UserSelf |
       | 18 | french    |         | -2    | UserSelf |
+      | 19 | Group C   |         | -2    | Team     |
     And the database has the following table 'languages':
       | tag |
       | fr  |
@@ -17,16 +18,19 @@ Feature: Get item for tree navigation
       | info_mid  | 0         | 16       |                  |
       | fr_user   | 0         | 18       | fr               |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 61 | 13              | 11             |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
+      | 19              | 11             |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 71 | 11                | 11             | 1       |
-      | 73 | 13                | 13             | 1       |
-      | 74 | 13                | 11             | 0       |
-      | 75 | 14                | 14             | 1       |
-      | 76 | 16                | 16             | 1       |
-      | 77 | 18                | 18             | 1       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 11                | 11             | 1       |
+      | 13                | 13             | 1       |
+      | 13                | 11             | 0       |
+      | 14                | 14             | 1       |
+      | 16                | 16             | 1       |
+      | 18                | 18             | 1       |
+      | 19                | 11             | 0       |
+      | 19                | 19             | 1       |
     And the database has the following table 'items':
       | id  | type    | default_language_tag | teams_editable | no_score |
       | 200 | Course  | en                   | false          | false    |
@@ -39,6 +43,9 @@ Feature: Get item for tree navigation
       | 250 | Task    | en                   | false          | false    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
+      | 11       | 200     | solution                 |
+      | 11       | 210     | content                  |
+      | 11       | 230     | info                     |
       | 13       | 200     | content_with_descendants |
       | 13       | 210     | content_with_descendants |
       | 13       | 220     | content_with_descendants |
@@ -68,6 +75,9 @@ Feature: Get item for tree navigation
       | 18       | 211     | content                  |
       | 18       | 231     | content                  |
       | 18       | 232     | content                  |
+      | 19       | 200     | content                  |
+      | 19       | 210     | content                  |
+      | 19       | 211     | content                  |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order | content_view_propagation | difficulty |
       | 200            | 210           | 3           | none                     | 0          |
@@ -90,15 +100,18 @@ Feature: Get item for tree navigation
       | 230     | fr           | Chapitre C  |
       | 211     | fr           | Tâche 1     |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | order | score_computed | submissions | started_at          | validated_at        |
-      | 101 | 11       | 200     | 1     | 91             | 11          | 2019-01-30 09:26:41 | null                |
-      | 102 | 11       | 210     | 1     | 92             | 12          | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 11       | 211     | 1     | 93             | 13          | 2019-01-30 09:26:43 | null                |
-      | 103 | 11       | 220     | 1     | 94             | 14          | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-      | 104 | 11       | 230     | 1     | 95             | 15          | 2019-01-30 09:26:45 | 2019-01-31 09:26:45 |
-      | 106 | 11       | 231     | 1     | 96             | 16          | 2019-01-30 09:26:46 | 2019-01-31 09:26:46 |
-      | 107 | 11       | 232     | 1     | 97             | 17          | 2019-01-30 09:26:47 | 2019-01-31 09:26:47 |
-      | 108 | 11       | 200     | 2     | 90             | 11          | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | group_id | item_id | order | score_computed | submissions | started_at          | validated_at        |
+      | 11       | 200     | 1     | 91             | 11          | 2019-01-30 09:26:41 | null                |
+      | 11       | 210     | 1     | 92             | 12          | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
+      | 11       | 211     | 1     | 93             | 13          | 2019-01-30 09:26:43 | null                |
+      | 11       | 220     | 1     | 94             | 14          | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
+      | 11       | 230     | 1     | 95             | 15          | 2019-01-30 09:26:45 | 2019-01-31 09:26:45 |
+      | 11       | 231     | 1     | 96             | 16          | 2019-01-30 09:26:46 | 2019-01-31 09:26:46 |
+      | 11       | 232     | 1     | 97             | 17          | 2019-01-30 09:26:47 | 2019-01-31 09:26:47 |
+      | 11       | 200     | 2     | 90             | 11          | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | 13       | 200     | 1     | 45             | 2           | 2018-01-30 09:26:42 | null                |
+      | 13       | 210     | 1     | 56             | 5           | 2018-01-30 09:26:42 | 2018-01-31 09:26:42 |
+      | 13       | 230     | 1     | 78             | 4           | 2018-01-30 09:26:42 | 2018-01-31 09:26:42 |
 
   Scenario: Get tree structure
     Given I am the user with id "11"
@@ -115,7 +128,7 @@ Feature: Get item for tree navigation
         "best_score": 91,
         "validated": true,
         "access_rights": {
-          "can_view": "content_with_descendants"
+          "can_view": "solution"
         },
         "children": [
           {
@@ -475,6 +488,173 @@ Feature: Get item for tree navigation
                 "type": "Task",
                 "string": {
                   "title": "Tâche 1"
+                },
+                "best_score": 0,
+                "validated": false,
+                "access_rights": {
+                  "can_view": "content"
+                },
+                "children": null
+              }
+            ]
+          }
+        ]
+      }
+      """
+
+  Scenario: Get tree structure (as team)
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/as-nav-tree?as_team_id=13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "id": "200",
+        "type": "Course",
+        "string": {
+          "title": "Category 1"
+        },
+        "best_score": 45,
+        "validated": false,
+        "access_rights": {
+          "can_view": "content_with_descendants"
+        },
+        "children": [
+          {
+            "id": "230",
+            "order": 1,
+            "content_view_propagation": "as_content",
+            "type": "Chapter",
+            "string": {
+              "title": "Chapter C"
+            },
+            "best_score": 78,
+            "validated": true,
+            "access_rights": {
+              "can_view": "content_with_descendants"
+            },
+            "children": [
+              {
+                "id": "232",
+                "order": 1,
+                "content_view_propagation": "none",
+                "type": "Task",
+                "string": {
+                  "title": "Task 3"
+                },
+                "best_score": 0,
+                "validated": false,
+                "access_rights": {
+                  "can_view": "content_with_descendants"
+                },
+                "children": null
+              },
+              {
+                "id": "231",
+                "order": 2,
+                "content_view_propagation": "none",
+                "type": "Task",
+                "string": {
+                  "title": "Task 2"
+                },
+                "best_score": 0,
+                "validated": false,
+                "access_rights": {
+                  "can_view": "content_with_descendants"
+                },
+                "children": null
+              }
+            ]
+          },
+          {
+            "id": "220",
+            "order": 2,
+            "content_view_propagation": "as_info",
+            "type": "Chapter",
+            "string": {
+              "title": "Chapter B"
+            },
+            "best_score": 0,
+            "validated": false,
+            "access_rights": {
+              "can_view": "content_with_descendants"
+            },
+            "children": []
+          },
+          {
+            "id": "210",
+            "order": 3,
+            "content_view_propagation": "none",
+            "type": "Chapter",
+            "string": {
+              "title": "Chapter A"
+            },
+            "best_score": 56,
+            "validated": true,
+            "access_rights": {
+              "can_view": "content_with_descendants"
+            },
+            "children": [
+              {
+                "id": "211",
+                "order": 1,
+                "content_view_propagation": "none",
+                "type": "Task",
+                "string": {
+                  "title": "Task 1"
+                },
+                "best_score": 0,
+                "validated": false,
+                "access_rights": {
+                  "can_view": "content_with_descendants"
+                },
+                "children": null
+              }
+            ]
+          }
+        ]
+      }
+      """
+
+  Scenario: Get tree structure (as another team)
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/as-nav-tree?as_team_id=19"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "id": "200",
+        "type": "Course",
+        "string": {
+          "title": "Category 1"
+        },
+        "best_score": 0,
+        "validated": false,
+        "access_rights": {
+          "can_view": "content"
+        },
+        "children": [
+          {
+            "id": "210",
+            "order": 3,
+            "content_view_propagation": "none",
+            "type": "Chapter",
+            "string": {
+              "title": "Chapter A"
+            },
+            "best_score": 0,
+            "validated": false,
+            "access_rights": {
+              "can_view": "content"
+            },
+            "children": [
+              {
+                "id": "211",
+                "order": 1,
+                "content_view_propagation": "none",
+                "type": "Task",
+                "string": {
+                  "title": "Task 1"
                 },
                 "best_score": 0,
                 "validated": false,
