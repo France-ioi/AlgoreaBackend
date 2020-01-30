@@ -1,3 +1,7 @@
 - {group_id: 1, item_id: 1, source_group_id: 1}
-- {group_id: 2, item_id: 1, source_group_id: 2}
 - {group_id: 3, item_id: 1, source_group_id: 3}
+
+- {group_id: 2, item_id: 1, source_group_id: 1, can_view: solution, origin: group_membership}
+- {group_id: 2, item_id: 1, source_group_id: 1, can_view: content, origin: item_unlocking}
+- {group_id: 2, item_id: 1, source_group_id: 2, can_view: info, origin: group_membership}
+- {group_id: 3, item_id: 1, source_group_id: 1, can_view: info, origin: group_membership}
