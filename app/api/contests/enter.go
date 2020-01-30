@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /contests/{item_id}/groups/{group_id} contests contestEnter
+// swagger:operation POST /contests/{item_id}/enter contests contestEnter
 // ---
 // summary: Enter the contest
 // description: >
