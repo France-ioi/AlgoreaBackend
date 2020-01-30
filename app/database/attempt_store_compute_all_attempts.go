@@ -40,7 +40,9 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				(descendants.result_propagation_state = 'to_be_recomputed' OR
 				 descendants.result_propagation_state = 'changed')`).Error)
 
-		// Insert missing attempts for chapters having descendants marked as 'to_be_recomputed'/'changed'
+		// Insert missing attempts for chapters having descendants with attempts marked as 'to_be_recomputed'/'changed'.
+		// We only create attempts for chapters which are (or have ancestors which are) visible to the group that attempted
+		// to solve the descendant items.
 		// (this query can take more than 25 seconds when executed for the first time after the db migration)
 		mustNotBeError(ds.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 			return retryStore.Exec(`
@@ -57,7 +59,20 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				WHERE (
 					descendants.result_propagation_state = 'to_be_recomputed' OR
 					descendants.result_propagation_state = 'changed'
-				) AND existing.id IS NULL
+				) AND existing.id IS NULL AND EXISTS(
+					SELECT 1 FROM permissions_generated
+					JOIN groups_ancestors_active
+						ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id
+					WHERE
+						(permissions_generated.item_id = items_ancestors.ancestor_item_id OR
+						 permissions_generated.item_id IN (
+								 SELECT grand_ancestors.ancestor_item_id
+								 FROM items_ancestors AS grand_ancestors
+								 WHERE grand_ancestors.child_item_id = items_ancestors.ancestor_item_id
+						)) AND permissions_generated.can_view_generated != 'none' AND
+						groups_ancestors_active.child_group_id = descendants.group_id
+					LIMIT 1
+				)
 				GROUP BY descendants.group_id, items_ancestors.ancestor_item_id
 			`).Error()
 		}))
@@ -217,7 +232,11 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		return s.PermissionsGranted().After()
+		// generate permissions_generated from permissions_granted
+		mustNotBeError(s.PermissionsGranted().After())
+		// we should compute attempts again as new permissions were set and
+		// triggers on permissions_generated likely marked some attempts as 'changed'
+		return s.ComputeAllAttempts()
 	}
 	return nil
 }

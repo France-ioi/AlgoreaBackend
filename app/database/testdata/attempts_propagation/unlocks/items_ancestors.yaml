@@ -1,2 +1,4 @@
 - { ancestor_item_id: 2, child_item_id: 3}
 - { ancestor_item_id: 2, child_item_id: 4}
+
+- { ancestor_item_id: 2001, child_item_id: 4}

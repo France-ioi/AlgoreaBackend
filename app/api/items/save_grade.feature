@@ -248,7 +248,6 @@ Feature: Save grading result
       | 124       | 99    | 1                                                |
     And the table "attempts" should be:
       | group_id | item_id | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
-      | 101      | 10      | 49.5           | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | null                | null         |
       | 101      | 50      | 99             | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
       | 101      | 60      | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
 

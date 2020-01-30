@@ -1,2 +1,4 @@
 - { parent_item_id: 2, child_item_id: 3, child_order: 1}
 - { parent_item_id: 2, child_item_id: 4, child_order: 2}
+
+- { parent_item_id: 2001, child_item_id: 4, content_view_propagation: as_content, child_order: 1}

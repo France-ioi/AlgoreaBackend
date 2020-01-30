@@ -29,7 +29,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 34              | 13             | 9999-12-31 23:59:59 |
       | 34              | 14             | 9999-12-31 23:59:59 |
       | 36              | 13             | 9999-12-31 23:59:59 |
-      | 36              | 14             | 9999-12-31 23:59:59 |
+      | 36              | 14             | 2018-12-31 23:59:59 |
       | 36              | 31             | 9999-12-31 23:59:59 |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self | expires_at          |
@@ -51,7 +51,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 34                | 34             | 1       | 9999-12-31 23:59:59 |
       | 35                | 35             | 1       | 9999-12-31 23:59:59 |
       | 36                | 13             | 0       | 9999-12-31 23:59:59 |
-      | 36                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 36                | 14             | 0       | 2018-12-31 23:59:59 |
       | 36                | 31             | 0       | 9999-12-31 23:59:59 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
     And the database has the following table 'items':
@@ -60,6 +60,14 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 50 | 00:00:00 | 34                            | fr                   |
       | 60 | 00:00:01 | 35                            | fr                   |
       | 70 | 00:00:03 | 36                            | fr                   |
+    And the database has the following table 'items_ancestors':
+      | ancestor_item_id | child_item_id |
+      | 10               | 50            |
+      | 10               | 70            |
+    And the database has the following table 'items_items':
+      | parent_item_id | child_item_id | child_order |
+      | 10             | 50            | 1           |
+      | 10             | 70            | 1           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | none                     |
@@ -71,6 +79,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 50      | solution                 |
       | 21       | 60      | content_with_descendants |
       | 21       | 70      | content_with_descendants |
+      | 36       | 10      | info                     |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -81,11 +90,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 60      | 00:01:00        |
       | 21       | 70      | 00:01:00        |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order |
-      | 13       | 50      | 2018-05-29 06:38:38 | 1     |
-      | 13       | 70      | 2018-05-29 06:38:38 | 1     |
-      | 14       | 50      | 2019-05-29 06:38:38 | 1     |
-      | 31       | 70      | 2017-05-29 06:38:38 | 1     |
+      | group_id | item_id | started_at          | order | result_propagation_state |
+      | 13       | 50      | 3018-05-29 06:38:38 | 1     | done                     |
+      | 13       | 70      | 3018-05-29 06:38:38 | 1     | done                     |
+      | 14       | 50      | 3019-05-29 06:38:38 | 1     | done                     |
+      | 31       | 70      | 3017-05-29 06:38:38 | 1     | done                     |
 
   Scenario: Updates an existing row
     Given I am the user with id "21"
@@ -107,10 +116,10 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10              | 11             | 9999-12-31 23:59:59 |
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
-      | 34              | 13             | 2018-07-03 06:39:37 |
-      | 34              | 14             | 2019-07-03 06:39:37 |
+      | 34              | 13             | 3018-07-03 06:39:37 |
+      | 34              | 14             | 3019-07-03 06:39:37 |
       | 36              | 13             | 9999-12-31 23:59:59 |
-      | 36              | 14             | 9999-12-31 23:59:59 |
+      | 36              | 14             | 2018-12-31 23:59:59 |
       | 36              | 31             | 9999-12-31 23:59:59 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
@@ -127,12 +136,15 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
       | 33                | 33             | 1       | 9999-12-31 23:59:59 |
+      | 34                | 13             | 0       | 3018-07-03 06:39:37 |
+      | 34                | 14             | 0       | 3019-07-03 06:39:37 |
       | 34                | 34             | 1       | 9999-12-31 23:59:59 |
       | 35                | 35             | 1       | 9999-12-31 23:59:59 |
       | 36                | 13             | 0       | 9999-12-31 23:59:59 |
       | 36                | 14             | 0       | 9999-12-31 23:59:59 |
       | 36                | 31             | 0       | 9999-12-31 23:59:59 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
+    And the table "attempts" should stay unchanged
 
   Scenario: Creates a new row
     Given I am the user with id "21"
@@ -157,8 +169,8 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 9999-12-31 23:59:59 |
       | 34              | 14             | 9999-12-31 23:59:59 |
-      | 36              | 13             | 2018-04-24 07:38:42 |
-      | 36              | 14             | 9999-12-31 23:59:59 |
+      | 36              | 13             | 3018-04-24 07:38:42 |
+      | 36              | 14             | 2018-12-31 23:59:59 |
       | 36              | 31             | 9999-12-31 23:59:59 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
@@ -179,9 +191,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 34                | 14             | 0       | 9999-12-31 23:59:59 |
       | 34                | 34             | 1       | 9999-12-31 23:59:59 |
       | 35                | 35             | 1       | 9999-12-31 23:59:59 |
-      | 36                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 36                | 13             | 0       | 3018-04-24 07:38:42 |
+      | 36                | 14             | 0       | 3018-04-24 07:38:42 |
       | 36                | 31             | 0       | 9999-12-31 23:59:59 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
+    And the table "attempts" should stay unchanged
 
   Scenario: Doesn't create a new row when seconds=0
     Given I am the user with id "21"
@@ -191,6 +205,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_contest_items" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Creates a new row for a user group
     Given I am the user with id "21"
@@ -216,8 +231,8 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 34              | 13             | 9999-12-31 23:59:59 |
       | 34              | 14             | 9999-12-31 23:59:59 |
       | 36              | 13             | 9999-12-31 23:59:59 |
-      | 36              | 14             | 9999-12-31 23:59:59 |
-      | 36              | 31             | 2017-04-24 07:38:42 |
+      | 36              | 14             | 2018-12-31 23:59:59 |
+      | 36              | 31             | 3017-04-24 07:38:42 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 10                | 10             | 1       | 9999-12-31 23:59:59 |
@@ -239,4 +254,6 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 35                | 35             | 1       | 9999-12-31 23:59:59 |
       | 36                | 13             | 0       | 9999-12-31 23:59:59 |
       | 36                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 36                | 31             | 0       | 3017-04-24 07:38:42 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
+    And the table "attempts" should stay unchanged

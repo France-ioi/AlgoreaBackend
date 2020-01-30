@@ -61,7 +61,8 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	assert.NoError(t, err)
 
 	var result []unlocksResultRow
-	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
+	dataStore := database.NewDataStore(db)
+	assert.NoError(t, dataStore.PermissionsGranted().
 		Select("group_id, item_id, can_view, source_group_id, origin").
 		Order("group_id, item_id").
 		Scan(&result).Error())
@@ -74,13 +75,17 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		{GroupID: 101, ItemID: 4002, CanView: "content", SourceGroupID: 101, Origin: "item_unlocking"},
 	}, result)
 	var count int64
-	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
+	assert.NoError(t, dataStore.PermissionsGranted().
 		Where("TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) > 1").Count(&count).Error())
 	assert.Zero(t, count)
-	assert.NoError(t, database.NewDataStore(db).Permissions().
+	assert.NoError(t, dataStore.Permissions().
 		Where("can_view_generated != 'content'").Count(&count).Error())
 	assert.Zero(t, count)
-	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
+	assert.NoError(t, dataStore.PermissionsGranted().
 		Where("can_view != 'content'").Count(&count).Error())
 	assert.Zero(t, count)
+
+	found, err := dataStore.Attempts().Where("group_id = 101").Where("item_id = 2001").HasRows()
+	assert.NoError(t, err)
+	assert.True(t, found, "should have created a new attempt for the unlocked item 2001")
 }
