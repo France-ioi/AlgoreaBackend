@@ -14,17 +14,17 @@ type ItemStore struct {
 	*DataStore
 }
 
-// Visible returns a view of the visible items for the given group
+// Visible returns a view of the visible items for the given participant
 func (s *ItemStore) Visible(groupID int64) *DB {
 	return s.WhereItemsAreVisible(groupID)
 }
 
-// VisibleByID returns a view of the visible item identified by itemID, for the given group
+// VisibleByID returns a view of the visible item identified by itemID, for the given participant
 func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 	return s.Visible(groupID).Where("items.id = ?", itemID)
 }
 
-// VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given group
+// VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given participant
 func (s *ItemStore) VisibleChildrenOfID(groupID, itemID int64) *DB {
 	return s.
 		Visible(groupID).
@@ -32,7 +32,7 @@ func (s *ItemStore) VisibleChildrenOfID(groupID, itemID int64) *DB {
 		Where("ii.parent_item_id = ?", itemID)
 }
 
-// VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given group
+// VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given participant
 func (s *ItemStore) VisibleGrandChildrenOfID(groupID, itemID int64) *DB {
 	return s.
 		// visible items are the leaves (potential grandChildren)
