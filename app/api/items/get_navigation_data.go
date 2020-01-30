@@ -107,7 +107,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID, apiError := srv.chooseBetweenUserAndAsTeamID(httpReq, user)
+	groupID, apiError := srv.getParticipantIDFromRequest(httpReq, user)
 	if apiError != service.NoError {
 		return apiError
 	}

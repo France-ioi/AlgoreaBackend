@@ -175,7 +175,7 @@ func createContestParticipantsGroup(store *database.DataStore, itemID int64) int
 	return participantsGroupID
 }
 
-func (srv *Service) chooseBetweenUserAndAsTeamID(httpReq *http.Request, user *database.User) (int64, service.APIError) {
+func (srv *Service) getParticipantIDFromRequest(httpReq *http.Request, user *database.User) (int64, service.APIError) {
 	groupID := user.GroupID
 	var err error
 	if len(httpReq.URL.Query()["as_team_id"]) != 0 {

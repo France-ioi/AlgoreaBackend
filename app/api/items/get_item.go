@@ -187,7 +187,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID, apiError := srv.chooseBetweenUserAndAsTeamID(httpReq, user)
+	groupID, apiError := srv.getParticipantIDFromRequest(httpReq, user)
 	if apiError != service.NoError {
 		return apiError
 	}
