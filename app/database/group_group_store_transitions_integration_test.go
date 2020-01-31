@@ -60,6 +60,8 @@ type transitionTest struct {
 	wantGroupPendingRequests   []groupPendingRequest
 	wantGroupAncestors         []groupAncestor
 	wantGroupMembershipChanges []groupMembershipChange
+	wantGrantedPermissions     []grantedPermission
+	wantGeneratedPermissions   []permissionsGeneratedResultRow
 	shouldRunListeners         bool
 }
 
@@ -143,6 +145,28 @@ var groupPendingRequestsUnchanged = []groupPendingRequest{
 	{GroupID: 20, MemberID: 7, Type: "leave_request"},
 }
 
+var grantedPermissionsUnchanged = []grantedPermission{
+	{GroupID: 4, ItemID: 1, SourceGroupID: 4, Origin: "group_membership", CanView: "info"},
+	{GroupID: 4, ItemID: 1, SourceGroupID: 20, Origin: "group_membership", CanView: "solution"},
+	{GroupID: 4, ItemID: 1, SourceGroupID: 20, Origin: "item_unlocking", CanView: "content"},
+	{GroupID: 5, ItemID: 2, SourceGroupID: 5, Origin: "group_membership", CanView: "info"},
+	{GroupID: 5, ItemID: 2, SourceGroupID: 20, Origin: "group_membership", CanView: "solution"},
+	{GroupID: 5, ItemID: 2, SourceGroupID: 20, Origin: "item_unlocking", CanView: "content"},
+	{GroupID: 10, ItemID: 1, SourceGroupID: 10, Origin: "group_membership", CanView: "info"},
+	{GroupID: 10, ItemID: 1, SourceGroupID: 20, Origin: "group_membership", CanView: "solution"},
+	{GroupID: 10, ItemID: 1, SourceGroupID: 20, Origin: "item_unlocking", CanView: "content"},
+	{GroupID: 11, ItemID: 2, SourceGroupID: 11, Origin: "group_membership", CanView: "info"},
+	{GroupID: 11, ItemID: 2, SourceGroupID: 20, Origin: "group_membership", CanView: "solution"},
+	{GroupID: 11, ItemID: 2, SourceGroupID: 20, Origin: "item_unlocking", CanView: "content"},
+}
+
+var generatedPermissionsUnchanged = []permissionsGeneratedResultRow{
+	{GroupID: 4, ItemID: 1, CanViewGenerated: "solution"},
+	{GroupID: 5, ItemID: 2, CanViewGenerated: "solution"},
+	{GroupID: 10, ItemID: 1, CanViewGenerated: "solution"},
+	{GroupID: 11, ItemID: 2, CanViewGenerated: "solution"},
+}
+
 var currentTimePtr = (*database.Time)(ptrTime(time.Now().UTC()))
 var userID = int64(111)
 var userIDPtr = &userID
@@ -189,7 +213,8 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 			{GroupID: 20, MemberID: 6, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 			{GroupID: 20, MemberID: 7, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
-		shouldRunListeners: true,
+		wantGrantedPermissions: grantedPermissionsUnchanged,
+		shouldRunListeners:     true,
 	}
 }
 
@@ -216,7 +241,8 @@ func testTransitionAcceptingPendingRequest(name string, action database.GroupGro
 		wantGroupMembershipChanges: []groupMembershipChange{
 			{GroupID: 20, MemberID: acceptedID, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
-		shouldRunListeners: true,
+		wantGrantedPermissions: grantedPermissionsUnchanged,
+		shouldRunListeners:     true,
 	}
 }
 
@@ -247,6 +273,12 @@ func testTransitionRemovingUserFromGroup(name string, action database.GroupGroup
 			{GroupID: 20, MemberID: 10, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 			{GroupID: 20, MemberID: 11, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
+		wantGrantedPermissions: patchGrantedPermissions(grantedPermissionsUnchanged, []string{
+			"4_1_20_group_membership", "5_2_20_group_membership", "10_1_20_group_membership", "11_2_20_group_membership",
+		}),
+		wantGeneratedPermissions: patchGeneratedPermissions(generatedPermissionsUnchanged, map[string]string{
+			"4_1": "content", "5_2": "content", "10_1": "content", "11_2": "content",
+		}),
 		shouldRunListeners: true,
 	}
 }
@@ -283,7 +315,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
 				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
 			},
-			shouldRunListeners: true,
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     true,
 		},
 		{
 			name:              "UserCreatesJoinRequest",
@@ -321,7 +354,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				{GroupID: 20, MemberID: 6, Action: "join_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
 				{GroupID: 20, MemberID: 7, Action: "join_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
-			shouldRunListeners: false,
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     false,
 		},
 		testTransitionAcceptingPendingRequest(
 			"UserAcceptsInvitation", database.UserAcceptsInvitation, 2, database.InvitationCreated, database.InvitationAccepted),
@@ -334,6 +368,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupGroups:            groupsGroupsUnchanged,
 			wantGroupPendingRequests:   patchGroupPendingRequests(groupPendingRequestsUnchanged, "invitation", nil, nil),
 			wantGroupAncestors:         patchGroupAncestors(groupAncestorsUnchanged, nil, nil),
+			wantGrantedPermissions:     grantedPermissionsUnchanged,
 			shouldRunListeners:         false,
 		},
 		testTransitionAcceptingPendingRequest(
@@ -352,7 +387,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupMembershipChanges: []groupMembershipChange{
 				{GroupID: 20, MemberID: 2, Action: "invitation_refused", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
-			shouldRunListeners: false,
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     false,
 		},
 		{
 			name:              "AdminRefusesJoinRequest",
@@ -368,7 +404,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupMembershipChanges: []groupMembershipChange{
 				{GroupID: 20, MemberID: 3, Action: "join_request_refused", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
-			shouldRunListeners: false,
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     false,
 		},
 		testTransitionRemovingUserFromGroup("AdminRemovesUser", database.AdminRemovesUser, database.Removed),
 		{
@@ -385,7 +422,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupMembershipChanges: []groupMembershipChange{
 				{GroupID: 20, MemberID: 2, Action: "invitation_withdrawn", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
-			shouldRunListeners: false,
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     false,
 		},
 		testTransitionRemovingUserFromGroup("UserLeavesGroup", database.UserLeavesGroup, database.Left),
 		{
@@ -402,7 +440,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupMembershipChanges: []groupMembershipChange{
 				{GroupID: 20, MemberID: 3, Action: "join_request_withdrawn", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
-			shouldRunListeners: false,
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     false,
 		},
 		{
 			name:              "UserCreatesLeaveRequest",
@@ -424,6 +463,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				{GroupID: 20, MemberID: 10, Action: "leave_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
 				{GroupID: 20, MemberID: 11, Action: "leave_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
+			wantGrantedPermissions: grantedPermissionsUnchanged,
 		},
 		{
 			name:              "UserCancelsLeaveRequest",
@@ -439,6 +479,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupMembershipChanges: []groupMembershipChange{
 				{GroupID: 20, MemberID: 5, Action: "leave_request_withdrawn", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
+			wantGrantedPermissions: grantedPermissionsUnchanged,
 		},
 		{
 			name:              "AdminAcceptsLeaveRequest",
@@ -454,6 +495,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupMembershipChanges: []groupMembershipChange{
 				{GroupID: 20, MemberID: 5, Action: "leave_request_accepted", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
+			wantGrantedPermissions: patchGrantedPermissions(grantedPermissionsUnchanged, []string{
+				"5_2_20_group_membership",
+			}),
+			wantGeneratedPermissions: patchGeneratedPermissions(generatedPermissionsUnchanged, map[string]string{
+				"5_2": "content",
+			}),
 			shouldRunListeners: true,
 		},
 		{
@@ -470,7 +517,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupMembershipChanges: []groupMembershipChange{
 				{GroupID: 20, MemberID: 5, Action: "leave_request_refused", At: currentTimePtr, InitiatorID: userIDPtr},
 			},
-			shouldRunListeners: false,
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     false,
 		},
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserCreatesAcceptedJoinRequest", database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false),
@@ -494,6 +542,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					"20_4": nil, "20_5": nil, "20_10": nil, "20_11": nil,
 					"30_4": nil, "30_5": nil, "30_10": nil, "30_11": nil,
 				}, nil),
+			wantGrantedPermissions: patchGrantedPermissions(grantedPermissionsUnchanged, []string{
+				"4_1_20_group_membership", "5_2_20_group_membership", "10_1_20_group_membership", "11_2_20_group_membership",
+			}),
+			wantGeneratedPermissions: patchGeneratedPermissions(generatedPermissionsUnchanged, map[string]string{
+				"4_1": "content", "5_2": "content", "10_1": "content", "11_2": "content",
+			}),
 			shouldRunListeners: true,
 		},
 	}
@@ -561,6 +615,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}
 
 			assertGroupMembershipChangesEqual(t, dataStore.GroupMembershipChanges(), tt.wantGroupMembershipChanges)
+			assertGrantedPermissionsEqual(t, dataStore.PermissionsGranted(), tt.wantGrantedPermissions)
+			assertGeneratedPermissionsEqual(t, dataStore.Permissions(), tt.wantGeneratedPermissions)
 		})
 	}
 }
@@ -948,6 +1004,32 @@ func patchGroupAncestors(old []groupAncestor, diff map[string]*groupAncestor, ad
 	return result
 }
 
+func patchGrantedPermissions(old []grantedPermission, deleteIDs []string) []grantedPermission {
+	patchMap := make(map[string]bool, len(deleteIDs))
+	for _, deleteID := range deleteIDs {
+		patchMap[deleteID] = true
+	}
+	result := make([]grantedPermission, 0, len(old)-len(patchMap))
+	for _, permission := range old {
+		if !patchMap[fmt.Sprintf("%d_%d_%d_%s", permission.GroupID, permission.ItemID, permission.SourceGroupID, permission.Origin)] {
+			result = append(result, permission)
+		}
+	}
+	return result
+}
+
+func patchGeneratedPermissions(
+	old []permissionsGeneratedResultRow, canViewGeneratedChangeMap map[string]string) []permissionsGeneratedResultRow {
+	result := make([]permissionsGeneratedResultRow, 0, len(old))
+	for _, permission := range old {
+		result = append(result, permission)
+		if newCanViewGenerated, ok := canViewGeneratedChangeMap[fmt.Sprintf("%d_%d", permission.GroupID, permission.ItemID)]; ok {
+			result[len(result)-1].CanViewGenerated = newCanViewGenerated
+		}
+	}
+	return result
+}
+
 func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitionResults) database.GroupGroupTransitionResults {
 	result := make(database.GroupGroupTransitionResults, 12)
 	const invalid = "invalid"
@@ -1056,4 +1138,22 @@ func assertGroupMembershipChangesEqual(
 			assert.True(t, time.Now().UTC().Sub(time.Time(*groupMembershipChanges[index].At))/time.Second > -5)
 		}
 	}
+}
+
+func assertGrantedPermissionsEqual(t *testing.T, grantedPermissionStore *database.PermissionGrantedStore, expected []grantedPermission) {
+	var grantedPermissions []grantedPermission
+	assert.NoError(t, grantedPermissionStore.Select("group_id, item_id, source_group_id, origin, can_view").
+		Order("group_id, item_id, source_group_id, origin").Scan(&grantedPermissions).Error())
+	assert.Equal(t, expected, grantedPermissions)
+}
+
+func assertGeneratedPermissionsEqual(
+	t *testing.T, permissionGeneratedStore *database.PermissionGeneratedStore, expected []permissionsGeneratedResultRow) {
+	if expected == nil {
+		expected = make([]permissionsGeneratedResultRow, 0)
+	}
+	var generatedPermissions []permissionsGeneratedResultRow
+	assert.NoError(t, permissionGeneratedStore.Select("group_id, item_id, can_view_generated").
+		Order("group_id, item_id").Scan(&generatedPermissions).Error())
+	assert.EqualValues(t, expected, generatedPermissions)
 }

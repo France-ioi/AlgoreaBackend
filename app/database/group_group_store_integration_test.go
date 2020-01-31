@@ -14,13 +14,15 @@ import (
 
 func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 	tests := []struct {
-		name                     string
-		fixture                  string
-		shouldDeleteOrphans      bool
-		wantErr                  error
-		remainingGroupIDs        []int64
-		remainingGroupsGroups    []map[string]interface{}
-		remainingGroupsAncestors []map[string]interface{}
+		name                         string
+		fixture                      string
+		shouldDeleteOrphans          bool
+		wantErr                      error
+		remainingGroupIDs            []int64
+		remainingGroupsGroups        []map[string]interface{}
+		remainingGroupsAncestors     []map[string]interface{}
+		expectedGrantedPermissions   []grantedPermission
+		expectedGeneratedPermissions []permissionsGeneratedResultRow
 	}{
 		{
 			name:                "refuses to produce orphans",
@@ -35,6 +37,14 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "1", "child_group_id": "1"},
 				{"ancestor_group_id": "1", "child_group_id": "2"},
 				{"ancestor_group_id": "2", "child_group_id": "2"},
+			},
+			expectedGrantedPermissions: []grantedPermission{
+				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
+				{GroupID: 2, ItemID: 1, SourceGroupID: 2, Origin: "group_membership", CanView: "none"},
+			},
+			expectedGeneratedPermissions: []permissionsGeneratedResultRow{
+				{GroupID: 1, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 2, ItemID: 1, CanViewGenerated: "none"},
 			},
 		},
 		{
@@ -51,6 +61,18 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "3", "child_group_id": "2"},
 				{"ancestor_group_id": "3", "child_group_id": "3"},
 			},
+			expectedGrantedPermissions: []grantedPermission{
+				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
+				{GroupID: 2, ItemID: 1, SourceGroupID: 1, Origin: "item_unlocking", CanView: "content"},
+				{GroupID: 2, ItemID: 1, SourceGroupID: 2, Origin: "group_membership", CanView: "info"},
+				{GroupID: 3, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "info"},
+				{GroupID: 3, ItemID: 1, SourceGroupID: 3, Origin: "group_membership", CanView: "none"},
+			},
+			expectedGeneratedPermissions: []permissionsGeneratedResultRow{
+				{GroupID: 1, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 2, ItemID: 1, CanViewGenerated: "content"},
+				{GroupID: 3, ItemID: 1, CanViewGenerated: "info"},
+			},
 		},
 		{
 			name:                  "deletes orphans",
@@ -60,6 +82,12 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			remainingGroupsGroups: nil,
 			remainingGroupsAncestors: []map[string]interface{}{
 				{"ancestor_group_id": "1", "child_group_id": "1"},
+			},
+			expectedGrantedPermissions: []grantedPermission{
+				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
+			},
+			expectedGeneratedPermissions: []permissionsGeneratedResultRow{
+				{GroupID: 1, ItemID: 1, CanViewGenerated: "none"},
 			},
 		},
 		{
@@ -79,6 +107,18 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "10", "child_group_id": "5"},
 				{"ancestor_group_id": "10", "child_group_id": "10"},
 			},
+			expectedGrantedPermissions: []grantedPermission{
+				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
+				{GroupID: 3, ItemID: 1, SourceGroupID: 3, Origin: "group_membership", CanView: "none"},
+				{GroupID: 5, ItemID: 1, SourceGroupID: 5, Origin: "group_membership", CanView: "none"},
+				{GroupID: 10, ItemID: 1, SourceGroupID: 10, Origin: "group_membership", CanView: "none"},
+			},
+			expectedGeneratedPermissions: []permissionsGeneratedResultRow{
+				{GroupID: 1, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 3, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 5, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 10, ItemID: 1, CanViewGenerated: "none"},
+			},
 		},
 		{
 			name:                  "deletes only orphans of accepted types",
@@ -92,6 +132,18 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "9", "child_group_id": "9"},
 				{"ancestor_group_id": "11", "child_group_id": "11"},
 			},
+			expectedGrantedPermissions: []grantedPermission{
+				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
+				{GroupID: 8, ItemID: 1, SourceGroupID: 8, Origin: "group_membership", CanView: "none"},
+				{GroupID: 9, ItemID: 1, SourceGroupID: 9, Origin: "group_membership", CanView: "none"},
+				{GroupID: 11, ItemID: 1, SourceGroupID: 11, Origin: "group_membership", CanView: "none"},
+			},
+			expectedGeneratedPermissions: []permissionsGeneratedResultRow{
+				{GroupID: 1, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 8, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 9, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 11, ItemID: 1, CanViewGenerated: "none"},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -102,12 +154,16 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.Table("groups_propagate").UpdateColumn("ancestors_computation_state", "done").Error())
 
+			assert.NoError(t, dataStore.InTransaction(func(s *database.DataStore) error {
+				s.PermissionsGranted().ComputeAllAccess()
+				return nil
+			}))
 			err := dataStore.InTransaction(func(s *database.DataStore) error {
 				return s.GroupGroups().DeleteRelation(1, 2, tt.shouldDeleteOrphans)
 			})
 			assert.Equal(t, tt.wantErr, err)
 			assertGroupRelations(t, dataStore, tt.remainingGroupIDs, tt.remainingGroupsGroups, tt.remainingGroupsAncestors)
-			assertGroupLinkedObjects(t, dataStore, tt.remainingGroupIDs)
+			assertGroupLinkedObjects(t, dataStore, tt.remainingGroupIDs, tt.expectedGrantedPermissions, tt.expectedGeneratedPermissions)
 		})
 	}
 }
@@ -133,7 +189,16 @@ func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
 	assert.Zero(t, count)
 }
 
-func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remainingGroupIDs []int64) {
+type grantedPermission struct {
+	GroupID       int64
+	ItemID        int64
+	SourceGroupID int64
+	Origin        string
+	CanView       string
+}
+
+func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remainingGroupIDs []int64,
+	expectedGrantedPermissions []grantedPermission, expectedGeneratedPermissions []permissionsGeneratedResultRow) {
 	var ids []int64
 	assert.NoError(t, dataStore.Table("filters").Order("group_id").
 		Pluck("group_id", &ids).Error())
@@ -141,8 +206,17 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.NoError(t, dataStore.Attempts().Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.PermissionsGranted().Order("group_id").
-		Pluck("group_id", &ids).Error())
+
+	var grantedPermissions []grantedPermission
+	assert.NoError(t, dataStore.PermissionsGranted().Order("group_id, item_id, source_group_id, origin").
+		Select("group_id, item_id, source_group_id, origin, can_view").Scan(&grantedPermissions).Error())
+	assert.Equal(t, expectedGrantedPermissions, grantedPermissions)
+
+	var generatedPermissions []permissionsGeneratedResultRow
+	assert.NoError(t, dataStore.Permissions().Order("group_id, item_id").
+		Select("group_id, item_id, can_view_generated").Scan(&generatedPermissions).Error())
+	assert.Equal(t, expectedGeneratedPermissions, generatedPermissions)
+
 	assert.Equal(t, remainingGroupIDs, ids)
 	assert.NoError(t, dataStore.Permissions().Order("group_id").
 		Pluck("group_id", &ids).Error())
@@ -157,6 +231,10 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.NoError(t, dataStore.Table("groups_propagate").Order("id").
 		Pluck("id", &ids).Error())
 	assert.Equal(t, totalRemainingGroupIDs, ids)
+
+	var cnt int64
+	assert.NoError(t, dataStore.Table("permissions_propagate").Count(&cnt).Error())
+	assert.Zero(t, cnt)
 }
 
 const done = "done"

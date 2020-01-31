@@ -379,6 +379,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			idsToDeletePending, idsToDeleteRelation, idsChanged)
 
 		shouldCreateNewAncestors := false
+		shouldPropagatePermissions := false
 		if len(idsToDeletePending) > 0 {
 			idsToDeleteSlice := make([]int64, 0, len(idsToDeletePending))
 			for id := range idsToDeletePending {
@@ -392,7 +393,11 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 				idsToDeleteSlice = append(idsToDeleteSlice, id)
 			}
 			mustNotBeError(dataStore.GroupGroups().Delete("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
+			result := dataStore.PermissionsGranted().
+				Delete("origin = 'group_membership' AND source_group_id = ? AND group_id IN (?)", parentGroupID, idsToDeleteSlice)
+			mustNotBeError(result.Error())
 			shouldCreateNewAncestors = true
+			shouldPropagatePermissions = result.RowsAffected() > 0
 		}
 
 		insertGroupPendingRequests(dataStore, idsToInsertPending, parentGroupID, approvals)
@@ -431,6 +436,9 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 		if shouldCreateNewAncestors {
 			dataStore.GroupGroups().createNewAncestors()
+			if shouldPropagatePermissions {
+				dataStore.PermissionsGranted().computeAllAccess()
+			}
 			mustNotBeError(dataStore.Attempts().ComputeAllAttempts())
 		}
 		return nil

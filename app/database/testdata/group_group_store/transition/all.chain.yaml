@@ -52,3 +52,19 @@ groups_ancestors:
   - {id: 32, ancestor_group_id: 30, child_group_id: 20}
   - {id: 33, ancestor_group_id: 30, child_group_id: 30, is_self: 1}
   - {id: 34, ancestor_group_id: 111, child_group_id: 111, is_self: 1}
+items:
+  - {id: 1, default_language_tag: fr}
+  - {id: 2, default_language_tag: fr}
+permissions_granted:
+  - {group_id: 4, item_id: 1, source_group_id: 20, origin: group_membership, can_view: solution}
+  - {group_id: 4, item_id: 1, source_group_id: 20, origin: item_unlocking, can_view: content}
+  - {group_id: 4, item_id: 1, source_group_id: 4, origin: group_membership, can_view: info}
+  - {group_id: 5, item_id: 2, source_group_id: 20, origin: group_membership, can_view: solution}
+  - {group_id: 5, item_id: 2, source_group_id: 20, origin: item_unlocking, can_view: content}
+  - {group_id: 5, item_id: 2, source_group_id: 5, origin: group_membership, can_view: info}
+  - {group_id: 10, item_id: 1, source_group_id: 20, origin: group_membership, can_view: solution}
+  - {group_id: 10, item_id: 1, source_group_id: 20, origin: item_unlocking, can_view: content}
+  - {group_id: 10, item_id: 1, source_group_id: 10, origin: group_membership, can_view: info}
+  - {group_id: 11, item_id: 2, source_group_id: 20, origin: group_membership, can_view: solution}
+  - {group_id: 11, item_id: 2, source_group_id: 20, origin: item_unlocking, can_view: content}
+  - {group_id: 11, item_id: 2, source_group_id: 11, origin: group_membership, can_view: info}

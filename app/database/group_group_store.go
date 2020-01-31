@@ -165,10 +165,20 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
 		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
 
+		var shouldPropagatePermissions bool
+
 		if shouldDeleteChildGroup {
 			// we delete the orphan here in order to recalculate new ancestors correctly
+			// (no need to delete permissions here since we have a cascade delete in the DB)
 			mustNotBeError(s.db.Exec(deleteGroupsQuery, []int64{childGroupID}).Error)
+			shouldPropagatePermissions = true
+		} else {
+			permissionsResult := store.PermissionsGranted().
+				Delete("origin = 'group_membership' AND source_group_id = ? AND group_id = ?", parentGroupID, childGroupID)
+			mustNotBeError(permissionsResult.Error())
+			shouldPropagatePermissions = permissionsResult.RowsAffected() > 0
 		}
+
 		// recalculate relations
 		s.GroupGroups().createNewAncestors()
 
@@ -196,9 +206,9 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 					Pluck("groups.id", &idsToDelete).Error())
 
 				if len(idsToDelete) > 0 {
-					deleteResult := s.db.Exec(deleteGroupsQuery, idsToDelete)
-					mustNotBeError(deleteResult.Error)
-					if deleteResult.RowsAffected > 0 {
+					deleteResult := s.Exec(deleteGroupsQuery, idsToDelete)
+					mustNotBeError(deleteResult.Error())
+					if deleteResult.RowsAffected() > 0 {
 						s.GroupGroups().createNewAncestors()
 					}
 				}
@@ -207,8 +217,9 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			idsToDelete = append(idsToDelete, childGroupID)
 			// delete self relations of the removed groups
 			mustNotBeError(s.GroupAncestors().Delete("ancestor_group_id IN (?)", idsToDelete).Error())
-			// delete removed groups from groups_propagate
-			mustNotBeError(s.Table("groups_propagate").Delete("id IN (?)", idsToDelete).Error())
+		}
+		if shouldPropagatePermissions {
+			s.PermissionsGranted().computeAllAccess()
 		}
 		return nil
 	}))
