@@ -12,15 +12,61 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// UpdateItemStringRequest is the expected input for item's strings updating
-type UpdateItemStringRequest struct {
-	// Nullable fields are of pointer types
-	Title       string  `json:"title" validate:"max=200"`     // max length = 200
-	ImageURL    *string `json:"image_url" validate:"max=100"` // max length = 100
-	Subtitle    *string `json:"subtitle" validate:"max=200"`  // max length = 200
+// itemStringEditRequest is the expected input for item's strings updating
+// swagger:model itemStringEditRequest
+type itemStringEditRequest struct {
+	// maxLength: 200
+	Title string `json:"title" validate:"max=200"`
+	// Nullable
+	// maxLength: 100
+	ImageURL *string `json:"image_url" validate:"max=100"`
+	// Nullable
+	// maxLength: 200
+	Subtitle *string `json:"subtitle" validate:"max=200"`
+	// Nullable
 	Description *string `json:"description"`
 }
 
+// swagger:operation PUT /items/{item_id}/strings/{language_tag} items itemStringEdit
+// ---
+// summary: Edit the strings of an item
+// description: >
+//
+//   Updates the corresponding `items_strings` row identified by `item_id` and `language_tag` if exists or
+//   creates a new one otherwise.
+//
+//
+//   If `language_tag` is not specified, uses the item’s default language.
+//
+//
+//   The user should have `can_edit` >= 'all' on the item, otherwise the "forbidden" response is returned.
+// parameters:
+// - name: item_id
+//   in: path
+//   type: integer
+//   format: int64
+//   required: true
+// - name: language_tag
+//   in: path
+//   type: string
+//   required: true
+// - in: body
+//   name: data
+//   required: true
+//   description: New item property values
+//   schema:
+//     "$ref": "#/definitions/itemStringEditRequest"
+// responses:
+//   "200":
+//     "$ref": "#/responses/updatedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
@@ -37,7 +83,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		useDefaultLanguage = false
 	}
 
-	input := UpdateItemStringRequest{}
+	input := itemStringEditRequest{}
 	data := formdata.NewFormData(&input)
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
