@@ -14,9 +14,9 @@ Feature: Discard the code of the given group - robustness
       | user  | 0         | 41       | John        | Doe       | en               |
       | jane  | 0         | 31       | Jane        | Doe       | en               |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 76 | 13                | 11             | 0       |
-      | 78 | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 13                | 11             |
+      | 21                | 21             |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |

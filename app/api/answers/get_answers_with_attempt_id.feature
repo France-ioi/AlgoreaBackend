@@ -14,15 +14,15 @@ Background:
     | group_id | manager_id |
     | 13       | 21         |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id | personal_info_view_approved_at |
-    | 61 | 13              | 11             | 2019-05-30 11:00:00            |
+    | parent_group_id | child_group_id | personal_info_view_approved_at |
+    | 13              | 11             | 2019-05-30 11:00:00            |
   And the database has the following table 'groups_ancestors':
-    | id | ancestor_group_id | child_group_id | is_self |
-    | 71 | 11                | 11             | 1       |
-    | 73 | 13                | 13             | 1       |
-    | 74 | 13                | 11             | 0       |
-    | 75 | 21                | 21             | 1       |
-    | 77 | 41                | 21             | 0       |
+    | ancestor_group_id | child_group_id |
+    | 11                | 11             |
+    | 13                | 13             |
+    | 13                | 11             |
+    | 21                | 21             |
+    | 41                | 21             |
   And the database has the following table 'items':
     | id  | type    | teams_editable | no_score | default_language_tag |
     | 190 | Chapter | false          | false    | fr                   |

@@ -14,19 +14,19 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | fr  |
       | sl  |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
-      | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
-      | 41                | 41             | 1       |
-      | 42                | 42             | 1       |
-      | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
-      | 61                | 61             | 1       |
-      | 62                | 62             | 1       |
-      | 71                | 71             | 1       |
-      | 72                | 72             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 21                | 21             |
+      | 22                | 22             |
+      | 31                | 31             |
+      | 32                | 32             |
+      | 41                | 41             |
+      | 42                | 42             |
+      | 51                | 51             |
+      | 52                | 52             |
+      | 61                | 61             |
+      | 62                | 62             |
+      | 71                | 71             |
+      | 72                | 72             |
     And the database has the following table 'items':
       | id | duration | default_language_tag | allows_multiple_attempts |
       | 50 | 00:00:00 | fr                   | 0                        |

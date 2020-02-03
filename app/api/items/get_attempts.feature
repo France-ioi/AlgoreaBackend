@@ -11,19 +11,19 @@ Feature: Get groups attempts for current user and item_id
       | jdoe  | 11       | John       | Doe       |
       | other | 21       | George     | Bush      |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 61 | 13              | 11             |
-      | 62 | 13              | 21             |
-      | 64 | 23              | 21             |
-      | 65 | 23              | 31             |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
+      | 13              | 21             |
+      | 23              | 21             |
+      | 23              | 31             |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 71 | 11                | 11             | 1       |
-      | 73 | 13                | 13             | 1       |
-      | 74 | 13                | 11             | 0       |
-      | 75 | 13                | 21             | 0       |
-      | 77 | 23                | 21             | 0       |
-      | 78 | 23                | 23             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 13                | 11             |
+      | 13                | 21             |
+      | 23                | 21             |
+      | 23                | 23             |
     And the database has the following table 'items':
       | id  | allows_multiple_attempts | default_language_tag |
       | 200 | 0                        | fr                   |

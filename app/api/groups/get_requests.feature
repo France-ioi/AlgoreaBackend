@@ -20,27 +20,27 @@ Feature: Get requests for group_id
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 11                | 11             | 1       |
-      | 76 | 13                | 11             | 0       |
-      | 77 | 13                | 13             | 1       |
-      | 78 | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 21                | 21             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 1  | 13              | 21             |
-      | 2  | 13              | 11             |
-      | 3  | 13              | 31             |
-      | 4  | 13              | 22             |
-      | 5  | 14              | 11             |
-      | 6  | 14              | 31             |
-      | 7  | 14              | 21             |
-      | 8  | 14              | 22             |
-      | 9  | 13              | 121            |
-      | 10 | 13              | 111            |
-      | 11 | 13              | 131            |
-      | 12 | 13              | 122            |
-      | 13 | 13              | 123            |
-      | 14 | 13              | 124            |
+      | parent_group_id | child_group_id |
+      | 13              | 21             |
+      | 13              | 11             |
+      | 13              | 31             |
+      | 13              | 22             |
+      | 14              | 11             |
+      | 14              | 31             |
+      | 14              | 21             |
+      | 14              | 22             |
+      | 13              | 121            |
+      | 13              | 111            |
+      | 13              | 131            |
+      | 13              | 122            |
+      | 13              | 123            |
+      | 13              | 124            |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | at                        |
       | 13       | 21        | invitation   | {{relativeTime("-170h")}} |

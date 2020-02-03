@@ -20,13 +20,13 @@ Feature: Get item information for breadcrumb - robustness
       | 23      | en           | Reduce Graph     |
       | 21      | fr           | Graphe: Methodes |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 61 | 13              | 11             |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 71 | 11                | 11             | 1       |
-      | 73 | 13                | 13             | 1       |
-      | 74 | 13                | 11             | 0       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 13                | 11             |
 
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing), but user has full access to all
     Given the database has the following table 'permissions_generated':

@@ -37,23 +37,23 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 22              | 13             |
       | 55              | 14             |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 11                | 55             | 0       |
-      | 13                | 11             | 0       |
-      | 13                | 13             | 1       |
-      | 13                | 55             | 0       |
-      | 14                | 14             | 1       |
-      | 15                | 15             | 1       |
-      | 15                | 55             | 0       |
-      | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 22             | 1       |
-      | 52                | 52             | 1       |
-      | 53                | 53             | 1       |
-      | 55                | 14             | 0       |
-      | 55                | 55             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 11                | 55             |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 13                | 55             |
+      | 14                | 14             |
+      | 15                | 15             |
+      | 15                | 55             |
+      | 21                | 21             |
+      | 22                | 11             |
+      | 22                | 13             |
+      | 22                | 22             |
+      | 52                | 52             |
+      | 53                | 53             |
+      | 55                | 14             |
+      | 55                | 55             |
 
   Scenario: User tries to delete a relation making a child group an orphan
     Given I am the user with id "21"

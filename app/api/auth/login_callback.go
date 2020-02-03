@@ -128,7 +128,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 		return selfGroupID
 	}
 
-	found, err := s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
+	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	groupsToCreate := make([]database.ParentChild, 0, 2)

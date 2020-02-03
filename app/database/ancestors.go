@@ -7,10 +7,12 @@ import (
 const groups = "groups"
 
 // createNewAncestors inserts new rows into
-// the objectName_ancestors table (items_ancestors or groups_ancestor)
+// the objectName_ancestors table (items_ancestors or groups_ancestors)
 // for all rows marked with ancestors_computation_state="todo" in objectName_propagate
 // (items_propagate or groups_propagate) and their descendants
 func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /* #nosec */
+	s.mustBeInTransaction()
+
 	// We mark as 'todo' all descendants of objects marked as 'todo'
 	query := `
 		INSERT INTO  ` + objectName + `_propagate (id, ancestors_computation_state)
@@ -21,15 +23,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		JOIN ` + QuoteName(objectName+"_propagate") + ` AS ancestors
 			ON ancestors.id = ` + QuoteName(objectName+"_ancestors") + ".ancestor_" + singleObjectName + `_id
 		WHERE ancestors.ancestors_computation_state = 'todo'
-		ON DUPLICATE KEY UPDATE ancestors_computation_state = 'todo'`
+		FOR UPDATE
+		ON DUPLICATE KEY UPDATE ancestors_computation_state = 'todo'` /* #nosec */
 
 	mustNotBeError(s.db.Exec(query).Error)
-	hasChanges := true
 
-	groupsAcceptedCondition := ""
-	if objectName == groups {
-		groupsAcceptedCondition = " AND NOW() < groups_groups.expires_at"
-	}
+	hasChanges := true
 
 	relationsTable := objectName + "_" + objectName
 
@@ -41,111 +40,93 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	/* #nosec */
 	query = `
 		UPDATE ` + objectName + `_propagate AS children
-		LEFT JOIN ` + relationsTable + `
-			ON ` + relationsTable + `.child_` + singleObjectName + `_id = children.id ` + groupsAcceptedCondition + `
-		LEFT JOIN ` + objectName + `_propagate AS parents
-			ON parents.id = ` + relationsTable + `.parent_` + singleObjectName + `_id AND parents.ancestors_computation_state <> 'done'
 		SET children.ancestors_computation_state='processing'
-		WHERE children.ancestors_computation_state = 'todo' AND parents.id IS NULL`
+		WHERE children.ancestors_computation_state = 'todo' AND NOT EXISTS (
+			SELECT 1 FROM (
+				SELECT 1
+				FROM ` + relationsTable + `
+					JOIN ` + objectName + `_propagate
+						ON ` + objectName + `_propagate.id = ` + relationsTable + `.parent_` + singleObjectName + `_id AND
+							 ` + objectName + `_propagate.ancestors_computation_state <> 'done'
+				WHERE ` + relationsTable + `.child_` + singleObjectName + `_id = children.id
+				FOR UPDATE
+			) has_undone_parents FOR UPDATE
+		)`
 	markAsProcessing, err := s.db.CommonDB().Prepare(query)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsProcessing.Close()) }()
 
-	isSelfColumn := ""
-	isSelfValue := ""
 	expiresAtColumn := ""
-	expiresAtValue := ""
 	expiresAtValueJoin := ""
+	ignore := "IGNORE"
 
 	if objectName == groups {
-		isSelfColumn = ", is_self"
-		isSelfValue = ", '0' AS is_self"
 		expiresAtColumn = ", expires_at"
-		expiresAtValue = ", groups_groups.expires_at"
-		expiresAtValueJoin = ", LEAST(groups_ancestors_select.expires_at, groups_groups_join.expires_at)"
+		expiresAtValueJoin = ", LEAST(groups_ancestors_join.expires_at, groups_groups_select.expires_at)"
+		ignore = ""
 	}
 
 	// For every object marked as 'processing', we compute all its ancestors
-	insertQueries := make([]string, 0, 4)
-	insertQueries = append(insertQueries, `
-		INSERT IGNORE INTO `+objectName+`_ancestors
+	recomputeQueries := make([]string, 0, 3)
+	recomputeQueries = append(recomputeQueries, `
+		DELETE `+objectName+`_ancestors
+		FROM `+objectName+`_ancestors
+			JOIN `+objectName+`_propagate
+				ON `+objectName+`_propagate.id = `+objectName+`_ancestors.child_`+singleObjectName+`_id
+		WHERE `+objectName+`_propagate.ancestors_computation_state = 'processing'`, `
+		INSERT `+ignore+` INTO `+objectName+`_ancestors
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+expiresAtColumn+`
+			`+expiresAtColumn+`
 		)
 		SELECT
-			`+relationsTable+`.parent_`+singleObjectName+`_id,
-			`+relationsTable+`.child_`+singleObjectName+`_id
-			`+isSelfValue+expiresAtValue+`
-		FROM `+relationsTable+`
-		JOIN `+objectName+`_propagate
-		ON (
-			`+relationsTable+`.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
-		)
-		WHERE
-			`+objectName+`_propagate.ancestors_computation_state = 'processing'`+groupsAcceptedCondition, `
-		INSERT IGNORE INTO `+objectName+`_ancestors
-		(
-			ancestor_`+singleObjectName+`_id,
-			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+expiresAtColumn+`
-		)
-		SELECT
-			`+relationsTable+`.parent_`+singleObjectName+`_id,
-			`+relationsTable+`.child_`+singleObjectName+`_id
-			`+isSelfValue+expiresAtValue+`
-		FROM `+relationsTable+`
-		JOIN `+objectName+`_propagate
-		ON (
-			`+relationsTable+`.parent_`+singleObjectName+`_id = `+objectName+`_propagate.id
-		)
-		WHERE
-			`+objectName+`_propagate.ancestors_computation_state = 'processing'`+groupsAcceptedCondition, `
-		INSERT IGNORE INTO `+objectName+`_ancestors
-		(
-			ancestor_`+singleObjectName+`_id,
-			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+expiresAtColumn+`
-		)
-		SELECT
-			`+objectName+`_ancestors_select.ancestor_`+singleObjectName+`_id,
-			`+relationsTable+`_join.child_`+singleObjectName+`_id
-			`+isSelfValue+expiresAtValueJoin+`
-		FROM `+objectName+`_ancestors AS `+objectName+`_ancestors_select
-		JOIN `+relationsTable+` AS `+relationsTable+`_join ON (
-			`+relationsTable+`_join.parent_`+singleObjectName+`_id = `+objectName+`_ancestors_select.child_`+singleObjectName+`_id
+			`+objectName+`_ancestors_join.ancestor_`+singleObjectName+`_id,
+			`+relationsTable+`_select.child_`+singleObjectName+`_id
+			`+expiresAtValueJoin+`
+		FROM `+relationsTable+` AS `+relationsTable+`_select
+		JOIN `+objectName+`_ancestors AS `+objectName+`_ancestors_join ON (
+			`+objectName+`_ancestors_join.child_`+singleObjectName+`_id = `+relationsTable+`_select.parent_`+singleObjectName+`_id
 		)
 		JOIN `+objectName+`_propagate ON (
-			`+relationsTable+`_join.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
+			`+relationsTable+`_select.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
 		)
 		WHERE
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`) // #nosec
 	if objectName == groups {
-		insertQueries[2] += `
-				AND NOT groups_ancestors_select.is_self
+		recomputeQueries[1] += `
+				AND NOW() < groups_groups_select.expires_at AND
+				NOW() < LEAST(groups_ancestors_join.expires_at, groups_groups_select.expires_at)
 			ON DUPLICATE KEY UPDATE
-				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_select.expires_at, groups_groups_join.expires_at))`
-		insertQueries = append(insertQueries, `
+				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_join.expires_at, groups_groups_select.expires_at))`
+		recomputeQueries = append(recomputeQueries, `
 			INSERT IGNORE INTO `+objectName+`_ancestors
 			(
 				ancestor_`+singleObjectName+`_id,
-				child_`+singleObjectName+`_id`+`
-				`+isSelfColumn+`
+				child_`+singleObjectName+`_id
 			)
 			SELECT
 				groups_propagate.id AS ancestor_group_id,
-				groups_propagate.id AS child_group_id,
-				'1' AS is_self
+				groups_propagate.id AS child_group_id
 			FROM groups_propagate
-			WHERE groups_propagate.ancestors_computation_state = 'processing'`) // #nosec
+			WHERE groups_propagate.ancestors_computation_state = 'processing'
+			FOR UPDATE`) // #nosec
+	} else {
+		recomputeQueries[1] += ` FOR UPDATE`
+		recomputeQueries = append(recomputeQueries, `
+			INSERT IGNORE INTO items_ancestors (ancestor_item_id, child_item_id)
+			SELECT items_items.parent_item_id, items_items.child_item_id
+			FROM items_items
+			JOIN items_propagate ON items_items.child_item_id = items_propagate.id
+			WHERE items_propagate.ancestors_computation_state = 'processing'
+			FOR UPDATE`) // #nosec
 	}
 
-	insertAncestors := make([]*sql.Stmt, len(insertQueries))
-	for i := 0; i < len(insertQueries); i++ {
-		insertAncestors[i], err = s.db.CommonDB().Prepare(insertQueries[i])
+	recomputeAncestors := make([]*sql.Stmt, len(recomputeQueries))
+	for i := 0; i < len(recomputeQueries); i++ {
+		recomputeAncestors[i], err = s.db.CommonDB().Prepare(recomputeQueries[i])
 		mustNotBeError(err)
-		defer func(i int) { mustNotBeError(insertAncestors[i].Close()) }(i)
+		defer func(i int) { mustNotBeError(recomputeAncestors[i].Close()) }(i)
 	}
 
 	// Objects marked as 'processing' are now marked as 'done'
@@ -160,8 +141,8 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	for hasChanges {
 		_, err = markAsProcessing.Exec()
 		mustNotBeError(err)
-		for i := 0; i < len(insertAncestors); i++ {
-			_, err = insertAncestors[i].Exec()
+		for i := 0; i < len(recomputeAncestors); i++ {
+			_, err = recomputeAncestors[i].Exec()
 			mustNotBeError(err)
 		}
 

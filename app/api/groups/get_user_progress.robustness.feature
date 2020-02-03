@@ -11,10 +11,10 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | group_id | manager_id |
       | 13       | 21         |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 21                | 21             |
     And the database has the following table 'items':
       | id  | type    | default_language_tag |
       | 200 | Course  | fr                   |

@@ -16,12 +16,12 @@ Feature: Change item access rights for a group - robustness
       | 23       | 21         | 1                      |
       | 25       | 21         | 0                      |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 21                | 21             | 1       |
-      | 23                | 23             | 1       |
-      | 25                | 23             | 0       |
-      | 25                | 25             | 1       |
-      | 31                | 31             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 21                | 21             |
+      | 23                | 23             |
+      | 25                | 23             |
+      | 25                | 25             |
+      | 31                | 31             |
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 100 | fr                   |

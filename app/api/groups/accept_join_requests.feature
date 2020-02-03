@@ -20,28 +20,28 @@ Feature: Accept group requests
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 13                | 111            | 0       |
-      | 13                | 121            | 0       |
-      | 13                | 123            | 0       |
-      | 13                | 151            | 0       |
-      | 14                | 14             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 111               | 111            | 1       |
-      | 121               | 121            | 1       |
-      | 122               | 122            | 1       |
-      | 123               | 123            | 1       |
-      | 151               | 151            | 1       |
-      | 161               | 161            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 13                | 111            |
+      | 13                | 121            |
+      | 13                | 123            |
+      | 13                | 151            |
+      | 14                | 14             |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 111               | 111            |
+      | 121               | 121            |
+      | 122               | 122            |
+      | 123               | 123            |
+      | 151               | 151            |
+      | 161               | 161            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at |
-      | 9  | 13              | 121            | null                           | null                        | null              |
-      | 10 | 13              | 111            | null                           | null                        | null              |
-      | 13 | 13              | 123            | null                           | null                        | null              |
-      | 16 | 13              | 151            | null                           | null                        | null              |
+      | parent_group_id | child_group_id | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at |
+      | 13              | 111            | null                           | null                        | null              |
+      | 13              | 121            | null                           | null                        | null              |
+      | 13              | 123            | null                           | null                        | null              |
+      | 13              | 151            | null                           | null                        | null              |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
       | 13       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00 |
@@ -140,16 +140,16 @@ Feature: Accept group requests
   Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
     Given I am the user with id "21"
     And the database table 'groups_groups' has also the following rows:
-      | id | parent_group_id | child_group_id |
-      | 18 | 444             | 31             |
-      | 19 | 444             | 141            |
-      | 20 | 444             | 161            |
+      | parent_group_id | child_group_id |
+      | 444             | 31             |
+      | 444             | 141            |
+      | 444             | 161            |
     And the database table 'groups_ancestors' has also the following rows:
-      | ancestor_group_id | child_group_id | is_self |
-      | 444               | 31             | 0       |
-      | 444               | 141            | 0       |
-      | 444               | 161            | 0       |
-      | 444               | 444            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 444               | 31             |
+      | 444               | 141            |
+      | 444               | 161            |
+      | 444               | 444            |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |

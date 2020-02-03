@@ -12,18 +12,18 @@ Feature: User accepts an invitation to join a group - robustness
       | group_id | login |
       | 21       | john  |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 14                | 13             | 0       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 21                | 13             | 0       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 14                | 13             |
+      | 14                | 14             |
+      | 14                | 21             |
+      | 21                | 13             |
+      | 21                | 21             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 7  | 14              | 21             |
-      | 10 | 21              | 13             |
+      | parent_group_id | child_group_id |
+      | 14              | 21             |
+      | 21              | 13             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | join_request |

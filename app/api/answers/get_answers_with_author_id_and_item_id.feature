@@ -16,18 +16,18 @@ Background:
     | group_id | manager_id |
     | 13       | 21         |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id | personal_info_view_approved_at |
-    | 61 | 13              | 11             | 2019-05-30 11:00:00            |
-    | 62 | 13              | 25             | null                           |
+    | parent_group_id | child_group_id | personal_info_view_approved_at |
+    | 13              | 11             | 2019-05-30 11:00:00            |
+    | 13              | 25             | null                           |
   And the database has the following table 'groups_ancestors':
-    | ancestor_group_id | child_group_id | is_self |
-    | 11                | 11             | 1       |
-    | 13                | 11             | 0       |
-    | 13                | 13             | 1       |
-    | 13                | 25             | 0       |
-    | 21                | 21             | 1       |
-    | 23                | 21             | 0       |
-    | 23                | 23             | 1       |
+    | ancestor_group_id | child_group_id |
+    | 11                | 11             |
+    | 13                | 11             |
+    | 13                | 13             |
+    | 13                | 25             |
+    | 21                | 21             |
+    | 23                | 21             |
+    | 23                | 23             |
   And the database has the following table 'items':
     | id  | type    | teams_editable | no_score | default_language_tag |
     | 190 | Chapter | false          | false    | fr                   |

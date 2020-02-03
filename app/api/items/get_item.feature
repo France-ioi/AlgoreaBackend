@@ -37,15 +37,15 @@ Feature: Get item view information
       | 26              | 11             |
       | 26              | 22             |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 13                | 11             | 0       |
-      | 15                | 14             | 0       |
-      | 13                | 17             | 0       |
-      | 26                | 11             | 0       |
-      | 26                | 22             | 0       |
-      | 26                | 26             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 13                | 11             |
+      | 15                | 14             |
+      | 13                | 17             |
+      | 26                | 11             |
+      | 26                | 22             |
+      | 26                | 26             |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
       | 200            | 210           | 2           | Discovery | as_info                  |

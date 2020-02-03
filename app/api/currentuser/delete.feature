@@ -23,21 +23,21 @@ Feature: Delete the current user
       | 100      | 21        | 2019-05-30 11:00:00 |
       | 100      | 31        | 2019-05-30 11:00:00 |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 1                 | 1              | true    |
-      | 1                 | 2              | false   |
-      | 1                 | 4              | false   |
-      | 1                 | 21             | false   |
-      | 1                 | 31             | false   |
-      | 2                 | 2              | true    |
-      | 2                 | 4              | false   |
-      | 2                 | 21             | false   |
-      | 2                 | 31             | false   |
-      | 4                 | 4              | true    |
-      | 4                 | 31             | true    |
-      | 21                | 21             | true    |
-      | 31                | 31             | true    |
-      | 100               | 100            | true    |
+      | ancestor_group_id | child_group_id |
+      | 1                 | 1              |
+      | 1                 | 2              |
+      | 1                 | 4              |
+      | 1                 | 21             |
+      | 1                 | 31             |
+      | 2                 | 2              |
+      | 2                 | 4              |
+      | 2                 | 21             |
+      | 2                 | 31             |
+      | 4                 | 4              |
+      | 4                 | 31             |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 100               | 100            |
     And the database has the following table 'users':
       | temp_user | login    | group_id | login_id |
       | 0         | user     | 21       | 1234567  |
@@ -97,7 +97,7 @@ Feature: Delete the current user
       | 2                 | 4              | false   |
       | 2                 | 31             | false   |
       | 4                 | 4              | true    |
-      | 4                 | 31             | true    |
+      | 4                 | 31             | false   |
       | 31                | 31             | true    |
       | 100               | 100            | true    |
 

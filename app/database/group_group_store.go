@@ -48,15 +48,13 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		mustNotBeError(store.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
 		mustNotBeError(store.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
-		var rows []interface{}
-		mustNotBeError(store.GroupAncestors().
+		found, err := store.GroupAncestors().
 			WithWriteLock().
-			Select("id").
 			// do not allow cycles even via expired relations
 			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
-			Limit(1).
-			Scan(&rows).Error())
-		if len(rows) > 0 {
+			HasRows()
+		mustNotBeError(err)
+		if found {
 			return ErrRelationCycle
 		}
 
@@ -74,17 +72,12 @@ func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
 		"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `parent_group_id` = ? FOR UPDATE), 0)",
 		parentGroupID).Error)
 
-	mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-		store := NewDataStore(db).GroupGroups()
-		newID := store.NewID()
-		relationMap := map[string]interface{}{
-			"id":              newID,
-			"parent_group_id": parentGroupID,
-			"child_group_id":  childGroupID,
-			"child_order":     gorm.Expr("@maxIChildOrder+1"),
-		}
-		return store.GroupGroups().InsertMap(relationMap)
-	}))
+	relationMap := map[string]interface{}{
+		"parent_group_id": parentGroupID,
+		"child_group_id":  childGroupID,
+		"child_order":     gorm.Expr("@maxIChildOrder+1"),
+	}
+	mustNotBeError(s.GroupGroups().InsertMap(relationMap))
 }
 
 // CreateRelationsWithoutChecking creates multiple direct relations between group pairs at once
@@ -117,18 +110,14 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) error {
 		// check if parent_group_id is the only parent of child_group_id
-		shouldDeleteChildGroup := false
-		var result []interface{}
-		mustNotBeError(s.GroupGroups().WithWriteLock().
-			Select("1").
+		var shouldDeleteChildGroup bool
+		shouldDeleteChildGroup, err = s.GroupGroups().WithWriteLock().
 			Where("child_group_id = ?", childGroupID).
-			Where("parent_group_id != ?", parentGroupID).
-			Limit(1).Scan(&result).Error())
-		if len(result) == 0 {
-			shouldDeleteChildGroup = true
-			if !shouldDeleteOrphans {
-				return ErrGroupBecomesOrphan
-			}
+			Where("parent_group_id != ?", parentGroupID).HasRows()
+		mustNotBeError(err)
+		shouldDeleteChildGroup = !shouldDeleteChildGroup
+		if shouldDeleteChildGroup && !shouldDeleteOrphans {
+			return ErrGroupBecomesOrphan
 		}
 
 		var candidatesForDeletion []int64
@@ -144,10 +133,8 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				Pluck("groups.id", &candidatesForDeletion).Error())
 		}
 
-		// triggers/cascading delete from groups_ancestors (all except self-links) and groups_propagate,
-		// but the `before_delete_groups_groups` trigger inserts into groups_propagate again :(
 		const deleteGroupsQuery = `
-			DELETE ` + "`groups`" + `, group_children, group_parents, attempts,
+			DELETE group_children, group_parents, attempts,
 						 groups_login_prefixes, filters
 			FROM ` + "`groups`" + `
 			LEFT JOIN groups_groups AS group_children
@@ -215,12 +202,14 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			}
 
 			idsToDelete = append(idsToDelete, childGroupID)
-			// delete self relations of the removed groups
-			mustNotBeError(s.GroupAncestors().Delete("ancestor_group_id IN (?)", idsToDelete).Error())
+			// triggers/cascading delete from groups_ancestors and groups_propagate,
+			mustNotBeError(s.Groups().Delete("id IN (?)", idsToDelete).Error())
 		}
+
 		if shouldPropagatePermissions {
 			s.PermissionsGranted().computeAllAccess()
 		}
+
 		return nil
 	}))
 	return nil

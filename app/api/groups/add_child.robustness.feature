@@ -34,17 +34,17 @@ Feature: Add a parent-child relation between two groups - robustness
       | 18       | 27         | memberships_and_group |
       | 19       | 27         | memberships_and_group |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 11             | 0       |
-      | 13                | 13             | 1       |
-      | 15                | 15             | 1       |
-      | 16                | 16             | 1       |
-      | 18                | 18             | 1       |
-      | 19                | 19             | 1       |
-      | 21                | 21             | 1       |
-      | 25                | 25             | 1       |
-      | 27                | 27             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 15                | 15             |
+      | 16                | 16             |
+      | 18                | 18             |
+      | 19                | 19             |
+      | 21                | 21             |
+      | 25                | 25             |
+      | 27                | 27             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | child_order |
       | 13              | 11             | 1           |

@@ -35,25 +35,25 @@ Feature: Get group by name (contestGetGroupByName)
       | 50              | 15             |
       | 50              | 31             |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 10                | 10             | 1       |
-      | 10                | 11             | 0       |
-      | 10                | 13             | 0       |
-      | 10                | 15             | 0       |
-      | 11                | 11             | 1       |
-      | 11                | 13             | 0       |
-      | 11                | 15             | 0       |
-      | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
-      | 15                | 15             | 1       |
-      | 15                | 31             | 0       |
-      | 15                | 41             | 0       |
-      | 21                | 21             | 1       |
-      | 50                | 50             | 1       |
-      | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
-      | 41                | 41             | 1       |
-      | 42                | 42             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 10                | 10             |
+      | 10                | 11             |
+      | 10                | 13             |
+      | 10                | 15             |
+      | 11                | 11             |
+      | 11                | 13             |
+      | 11                | 15             |
+      | 13                | 13             |
+      | 14                | 14             |
+      | 15                | 15             |
+      | 15                | 31             |
+      | 15                | 41             |
+      | 21                | 21             |
+      | 50                | 50             |
+      | 31                | 31             |
+      | 32                | 32             |
+      | 41                | 41             |
+      | 42                | 42             |
     And the database has the following table 'items':
       | id | duration | allows_multiple_attempts | default_language_tag |
       | 50 | 00:00:00 | 0                        | fr                   |

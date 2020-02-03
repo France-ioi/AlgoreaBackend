@@ -46,7 +46,7 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 		{ChildGroupID: 2, AncestorGroupID: 1, IsSelf: false, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 1, IsSelf: false, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt}, // has already been there
+		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt}, // has already been there
 		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 4, AncestorGroupID: 1, IsSelf: false, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 4, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt},
@@ -80,7 +80,7 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	assert.Equal(t, []groupAncestorsResultRow{ // these rows have already been there
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -117,7 +117,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 	assert.Equal(t, []groupAncestorsResultRow{ // these rows have already been there
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -200,7 +200,7 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 		{ChildGroupID: 3, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3020-12-31 20:10:30"},
 		{ChildGroupID: 4, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3021-12-31 20:10:30"},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: "3022-12-31 20:10:30"},
 		{ChildGroupID: 4, AncestorGroupID: 2, IsSelf: false, ExpiresAt: "3023-12-31 20:10:30"},
 		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 4, AncestorGroupID: 3, IsSelf: false, ExpiresAt: "3024-12-31 20:10:30"},
@@ -246,7 +246,6 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T
 	assert.Equal(t, []groupAncestorsResultRow{
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
 	}, result)

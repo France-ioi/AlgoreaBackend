@@ -30,8 +30,8 @@ Feature: Update item - robustness
       | 11       | 21      | solution | none     | false    | 11              |
       | 11       | 50      | solution | all      | false    | 11              |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 71 | 11                | 11             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
     And the database has the following table 'languages':
       | tag |
       | sl  |

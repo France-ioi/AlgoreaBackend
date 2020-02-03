@@ -12,16 +12,16 @@ Feature: Remove members from a group (groupRemoveMembers)
       | user  | 11       | John        | Doe       | 1     |
       | jane  | 31       | Jane        | Doe       | 1     |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 11             | 0       |
-      | 13                | 13             | 1       |
-      | 13                | 21             | 0       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 13                | 21             |
+      | 21                | 21             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 1  | 13              | 21             |
-      | 2  | 13              | 11             |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
+      | 13              | 21             |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 31         | none                  |

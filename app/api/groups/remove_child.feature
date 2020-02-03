@@ -35,16 +35,16 @@ Feature: Remove a direct parent-child relation between two groups
       | 22       | 13        |
       | 22       | 14        |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 11             | 0       |
-      | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
-      | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 22             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 14                | 14             |
+      | 21                | 21             |
+      | 22                | 11             |
+      | 22                | 13             |
+      | 22                | 14             |
+      | 22                | 22             |
 
   Scenario: User deletes a relation
     Given I am the user with id "21"

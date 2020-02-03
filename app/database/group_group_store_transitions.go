@@ -410,26 +410,24 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 			insertQuery := `
 				INSERT INTO groups_groups (
-					id, parent_group_id, child_group_id, child_order, personal_info_view_approved_at,
+					parent_group_id, child_group_id, child_order, personal_info_view_approved_at,
 					lock_membership_approved_at, watch_approved_at
 				)`
-			valuesTemplate := "(?, ?, ?, ?, ?, ?, ?)"
+			valuesTemplate := `(?, ?, ?, ?, ?, ?)`
 			insertQuery += " VALUES " +
 				strings.Repeat(valuesTemplate+", ", len(idsToInsertRelation)-1) +
 				valuesTemplate // #nosec
 			insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
-			mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-				values := make([]interface{}, 0, len(idsToInsertRelation)*7)
-				for id := range idsToInsertRelation {
-					maxChildOrder.MaxChildOrder++
-					personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt :=
-						resolveApprovalTimesForGroupsGroups(oldActionsMap, id, approvals)
-					values = append(values, NewDataStore(db).NewID(), parentGroupID, id, maxChildOrder.MaxChildOrder,
-						personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt)
-					shouldCreateNewAncestors = true
-				}
-				return db.Exec(insertQuery, values...).Error()
-			}))
+			values := make([]interface{}, 0, len(idsToInsertRelation)*7)
+			for id := range idsToInsertRelation {
+				maxChildOrder.MaxChildOrder++
+				personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt :=
+					resolveApprovalTimesForGroupsGroups(oldActionsMap, id, approvals)
+				values = append(values, parentGroupID, id, maxChildOrder.MaxChildOrder,
+					personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt)
+				shouldCreateNewAncestors = true
+			}
+			mustNotBeError(dataStore.Exec(insertQuery, values...).Error())
 		}
 
 		insertGroupMembershipChanges(dataStore, idsChanged, parentGroupID, performedByUserID)

@@ -14,12 +14,12 @@ Feature: Update a group (groupEdit) - robustness
       | group_id | manager_id |
       | 13       | 21         |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 13                | 11             | 0       |
-      | 13                | 13             | 1       |
-      | 15                | 15             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 15                | 15             |
+      | 21                | 21             |
+      | 31                | 31             |
 
   Scenario: Should fail if the user is not a manager of the group
     Given I am the user with id "31"

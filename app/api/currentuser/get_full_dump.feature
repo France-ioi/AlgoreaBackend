@@ -26,12 +26,12 @@ Feature: Export the current user's data
       | 21      | refreshTokenFor1 |
       | 11      | refreshTokenFor2 |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 3  | 2               | 11             |
-      | 6  | 5               | 11             |
-      | 7  | 6               | 11             |
-      | 10 | 9               | 11             |
-      | 14 | 10              | 11             |
+      | parent_group_id | child_group_id |
+      | 2               | 11             |
+      | 5               | 11             |
+      | 6               | 11             |
+      | 9               | 11             |
+      | 10              | 11             |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 1        | 11         | memberships           | 1                      | 0                 |
@@ -49,22 +49,22 @@ Feature: Export the current user's data
       | 7        | 11        | removed              | 2019-07-10 03:02:28 | 31           |
       | 8        | 11        | left                 | 2019-07-10 04:02:28 | 11           |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 1                 | 1              | true    |
-      | 2                 | 2              | true    |
-      | 2                 | 11             | false   |
-      | 3                 | 3              | true    |
-      | 4                 | 4              | true    |
-      | 5                 | 5              | true    |
-      | 5                 | 11             | false   |
-      | 6                 | 6              | true    |
-      | 6                 | 11             | false   |
-      | 7                 | 7              | true    |
-      | 8                 | 8              | true    |
-      | 9                 | 9              | true    |
-      | 9                 | 11             | false   |
-      | 10                | 11             | false   |
-      | 11                | 11             | true    |
+      | ancestor_group_id | child_group_id |
+      | 1                 | 1              |
+      | 2                 | 2              |
+      | 2                 | 11             |
+      | 3                 | 3              |
+      | 4                 | 4              |
+      | 5                 | 5              |
+      | 5                 | 11             |
+      | 6                 | 6              |
+      | 6                 | 11             |
+      | 7                 | 7              |
+      | 8                 | 8              |
+      | 9                 | 9              |
+      | 9                 | 11             |
+      | 10                | 11             |
+      | 11                | 11             |
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 404 | fr                   |
@@ -127,35 +127,35 @@ Feature: Export the current user's data
       ],
       "groups_groups": [
         {
-          "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "14", "child_order": 0, "child_group_id": "11", "parent_group_id": "10",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "10",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,

@@ -8,8 +8,8 @@ Feature: Create a group (groupCreate)
       | login | temp_user | group_id | first_name  | last_name | allow_subgroups |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 21                | 21             |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 10 | fr                   |

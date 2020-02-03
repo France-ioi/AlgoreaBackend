@@ -25,18 +25,18 @@ Feature: Get managers of group_id
       | 14       | 31         | memberships           | 0                      | 1                 |
       | 14       | 41         | memberships           | 0                      | 1                 |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 41                | 41             | 1       |
-      | 51                | 51             | 1       |
-      | 61                | 61             | 1       |
-      | 71                | 71             | 1       |
-      | 81                | 81             | 1       |
-      | 91                | 91             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 14                | 14             |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 41                | 41             |
+      | 51                | 51             |
+      | 61                | 61             |
+      | 71                | 71             |
+      | 81                | 81             |
+      | 91                | 91             |
 
   Scenario: Default sort (by name)
     Given I am the user with id "21"

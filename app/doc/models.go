@@ -99,9 +99,6 @@ type invitationsViewResponseRow struct {
 
 // swagger:model membershipsViewResponseRow
 type membershipsViewResponseRow struct {
-	// `groups_groups.id`
-	// required: true
-	ID int64 `json:"id"`
 	// `MAX(group_membership_changes.at); Nullable`
 	// required: true
 	MemberSince *time.Time `json:"member_since"`

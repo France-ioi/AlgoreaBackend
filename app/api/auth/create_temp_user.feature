@@ -16,9 +16,9 @@ Feature: Create a temporary user
       | 2  | RootSelf  | Base     | RootSelf  |
       | 4  | RootTemp  | UserSelf | RootTemp  |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | child_order |
-      | 1  | 1               | 2              | 1           |
-      | 3  | 2               | 4              | 1           |
+      | parent_group_id | child_group_id | child_order |
+      | 1               | 2              | 1           |
+      | 2               | 4              | 1           |
 
   Scenario: Create a new temporary user
     Given the generated auth key is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
@@ -43,10 +43,10 @@ Feature: Create a temporary user
     And the table "groups" at id "5577006791947779410" should be:
       | id                  | name         | type     | description  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 | opened | send_emails |
       | 5577006791947779410 | tmp-49727887 | UserSelf | tmp-49727887 | true                                              | false  | false       |
-    And the table "groups_groups" should stay unchanged but the row with id "6129484611666145821"
-    And the table "groups_groups" at id "6129484611666145821" should be:
-      | id                  | parent_group_id | child_group_id      | child_order |
-      | 6129484611666145821 | 4               | 5577006791947779410 | 1           |
+    And the table "groups_groups" should stay unchanged but the row with child_group_id "5577006791947779410"
+    And the table "groups_groups" at child_group_id "5577006791947779410" should be:
+      | parent_group_id | child_group_id      | child_order |
+      | 4               | 5577006791947779410 | 1           |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 1                   | 1                   | true    |

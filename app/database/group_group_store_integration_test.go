@@ -401,7 +401,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T)
 		},
 		{
 			name:            "no changes",
-			parentGroupID:   10,
+			parentGroupID:   105,
 			childGroupID:    102,
 			doNotSetExpired: true,
 			expiresAt:       "9999-12-31 23:59:59",
