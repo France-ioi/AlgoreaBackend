@@ -332,41 +332,6 @@ Feature: Save grading result - robustness
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
-  Scenario: Scenario: No submission rights
-    Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "100",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
-      }
-      """
-    And the following token "scoreToken" signed by the task platform is distributed:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "100",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "score": "99",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 403
-    And the response error message should contain "Item is read-only"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
   Scenario: Platform doesn't use tokens and answer_token is missing
     Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
