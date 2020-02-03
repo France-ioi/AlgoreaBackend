@@ -37,8 +37,7 @@ import (
 //        response is returned;
 //     * `idItemLocal`, `itemUrl`, `idAttempt` of the `task_token` should match ones in the `score_token`/`answer_token`,
 //       otherwise the "bad request" response is returned;
-//     * the current user should have submission rights on the `task_token`'s item, the answer should exist and
-//       should have not been graded, otherwise the "forbidden" response is returned.
+//     * the answer should exist and should have not been graded, otherwise the "forbidden" response is returned.
 // parameters:
 // - in: body
 //   name: data
@@ -102,8 +101,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 	user := srv.GetUser(r)
 
-	apiError := service.NoError
-	if apiError = checkHintOrScoreTokenRequiredFields(user, requestData.TaskToken, "score_token",
+	if apiError := checkHintOrScoreTokenRequiredFields(user, requestData.TaskToken, "score_token",
 		requestData.ScoreToken.Converted.UserID, requestData.ScoreToken.LocalItemID,
 		requestData.ScoreToken.ItemURL, requestData.ScoreToken.AttemptID); apiError != service.NoError {
 		return apiError
@@ -111,22 +109,9 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 	var validated, ok bool
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		var hasAccess bool
-		var reason error
-		hasAccess, reason, err = store.Items().CheckSubmissionRights(requestData.TaskToken.Converted.LocalItemID, user)
-		service.MustNotBeError(err)
-
-		if !hasAccess {
-			apiError = service.ErrForbidden(reason)
-			return apiError.Error // rollback
-		}
-
 		validated, ok = saveGradingResultsIntoDB(store, user, &requestData)
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	if !ok {
