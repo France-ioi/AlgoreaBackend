@@ -126,7 +126,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	// There should not be too many of end members on one page.
 	var userIDs []interface{}
 	userIDQuery := srv.Store.ActiveGroupAncestors().
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'UserSelf'").
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'User'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
 	userIDQuery, apiError := service.ApplySortingAndPaging(r, userIDQuery, map[string]*service.FieldSortingParams{

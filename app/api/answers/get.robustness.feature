@@ -1,8 +1,8 @@
 Feature: Feature: Get user's answer by user_answer_id
   Background:
     Given the database has the following table 'groups':
-      | id | name | type     |
-      | 11 | jdoe | UserSelf |
+      | id | name | type |
+      | 11 | jdoe | User |
     And the database has the following table 'users':
       | login | group_id |
       | jdoe  | 11       |

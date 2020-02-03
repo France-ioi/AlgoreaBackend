@@ -46,7 +46,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 			userID = retryIDStore.NewID()
 			return retryIDStore.Groups().InsertMap(map[string]interface{}{
 				"id":          userID,
-				"type":        "UserSelf",
+				"type":        "User",
 				"created_at":  database.Now(),
 				"opened":      false,
 				"send_emails": false,

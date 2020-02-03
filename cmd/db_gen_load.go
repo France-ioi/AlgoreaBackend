@@ -70,7 +70,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 				- {ID: 17, sType: Other}
 				- {ID: 18, sType: Club}
 				- {ID: 20, sType: Friends}
-				- {ID: 21, sType: UserSelf}
+				- {ID: 21, sType: User}
 				- {ID: 22, sType: UserAdmin}
 			groups_groups:
 				- {idGroupParent: 1, idGroupChild: 2, sType: direct, iChildOrder: 1}
@@ -177,7 +177,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 					sCachedGrayedAccessDate: "2017-05-29T06:38:38Z"}
 				- {idGroup: 20, idItem: 212, sCachedFullAccessDate: null, sCachedPartialAccessDate: "2017-05-29T06:38:38Z",
 					sCachedGrayedAccessDate: null}
-				- {idGroup: 21, idItem: 213, sCachedFullAccessDate: "2017-05-29T06:38:38Z", sCachedPartialAccessDate: null, 
+				- {idGroup: 21, idItem: 213, sCachedFullAccessDate: "2017-05-29T06:38:38Z", sCachedPartialAccessDate: null,
 					sCachedGrayedAccessDate: null}
 				- {idGroup: 20, idItem: 214, sCachedFullAccessDate: null, sCachedPartialAccessDate: null,
 					sCachedGrayedAccessDate: "2017-05-29T06:38:38Z"}

@@ -58,7 +58,7 @@ type groupGroupProgressResponseRow struct {
 //
 //
 //              For all children of items from the parent_item_id list, display the result
-//              of each direct child of the given `group_id` whose type is not in (Team,UserSelf).
+//              of each direct child of the given `group_id` whose type is not in (Team, User).
 // parameters:
 // - name: group_id
 //   in: path
@@ -91,7 +91,7 @@ type groupGroupProgressResponseRow struct {
 //     description: >
 //       OK. Success response with groups progress on items
 //       For all children of items in the parent_item_id list, display the result for each direct child
-//       of the given group_id whose type is not in (Team,UserSelf). Values are averages of all the group's
+//       of the given group_id whose type is not in (Team, User). Values are averages of all the group's
 //       "end-members" where “end-member” defined as descendants of the group which are either
 //       1) teams or
 //       2) users who descend from the input group not only through teams (one or more).
@@ -150,7 +150,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Where("groups_groups_active.parent_group_id = ?", groupID).
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
-			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'UserSelf')`)
+			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'User')`)
 	ancestorGroupIDQuery, apiError := service.ApplySortingAndPaging(r, ancestorGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "group_child.name", FieldType: "string"},
@@ -172,7 +172,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	users := srv.Store.ActiveGroupGroups().
 		Select("child.id").
 		Joins("JOIN `groups` AS parent ON parent.id = groups_groups_active.parent_group_id AND parent.type != 'Team'").
-		Joins("JOIN `groups` AS child ON child.id = groups_groups_active.child_group_id and child.type = 'UserSelf'").
+		Joins("JOIN `groups` AS child ON child.id = groups_groups_active.child_group_id and child.type = 'User'").
 		Joins(`
 			JOIN groups_ancestors_active
 			ON groups_ancestors_active.ancestor_group_id IN (?) AND

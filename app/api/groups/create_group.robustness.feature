@@ -2,10 +2,10 @@ Feature: Create a group (groupCreate) - robustness
 
   Background:
     Given the database has the following table 'groups':
-      | id | name         | type      | team_item_id |
-      | 21 | owner        | UserSelf  | null         |
-      | 31 | tmp12        | UserSelf  | null         |
-      | 51 | john         | UserSelf  | null         |
+      | id | name  | type | team_item_id |
+      | 21 | owner | User | null         |
+      | 31 | tmp12 | User | null         |
+      | 51 | john  | User | null         |
     And the database has the following table 'users':
       | login  | temp_user | group_id |
       | owner  | 0         | 21       |
@@ -110,14 +110,14 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
   Examples:
-    | type      |
-    |           |
-    | Unknown   |
-    | UserSelf  |
-    | Base      |
-    | RootSelf  |
-    | Root      |
-    | RootTemp  |
+    | type     |
+    |          |
+    | Unknown  |
+    | User     |
+    | Base     |
+    | RootSelf |
+    | Root     |
+    | RootTemp |
 
   Scenario: Zero item_id
     Given I am the user with id "21"

@@ -1,11 +1,11 @@
 Feature: Get a task token with a refreshed attempt for an item - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  | team_item_id | type     |
-      | 101 | null         | UserSelf |
-      | 102 | 60           | Team     |
-      | 103 | 60           | Class    |
-      | 104 | 50           | Team     |
+      | id  | team_item_id | type  |
+      | 101 | null         | User  |
+      | 102 | 60           | Team  |
+      | 103 | 60           | Class |
+      | 104 | 50           | Team  |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |

@@ -37,7 +37,7 @@ type groupViewResponse struct {
 	// required:true
 	CreatedAt *database.Time `json:"created_at"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,UserSelf
+	// enum: Class,Team,Club,Friends,Other,User
 	Type string `json:"type"`
 	// Nullable
 	// required:true

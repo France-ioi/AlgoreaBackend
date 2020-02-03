@@ -2,17 +2,17 @@ Feature: Remove a direct parent-child relation between two groups - robustness
 
   Background:
     Given the database has the following table 'groups':
-      | id | name          | type      |
-      | 11 | Group A       | Class     |
-      | 13 | Group B       | Class     |
-      | 14 | Group C       | Class     |
-      | 15 | Team          | Team      |
-      | 21 | owner         | UserSelf  |
-      | 22 | Group         | Class     |
-      | 23 | teacher       | UserSelf  |
-      | 52 | Root          | Base      |
-      | 53 | RootSelf      | Base      |
-      | 55 | UserSelf      | UserSelf  |
+      | id | name     | type  |
+      | 11 | Group A  | Class |
+      | 13 | Group B  | Class |
+      | 14 | Group C  | Class |
+      | 15 | Team     | Team  |
+      | 21 | owner    | User  |
+      | 22 | Group    | Class |
+      | 23 | teacher  | User  |
+      | 52 | Root     | Base  |
+      | 53 | RootSelf | Base  |
+      | 55 | User     | User  |
     And the database has the following table 'users':
       | login   | group_id | first_name  | last_name |
       | owner   | 21       | Jean-Michel | Blanquer  |
@@ -128,7 +128,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Child group is UserSelf
+  Scenario: Child group is User
     Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/55"
     Then the response code should be 403
@@ -136,7 +136,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Parent group is UserSelf
+  Scenario: Parent group is User
     Given I am the user with id "21"
     When I send a DELETE request to "/groups/55/relations/14"
     Then the response code should be 403

@@ -1,17 +1,17 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type     |
-      | 10 | Parent  | Club     |
-      | 11 | Group A | Class    |
-      | 13 | Group B | Other    |
-      | 14 | Group B | Friends  |
-      | 21 | owner   | UserSelf |
-      | 31 | john    | UserSelf |
-      | 33 | item10  | Other    |
-      | 34 | item50  | Other    |
-      | 35 | item60  | Other    |
-      | 36 | item70  | Other    |
+      | id | name    | type    |
+      | 10 | Parent  | Club    |
+      | 11 | Group A | Class   |
+      | 13 | Group B | Other   |
+      | 14 | Group B | Friends |
+      | 21 | owner   | User    |
+      | 31 | john    | User    |
+      | 33 | item10  | Other   |
+      | 34 | item50  | Other   |
+      | 35 | item60  | Other   |
+      | 36 | item70  | Other   |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |

@@ -1,16 +1,16 @@
 Feature: Get group by name (contestGetGroupByName)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type     | team_item_id |
-      | 10 | Parent  | Club     | null         |
-      | 11 | Group A | Friends  | null         |
-      | 13 | Group B | Team     | 60           |
-      | 14 | Group B | Other    | null         |
-      | 15 | Team    | Team     | 60           |
-      | 21 | owner   | UserSelf | null         |
-      | 31 | john    | UserSelf | null         |
-      | 41 | jane    | UserSelf | null         |
-      | 50 | Group D | Class    | null         |
+      | id | name    | type    | team_item_id |
+      | 10 | Parent  | Club    | null         |
+      | 11 | Group A | Friends | null         |
+      | 13 | Group B | Team    | 60           |
+      | 14 | Group B | Other   | null         |
+      | 15 | Team    | Team    | 60           |
+      | 21 | owner   | User    | null         |
+      | 31 | john    | User    | null         |
+      | 41 | jane    | User    | null         |
+      | 50 | Group D | Class   | null         |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -161,7 +161,7 @@ Feature: Get group by name (contestGetGroupByName)
     {
       "group_id": "31",
       "name": "john",
-      "type": "UserSelf",
+      "type": "User",
       "additional_time": 60,
       "total_additional_time": 60
     }

@@ -1,14 +1,14 @@
 Feature: Invite users
   Background:
     Given the database has the following table 'groups':
-      | id  | type     | team_item_id | require_personal_info_access_approval |
-      | 13  | Team     | 1234         | none                                  |
-      | 21  | UserSelf | null         | none                                  |
-      | 101 | UserSelf | null         | none                                  |
-      | 102 | UserSelf | null         | none                                  |
-      | 103 | UserSelf | null         | none                                  |
-      | 444 | Team     | 1234         | none                                  |
-      | 555 | Class    | null         | view                                  |
+      | id  | type  | team_item_id | require_personal_info_access_approval |
+      | 13  | Team  | 1234         | none                                  |
+      | 21  | User  | null         | none                                  |
+      | 101 | User  | null         | none                                  |
+      | 102 | User  | null         | none                                  |
+      | 103 | User  | null         | none                                  |
+      | 444 | Team  | 1234         | none                                  |
+      | 555 | Class | null         | view                                  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
