@@ -22,29 +22,29 @@ Feature: Get members of group_id
       | 13       | 91         |
       | 22       | 21         |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 13                | 51             | 0       |
-      | 13                | 61             | 0       |
-      | 13                | 91             | 0       |
-      | 14                | 11             | 0       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 14                | 31             | 0       |
-      | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
-      | 22                | 22             | 1       |
-      | 22                | 51             | 0       |
-      | 22                | 61             | 0       |
-      | 22                | 91             | 0       |
-      | 31                | 31             | 1       |
-      | 41                | 41             | 1       |
-      | 51                | 51             | 1       |
-      | 61                | 61             | 1       |
-      | 71                | 71             | 1       |
-      | 81                | 81             | 1       |
-      | 91                | 91             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 13                | 51             |
+      | 13                | 61             |
+      | 13                | 91             |
+      | 14                | 11             |
+      | 14                | 14             |
+      | 14                | 21             |
+      | 14                | 31             |
+      | 21                | 21             |
+      | 22                | 13             |
+      | 22                | 22             |
+      | 22                | 51             |
+      | 22                | 61             |
+      | 22                | 91             |
+      | 31                | 31             |
+      | 41                | 41             |
+      | 51                | 51             |
+      | 61                | 61             |
+      | 71                | 71             |
+      | 81                | 81             |
+      | 91                | 91             |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | expires_at          | personal_info_view_approved_at |
       | 9  | 13              | 51             | 9999-12-31 23:59:59 | null                           | # still shows personal info because of 22-51

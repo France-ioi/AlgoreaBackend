@@ -13,11 +13,11 @@ Feature: Create an attempt for an item
       | parent_group_id | child_group_id |
       | 102             | 101            |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 101               | 101            | 1       |
-      | 102               | 101            | 0       |
-      | 102               | 102            | 1       |
-      | 111               | 111            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 101               | 101            |
+      | 102               | 101            |
+      | 102               | 102            |
+      | 111               | 111            |
     And the database has the following table 'items':
       | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag |
       | 10 | null                                                                    | Chapter | 0                        | fr                   |

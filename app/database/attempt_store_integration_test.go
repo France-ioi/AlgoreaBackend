@@ -144,11 +144,11 @@ func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 				groups_groups:
 					- {parent_group_id: 102, child_group_id: 101}
 				groups_ancestors:
-					- {ancestor_group_id: 101, child_group_id: 101, is_self: 1}
-					- {ancestor_group_id: 102, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 102, child_group_id: 102, is_self: 1}
-					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
-					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
+					- {ancestor_group_id: 101, child_group_id: 101}
+					- {ancestor_group_id: 102, child_group_id: 101}
+					- {ancestor_group_id: 102, child_group_id: 102}
+					- {ancestor_group_id: 111, child_group_id: 111}
+					- {ancestor_group_id: 121, child_group_id: 121}
 				items:
 					- {id: 10, default_language_tag: fr}
 					- {id: 50, default_language_tag: fr}

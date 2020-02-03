@@ -73,10 +73,10 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+
-		regexp.QuoteMeta("SELECT id FROM `groups_ancestors`  "+
+		regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors`  "+
 			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}))
+		WillReturnRows(sqlmock.NewRows([]string{"1"}))
 	mock.ExpectExec("^" +
 		regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
 			"WHERE `parent_group_id` = ? FOR UPDATE), 0)") + "$").
@@ -156,7 +156,7 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+
-		regexp.QuoteMeta("SELECT id FROM `groups_ancestors`  "+
+		regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors`  "+
 			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(1)))

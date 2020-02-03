@@ -24,19 +24,19 @@ Feature: Reject group requests - robustness
       | 13       | 21         | memberships |
       | 13       | 12         | none        |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 13                | 111            | 0       |
-      | 13                | 121            | 0       |
-      | 13                | 123            | 0       |
-      | 14                | 14             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 111               | 111            | 1       |
-      | 121               | 121            | 1       |
-      | 122               | 122            | 1       |
-      | 123               | 123            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 13                | 111            |
+      | 13                | 121            |
+      | 13                | 123            |
+      | 14                | 14             |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 111               | 111            |
+      | 121               | 121            |
+      | 122               | 122            |
+      | 123               | 123            |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 9  | 13              | 121            |

@@ -4,8 +4,8 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | login      | group_id | default_language |
       | possesseur | 21       | fr               |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 21                | 21             |
 
   Scenario: Wrong sort
     Given I am the user with id "21"

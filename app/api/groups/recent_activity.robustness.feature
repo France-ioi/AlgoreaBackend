@@ -12,11 +12,11 @@ Feature: Get recent activity for group_id and item_id - robustness
       | group_id | manager_id |
       | 13       | 23         |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 76 | 13                | 11             | 0       |
-      | 77 | 13                | 13             | 1       |
-      | 78 | 21                | 21             | 1       |
-      | 79 | 23                | 23             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 21                | 21             |
+      | 23                | 23             |
     And the database has the following table 'attempts':
       | id  | item_id | group_id | order |
       | 100 | 200     | 11       | 1     |

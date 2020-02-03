@@ -51,15 +51,11 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsProcessing.Close()) }()
 
-	isSelfColumn := ""
-	isSelfValue := ""
 	expiresAtColumn := ""
 	expiresAtValue := ""
 	expiresAtValueJoin := ""
 
 	if objectName == groups {
-		isSelfColumn = ", is_self"
-		isSelfValue = ", '0' AS is_self"
 		expiresAtColumn = ", expires_at"
 		expiresAtValue = ", groups_groups.expires_at"
 		expiresAtValueJoin = ", LEAST(groups_ancestors_select.expires_at, groups_groups_join.expires_at)"
@@ -72,12 +68,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+expiresAtColumn+`
+			`+expiresAtColumn+`
 		)
 		SELECT
 			`+relationsTable+`.parent_`+singleObjectName+`_id,
 			`+relationsTable+`.child_`+singleObjectName+`_id
-			`+isSelfValue+expiresAtValue+`
+			`+expiresAtValue+`
 		FROM `+relationsTable+`
 		JOIN `+objectName+`_propagate
 		ON (
@@ -89,12 +85,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+expiresAtColumn+`
+			`+expiresAtColumn+`
 		)
 		SELECT
 			`+relationsTable+`.parent_`+singleObjectName+`_id,
 			`+relationsTable+`.child_`+singleObjectName+`_id
-			`+isSelfValue+expiresAtValue+`
+			`+expiresAtValue+`
 		FROM `+relationsTable+`
 		JOIN `+objectName+`_propagate
 		ON (
@@ -106,12 +102,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+expiresAtColumn+`
+			`+expiresAtColumn+`
 		)
 		SELECT
 			`+objectName+`_ancestors_select.ancestor_`+singleObjectName+`_id,
 			`+relationsTable+`_join.child_`+singleObjectName+`_id
-			`+isSelfValue+expiresAtValueJoin+`
+			`+expiresAtValueJoin+`
 		FROM `+objectName+`_ancestors AS `+objectName+`_ancestors_select
 		JOIN `+relationsTable+` AS `+relationsTable+`_join ON (
 			`+relationsTable+`_join.parent_`+singleObjectName+`_id = `+objectName+`_ancestors_select.child_`+singleObjectName+`_id
@@ -130,13 +126,11 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			INSERT IGNORE INTO `+objectName+`_ancestors
 			(
 				ancestor_`+singleObjectName+`_id,
-				child_`+singleObjectName+`_id`+`
-				`+isSelfColumn+`
+				child_`+singleObjectName+`_id
 			)
 			SELECT
 				groups_propagate.id AS ancestor_group_id,
-				groups_propagate.id AS child_group_id,
-				'1' AS is_self
+				groups_propagate.id AS child_group_id
 			FROM groups_propagate
 			WHERE groups_propagate.ancestors_computation_state = 'processing'`) // #nosec
 	}

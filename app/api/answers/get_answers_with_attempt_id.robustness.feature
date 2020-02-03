@@ -13,11 +13,11 @@ Background:
     | id | parent_group_id | child_group_id |
     | 61 | 13              | 11             |
   And the database has the following table 'groups_ancestors':
-    | id | ancestor_group_id | child_group_id | is_self |
-    | 71 | 11                | 11             | 1       |
-    | 73 | 13                | 13             | 1       |
-    | 74 | 13                | 11             | 0       |
-    | 75 | 21                | 21             | 1       |
+    | ancestor_group_id | child_group_id |
+    | 11                | 11             |
+    | 13                | 13             |
+    | 13                | 11             |
+    | 21                | 21             |
   And the database has the following table 'items':
     | id  | type    | teams_editable | no_score | default_language_tag |
     | 190 | Chapter | false          | false    | fr                   |

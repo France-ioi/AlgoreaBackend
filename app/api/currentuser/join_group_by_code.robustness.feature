@@ -13,15 +13,15 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | login | group_id |
       | john  | 21       |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 15                | 15             | 1       |
-      | 16                | 16             | 1       |
-      | 17                | 17             | 1       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 12                | 12             |
+      | 14                | 14             |
+      | 14                | 21             |
+      | 15                | 15             |
+      | 16                | 16             |
+      | 17                | 17             |
+      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 7  | 14              | 21             |

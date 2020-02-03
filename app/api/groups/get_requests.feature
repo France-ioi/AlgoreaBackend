@@ -20,11 +20,11 @@ Feature: Get requests for group_id
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 11                | 11             | 1       |
-      | 76 | 13                | 11             | 0       |
-      | 77 | 13                | 13             | 1       |
-      | 78 | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 11             |
+      | 13                | 13             |
+      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 1  | 13              | 21             |

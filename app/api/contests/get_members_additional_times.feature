@@ -40,33 +40,33 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 15              | 31             |
       | 15              | 41             |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 10                | 10             | 1       |
-      | 10                | 11             | 0       |
-      | 10                | 13             | 0       |
-      | 10                | 14             | 0       |
-      | 10                | 15             | 0       |
-      | 10                | 16             | 0       |
-      | 10                | 31             | 0       |
-      | 10                | 41             | 0       |
-      | 11                | 11             | 1       |
-      | 11                | 13             | 0       |
-      | 11                | 14             | 0       |
-      | 11                | 15             | 0       |
-      | 11                | 16             | 0       |
-      | 11                | 17             | 0       |
-      | 11                | 31             | 0       |
-      | 11                | 41             | 0       |
-      | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
-      | 15                | 15             | 1       |
-      | 15                | 31             | 0       |
-      | 15                | 41             | 0       |
-      | 16                | 16             | 1       |
-      | 17                | 17             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 41                | 41             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 10                | 10             |
+      | 10                | 11             |
+      | 10                | 13             |
+      | 10                | 14             |
+      | 10                | 15             |
+      | 10                | 16             |
+      | 10                | 31             |
+      | 10                | 41             |
+      | 11                | 11             |
+      | 11                | 13             |
+      | 11                | 14             |
+      | 11                | 15             |
+      | 11                | 16             |
+      | 11                | 17             |
+      | 11                | 31             |
+      | 11                | 41             |
+      | 13                | 13             |
+      | 14                | 14             |
+      | 15                | 15             |
+      | 15                | 31             |
+      | 15                | 41             |
+      | 16                | 16             |
+      | 17                | 17             |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 41                | 41             |
     And the database has the following table 'items':
       | id | duration | allows_multiple_attempts | default_language_tag |
       | 50 | 00:00:00 | 0                        | fr                   |

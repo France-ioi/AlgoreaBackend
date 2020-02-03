@@ -45,21 +45,21 @@ Feature: Export the short version of the current user's data
       | 7        | 11        | removed              | 2019-07-10 03:02:28 | 31           |
       | 8        | 11        | left                 | 2019-07-10 04:02:28 | 11           |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 1                 | 1              | true    |
-      | 2                 | 2              | true    |
-      | 2                 | 11             | false   |
-      | 3                 | 3              | true    |
-      | 4                 | 4              | true    |
-      | 5                 | 5              | true    |
-      | 5                 | 11             | false   |
-      | 6                 | 6              | true    |
-      | 6                 | 11             | false   |
-      | 7                 | 7              | true    |
-      | 8                 | 8              | true    |
-      | 9                 | 9              | true    |
-      | 9                 | 11             | false   |
-      | 11                | 11             | true    |
+      | ancestor_group_id | child_group_id |
+      | 1                 | 1              |
+      | 2                 | 2              |
+      | 2                 | 11             |
+      | 3                 | 3              |
+      | 4                 | 4              |
+      | 5                 | 5              |
+      | 5                 | 11             |
+      | 6                 | 6              |
+      | 6                 | 11             |
+      | 7                 | 7              |
+      | 8                 | 8              |
+      | 9                 | 9              |
+      | 9                 | 11             |
+      | 11                | 11             |
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 404 | fr                   |

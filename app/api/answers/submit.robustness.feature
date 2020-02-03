@@ -4,8 +4,8 @@ Feature: Submit a new answer - robustness
       | login | group_id |
       | john  | 101      |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 101               | 101            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 101               | 101            |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 15 | 22              | 13             |

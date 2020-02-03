@@ -18,16 +18,16 @@ Feature: User sends a request to join a group - robustness
       | group_id | manager_id | can_manage  |
       | 17       | 21         | memberships |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
-      | 15                | 15             | 1       |
-      | 16                | 16             | 1       |
-      | 16                | 21             | 0       |
-      | 17                | 17             | 1       |
-      | 21                | 13             | 0       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 14                | 14             |
+      | 15                | 15             |
+      | 16                | 16             |
+      | 16                | 21             |
+      | 17                | 17             |
+      | 21                | 13             |
+      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 8  | 16              | 21             |

@@ -13,12 +13,12 @@ Feature: User sends a request to leave a group
       | 11              | 21             | 2019-05-30 11:00:00         |
       | 14              | 21             | 2019-06-30 11:00:00         |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 11                | 21             | 0       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 11                | 21             |
+      | 14                | 14             |
+      | 14                | 21             |
+      | 21                | 21             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type          | at                  |
       | 14       | 21        | leave_request | 2019-05-30 11:00:00 |

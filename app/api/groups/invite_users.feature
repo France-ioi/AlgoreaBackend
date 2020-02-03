@@ -16,12 +16,12 @@ Feature: Invite users
       | jane  | 102      | Jane        | Doe       |
       | Jane  | 103      | Jane        | Smith     |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 13                | 13             | 1       |
-      | 21                | 21             | 1       |
-      | 101               | 101            | 1       |
-      | 102               | 102            | 1       |
-      | 103               | 103            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 13                | 13             |
+      | 21                | 21             |
+      | 101               | 101            |
+      | 102               | 102            |
+      | 103               | 103            |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 20 | fr                   |
@@ -43,8 +43,8 @@ Feature: Invite users
   Scenario: Successfully invite users
     Given I am the user with id "21"
     And the database table 'groups_ancestors' has also the following rows:
-      | ancestor_group_id | child_group_id | is_self |
-      | 444               | 444            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 444               | 444            |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
@@ -93,11 +93,11 @@ Feature: Invite users
       | 444             | 101            |
       | 444             | 102            |
     And the database table 'groups_ancestors' has also the following rows:
-      | ancestor_group_id | child_group_id | is_self |
-      | 444               | 21             | 0       |
-      | 444               | 101            | 0       |
-      | 444               | 102            | 0       |
-      | 444               | 444            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 444               | 21             |
+      | 444               | 101            |
+      | 444               | 102            |
+      | 444               | 444            |
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -130,8 +130,8 @@ Feature: Invite users
       | group_id | manager_id | can_manage            |
       | 555      | 21         | memberships_and_group |
     And the database table 'groups_ancestors' has also the following rows:
-      | ancestor_group_id | child_group_id | is_self |
-      | 555               | 555            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 555               | 555            |
     And the database table 'group_pending_requests' has also the following rows:
       | group_id | member_id | type         | personal_info_view_approved | at                  |
       | 555      | 101       | join_request | 1                           | 2019-05-30 11:00:00 |

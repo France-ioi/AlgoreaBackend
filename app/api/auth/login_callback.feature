@@ -153,12 +153,12 @@ Feature: Login callback
       | 2               | 11             | 1           |
       | 2               | 13             | 1           |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 2                 | 2              | true    |
-      | 2                 | 11             | false   |
-      | 2                 | 13             | false   |
-      | 11                | 11             | true    |
-      | 13                | 13             | true    |
+      | ancestor_group_id | child_group_id |
+      | 2                 | 2              |
+      | 2                 | 11             |
+      | 2                 | 13             |
+      | 11                | 11             |
+      | 13                | 13             |
     And the database has the following table 'login_states':
       | cookie                           | state                            | expires_at          |
       | {{cookie}}                       | {{state}}                        | 2019-07-16 22:02:29 |
@@ -245,8 +245,8 @@ Feature: Login callback
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | true    |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
     And the database has the following table 'login_states':
       | cookie     | state     | expires_at          |
       | {{cookie}} | {{state}} | 2019-07-16 22:02:29 |

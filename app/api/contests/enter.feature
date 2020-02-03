@@ -21,17 +21,17 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 11              | 41             |
       | 11              | 51             |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 11                | 31             | 0       |
-      | 11                | 41             | 0       |
-      | 11                | 51             | 0       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 41                | 41             | 1       |
-      | 51                | 51             | 1       |
-      | 98                | 98             | 1       |
-      | 99                | 99             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 11                | 31             |
+      | 11                | 41             |
+      | 11                | 51             |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 41                | 41             |
+      | 51                | 51             |
+      | 98                | 98             |
+      | 99                | 99             |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 10 | fr                   |

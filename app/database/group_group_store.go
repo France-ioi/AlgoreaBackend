@@ -48,15 +48,13 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		mustNotBeError(store.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
 		mustNotBeError(store.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
-		var rows []interface{}
-		mustNotBeError(store.GroupAncestors().
+		found, err := store.GroupAncestors().
 			WithWriteLock().
-			Select("id").
 			// do not allow cycles even via expired relations
 			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
-			Limit(1).
-			Scan(&rows).Error())
-		if len(rows) > 0 {
+			HasRows()
+		mustNotBeError(err)
+		if found {
 			return ErrRelationCycle
 		}
 

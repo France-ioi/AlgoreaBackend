@@ -22,15 +22,15 @@ Feature: Get item for tree navigation
       | 13              | 11             |
       | 19              | 11             |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 13                | 11             | 0       |
-      | 14                | 14             | 1       |
-      | 16                | 16             | 1       |
-      | 18                | 18             | 1       |
-      | 19                | 11             | 0       |
-      | 19                | 19             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 13                | 11             |
+      | 14                | 14             |
+      | 16                | 16             |
+      | 18                | 18             |
+      | 19                | 11             |
+      | 19                | 19             |
     And the database has the following table 'items':
       | id  | type    | default_language_tag | teams_editable | no_score |
       | 200 | Course  | en                   | false          | false    |

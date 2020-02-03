@@ -15,11 +15,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 13       | 21         |
       | 31       | 21         |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 12                | 12             | 1       |
-      | 13                | 13             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 12                | 12             |
+      | 13                | 13             |
+      | 21                | 21             |
+      | 31                | 31             |
     And the database has the following table 'items':
       | id | duration | allows_multiple_attempts | default_language_tag |
       | 50 | 00:00:00 | 0                        | fr                   |

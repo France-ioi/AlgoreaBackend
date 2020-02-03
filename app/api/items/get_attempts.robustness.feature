@@ -15,15 +15,15 @@ Feature: Get groups attempts for current user and item_id - robustness
       | 14              | 12             |
       | 15              | 12             |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
-      | 13                | 12             | 0       |
-      | 13                | 13             | 1       |
-      | 14                | 12             | 0       |
-      | 14                | 14             | 1       |
-      | 15                | 12             | 0       |
-      | 15                | 15             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 12                | 12             |
+      | 13                | 12             |
+      | 13                | 13             |
+      | 14                | 12             |
+      | 14                | 14             |
+      | 15                | 12             |
+      | 15                | 15             |
     And the database has the following table 'items':
       | id  | allows_multiple_attempts | default_language_tag |
       | 210 | 1                        | fr                   |

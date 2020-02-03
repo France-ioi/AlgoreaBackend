@@ -16,10 +16,10 @@ Feature: Invite users - robustness
       | 13       | 21         | memberships |
       | 13       | 22         | none        |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 21                | 21             |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"

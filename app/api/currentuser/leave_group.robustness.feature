@@ -12,14 +12,14 @@ Feature: User leaves a group - robustness
       | 21       | john  |
       | 31       | jane  |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 15                | 15             | 1       |
-      | 15                | 31             | 0       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 14                | 14             |
+      | 14                | 21             |
+      | 15                | 15             |
+      | 15                | 31             |
+      | 21                | 21             |
+      | 31                | 31             |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | lock_membership_approved_at |
       | 2  | 14              | 21             | null                        |

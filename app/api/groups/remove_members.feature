@@ -31,28 +31,28 @@ Feature: Remove members from a group (groupRemoveMembers)
       | jannet | 111      |
       | judith | 121      |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 13                | 13             | 1       |
-      | 13                | 51             | 0       |
-      | 13                | 61             | 0       |
-      | 13                | 91             | 0       |
-      | 13                | 111            | 0       |
-      | 13                | 131            | 0       |
-      | 14                | 14             | 1       |
-      | 14                | 41             | 0       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 41                | 41             | 1       |
-      | 51                | 51             | 1       |
-      | 61                | 61             | 1       |
-      | 71                | 71             | 1       |
-      | 81                | 81             | 1       |
-      | 91                | 91             | 1       |
-      | 101               | 101            | 1       |
-      | 111               | 111            | 1       |
-      | 121               | 121            | 1       |
-      | 131               | 131            | 1       |
-      | 132               | 132            | 1       |
+      | ancestor_group_id | child_group_id |
+      | 13                | 13             |
+      | 13                | 51             |
+      | 13                | 61             |
+      | 13                | 91             |
+      | 13                | 111            |
+      | 13                | 131            |
+      | 14                | 14             |
+      | 14                | 41             |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 41                | 41             |
+      | 51                | 51             |
+      | 61                | 61             |
+      | 71                | 71             |
+      | 81                | 81             |
+      | 91                | 91             |
+      | 101               | 101            |
+      | 111               | 111            |
+      | 121               | 121            |
+      | 131               | 131            |
+      | 132               | 132            |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 6  | 14              | 41             |

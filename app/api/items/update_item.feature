@@ -32,8 +32,8 @@ Background:
     | 11       | 50      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 60      | none     | true     | 11              | 2019-05-30 11:00:00 |
   And the database has the following table 'groups_ancestors':
-    | id | ancestor_group_id | child_group_id | is_self |
-    | 71 | 11                | 11             | 1       |
+    | ancestor_group_id | child_group_id |
+    | 11                | 11             |
   And the database has the following table 'attempts':
     | group_id | item_id | score_computed | order | result_propagation_state |
     | 11       | 21      | 0              | 1     | done                     |

@@ -16,11 +16,11 @@ Feature: Add a parent-child relation between two groups
       | 13       | 21         | memberships           |
       | 14       | 21         | memberships_and_group |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 13                | 13             |
+      | 14                | 14             |
+      | 21                | 21             |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 20 | fr                   |

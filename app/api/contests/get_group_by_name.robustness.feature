@@ -12,10 +12,10 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | group_id | manager_id |
       | 13       | 21         |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 12                | 12             | 1       |
-      | 13                | 13             | 1       |
-      | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 12                | 12             |
+      | 13                | 13             |
+      | 21                | 21             |
     And the database has the following table 'items':
       | id | duration | default_language_tag |
       | 50 | 00:00:00 | fr                   |

@@ -11,13 +11,13 @@ Feature: User accepts an invitation to join a group
       | group_id |
       | 21       |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 15                | 15             | 1       |
-      | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 11                | 11             |
+      | 14                | 14             |
+      | 14                | 21             |
+      | 15                | 15             |
+      | 21                | 21             |
+      | 22                | 22             |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 7  | 14              | 21             |

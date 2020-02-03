@@ -14,10 +14,10 @@ Feature: Create a group (groupCreate) - robustness
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 51                | 51             | 1       |
+      | ancestor_group_id | child_group_id |
+      | 21                | 21             |
+      | 31                | 31             |
+      | 51                | 51             |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 10 | fr                   |
