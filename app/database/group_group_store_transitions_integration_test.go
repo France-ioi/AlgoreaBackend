@@ -588,22 +588,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			assertGroupGroupsEqual(t, dataStore.GroupGroups(), tt.wantGroupGroups)
 			assertGroupPendingRequestsEqual(t, dataStore.GroupPendingRequests(), tt.wantGroupPendingRequests)
 
-			var groupAncestors []groupAncestor
-			assert.NoError(t, dataStore.GroupAncestors().Select("ancestor_group_id, child_group_id, is_self, expires_at").
-				Order("ancestor_group_id, child_group_id").Scan(&groupAncestors).Error())
-
-			sort.Slice(tt.wantGroupAncestors, func(i, j int) bool {
-				return tt.wantGroupAncestors[i].AncestorGroupID < tt.wantGroupAncestors[j].AncestorGroupID ||
-					(tt.wantGroupAncestors[i].AncestorGroupID == tt.wantGroupAncestors[j].AncestorGroupID &&
-						tt.wantGroupAncestors[i].ChildGroupID < tt.wantGroupAncestors[j].ChildGroupID)
-			})
-
-			for index := range tt.wantGroupAncestors {
-				if tt.wantGroupAncestors[index].ExpiresAt == "" {
-					tt.wantGroupAncestors[index].ExpiresAt = maxDateTime
-				}
-			}
-			assert.Equal(t, tt.wantGroupAncestors, groupAncestors)
+			assertGroupAncestorsEqual(t, dataStore, &tt)
 
 			var count int64
 			assert.NoError(t, dataStore.Table("groups_propagate").
@@ -619,6 +604,36 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			assertGeneratedPermissionsEqual(t, dataStore.Permissions(), tt.wantGeneratedPermissions)
 		})
 	}
+}
+
+func assertGroupAncestorsEqual(t *testing.T, dataStore *database.DataStore, tt *transitionTest) {
+	var groupAncestors []groupAncestor
+	assert.NoError(t, dataStore.GroupAncestors().Select("ancestor_group_id, child_group_id, is_self, expires_at").
+		Order("ancestor_group_id, child_group_id").Scan(&groupAncestors).Error())
+
+	sort.Slice(tt.wantGroupAncestors, func(i, j int) bool {
+		return tt.wantGroupAncestors[i].AncestorGroupID < tt.wantGroupAncestors[j].AncestorGroupID ||
+			(tt.wantGroupAncestors[i].AncestorGroupID == tt.wantGroupAncestors[j].AncestorGroupID &&
+				tt.wantGroupAncestors[i].ChildGroupID < tt.wantGroupAncestors[j].ChildGroupID)
+	})
+
+	for i := 0; i < len(tt.wantGroupAncestors); i++ {
+		if tt.wantGroupAncestors[i].ExpiresAt == "" {
+			tt.wantGroupAncestors[i].ExpiresAt = maxDateTime
+		}
+		if tt.shouldRunListeners {
+			parsed, err := time.Parse("2006-01-02 15:04:05", tt.wantGroupAncestors[i].ExpiresAt)
+			assert.NoError(t, err)
+			if parsed.Before(time.Now().UTC()) {
+				newValue := make([]groupAncestor, 0, len(tt.wantGroupAncestors)-1)
+				newValue = append(newValue, tt.wantGroupAncestors[0:i]...)
+				newValue = append(newValue, tt.wantGroupAncestors[i+1:len(tt.wantGroupAncestors)]...)
+				tt.wantGroupAncestors = newValue
+				i--
+			}
+		}
+	}
+	assert.Equal(t, tt.wantGroupAncestors, groupAncestors)
 }
 
 type approvalsTest struct {

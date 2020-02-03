@@ -102,7 +102,6 @@ Feature: User sends a request to join a group
       | 11                | 11             | 1       |
       | 11                | 21             | 0       |
       | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
       | 21                | 21             | 1       |
     And the table "attempts" should be:
       | group_id | item_id | result_propagation_state |

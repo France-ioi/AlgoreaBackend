@@ -115,18 +115,14 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) error {
 		// check if parent_group_id is the only parent of child_group_id
-		shouldDeleteChildGroup := false
-		var result []interface{}
-		mustNotBeError(s.GroupGroups().WithWriteLock().
-			Select("1").
+		var shouldDeleteChildGroup bool
+		shouldDeleteChildGroup, err = s.GroupGroups().WithWriteLock().
 			Where("child_group_id = ?", childGroupID).
-			Where("parent_group_id != ?", parentGroupID).
-			Limit(1).Scan(&result).Error())
-		if len(result) == 0 {
-			shouldDeleteChildGroup = true
-			if !shouldDeleteOrphans {
-				return ErrGroupBecomesOrphan
-			}
+			Where("parent_group_id != ?", parentGroupID).HasRows()
+		mustNotBeError(err)
+		shouldDeleteChildGroup = !shouldDeleteChildGroup
+		if shouldDeleteChildGroup && !shouldDeleteOrphans {
+			return ErrGroupBecomesOrphan
 		}
 
 		var candidatesForDeletion []int64
@@ -142,10 +138,8 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				Pluck("groups.id", &candidatesForDeletion).Error())
 		}
 
-		// triggers/cascading delete from groups_ancestors (all except self-links) and groups_propagate,
-		// but the `before_delete_groups_groups` trigger inserts into groups_propagate again :(
 		const deleteGroupsQuery = `
-			DELETE ` + "`groups`" + `, group_children, group_parents, attempts,
+			DELETE group_children, group_parents, attempts,
 						 groups_login_prefixes, filters
 			FROM ` + "`groups`" + `
 			LEFT JOIN groups_groups AS group_children
@@ -213,12 +207,14 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			}
 
 			idsToDelete = append(idsToDelete, childGroupID)
-			// delete self relations of the removed groups
-			mustNotBeError(s.GroupAncestors().Delete("ancestor_group_id IN (?)", idsToDelete).Error())
+			// triggers/cascading delete from groups_ancestors and groups_propagate,
+			mustNotBeError(s.Groups().Delete("id IN (?)", idsToDelete).Error())
 		}
+
 		if shouldPropagatePermissions {
 			s.PermissionsGranted().computeAllAccess()
 		}
+
 		return nil
 	}))
 	return nil
