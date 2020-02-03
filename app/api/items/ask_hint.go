@@ -126,7 +126,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		service.MustNotBeError(store.Attempts().ByID(requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(map[string]interface{}{
 				"tasks_with_help":          1,
-				"result_propagation_state": "changed",
+				"result_propagation_state": "to_be_propagated",
 				"latest_activity_at":       database.Now(),
 				"latest_hint_at":           database.Now(),
 				"hints_requested":          hintsRequestedNew,

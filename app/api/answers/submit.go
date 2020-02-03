@@ -92,7 +92,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			"submissions":              gorm.Expr("submissions + 1"),
 			"latest_submission_at":     database.Now(),
 			"latest_activity_at":       database.Now(),
-			"result_propagation_state": "changed",
+			"result_propagation_state": "to_be_propagated",
 		}).Error())
 		return store.Attempts().ComputeAllAttempts()
 	})
