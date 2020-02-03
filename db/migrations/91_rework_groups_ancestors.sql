@@ -28,7 +28,7 @@ CREATE VIEW groups_ancestors_active AS SELECT * FROM groups_ancestors WHERE NOW(
 
 -- +migrate Down
 ALTER TABLE `groups_ancestors`
-    ADD COLUMN `id` BIGINT(20),
+    ADD COLUMN `id` BIGINT(20) FIRST,
     DROP COLUMN `is_self`,
     ADD COLUMN `is_self` TINYINT(1) NOT NULL DEFAULT '0'
         COMMENT 'Whether ancestor_group_id = child_group_id.' AFTER `child_group_id`;
