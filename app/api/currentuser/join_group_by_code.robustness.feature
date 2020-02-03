@@ -23,8 +23,8 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 17                | 17             |
       | 21                | 21             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 7  | 14              | 21             |
+      | parent_group_id | child_group_id |
+      | 14              | 21             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type       |
       | 11       | 21        | invitation |

@@ -39,13 +39,13 @@ Feature: Accept requests to leave a group
       | 151               | 151            | 9999-12-31 23:59:59 |
       | 161               | 161            | 9999-12-31 23:59:59 |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | expires_at          |
-      | 8  | 13              | 31             | 9999-12-31 23:59:59 |
-      | 9  | 13              | 121            | 9999-12-31 23:59:59 |
-      | 10 | 13              | 111            | 9999-12-31 23:59:59 |
-      | 13 | 13              | 123            | 9999-12-31 23:59:59 |
-      | 14 | 13              | 141            | 2019-05-30 11:00:00 |
-      | 16 | 13              | 151            | 9999-12-31 23:59:59 |
+      | parent_group_id | child_group_id | expires_at          |
+      | 13              | 31             | 9999-12-31 23:59:59 |
+      | 13              | 111            | 9999-12-31 23:59:59 |
+      | 13              | 121            | 9999-12-31 23:59:59 |
+      | 13              | 123            | 9999-12-31 23:59:59 |
+      | 13              | 141            | 2019-05-30 11:00:00 |
+      | 13              | 151            | 9999-12-31 23:59:59 |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |

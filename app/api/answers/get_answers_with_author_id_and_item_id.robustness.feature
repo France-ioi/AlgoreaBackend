@@ -10,8 +10,8 @@ Background:
     | jdoe  | 0         | 11       |
     | guest | 0         | 404      |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id |
-    | 61 | 13              | 11             |
+    | parent_group_id | child_group_id |
+    | 13              | 11             |
   And the database has the following table 'groups_ancestors':
     | ancestor_group_id | child_group_id |
     | 11                | 11             |

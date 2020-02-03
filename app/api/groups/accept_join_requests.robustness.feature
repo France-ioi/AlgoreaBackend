@@ -38,10 +38,10 @@ Feature: Accept group requests - robustness
       | 122               | 122            |
       | 123               | 123            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 9  | 13              | 121            |
-      | 10 | 13              | 111            |
-      | 13 | 13              | 123            |
+      | parent_group_id | child_group_id |
+      | 13              | 111            |
+      | 13              | 121            |
+      | 13              | 123            |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |

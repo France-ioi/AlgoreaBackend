@@ -54,13 +54,13 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 131               | 131            |
       | 132               | 132            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 6  | 14              | 41             |
-      | 9  | 13              | 51             |
-      | 10 | 13              | 61             |
-      | 13 | 13              | 91             |
-      | 15 | 13              | 111            |
-      | 16 | 13              | 131            |
+      | parent_group_id | child_group_id |
+      | 13              | 51             |
+      | 13              | 61             |
+      | 13              | 91             |
+      | 13              | 111            |
+      | 13              | 131            |
+      | 14              | 41             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
@@ -96,9 +96,9 @@ Feature: Remove members from a group (groupRemoveMembers)
     }
     """
     And the table "groups_groups" should be:
-      | id | parent_group_id | child_group_id |
-      | 6  | 14              | 41             |
-      | 16 | 13              | 131            |
+      | parent_group_id | child_group_id |
+      | 13              | 131            |
+      | 14              | 41             |
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be:
       | group_id | member_id | action  | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |

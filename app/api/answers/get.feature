@@ -11,10 +11,10 @@ Background:
     | jdoe  | 0         | 11       | John       | Doe       |
     | other | 0         | 21       | George     | Bush      |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id |
-    | 61 | 13              | 11             |
-    | 62 | 13              | 21             |
-    | 63 | 23              | 21             |
+    | parent_group_id | child_group_id |
+    | 13              | 11             |
+    | 13              | 21             |
+    | 23              | 21             |
   And the database has the following table 'groups_ancestors':
     | ancestor_group_id | child_group_id |
     | 11                | 11             |

@@ -72,17 +72,12 @@ func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
 		"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `parent_group_id` = ? FOR UPDATE), 0)",
 		parentGroupID).Error)
 
-	mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-		store := NewDataStore(db).GroupGroups()
-		newID := store.NewID()
-		relationMap := map[string]interface{}{
-			"id":              newID,
-			"parent_group_id": parentGroupID,
-			"child_group_id":  childGroupID,
-			"child_order":     gorm.Expr("@maxIChildOrder+1"),
-		}
-		return store.GroupGroups().InsertMap(relationMap)
-	}))
+	relationMap := map[string]interface{}{
+		"parent_group_id": parentGroupID,
+		"child_group_id":  childGroupID,
+		"child_order":     gorm.Expr("@maxIChildOrder+1"),
+	}
+	mustNotBeError(s.GroupGroups().InsertMap(relationMap))
 }
 
 // CreateRelationsWithoutChecking creates multiple direct relations between group pairs at once

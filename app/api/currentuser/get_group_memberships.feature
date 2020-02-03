@@ -18,11 +18,11 @@ Feature: Get group memberships for the current user
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 0         | 11       | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 6  | 5               | 21             |
-      | 7  | 6               | 21             |
-      | 10 | 9               | 21             |
-      | 11 | 1               | 11             |
+      | parent_group_id | child_group_id |
+      | 5               | 21             |
+      | 6               | 21             |
+      | 9               | 21             |
+      | 1               | 11             |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                  |
       | 1        | 21        | invitation_created    | 2017-02-28 06:38:38 |
@@ -43,7 +43,6 @@ Feature: Get group memberships for the current user
     """
     [
       {
-        "id": "7",
         "group": {
           "id": "6",
           "name": "Another Class",
@@ -54,7 +53,6 @@ Feature: Get group memberships for the current user
         "action": "join_request_accepted"
       },
       {
-        "id": "6",
         "group": {
           "id": "5",
           "name": "Other people",
@@ -65,7 +63,6 @@ Feature: Get group memberships for the current user
         "action": "invitation_accepted"
       },
       {
-        "id": "10",
         "group": {
           "id": "9",
           "name": "Some other friends",
@@ -86,7 +83,6 @@ Feature: Get group memberships for the current user
     """
     [
       {
-        "id": "7",
         "group": {
           "id": "6",
           "name": "Another Class",

@@ -23,8 +23,8 @@ Feature: Update a group (groupEdit)
       | 14                | 14             |
       | 21                | 21             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 77 | 13              | 23             |
+      | parent_group_id | child_group_id |
+      | 13              | 23             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |

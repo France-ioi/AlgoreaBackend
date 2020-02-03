@@ -19,11 +19,11 @@ Feature: Get group invitations for the current user
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 0         | 11       | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 6  | 5               | 21             |
-      | 7  | 6               | 21             |
-      | 10 | 9               | 21             |
-      | 12 | 10              | 21             |
+      | parent_group_id | child_group_id |
+      | 5               | 21             |
+      | 6               | 21             |
+      | 9               | 21             |
+      | 10              | 21             |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                        | initiator_id |
       | 1        | 21        | invitation_created    | {{relativeTime("-169h")}} | 11           |

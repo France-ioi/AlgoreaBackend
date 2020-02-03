@@ -14,13 +14,13 @@ groups:
 users:
   - {group_id: 111}
 groups_groups:
-  - {id: 3, parent_group_id: 20, child_group_id: 4}
-  - {id: 4, parent_group_id: 20, child_group_id: 5}
-  - {id: 5, parent_group_id: 20, child_group_id: 6, expires_at: 2019-05-30 11:00:00}
-  - {id: 6, parent_group_id: 20, child_group_id: 7, expires_at: 2019-05-30 11:00:00}
-  - {id: 9, parent_group_id: 20, child_group_id: 10}
-  - {id: 10, parent_group_id: 20, child_group_id: 11}
-  - {id: 30, parent_group_id: 30, child_group_id: 20}
+  - {parent_group_id: 20, child_group_id: 4}
+  - {parent_group_id: 20, child_group_id: 5}
+  - {parent_group_id: 20, child_group_id: 6, expires_at: 2019-05-30 11:00:00}
+  - {parent_group_id: 20, child_group_id: 7, expires_at: 2019-05-30 11:00:00}
+  - {parent_group_id: 20, child_group_id: 10}
+  - {parent_group_id: 20, child_group_id: 11}
+  - {parent_group_id: 30, child_group_id: 20}
 group_pending_requests:
   - {group_id: 20, member_id: 2, type: invitation}
   - {group_id: 20, member_id: 3, type: join_request}

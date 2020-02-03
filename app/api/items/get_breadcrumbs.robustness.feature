@@ -20,8 +20,8 @@ Feature: Get item information for breadcrumb - robustness
       | 23      | en           | Reduce Graph     |
       | 21      | fr           | Graphe: Methodes |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 61 | 13              | 11             |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 11                | 11             |

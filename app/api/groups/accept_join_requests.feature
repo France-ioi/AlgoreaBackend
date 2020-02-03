@@ -37,11 +37,11 @@ Feature: Accept group requests
       | 151               | 151            |
       | 161               | 161            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at |
-      | 9  | 13              | 121            | null                           | null                        | null              |
-      | 10 | 13              | 111            | null                           | null                        | null              |
-      | 13 | 13              | 123            | null                           | null                        | null              |
-      | 16 | 13              | 151            | null                           | null                        | null              |
+      | parent_group_id | child_group_id | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at |
+      | 13              | 111            | null                           | null                        | null              |
+      | 13              | 121            | null                           | null                        | null              |
+      | 13              | 123            | null                           | null                        | null              |
+      | 13              | 151            | null                           | null                        | null              |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
       | 13       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00 |
@@ -140,10 +140,10 @@ Feature: Accept group requests
   Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
     Given I am the user with id "21"
     And the database table 'groups_groups' has also the following rows:
-      | id | parent_group_id | child_group_id |
-      | 18 | 444             | 31             |
-      | 19 | 444             | 141            |
-      | 20 | 444             | 161            |
+      | parent_group_id | child_group_id |
+      | 444             | 31             |
+      | 444             | 141            |
+      | 444             | 161            |
     And the database table 'groups_ancestors' has also the following rows:
       | ancestor_group_id | child_group_id |
       | 444               | 31             |

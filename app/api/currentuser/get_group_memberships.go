@@ -23,13 +23,13 @@ import (
 //     enum: [member_since,-member_since,id,-id]
 // - name: from.member_since
 //   description: Start the page from the membership next to one with `member_since` = `from.member_since`
-//                and `groups_groups.id` = `from.id`
+//                and `groups.id` = `from.id`
 //                (`from.id` is required when `from.member_since` is present)
 //   in: query
 //   type: string
 // - name: from.id
 //   description: Start the page from the membership next to one with `member_since`=`from.member_since`
-//                and `groups_groups.id`=`from.id`
+//                and `groups.id`=`from.id`
 //                (`from.member_since` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -57,7 +57,6 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 
 	query := srv.Store.ActiveGroupGroups().
 		Select(`
-			groups_groups_active.id,
 			latest_change.at AS member_since,
 			IFNULL(latest_change.action, 'added_directly') AS action,
 			groups.id AS group__id,
@@ -78,7 +77,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"member_since": {ColumnName: "member_since", FieldType: "time"},
-			"id":           {ColumnName: "groups_groups_active.id", FieldType: "int64"}},
+			"id":           {ColumnName: "groups.id", FieldType: "int64"}},
 		"-member_since,id", "id", false)
 	if apiError != service.NoError {
 		return apiError

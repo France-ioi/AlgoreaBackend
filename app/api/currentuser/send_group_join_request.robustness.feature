@@ -29,9 +29,9 @@ Feature: User sends a request to join a group - robustness
       | 21                | 13             |
       | 21                | 21             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 8  | 16              | 21             |
-      | 9  | 21              | 13             |
+      | parent_group_id | child_group_id |
+      | 16              | 21             |
+      | 21              | 13             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | invitation   |

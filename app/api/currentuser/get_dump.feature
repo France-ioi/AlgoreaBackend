@@ -23,11 +23,11 @@ Feature: Export the short version of the current user's data
       | 11      | refreshTokenFor1 |
       | 31      | refreshTokenFor2 |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 3  | 2               | 11             |
-      | 6  | 5               | 11             |
-      | 7  | 6               | 11             |
-      | 10 | 9               | 11             |
+      | parent_group_id | child_group_id |
+      | 2               | 11             |
+      | 5               | 11             |
+      | 6               | 11             |
+      | 9               | 11             |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 1        | 11         | memberships           | 1                      | 0                 |
@@ -97,28 +97,28 @@ Feature: Export the short version of the current user's data
       },
       "groups_groups": [
         {
-          "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
+          "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,

@@ -16,9 +16,9 @@ Feature: User leaves a group
       | 14                | 21             |
       | 21                | 21             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | lock_membership_approved_at |
-      | 1  | 11              | 21             | 2019-05-30 11:00:00         |
-      | 2  | 14              | 21             | null                        |
+      | parent_group_id | child_group_id | lock_membership_approved_at |
+      | 11              | 21             | 2019-05-30 11:00:00         |
+      | 14              | 21             | null                        |
 
   Scenario: Successfully leave a group
     Given I am the user with id "21"
@@ -32,8 +32,8 @@ Feature: User leaves a group
       "data": {"changed": true}
     }
     """
-    And the table "groups_groups" should stay unchanged but the row with id "1"
-    And the table "groups_groups" should not contain id "1"
+    And the table "groups_groups" should stay unchanged but the row with parent_group_id "11"
+    And the table "groups_groups" should not contain parent_group_id "11"
     And the table "group_membership_changes" should be:
       | group_id | member_id | action | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 11       | 21        | left   | 21           | 1                                         |
@@ -55,8 +55,8 @@ Feature: User leaves a group
       "data": {"changed": true}
     }
     """
-    And the table "groups_groups" should stay unchanged but the row with id "1"
-    And the table "groups_groups" should not contain id "1"
+    And the table "groups_groups" should stay unchanged but the row with parent_group_id "11"
+    And the table "groups_groups" should not contain parent_group_id "11"
     And the table "group_membership_changes" should be:
       | group_id | member_id | action | initiator_id | ABS(TIMESTAMPDIFF(SECOND, "2019-08-20 00:00:00", NOW())) < 3 |
       | 11       | 21        | left   | 21           | 1                                                            |
@@ -78,8 +78,8 @@ Feature: User leaves a group
       "data": {"changed": true}
     }
     """
-    And the table "groups_groups" should stay unchanged but the row with id "2"
-    And the table "groups_groups" should not contain id "2"
+    And the table "groups_groups" should stay unchanged but the row with parent_group_id "14"
+    And the table "groups_groups" should not contain parent_group_id "14"
     And the table "group_membership_changes" should be:
       | group_id | member_id | action | initiator_id | ABS(TIMESTAMPDIFF(SECOND, "2019-08-20 00:00:00", NOW())) < 3 |
       | 14       | 21        | left   | 21           | 1                                                            |

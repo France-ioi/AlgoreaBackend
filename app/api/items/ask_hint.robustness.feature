@@ -7,8 +7,8 @@ Feature: Ask for a hint - robustness
       | ancestor_group_id | child_group_id |
       | 101               | 101            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 15 | 22              | 13             |
+      | parent_group_id | child_group_id |
+      | 22              | 13             |
     And the database has the following table 'platforms':
       | id | uses_tokens | regexp                                            | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |

@@ -118,7 +118,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
 			groups.open_contest,
 			manager_access.found AS current_user_is_manager,
-			groups_groups_active.id IS NOT NULL AS current_user_is_member`).
+			groups_groups_active.parent_group_id IS NOT NULL AS current_user_is_member`).
 		Limit(1)
 
 	var result groupViewResponse

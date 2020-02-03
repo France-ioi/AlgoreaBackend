@@ -37,13 +37,13 @@ Feature: Accept requests to leave a group - robustness
       | 151               | 151            |
       | 161               | 161            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 8  | 13              | 31             |
-      | 9  | 13              | 121            |
-      | 10 | 13              | 111            |
-      | 13 | 13              | 123            |
-      | 14 | 13              | 141            |
-      | 16 | 13              | 151            |
+      | parent_group_id | child_group_id |
+      | 13              | 31             |
+      | 13              | 111            |
+      | 13              | 121            |
+      | 13              | 123            |
+      | 13              | 141            |
+      | 13              | 151            |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |

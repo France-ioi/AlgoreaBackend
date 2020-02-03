@@ -38,10 +38,10 @@ Feature: Reject group requests - robustness
       | 122               | 122            |
       | 123               | 123            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 9  | 13              | 121            |
-      | 10 | 13              | 111            |
-      | 13 | 13              | 123            |
+      | parent_group_id | child_group_id |
+      | 13              | 111            |
+      | 13              | 121            |
+      | 13              | 123            |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"

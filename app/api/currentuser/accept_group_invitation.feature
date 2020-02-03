@@ -19,8 +19,8 @@ Feature: User accepts an invitation to join a group
       | 21                | 21             |
       | 22                | 22             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 7  | 14              | 21             |
+      | parent_group_id | child_group_id |
+      | 14              | 21             |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 20 | fr                   |

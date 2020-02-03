@@ -46,16 +46,16 @@ Feature: Get members of group_id
       | 81                | 81             |
       | 91                | 91             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | expires_at          | personal_info_view_approved_at |
-      | 9  | 13              | 51             | 9999-12-31 23:59:59 | null                           | # still shows personal info because of 22-51
-      | 10 | 13              | 61             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
-      | 13 | 13              | 91             | 9999-12-31 23:59:59 | null                           |
-      | 5  | 14              | 11             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
-      | 6  | 14              | 31             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
-      | 7  | 14              | 21             | 2019-05-30 11:00:00 | 2019-05-30 11:00:00            |
-      | 8  | 14              | 41             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
-      | 15 | 22              | 13             | 9999-12-31 23:59:59 | null                           |
-      | 16 | 22              | 51             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
+      | parent_group_id | child_group_id | expires_at          | personal_info_view_approved_at |
+      | 13              | 51             | 9999-12-31 23:59:59 | null                           | # still shows personal info because of 22-51
+      | 13              | 61             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
+      | 13              | 91             | 9999-12-31 23:59:59 | null                           |
+      | 14              | 11             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
+      | 14              | 31             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
+      | 14              | 21             | 2019-05-30 11:00:00 | 2019-05-30 11:00:00            |
+      | 14              | 41             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
+      | 22              | 13             | 9999-12-31 23:59:59 | null                           |
+      | 22              | 51             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                  | initiator_id |
       | 13       | 11        | invitation_refused    | 2017-11-29 06:38:38 | 31           |
@@ -81,7 +81,7 @@ Feature: Get members of group_id
     """
     [
       {
-        "id": "9",
+        "id": "51",
         "user": {
           "first_name": "Bill",
           "group_id": "51",
@@ -93,7 +93,7 @@ Feature: Get members of group_id
         "action": "invitation_accepted"
       },
       {
-        "id": "10",
+        "id": "61",
         "user": {
           "first_name": "Mark",
           "group_id": "61",
@@ -105,7 +105,7 @@ Feature: Get members of group_id
         "action": "join_request_accepted"
       },
       {
-        "id": "13",
+        "id": "91",
         "user": {
           "first_name": null,
           "group_id": "91",
@@ -127,7 +127,7 @@ Feature: Get members of group_id
     """
     [
       {
-        "id": "9",
+        "id": "51",
         "user": {
           "first_name": null,
           "group_id": "51",
@@ -139,7 +139,7 @@ Feature: Get members of group_id
         "action": "invitation_accepted"
       },
       {
-        "id": "10",
+        "id": "61",
         "user": {
           "first_name": "Mark",
           "group_id": "61",
@@ -151,7 +151,7 @@ Feature: Get members of group_id
         "action": "join_request_accepted"
       },
       {
-        "id": "13",
+        "id": "91",
         "user": {
           "first_name": "Larry",
           "group_id": "91",
@@ -173,7 +173,7 @@ Feature: Get members of group_id
     """
     [
       {
-        "id": "9",
+        "id": "51",
         "user": {
           "first_name": "Bill",
           "group_id": "51",
@@ -185,7 +185,7 @@ Feature: Get members of group_id
         "action": "invitation_accepted"
       },
       {
-        "id": "13",
+        "id": "91",
         "user": {
           "first_name": null,
           "group_id": "91",
@@ -197,7 +197,7 @@ Feature: Get members of group_id
         "action": "added_directly"
       },
       {
-        "id": "10",
+        "id": "61",
         "user": {
           "first_name": "Mark",
           "group_id": "61",
@@ -219,7 +219,7 @@ Feature: Get members of group_id
     """
     [
       {
-        "id": "10",
+        "id": "61",
         "user": {
           "first_name": "Mark",
           "group_id": "61",
@@ -231,7 +231,7 @@ Feature: Get members of group_id
         "action": "join_request_accepted"
       },
       {
-        "id": "13",
+        "id": "91",
         "user": {
           "first_name": null,
           "group_id": "91",
@@ -243,7 +243,7 @@ Feature: Get members of group_id
         "action": "added_directly"
       },
       {
-        "id": "9",
+        "id": "51",
         "user": {
           "first_name": "Bill",
           "group_id": "51",
@@ -265,7 +265,7 @@ Feature: Get members of group_id
     """
     [
       {
-        "id": "9",
+        "id": "51",
         "user": {
           "first_name": "Bill",
           "group_id": "51",
@@ -287,7 +287,7 @@ Feature: Get members of group_id
     """
     [
       {
-        "id": "15",
+        "id": "13",
         "user": null,
         "member_since": "2016-10-29T06:38:38Z",
         "action": "added_directly"

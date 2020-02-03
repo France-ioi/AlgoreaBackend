@@ -7,8 +7,8 @@ Feature: Save an answer
       | ancestor_group_id | child_group_id |
       | 101               | 101            |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 15 | 13              | 101            |
+      | parent_group_id | child_group_id |
+      | 13              | 101            |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 50 | fr                   |

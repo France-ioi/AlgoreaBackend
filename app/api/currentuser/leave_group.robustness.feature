@@ -21,9 +21,9 @@ Feature: User leaves a group - robustness
       | 21                | 21             |
       | 31                | 31             |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | lock_membership_approved_at |
-      | 2  | 14              | 21             | null                        |
-      | 3  | 15              | 31             | 2019-05-30 11:00:00         |
+      | parent_group_id | child_group_id | lock_membership_approved_at |
+      | 14              | 21             | null                        |
+      | 15              | 31             | 2019-05-30 11:00:00         |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | join_request |

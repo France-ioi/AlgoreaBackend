@@ -11,7 +11,7 @@ import (
 
 // swagger:model groupsMembersViewResponseRow
 type groupsMembersViewResponseRow struct {
-	// `groups_groups.id`
+	// `groups.id`
 	// required: true
 	ID int64 `json:"id,string"`
 	// Nullable
@@ -82,7 +82,7 @@ type groupsMembersViewResponseRow struct {
 //   in: query
 //   type: integer
 // - name: from.id
-//   description: Start the page from the member next to the member with `groups_groups.id`=`from.id`
+//   description: Start the page from the member next to the member with `groups.id`=`from.id`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: integer
@@ -121,7 +121,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 
 	query := srv.Store.GroupGroups().
 		Select(`
-			groups_groups.id,
+			groups_groups.child_group_id AS id,
 			latest_change.at AS member_since,
 			latest_change.action,
 			users.group_id AS user__group_id,
@@ -148,7 +148,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			"user.login":   {ColumnName: "users.login"},
 			"user.grade":   {ColumnName: "users.grade"},
 			"member_since": {ColumnName: "member_since", FieldType: "time"},
-			"id":           {ColumnName: "groups_groups.id", FieldType: "int64"}},
+			"id":           {ColumnName: "groups_groups.child_group_id", FieldType: "int64"}},
 		"-member_since,id", "id", false)
 
 	if apiError != service.NoError {
