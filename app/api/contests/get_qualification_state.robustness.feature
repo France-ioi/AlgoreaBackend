@@ -1,13 +1,13 @@
 Feature: Get qualification state (contestGetQualificationState) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name   | type     | team_item_id |
-      | 10 | Team 1 | Team     | 50           |
-      | 11 | Team 2 | Team     | 60           |
-      | 21 | owner  | UserSelf | null         |
-      | 31 | john   | UserSelf | null         |
-      | 41 | jane   | UserSelf | null         |
-      | 51 | jack   | UserSelf | null         |
+      | id | name   | type | team_item_id |
+      | 10 | Team 1 | Team | 50           |
+      | 11 | Team 2 | Team | 60           |
+      | 21 | owner  | User | null         |
+      | 31 | john   | User | null         |
+      | 41 | jane   | User | null         |
+      | 51 | jack   | User | null         |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |

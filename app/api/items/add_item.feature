@@ -2,8 +2,8 @@ Feature: Add item
 
   Background:
     Given the database has the following table 'groups':
-      | id | name | type     |
-      | 11 | jdoe | UserSelf |
+      | id | name | type |
+      | 11 | jdoe | User |
     And the database has the following table 'users':
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
@@ -156,7 +156,7 @@ Feature: Add item
       | 5577006791947779410 | 34                  |
     And the table "groups" should be:
       | id                  | type                | name                             |
-      | 11                  | UserSelf            | jdoe                             |
+      | 11                  | User                | jdoe                             |
       | 8674665223082153551 | ContestParticipants | 5577006791947779410-participants |
     And the table "permissions_granted" should be:
       | group_id            | item_id             | source_group_id     | origin           | can_view                 | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |

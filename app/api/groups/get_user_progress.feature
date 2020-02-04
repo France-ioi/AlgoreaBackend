@@ -1,29 +1,29 @@
 Feature: Display the current progress of users on a subset of items (groupUserProgress)
   Background:
     Given the database has the following table 'groups':
-      | id | type     | name           |
-      | 1  | Base     | Root 1         |
-      | 3  | Base     | Root 2         |
-      | 11 | Class    | Our Class      |
-      | 12 | Class    | Other Class    |
-      | 13 | Class    | Special Class  |
-      | 14 | Team     | Super Team     |
-      | 15 | Team     | Our Team       |
-      | 16 | Team     | First Team     |
-      | 17 | Other    | A custom group |
-      | 18 | Club     | Our Club       |
-      | 20 | Friends  | My Friends     |
-      | 21 | UserSelf | owner          |
-      | 51 | UserSelf | johna          |
-      | 53 | UserSelf | johnb          |
-      | 55 | UserSelf | johnc          |
-      | 57 | UserSelf | johnd          |
-      | 59 | UserSelf | johne          |
-      | 61 | UserSelf | janea          |
-      | 63 | UserSelf | janeb          |
-      | 65 | UserSelf | janec          |
-      | 67 | UserSelf | janed          |
-      | 69 | UserSelf | janee          |
+      | id | type    | name           |
+      | 1  | Base    | Root 1         |
+      | 3  | Base    | Root 2         |
+      | 11 | Class   | Our Class      |
+      | 12 | Class   | Other Class    |
+      | 13 | Class   | Special Class  |
+      | 14 | Team    | Super Team     |
+      | 15 | Team    | Our Team       |
+      | 16 | Team    | First Team     |
+      | 17 | Other   | A custom group |
+      | 18 | Club    | Our Club       |
+      | 20 | Friends | My Friends     |
+      | 21 | User    | owner          |
+      | 51 | User    | johna          |
+      | 53 | User    | johnb          |
+      | 55 | User    | johnc          |
+      | 57 | User    | johnd          |
+      | 59 | User    | johne          |
+      | 61 | User    | janea          |
+      | 63 | User    | janeb          |
+      | 65 | User    | janec          |
+      | 67 | User    | janed          |
+      | 69 | User    | janee          |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |

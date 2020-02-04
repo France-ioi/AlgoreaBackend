@@ -1,11 +1,11 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type     | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class    | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class    | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
-      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | UserSelf | null                                   | false  | false       | null       | null          | null                | false        |
-      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | UserSelf | null                                   | false  | false       | null       | null          | null                | false        |
+      | id | name    | grade | description     | created_at          | type  | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false  | false       | null       | null          | null                | false        |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name |
       | owner | 0         | 21       | Jean-Michel | Blanquer  |

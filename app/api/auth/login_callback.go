@@ -150,7 +150,7 @@ func createGroupsFromLogin(store *database.GroupStore, login string, domainConfi
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
 			"id":          selfGroupID,
 			"name":        login,
-			"type":        "UserSelf",
+			"type":        "User",
 			"description": login,
 			"created_at":  database.Now(),
 			"opened":      false,

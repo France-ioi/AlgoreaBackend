@@ -1,19 +1,19 @@
 Feature: List user descendants of the group (groupUserDescendantView)
   Background:
     Given the database has the following table 'groups':
-      | id | type     | name           | grade |
-      | 1  | Base     | Root 1         | -2    |
-      | 3  | Base     | Root 2         | -2    |
-      | 11 | Class    | Our Class      | -2    |
-      | 12 | Class    | Other Class    | -2    |
-      | 13 | Class    | Special Class  | -2    |
-      | 14 | Team     | Super Team     | -2    |
-      | 15 | Team     | Our Team       | -1    |
-      | 16 | Team     | First Team     | 0     |
-      | 17 | Other    | A custom group | -2    |
-      | 18 | Club     | Our Club       | -2    |
-      | 20 | Friends  | My Friends     | -2    |
-      | 21 | UserSelf | owner          | -2    |
+      | id | type    | name           | grade |
+      | 1  | Base    | Root 1         | -2    |
+      | 3  | Base    | Root 2         | -2    |
+      | 11 | Class   | Our Class      | -2    |
+      | 12 | Class   | Other Class    | -2    |
+      | 13 | Class   | Special Class  | -2    |
+      | 14 | Team    | Super Team     | -2    |
+      | 15 | Team    | Our Team       | -1    |
+      | 16 | Team    | First Team     | 0     |
+      | 17 | Other   | A custom group | -2    |
+      | 18 | Club    | Our Club       | -2    |
+      | 20 | Friends | My Friends     | -2    |
+      | 21 | User    | owner          | -2    |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 10    |
@@ -61,11 +61,11 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: One group with 4 grand children (different parents)
     Given the database table 'groups' has also the following rows:
-      | id | type     | name  | grade |
-      | 51 | UserSelf | johna | -2    |
-      | 53 | UserSelf | johnb | -2    |
-      | 55 | UserSelf | johnc | -2    |
-      | 57 | UserSelf | johnd | -2    |
+      | id | type | name  | grade |
+      | 51 | User | johna | -2    |
+      | 53 | User | johnb | -2    |
+      | 55 | User | johnc | -2    |
+      | 57 | User | johnd | -2    |
     And the database table 'users' has also the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |
@@ -168,8 +168,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: Non-descendant parents should not appear (one group with 1 grand child, having also a parent which is not descendant)
     Given the database table 'groups' has also the following rows:
-      | id | type     | name  | grade |
-      | 51 | UserSelf | johna | -2    |
+      | id | type | name  | grade |
+      | 51 | User | johna | -2    |
     And the database table 'users' has also the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |
@@ -201,8 +201,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: Only actual memberships count
     Given the database table 'groups' has also the following rows:
-      | id | type     | name  | grade |
-      | 51 | UserSelf | johna | -2    |
+      | id | type | name  | grade |
+      | 51 | User | johna | -2    |
     And the database table 'users' has also the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | John       | Adams     | 1     |
@@ -225,8 +225,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: No duplication (one group with 1 grand children connected through 2 different parents)
     Given the database table 'groups' has also the following rows:
-      | id | type     | name  | grade |
-      | 51 | UserSelf | johna | -2    |
+      | id | type | name  | grade |
+      | 51 | User | johna | -2    |
     And the database table 'users' has also the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |

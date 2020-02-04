@@ -1,13 +1,13 @@
 Feature: User accepts an invitation to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type     | team_item_id | require_personal_info_access_approval |
-      | 11 | Class    | null         | none                                  |
-      | 13 | Friends  | null         | none                                  |
-      | 14 | Team     | 1234         | none                                  |
-      | 15 | Team     | 1234         | none                                  |
-      | 16 | Team     | null         | view                                  |
-      | 21 | UserSelf | null         | none                                  |
+      | id | type    | team_item_id | require_personal_info_access_approval |
+      | 11 | Class   | null         | none                                  |
+      | 13 | Friends | null         | none                                  |
+      | 14 | Team    | 1234         | none                                  |
+      | 15 | Team    | 1234         | none                                  |
+      | 16 | Team    | null         | view                                  |
+      | 21 | User    | null         | none                                  |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |

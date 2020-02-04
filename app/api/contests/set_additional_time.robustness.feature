@@ -1,11 +1,11 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type     |
-      | 12 | Group A | Class    |
-      | 13 | Group B | Other    |
-      | 21 | owner   | UserSelf |
-      | 31 | john    | UserSelf |
+      | id | name    | type  |
+      | 12 | Group A | Class |
+      | 13 | Group B | Other |
+      | 21 | owner   | User  |
+      | 31 | john    | User  |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -139,7 +139,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should stay unchanged
 
-  Scenario: Team contest and the UserSelf group
+  Scenario: Team contest and the User group
     Given I am the user with id "21"
     When I send a PUT request to "/contests/80/groups/31/additional-times?seconds=0"
     Then the response code should be 403

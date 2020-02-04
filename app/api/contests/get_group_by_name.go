@@ -17,7 +17,7 @@ import (
 //
 //                  * the group has access to the contest (info, content or content_with_descendants);
 //                  * the authenticated user is a manager of the group;
-//                  * the `groups.name` (matching `login` if a "UserSelf" group) is matching the input `name` parameter (case-insensitive)
+//                  * the `groups.name` (matching `login` if a "User" group) is matching the input `name` parameter (case-insensitive)
 //
 //                If there are several groups or users matching, returns the first one (by `id`).
 //
@@ -119,7 +119,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 					ON groups_groups_active.parent_group_id = team.id`).
 			Joins(`
 				LEFT JOIN `+"`groups`"+` AS user_group
-					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'UserSelf' AND
+					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'User' AND
 						user_group.name LIKE ?`, groupName).
 			Group("groups.id, user_group.id").
 			Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)

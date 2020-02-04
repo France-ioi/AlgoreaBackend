@@ -5,7 +5,7 @@ groups:
   - {id: 4, type: "Club"}
   - {id: 5, type: "Friends"}
   - {id: 10, type: "Other"}
-  - {id: 111, type: "UserSelf"}
+  - {id: 111, type: "User"}
 
 users: [{group_id: 111}]
 

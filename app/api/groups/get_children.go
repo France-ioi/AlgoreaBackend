@@ -16,7 +16,7 @@ type groupChildrenViewResponseRow struct {
 	// required:true
 	Name string `json:"name"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,UserSelf,Base
+	// enum: Class,Team,Club,Friends,Other,User,Base
 	Type string `json:"type"`
 	// required:true
 	Grade int32 `json:"grade"`
@@ -46,18 +46,18 @@ type groupChildrenViewResponseRow struct {
 //   type: integer
 // - name: types_include
 //   in: query
-//   default: [Class,Team,Club,Friends,Other,UserSelf,Base]
+//   default: [Class,Team,Club,Friends,Other,User,Base]
 //   type: array
 //   items:
 //     type: string
-//     enum: [Class,Team,Club,Friends,Other,UserSelf,Base]
+//     enum: [Class,Team,Club,Friends,Other,User,Base]
 // - name: types_exclude
 //   in: query
 //   default: []
 //   type: array
 //   items:
 //     type: string
-//     enum: [Class,Team,Club,Friends,Other,UserSelf,Base]
+//     enum: [Class,Team,Club,Friends,Other,User,Base]
 // - name: from.name
 //   description: Start the page from the sub-group next to the sub-group with `name` = `from.name` and `id` = `from.id`
 //                (`from.id` is required when `from.name` is present,
@@ -120,7 +120,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(r, "types",
 		map[string]bool{
 			"Base": true, "Class": true, "Team": true, "Club": true, "Friends": true,
-			"Other": true, "UserSelf": true,
+			"Other": true, "User": true,
 		})
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -139,7 +139,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				JOIN groups_ancestors_active
 				ON groups_ancestors_active.child_group_id = user_groups.id AND
 					groups_ancestors_active.ancestor_group_id != groups_ancestors_active.child_group_id
-				WHERE user_groups.type = 'UserSelf' AND groups_ancestors_active.ancestor_group_id = groups.id
+				WHERE user_groups.type = 'User' AND groups_ancestors_active.ancestor_group_id = groups.id
 			) AS user_count`).
 		Where("groups.id IN(?)",
 			srv.Store.ActiveGroupGroups().

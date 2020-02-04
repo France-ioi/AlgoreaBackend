@@ -1,10 +1,10 @@
 Feature: Request a new access token
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type      |
-      | 12 | tmp-1234567 | UserSelf  |
-      | 13 | jane        | UserSelf  |
-      | 14 | john        | UserSelf  |
+      | id | name        | type |
+      | 12 | tmp-1234567 | User |
+      | 13 | jane        | User |
+      | 14 | john        | User |
     And the database has the following table 'users':
       | group_id | login       | temp_user |
       | 12       | tmp-1234567 | true      |

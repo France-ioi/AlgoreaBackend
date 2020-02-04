@@ -1,21 +1,21 @@
 Feature: Accept group requests
   Background:
     Given the database has the following table 'groups':
-      | id  | type     | team_item_id | require_personal_info_access_approval |
-      | 11  | Class    | null         | none                                  |
-      | 13  | Team     | 1234         | none                                  |
-      | 14  | Friends  | null         | view                                  |
-      | 21  | UserSelf | null         | none                                  |
-      | 31  | UserSelf | null         | none                                  |
-      | 111 | UserSelf | null         | none                                  |
-      | 121 | UserSelf | null         | none                                  |
-      | 122 | UserSelf | null         | none                                  |
-      | 123 | UserSelf | null         | none                                  |
-      | 131 | UserSelf | null         | none                                  |
-      | 141 | UserSelf | null         | none                                  |
-      | 151 | UserSelf | null         | none                                  |
-      | 161 | UserSelf | null         | none                                  |
-      | 444 | Team     | 1234         | none                                  |
+      | id  | type    | team_item_id | require_personal_info_access_approval |
+      | 11  | Class   | null         | none                                  |
+      | 13  | Team    | 1234         | none                                  |
+      | 14  | Friends | null         | view                                  |
+      | 21  | User    | null         | none                                  |
+      | 31  | User    | null         | none                                  |
+      | 111 | User    | null         | none                                  |
+      | 121 | User    | null         | none                                  |
+      | 122 | User    | null         | none                                  |
+      | 123 | User    | null         | none                                  |
+      | 131 | User    | null         | none                                  |
+      | 141 | User    | null         | none                                  |
+      | 151 | User    | null         | none                                  |
+      | 161 | User    | null         | none                                  |
+      | 444 | Team    | 1234         | none                                  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |

@@ -23,8 +23,8 @@ import (
 //     * the authenticated user should have `can_manage` >= 'memberships' on the `parent_group_id`,
 //     * the authenticated user should have `can_manage` = 'memberships_and_group' on the `child_group_id`,
 //     * the authenticated user should have `users.allow_subgroups` set to 1,
-//     * the parent group should not be of type "UserSelf" or "Team",
-//     * the child group should not be of types "Base" or "UserSelf"
+//     * the parent group should not be of type "User" or "Team",
+//     * the child group should not be of types "Base" or "User"
 //       (since users should join groups only by code or by invitation/request),
 //     * the action should not create cycles in the groups relations graph.
 // parameters:

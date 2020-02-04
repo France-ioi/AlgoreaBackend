@@ -28,7 +28,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 1, type: "Class", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
-					- {id: 10, type: UserSelf}
+					- {id: 10, type: User}
 				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
 			groupsToInvite: []int64{10},
 			want:           []int64{10},
@@ -40,7 +40,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 1, type: "Team"}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
-					- {id: 10, type: UserSelf}
+					- {id: 10, type: User}
 				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
 			groupsToInvite: []int64{10},
 			want:           []int64{10},
@@ -56,12 +56,12 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 5, type: "Friends", "team_item_id": 1234}
 					- {id: 6, type: "Other", "team_item_id": 1234}
 					- {id: 7, type: "Club", "team_item_id": 1234}
-					- {id: 10, type: UserSelf}
-					- {id: 11, type: UserSelf}
-					- {id: 12, type: UserSelf}
-					- {id: 13, type: UserSelf}
-					- {id: 14, type: UserSelf}
-					- {id: 15, type: UserSelf}
+					- {id: 10, type: User}
+					- {id: 11, type: User}
+					- {id: 12, type: User}
+					- {id: 13, type: User}
+					- {id: 14, type: User}
+					- {id: 15, type: User}
 				groups_groups:
 					- {parent_group_id: 4, child_group_id: 10}
 					- {parent_group_id: 5, child_group_id: 11}
@@ -77,10 +77,10 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 1, type: "Team", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 2345}
 					- {id: 3, type: "Team"}
-					- {id: 10, type: UserSelf}
-					- {id: 11, type: UserSelf}
-					- {id: 12, type: UserSelf}
-					- {id: 13, type: UserSelf}
+					- {id: 10, type: User}
+					- {id: 11, type: User}
+					- {id: 12, type: User}
+					- {id: 13, type: User}
 				groups_groups:
 					- {parent_group_id: 2, child_group_id: 10}
 					- {parent_group_id: 3, child_group_id: 11}
@@ -96,10 +96,10 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 1, type: "Team", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", team_item_id: 1234}
-					- {id: 10, type: UserSelf}
-					- {id: 11, type: UserSelf}
-					- {id: 12, type: UserSelf}
-					- {id: 13, type: UserSelf}
+					- {id: 10, type: User}
+					- {id: 11, type: User}
+					- {id: 12, type: User}
+					- {id: 13, type: User}
 				groups_groups:
 					- {parent_group_id: 2, child_group_id: 10}
 					- {parent_group_id: 3, child_group_id: 11}

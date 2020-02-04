@@ -1,8 +1,8 @@
 Feature: Get item answers - robustness
 Background:
   Given the database has the following table 'groups':
-    | id | name | type     |
-    | 1  | jdoe | UserSelf |
+    | id | name | type |
+    | 1  | jdoe | User |
   And the database has the following table 'users':
     | login | temp_user | group_id |
     | jdoe  | 0         | 1        |

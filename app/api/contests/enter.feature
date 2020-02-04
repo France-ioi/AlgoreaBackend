@@ -3,10 +3,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     Given the database has the following table 'groups':
       | id | name         | type                | team_item_id |
       | 11 | Team 2       | Team                | 60           |
-      | 21 | owner        | UserSelf            | null         |
-      | 31 | john         | UserSelf            | null         |
-      | 41 | jane         | UserSelf            | null         |
-      | 51 | jack         | UserSelf            | null         |
+      | 21 | owner        | User                | null         |
+      | 31 | john         | User                | null         |
+      | 41 | jane         | User                | null         |
+      | 51 | jack         | User                | null         |
       | 98 | item60-group | ContestParticipants | null         |
       | 99 | item50-group | ContestParticipants | null         |
     And the database has the following table 'users':

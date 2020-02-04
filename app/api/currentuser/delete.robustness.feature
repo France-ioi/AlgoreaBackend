@@ -2,12 +2,12 @@ Feature: Delete the current user - robustness
   Background:
     Given the DB time now is "2019-08-09 23:59:59"
     And the database has the following table 'groups':
-      | id | type     | name      | require_lock_membership_approval_until |
-      | 1  | Base     | Root      | null                                   |
-      | 2  | Base     | RootSelf  | null                                   |
-      | 4  | Base     | RootTemp  | null                                   |
-      | 21 | UserSelf | user      | null                                   |
-      | 50 | Class    | Our class | 2019-08-10 00:00:00                    |
+      | id | type  | name      | require_lock_membership_approval_until |
+      | 1  | Base  | Root      | null                                   |
+      | 2  | Base  | RootSelf  | null                                   |
+      | 4  | Base  | RootTemp  | null                                   |
+      | 21 | User  | user      | null                                   |
+      | 50 | Class | Our class | 2019-08-10 00:00:00                    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 1               | 2              | null                        |
