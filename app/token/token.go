@@ -127,10 +127,9 @@ func UnmarshalDependingOnItemPlatform(store *database.DataStore, itemID int64,
 	defer recoverPanics(&err)
 
 	var platformInfo struct {
-		UsesTokens bool
-		PublicKey  string
+		PublicKey *string
 	}
-	if err = store.Platforms().Select("uses_tokens, public_key").
+	if err = store.Platforms().Select("public_key").
 		Joins("JOIN items ON items.platform_id = platforms.id").
 		Where("items.id = ?", itemID).
 		Scan(&platformInfo).Error(); gorm.IsRecordNotFoundError(err) {
@@ -138,11 +137,11 @@ func UnmarshalDependingOnItemPlatform(store *database.DataStore, itemID int64,
 	}
 	mustNotBeError(err)
 
-	if platformInfo.UsesTokens {
+	if platformInfo.PublicKey != nil {
 		if token == nil {
 			return fmt.Errorf("missing %s", tokenFieldName)
 		}
-		parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(platformInfo.PublicKey))
+		parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(*platformInfo.PublicKey))
 		if err != nil {
 			logging.Warnf("cannot parse platform's public key for item with id = %d: %s",
 				itemID, err.Error())

@@ -10,8 +10,8 @@ Feature: Ask for a hint
       | parent_group_id | child_group_id |
       | 22              | 13             |
     And the database has the following table 'platforms':
-      | id | uses_tokens | regexp                                            | public_key                |
-      | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
+      | id | regexp                                            | public_key                |
+      | 10 | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
     And the database has the following table 'items':
       | id | platform_id | url                                                                     | default_language_tag |
       | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | fr                   |

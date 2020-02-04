@@ -10,9 +10,9 @@ Feature: Save grading result
       | parent_group_id | child_group_id |
       | 22              | 13             |
     And the database has the following table 'platforms':
-      | id | uses_tokens | regexp                                             | public_key                |
-      | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.*  | {{taskPlatformPublicKey}} |
-      | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
+      | id | regexp                                             | priority | public_key                |
+      | 10 | http://taskplatform.mblockelet.info/task.html\?.*  | 2        | {{taskPlatformPublicKey}} |
+      | 20 | http://taskplatform1.mblockelet.info/task.html\?.* | 1        | null                      |
     And the database has the following table 'items':
       | id | platform_id | url                                                                     | validation_type | default_language_tag |
       | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | All             | fr                   |
