@@ -129,7 +129,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 						ancestors.child_group_id = groups.id AND
 						ancestors.is_self = 0 AND
 						ancestors.ancestor_group_id = ?`, childGroupID).
-				Where("groups.type NOT IN('Base', 'UserSelf')").
+				Where("groups.type NOT IN('Base', 'User')").
 				Pluck("groups.id", &candidatesForDeletion).Error())
 		}
 

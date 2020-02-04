@@ -7,7 +7,7 @@ CREATE TRIGGER `after_insert_permissions_generated` AFTER INSERT ON `permissions
                                       `items_ancestors`.`ancestor_item_id` = NEW.`item_id`
             JOIN `groups_ancestors_active` ON `groups_ancestors_active`.`child_group_id` = `attempts`.`group_id` AND
                                               `groups_ancestors_active`.`ancestor_group_id` = NEW.`group_id`
-        SET `result_propagation_state` = 'changed';
+        SET `result_propagation_state` = 'to_be_propagated';
     END IF;
 END
 -- +migrate StatementEnd
@@ -28,7 +28,7 @@ CREATE TRIGGER `after_update_permissions_generated` AFTER UPDATE ON `permissions
                                       `items_ancestors`.`ancestor_item_id` = NEW.`item_id`
             JOIN `groups_ancestors_active` ON `groups_ancestors_active`.`child_group_id` = `attempts`.`group_id` AND
                                               `groups_ancestors_active`.`ancestor_group_id` = NEW.`group_id`
-        SET `result_propagation_state` = 'changed';
+        SET `result_propagation_state` = 'to_be_propagated';
     END IF;
 END
 -- +migrate StatementEnd

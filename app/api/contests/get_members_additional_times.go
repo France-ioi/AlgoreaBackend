@@ -115,7 +115,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		query = query.
 			Joins(`
 				JOIN ` + "`groups`" + ` AS found_group
-					ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'UserSelf'`)
+					ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'User'`)
 	}
 
 	query = query.

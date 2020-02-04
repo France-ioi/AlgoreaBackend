@@ -1,11 +1,11 @@
 Feature: Change item access rights for a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name       | type     |
-      | 21 | owner      | UserSelf |
-      | 23 | user       | UserSelf |
-      | 25 | some class | Class    |
-      | 31 | admin      | UserSelf |
+      | id | name       | type  |
+      | 21 | owner      | User  |
+      | 23 | user       | User  |
+      | 25 | some class | Class |
+      | 31 | admin      | User  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |

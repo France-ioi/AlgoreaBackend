@@ -1,29 +1,29 @@
 Feature: List team descendants of the group (groupTeamDescendantView)
   Background:
     Given the database has the following table 'groups':
-      | id | type     | name           | grade |
-      | 1  | Base     | Root 1         | -2    |
-      | 3  | Base     | Root 2         | -2    |
-      | 11 | Class    | Our Class      | -2    |
-      | 12 | Class    | Other Class    | -2    |
-      | 13 | Class    | Special Class  | -2    |
-      | 14 | Team     | Super Team     | -2    |
-      | 15 | Team     | Our Team       | -1    |
-      | 16 | Team     | First Team     | 0     |
-      | 17 | Other    | A custom group | -2    |
-      | 18 | Club     | Our Club       | -2    |
-      | 20 | Friends  | My Friends     | -2    |
-      | 21 | UserSelf | owner          | -2    |
-      | 51 | UserSelf | johna          | -2    |
-      | 53 | UserSelf | johnb          | -2    |
-      | 55 | UserSelf | johnc          | -2    |
-      | 57 | UserSelf | johnd          | -2    |
-      | 59 | UserSelf | johne          | -2    |
-      | 61 | UserSelf | janea          | -2    |
-      | 63 | UserSelf | janeb          | -2    |
-      | 65 | UserSelf | janec          | -2    |
-      | 67 | UserSelf | janed          | -2    |
-      | 69 | UserSelf | janee          | -2    |
+      | id | type    | name           | grade |
+      | 1  | Base    | Root 1         | -2    |
+      | 3  | Base    | Root 2         | -2    |
+      | 11 | Class   | Our Class      | -2    |
+      | 12 | Class   | Other Class    | -2    |
+      | 13 | Class   | Special Class  | -2    |
+      | 14 | Team    | Super Team     | -2    |
+      | 15 | Team    | Our Team       | -1    |
+      | 16 | Team    | First Team     | 0     |
+      | 17 | Other   | A custom group | -2    |
+      | 18 | Club    | Our Club       | -2    |
+      | 20 | Friends | My Friends     | -2    |
+      | 21 | User    | owner          | -2    |
+      | 51 | User    | johna          | -2    |
+      | 53 | User    | johnb          | -2    |
+      | 55 | User    | johnc          | -2    |
+      | 57 | User    | johnd          | -2    |
+      | 59 | User    | johne          | -2    |
+      | 61 | User    | janea          | -2    |
+      | 63 | User    | janeb          | -2    |
+      | 65 | User    | janec          | -2    |
+      | 67 | User    | janed          | -2    |
+      | 69 | User    | janee          | -2    |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 10    |

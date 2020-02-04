@@ -2,8 +2,8 @@ Feature: Update item
 
 Background:
   Given the database has the following table 'groups':
-    | id | name | type     |
-    | 11 | jdoe | UserSelf |
+    | id | name | type |
+    | 11 | jdoe | User |
   And the database has the following table 'users':
     | login | temp_user | group_id |
     | jdoe  | 0         | 11       |
@@ -136,7 +136,7 @@ Background:
       | 50               | 134           |
     And the table "groups" should be:
       | id                  | type                | name            |
-      | 11                  | UserSelf            | jdoe            |
+      | 11                  | User                | jdoe            |
       | 5577006791947779410 | ContestParticipants | 50-participants |
     And the table "permissions_granted" should be:
       | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |

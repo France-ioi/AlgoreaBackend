@@ -43,7 +43,7 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 			- {ancestor_item_id: 111, child_item_id: 333}
 			- {ancestor_item_id: 222, child_item_id: 333}
 		attempts:
-			- {group_id: 3, item_id: 333, order: 1, result_propagation_state: changed}
+			- {group_id: 3, item_id: 333, order: 1, result_propagation_state: to_be_propagated}
 	`)
 	mergedFixtures = append(mergedFixtures, fixtures...)
 	db := testhelpers.SetupDBWithFixtureString(mergedFixtures...)

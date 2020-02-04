@@ -1,17 +1,17 @@
 Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime)
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type     | team_item_id |
-      | 10 | Parent      | Club     | null         |
-      | 11 | Group A     | Friends  | null         |
-      | 13 | Group B     | Team     | 60           |
-      | 14 | Group B     | Other    | null         |
-      | 15 | Team        | Team     | 10           |
-      | 16 | Team for 70 | Team     | 70           |
-      | 17 | Team wo/acc | Team     | 60           |
-      | 21 | owner       | UserSelf | null         |
-      | 31 | john        | UserSelf | null         |
-      | 41 | jane        | UserSelf | null         |
+      | id | name        | type    | team_item_id |
+      | 10 | Parent      | Club    | null         |
+      | 11 | Group A     | Friends | null         |
+      | 13 | Group B     | Team    | 60           |
+      | 14 | Group B     | Other   | null         |
+      | 15 | Team        | Team    | 10           |
+      | 16 | Team for 70 | Team    | 70           |
+      | 17 | Team wo/acc | Team    | 60           |
+      | 21 | owner       | User    | null         |
+      | 31 | john        | User    | null         |
+      | 41 | jane        | User    | null         |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -119,14 +119,14 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       {
         "group_id": "41",
         "name": "jane",
-        "type": "UserSelf",
+        "type": "User",
         "additional_time": 0,
         "total_additional_time": 3660
       },
       {
         "group_id": "31",
         "name": "john",
-        "type": "UserSelf",
+        "type": "User",
         "additional_time": 60,
         "total_additional_time": 3720
       }
@@ -184,7 +184,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       {
         "group_id": "31",
         "name": "john",
-        "type": "UserSelf",
+        "type": "User",
         "additional_time": 60,
         "total_additional_time": 3720
       }

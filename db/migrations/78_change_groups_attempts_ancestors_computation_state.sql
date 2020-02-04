@@ -1,15 +1,15 @@
 -- +migrate Up
 ALTER TABLE `groups_attempts`
     CHANGE COLUMN `ancestors_computation_state`
-        `result_propagation_state` ENUM('done','processing','todo','temp','changed','to_be_recomputed'),
+        `result_propagation_state` ENUM('done','processing','todo','temp','to_be_propagated','to_be_recomputed'),
     RENAME INDEX `ancestors_computation_state` TO `result_propagation_state`;
 
 UPDATE `groups_attempts` SET `result_propagation_state` = 'done' WHERE `result_propagation_state` = 'temp';
 UPDATE `groups_attempts` SET `result_propagation_state` = 'to_be_recomputed' WHERE `result_propagation_state` = 'todo';
 
 ALTER TABLE `groups_attempts`
-    MODIFY COLUMN `result_propagation_state` ENUM('done','processing','changed','to_be_recomputed') NOT NULL DEFAULT 'done'
-        COMMENT 'Used by the algorithm that computes results for items that have children and unlocks items if needed ("changed" means that ancestors should be recomputed).';
+    MODIFY COLUMN `result_propagation_state` ENUM('done','processing','to_be_propagated','to_be_recomputed') NOT NULL DEFAULT 'done'
+        COMMENT 'Used by the algorithm that computes results for items that have children and unlocks items if needed ("to_be_propagated" means that ancestors should be recomputed).';
 
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin
@@ -125,11 +125,11 @@ END
 -- +migrate Down
 ALTER TABLE `groups_attempts`
     CHANGE COLUMN `result_propagation_state`
-        `ancestors_computation_state` ENUM('done','processing','changed','to_be_recomputed','todo','temp'),
+        `ancestors_computation_state` ENUM('done','processing','to_be_propagated','to_be_recomputed','todo','temp'),
     RENAME INDEX `result_propagation_state` TO `ancestors_computation_state`;
 
 UPDATE `groups_attempts` SET `ancestors_computation_state` = 'todo'
-WHERE `ancestors_computation_state` IN ('changed', 'to_be_recomputed');
+WHERE `ancestors_computation_state` IN ('to_be_propagated', 'to_be_recomputed');
 
 ALTER TABLE `groups_attempts`
     MODIFY COLUMN `ancestors_computation_state` enum('done','processing','todo','temp') NOT NULL DEFAULT 'done'

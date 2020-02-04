@@ -1,12 +1,12 @@
 Feature: Get item view information - robustness
 Background:
   Given the database has the following table 'groups':
-    | id | name    | text_id | grade | type     |
-    | 11 | jdoe    |         | -2    | UserSelf |
-    | 13 | Group B |         | -2    | Class    |
-    | 14 | info    |         | -2    | Class    |
-    | 16 | Group C |         | -2    | Class    |
-    | 17 | Team    |         | -2    | Team     |
+    | id | name    | text_id | grade | type  |
+    | 11 | jdoe    |         | -2    | User  |
+    | 13 | Group B |         | -2    | Class |
+    | 14 | info    |         | -2    | Class |
+    | 16 | Group C |         | -2    | Class |
+    | 17 | Team    |         | -2    | Team  |
   And the database has the following table 'users':
     | login | temp_user | group_id |
     | jdoe  | 0         | 11       |

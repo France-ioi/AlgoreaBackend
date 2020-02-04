@@ -4,10 +4,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | id | name         | type                | team_item_id |
       | 10 | Team 1       | Team                | 50           |
       | 11 | Team 2       | Team                | 60           |
-      | 21 | owner        | UserSelf            | null         |
-      | 31 | john         | UserSelf            | null         |
-      | 41 | jane         | UserSelf            | null         |
-      | 51 | jack         | UserSelf            | null         |
+      | 21 | owner        | User                | null         |
+      | 31 | john         | User                | null         |
+      | 41 | jane         | User                | null         |
+      | 51 | jack         | User                | null         |
       | 99 | item50-group | ContestParticipants | null         |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |

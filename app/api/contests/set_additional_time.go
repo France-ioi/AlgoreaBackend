@@ -87,7 +87,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 			items.allows_multiple_attempts AS is_team_only_contest,
 			items.contest_participants_group_id`).
 			Take(&contestInfo).Error()
-		if gorm.IsRecordNotFoundError(err) || (contestInfo.IsTeamOnlyContest && groupType == "UserSelf") {
+		if gorm.IsRecordNotFoundError(err) || (contestInfo.IsTeamOnlyContest && groupType == "User") {
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error
 		}

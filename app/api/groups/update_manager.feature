@@ -2,11 +2,11 @@ Feature: Update the group manager's permissions (groupManagerEdit)
 
   Background:
     Given the database has the following table 'groups':
-      | id | name  | type     |
-      | 1  | Group | Class    |
-      | 2  | Team  | Team     |
-      | 21 | owner | UserSelf |
-      | 22 | john  | UserSelf |
+      | id | name  | type  |
+      | 1  | Group | Class |
+      | 2  | Team  | Team  |
+      | 21 | owner | User  |
+      | 22 | john  | User  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |

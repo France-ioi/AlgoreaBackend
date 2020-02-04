@@ -74,9 +74,9 @@ Feature: Login callback
       | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   |
       | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 |
     And the table "groups" should be:
-      | id                  | name      | type     | description | created_at          | opened | send_emails |
-      | 2                   | RootSelf  | Base     | null        | 2015-08-10 12:34:55 | false  | false       |
-      | 5577006791947779410 | mohammed  | UserSelf | mohammed    | 2019-07-16 22:02:28 | false  | false       |
+      | id                  | name     | type | description | created_at          | opened | send_emails |
+      | 2                   | RootSelf | Base | null        | 2015-08-10 12:34:55 | false  | false       |
+      | 5577006791947779410 | mohammed | User | mohammed    | 2019-07-16 22:02:28 | false  | false       |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id      | child_order |
       | 2               | 5577006791947779410 | 1           |
@@ -141,9 +141,9 @@ Feature: Login callback
       }
       """
     And the database table 'groups' has also the following rows:
-      | id | name     | type     | description | created_at          | opened | send_emails |
-      | 11 | mohammed | UserSelf | mohammed    | 2019-05-10 10:42:11 | false  | true        |
-      | 13 | john     | UserSelf | john        | 2018-05-10 10:42:11 | false  | false       |
+      | id | name     | type | description | created_at          | opened | send_emails |
+      | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false  | true        |
+      | 13 | john     | User | john        | 2018-05-10 10:42:11 | false  | false       |
     And the database has the following table 'users':
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
@@ -239,8 +239,8 @@ Feature: Login callback
     And the template constant "state" is "o5yuy6wmpe607bknrmvrrduy5xe60zd7"
     And the template constant "code_from_oauth" is "somecode"
     And the database table 'groups' has also the following rows:
-      | id | name     | type     | description | created_at          | opened | send_emails |
-      | 11 | mohammed | UserSelf | mohammed    | 2019-05-10 10:42:11 | false  | true        |
+      | id | name     | type | description | created_at          | opened | send_emails |
+      | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false  | true        |
     And the database has the following table 'users':
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |

@@ -1,21 +1,21 @@
 Feature: Accept requests to leave a group
   Background:
     Given the database has the following table 'groups':
-      | id  | type     | team_item_id |
-      | 11  | Class    | null         |
-      | 13  | Team     | 1234         |
-      | 14  | Friends  | null         |
-      | 21  | UserSelf | null         |
-      | 31  | UserSelf | null         |
-      | 111 | UserSelf | null         |
-      | 121 | UserSelf | null         |
-      | 122 | UserSelf | null         |
-      | 123 | UserSelf | null         |
-      | 131 | UserSelf | null         |
-      | 141 | UserSelf | null         |
-      | 151 | UserSelf | null         |
-      | 161 | UserSelf | null         |
-      | 444 | Team     | 1234         |
+      | id  | type    | team_item_id |
+      | 11  | Class   | null         |
+      | 13  | Team    | 1234         |
+      | 14  | Friends | null         |
+      | 21  | User    | null         |
+      | 31  | User    | null         |
+      | 111 | User    | null         |
+      | 121 | User    | null         |
+      | 122 | User    | null         |
+      | 123 | User    | null         |
+      | 131 | User    | null         |
+      | 141 | User    | null         |
+      | 151 | User    | null         |
+      | 161 | User    | null         |
+      | 444 | Team    | 1234         |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |

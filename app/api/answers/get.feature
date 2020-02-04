@@ -1,11 +1,11 @@
 Feature: Get user's answer by user_answer_id
 Background:
   Given the database has the following table 'groups':
-    | id | name    | type     |
-    | 11 | jdoe    | UserSelf |
-    | 13 | Group B | Class    |
-    | 21 | other   | UserSelf |
-    | 23 | Group C | Class    |
+    | id | name    | type  |
+    | 11 | jdoe    | User  |
+    | 13 | Group B | Class |
+    | 21 | other   | User  |
+    | 23 | Group C | Class |
   And the database has the following table 'users':
     | login | temp_user | group_id | first_name | last_name |
     | jdoe  | 0         | 11       | John       | Doe       |

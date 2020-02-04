@@ -1,2 +1,2 @@
-- { id: 13, item_id: 3, group_id: 101, order: 1, result_propagation_state: changed}
-- { id: 14, item_id: 4, group_id: 101, order: 1, result_propagation_state: changed}
+- { id: 13, item_id: 3, group_id: 101, order: 1, result_propagation_state: to_be_propagated}
+- { id: 14, item_id: 4, group_id: 101, order: 1, result_propagation_state: to_be_propagated}

@@ -11,7 +11,7 @@ import (
 // swagger:operation GET /groups/{group_id}/user-descendants group-memberships groupUserDescendantView
 // ---
 // summary: List group's user descendants
-// description: Return all users (`type` = "UserSelf") among the descendants of the given group
+// description: Return all users (`type` = "User") among the descendants of the given group
 //
 //   * The authenticated user should be a manager of the parent group.
 // parameters:
@@ -78,7 +78,7 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 				groups_ancestors_active.ancestor_group_id != groups_ancestors_active.child_group_id AND
 				groups_ancestors_active.ancestor_group_id = ?`, groupID).
 		Joins("JOIN users ON users.group_id = groups.id").
-		Where("groups.type = 'UserSelf'")
+		Where("groups.type = 'User'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{

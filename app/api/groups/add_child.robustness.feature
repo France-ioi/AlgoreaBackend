@@ -2,19 +2,19 @@ Feature: Add a parent-child relation between two groups - robustness
 
   Background:
     Given the database has the following table 'groups':
-      | id | name     | type     |
-      | 11 | Group A  | Class    |
-      | 13 | Group B  | Class    |
-      | 15 | Root     | Base     |
-      | 16 | RootSelf | Base     |
-      | 18 | UserSelf | UserSelf |
-      | 19 | Team     | Team     |
-      | 21 | owner    | UserSelf |
-      | 25 | student  | UserSelf |
-      | 27 | admin    | UserSelf |
-      | 77 | Group C  | Class    |
-      | 78 | Group D  | Class    |
-      | 79 | Group E  | Class    |
+      | id | name     | type  |
+      | 11 | Group A  | Class |
+      | 13 | Group B  | Class |
+      | 15 | Root     | Base  |
+      | 16 | RootSelf | Base  |
+      | 18 | User     | User  |
+      | 19 | Team     | Team  |
+      | 21 | owner    | User  |
+      | 25 | student  | User  |
+      | 27 | admin    | User  |
+      | 77 | Group C  | Class |
+      | 78 | Group D  | Class |
+      | 79 | Group E  | Class |
     And the database has the following table 'users':
       | login   | group_id | first_name  | last_name | allow_subgroups |
       | owner   | 21       | Jean-Michel | Blanquer  | 0               |
@@ -129,7 +129,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Child group is UserSelf
+  Scenario: Child group is User
     Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/18"
     Then the response code should be 403
@@ -137,7 +137,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Parent group is UserSelf
+  Scenario: Parent group is User
     Given I am the user with id "27"
     When I send a POST request to "/groups/18/relations/11"
     Then the response code should be 403

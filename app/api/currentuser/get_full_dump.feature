@@ -2,20 +2,20 @@ Feature: Export the current user's data
   Background:
     Given the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'groups':
-      | id | type     | name               | description            |
-      | 1  | Class    | Our Class          | Our class group        |
-      | 2  | Team     | Our Team           | Our team group         |
-      | 3  | Club     | Our Club           | Our club group         |
-      | 4  | Friends  | Our Friends        | Group for our friends  |
-      | 5  | Other    | Other people       | Group for other people |
-      | 6  | Class    | Another Class      | Another class group    |
-      | 7  | Team     | Another Team       | Another team group     |
-      | 8  | Club     | Another Club       | Another club group     |
-      | 9  | Friends  | Some other friends | Another friends group  |
-      | 10 | Other    | Secret group       | Secret group           |
-      | 11 | UserSelf | user self          |                        |
-      | 21 | UserSelf | jack               |                        |
-      | 31 | UserSelf | jane               |                        |
+      | id | type    | name               | description            |
+      | 1  | Class   | Our Class          | Our class group        |
+      | 2  | Team    | Our Team           | Our team group         |
+      | 3  | Club    | Our Club           | Our club group         |
+      | 4  | Friends | Our Friends        | Group for our friends  |
+      | 5  | Other   | Other people       | Group for other people |
+      | 6  | Class   | Another Class      | Another class group    |
+      | 7  | Team    | Another Team       | Another team group     |
+      | 8  | Club    | Another Club       | Another club group     |
+      | 9  | Friends | Some other friends | Another friends group  |
+      | 10 | Other   | Secret group       | Secret group           |
+      | 11 | User    | user self          |                        |
+      | 21 | User    | jack               |                        |
+      | 31 | User    | jane               |                        |
     And the database has the following table 'users':
       | login | group_id | first_name | last_name | grade |
       | user  | 11       | John       | Doe       | 1     |

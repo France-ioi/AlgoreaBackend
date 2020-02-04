@@ -1,19 +1,19 @@
 Feature: Get group memberships history for the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type     | name               |
-      | 1  | Class    | Our Class          |
-      | 2  | Team     | Our Team           |
-      | 3  | Club     | Our Club           |
-      | 4  | Friends  | Our Friends        |
-      | 5  | Other    | Other people       |
-      | 6  | Class    | Another Class      |
-      | 7  | Team     | Another Team       |
-      | 8  | Club     | Another Club       |
-      | 9  | Friends  | Some other friends |
-      | 11 | UserSelf | user               |
-      | 13 | UserSelf | jane               |
-      | 21 | UserSelf | owner              |
+      | id | type    | name               |
+      | 1  | Class   | Our Class          |
+      | 2  | Team    | Our Team           |
+      | 3  | Club    | Our Club           |
+      | 4  | Friends | Our Friends        |
+      | 5  | Other   | Other people       |
+      | 6  | Class   | Another Class      |
+      | 7  | Team    | Another Team       |
+      | 8  | Club    | Another Club       |
+      | 9  | Friends | Some other friends |
+      | 11 | User    | user               |
+      | 13 | User    | jane               |
+      | 21 | User    | owner              |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade | notifications_read_at |
       | owner | 21       | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38   |

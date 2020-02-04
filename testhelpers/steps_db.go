@@ -108,7 +108,7 @@ func (ctx *TestContext) DBHasUsers(data *gherkin.DataTable) error { // nolint
 			if groupIDColumnNumber != -1 {
 				groupsToCreate.Rows = append(groupsToCreate.Rows, &gherkin.TableRow{
 					Cells: []*gherkin.TableCell{
-						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "UserSelf"},
+						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "User"},
 					},
 				})
 			}

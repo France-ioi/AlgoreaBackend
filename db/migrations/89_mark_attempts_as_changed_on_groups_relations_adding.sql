@@ -5,7 +5,7 @@ CREATE TRIGGER `after_insert_groups_groups` AFTER INSERT ON `groups_groups` FOR 
         UPDATE `attempts`
             JOIN `groups_ancestors_active` ON `groups_ancestors_active`.`child_group_id` = `attempts`.`group_id` AND
                                               `groups_ancestors_active`.`ancestor_group_id` = NEW.`child_group_id`
-        SET `result_propagation_state` = 'changed'
+        SET `result_propagation_state` = 'to_be_propagated'
         WHERE EXISTS(
             SELECT 1 FROM `permissions_generated`
                 JOIN `groups_ancestors_active` AS `grand_ancestors`
@@ -45,7 +45,7 @@ CREATE TRIGGER `after_update_groups_groups` AFTER UPDATE ON `groups_groups` FOR 
             UPDATE `attempts`
                 JOIN `groups_ancestors_active` ON `groups_ancestors_active`.`child_group_id` = `attempts`.`group_id` AND
                                                   `groups_ancestors_active`.`ancestor_group_id` = NEW.`child_group_id`
-            SET `result_propagation_state` = 'changed'
+            SET `result_propagation_state` = 'to_be_propagated'
             WHERE EXISTS(
                 SELECT 1 FROM `permissions_generated`
                     JOIN `groups_ancestors_active` AS `grand_ancestors`

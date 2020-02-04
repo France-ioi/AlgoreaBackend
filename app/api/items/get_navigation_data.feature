@@ -1,13 +1,13 @@
 Feature: Get item for tree navigation
   Background:
     Given the database has the following table 'groups':
-      | id | name      | text_id | grade | type     |
-      | 11 | jdoe      |         | -2    | UserSelf |
-      | 13 | Group B   |         | -2    | Team     |
-      | 14 | info_root |         | -2    | UserSelf |
-      | 16 | info_mid  |         | -2    | UserSelf |
-      | 18 | french    |         | -2    | UserSelf |
-      | 19 | Group C   |         | -2    | Team     |
+      | id | name      | text_id | grade | type |
+      | 11 | jdoe      |         | -2    | User |
+      | 13 | Group B   |         | -2    | Team |
+      | 14 | info_root |         | -2    | User |
+      | 16 | info_mid  |         | -2    | User |
+      | 18 | french    |         | -2    | User |
+      | 19 | Group C   |         | -2    | Team |
     And the database has the following table 'languages':
       | tag |
       | fr  |

@@ -1,12 +1,12 @@
 Feature: Get current user's team for item (teamGetByItemID)
   Background:
     Given the database has the following table 'groups':
-      | id | type     | team_item_id |
-      | 12 | UserSelf | null         |
-      | 13 | UserSelf | null         |
-      | 14 | UserSelf | null         |
-      | 20 | Team     | 100          |
-      | 21 | Team     | 100          |
+      | id | type | team_item_id |
+      | 12 | User | null         |
+      | 13 | User | null         |
+      | 14 | User | null         |
+      | 20 | Team | 100          |
+      | 21 | Team | 100          |
     And the database has the following table 'users':
       | login | group_id |
       | user  | 12       |
