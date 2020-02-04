@@ -1,14 +1,14 @@
 Feature: Join a group using a code (groupsJoinByCode) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type  | code       | code_expires_at     | code_lifetime | free_access | team_item_id | require_watch_approval |
-      | 11 | Team  | 3456789abc | 2017-04-29 06:38:38 | null          | true        | null         | 0                      |
-      | 12 | Team  | abc3456789 | null                | null          | true        | null         | 1                      |
-      | 14 | Team  | cba9876543 | null                | null          | true        | 1234         | 0                      |
-      | 15 | Team  | 75987654ab | null                | null          | false       | null         | 0                      |
-      | 16 | Class | dcef123492 | null                | null          | false       | null         | 0                      |
-      | 17 | Team  | 5987654abc | null                | null          | true        | 1234         | 0                      |
-      | 21 | User  | null       | null                | null          | false       | null         | 0                      |
+      | id | type  | code       | code_expires_at     | code_lifetime | is_public | team_item_id | require_watch_approval |
+      | 11 | Team  | 3456789abc | 2017-04-29 06:38:38 | null          | true      | null         | 0                      |
+      | 12 | Team  | abc3456789 | null                | null          | true      | null         | 1                      |
+      | 14 | Team  | cba9876543 | null                | null          | true      | 1234         | 0                      |
+      | 15 | Team  | 75987654ab | null                | null          | false     | null         | 0                      |
+      | 16 | Class | dcef123492 | null                | null          | false     | null         | 0                      |
+      | 17 | Team  | 5987654abc | null                | null          | true      | 1234         | 0                      |
+      | 21 | User  | null       | null                | null          | false     | null         | 0                      |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 21       |

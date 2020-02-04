@@ -21,9 +21,9 @@ type groupChildrenViewResponseRow struct {
 	// required:true
 	Grade int32 `json:"grade"`
 	// required:true
-	Opened bool `json:"opened"`
+	IsOpen bool `json:"is_open"`
 	// required:true
-	FreeAccess bool `json:"free_access"`
+	IsPublic bool `json:"is_public"`
 	// Nullable
 	// required:true
 	Code *string `json:"code"`
@@ -133,7 +133,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 	query := srv.Store.Groups().
 		Select(`
 			groups.id as id, groups.name, groups.type, groups.grade,
-			groups.opened, groups.free_access, groups.code,
+			groups.is_open, groups.is_public, groups.code,
 			(
 				SELECT COUNT(*) FROM `+"`groups`"+` AS user_groups
 				JOIN groups_ancestors_active

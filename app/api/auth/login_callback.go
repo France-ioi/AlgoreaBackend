@@ -153,7 +153,7 @@ func createGroupsFromLogin(store *database.GroupStore, login string, domainConfi
 			"type":        "User",
 			"description": login,
 			"created_at":  database.Now(),
-			"opened":      false,
+			"is_open":     false,
 			"send_emails": false,
 		})
 	}))

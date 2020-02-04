@@ -21,9 +21,9 @@ type groupUpdateInput struct {
 	Grade int32  `json:"grade"`
 	// Nullable
 	Description *string `json:"description"`
-	Opened      bool    `json:"opened"`
-	// If changed from true to false, automatically switch all requests to join this group from requestSent to requestRefused
-	FreeAccess bool `json:"free_access"`
+	IsOpen      bool    `json:"is_open"`
+	// If changed from true to false, is automatically switches all requests to join this group from requestSent to requestRefused
+	IsPublic bool `json:"is_public"`
 	// Duration after the first use of the code when it will expire
 	// Nullable
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
@@ -81,11 +81,11 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		groupStore := s.Groups()
 
 		var currentGroupData []struct {
-			FreeAccess bool
+			IsPublic bool
 		}
 
 		if errInTransaction := groupStore.ManagedBy(user).
-			Select("groups.free_access").WithWriteLock().
+			Select("groups.is_public").WithWriteLock().
 			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
@@ -96,7 +96,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		dbMap := formData.ConstructMapForDB()
 		if errInTransaction := refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, user.GroupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
+			groupStore, groupID, user.GroupID, dbMap, currentGroupData[0].IsPublic); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
@@ -124,11 +124,11 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 // refuseSentGroupRequestsIfNeeded automatically refuses all requests to join this group
 // (removes them from group_pending_requests and inserts appropriate group_membership_changes
-// with `action` = 'join_request_refused') if free_access is changed from true to false
+// with `action` = 'join_request_refused') if is_public is changed from true to false
 func refuseSentGroupRequestsIfNeeded(
-	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{}, previousFreeAccessValue bool) error {
-	// if free_access is going to be changed from true to false
-	if newFreeAccess, ok := dbMap["free_access"]; ok && !newFreeAccess.(bool) && previousFreeAccessValue {
+	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{}, previousIsPublicValue bool) error {
+	// if is_public is going to be changed from true to false
+	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && previousIsPublicValue {
 		service.MustNotBeError(store.Exec(`
 			INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)
 			SELECT group_id, member_id, 'join_request_refused', NOW(), ?

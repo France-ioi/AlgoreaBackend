@@ -23,7 +23,7 @@ import (
 //   and `at` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `free_access` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `code`,
+//   * If there is no team with `is_public` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `code`,
 //     the forbidden error is returned.
 //
 //   * If the team has `team_item_id` set and the user is already on a team with the same `team_item_id`,
@@ -82,7 +82,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			CodeLifetimeIsNull bool
 		}
 		errInTransaction := store.Groups().WithWriteLock().
-			Where("type = 'Team'").Where("free_access").
+			Where("type = 'Team'").Where("is_public").
 			Where("code LIKE ?", code).
 			Where("code_expires_at IS NULL OR NOW() < code_expires_at").
 			Select("id, team_item_id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null").

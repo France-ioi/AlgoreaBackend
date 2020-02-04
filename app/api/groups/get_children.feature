@@ -1,27 +1,27 @@
 Feature: Get group children (groupChildrenView)
   Background:
     Given the database has the following table 'groups':
-      | id | name          | grade | type    | opened | free_access | code       |
-      | 11 | Group A       | -3    | Class   | true   | true        | ybqybxnlyo |
-      | 13 | Group B       | -2    | Class   | true   | true        | ybabbxnlyo |
-      | 21 | user          | -2    | User    | true   | false       | null       |
-      | 23 | Our Class     | -3    | Class   | true   | false       | null       |
-      | 24 | Root          | -2    | Base    | true   | false       | 3456789abc |
-      | 25 | Our Team      | -1    | Team    | true   | false       | 456789abcd |
-      | 26 | Our Club      | 0     | Club    | true   | false       | null       |
-      | 27 | Our Friends   | 0     | Friends | true   | false       | 56789abcde |
-      | 28 | Other         | 0     | Other   | true   | false       | null       |
-      | 29 | User          | 0     | User    | true   | false       | null       |
-      | 30 | RootSelf      | 0     | Base    | true   | false       | null       |
-      | 42 | Their Class   | -3    | Class   | true   | false       | null       |
-      | 43 | Other Root    | -2    | Base    | true   | false       | 3567894abc |
-      | 44 | Other Team    | -1    | Team    | true   | false       | 678934abcd |
-      | 45 | Their Club    | 0     | Club    | true   | false       | null       |
-      | 46 | Their Friends | 0     | Friends | true   | false       | 98765abcde |
-      | 47 | Other         | 0     | Other   | true   | false       | null       |
-      | 51 | john          | 0     | User    | false  | false       | null       |
-      | 53 | jane          | 0     | User    | false  | false       | null       |
-      | 90 | Sub-Class     | 0     | Team    | false  | false       | null       |
+      | id | name          | grade | type    | is_open | is_public | code       |
+      | 11 | Group A       | -3    | Class   | true    | true      | ybqybxnlyo |
+      | 13 | Group B       | -2    | Class   | true    | true      | ybabbxnlyo |
+      | 21 | user          | -2    | User    | true    | false     | null       |
+      | 23 | Our Class     | -3    | Class   | true    | false     | null       |
+      | 24 | Root          | -2    | Base    | true    | false     | 3456789abc |
+      | 25 | Our Team      | -1    | Team    | true    | false     | 456789abcd |
+      | 26 | Our Club      | 0     | Club    | true    | false     | null       |
+      | 27 | Our Friends   | 0     | Friends | true    | false     | 56789abcde |
+      | 28 | Other         | 0     | Other   | true    | false     | null       |
+      | 29 | User          | 0     | User    | true    | false     | null       |
+      | 30 | RootSelf      | 0     | Base    | true    | false     | null       |
+      | 42 | Their Class   | -3    | Class   | true    | false     | null       |
+      | 43 | Other Root    | -2    | Base    | true    | false     | 3567894abc |
+      | 44 | Other Team    | -1    | Team    | true    | false     | 678934abcd |
+      | 45 | Their Club    | 0     | Club    | true    | false     | null       |
+      | 46 | Their Friends | 0     | Friends | true    | false     | 98765abcde |
+      | 47 | Other         | 0     | Other   | true    | false     | null       |
+      | 51 | john          | 0     | User    | false   | false     | null       |
+      | 53 | jane          | 0     | User    | false   | false     | null       |
+      | 90 | Sub-Class     | 0     | Team    | false   | false     | null       |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -96,13 +96,13 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "code": null, "user_count": 2},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
-      {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
+      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -113,15 +113,15 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "code": null, "user_count": 2},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
-      {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "21", "name": "user", "type": "User", "free_access": false, "grade": -2, "opened": true, "code": null, "user_count": 0},
-      {"id": "29", "name": "User", "type": "User", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
+      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0},
+      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -132,15 +132,15 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "code": null, "user_count": 2},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
-      {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "21", "name": "user", "type": "User", "free_access": false, "grade": -2, "opened": true, "code": null, "user_count": 0},
-      {"id": "29", "name": "User", "type": "User", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
+      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0},
+      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -151,11 +151,11 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "21", "name": "user", "type": "User", "free_access": false, "grade": -2, "opened": true, "code": null, "user_count": 0},
-      {"id": "29", "name": "User", "type": "User", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
+      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0},
+      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -166,13 +166,13 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "code": null, "user_count": 2},
-      {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -183,13 +183,13 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "code": null, "user_count": 2},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
+      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -200,7 +200,7 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -211,6 +211,6 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """

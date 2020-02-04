@@ -60,7 +60,7 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
@@ -75,14 +75,14 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
 			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
 			"user_ancestors.child_group_id = ? "+
 			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
+			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"is_public"}).AddRow(true))
 		mock.ExpectExec("INSERT INTO group_membership_changes .+").
 			WithArgs(2, 1).WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
@@ -92,14 +92,14 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.
 func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
 			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
 			"user_ancestors.child_group_id = ? "+
 			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
+			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"is_public"}).AddRow(true))
 		mock.ExpectExec("INSERT INTO group_membership_changes .+").WithArgs(2, 1).
 			WillReturnResult(sqlmock.NewResult(-1, 1))
 		mock.ExpectExec("DELETE FROM `group_pending_requests` .+").WithArgs(1).
@@ -111,14 +111,14 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.
 func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
 			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
 			"user_ancestors.child_group_id = ? "+
 			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(false))
+			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"is_public"}).AddRow(false))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
@@ -127,7 +127,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 
 func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) {
 	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-		"PUT", "/groups/1", `{"free_access":false}`, &database.User{GroupID: 2},
+		"PUT", "/groups/1", `{"is_public":false}`, &database.User{GroupID: 2},
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
 			srv := &Service{Base: *baseService}

@@ -20,7 +20,7 @@ import (
 //     and a new row in `group_membership_changes` for the same pair of groups
 //     with `action` = 'join_request_created' and `at` equal to current UTC time.
 //
-//     * `groups.free_access` should be 1, otherwise the 'forbidden' response is returned.
+//     * `groups.is_public` should be 1, otherwise the 'forbidden' response is returned.
 //
 //     * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,
 //       the unprocessable entity error is returned.

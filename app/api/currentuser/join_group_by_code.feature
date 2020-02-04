@@ -1,12 +1,12 @@
 Feature: Join a group using a code (groupsJoinByCode)
   Background:
     Given the database has the following table 'groups':
-      | id | type | code       | code_expires_at     | code_lifetime | free_access | require_watch_approval |
-      | 11 | Team | 3456789abc | 2037-05-29 06:38:38 | 01:02:03      | true        | 0                      |
-      | 12 | Team | abc3456789 | null                | 12:34:56      | true        | 0                      |
-      | 14 | Team | cba9876543 | null                | null          | true        | 0                      |
-      | 15 | Team | 987654321a | null                | null          | true        | 1                      |
-      | 21 | User | null       | null                | null          | false       | 0                      |
+      | id | type | code       | code_expires_at     | code_lifetime | is_public | require_watch_approval |
+      | 11 | Team | 3456789abc | 2037-05-29 06:38:38 | 01:02:03      | true      | 0                      |
+      | 12 | Team | abc3456789 | null                | 12:34:56      | true      | 0                      |
+      | 14 | Team | cba9876543 | null                | null          | true      | 0                      |
+      | 15 | Team | 987654321a | null                | null          | true      | 1                      |
+      | 21 | User | null       | null                | null          | false     | 0                      |
     And the database has the following table 'users':
       | group_id |
       | 21       |
@@ -91,8 +91,8 @@ Feature: Join a group using a code (groupsJoinByCode)
     """
     And the table "groups" should stay unchanged but the row with id "12"
     And the table "groups" at id "12" should be:
-      | id | type | code       | code_lifetime | free_access | TIMESTAMPDIFF(SECOND, code_expires_at, ADDTIME(NOW(), "12:34:56")) < 3 |
-      | 12 | Team | abc3456789 | 12:34:56      | true        | 1                                                                      |
+      | id | type | code       | code_lifetime | is_public | TIMESTAMPDIFF(SECOND, code_expires_at, ADDTIME(NOW(), "12:34:56")) < 3 |
+      | 12 | Team | abc3456789 | 12:34:56      | true      | 1                                                                      |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 12              | 21             |

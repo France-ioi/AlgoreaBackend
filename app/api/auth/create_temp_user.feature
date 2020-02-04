@@ -41,8 +41,8 @@ Feature: Create a temporary user
       | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                 | 127.0.0.1 |
     And the table "groups" should stay unchanged but the row with id "5577006791947779410"
     And the table "groups" at id "5577006791947779410" should be:
-      | id                  | name         | type | description  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 | opened | send_emails |
-      | 5577006791947779410 | tmp-49727887 | User | tmp-49727887 | true                                              | false  | false       |
+      | id                  | name         | type | description  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 | is_open | send_emails |
+      | 5577006791947779410 | tmp-49727887 | User | tmp-49727887 | true                                              | false   | false       |
     And the table "groups_groups" should stay unchanged but the row with child_group_id "5577006791947779410"
     And the table "groups_groups" at child_group_id "5577006791947779410" should be:
       | parent_group_id | child_group_id      | child_order |

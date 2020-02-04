@@ -48,7 +48,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 				"id":          userID,
 				"type":        "User",
 				"created_at":  database.Now(),
-				"opened":      false,
+				"is_open":     false,
 				"send_emails": false,
 			})
 		}))
