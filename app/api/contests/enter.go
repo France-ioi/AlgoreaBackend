@@ -92,7 +92,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 				itemInfo.ContestParticipantsGroupID, qualificationState.groupID,
 				itemInfo.Now, itemInfo.Duration, totalAdditionalTime).Error())
 			service.MustNotBeError(store.GroupGroups().After())
-			// Upserting into groups_groups may mark some attempts as 'changed',
+			// Upserting into groups_groups may mark some attempts as 'to_be_propagated',
 			// so we need to recompute them
 			service.MustNotBeError(store.Attempts().ComputeAllAttempts())
 		} else {

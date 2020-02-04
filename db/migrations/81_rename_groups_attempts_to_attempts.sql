@@ -25,7 +25,7 @@ CREATE TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH
     FROM `permissions_generated`
     WHERE `permissions_generated`.`item_id` = NEW.`parent_item_id`;
 
-    UPDATE `attempts` SET `result_propagation_state` = 'changed'
+    UPDATE `attempts` SET `result_propagation_state` = 'to_be_propagated'
     WHERE `item_id` = NEW.`child_item_id`;
 END
 -- +migrate StatementEnd

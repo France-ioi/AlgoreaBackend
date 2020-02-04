@@ -9,7 +9,7 @@ const computeAllAttemptsLockName = "listener_computeAllAttempts"
 const computeAllAttemptsLockTimeout = 10 * time.Second
 
 // ComputeAllAttempts recomputes fields of attempts
-// For attempts marked with result_propagation_state = 'changed'/'to_be_recomputed':
+// For attempts marked with result_propagation_state = 'to_be_propagated'/'to_be_recomputed':
 // 1. We mark all their ancestors in attempts as 'to_be_recomputed'
 //  (we consider a row in attempts as an ancestor if it has the same value in group_id and
 //  its item_id is an ancestor of the original row's item_id).
@@ -26,7 +26,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(computeAllAttemptsLockName, computeAllAttemptsLockTimeout, func(ds *DataStore) error {
-		// We mark as 'to_be_recomputed' all ancestors of objects marked as 'to_be_recomputed'/'changed'
+		// We mark as 'to_be_recomputed' all ancestors of objects marked as 'to_be_recomputed'/'to_be_propagated'
 		// (this query can take more than 50 seconds to run when executed for the first time after the db migration)
 		mustNotBeError(ds.db.Exec(
 			`UPDATE attempts AS ancestors
@@ -38,9 +38,9 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 			SET ancestors.result_propagation_state = 'to_be_recomputed'
 			WHERE ancestors.result_propagation_state != 'to_be_recomputed' AND
 				(descendants.result_propagation_state = 'to_be_recomputed' OR
-				 descendants.result_propagation_state = 'changed')`).Error)
+				 descendants.result_propagation_state = 'to_be_propagated')`).Error)
 
-		// Insert missing attempts for chapters having descendants with attempts marked as 'to_be_recomputed'/'changed'.
+		// Insert missing attempts for chapters having descendants with attempts marked as 'to_be_recomputed'/'to_be_propagated'.
 		// We only create attempts for chapters which are (or have ancestors which are) visible to the group that attempted
 		// to solve the descendant items.
 		// (this query can take more than 25 seconds when executed for the first time after the db migration)
@@ -58,7 +58,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				)
 				WHERE (
 					descendants.result_propagation_state = 'to_be_recomputed' OR
-					descendants.result_propagation_state = 'changed'
+					descendants.result_propagation_state = 'to_be_propagated'
 				) AND existing.id IS NULL AND EXISTS(
 					SELECT 1 FROM permissions_generated
 					JOIN groups_ancestors_active
@@ -188,7 +188,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 								WHEN 'diff' THEN children_stats.average_score + target_attempts.score_edit_value
 								ELSE children_stats.average_score
 							END, 0), 100)),
-						target_attempts.result_propagation_state = 'changed'
+						target_attempts.result_propagation_state = 'to_be_propagated'
 					WHERE target_attempts.result_propagation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
@@ -217,7 +217,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				JOIN item_unlocking_rules ON item_unlocking_rules.unlocking_item_id = attempts.item_id AND
 					item_unlocking_rules.score <= attempts.score_computed
 				JOIN ` + "`groups`" + ` ON attempts.group_id = groups.id
-				WHERE attempts.result_propagation_state = 'changed'
+				WHERE attempts.result_propagation_state = 'to_be_propagated'
 			ON DUPLICATE KEY UPDATE
 				latest_update_on = IF(can_view = 'content', latest_update_on, NOW()),
 				can_view = 'content'`)
@@ -227,7 +227,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 		return ds.db.Exec(`
 			UPDATE attempts SET result_propagation_state = 'done'
-				WHERE result_propagation_state = 'changed'`).Error
+				WHERE result_propagation_state = 'to_be_propagated'`).Error
 	}))
 
 	// If items have been unlocked, need to recompute access
@@ -235,7 +235,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 		// generate permissions_generated from permissions_granted
 		mustNotBeError(s.PermissionsGranted().After())
 		// we should compute attempts again as new permissions were set and
-		// triggers on permissions_generated likely marked some attempts as 'changed'
+		// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
 		return s.ComputeAllAttempts()
 	}
 	return nil

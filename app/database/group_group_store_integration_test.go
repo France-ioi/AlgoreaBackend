@@ -483,12 +483,12 @@ func assertAttemptsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, 
 	for _, dbAttempt := range attempts {
 		expectedState := done
 		if expectedChangedPairsMap[groupItemPair{GroupID: dbAttempt.GroupID, ItemID: dbAttempt.ItemID}] {
-			expectedState = "changed"
+			expectedState = "to_be_propagated"
 		}
 		assert.Equal(t, expectedState, dbAttempt.ResultPropagationState,
 			"Wrong result propagation state for attempt with group_id=%d, item_id=%d",
 			dbAttempt.GroupID, dbAttempt.ItemID)
 		delete(expectedChangedPairsMap, groupItemPair{GroupID: dbAttempt.GroupID, ItemID: dbAttempt.ItemID})
 	}
-	assert.Empty(t, expectedChangedPairsMap, "Cannot find attempts that should be marked as 'changed': %#v", expectedChangedPairsMap)
+	assert.Empty(t, expectedChangedPairsMap, "Cannot find attempts that should be marked as 'to_be_propagated': %#v", expectedChangedPairsMap)
 }

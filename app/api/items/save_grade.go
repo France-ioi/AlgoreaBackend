@@ -171,7 +171,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 				ELSE score_obtained_at
 			END`, newScoreExpression, newScoreExpression), // score_obtained_at
 		newScoreExpression, // score_computed
-		"changed",          // result_propagation_state
+		"to_be_propagated", // result_propagation_state
 	}
 	if validated {
 		// Item was validated
