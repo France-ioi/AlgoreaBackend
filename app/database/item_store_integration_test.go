@@ -287,6 +287,7 @@ func TestItemStore_CanGrantViewContentOnAll(t *testing.T) {
 			- {group_id: 100, item_id: 13}
 			- {group_id: 110, item_id: 12, can_grant_view_generated: transfer}
 			- {group_id: 110, item_id: 13, can_grant_view_generated: content}`)
+	defer func() { _ = db.Close() }()
 
 	tests := []itemsTest{
 		{name: "two permissions_granted rows for one item", ids: []int64{11}, userID: 100, wantResult: true},
@@ -333,6 +334,7 @@ func TestItemStore_AreAllVisible(t *testing.T) {
 			- {group_id: 100, item_id: 13}
 			- {group_id: 110, item_id: 12, can_view_generated: content_with_descendants}
 			- {group_id: 110, item_id: 13, can_view_generated: solution}`)
+	defer func() { _ = db.Close() }()
 
 	tests := []itemsTest{
 		{name: "two permissions_granted rows for one item", ids: []int64{11}, userID: 100, wantResult: true},
@@ -379,6 +381,7 @@ func TestItemStore_GetAccessDetailsForIDs(t *testing.T) {
 			- {group_id: 100, item_id: 13}
 			- {group_id: 110, item_id: 12, can_view_generated: content_with_descendants}
 			- {group_id: 110, item_id: 13, can_view_generated: solution}`)
+	defer func() { _ = db.Close() }()
 
 	tests := []struct {
 		name       string
@@ -426,6 +429,202 @@ func TestItemStore_GetAccessDetailsForIDs(t *testing.T) {
 			accessDetails, err := store.Items().GetAccessDetailsForIDs(user, test.ids)
 			assert.Equal(t, test.wantResult, accessDetails)
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
+	tests := []struct {
+		name           string
+		url            *string
+		wantPlatformID *int64
+	}{
+		{name: "url is null", url: nil, wantPlatformID: nil},
+		{name: "chooses a platform with higher priority", url: ptrString("1234"), wantPlatformID: ptrInt64(2)},
+		{name: "url doesn't match any regexp", url: ptrString("34"), wantPlatformID: nil},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixtureString(`
+				platforms:
+					- {id: 3, regexp: "^1.*", priority: 1}
+					- {id: 4, regexp: "^2.*", priority: 2}
+					- {id: 2, regexp: "^1.*", priority: 3}
+					- {id: 1, regexp: "^4.*", priority: 4}
+				languages: [{tag: fr}]`)
+			defer func() { _ = db.Close() }()
+
+			itemStore := database.NewDataStore(db).Items()
+			assert.NoError(t, itemStore.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
+				return store.Items().InsertMap(map[string]interface{}{
+					"url":                  test.url,
+					"default_language_tag": "fr",
+				})
+			}))
+			var platformID *int64
+			assert.NoError(t, itemStore.PluckFirst("platform_id", &platformID).Error())
+			if test.wantPlatformID == nil {
+				assert.Nil(t, platformID)
+			} else {
+				assert.NotNil(t, platformID)
+				if platformID != nil {
+					assert.Equal(t, *test.wantPlatformID, *platformID)
+				}
+			}
+		})
+	}
+}
+
+func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
+	tests := []struct {
+		name           string
+		updateMap      map[string]interface{}
+		wantPlatformID *int64
+	}{
+		{name: "url is unchanged", updateMap: map[string]interface{}{"type": "Chapter"}, wantPlatformID: ptrInt64(4)},
+		{name: "new url is null", updateMap: map[string]interface{}{"url": nil}, wantPlatformID: nil},
+		{name: "chooses a platform with higher priority", updateMap: map[string]interface{}{"url": ptrString("12345")},
+			wantPlatformID: ptrInt64(2)},
+		{name: "new url doesn't match any regexp", updateMap: map[string]interface{}{"url": ptrString("34")}, wantPlatformID: nil},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixtureString(`
+				platforms:
+					- {id: 3, regexp: "^1.*", priority: 1}
+					- {id: 4, regexp: "^2.*", priority: 2}
+					- {id: 2, regexp: "^1.*", priority: 3}
+					- {id: 1, regexp: "^4.*", priority: 4}
+				languages: [{tag: fr}]
+				items:
+					- {id: 1, platform_id: 4, url: 1234, default_language_tag: fr}`)
+			defer func() { _ = db.Close() }()
+
+			itemStore := database.NewDataStore(db).Items()
+			assert.NoError(t, itemStore.ByID(1).UpdateColumn("platform_id", 4).Error())
+			assert.NoError(t, itemStore.UpdateColumn(test.updateMap).Error())
+			var platformID *int64
+			assert.NoError(t, itemStore.ByID(1).PluckFirst("platform_id", &platformID).Error())
+			if test.wantPlatformID == nil {
+				assert.Nil(t, platformID)
+			} else {
+				assert.NotNil(t, platformID)
+				if platformID != nil {
+					assert.Equal(t, *test.wantPlatformID, *platformID)
+				}
+			}
+		})
+	}
+}
+
+func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
+	tests := []struct {
+		name            string
+		regexp          string
+		priority        int
+		wantPlatformIDs []*int64
+	}{
+		{name: "recalculates items linked to platforms with lower priority or no platform",
+			regexp: "1", priority: 3,
+			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(1), ptrInt64(2), ptrInt64(2)},
+		},
+		{name: "recalculates items linked to platforms with lower priority or no platform (higher priority)",
+			regexp: "1", priority: 6,
+			wantPlatformIDs: []*int64{ptrInt64(5), ptrInt64(4), ptrInt64(5), nil},
+		},
+		{name: "recalculates only item without a platform when the new platform has the lowest priority",
+			regexp: "1", priority: -1,
+			wantPlatformIDs: []*int64{ptrInt64(4), ptrInt64(1), ptrInt64(2), ptrInt64(2)},
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixtureString(`
+				platforms:
+					- {id: 3, regexp: "^1.*", priority: 1}
+					- {id: 4, regexp: "^2.*", priority: 2}
+					- {id: 2, regexp: "^1.*", priority: 4}
+					- {id: 1, regexp: "^4.*", priority: 5}
+				languages: [{tag: fr}]
+				items:
+					- {id: 1, platform_id: 4, url: 1234, default_language_tag: fr}
+					- {id: 2, platform_id: 1, url: 234, default_language_tag: fr}
+					- {id: 3, platform_id: null, url: 123, default_language_tag: fr}
+					- {id: 4, platform_id: 2, url: "987", default_language_tag: fr}`)
+			defer func() { _ = db.Close() }()
+
+			itemStore := database.NewDataStore(db).Items()
+			assert.NoError(t, itemStore.ByID(1).UpdateColumn("platform_id", 4).Error())
+			assert.NoError(t, itemStore.ByID(2).UpdateColumn("platform_id", 1).Error())
+			assert.NoError(t, itemStore.ByID(3).UpdateColumn("platform_id", nil).Error())
+			assert.NoError(t, itemStore.ByID(4).UpdateColumn("platform_id", 2).Error())
+			assert.NoError(t, itemStore.
+				Exec("INSERT platforms (id, `regexp`, priority) VALUES (5, ?, ?)", test.regexp, test.priority).Error())
+			var platformIDs []*int64
+			assert.NoError(t, itemStore.Order("id").Pluck("platform_id", &platformIDs).Error())
+			assert.Equal(t, test.wantPlatformIDs, platformIDs)
+		})
+	}
+}
+
+func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
+	tests := []struct {
+		name            string
+		regexp          string
+		priority        int
+		wantPlatformIDs []*int64
+	}{
+		{name: "recalculates items linked to platforms with lower priority or no platform or the modified platform (only priority is changed)",
+			regexp: "^1.*", priority: 3,
+			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(1), ptrInt64(2), nil},
+		},
+		{name: "recalculates items linked to platforms with lower priority or no platform or the modified platform (only regexp is changed)",
+			regexp: "1", priority: 4,
+			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(1), ptrInt64(2), nil},
+		},
+		{name: "recalculates items linked to platforms with lower priority or no platform or the modified platform (higher priority)",
+			regexp: "1", priority: 6,
+			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(4), ptrInt64(2), nil},
+		},
+		{name: "recalculates only item without a platform when the new platform has the lowest priority",
+			regexp: "1", priority: -1,
+			wantPlatformIDs: []*int64{ptrInt64(4), ptrInt64(1), ptrInt64(3), nil},
+		},
+		{name: "doesn't recalculate anything when regexp & priority stays unchanged",
+			regexp: "^1.*", priority: 4,
+			wantPlatformIDs: []*int64{ptrInt64(4), ptrInt64(1), nil, ptrInt64(2)},
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixtureString(`
+				platforms:
+					- {id: 3, regexp: "^1.*", priority: 1}
+					- {id: 4, regexp: "^2.*", priority: 2}
+					- {id: 2, regexp: "^1.*", priority: 4}
+					- {id: 1, regexp: "^4.*", priority: 5}
+				languages: [{tag: fr}]
+				items:
+					- {id: 1, platform_id: 4, url: 1234, default_language_tag: fr}
+					- {id: 2, platform_id: 1, url: 234, default_language_tag: fr}
+					- {id: 3, platform_id: null, url: 123, default_language_tag: fr}
+					- {id: 4, platform_id: 2, url: "987", default_language_tag: fr}`)
+			defer func() { _ = db.Close() }()
+
+			itemStore := database.NewDataStore(db).Items()
+			assert.NoError(t, itemStore.ByID(1).UpdateColumn("platform_id", 4).Error())
+			assert.NoError(t, itemStore.ByID(2).UpdateColumn("platform_id", 1).Error())
+			assert.NoError(t, itemStore.ByID(3).UpdateColumn("platform_id", nil).Error())
+			assert.NoError(t, itemStore.ByID(4).UpdateColumn("platform_id", 2).Error())
+			assert.NoError(t, itemStore.Table("platforms").Where("id = ?", 2).
+				UpdateColumn(map[string]interface{}{"regexp": test.regexp, "priority": test.priority}).Error())
+			var platformIDs []*int64
+			assert.NoError(t, itemStore.Order("id").Pluck("platform_id", &platformIDs).Error())
+			assert.Equal(t, test.wantPlatformIDs, platformIDs)
 		})
 	}
 }
