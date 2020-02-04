@@ -32,8 +32,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	defer monkey.UnpatchAll()
 
 	type platform struct {
-		usesTokens bool
-		publicKey  string
+		publicKey string
 	}
 	tests := []struct {
 		name     string
@@ -80,7 +79,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			wantErr:  errors.New("invalid hint_requested: wrong platform's key"),
 			mockDB:   true,
 			itemID:   901756573345831409,
-			platform: &platform{usesTokens: true, publicKey: "zzz"},
+			platform: &platform{publicKey: "zzz"},
 		},
 		{
 			name: "hint_requested is not a string, but it should be a token",
@@ -89,7 +88,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			wantErr:  errors.New("invalid hint_requested: json: cannot unmarshal number into Go value of type string"),
 			mockDB:   true,
 			itemID:   901756573345831409,
-			platform: &platform{usesTokens: true, publicKey: string(tokentest.AlgoreaPlatformPublicKey)},
+			platform: &platform{publicKey: string(tokentest.AlgoreaPlatformPublicKey)},
 		},
 		{
 			name: "invalid hint_requested token",
@@ -97,7 +96,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed))),
 			wantErr:  errors.New("invalid hint_requested: invalid character '\\x00' looking for beginning of value"),
 			mockDB:   true,
-			platform: &platform{usesTokens: true, publicKey: string(tokentest.AlgoreaPlatformPublicKey)},
+			platform: &platform{publicKey: string(tokentest.AlgoreaPlatformPublicKey)},
 			itemID:   901756573345831409,
 		},
 		{
@@ -107,7 +106,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 				token.Generate(payloadstest.HintPayloadFromTaskPlatform, tokentest.TaskPlatformPrivateKeyParsed),
 			)),
 			mockDB:   true,
-			platform: &platform{usesTokens: true, publicKey: string(tokentest.TaskPlatformPublicKey)},
+			platform: &platform{publicKey: string(tokentest.TaskPlatformPublicKey)},
 			itemID:   901756573345831409,
 			expected: AskHintRequest{
 				TaskToken: &expectedTaskToken,
@@ -121,7 +120,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			)),
 			mockDB:   true,
 			itemID:   901756573345831409,
-			platform: &platform{usesTokens: false},
+			platform: &platform{},
 			wantErr: errors.New("invalid hint_requested: " +
 				"json: cannot unmarshal array into Go value of type map[string]formdata.Anything"),
 		},
@@ -132,7 +131,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			)),
 			mockDB:   true,
 			itemID:   901756573345831409,
-			platform: &platform{usesTokens: false},
+			platform: &platform{},
 			wantErr:  errors.New("invalid hint_requested: invalid HintToken: invalid input data"),
 		},
 		{
@@ -142,7 +141,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			)),
 			mockDB:   true,
 			itemID:   901756573345831409,
-			platform: &platform{usesTokens: false},
+			platform: &platform{},
 			expected: AskHintRequest{
 				TaskToken: &expectedTaskToken,
 				HintToken: &token.Hint{
@@ -162,20 +161,20 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			defer func() { _ = db.Close() }()
 
 			if tt.mockDB {
-				mockQuery := mock.ExpectQuery(regexp.QuoteMeta("SELECT uses_tokens, public_key " +
+				mockQuery := mock.ExpectQuery(regexp.QuoteMeta("SELECT public_key " +
 					"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?)")).
 					WithArgs(tt.itemID)
 
 				if tt.platform != nil {
-					var usesTokens int64
-					if tt.platform.usesTokens {
-						usesTokens = 1
+					publicKey := &tt.platform.publicKey
+					if tt.platform.publicKey == "" {
+						publicKey = nil
 					}
 					mockQuery.
-						WillReturnRows(mock.NewRows([]string{"uses_tokens", "public_key"}).AddRow(usesTokens, tt.platform.publicKey))
+						WillReturnRows(mock.NewRows([]string{"public_key"}).AddRow(publicKey))
 				} else {
 					mockQuery.
-						WillReturnRows(mock.NewRows([]string{"uses_tokens", "public_key"}))
+						WillReturnRows(mock.NewRows([]string{"public_key"}))
 				}
 			}
 			r := &AskHintRequest{
