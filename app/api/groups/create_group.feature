@@ -62,3 +62,4 @@ Feature: Create a group (groupCreate)
     | Club       |                   | null         |
     | Friends    |                   | null         |
     | Other      |                   | null         |
+    | Session    |                   | null         |

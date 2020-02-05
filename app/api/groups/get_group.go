@@ -37,11 +37,11 @@ type groupViewResponse struct {
 	// required:true
 	CreatedAt *database.Time `json:"created_at"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,User
+	// enum: Class,Team,Club,Friends,Other,User,Session
 	Type string `json:"type"`
 	// Nullable
 	// required:true
-	RedirectPath *string `json:"redirect_path"`
+	ActivityID *int64 `json:"activity_id,string"`
 	// required:true
 	IsOpen bool `json:"is_open"`
 	// required:true
@@ -112,7 +112,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Where("groups.id = ?", groupID).
 		Select(
 			`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
-			groups.type, groups.redirect_path, groups.is_open, groups.is_public,
+			groups.type, groups.activity_id, groups.is_open, groups.is_public,
 			IF(manager_access.found, groups.code, NULL) AS code,
 			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
 			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
