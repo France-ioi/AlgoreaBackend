@@ -1,13 +1,11 @@
 package groups
 
 import (
+	"errors"
 	"net/http"
-	"regexp"
 	"time"
 
 	"github.com/go-chi/render"
-
-	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -32,9 +30,24 @@ type groupUpdateInput struct {
 	// Nullable
 	CodeExpiresAt *time.Time `json:"code_expires_at"`
 	// Nullable
-	// pattern:  ^(\d+(/\d+))$
-	RedirectPath *string `json:"redirect_path" validate:"omitempty,redirect_path"`
-	OpenContest  bool    `json:"open_contest"`
+	ActivityID  *int64 `json:"activity_id"`
+	OpenContest bool   `json:"open_contest"`
+
+	RequireMembersToJoinParent bool `json:"require_members_to_join_parent"`
+	// Nullable
+	Organizer *string `json:"organizer"`
+	// Nullable
+	AddressLine1 *string `json:"address_line1"`
+	// Nullable
+	AddressLine2 *string `json:"address_line2"`
+	// Nullable
+	AddressPostcode *string `json:"address_postcode"`
+	// Nullable
+	AddressCity *string `json:"address_city"`
+	// Nullable
+	AddressCountry *string `json:"address_country"`
+	// Nullable
+	ExpectedStart *time.Time `json:"expected_start"`
 }
 
 // swagger:operation PUT /groups/{group_id} groups groupEdit
@@ -42,6 +55,10 @@ type groupUpdateInput struct {
 // summary: Update group information
 // description: Edit group information.
 //   Requires the user to be a manager of the group.
+//
+//
+//   If the `activity_id` item is provided and is not null, the user should have at least
+//  'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -84,26 +101,31 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			IsPublic bool
 		}
 
-		if errInTransaction := groupStore.ManagedBy(user).
+		service.MustNotBeError(groupStore.ManagedBy(user).
 			Select("groups.is_public").WithWriteLock().
-			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
-			return errInTransaction // rollback
-		}
+			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error())
 		if len(currentGroupData) < 1 {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
 		}
 
 		dbMap := formData.ConstructMapForDB()
-		if errInTransaction := refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, user.GroupID, dbMap, currentGroupData[0].IsPublic); errInTransaction != nil {
-			return errInTransaction // rollback
+
+		if activityID, ok := dbMap["activity_id"]; ok && activityID != (*int64)(nil) {
+			found, errorInTransaction := groupStore.Items().ByID(*activityID.(*int64)).WithWriteLock().
+				WhereUserHasViewPermissionOnItems(user, "info").HasRows()
+			service.MustNotBeError(errorInTransaction)
+			if !found {
+				apiErr = service.ErrForbidden(errors.New("no access to the activity"))
+				return apiErr.Error // rollback
+			}
 		}
 
+		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
+			groupStore, groupID, user.GroupID, dbMap, currentGroupData[0].IsPublic))
+
 		// update the group
-		if errInTransaction := groupStore.Where("id = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
-			return errInTransaction // rollback
-		}
+		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())
 
 		return nil // commit
 	})
@@ -144,13 +166,7 @@ func refuseSentGroupRequestsIfNeeded(
 	return nil
 }
 
-var redirectPathRegexp = regexp.MustCompile(`^(\d+(/\d+)*)*$`)
-
 func validateUpdateGroupInput(r *http.Request) (*formdata.FormData, error) {
 	formData := formdata.NewFormData(&groupUpdateInput{})
-	formData.RegisterValidation("redirect_path", validator.Func(func(fl validator.FieldLevel) bool {
-		return redirectPathRegexp.MatchString(fl.Field().Interface().(string))
-	}))
-	formData.RegisterTranslation("redirect_path", "invalid redirect path")
 	return formData, formData.ParseJSONRequestData(r)
 }

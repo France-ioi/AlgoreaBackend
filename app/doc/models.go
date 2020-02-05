@@ -47,7 +47,7 @@ type groupsMembershipHistoryResponseRow struct {
 		// required: true
 		Name string `json:"name"`
 		// required: true
-		// enum: Class,Team,Club,Friends,Other
+		// enum: Class,Team,Club,Friends,Other,Session
 		Type string `json:"type"`
 	} `json:"group"`
 }

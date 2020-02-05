@@ -1,11 +1,11 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type  | redirect_path                          | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 182529188317717510/1672978871462145361 | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 182529188317717610/1672978871462145461 | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
-      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false   | false     | null       | null          | null                | false        |
-      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false   | false     | null       | null          | null                | false        |
+      | id | name    | grade | description     | created_at          | type  | activity_id         | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false   | false     | null       | null          | null                | false        |
+      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false   | false     | null       | null          | null                | false        |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name |
       | owner | 0         | 21       | Jean-Michel | Blanquer  |
@@ -20,6 +20,12 @@ Feature: Update a group (groupEdit) - robustness
       | 15                | 15             |
       | 21                | 21             |
       | 31                | 31             |
+    And the database has the following table 'items':
+      | id   | default_language_tag |
+      | 5678 | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 21       | 5678    | none               |
 
   Scenario: Should fail if the user is not a manager of the group
     Given I am the user with id "31"
@@ -56,7 +62,7 @@ Feature: Update a group (groupEdit) - robustness
       "code_lifetime": 1234,
       "code_expires_at": "the end",
       "open_contest": 12,
-      "redirect_path": "some path"
+      "activity_id": "abc"
     }
     """
     Then the response code should be 400
@@ -73,23 +79,12 @@ Feature: Update a group (groupEdit) - robustness
         "is_open": ["expected type 'bool', got unconvertible type 'string'"],
         "code_expires_at": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
         "code_lifetime": ["expected type 'string', got unconvertible type 'float64'"],
-        "redirect_path": ["invalid redirect path"]
+        "activity_id": ["decoding error: strconv.ParseInt: parsing \"abc\": invalid syntax"]
       },
       "message": "Bad Request",
       "success": false
     }
     """
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-
-  Scenario: User is a manager of the group, but no fields provided
-    Given I am the user with id "21"
-    When I send a PUT request to "/groups/13" with the following body:
-    """
-    {
-    }
-    """
-    Then the response should be "updated"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
@@ -102,5 +97,31 @@ Feature: Update a group (groupEdit) - robustness
     """
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+
+  Scenario: The activity does not exist
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "activity_id": "404"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "No access to the activity"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+
+  Scenario: The user cannot view the activity
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "activity_id": "5678"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "No access to the activity"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged

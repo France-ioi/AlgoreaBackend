@@ -103,7 +103,7 @@ Feature: Create a group (groupCreate) - robustness
       "success": false,
       "message": "Bad Request",
       "error_text": "Invalid input data",
-      "errors": {"type": ["type must be one of [Class Team Club Friends Other]"]}
+      "errors": {"type": ["type must be one of [Class Team Club Friends Other Session]"]}
     }
     """
     And the table "groups" should stay unchanged

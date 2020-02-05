@@ -31,19 +31,6 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		{"code_lifetime=59", `{"code_lifetime":"59"}`, true},
 		{"code_lifetime=59", `{"code_lifetime":"invalid"}`, true},
 		{"code_lifetime=", `{"code_lifetime":""}`, true},
-
-		{"redirect_path=9", `{"redirect_path":"9"}`, false},
-		{"redirect_path=1234567890", `{"redirect_path":"1234567890"}`, false},
-		{"redirect_path=1234567890/0", `{"redirect_path":"1234567890/0"}`, false},
-		{"redirect_path=0/1234567890", `{"redirect_path":"0/1234567890"}`, false},
-		{"redirect_path=1234567890/1234567890", `{"redirect_path":"1234567890/1234567890"}`, false},
-		// empty strings are allowed (there are some in the DB)
-		{"redirect_path=", `{"redirect_path":""}`, false},
-
-		{"redirect_path=invalid", `{"redirect_path":"invalid"}`, true},
-		{"redirect_path=1A", `{"redirect_path":"1A"}`, true},
-		{"redirect_path=1A/2B", `{"redirect_path":"1A/2B"}`, true},
-		{"redirect_path=1234567890/1234567890/1", `{"redirect_path":"1234567890/1234567890/1"}`, false},
 	}
 	for _, tt := range tests {
 		tt := tt
