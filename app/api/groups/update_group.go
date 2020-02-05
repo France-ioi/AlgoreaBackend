@@ -133,10 +133,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	if apiErr != service.NoError {
 		return apiErr
 	}
-
-	if err != nil {
-		return service.ErrUnexpected(err)
-	}
+	service.MustNotBeError(err)
 
 	response := service.Response{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
