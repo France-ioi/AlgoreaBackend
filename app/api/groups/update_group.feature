@@ -53,13 +53,13 @@ Feature: Update a group (groupEdit)
       "open_contest": false,
       "activity_id": "5678",
 
-	    "require_members_to_join_parent": true,
+      "require_members_to_join_parent": true,
       "organizer": "Association France-ioi",
       "address_line1": "Chez Jacques-Henri Jourdan,",
       "address_line2": "42, rue de Cronstadt",
       "address_postcode": "75015",
       "address_city": "Paris",
-	    "address_country": "France",
+      "address_country": "France",
       "expected_start": "2019-05-03T12:00:00+01:00"
     }
     """
