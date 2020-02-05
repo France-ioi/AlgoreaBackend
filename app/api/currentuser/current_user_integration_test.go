@@ -24,7 +24,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			name: "parent group is not a team",
 			fixture: `
 				groups:
-					- {id: 1, free_access: 1, type: "Class", team_item_id: 1234}
+					- {id: 1, is_public: 1, type: "Class", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
 					- {id: 10, type: User}
@@ -35,7 +35,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			name: "parent group is a team without team_item_id",
 			fixture: `
 				groups:
-					- {id: 1, free_access: 1, type: "Team"}
+					- {id: 1, is_public: 1, type: "Team"}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
 					- {id: 10, type: User}
@@ -46,7 +46,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			name: "parent group is a team with team_item_id, but the user is not on teams",
 			fixture: `
 				groups:
-					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 1, is_public: 1, type: "Team", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
 					- {id: 4, type: "Class", "team_item_id": 1234}
@@ -70,7 +70,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			name: "parent group is a team with team_item_id, but the user is on teams with mismatching team_item_id",
 			fixture: `
 				groups:
-					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 1, is_public: 1, type: "Team", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 2345}
 					- {id: 3, type: Team}
 					- {id: 4, type: Team, team_item_id: 2345}
@@ -87,7 +87,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id",
 			fixture: `
 				groups:
-					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 1, is_public: 1, type: "Team", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 10, type: User}
 				groups_groups:

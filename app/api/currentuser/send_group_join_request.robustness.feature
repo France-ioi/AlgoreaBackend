@@ -1,15 +1,15 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | free_access | type    | team_item_id | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
-      | 11 | 1           | Class   | null         | none                                  | null                                   | 0                      |
-      | 13 | 1           | Friends | null         | none                                  | null                                   | 0                      |
-      | 14 | 1           | Team    | 1234         | none                                  | null                                   | 0                      |
-      | 15 | 0           | Club    | null         | none                                  | null                                   | 0                      |
-      | 16 | 1           | Team    | 1234         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
-      | 17 | 1           | Team    | 1234         | none                                  | null                                   | 0                      |
-      | 21 | 0           | User    | null         | none                                  | null                                   | 0                      |
-      | 23 | 0           | User    | null         | none                                  | null                                   | 0                      |
+      | id | is_public | type    | team_item_id | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
+      | 11 | 1         | Class   | null         | none                                  | null                                   | 0                      |
+      | 13 | 1         | Friends | null         | none                                  | null                                   | 0                      |
+      | 14 | 1         | Team    | 1234         | none                                  | null                                   | 0                      |
+      | 15 | 0         | Club    | null         | none                                  | null                                   | 0                      |
+      | 16 | 1         | Team    | 1234         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
+      | 17 | 1         | Team    | 1234         | none                                  | null                                   | 0                      |
+      | 21 | 0         | User    | null         | none                                  | null                                   | 0                      |
+      | 23 | 0         | User    | null         | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -121,7 +121,7 @@ Feature: User sends a request to join a group - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Can't send request to a group having free_access=0
+  Scenario: Can't send request to a group having is_public=0
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-requests/15"
     Then the response code should be 403

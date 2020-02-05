@@ -1,13 +1,13 @@
 Feature: Update a group (groupEdit)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type  | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
-      | 14 | Group C | -4    | Group           | 2019-04-06 09:26:40 | Club  | null                                   | true   | false       | null       | null          | null                | false        |
-      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false  | false       | null       | null          | null                | false        |
-      | 24 | other   | -4    | other           | 2019-04-06 09:26:40 | User  | null                                   | false  | false       | null       | null          | null                | false        |
-      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false  | false       | null       | null          | null                | false        |
+      | id | name    | grade | description     | created_at          | type  | redirect_path                          | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 182529188317717510/1672978871462145361 | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 182529188317717610/1672978871462145461 | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 14 | Group C | -4    | Group           | 2019-04-06 09:26:40 | Club  | null                                   | true    | false     | null       | null          | null                | false        |
+      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false   | false     | null       | null          | null                | false        |
+      | 24 | other   | -4    | other           | 2019-04-06 09:26:40 | User  | null                                   | false   | false     | null       | null          | null                | false        |
+      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false   | false     | null       | null          | null                | false        |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | default_language |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
@@ -37,11 +37,11 @@ Feature: Update a group (groupEdit)
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "free_access": false,
+      "is_public": false,
       "name": "Team B",
       "grade": 10,
       "description": "Team B is here",
-      "opened": false,
+      "is_open": false,
       "code_lifetime": "99:59:59",
       "code_expires_at": "2019-12-31T23:59:59Z",
       "open_contest": false,
@@ -51,8 +51,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description    | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
-      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | 1234/5678     | false  | false       | ybabbxnlyo | 99:59:59      | 2019-12-31 23:59:59 | false        |
+      | id | name   | grade | description    | created_at          | type  | redirect_path | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest |
+      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | 1234/5678     | false   | false     | ybabbxnlyo | 99:59:59      | 2019-12-31 23:59:59 | false        |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should be:
       | group_id | member_id | type         |
@@ -68,10 +68,10 @@ Feature: Update a group (groupEdit)
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "free_access": false,
+      "is_public": false,
       "name": "Club B",
       "description": null,
-      "opened": false,
+      "is_open": false,
       "open_contest": false,
       "redirect_path": null,
       "grade": 0,
@@ -82,18 +82,18 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at | open_contest |
-      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | false       | ybabbxnlyo | null          | null            | false        |
+      | id | name   | grade | description | created_at          | type  | redirect_path | is_open | is_public | code       | code_lifetime | code_expires_at | open_contest |
+      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false   | false     | ybabbxnlyo | null          | null            | false        |
 
-  Scenario: User is a manager of the group, does not update group_pending_requests (free_access is still true)
+  Scenario: User is a manager of the group, does not update group_pending_requests (is_public is still true)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "free_access": true,
+      "is_public": true,
       "name": "Club B",
       "description": null,
-      "opened": false,
+      "is_open": false,
       "open_contest": false,
       "redirect_path": null,
       "grade": 0,
@@ -104,20 +104,20 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at | open_contest |
-      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | true        | ybabbxnlyo | null          | null            | false        |
+      | id | name   | grade | description | created_at          | type  | redirect_path | is_open | is_public | code       | code_lifetime | code_expires_at | open_contest |
+      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false   | true      | ybabbxnlyo | null          | null            | false        |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
 
-  Scenario: User is a manager of the group, does not update group_pending_requests (free_access is not changed)
+  Scenario: User is a manager of the group, does not update group_pending_requests (is_public is not changed)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
       "name": "Club B",
       "description": null,
-      "opened": false,
+      "is_open": false,
       "open_contest": false,
       "redirect_path": null,
       "grade": 0,
@@ -128,25 +128,25 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at | open_contest |
-      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | true        | ybabbxnlyo | null          | null            | false        |
+      | id | name   | grade | description | created_at          | type  | redirect_path | is_open | is_public | code       | code_lifetime | code_expires_at | open_contest |
+      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false   | true      | ybabbxnlyo | null          | null            | false        |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
 
-  Scenario: User is a manager of the group, does not update group_pending_requests (free_access changes from false to true)
+  Scenario: User is a manager of the group, does not update group_pending_requests (is_public changes from false to true)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/14" with the following body:
     """
     {
-      "free_access": true
+      "is_public": true
     }
     """
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "14"
     And the table "groups" at id "14" should be:
-      | id | name    | grade | description | created_at          | type | redirect_path | opened | free_access | code | code_lifetime | code_expires_at | open_contest |
-      | 14 | Group C | -4    | Group       | 2019-04-06 09:26:40 | Club | null          | true   | true        | null | null          | null            | false        |
+      | id | name    | grade | description | created_at          | type | redirect_path | is_open | is_public | code | code_lifetime | code_expires_at | open_contest |
+      | 14 | Group C | -4    | Group       | 2019-04-06 09:26:40 | Club | null          | true    | true      | null | null          | null            | false        |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged

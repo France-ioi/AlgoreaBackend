@@ -1,18 +1,18 @@
 Feature: Search for groups available to the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type    | name                                      | description            | free_access |
-      | 1  | Class   | (the) Our Class                           | Our class group        | 1           |
-      | 2  | Team    | (the) Our Team ___                        | Our team group         | 1           |
-      | 3  | Club    | (the) Our Club                            | Our club group         | 1           |
-      | 4  | Friends | (the) \|\|\|Our Friends \\\\\\%\\\\%\\ :) | Group for our friends  | 1           |
-      | 5  | Other   | Other people                              | Group for other people | 1           |
-      | 6  | Class   | Another Class                             | Another class group    | 1           |
-      | 7  | Team    | Another %%%Team                           | Another team group     | 1           |
-      | 8  | Club    | Another %%%Club                           | Another club group     | 1           |
-      | 9  | Friends | Some other friends                        | Another friends group  | 1           |
-      | 10 | Class   | The third class                           | The third class        | 1           |
-      | 21 | User    | (the) user self                           |                        | 0           |
+      | id | type    | name                                      | description            | is_public |
+      | 1  | Class   | (the) Our Class                           | Our class group        | 1         |
+      | 2  | Team    | (the) Our Team ___                        | Our team group         | 1         |
+      | 3  | Club    | (the) Our Club                            | Our club group         | 1         |
+      | 4  | Friends | (the) \|\|\|Our Friends \\\\\\%\\\\%\\ :) | Group for our friends  | 1         |
+      | 5  | Other   | Other people                              | Group for other people | 1         |
+      | 6  | Class   | Another Class                             | Another class group    | 1         |
+      | 7  | Team    | Another %%%Team                           | Another team group     | 1         |
+      | 8  | Club    | Another %%%Club                           | Another club group     | 1         |
+      | 9  | Friends | Some other friends                        | Another friends group  | 1         |
+      | 10 | Class   | The third class                           | The third class        | 1         |
+      | 21 | User    | (the) user self                           |                        | 0         |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | grade |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |

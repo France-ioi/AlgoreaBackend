@@ -177,13 +177,13 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	groupID int64, action userGroupRelationAction) service.APIError {
 	var parentGroup parentGroupInfo
 
-	// The group should exist (and optionally should have `free_access` = 1)
+	// The group should exist (and optionally should have `is_public` = 1)
 	query := store.Groups().ByID(groupID).WithWriteLock().Select(`
 		type, team_item_id, require_personal_info_access_approval,
 		IFNULL(NOW() < require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
 		require_watch_approval`)
 	if action == createGroupJoinRequestAction {
-		query = query.Where("free_access")
+		query = query.Where("is_public")
 	}
 	err := query.Take(&parentGroup).Error()
 	if gorm.IsRecordNotFoundError(err) {

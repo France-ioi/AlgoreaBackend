@@ -19,13 +19,13 @@ const minSearchStringLength = 3
 // summary: Search for available groups
 // description: >
 //   Searches for groups that can be joined freely, based on a substring of their name.
-//   Returns groups with `free_access`=1, whose `name` has `search` as a substring, and for that the current user
+//   Returns groups with `is_public`=1, whose `name` has `search` as a substring, and for that the current user
 //   is not already a member and don’t have pending requests/invitations.
 //
 //
 //   Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
-//   at the beginning. This causes MySQL to explore every row having `free_access`=1. Moreover, actually
-//   it has to examine every row of the `groups` table since there is no index for the `free_access` column.
+//   at the beginning. This causes MySQL to explore every row having `is_public`=1. Moreover, actually
+//   it has to examine every row of the `groups` table since there is no index for the `is_public` column.
 //   But since there are not too many groups and the result rows count is limited, the search works almost well.
 // parameters:
 // - name: search
@@ -113,7 +113,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 			groups.name,
 			groups.type,
 			groups.description`).
-		Where("groups.free_access").
+		Where("groups.is_public").
 		Where("groups.id NOT IN ?", skipGroups).
 		Where("groups.id NOT IN ?", skipPending).
 		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)

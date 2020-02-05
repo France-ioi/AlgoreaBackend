@@ -1,9 +1,9 @@
 Feature: Get group children (groupChildrenView) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | type  | opened | free_access | code       |
-      | 11 | Group A | -3    | Class | true   | true        | ybqybxnlyo |
-      | 13 | Group B | -2    | Class | true   | true        | ybabbxnlyo |
+      | id | name    | grade | type  | is_open | is_public | code       |
+      | 11 | Group A | -3    | Class | true    | true      | ybqybxnlyo |
+      | 13 | Group B | -2    | Class | true    | true      | ybabbxnlyo |
     And the database has the following users:
       | login | temp_user | group_id | first_name  | last_name | default_language |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |

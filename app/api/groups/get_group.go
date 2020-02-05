@@ -43,9 +43,9 @@ type groupViewResponse struct {
 	// required:true
 	RedirectPath *string `json:"redirect_path"`
 	// required:true
-	Opened bool `json:"opened"`
+	IsOpen bool `json:"is_open"`
 	// required:true
-	FreeAccess bool `json:"free_access"`
+	IsPublic bool `json:"is_public"`
 	// required:true
 	OpenContest bool `json:"open_contest"`
 	// required:true
@@ -65,7 +65,7 @@ type groupViewResponse struct {
 //   Returns general information about the group from the `groups` table.
 //
 //
-//   The authenticated user should be a manager of `group_id` OR a descendant of the group OR  the group's `free_access`=1,
+//   The authenticated user should be a manager of `group_id` OR a descendant of the group OR  the group's `is_public`=1,
 //   otherwise the 'forbidden' error is returned.
 //
 //
@@ -108,11 +108,11 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Joins(`
 			LEFT JOIN groups_groups_active
 				ON groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
-		Where("manager_access.found OR groups_descendants.ancestor_group_id IS NOT NULL OR groups.free_access").
+		Where("manager_access.found OR groups_descendants.ancestor_group_id IS NOT NULL OR groups.is_public").
 		Where("groups.id = ?", groupID).
 		Select(
 			`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
-			groups.type, groups.redirect_path, groups.opened, groups.free_access,
+			groups.type, groups.redirect_path, groups.is_open, groups.is_public,
 			IF(manager_access.found, groups.code, NULL) AS code,
 			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
 			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,

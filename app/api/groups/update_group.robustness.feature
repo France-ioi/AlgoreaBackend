@@ -1,11 +1,11 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type  | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
-      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false  | false       | null       | null          | null                | false        |
-      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false  | false       | null       | null          | null                | false        |
+      | id | name    | grade | description     | created_at          | type  | redirect_path                          | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 182529188317717510/1672978871462145361 | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 182529188317717610/1672978871462145461 | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false   | false     | null       | null          | null                | false        |
+      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                                   | false   | false     | null       | null          | null                | false        |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name |
       | owner | 0         | 21       | Jean-Michel | Blanquer  |
@@ -48,11 +48,11 @@ Feature: Update a group (groupEdit) - robustness
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "free_access": 15,
+      "is_public": 15,
       "name": 123,
       "grade": "grade",
       "description": 14.5,
-      "opened": "true",
+      "is_open": "true",
       "code_lifetime": 1234,
       "code_expires_at": "the end",
       "open_contest": 12,
@@ -66,11 +66,11 @@ Feature: Update a group (groupEdit) - robustness
       "error_text": "Invalid input data",
       "errors": {
         "description": ["expected type 'string', got unconvertible type 'float64'"],
-        "free_access": ["expected type 'bool', got unconvertible type 'float64'"],
+        "is_public": ["expected type 'bool', got unconvertible type 'float64'"],
         "grade": ["expected type 'int32', got unconvertible type 'string'"],
         "name": ["expected type 'string', got unconvertible type 'float64'"],
         "open_contest": ["expected type 'bool', got unconvertible type 'float64'"],
-        "opened": ["expected type 'bool', got unconvertible type 'string'"],
+        "is_open": ["expected type 'bool', got unconvertible type 'string'"],
         "code_expires_at": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
         "code_lifetime": ["expected type 'string', got unconvertible type 'float64'"],
         "redirect_path": ["invalid redirect path"]
