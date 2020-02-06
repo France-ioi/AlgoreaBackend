@@ -23,7 +23,6 @@ func GetResponseForRouteWithMockedDBAndUser(
 	method, path, requestBody string, user *database.User,
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
 	setRouterFunc func(router *chi.Mux, baseService *service.Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
-
 	logger, hook := loggingtest.NewNullLogger()
 
 	db, mock := database.NewDBMock()

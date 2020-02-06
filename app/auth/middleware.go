@@ -23,7 +23,6 @@ const (
 func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 			var accessToken string
 			var user database.User
 			var authorized bool

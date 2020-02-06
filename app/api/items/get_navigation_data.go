@@ -112,8 +112,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 		return apiError
 	}
 
-	rawData, err := getRawNavigationData(srv.Store, itemID, groupID, user)
-	service.MustNotBeError(err)
+	rawData := getRawNavigationData(srv.Store, itemID, groupID, user)
 
 	if len(rawData) == 0 || rawData[0].ID != itemID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))

@@ -63,9 +63,9 @@ db-migrate-undo: $(BIN_PATH)
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
-	$(Q)$(GOTEST) -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
+	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
 test-unit:
-	$(GOTEST) -race -cover -v ./app/... -tags=unit
+	$(GOTEST) -gcflags=all=-l -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS) .
@@ -96,7 +96,7 @@ $(TEST_REPORT_DIR):
 $(GODOG):
 	$(GOGET) -u github.com/DATA-DOG/godog/cmd/godog
 $(GOLANGCILINT):
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.16.0
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.18.0
 $(MYSQL_CONNECTOR_JAVA):
 	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)

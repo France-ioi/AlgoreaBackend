@@ -80,7 +80,10 @@ func doRequest(forcePanic bool) {
 	// calling web server
 	mainRequest, _ := http.NewRequest("GET", mainSrv.URL+"/a_path", nil)
 	client := mainSrv.Client()
-	_, _ = client.Do(mainRequest)
+	response, err := client.Do(mainRequest)
+	if err == nil {
+		_ = response.Body.Close()
+	}
 }
 
 func checkCommon(assert *assertlib.Assertions, entryData logrus.Fields) {

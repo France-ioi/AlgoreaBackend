@@ -272,8 +272,6 @@ func init() { // nolint:gochecknoinits,gocyclo
 				go func(i int) {
 					limiter <- true
 					barrier <- true
-					//			usersQuery := "INSERT INTO users (ID, sLogin, idGroupSelf, idGroupOwned) VALUES "
-					//			usersQueryValues := make([]string, 0, 100)
 
 					teamsNumber := batchSize / 3
 					groupsQuery := "INSERT INTO groups (ID, sType) VALUES "

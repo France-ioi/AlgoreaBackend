@@ -27,7 +27,7 @@ func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() 
 		select { // like mutex.Lock(), but with cancel/deadline
 		case <-userMutexInterface.(chan bool): // it is much better than <-time.After(...)
 		case <-r.Context().Done():
-			logging.GetLogEntry(r).Warnf("The request is cancelled: %s", r.Context().Err())
+			logging.GetLogEntry(r).Warnf("The request is canceled: %s", r.Context().Err())
 			return r.Context().Err()
 		}
 	}

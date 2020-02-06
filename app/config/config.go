@@ -139,7 +139,6 @@ func setDefaults(c *viper.Viper) {
 
 	// reverse proxy
 	c.SetDefault("reverseproxy.server", "http://localhost:3000")
-
 }
 
 func configDirectory() string {

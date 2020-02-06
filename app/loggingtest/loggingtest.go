@@ -17,12 +17,15 @@ const newLine = "\n"
 // GetAllLogs returns all the logs collected by the hook as a string
 func (hook *Hook) GetAllLogs() string {
 	logs := ""
+
 	for _, entry := range hook.AllEntries() {
 		if len(logs) > 0 {
 			logs += newLine
 		}
+
 		logs += strings.TrimSpace(entry.Message)
 	}
+
 	return logs
 }
 

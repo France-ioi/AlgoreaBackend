@@ -29,7 +29,7 @@ type rawNavigationItem struct {
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
-func getRawNavigationData(dataStore *database.DataStore, rootID, groupID int64, user *database.User) ([]rawNavigationItem, error) {
+func getRawNavigationData(dataStore *database.DataStore, rootID, groupID int64, user *database.User) []rawNavigationItem {
 	var result []rawNavigationItem
 	items := dataStore.Items()
 
@@ -72,8 +72,6 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID int64, 
 			) AS best_scores ON 1`, groupID).
 		Order("item_grandparent_id, parent_item_id, child_order")
 
-	if err := query.Scan(&result).Error(); err != nil {
-		return nil, err
-	}
-	return result, nil
+	service.MustNotBeError(query.Scan(&result).Error())
+	return result
 }

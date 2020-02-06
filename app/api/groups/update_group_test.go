@@ -121,6 +121,9 @@ func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectati
 			router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
 		})
 
+	if err == nil {
+		_ = response.Body.Close()
+	}
 	assert.NoError(t, err)
 	assert.Equal(t, 500, response.StatusCode)
 	assert.NoError(t, mock.ExpectationsWereMet())
