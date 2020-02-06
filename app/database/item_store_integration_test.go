@@ -54,6 +54,51 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 	}
 }
 
+func TestItemStore_IsValidHierarchy(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items:
+			- {id: 1, default_language_tag: fr}
+			- {id: 2, default_language_tag: fr, is_root: 1}
+			- {id: 3, default_language_tag: fr}
+			- {id: 4, default_language_tag: fr}
+			- {id: 5, default_language_tag: fr}
+			- {id: 6, default_language_tag: fr}
+			- {id: 7, default_language_tag: fr}
+			- {id: 8, default_language_tag: fr}
+		items_items:
+			- {parent_item_id: 2, child_item_id: 4, child_order: 1}
+			- {parent_item_id: 4, child_item_id: 6, child_order: 1}
+			- {parent_item_id: 6, child_item_id: 8, child_order: 1}`)
+	defer func() { _ = db.Close() }()
+
+	tests := []struct {
+		name     string
+		ids      []int64
+		expected bool
+	}{
+		{name: "empty list", ids: []int64{}, expected: false},
+		{name: "the first item does not exist", ids: []int64{404}, expected: false},
+		{name: "the first item is not a root item", ids: []int64{1}, expected: false},
+		{name: "only the root item", ids: []int64{2}, expected: true},
+		{name: "the second item is not a child of the root item", ids: []int64{2, 3}, expected: false},
+		{name: "the third item is not a child of the second item", ids: []int64{2, 4, 5}, expected: false},
+		{name: "the fourth item is not a child of the third item", ids: []int64{2, 4, 6, 7}, expected: false},
+		{name: "the correct hierarchy of two items", ids: []int64{2, 4}, expected: true},
+		{name: "the correct hierarchy of three items", ids: []int64{2, 4, 6}, expected: true},
+		{name: "the correct hierarchy of four items", ids: []int64{2, 4, 6, 8}, expected: true},
+	}
+	for _, testCase := range tests {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			itemStore := database.NewDataStore(db).Items()
+
+			valid, err := itemStore.IsValidHierarchy(testCase.ids)
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.expected, valid)
+		})
+	}
+}
+
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
