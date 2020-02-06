@@ -61,8 +61,8 @@ Feature: Change item access rights for a group
       | 21       | 102     | solution           | solution                 | answer              | all                |
       | 21       | 103     | solution           | solution                 | answer              | all                |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | source_group_id | latest_update_on    |
-      | 21       | 102     | solution | transfer       | transfer  | transfer | 23              | 2019-05-30 11:00:00 |
+      | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | source_group_id | latest_update_on    |
+      | 21       | 102     | solution | solution_with_grant | answer_with_grant | all_with_grant | 23              | 2019-05-30 11:00:00 |
     When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
       """
       {
@@ -77,7 +77,7 @@ Feature: Change item access rights for a group
       | 23       | 102     | 25              | group_membership | <can_view> | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated    | can_grant_view_generated | can_watch_generated | can_edit_generated |
-      | 21       | 102     | solution              | transfer                 | transfer            | transfer           |
+      | 21       | 102     | solution              | solution_with_grant      | answer_with_grant   | all_with_grant     |
       | 21       | 103     | content               | none                     | none                | none               |
       | 23       | 100     | content               | none                     | none                | none               |
       | 23       | 101     | info                  | none                     | none                | none               |
@@ -131,7 +131,7 @@ Feature: Change item access rights for a group
     Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 21       | 102     | solution           | transfer                 | transfer            | transfer           | 1                  |
+      | 21       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
       | 21       | 103     | none               | none                     | none                | none               | 0                  |
       | 31       | 101     | content            | none                     | none                | none               | 0                  |
       | 31       | 102     | none               | none                     | none                | none               | 0                  |
@@ -155,7 +155,7 @@ Feature: Change item access rights for a group
       | 31       | 102     | solution | 0        | 25              | group_membership | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 21       | 102     | solution           | transfer                 | transfer            | transfer           | 1                  |
+      | 21       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
       | 21       | 103     | content            | none                     | none                | none               | 0                  |
       | 23       | 100     | content            | none                     | none                | none               | 0                  |
       | 23       | 101     | info               | none                     | none                | none               | 0                  |

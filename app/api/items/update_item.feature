@@ -24,8 +24,8 @@ Background:
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
     | 11       | 21      | solution           | none               | false              |
-    | 11       | 50      | solution           | transfer           | true               |
-    | 11       | 60      | solution           | transfer           | true               |
+    | 11       | 50      | solution           | all_with_grant     | true               |
+    | 11       | 60      | solution           | all_with_grant     | true               |
   And the database has the following table 'permissions_granted':
     | group_id | item_id | can_view | is_owner | source_group_id | latest_update_on    |
     | 11       | 21      | solution | false    | 11              | 2019-05-30 11:00:00 |
@@ -80,7 +80,7 @@ Background:
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
-      | 11       | 134     | solution           | transfer                 | transfer            | transfer           | true               |
+      | 11       | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
@@ -149,10 +149,10 @@ Background:
     And the table "permissions_generated" should be:
       | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11                  | 21      | solution           | none                     | none                | none               | false              |
-      | 11                  | 50      | solution           | transfer                 | transfer            | transfer           | true               |
-      | 11                  | 60      | solution           | transfer                 | transfer            | transfer           | true               |
+      | 11                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11                  | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11                  | 112     | solution           | content                  | answer              | all                | false              |
-      | 11                  | 134     | solution           | transfer                 | transfer            | transfer           | true               |
+      | 11                  | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 5577006791947779410 | 50      | content            | none                     | none                | none               | false              |
       | 5577006791947779410 | 112     | info               | none                     | none                | none               | false              |
       | 5577006791947779410 | 134     | info               | none                     | none                | none               | false              |

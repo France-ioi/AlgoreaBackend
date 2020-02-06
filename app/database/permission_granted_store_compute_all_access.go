@@ -69,15 +69,15 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 					ELSE parent.can_view_generated_value
 					END), 1)
 			)) AS can_view_generated,
-			IF(MAX(permissions_granted.is_owner), 'transfer', GREATEST(
+			IF(MAX(permissions_granted.is_owner), 'solution_with_grant', GREATEST(
 				IFNULL(MAX(permissions_granted.can_grant_view_value), 1),
 				IFNULL(MAX(IF(items_items.grant_view_propagation, LEAST(parent.can_grant_view_generated_value, 4 /* solution */), 1)), 1)
 			)) AS can_grant_view_generated,
-			IF(MAX(permissions_granted.is_owner), 'transfer', GREATEST(
+			IF(MAX(permissions_granted.is_owner), 'answer_with_grant', GREATEST(
 				IFNULL(MAX(permissions_granted.can_watch_value), 1),
 				IFNULL(MAX(IF(items_items.watch_propagation, LEAST(parent.can_watch_generated_value, 3 /* answer */), 1)), 1)
 			)) AS can_watch_generated,
-			IF(MAX(permissions_granted.is_owner), 'transfer', GREATEST(
+			IF(MAX(permissions_granted.is_owner), 'all_with_grant', GREATEST(
 				IFNULL(MAX(permissions_granted.can_edit_value), 1),
 				IFNULL(MAX(IF(items_items.edit_propagation, LEAST(parent.can_edit_generated_value, 3 /* all */), 1)), 1)
 			)) AS can_edit_generated,

@@ -8,11 +8,11 @@ CREATE TABLE `permissions_granted` (
         COMMENT 'Last time one of the attributes has been modified',
     `can_view` ENUM('none','info','content','content_with_descendants','solution') NOT NULL DEFAULT 'none'
         COMMENT 'The level of visibility the group has on the item',
-    `can_grant_view` ENUM('none','content','content_with_descendants','solution','transfer') NOT NULL DEFAULT 'none'
+    `can_grant_view` ENUM('none','content','content_with_descendants','solution','solution_with_grant') NOT NULL DEFAULT 'none'
         COMMENT 'The level of visibility that the group can give on this item to other groups on which it has the right to',
-    `can_watch` ENUM('none','result','answer','transfer') NOT NULL DEFAULT 'none'
+    `can_watch` ENUM('none','result','answer','answer_with_grant') NOT NULL DEFAULT 'none'
         COMMENT 'The level of observation a group has for an item, on the activity of the users he can watch',
-    `can_edit` ENUM('none','children','all','transfer') NOT NULL DEFAULT 'none'
+    `can_edit` ENUM('none','children','all','all_with_grant') NOT NULL DEFAULT 'none'
         COMMENT 'The level of edition permissions a group has on an item',
     `is_owner` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether the group is the owner of this item. Implies the maximum level in all of the above permissions. Can delete the item.',
@@ -35,11 +35,11 @@ CREATE TABLE `permissions_generated` (
     `item_id` BIGINT(20) NOT NULL,
     `can_view_generated` ENUM('none','info','content','content_with_descendants','solution') NOT NULL DEFAULT 'none'
         COMMENT 'The aggregated level of visibility the group has on the item',
-    `can_grant_view_generated` ENUM('none','content','content_with_descendants','solution','transfer') NOT NULL DEFAULT 'none'
+    `can_grant_view_generated` ENUM('none','content','content_with_descendants','solution','solution_with_grant') NOT NULL DEFAULT 'none'
         COMMENT 'The aggregated level of visibility that the group can give on this item to other groups on which it has the right to',
-    `can_watch_generated` ENUM('none','result','answer','transfer') NOT NULL DEFAULT 'none'
+    `can_watch_generated` ENUM('none','result','answer','answer_with_grant') NOT NULL DEFAULT 'none'
         COMMENT 'The aggregated level of observation a group has for an item, on the activity of the users he can watch',
-    `can_edit_generated` ENUM('none','children','all','transfer') NOT NULL DEFAULT 'none'
+    `can_edit_generated` ENUM('none','children','all','all_with_grant') NOT NULL DEFAULT 'none'
         COMMENT 'The aggregated level of edition permissions a group has on an item',
     `is_owner_generated` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether the group is the owner of this item. Implies the maximum level in all of the above permissions. Can delete the item.',
