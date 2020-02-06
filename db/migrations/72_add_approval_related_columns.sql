@@ -1,11 +1,14 @@
 -- +migrate Up
 ALTER TABLE `groups`
     ADD COLUMN `require_personal_info_access_approval` ENUM('none', 'view', 'edit') NOT NULL DEFAULT 'none'
-        AFTER `lock_user_deletion_until`,
+        COMMENT 'If not ''none'', requires (for joining) members to approve that managers may be able to view or edit their personal information'
+            AFTER `lock_user_deletion_until`,
     ADD COLUMN `require_lock_membership_approval_until` DATETIME DEFAULT NULL
-        AFTER `require_personal_info_access_approval`,
+        COMMENT 'If not null or in the future, requires (for joining) members to approve that they will not be able to leave the group without approval until the given date'
+            AFTER `require_personal_info_access_approval`,
     ADD COLUMN `require_watch_approval` TINYINT(1) NOT NULL DEFAULT 0
-        AFTER `require_lock_membership_approval_until`;
+        COMMENT 'Whether it requires (for joining) members to approve that managers may be able to watch their results and answers'
+            AFTER `require_lock_membership_approval_until`;
 
 ALTER TABLE `groups_groups`
     ADD COLUMN `personal_info_view_approved_at` DATETIME DEFAULT NULL AFTER `expires_at`,
