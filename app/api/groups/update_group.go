@@ -165,5 +165,6 @@ func refuseSentGroupRequestsIfNeeded(
 
 func validateUpdateGroupInput(r *http.Request) (*formdata.FormData, error) {
 	formData := formdata.NewFormData(&groupUpdateInput{})
-	return formData, formData.ParseJSONRequestData(r)
+	err := formData.ParseJSONRequestData(r)
+	return formData, err
 }

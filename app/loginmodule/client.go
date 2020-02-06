@@ -103,7 +103,6 @@ func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey stri
 	if !decodedResponse.Success {
 		logging.Warnf("Can't unlink the user. The login module returned an error: %s", decodedResponse.Error)
 		return fmt.Errorf("can't unlink the user")
-
 	}
 	return nil
 }

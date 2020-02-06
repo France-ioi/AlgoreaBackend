@@ -1215,7 +1215,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 
 	assert.True(t, didPanic)
 	assert.Implements(t, (*runtime.Error)(nil), panicValue)
-	assert.Equal(t, "runtime error: index out of range", panicValue.(error).Error())
+	assert.Equal(t, "runtime error: index out of range [0] with length 0", panicValue.(error).Error())
 }
 
 func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {

@@ -24,6 +24,11 @@ func TestMiddlewareMock(t *testing.T) {
 	request, _ := http.NewRequest("GET", ts.URL, nil)
 	response, err := http.DefaultClient.Do(request)
 	assert.NoError(err)
+	if err != nil {
+		return
+	}
+	defer func() { _ = response.Body.Close() }()
+
 	respBody, err := ioutil.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Equal("42", string(respBody))

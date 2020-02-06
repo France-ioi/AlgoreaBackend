@@ -110,8 +110,13 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	nbLogsBeforeRequest := len(hook.AllEntries())
 	request, _ := http.NewRequest("GET", srv.URL+"/dummy", nil)
 	request.Header.Set("X-Forwarded-For", "1.1.1.1")
-	response, _ := http.DefaultClient.Do(request)
+	response, err := http.DefaultClient.Do(request)
+	assert.NoError(err)
+	if err != nil {
+		return
+	}
 	respBody, _ := ioutil.ReadAll(response.Body)
+	_ = response.Body.Close()
 
 	// check that the error has been handled by the recover
 	assert.Equal(http.StatusInternalServerError, response.StatusCode)
@@ -147,7 +152,12 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	request, _ := http.NewRequest("GET", srv.URL+"/dummy", nil)
 	request.Header.Set("X-Real-IP", "1.1.1.1")
 	request.Header.Set("Accept-Encoding", "gzip, deflate")
-	response, _ := http.DefaultClient.Do(request)
+	response, err := http.DefaultClient.Do(request)
+	assert.NoError(err)
+	if err != nil {
+		return
+	}
+	defer func() { _ = response.Body.Close() }()
 	assert.NotNil(response.Header.Get("Content-type"))
 	assert.Equal("application/json", response.Header.Get("Content-Type"))
 	allLogs := hook.AllEntries()
@@ -165,6 +175,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 func TestNew_MountsPprofInDev(t *testing.T) {
 	assert := assertlib.New(t)
 
+	appenv.SetDefaultEnvToTest()
 	monkey.Patch(appenv.IsEnvDev, func() bool { return true })
 	defer monkey.UnpatchAll()
 
@@ -176,7 +187,12 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 	defer srv.Close()
 
 	request, _ := http.NewRequest("GET", srv.URL+"/debug", nil)
-	response, _ := http.DefaultClient.Do(request)
+	response, err := http.DefaultClient.Do(request)
+	assert.NoError(err)
+	if err != nil {
+		return
+	}
+	defer func() { _ = response.Body.Close() }()
 	body, err := ioutil.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Contains(string(body), "Types of profiles available:")
@@ -196,7 +212,12 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	defer srv.Close()
 
 	request, _ := http.NewRequest("GET", srv.URL+"/debug", nil)
-	response, _ := http.DefaultClient.Do(request)
+	response, err := http.DefaultClient.Do(request)
+	assert.NoError(err)
+	if err != nil {
+		return
+	}
+	defer func() { _ = response.Body.Close() }()
 	assert.Equal(502, response.StatusCode)
 	body, err := ioutil.ReadAll(response.Body)
 	assert.NoError(err)

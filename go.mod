@@ -1,5 +1,7 @@
 module github.com/France-ioi/AlgoreaBackend
 
+go 1.13
+
 exclude github.com/SermoDigital/jose v0.9.1
 
 exclude github.com/thingful/httpmock v0.0.2

@@ -4,7 +4,7 @@ orbs:
 jobs:
   deps:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.13
     steps:
       - checkout
       - restore_cache: &CACHEKEYMOD
@@ -21,7 +21,7 @@ jobs:
           - ~/.cache/go-build/
   tests:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.13
       - image: circleci/mysql:8.0
         command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760
         environment:
@@ -82,7 +82,7 @@ jobs:
           command: make test-bdd
   migration-tests:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.13
       - image: circleci/mysql:8.0
         command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760
         environment:
@@ -128,7 +128,7 @@ jobs:
           no_output_timeout: 1h
   lint:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.13
     steps:
       - attach_workspace:
           at: ./
@@ -160,7 +160,7 @@ jobs:
           arguments: '--acl public-read'
   dbdoc-gen:
     docker:
-      - image: circleci/golang:1.11-browsers
+      - image: circleci/golang:1.13-browsers
       - image: circleci/mysql:8.0
         command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760
         environment:

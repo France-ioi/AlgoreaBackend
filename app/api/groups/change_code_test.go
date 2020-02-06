@@ -39,7 +39,7 @@ func TestGenerateGroupCode_HandlesError(t *testing.T) {
 }
 
 func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
-	response, _, logs, _ := assertMockedChangeCodeRequest(t, func(mock sqlmock.Sqlmock) {
+	response, _, logs, err := assertMockedChangeCodeRequest(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors` "+
 			"JOIN group_managers ON group_managers.group_id = `groups_ancestors`.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
@@ -55,7 +55,10 @@ func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 		mock.ExpectExec("UPDATE `groups` .+").WillReturnResult(sqlmock.NewResult(-1, 1))
 		mock.ExpectCommit()
 	})
-	assert.Equal(t, 200, response.StatusCode, logs)
+	if err == nil {
+		_ = response.Body.Close()
+		assert.Equal(t, 200, response.StatusCode, logs)
+	}
 }
 
 func assertMockedChangeCodeRequest(t *testing.T,

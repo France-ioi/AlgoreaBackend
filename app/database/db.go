@@ -36,7 +36,6 @@ func newDB(db *gorm.DB) *DB {
 // Open connects to the database and tests the connection
 // nolint: gosec
 func Open(source interface{}) (*DB, error) {
-
 	var err error
 	var dbConn *gorm.DB
 	var driverName = "mysql"
@@ -309,7 +308,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 
 // ScanIntoSliceOfMaps scans value into a slice of maps
 func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
-	*dest = *new([]map[string]interface{})
+	*dest = []map[string]interface{}(nil)
 
 	return conn.ScanAndHandleMaps(func(rowMap map[string]interface{}) error {
 		*dest = append(*dest, rowMap)

@@ -92,7 +92,10 @@ func TestQueryLimiter_Apply(t *testing.T) {
 
 			ts := httptest.NewServer(r)
 			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, nil)
-			_, _ = http.DefaultClient.Do(request)
+			response, err := http.DefaultClient.Do(request)
+			if err == nil {
+				_ = response.Body.Close()
+			}
 			ts.Close()
 			assert.True(t, called, "The handler was not called")
 		})
