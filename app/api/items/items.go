@@ -116,11 +116,11 @@ func constructItemsItemsForChildren(childrenPermissions []permission, children [
 				ContentViewPropagation:     "as_info",
 				UpperViewLevelsPropagation: upperViewLevelsPropagation,
 				GrantViewPropagation: permissions.CanGrantViewGeneratedValue >=
-					permissionGrantedStore.PermissionIndexByKindAndName("grant_view", "transfer"),
+					permissionGrantedStore.PermissionIndexByKindAndName("grant_view", "solution_with_grant"),
 				WatchPropagation: permissions.CanWatchGeneratedValue >=
-					permissionGrantedStore.PermissionIndexByKindAndName("watch", "transfer"),
+					permissionGrantedStore.PermissionIndexByKindAndName("watch", "answer_with_grant"),
 				EditPropagation: permissions.CanEditGeneratedValue >=
-					permissionGrantedStore.PermissionIndexByKindAndName("edit", "transfer"),
+					permissionGrantedStore.PermissionIndexByKindAndName("edit", "all_with_grant"),
 			})
 	}
 	return parentChildSpec

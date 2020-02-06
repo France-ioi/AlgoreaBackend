@@ -327,10 +327,10 @@ func TestItemStore_CanGrantViewContentOnAll(t *testing.T) {
 			- {ancestor_group_id: 400, child_group_id: 400}
 		permissions_generated:
 			- {group_id: 400, item_id: 11, can_grant_view_generated: content}
-			- {group_id: 100, item_id: 11, can_grant_view_generated: transfer}
+			- {group_id: 100, item_id: 11, can_grant_view_generated: solution_with_grant}
 			- {group_id: 100, item_id: 12}
 			- {group_id: 100, item_id: 13}
-			- {group_id: 110, item_id: 12, can_grant_view_generated: transfer}
+			- {group_id: 110, item_id: 12, can_grant_view_generated: solution_with_grant}
 			- {group_id: 110, item_id: 13, can_grant_view_generated: content}`)
 	defer func() { _ = db.Close() }()
 
@@ -339,7 +339,7 @@ func TestItemStore_CanGrantViewContentOnAll(t *testing.T) {
 		{name: "cannot grant view", ids: []int64{12}, userID: 100, wantResult: false},
 		{name: "can grant view for a part of items", ids: []int64{11, 12}, userID: 100, wantResult: false},
 		{name: "another user cannot grant view", ids: []int64{11}, userID: 110, wantResult: false},
-		{name: "can_grant_view_generated = transfer", ids: []int64{12}, userID: 110, wantResult: true},
+		{name: "can_grant_view_generated = solution_with_grant", ids: []int64{12}, userID: 110, wantResult: true},
 		{name: "can_grant_view_generated = content", ids: []int64{13}, userID: 110, wantResult: true},
 		{name: "two items", ids: []int64{12, 13}, userID: 110, wantResult: true},
 		{name: "two items (not unique)", ids: []int64{12, 13, 12, 13}, userID: 110, wantResult: true},
