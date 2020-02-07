@@ -47,7 +47,8 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
+			"FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
@@ -62,7 +63,8 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
+			"FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
@@ -79,7 +81,8 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.
 func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
+			"FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+
@@ -98,7 +101,8 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.
 func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public FROM `groups` "+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
+			"FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
 			"JOIN groups_ancestors_active AS user_ancestors "+

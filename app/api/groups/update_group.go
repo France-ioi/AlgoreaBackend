@@ -30,8 +30,11 @@ type groupUpdateInput struct {
 	// Nullable
 	CodeExpiresAt *time.Time `json:"code_expires_at"`
 	// Nullable
-	ActivityID  *int64 `json:"activity_id"`
-	OpenContest bool   `json:"open_contest"`
+	ActivityID *int64 `json:"activity_id"`
+	// Can be set only if activity_id is set and
+	// the current user has the 'can_make_session_official' permission on the activity item
+	IsOfficialSession bool `json:"is_official_session"`
+	OpenContest       bool `json:"open_contest"`
 
 	RequireMembersToJoinParent bool `json:"require_members_to_join_parent"`
 	// Nullable
@@ -54,11 +57,19 @@ type groupUpdateInput struct {
 // ---
 // summary: Update group information
 // description: Edit group information.
-//   Requires the user to be a manager of the group.
+//   Requires the user to be a manager of the group, otherwise the 'forbidden' error is returned.
 //
 //
 //   If the `activity_id` item is provided and is not null, the user should have at least
 //  'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
+//
+//
+//   If `is_official_session` is provided as true, the user should have at least
+//  'can_make_session_official' permission on the activity item, otherwise the 'forbidden' error is returned.
+//
+//
+//   Setting `is_official_session` to true while keeping `activity_id` not set or setting `activity_id` to null for
+//   an official session, will cause the "bad request" error.
 // parameters:
 // - name: group_id
 //   in: path
@@ -98,11 +109,13 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		groupStore := s.Groups()
 
 		var currentGroupData []struct {
-			IsPublic bool
+			IsPublic          bool
+			ActivityID        *int64
+			IsOfficialSession bool
 		}
 
 		service.MustNotBeError(groupStore.ManagedBy(user).
-			Select("groups.is_public").WithWriteLock().
+			Select("groups.is_public, groups.activity_id, groups.is_official_session").WithWriteLock().
 			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error())
 		if len(currentGroupData) < 1 {
 			apiErr = service.InsufficientAccessRightsError
@@ -111,14 +124,9 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		dbMap := formData.ConstructMapForDB()
 
-		if activityID, ok := dbMap["activity_id"]; ok && activityID != (*int64)(nil) {
-			found, errorInTransaction := groupStore.Items().ByID(*activityID.(*int64)).WithWriteLock().
-				WhereUserHasViewPermissionOnItems(user, "info").HasRows()
-			service.MustNotBeError(errorInTransaction)
-			if !found {
-				apiErr = service.ErrForbidden(errors.New("no access to the activity"))
-				return apiErr.Error // rollback
-			}
+		apiErr = validateActivityIDAndIsOfficial(s, user, currentGroupData[0].ActivityID, currentGroupData[0].IsOfficialSession, dbMap)
+		if apiErr != service.NoError {
+			return apiErr.Error // rollback
 		}
 
 		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
@@ -138,6 +146,51 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	response := service.Response{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
+	return service.NoError
+}
+
+func validateActivityIDAndIsOfficial(
+	store *database.DataStore, user *database.User, oldActivityID *int64, oldIsOfficial bool,
+	dbMap map[string]interface{}) service.APIError {
+	activityIDToCheck := oldActivityID
+	activityID, activityIDSet := dbMap["activity_id"]
+	if activityIDSet {
+		activityIDToCheck = activityID.(*int64)
+		apiError := validateActivityID(store, user, activityIDToCheck)
+		if apiError != service.NoError {
+			return apiError
+		}
+	}
+
+	isOfficialSession, isOfficialSessionSet := dbMap["is_official_session"]
+	if (isOfficialSessionSet && isOfficialSession.(bool)) || (!isOfficialSessionSet && oldIsOfficial && activityIDSet) {
+		if activityIDToCheck == nil {
+			return service.ErrInvalidRequest(errors.New("the activity_id should be set for official sessions"))
+		}
+		found, err := store.PermissionsGranted().WithWriteLock().
+			Joins(`
+				JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = permissions_granted.group_id AND
+				     groups_ancestors.child_group_id = ?`, user.GroupID).
+			Where("permissions_granted.can_make_session_official").
+			Where("permissions_granted.item_id = ?", activityIDToCheck).
+			HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrForbidden(errors.New("not enough permissions for attaching the group to the activity as an official session"))
+		}
+	}
+	return service.NoError
+}
+
+func validateActivityID(store *database.DataStore, user *database.User, activityIDToCheck *int64) service.APIError {
+	if activityIDToCheck != nil {
+		found, errorInTransaction := store.Items().ByID(*activityIDToCheck).WithWriteLock().
+			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
+		service.MustNotBeError(errorInTransaction)
+		if !found {
+			return service.ErrForbidden(errors.New("no access to the activity"))
+		}
+	}
 	return service.NoError
 }
 

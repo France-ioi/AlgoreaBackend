@@ -1,5 +1,8 @@
 -- +migrate Up
 ALTER TABLE `groups`
+    ADD COLUMN `is_official_session` TINYINT(1) NOT NULL DEFAULT 0
+        COMMENT 'Whether this session is shown on the activity page (require specific permissions)'
+            AFTER `send_emails`,
     ADD COLUMN `require_personal_info_access_approval` ENUM('none', 'view', 'edit') NOT NULL DEFAULT 'none'
         AFTER `lock_user_deletion_until`,
     ADD COLUMN `require_lock_membership_approval_until` DATETIME DEFAULT NULL
@@ -55,6 +58,7 @@ ALTER TABLE `groups`
 UPDATE `groups` SET `lock_user_deletion_until` = CAST(`require_lock_membership_approval_until` AS DATE);
 
 ALTER TABLE `groups`
+    DROP COLUMN `is_official_session`,
     DROP COLUMN `require_lock_membership_approval_until`,
     DROP COLUMN `require_watch_approval`;
 

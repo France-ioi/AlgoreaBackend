@@ -14,6 +14,8 @@ CREATE TABLE `permissions_granted` (
         COMMENT 'The level of observation a group has for an item, on the activity of the users he can watch',
     `can_edit` ENUM('none','children','all','transfer') NOT NULL DEFAULT 'none'
         COMMENT 'The level of edition permissions a group has on an item',
+    `can_make_session_official` TINYINT(1) NOT NULL DEFAULT 0
+        COMMENT 'Whether the group is allowed to associate official sessions to this item',
     `is_owner` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether the group is the owner of this item. Implies the maximum level in all of the above permissions. Can delete the item.',
     `can_view_value` TINYINT(3) UNSIGNED AS (`can_view` + 0) NOT NULL
