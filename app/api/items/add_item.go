@@ -2,6 +2,7 @@ package items
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -85,8 +86,12 @@ type NewItemRequest struct {
 	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id"`
 	// default: 0
 	Order int32 `json:"order"`
-
-	Children []itemChild `json:"children" validate:"children"`
+	// enum: Undefined,Discovery,Application,Validation,Challenge
+	// default: Undefined
+	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
+	// default: 1
+	ScoreWeight int8        `json:"score_weight"`
+	Children    []itemChild `json:"children" validate:"children,dive"`
 }
 
 func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.DataStore) bool {
@@ -296,10 +301,25 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	stringMap["language_tag"] = newItemRequest.LanguageTag
 	service.MustNotBeError(store.ItemStrings().InsertMap(stringMap))
 
+	if !formData.IsSet("category") {
+		newItemRequest.Category = undefined
+	}
+	if !formData.IsSet("score_weight") {
+		newItemRequest.ScoreWeight = 1
+	}
+	for index := range newItemRequest.Children {
+		if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
+			newItemRequest.Children[index].Category = undefined
+		}
+		if !formData.IsSet(fmt.Sprintf("children[%d].score_weight", index)) {
+			newItemRequest.Children[index].ScoreWeight = 1
+		}
+	}
 	parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
 	parentChildSpec = append(parentChildSpec,
 		&insertItemItemsSpec{
 			ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order,
+			Category: newItemRequest.Category, ScoreWeight: newItemRequest.ScoreWeight,
 			ContentViewPropagation: "as_info", UpperViewLevelsPropagation: "as_is",
 			GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
 		})

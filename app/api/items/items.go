@@ -21,6 +21,8 @@ type Service struct {
 	service.Base
 }
 
+const undefined = "Undefined"
+
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
@@ -73,15 +75,23 @@ type permission struct {
 
 type itemChild struct {
 	// required: true
-	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set,child_item_id"`
+	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set"`
 	// default: 0
 	Order int32 `json:"order" sql:"column:child_order"`
+	// enum: Undefined,Discovery,Application,Validation,Challenge
+	// default: Undefined
+	// required: true
+	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
+	// default: 1
+	ScoreWeight int8 `json:"score_weight"`
 }
 
 type insertItemItemsSpec struct {
 	ParentItemID               int64
 	ChildItemID                int64
 	Order                      int32
+	Category                   string
+	ScoreWeight                int8
 	ContentViewPropagation     string
 	UpperViewLevelsPropagation string
 	GrantViewPropagation       bool
@@ -113,6 +123,7 @@ func constructItemsItemsForChildren(childrenPermissions []permission, children [
 		parentChildSpec = append(parentChildSpec,
 			&insertItemItemsSpec{
 				ParentItemID: itemID, ChildItemID: child.ItemID, Order: child.Order,
+				Category: child.Category, ScoreWeight: child.ScoreWeight,
 				ContentViewPropagation:     "as_info",
 				UpperViewLevelsPropagation: upperViewLevelsPropagation,
 				GrantViewPropagation: permissions.CanGrantViewGeneratedValue >=
@@ -137,16 +148,17 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 
 	for index := range spec {
 		values = append(values,
-			spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order, spec[index].ContentViewPropagation,
+			spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order, spec[index].Category,
+			spec[index].ScoreWeight, spec[index].ContentViewPropagation,
 			spec[index].UpperViewLevelsPropagation, spec[index].GrantViewPropagation, spec[index].WatchPropagation,
 			spec[index].EditPropagation)
 	}
 
-	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?)"
+	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	// nolint:gosec
 	query :=
 		`INSERT INTO items_items (
-			parent_item_id, child_item_id, child_order,
+			parent_item_id, child_item_id, child_order, category, score_weight,
 			content_view_propagation, upper_view_levels_propagation, grant_view_propagation,
 			watch_propagation, edit_propagation) VALUES ` + valuesMarks
 	service.MustNotBeError(store.Exec(query, values...).Error())

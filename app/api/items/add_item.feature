@@ -57,8 +57,8 @@ Feature: Add item
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
-      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
+      | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
+      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
@@ -121,9 +121,11 @@ Feature: Add item
         "description": "the goal of this task is ...",
         "parent_item_id": "21",
         "order": 100,
+        "category": "Challenge",
+        "score_weight": 3,
         "children": [
-          {"item_id": "12", "order": 0},
-          {"item_id": "34", "order": 1}
+          {"item_id": "12", "order": 0, "category": "Discovery", "score_weight": 1},
+          {"item_id": "34", "order": 1, "category": "Application", "score_weight": 2}
         ]
       }
       """
@@ -143,10 +145,10 @@ Feature: Add item
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
-      | 21                  | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
-      | 5577006791947779410 | 12                  | 0           | as_info                  | as_content_with_descendants   | 0                      | 0                 | 0                |
-      | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                |
+      | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category    | score_weight |
+      | 21                  | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Challenge   | 3            |
+      | 5577006791947779410 | 12                  | 0           | as_info                  | as_content_with_descendants   | 0                      | 0                 | 0                | Discovery   | 1            |
+      | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Application | 2            |
     And the table "items_ancestors" should be:
       | ancestor_item_id    | child_item_id       |
       | 21                  | 12                  |
@@ -209,8 +211,8 @@ Feature: Add item
       | item_id             | language_tag | title    | image_url | subtitle | description |
       | 5577006791947779410 | sl           | my title | null      | null     | null        |
     And the table "items_items" should be:
-      | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
-      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
+      | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
+      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |

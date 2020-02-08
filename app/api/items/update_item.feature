@@ -113,8 +113,8 @@ Background:
         "group_code_enter": false,
         "default_language_tag": "sl",
         "children": [
-          {"item_id": "112", "order": 0},
-          {"item_id": "134", "order": 1}
+          {"item_id": "112", "order": 0, "category": "Discovery", "score_weight": 1},
+          {"item_id": "134", "order": 1, "category": "Application", "score_weight": 2}
         ]
       }
       """
@@ -159,7 +159,7 @@ Background:
     And the table "attempts" should stay unchanged but the row with item_id "50"
     And the table "attempts" at item_id "50" should be:
       | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 50      | 55             | 1     | done                     |
+      | 11       | 50      | 56.666668      | 1     | done                     |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"

@@ -2,6 +2,7 @@ package items
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -173,6 +174,14 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 				return apiError.Error // rollback
 			}
 
+			for index := range input.Children {
+				if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
+					input.Children[index].Category = undefined
+				}
+				if !formData.IsSet(fmt.Sprintf("children[%d].score_weight", index)) {
+					input.Children[index].ScoreWeight = 1
+				}
+			}
 			parentChildSpec := constructItemsItemsForChildren(childrenPermissions, input.Children, lockedStore, itemID)
 			insertItemItems(lockedStore, parentChildSpec)
 			return lockedStore.ItemItems().After()
