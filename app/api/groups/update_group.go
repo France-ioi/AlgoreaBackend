@@ -64,7 +64,7 @@ type groupUpdateInput struct {
 //  'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 //
 //
-//   If `is_official_session` is provided as true, the user should have at least
+//   If `is_official_session` is being changed to true, the user should have at least
 //  'can_make_session_official' permission on the activity item, otherwise the 'forbidden' error is returned.
 //
 //
@@ -150,20 +150,22 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 }
 
 func validateActivityIDAndIsOfficial(
-	store *database.DataStore, user *database.User, oldActivityID *int64, oldIsOfficial bool,
+	store *database.DataStore, user *database.User, oldActivityID *int64, oldIsOfficialSession bool,
 	dbMap map[string]interface{}) service.APIError {
 	activityIDToCheck := oldActivityID
 	activityID, activityIDSet := dbMap["activity_id"]
-	if activityIDSet {
+	activityIDChanged := activityIDSet && !int64PtrEqualValues(oldActivityID, activityID.(*int64))
+	if activityIDChanged {
 		activityIDToCheck = activityID.(*int64)
-		apiError := validateActivityID(store, user, activityIDToCheck)
-		if apiError != service.NoError {
-			return apiError
+		if activityIDToCheck != nil {
+			apiError := validateActivityID(store, user, activityIDToCheck)
+			if apiError != service.NoError {
+				return apiError
+			}
 		}
 	}
 
-	isOfficialSession, isOfficialSessionSet := dbMap["is_official_session"]
-	if (isOfficialSessionSet && isOfficialSession.(bool)) || (!isOfficialSessionSet && oldIsOfficial && activityIDSet) {
+	if isTryingToChangeOfficialSessionActivity(dbMap, oldIsOfficialSession, activityIDChanged) {
 		if activityIDToCheck == nil {
 			return service.ErrInvalidRequest(errors.New("the activity_id should be set for official sessions"))
 		}
@@ -220,4 +222,15 @@ func validateUpdateGroupInput(r *http.Request) (*formdata.FormData, error) {
 	formData := formdata.NewFormData(&groupUpdateInput{})
 	err := formData.ParseJSONRequestData(r)
 	return formData, err
+}
+
+func int64PtrEqualValues(a, b *int64) bool {
+	return a == nil && b == nil || a != nil && b != nil && *a == *b
+}
+
+func isTryingToChangeOfficialSessionActivity(dbMap map[string]interface{}, oldIsOfficialSession, activityIDChanged bool) bool {
+	isOfficialSession, isOfficialSessionSet := dbMap["is_official_session"]
+	isOfficialSessionChanged := isOfficialSessionSet && oldIsOfficialSession != isOfficialSession.(bool)
+	return isOfficialSessionChanged && isOfficialSession.(bool) ||
+		!isOfficialSessionChanged && oldIsOfficialSession && activityIDChanged
 }
