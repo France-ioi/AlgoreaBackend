@@ -23,8 +23,8 @@ Background:
     | 50               | 60            |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
-    | 11       | 21      | solution           | none               | false              |
-    | 11       | 50      | solution           | all_with_grant     | true               |
+    | 11       | 21      | solution           | children           | false              |
+    | 11       | 50      | solution           | all                | true               |
     | 11       | 60      | solution           | all_with_grant     | true               |
   And the database has the following table 'permissions_granted':
     | group_id | item_id | can_view | is_owner | source_group_id | latest_update_on    |
@@ -197,7 +197,7 @@ Background:
 
   Scenario: Valid with empty children array
     Given I am the user with id "11"
-    When I send a PUT request to "/items/50" with the following body:
+    When I send a PUT request to "/items/21" with the following body:
     """
     {
       "children": []
@@ -208,10 +208,10 @@ Background:
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id |
-      | 21             | 60            |
+      | 50             | 21            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id |
-      | 21               | 60            |
+      | 50               | 21            |
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "attempts" should stay unchanged but the row with item_id "50"

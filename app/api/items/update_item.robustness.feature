@@ -121,7 +121,7 @@ Feature: Update item - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "No access rights to edit the item"
+    And the response error message should contain "No access rights to edit the item's properties"
     And the table "items" should stay unchanged
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
@@ -137,7 +137,23 @@ Feature: Update item - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "No access rights to edit the item"
+    And the response error message should contain "No access rights to edit the item's properties"
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+
+  Scenario: The user doesn't have rights to edit item's children
+    And I am the user with id "11"
+    When I send a PUT request to "/items/60" with the following body:
+      """
+      {
+        "children": []
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "No access rights to edit the item's children"
     And the table "items" should stay unchanged
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged

@@ -69,7 +69,8 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //
 //   The user should have
 //
-//     * `can_edit` >= 'all' on the item, otherwise the "forbidden" response is returned;
+//     * `can_edit` >= 'children' on the item to edit children or `can_edit` >= 'all' to edit the item's properties,
+//       otherwise the "forbidden" response is returned;
 //     * `can_view` != 'none' on the `children` items (if any), otherwise the "bad request"
 //       response is returned.
 // parameters:
@@ -118,36 +119,35 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return err // rollback
 		}
 
+		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageTagAndOptionalType")
+		if len(itemData) == 0 && !formData.IsSet("children") {
+			return nil // Nothing to do
+		}
+
+		neededEditPermission := "children"
+		errorSubject := neededEditPermission
+		if len(itemData) > 0 {
+			neededEditPermission = "all"
+			errorSubject = "properties"
+		}
+
 		var participantsGroupID *int64
 		err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
 			Joins("JOIN items ON items.id = item_id").
 			Where("item_id = ?", itemID).
-			WherePermissionIsAtLeast("edit", "all").
+			WherePermissionIsAtLeast("edit", neededEditPermission).
 			PluckFirst("items.contest_participants_group_id", &participantsGroupID).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.ErrForbidden(errors.New("no access rights to edit the item"))
+			apiError = service.ErrForbidden(errors.New("no access rights to edit the item's " + errorSubject))
 			return apiError.Error // rollback
 		}
 		service.MustNotBeError(err)
 
-		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageTagAndOptionalType")
-
-		if itemData["duration"] != nil && participantsGroupID == nil {
-			createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
-			itemData["contest_participants_group_id"] = createdParticipantsGroupID
+		apiError = updateItemInDB(itemData, participantsGroupID, store, itemID)
+		if apiError != service.NoError {
+			return apiError.Error // rollback
 		}
-
-		err = store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
-		// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails
-		// (no items_strings for the new default_language_tag)
-		if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1452 {
-			apiError = service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
-				"default language should exist and there should be item's strings in this language",
-			}})
-			return apiError.Error
-		}
-		service.MustNotBeError(err)
 
 		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenPermissions)
 		return err
@@ -160,6 +160,24 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 
 	// response
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
+	return service.NoError
+}
+
+func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64, store *database.DataStore, itemID int64) service.APIError {
+	if itemData["duration"] != nil && participantsGroupID == nil {
+		createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
+		itemData["contest_participants_group_id"] = createdParticipantsGroupID
+	}
+
+	err := store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
+	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails
+	// (no items_strings for the new default_language_tag)
+	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1452 {
+		return service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
+			"default language should exist and there should be item's strings in this language",
+		}})
+	}
+	service.MustNotBeError(err)
 	return service.NoError
 }
 
