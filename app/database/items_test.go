@@ -45,8 +45,8 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 			"WHERE groups_ancestors_active.child_group_id = ? "+
 			") AS ancestors "+
 			"ON ancestors.ancestor_group_id = permissions.group_id "+
-			"WHERE (can_view_generated_value >= ?) "+
-			"GROUP BY permissions.item_id) "+
+			"GROUP BY permissions.item_id "+
+			"HAVING (MAX(can_view_generated_value) >= ?)) "+
 			"as visible ON visible.item_id = items.id")+"$").
 		WithArgs(2, NewDataStore(db).PermissionsGranted().ViewIndexByName("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
@@ -75,7 +75,7 @@ func TestDB_WhereGroupHasViewPermissionOnItems(t *testing.T) {
 			"FROM permissions_generated AS permissions "+
 			"JOIN ( SELECT * FROM groups_ancestors_active WHERE groups_ancestors_active.child_group_id = ? ) AS ancestors "+
 			"ON ancestors.ancestor_group_id = permissions.group_id "+
-			"WHERE (can_view_generated_value >= ?) GROUP BY permissions.item_id) AS permissions "+
+			"GROUP BY permissions.item_id HAVING (MAX(can_view_generated_value) >= ?)) AS permissions "+
 			"ON permissions.item_id = items.id")+"$").
 		WithArgs(123, 5).WillReturnRows(mock.NewRows([]string{"id"}))
 
