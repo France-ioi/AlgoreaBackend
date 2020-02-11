@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/render"
-
 	"github.com/France-ioi/validator"
+	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -90,8 +89,20 @@ type NewItemRequest struct {
 	// default: Undefined
 	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
 	// default: 1
-	ScoreWeight int8        `json:"score_weight"`
-	Children    []itemChild `json:"children" validate:"children,dive"`
+	ScoreWeight int8 `json:"score_weight"`
+	// default: as_info
+	// enum: none,as_info,as_content
+	ContentViewPropagation string `json:"content_view_propagation" validate:"oneof=none as_info as_content"`
+	// default: as_is
+	// enum: use_content_view_propagation,as_content_with_descendants,as_is
+	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` // nolint:lll
+	// default: true
+	GrantViewPropagation bool `json:"grant_view_propagation"`
+	// default: true
+	WatchPropagation bool `json:"watch_propagation"`
+	// default:true
+	EditPropagation bool        `json:"edit_propagation"`
+	Children        []itemChild `json:"children" validate:"children,dive"`
 }
 
 func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.DataStore) bool {
@@ -180,8 +191,13 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 				return apiError.Error // rollback
 			}
 
+			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissions, input.Children, formData, lockedStore)
+			if apiError != service.NoError {
+				return apiError.Error // rollback
+			}
+
 			// insertion
-			itemID = srv.insertItem(lockedStore, user, formData, &input, childrenPermissions)
+			itemID = srv.insertItem(lockedStore, user, formData, &input)
 			return nil
 		})
 	})
@@ -203,12 +219,12 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 // The validator checks that the user has rights to manage the parent item's children (can_edit >= children).
 func constructParentItemIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		hasAccess, err := store.Permissions().MatchingUserAncestors(user).WithWriteLock().
-			Where("item_id = ?", fl.Field().Interface().(int64)).
-			WherePermissionIsAtLeast("edit", "children").
+		found, err := store.Items().WhereUserHasPermissionOnItems(user, "edit", "children").
+			Where("items.id = ?", fl.Field().Interface().(int64)).
+			Select("can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value").
 			HasRows()
 		service.MustNotBeError(err)
-		return hasAccess
+		return found
 	})
 }
 
@@ -228,6 +244,10 @@ func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 func constructChildrenValidator(store *database.DataStore, user *database.User, childrenPermissions *[]permission) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
+
+		if len(children) == 0 {
+			return true
+		}
 
 		idsMap := make(map[int64]bool, len(children))
 		ids := make([]int64, len(children))
@@ -268,7 +288,7 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
-	newItemRequest *NewItemRequest, childrenPermissions []permission) (itemID int64) {
+	newItemRequest *NewItemRequest) (itemID int64) {
 	itemMap := formData.ConstructPartialMapForDB("itemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
@@ -307,6 +327,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	if !formData.IsSet("score_weight") {
 		newItemRequest.ScoreWeight = 1
 	}
+
 	for index := range newItemRequest.Children {
 		if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
 			newItemRequest.Children[index].Category = undefined
@@ -320,11 +341,11 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		&insertItemItemsSpec{
 			ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order,
 			Category: newItemRequest.Category, ScoreWeight: newItemRequest.ScoreWeight,
-			ContentViewPropagation: "as_info", UpperViewLevelsPropagation: "as_is",
+			ContentViewPropagation: asInfo, UpperViewLevelsPropagation: asIs,
 			GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
 		})
 	parentChildSpec = append(parentChildSpec,
-		constructItemsItemsForChildren(childrenPermissions, newItemRequest.Children, store, itemID)...)
+		constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
 	insertItemItems(store, parentChildSpec)
 	service.MustNotBeError(store.ItemItems().After())
 
