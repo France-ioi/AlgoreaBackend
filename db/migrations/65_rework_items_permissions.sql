@@ -102,18 +102,24 @@ ALTER TABLE `items_items`
         COMMENT 'Defines how a can_view=”content” permission propagates' AFTER `partial_access_propagation`,
     ADD COLUMN `upper_view_levels_propagation` ENUM('use_content_view_propagation', 'as_content_with_descendants', 'as_is')
         NOT NULL DEFAULT 'use_content_view_propagation'
-        COMMENT 'Defines how can_view="content_with_descendants"|"solution" permissions propagate',
+        COMMENT 'Defines how can_view="content_with_descendants"|"solution" permissions propagate'
+            AFTER `content_view_propagation`,
     ADD COLUMN `grant_view_propagation` TINYINT(1) NOT NULL DEFAULT 0
-        COMMENT 'Whether can_grant_view propagates (as the same value, with “solution” as the upper limit)',
+        COMMENT 'Whether can_grant_view propagates (as the same value, with “solution” as the upper limit)'
+            AFTER `upper_view_levels_propagation`,
     ADD COLUMN `watch_propagation` TINYINT(1) NOT NULL DEFAULT 0
-        COMMENT 'Whether can_watch propagates (as the same value, with “answer” as the upper limit)',
+        COMMENT 'Whether can_watch propagates (as the same value, with “answer” as the upper limit)'
+            AFTER `grant_view_propagation`,
     ADD COLUMN `edit_propagation` TINYINT(1) NOT NULL DEFAULT 0
-        COMMENT 'Whether can_edit propagates (as the same value, with “all” as the upper limit)',
+        COMMENT 'Whether can_edit propagates (as the same value, with “all” as the upper limit)'
+            AFTER `watch_propagation`,
     ADD COLUMN `content_view_propagation_value` TINYINT(3) UNSIGNED AS (`content_view_propagation`) NOT NULL
-        COMMENT 'content_view_propagation as an integer (to use comparison operators)',
+        COMMENT 'content_view_propagation as an integer (to use comparison operators)'
+            AFTER `edit_propagation`,
     ADD COLUMN `upper_view_levels_propagation_value` TINYINT(3) UNSIGNED
         AS (`upper_view_levels_propagation`) NOT NULL
-        COMMENT 'upper_view_levels_propagation as an integer (to use comparison operators)';
+        COMMENT 'upper_view_levels_propagation as an integer (to use comparison operators)'
+            AFTER `content_view_propagation_value`;
 
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin
