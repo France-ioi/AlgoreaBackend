@@ -3,7 +3,7 @@ ALTER TABLE `groups`
     MODIFY COLUMN `type` enum('Class','Team','Club','Friends','Other','User','Session','Base','ContestParticipants') NOT NULL
         AFTER `name`,
     MODIFY COLUMN `open_contest` TINYINT(1) NOT NULL DEFAULT '0'
-        COMMENT 'If true and the group is associated through activity_id with an item that is a contest, the contest should be started for this user as soon as he joins the group.',
+        COMMENT 'If true and the group is associated through activity_id with an item that is a contest, the contest should be started for this user as soon as he joins the group',
     ADD COLUMN `activity_id` BIGINT(20) DEFAULT NULL
         COMMENT 'Root activity (chapter, task, or course) associated with this group'
             AFTER `redirect_path`,
