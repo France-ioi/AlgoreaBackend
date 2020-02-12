@@ -1,4 +1,8 @@
 -- +migrate Up
+UPDATE `groups_login_prefixes`
+    SET `prefix` = CONCAT(`prefix`, '_')
+WHERE `prefix` NOT LIKE '%\_';
+
 CREATE TABLE `user_batch_prefixes` (
     `group_prefix` VARCHAR(13) NOT NULL PRIMARY KEY COMMENT 'Prefix used in front of all batches',
     `group_id` BIGINT(20) NOT NULL COMMENT 'Group and its subgroups in which managers can create users in batch',
@@ -11,12 +15,13 @@ CREATE TABLE `user_batch_prefixes` (
 
 CREATE TABLE `user_batches` (
     `group_prefix` VARCHAR(13) NOT NULL COMMENT 'Authorized (first) part of the full login prefix',
-    `custom_prefix` VARCHAR(14) NOT NULL CHECK (BINARY `custom_prefix` REGEXP '^[a-z0-9-]+$')
+    `custom_prefix` VARCHAR(14) NOT NULL
         COMMENT 'Custom (second) part of the full login prefix',
     `size` MEDIUMINT UNSIGNED NOT NULL COMMENT 'Number of users created in this batch',
     `creator_id` BIGINT(20) DEFAULT NULL,
     `created_at` DATETIME NOT NULL DEFAULT NOW(),
     PRIMARY KEY (`group_prefix`, `custom_prefix`),
+    CONSTRAINT `ck_user_batches_custom_prefix` CHECK (BINARY `custom_prefix` REGEXP '^[a-z0-9-]+$'),
     CONSTRAINT `fk_user_batches_group_prefix_user_batch_prefixes_group_prefix`
         FOREIGN KEY (`group_prefix`) REFERENCES `user_batch_prefixes`(`group_prefix`) ON DELETE RESTRICT,
     CONSTRAINT `fk_user_batches_creator_id_users_group_id`
@@ -25,20 +30,19 @@ CREATE TABLE `user_batches` (
     COMMENT='Batches of users that were created';
 
 INSERT INTO `user_batch_prefixes` (`group_prefix`, `group_id`, `max_users`)
-SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`))), 13) AS group_prefix,
+SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`), 2)), 13) AS group_prefix,
        MAX(`group_id`) AS `group_id`,
        1000
 FROM `groups_login_prefixes`
 GROUP BY group_prefix;
 
 INSERT INTO `user_batches` (`group_prefix`, `custom_prefix`, `size`, `creator_id`, `created_at`)
-SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`))), 13) AS `group_prefix`,
-       LEFT(SUBSTRING_INDEX(`prefix`, '_', -1), 13) AS `custom_prefix`,
-       (SELECT COUNT(*) FROM `groups` WHERE BINARY `name` LIKE REPLACE(CONCAT(`prefix`, '_%'), '_', '\_') LIMIT 1) AS `size`,
-       (SELECT `creator_id` FROM `users` WHERE `creator_id` IS NOT NULL AND BINARY `login` LIKE REPLACE(CONCAT(`prefix`, '_%'), '_', '\_') LIMIT 1) AS `creator_id`,
-       (SELECT IFNULL(MIN(`created_at`), NOW()) FROM `groups` WHERE BINARY `name` LIKE REPLACE(CONCAT(`prefix`, '_%'), '_', '\_')) AS `created_at`
-FROM `groups_login_prefixes`
-HAVING `size` > 0;
+SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`), 2)), 13) AS `group_prefix`,
+       LEFT(REVERSE(SUBSTR(REVERSE(SUBSTRING_INDEX(`prefix`, '_', -2)), 2)), 14) AS `custom_prefix`,
+       (SELECT COUNT(*) FROM `users` WHERE BINARY `login` LIKE REPLACE(CONCAT(`prefix`, '%'), '_', '\_') LIMIT 1) AS `size`,
+       (SELECT `creator_id` FROM `users` WHERE `creator_id` IS NOT NULL AND BINARY `login` LIKE REPLACE(CONCAT(`prefix`, '%'), '_', '\_') LIMIT 1) AS `creator_id`,
+       (SELECT IFNULL(MIN(`created_at`), NOW()) FROM `groups` WHERE BINARY `name` LIKE REPLACE(CONCAT(`prefix`, '%'), '_', '\_')) AS `created_at`
+FROM `groups_login_prefixes`;
 
 ALTER TABLE `users` DROP COLUMN `login_module_prefix`;
 DROP TRIGGER `before_insert_groups_login_prefixes`;
@@ -63,7 +67,7 @@ INSERT INTO `groups_login_prefixes` (`group_id`, `prefix`)
 SELECT
     user_batch_prefixes.group_id,
     CONCAT(`group_prefix`, '_', `custom_prefix`) AS `prefix`
-FROM `user_batches` JOIN `user_batch_prefixes` USING (`group_prefix`)
+FROM `user_batches` LEFT JOIN `user_batch_prefixes` USING (`group_prefix`)
 GROUP BY group_prefix, custom_prefix;
 
 ALTER TABLE `users`
