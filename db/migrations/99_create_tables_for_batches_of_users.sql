@@ -25,15 +25,15 @@ CREATE TABLE `user_batches` (
     COMMENT='Batches of users that were created';
 
 INSERT INTO `user_batch_prefixes` (`group_prefix`, `group_id`, `max_users`)
-SELECT LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`))) AS group_prefix,
+SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`))), 13) AS group_prefix,
        MAX(`group_id`) AS `group_id`,
        1000
 FROM `groups_login_prefixes`
 GROUP BY group_prefix;
 
 INSERT INTO `user_batches` (`group_prefix`, `custom_prefix`, `size`, `creator_id`, `created_at`)
-SELECT LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`))) AS `group_prefix`,
-       SUBSTRING_INDEX(`prefix`, '_', -1) AS `custom_prefix`,
+SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`))), 13) AS `group_prefix`,
+       LEFT(SUBSTRING_INDEX(`prefix`, '_', -1), 13) AS `custom_prefix`,
        (SELECT COUNT(*) FROM `groups` WHERE BINARY `name` LIKE REPLACE(CONCAT(`prefix`, '_%'), '_', '\_') LIMIT 1) AS `size`,
        (SELECT `creator_id` FROM `users` WHERE `creator_id` IS NOT NULL AND BINARY `login` LIKE REPLACE(CONCAT(`prefix`, '_%'), '_', '\_') LIMIT 1) AS `creator_id`,
        (SELECT IFNULL(MIN(`created_at`), NOW()) FROM `groups` WHERE BINARY `name` LIKE REPLACE(CONCAT(`prefix`, '_%'), '_', '\_')) AS `created_at`
