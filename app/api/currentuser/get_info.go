@@ -102,9 +102,6 @@ type getInfoData struct {
 	NoRanking bool `json:"no_ranking"`
 	// Nullable
 	// required: true
-	LoginModulePrefix *string `json:"login_module_prefix"`
-	// Nullable
-	// required: true
 	AllowSubgroups *bool `json:"allow_subgroups"`
 }
 
@@ -133,7 +130,7 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,
 			city, land_line_number, cell_phone_number, default_language, public_first_name, public_last_name,
 			notify_news, notify, free_text, web_site, photo_autoload, lang_prog, basic_editor_mode, spaces_for_tab,
-			step_level_in_site, is_admin, no_ranking, login_module_prefix, allow_subgroups`).
+			step_level_in_site, is_admin, no_ranking, allow_subgroups`).
 		Scan(&userInfo).Error()
 
 	// This is very unlikely since the user middleware has already checked that the user exists

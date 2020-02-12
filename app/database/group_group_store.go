@@ -134,8 +134,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 		}
 
 		const deleteGroupsQuery = `
-			DELETE group_children, group_parents, attempts,
-						 groups_login_prefixes, filters
+			DELETE group_children, group_parents, attempts, filters
 			FROM ` + "`groups`" + `
 			LEFT JOIN groups_groups AS group_children
 				ON group_children.parent_group_id = groups.id
@@ -143,8 +142,6 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				ON group_parents.child_group_id = groups.id
 			LEFT JOIN attempts
 				ON attempts.group_id = groups.id
-			LEFT JOIN groups_login_prefixes
-				ON groups_login_prefixes.group_id = groups.id
 			LEFT JOIN filters
 				ON filters.group_id = groups.id
 			WHERE groups.id IN(?)`

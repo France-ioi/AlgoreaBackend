@@ -221,9 +221,6 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.NoError(t, dataStore.Permissions().Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.Table("groups_login_prefixes").Order("group_id").
-		Pluck("group_id", &ids).Error())
-	assert.Equal(t, remainingGroupIDs, ids)
 
 	totalRemainingGroupIDs := make([]int64, 0, len(remainingGroupIDs)+1)
 	totalRemainingGroupIDs = append(totalRemainingGroupIDs, remainingGroupIDs...)
