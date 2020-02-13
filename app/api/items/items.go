@@ -96,13 +96,13 @@ type itemChild struct {
 	// enum: use_content_view_propagation,as_content_with_descendants,as_is
 	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` // nolint:lll
 	// Can be set to true if `can_grant_view` >= 'solution_with_grant'.
-	// Defaults to true  if `can_grant_view` >= 'solution_with_grant'.
+	// Defaults to true  if `can_grant_view` >= 'solution_with_grant', false otherwise.
 	GrantViewPropagation bool `json:"grant_view_propagation"`
 	// Can be set to true if `can_watch` >= 'answer_with_grant'.
-	// Defaults to true  if `can_watch` >= 'answer_with_grant'.
+	// Defaults to true  if `can_watch` >= 'answer_with_grant', false otherwise.
 	WatchPropagation bool `json:"watch_propagation"`
 	// Can be set to true if `can_edit` >= 'all_with_grant'.
-	// Defaults to true  if `can_edit` >= 'all_with_grant'.
+	// Defaults to true  if `can_edit` >= 'all_with_grant', false otherwise.
 	EditPropagation bool `json:"edit_propagation"`
 }
 
