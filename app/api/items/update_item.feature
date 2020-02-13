@@ -8,10 +8,10 @@ Background:
     | login | temp_user | group_id |
     | jdoe  | 0         | 11       |
   And the database has the following table 'items':
-    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | group_code_enter | contest_participants_group_id |
-    | 21 | Chapter | http://someurl1.com/ | en                   | 1        | Task 1  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                | null                          |
-    | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                | null                          |
-    | 60 | Chapter | http://someurl2.com/ | en                   | 1        | Task 3  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                | 1234                          |
+    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
+    | 21 | Chapter | http://someurl1.com/ | en                   | 1        | Task 1  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
+    | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
+    | 60 | Chapter | http://someurl2.com/ | en                   | 1        | Task 3  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 1234                          |
   And the database has the following table 'items_items':
     | parent_item_id | child_item_id | child_order |
     | 21             | 60            | 0           |
@@ -54,8 +54,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-    | id | type   | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | group_code_enter | contest_participants_group_id |
-    | 50 | Course | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                | null                          |
+    | id | type   | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
+    | 50 | Course | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -110,7 +110,7 @@ Background:
         "duration": "01:02:03",
         "show_user_infos": false,
         "no_score": false,
-        "group_code_enter": false,
+        "prompt_to_join_group_by_code": false,
         "default_language_tag": "sl",
         "children": [
           {"item_id": "112", "order": 0, "category": "Discovery", "score_weight": 1},
@@ -121,8 +121,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | group_code_enter | contest_participants_group_id |
-      | 50 | Course | http://myurl.com/ | sl                   | 0              | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | All                        | 0              | 2345                  | 0                        | 01:02:03 | 0               | 0                | 5577006791947779410           |
+      | id | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
+      | 50 | Course | http://myurl.com/ | sl                   | 0              | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | All                        | 0              | 2345                  | 0                        | 01:02:03 | 0               | 0                            | 5577006791947779410           |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
@@ -172,8 +172,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | group_code_enter | contest_participants_group_id |
-      | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         |             | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                | null                          |
+      | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
+      | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         |             | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
