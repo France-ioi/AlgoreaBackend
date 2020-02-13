@@ -77,9 +77,8 @@ type itemCommonFields struct {
 	NoScore bool `json:"no_score"`
 	// required: true
 	DefaultLanguageTag string `json:"default_language_tag"`
-	// Nullable
 	// required: true
-	GroupCodeEnter *bool `json:"group_code_enter"`
+	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 	// Whether the current user (or the `as_team_id` team) made at least one attempt to solve the item
 	// required: true
 	HasAttempts bool `json:"has_attempts"`
@@ -226,7 +225,7 @@ type rawItem struct {
 	Duration                 *string
 	NoScore                  bool
 	DefaultLanguageTag       string
-	GroupCodeEnter           *bool
+	PromptToJoinGroupByCode  bool
 	HasAttempts              bool
 
 	// root node only
@@ -271,7 +270,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database
 		items.duration,
 		items.no_score,
 		items.default_language_tag,
-		items.group_code_enter,
+		items.prompt_to_join_group_by_code,
 		EXISTS(SELECT 1 FROM attempts WHERE group_id = ? AND item_id = items.id AND started_at IS NOT NULL) AS has_attempts, `
 
 	rootItemQuery := s.ByID(rootID).Select(
@@ -390,7 +389,7 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		Duration:                 rawData.Duration,
 		NoScore:                  rawData.NoScore,
 		DefaultLanguageTag:       rawData.DefaultLanguageTag,
-		GroupCodeEnter:           rawData.GroupCodeEnter,
+		PromptToJoinGroupByCode:  rawData.PromptToJoinGroupByCode,
 		HasAttempts:              rawData.HasAttempts,
 	}
 	return result

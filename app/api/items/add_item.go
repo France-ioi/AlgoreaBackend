@@ -45,11 +45,10 @@ type item struct {
 	// MySQL time (max value is 838:59:59)
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	Duration      *string `json:"duration" validate:"omitempty,duration"`
-	ShowUserInfos bool    `json:"show_user_infos"`
-	UsesAPI       bool    `json:"uses_api"`
-	// Nullable
-	GroupCodeEnter *bool `json:"group_code_enter"`
+	Duration                *string `json:"duration" validate:"omitempty,duration"`
+	ShowUserInfos           bool    `json:"show_user_infos"`
+	UsesAPI                 bool    `json:"uses_api"`
+	PromptToJoinGroupByCode bool    `json:"prompt_to_join_group_by_code"`
 }
 
 type itemWithRequiredType struct {
