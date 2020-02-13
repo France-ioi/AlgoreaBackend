@@ -5,18 +5,18 @@ WHERE `prefix` NOT LIKE '%\_';
 
 CREATE TABLE `user_batch_prefixes` (
     `group_prefix` VARCHAR(13) NOT NULL PRIMARY KEY COMMENT 'Prefix used in front of all batches',
-    `group_id` BIGINT(20) NOT NULL COMMENT 'Group and its subgroups in which managers can create users in batch',
+    `group_id` BIGINT(20) DEFAULT NULL COMMENT 'Group and its subgroups in which managers can create users in batch',
     `max_users` MEDIUMINT UNSIGNED DEFAULT NULL COMMENT 'Maximum number of users that can be created under this prefix',
-    `allow_new` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Whether this prefix can be used for new creations',
+    `allow_new` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Whether this prefix can be used for new user batches',
     CONSTRAINT `fk_user_batch_prefixes_group_id_groups_id`
-        FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE
+        FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB CHARSET=utf8
     COMMENT='Authorized login prefixes for user batch creation. A prefix cannot be deleted without deleting batches using it.';
 
 CREATE TABLE `user_batches` (
     `group_prefix` VARCHAR(13) NOT NULL COMMENT 'Authorized (first) part of the full login prefix',
     `custom_prefix` VARCHAR(14) NOT NULL
-        COMMENT 'Custom (second) part of the full login prefix',
+        COMMENT 'Second part of the full login prefix, given by the user that created the batch',
     `size` MEDIUMINT UNSIGNED NOT NULL COMMENT 'Number of users created in this batch',
     `creator_id` BIGINT(20) DEFAULT NULL,
     `created_at` DATETIME NOT NULL DEFAULT NOW(),
