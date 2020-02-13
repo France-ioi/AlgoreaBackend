@@ -22,10 +22,10 @@ Background:
     | 50               | 21            |
     | 50               | 60            |
   And the database has the following table 'permissions_generated':
-    | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
-    | 11       | 21      | solution           | none               | false              |
-    | 11       | 50      | solution           | all_with_grant     | true               |
-    | 11       | 60      | solution           | all_with_grant     | true               |
+    | group_id | item_id | can_view_generated | can_grant_view_generated | can_edit_generated | is_owner_generated |
+    | 11       | 21      | solution           | none                     | children           | false              |
+    | 11       | 50      | solution           | solution_with_grant      | all                | true               |
+    | 11       | 60      | solution           | solution_with_grant      | all_with_grant     | true               |
   And the database has the following table 'permissions_granted':
     | group_id | item_id | can_view | is_owner | source_group_id | latest_update_on    |
     | 11       | 21      | solution | false    | 11              | 2019-05-30 11:00:00 |
@@ -113,8 +113,8 @@ Background:
         "group_code_enter": false,
         "default_language_tag": "sl",
         "children": [
-          {"item_id": "112", "order": 0},
-          {"item_id": "134", "order": 1}
+          {"item_id": "112", "order": 0, "category": "Discovery", "score_weight": 1},
+          {"item_id": "134", "order": 1, "category": "Application", "score_weight": 2}
         ]
       }
       """
@@ -125,10 +125,10 @@ Background:
       | 50 | Course | http://myurl.com/ | sl                   | 0              | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | All                        | 0              | 2345                  | 0                        | 01:02:03 | 0               | 0                | 5577006791947779410           |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
-      | parent_item_id | child_item_id | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
-      | 21             | 60            | none                     | use_content_view_propagation  | 0                      | 0                 | 0                |
-      | 50             | 112           | as_info                  | as_is                         | 0                      | 0                 | 0                |
-      | 50             | 134           | as_info                  | as_is                         | 1                      | 1                 | 1                |
+      | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
+      | 21             | 60            | Undefined   | 1            | none                     | use_content_view_propagation  | 0                      | 0                 | 0                |
+      | 50             | 112           | Discovery   | 1            | as_info                  | use_content_view_propagation  | 0                      | 0                 | 0                |
+      | 50             | 134           | Application | 2            | as_info                  | as_is                         | 1                      | 1                 | 1                |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id |
       | 21               | 60            |
@@ -159,7 +159,7 @@ Background:
     And the table "attempts" should stay unchanged but the row with item_id "50"
     And the table "attempts" at item_id "50" should be:
       | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 50      | 55             | 1     | done                     |
+      | 11       | 50      | 56.666668      | 1     | done                     |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"
@@ -180,6 +180,57 @@ Background:
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
 
+  Scenario: Should set content_view_propagation to 'none' by default if can_grant_view = 'none' for the parent item
+    Given I am the user with id "11"
+    And the database has the following table 'items':
+      | id  | default_language_tag |
+      | 112 | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11       | 112     | solution           | content                  | answer              | all                | false              |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
+      | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [
+          {"item_id": "112", "order": 0}
+        ]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should be:
+      | parent_item_id | child_item_id | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
+      | 21             | 112           | Undefined | 1            | as_info                  | use_content_view_propagation  | 0                      | 0                 | 0                |
+      | 50             | 21            | Undefined | 1            | none                     | use_content_view_propagation  | 0                      | 0                 | 0                |
+    And the table "items_ancestors" should be:
+      | ancestor_item_id | child_item_id |
+      | 21               | 112           |
+      | 50               | 21            |
+      | 50               | 112           |
+    And the table "groups" should be:
+      | id                  | type                | name            |
+      | 11                  | User                | jdoe            |
+    And the table "permissions_granted" should be:
+      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11                  | 21      | solution | none           | none      | none     | false    | 11                  | 0                                                       |
+      | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
+      | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
+      | 11                  | 112     | solution | content        | answer    | all      | false    | 11                  | 0                                                       |
+    And the table "permissions_generated" should be:
+      | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11                  | 21      | solution           | none                     | none                | none               | false              |
+      | 11                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11                  | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11                  | 112     | solution           | content                  | answer              | all                | false              |
+    And the table "attempts" should stay unchanged but the row with item_id "50"
+    And the table "attempts" at item_id "50" should be:
+      | group_id | item_id | score_computed | order | result_propagation_state |
+      | 11       | 50      | 0              | 1     | done                     |
+
   Scenario: Valid without any fields
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
@@ -197,7 +248,7 @@ Background:
 
   Scenario: Valid with empty children array
     Given I am the user with id "11"
-    When I send a PUT request to "/items/50" with the following body:
+    When I send a PUT request to "/items/21" with the following body:
     """
     {
       "children": []
@@ -208,10 +259,10 @@ Background:
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id |
-      | 21             | 60            |
+      | 50             | 21            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id |
-      | 21               | 60            |
+      | 50               | 21            |
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "attempts" should stay unchanged but the row with item_id "50"
@@ -295,3 +346,149 @@ Background:
     And the table "attempts" at item_id "50" should be:
       | group_id | item_id | score_computed | order | result_propagation_state |
       | 11       | 50      | 0              | 1     | done                     |
+
+
+  Scenario Outline: Sets default values of items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly for each can_grant_view
+    Given I am the user with id "11"
+    And the database has the following table 'items':
+      | id  | default_language_tag |
+      | 112 | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_grant_view_generated |
+      | 11       | 112     | info               | <can_grant_view>         |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | can_view | can_grant_view   | source_group_id |
+      | 11       | 112     | info     | <can_grant_view> | 11              |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [{"item_id": 112, "order": 1}]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_items" should be:
+      | parent_item_id | child_item_id | child_order | content_view_propagation   | upper_view_levels_propagation   | grant_view_propagation   |
+      | 21             | 112           | 1           | <content_view_propagation> | <upper_view_levels_propagation> | <grant_view_propagation> |
+      | 50             | 21            | 0           | none                       | use_content_view_propagation    | false                    |
+    Examples:
+      | can_grant_view           | content_view_propagation | upper_view_levels_propagation | grant_view_propagation |
+      | solution_with_grant      | as_info                  | as_is                         | true                   |
+      | solution                 | as_info                  | as_is                         | false                  |
+      | content_with_descendants | as_info                  | as_content_with_descendants   | false                  |
+      | content                  | as_info                  | use_content_view_propagation  | false                  |
+      | none                     | none                     | use_content_view_propagation  | false                  |
+
+  Scenario Outline: Sets default values of items_items.watch_propagation/edit_propagation correctly
+    Given I am the user with id "11"
+    And the database has the following table 'items':
+      | id  | default_language_tag |
+      | 112 | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | <parent_permission_column> |
+      | 11       | 112     | info               | <parent_permission_value>  |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [{"item_id": 112, "order": 1}]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_items" at parent_item_id "21" should be:
+      | parent_item_id | child_item_id | child_order | <propagation_column> |
+      | 21             | 112           | 1           | <propagation_value>  |
+    Examples:
+      | parent_permission_column | parent_permission_value | propagation_column | propagation_value |
+      | can_watch_generated      | answer_with_grant       | watch_propagation  | true              |
+      | can_watch_generated      | answer                  | watch_propagation  | false             |
+      | can_watch_generated      | result                  | watch_propagation  | false             |
+      | can_watch_generated      | none                    | watch_propagation  | false             |
+      | can_edit_generated       | all_with_grant          | edit_propagation   | true              |
+      | can_edit_generated       | all                     | edit_propagation   | false             |
+      | can_edit_generated       | children                | edit_propagation   | false             |
+      | can_edit_generated       | none                    | edit_propagation   | false             |
+
+  Scenario Outline: Sets items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly
+    Given I am the user with id "11"
+    And the database has the following table 'items':
+      | id  | default_language_tag |
+      | 112 | fr                   |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11       | 112     | info               | <can_grant_view>         | none                | none               | 0                  |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [{
+          "item_id": 112,
+          "order": 1,
+          "<field_name>": {{"<value>" != "true" && "<value>" != "false" ? "\"<value>\"" : <value>}}
+        }]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_items" at parent_item_id "21" should be:
+      | parent_item_id | child_item_id | child_order | <field_name> |
+      | 21             | 112           | 1           | <value>      |
+    Examples:
+      | can_grant_view           | field_name                    | value                        |
+      | solution_with_grant      | content_view_propagation      | as_content                   |
+      | solution                 | content_view_propagation      | as_content                   |
+      | content_with_descendants | content_view_propagation      | as_content                   |
+      | content                  | content_view_propagation      | as_content                   |
+      | solution_with_grant      | content_view_propagation      | as_info                      |
+      | solution                 | content_view_propagation      | as_info                      |
+      | content_with_descendants | content_view_propagation      | as_info                      |
+      | content                  | content_view_propagation      | as_info                      |
+      | solution_with_grant      | content_view_propagation      | none                         |
+      | solution                 | content_view_propagation      | none                         |
+      | content_with_descendants | content_view_propagation      | none                         |
+      | content                  | content_view_propagation      | none                         |
+      | none                     | content_view_propagation      | none                         |
+      | solution_with_grant      | upper_view_levels_propagation | as_is                        |
+      | solution                 | upper_view_levels_propagation | as_is                        |
+      | solution_with_grant      | upper_view_levels_propagation | as_content_with_descendants  |
+      | solution                 | upper_view_levels_propagation | as_content_with_descendants  |
+      | content_with_descendants | upper_view_levels_propagation | as_content_with_descendants  |
+      | content                  | upper_view_levels_propagation | use_content_view_propagation |
+      | none                     | upper_view_levels_propagation | use_content_view_propagation |
+      | solution_with_grant      | grant_view_propagation        | true                         |
+      | solution_with_grant      | grant_view_propagation        | false                        |
+      | solution                 | grant_view_propagation        | false                        |
+      | content_with_descendants | grant_view_propagation        | false                        |
+      | content                  | grant_view_propagation        | false                        |
+      | none                     | grant_view_propagation        | false                        |
+
+  Scenario Outline: Sets items_items.watch_propagation/edit_propagation correctly
+    Given I am the user with id "11"
+    And the database has the following table 'items':
+      | id  | default_language_tag |
+      | 112 | fr                   |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_view_generated | <parent_permission_column> |
+      | 11       | 112     | info               | <parent_permission_value>  |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [{
+          "item_id": 112,
+          "order": 1,
+          "<field_name>": {{"<value>" != "true" && "<value>" != "false" ? "\"<value>\"" : <value>}}
+        }]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_items" at parent_item_id "21" should be:
+      | parent_item_id | child_item_id | child_order | <field_name> |
+      | 21             | 112           | 1           | <value>      |
+    Examples:
+      | parent_permission_column | parent_permission_value | field_name        | value |
+      | can_watch_generated      | answer_with_grant       | watch_propagation | true  |
+      | can_watch_generated      | answer_with_grant       | watch_propagation | false |
+      | can_watch_generated      | answer                  | watch_propagation | false |
+      | can_watch_generated      | result                  | watch_propagation | false |
+      | can_watch_generated      | none                    | watch_propagation | false |
+      | can_edit_generated       | all_with_grant          | edit_propagation  | true  |
+      | can_edit_generated       | all_with_grant          | edit_propagation  | false |
+      | can_edit_generated       | all                     | edit_propagation  | false |
+      | can_edit_generated       | children                | edit_propagation  | false |
+      | can_edit_generated       | none                    | edit_propagation  | false |

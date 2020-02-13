@@ -79,13 +79,13 @@ Feature: Get item for tree navigation
       | 19       | 210     | content                  |
       | 19       | 211     | content                  |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | child_order | content_view_propagation | difficulty |
-      | 200            | 210           | 3           | none                     | 0          |
-      | 200            | 220           | 2           | as_info                  | 0          |
-      | 200            | 230           | 1           | as_content               | 0          |
-      | 210            | 211           | 1           | none                     | 0          |
-      | 230            | 231           | 2           | none                     | 0          |
-      | 230            | 232           | 1           | none                     | 0          |
+      | parent_item_id | child_item_id | child_order | content_view_propagation |
+      | 200            | 210           | 3           | none                     |
+      | 200            | 220           | 2           | as_info                  |
+      | 200            | 230           | 1           | as_content               |
+      | 210            | 211           | 1           | none                     |
+      | 230            | 231           | 2           | none                     |
+      | 230            | 232           | 1           | none                     |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title       |
       | 200     | en           | Category 1  |
