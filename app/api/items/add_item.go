@@ -220,9 +220,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 func constructParentItemIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		found, err := store.Items().WhereUserHasPermissionOnItems(user, "edit", "children").
-			Where("items.id = ?", fl.Field().Interface().(int64)).
-			Select("can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value").
-			HasRows()
+			Where("items.id = ?", fl.Field().Interface().(int64)).HasRows()
 		service.MustNotBeError(err)
 		return found
 	})
