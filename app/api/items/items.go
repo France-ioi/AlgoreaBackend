@@ -140,15 +140,19 @@ func constructItemsItemsForChildren(children []itemChild, itemID int64) []*inser
 	return parentChildSpec
 }
 
-const asInfo = "as_info"
-const asIs = "as_is"
-const asContentWithDescendants = "as_content_with_descendants"
+const (
+	asInfo                    = "as_info"
+	asIs                      = "as_is"
+	none                      = "none"
+	asContentWithDescendants  = "as_content_with_descendants"
+	useContentViewPropagation = "use_content_view_propagation"
+)
 
 func defaultContentViewPropagationForNewItemItems(canGrantViewGeneratedValue int, store *database.DataStore) string {
 	if canGrantViewGeneratedValue > store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "none") {
 		return asInfo
 	}
-	return "none"
+	return none
 }
 
 func defaultUpperViewLevelsPropagationForNewItemItems(canGrantViewGeneratedValue int, store *database.DataStore) string {
@@ -158,7 +162,7 @@ func defaultUpperViewLevelsPropagationForNewItemItems(canGrantViewGeneratedValue
 	if canGrantViewGeneratedValue >= store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "content_with_descendants") {
 		return asContentWithDescendants
 	}
-	return "use_content_view_propagation"
+	return useContentViewPropagation
 }
 
 func defaultGrantViewPropagationForNewItemItems(canGrantViewGeneratedValue int, store *database.DataStore) bool {
