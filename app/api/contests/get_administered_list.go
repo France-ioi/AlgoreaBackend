@@ -27,6 +27,10 @@ type contestAdminListRow struct {
 	// Nullable
 	// required: true
 	LanguageTag *string `gorm:"column:title_language_tag" json:"language_tag"`
+	// Nullable
+	// required: true
+	// enum: User,Team
+	EntryParticipantType *string `json:"entry_participant_type"`
 	// required: true
 	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
 	// required: true
@@ -89,6 +93,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 	query := srv.Store.Items().Select(`
 			items.id AS item_id,
 			items.allows_multiple_attempts,
+			items.entry_participant_type,
 			COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS title_translation,
 			COALESCE(MAX(user_strings.language_tag), MAX(default_strings.language_tag)) AS title_language_tag`).
 		WhereUserHasViewPermissionOnItems(user, "content_with_descendants").
