@@ -114,6 +114,7 @@ Feature: Add item
         "teams_editable": true,
         "contest_max_team_size": 2345,
         "allows_multiple_attempts": true,
+        "entry_participant_type": "Team",
         "duration": "01:02:03",
         "show_user_infos": true,
         "no_score": true,
@@ -145,8 +146,8 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 5577006791947779410 | Course | http://myurl.com/ | sl                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1                        | 01:02:03 | 1               | 1        | 1                            | 8674665223082153551           |
+      | id                  | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | entry_participant_type | duration | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
+      | 5577006791947779410 | Course | http://myurl.com/ | sl                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1                        | Team                   | 01:02:03 | 1               | 1        | 1                            | 8674665223082153551           |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |

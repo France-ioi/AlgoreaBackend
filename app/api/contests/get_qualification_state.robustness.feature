@@ -82,10 +82,24 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: as_team_id is given while the item's allows_multiple_attempts = false
+  Scenario: as_team_id is given while the item's entry_participant_type = User
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 50 | 00:00:00 | false                    | fr                   |
+      | id | duration | entry_participant_type | default_language_tag |
+      | 50 | 00:00:00 | User                   | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 10       | 50      | content                  |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
+    And I am the user with id "31"
+    When I send a GET request to "/contests/50/qualification-state?as_team_id=10"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: as_team_id is not given while the item's entry_participant_type = Team
+    Given the database has the following table 'items':
+      | id | duration | entry_participant_type | default_language_tag |
+      | 50 | 00:00:00 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -93,27 +107,27 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state?as_team_id=21"
+    When I send a GET request to "/contests/50/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: as_team_id is not a team related to the item while the item's allows_multiple_attempts = true
+  Scenario: as_team_id is not a team related to the item while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 60 | 00:00:00 | true                     | fr                   |
+      | id | duration | entry_participant_type | default_language_tag |
+      | 60 | 00:00:00 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
-      | 11       | 60      | info                     |
+      | 10       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
     When I send a GET request to "/contests/60/qualification-state?as_team_id=10"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The current user is not a member of as_team_id while the item's allows_multiple_attempts = true
+  Scenario: The current user is not a member of as_team_id while the item's entry_participant_type = 'Team'
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 60 | 00:00:00 | true                     | fr                   |
+      | id | duration | entry_participant_type | default_language_tag |
+      | 60 | 00:00:00 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |

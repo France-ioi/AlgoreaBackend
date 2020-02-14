@@ -23,7 +23,7 @@ import (
 //
 //   Restrictions:
 //
-//     * If `as_team_id` is given, it should be a user's parent team group with `groups.team_item_id`
+//     * if `as_team_id` is given, it should be a user's parent team group with `groups.team_item_id`
 //       pointing to one of the item's ancestors or the item itself.
 //     * the group creating the attempt should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',

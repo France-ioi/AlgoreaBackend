@@ -7,9 +7,9 @@ Feature: Feature: Get user's answer by user_answer_id
       | login | group_id |
       | jdoe  | 11       |
     And the database has the following table 'items':
-      | id  | allows_multiple_attempts | default_language_tag |
-      | 200 | 0                        | fr                   |
-      | 210 | 1                        | fr                   |
+      | id  | entry_participant_type | default_language_tag |
+      | 200 | User                   | fr                   |
+      | 210 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | item_id | group_id | can_view_generated |
       | 200     | 11       | info               |

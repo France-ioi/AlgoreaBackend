@@ -50,7 +50,8 @@ type contestInfo struct {
 
 func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.User) (bool, error) {
 	var isTeamOnly bool
-	err := srv.Store.Items().ContestManagedByUser(itemID, user).PluckFirst("items.allows_multiple_attempts", &isTeamOnly).Error()
+	err := srv.Store.Items().ContestManagedByUser(itemID, user).
+		PluckFirst("IFNULL(items.entry_participant_type = 'Team', 0)", &isTeamOnly).Error()
 	return isTeamOnly, err
 }
 

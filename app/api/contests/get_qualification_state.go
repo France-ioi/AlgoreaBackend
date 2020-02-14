@@ -80,7 +80,8 @@ type contestGetQualificationStateResponse struct {
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * `as_team_id` (if given) should be the current user's team;
+//                  * `as_team_id` (if given) should be the current user's team having the `item_id` as the team item;
+//                  * `as_team_id` should be given if the contest is team-only and should not be given if the contest is user-only;
 //                  * the authenticated user (or his team) should have at least 'info' access to the item.
 //
 //                Otherwise, the "Forbidden" response is returned.
@@ -134,17 +135,25 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	}
 
 	var contestInfo struct {
-		IsTeamContest            bool `gorm:"column:allows_multiple_attempts"`
+		IsTeamContest            bool
+		AllowsMultipleAttempts   bool
 		ContestMaxTeamSize       int32
 		ContestEnteringCondition string
 	}
+
 	err = store.Items().VisibleByID(groupID, itemID).Where("items.duration IS NOT NULL").
-		Select("items.allows_multiple_attempts, items.contest_max_team_size, items.contest_entering_condition").
+		Select(`
+			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_contest,
+			items.contest_max_team_size, items.contest_entering_condition`).
 		Take(&contestInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
+
+	if (groupID != user.GroupID) != contestInfo.IsTeamContest {
+		return nil, service.InsufficientAccessRightsError
+	}
 
 	if apiError := srv.checkTeamID(groupID, itemID, user, store); apiError != service.NoError {
 		return nil, apiError
@@ -173,7 +182,7 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount :=
 		srv.getQualificatonInfo(groupID, itemID, user, store)
 	state := computeQualificationState(
-		alreadyStarted, isActive, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
+		alreadyStarted, isActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
 		contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
 
 	result := &contestGetQualificationStateResponse{
@@ -207,8 +216,8 @@ func (srv *Service) checkTeamID(
 	return service.NoError
 }
 
-func computeQualificationState(hasAlreadyStarted, isActive, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
-	membersCount, qualifiedMembersCount int32) qualificationState {
+func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
+	maxTeamSize int32, contestEnteringCondition string, membersCount, qualifiedMembersCount int32) qualificationState {
 	var state qualificationState
 	if hasAlreadyStarted && isActive {
 		state = alreadyStarted
@@ -219,7 +228,7 @@ func computeQualificationState(hasAlreadyStarted, isActive, isTeamContest bool, 
 			state = notReady
 		}
 	}
-	if hasAlreadyStarted && !isActive && !isTeamContest {
+	if hasAlreadyStarted && !isActive && !allowsMultipleAttempts {
 		state = notReady
 	}
 	return state

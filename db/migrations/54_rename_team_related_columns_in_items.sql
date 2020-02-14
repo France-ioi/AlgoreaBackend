@@ -1,4 +1,11 @@
 -- +migrate Up
+ALTER TABLE `items`
+    ADD COLUMN `entry_participant_type` ENUM('User', 'Team')
+        COMMENT 'For explicit-entry items, the type of participants who can enter'
+            AFTER `default_language_id`;
+
+UPDATE `items` SET `entry_participant_type` = IF(`team_mode` IS NULL, 'User', 'Team') WHERE `type` = 'Chapter';
+
 UPDATE `items` SET `team_mode` = 'None' WHERE `team_mode` IS NULL;
 UPDATE `history_items` SET `team_mode` = 'None' WHERE `team_mode` IS NULL;
 ALTER TABLE `history_items`
@@ -36,7 +43,8 @@ ALTER TABLE `items`
     CHANGE COLUMN `contest_entering_condition` `team_mode` enum('All','Half','One','None') DEFAULT NULL
         COMMENT 'If qualified_group_id is not NULL, this field specifies how many team members need to belong to that group in order for the whole team to be qualified and able to start the item.',
     MODIFY `qualified_group_id` bigint(20) DEFAULT NULL
-        COMMENT 'group id in which "qualified" users will belong. team_mode dictates how many of a team''s members must be "qualified" in order to start the item.';
+        COMMENT 'group id in which "qualified" users will belong. team_mode dictates how many of a team''s members must be "qualified" in order to start the item.',
+    DROP COLUMN `entry_participant_type`;
 
 DROP TRIGGER `after_insert_items`;
 -- +migrate StatementBegin

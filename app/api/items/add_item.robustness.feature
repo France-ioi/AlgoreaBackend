@@ -385,6 +385,7 @@ Feature: Add item - robustness
       | duration                   | "99:59:60"    | invalid duration                                                               |
       | category                   | "wrong"       | category must be one of [Undefined Discovery Application Validation Challenge] |
       | score_weight               | "wrong"       | expected type 'int8', got unconvertible type 'string'                          |
+      | entry_participant_type     | "Class"       | entry_participant_type must be one of [User Team]                              |
 
   Scenario Outline: Wrong optional field value in the array of children
     Given I am the user with id "11"
