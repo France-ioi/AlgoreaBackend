@@ -89,7 +89,6 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
-      | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
@@ -118,7 +117,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 60 | 00:00:00 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
-      | 11       | 60      | info                     |
+      | 10       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
     When I send a GET request to "/contests/60/qualification-state?as_team_id=10"
