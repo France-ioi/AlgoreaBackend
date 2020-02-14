@@ -41,6 +41,9 @@ type item struct {
 	TitleBarVisible          bool   `json:"title_bar_visible"`
 	AllowsMultipleAttempts   bool   `json:"allows_multiple_attempts"`
 	// Nullable
+	// enum: User,Team
+	EntryParticipantType *string `json:"entry_participant_type" validate:"oneof=User Team"`
+	// Nullable
 	//
 	// MySQL time (max value is 838:59:59)
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
