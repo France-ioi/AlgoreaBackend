@@ -24,7 +24,7 @@ import (
 //                   having `user_id` = `users.group_id`;
 //                2. `answers` having `author_id` = `users.group_id`;
 //
-//                3. [`permissions_granted`, `permissions_generated`, `attempts`, `groups_login_prefixes`]
+//                3. [`permissions_granted`, `permissions_generated`, `attempts`]
 //                   having `group_id` = `users.group_id`;
 //
 //                4. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
