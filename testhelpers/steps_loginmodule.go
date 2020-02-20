@@ -89,6 +89,19 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 	if err != nil {
 		return err
 	}
+	bodyBase64, err := ctx.encodeLoginModuleResponse(preprocessedBody)
+	if err != nil {
+		return err
+	}
+
+	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/unlink_client?client_id="+
+			url.QueryEscape(ctx.application.Config.Auth.ClientID)+"&user_id="+url.QueryEscape(preprocessedUserID), responder))
+	return nil
+}
+
+func (ctx *TestContext) encodeLoginModuleResponse(preprocessedBody string) (string, error) {
 	const size = 16
 	mod := len(preprocessedBody) % size
 	if mod != 0 {
@@ -99,7 +112,7 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 	data := []byte(preprocessedBody)
 	cipher, err := aes.NewCipher([]byte(ctx.application.Config.Auth.ClientSecret)[0:16])
 	if err != nil {
-		return err
+		return "", err
 	}
 	encrypted := make([]byte, len(data))
 	for bs, be := 0, size; bs < len(data); bs, be = bs+size, be+size {
@@ -107,10 +120,31 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 	}
 
 	bodyBase64 := base64.StdEncoding.EncodeToString(encrypted)
+	return bodyBase64, nil
+}
 
+func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( // nolint
+	params string, statusCode int, body *gherkin.DocString) error {
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	preprocessedParams, err := ctx.preprocessString(params)
+	if err != nil {
+		return err
+	}
+	preprocessedBody, err := ctx.preprocessString(body.Content)
+	if err != nil {
+		return err
+	}
+	bodyBase64, err := ctx.encodeLoginModuleResponse(preprocessedBody)
+	if err != nil {
+		return err
+	}
+
+	urlValues, err := url.ParseQuery("client_id=" + url.QueryEscape(ctx.application.Config.Auth.ClientID) + "&" + preprocessedParams)
+	if err != nil {
+		return err
+	}
 	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/unlink_client?client_id="+
-			url.QueryEscape(ctx.application.Config.Auth.ClientID)+"&user_id="+url.QueryEscape(preprocessedUserID), responder))
+		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/create?"+urlValues.Encode(), responder))
 	return nil
 }

@@ -312,14 +312,15 @@ func TestClient_UnlinkClient(t *testing.T) {
 			responseCode: 500,
 			response:     "Unexpected error",
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog:  `level=warning msg="Can't unlink the user (status code = 500, response = \"Unexpected error\")"`,
+			expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/accounts_manager/unlink_client ` +
+				`(status code = 500, response = \"Unexpected error\")"`,
 		},
 		{
 			name:         "corrupted base64",
 			responseCode: 200,
 			response:     "Some text",
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog: `level=warning msg="Can't decode response from the login module ` +
+			expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/accounts_manager/unlink_client ` +
 				`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
 		},
 		{
@@ -327,7 +328,7 @@ func TestClient_UnlinkClient(t *testing.T) {
 			responseCode: 200,
 			response:     encodeUnlinkClientResponse(`{"success":true}`, "anotherClientKey"),
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog: `level=warning msg="Can't parse response from the login module ` +
+			expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/unlink_client ` +
 				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
 				`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
 		},
@@ -336,7 +337,7 @@ func TestClient_UnlinkClient(t *testing.T) {
 			responseCode: 200,
 			response:     encodeUnlinkClientResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog:  `level=warning msg="Can't unlink the user. The login module returned an error: unknown error"`,
+			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/unlink_client: unknown error"`,
 		},
 	}
 	const moduleURL = "http://login.url.com"
