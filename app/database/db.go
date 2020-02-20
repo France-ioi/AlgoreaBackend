@@ -509,6 +509,9 @@ func (conn *DB) constructInsertMapsStatement(dataMaps []map[string]interface{}, 
 // (so all the maps should have the same keys)
 // into the given table (like insertMaps does). If it is a duplicate, the listed columns will be updated.
 func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]interface{}, updateColumns []string) error {
+	if len(dataMaps) == 0 {
+		return nil
+	}
 	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
 
 	var builder strings.Builder
