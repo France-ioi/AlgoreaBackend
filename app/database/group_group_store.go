@@ -80,17 +80,27 @@ func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
 	mustNotBeError(s.GroupGroups().InsertMap(relationMap))
 }
 
-// CreateRelationsWithoutChecking creates multiple direct relations between group pairs at once
+// CreateRelationsWithoutChecking creates multiple direct relations at once
 // without checking for possible cycles in the graph and without deletion of old relations.
 // This method is only suitable to create relations with new groups.
-func (s *GroupGroupStore) CreateRelationsWithoutChecking(pairs []ParentChild) (err error) {
+func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]interface{}) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
+	parentRelations := make(map[int64][]map[string]interface{})
+	for _, relation := range relations {
+		parentRelations[relation["parent_group_id"].(int64)] = append(parentRelations[relation["parent_group_id"].(int64)], relation)
+	}
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
 		groupGroupStore := store.GroupGroups()
-		for _, pair := range pairs {
-			groupGroupStore.createRelation(pair.ParentID, pair.ChildID)
+		for parentID, groupedRelations := range parentRelations {
+			for index := range groupedRelations {
+				groupedRelations[index]["child_order"] = gorm.Expr("@maxIChildOrder+?", index+1)
+			}
+			mustNotBeError(s.Exec(
+				"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `parent_group_id` = ? FOR UPDATE), 0)",
+				parentID).Error())
+			mustNotBeError(s.InsertMaps(groupedRelations))
 		}
 		groupGroupStore.createNewAncestors()
 		return nil
