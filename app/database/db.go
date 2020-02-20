@@ -508,8 +508,8 @@ func (conn *DB) constructInsertMapsStatement(dataMaps []map[string]interface{}, 
 // insertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
 // (so all the maps should have the same keys)
 // into the given table (like insertMaps does). If it is a duplicate, the listed columns will be updated.
-func (conn *DB) insertOrUpdateMaps(tableName string, dataMap []map[string]interface{}, updateColumns []string) error {
-	query, values := conn.constructInsertMapsStatement(dataMap, tableName)
+func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]interface{}, updateColumns []string) error {
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
 
 	var builder strings.Builder
 	_, _ = builder.WriteString(query)
