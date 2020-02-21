@@ -1,7 +1,7 @@
 package testhelpers
 
 import (
-	"github.com/DATA-DOG/godog"
+	"github.com/cucumber/godog"
 )
 
 // FeatureContext binds the supported steps to the verifying functions

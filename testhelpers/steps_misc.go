@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/cucumber/godog/gherkin"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 

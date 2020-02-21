@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/DATA-DOG/godog"
-	"github.com/DATA-DOG/godog/colors"
+	"github.com/cucumber/godog"
+	"github.com/cucumber/godog/colors"
 
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )

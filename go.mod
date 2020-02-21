@@ -13,12 +13,12 @@ require (
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
 	github.com/CloudyKit/jet v2.1.3-0.20180809161101-62edd43e4f88+incompatible
 	github.com/DATA-DOG/go-sqlmock v1.3.2
-	github.com/DATA-DOG/godog v0.7.13
 	github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003
 	github.com/France-ioi/validator v9.29.2-0.20190902165131-fab02af38e92+incompatible
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
 	github.com/akrylysov/algnhsa v0.0.0-20190203201208-70f315bb89bd
 	github.com/aws/aws-lambda-go v1.8.2
+	github.com/cucumber/godog v0.8.1
 	github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3 // indirect
 	github.com/go-chi/chi v3.3.3+incompatible
 	github.com/go-chi/cors v1.0.0

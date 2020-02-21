@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/cucumber/godog/gherkin"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )

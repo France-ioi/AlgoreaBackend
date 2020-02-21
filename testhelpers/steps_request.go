@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/cucumber/godog/gherkin"
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
