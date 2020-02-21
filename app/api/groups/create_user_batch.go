@@ -146,7 +146,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 		"creator_id":    user.GroupID,
 		"created_at":    database.Now(),
 	})
-	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, fmt.Sprintf("for key '%s'", "PRIMARY")) {
+	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 {
 		return service.ErrInvalidRequest(errors.New("'custom_prefix' already exists for the given 'group_prefix'"))
 	}
 	service.MustNotBeError(err)
