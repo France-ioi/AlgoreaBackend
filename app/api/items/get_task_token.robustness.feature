@@ -22,10 +22,10 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
       | 104               | 101            |
       | 104               | 104            |
     And the database has the following table 'items':
-      | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0                        | fr                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | fr                   |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | 1                        | fr                   |
+      | id | url                                                                     | type    | entry_participant_type | default_language_tag |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | null                   | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | Team                   | fr                   |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |

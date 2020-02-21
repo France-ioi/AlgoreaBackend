@@ -105,10 +105,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: group_id is not a self group of the current user while the item's allows_multiple_attempts = false
+  Scenario: as_team_id is given while the item's entry_participant_type = User
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 50 | 00:00:00 | false                    | fr                   |
+      | id | duration | entry_participant_type | default_language_tag |
+      | 50 | 00:00:00 | User                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 21       | 50      | solution                 |
@@ -121,10 +121,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: group_id is not a team related to the item while the item's allows_multiple_attempts = true
+  Scenario: as_team_id is not a team related to the item while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 60 | 00:00:00 | true                     | fr                   |
+      | id | duration | entry_participant_type | default_language_tag |
+      | 60 | 00:00:00 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -137,10 +137,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: group_id is a user self group while the item's allows_multiple_attempts = true
+  Scenario: as_team_id is not given while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 60 | 00:00:00 | true                     | fr                   |
+      | id | duration | entry_participant_type | default_language_tag |
+      | 60 | 00:00:00 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -152,10 +152,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: The current user is not a member of group_id while the item's allows_multiple_attempts = true
+  Scenario: The current user is not a member of as_team_id while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | default_language_tag |
-      | 60 | 00:00:00 | true                     | fr                   |
+      | id | duration | entry_participant_type | default_language_tag |
+      | 60 | 00:00:00 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -170,8 +170,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The contest is not ready
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | contest_entering_condition | contest_max_team_size | default_language_tag |
-      | 60 | 00:00:00 | 1                        | All                        | 3                     | fr                   |
+      | id | duration | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | Team                   | All                        | 3                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -191,8 +191,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario Outline: Reenter a non-team contest
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | contest_entering_condition | contest_participants_group_id | default_language_tag |
-      | 50 | 01:01:01 | 0                        | None                       | 99                            | fr                   |
+      | id | duration | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag |
+      | 50 | 01:01:01 | User                   | None                       | 99                            | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at   |
       | 99              | 31             | <expires_at> |
@@ -221,8 +221,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: Reenter an already entered (not expired) contest as a team
     Given the database has the following table 'items':
-      | id | duration | allows_multiple_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 01:01:01 | 1                        | None                       | 10                    | 99                            | fr                   |
+      | id | duration | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | Team                   | None                       | 10                    | 99                            | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 99              | 11             |

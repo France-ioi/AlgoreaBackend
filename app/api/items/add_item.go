@@ -2,12 +2,12 @@ package items
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/go-chi/render"
-
 	"github.com/France-ioi/validator"
+	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -41,15 +41,17 @@ type item struct {
 	TitleBarVisible          bool   `json:"title_bar_visible"`
 	AllowsMultipleAttempts   bool   `json:"allows_multiple_attempts"`
 	// Nullable
+	// enum: User,Team
+	EntryParticipantType *string `json:"entry_participant_type" validate:"oneof=User Team"`
+	// Nullable
 	//
 	// MySQL time (max value is 838:59:59)
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	Duration      *string `json:"duration" validate:"omitempty,duration"`
-	ShowUserInfos bool    `json:"show_user_infos"`
-	UsesAPI       bool    `json:"uses_api"`
-	// Nullable
-	GroupCodeEnter *bool `json:"group_code_enter"`
+	Duration                *string `json:"duration" validate:"omitempty,duration"`
+	ShowUserInfos           bool    `json:"show_user_infos"`
+	UsesAPI                 bool    `json:"uses_api"`
+	PromptToJoinGroupByCode bool    `json:"prompt_to_join_group_by_code"`
 }
 
 type itemWithRequiredType struct {
@@ -85,8 +87,24 @@ type NewItemRequest struct {
 	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id"`
 	// default: 0
 	Order int32 `json:"order"`
-
-	Children []itemChild `json:"children" validate:"children"`
+	// enum: Undefined,Discovery,Application,Validation,Challenge
+	// default: Undefined
+	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
+	// default: 1
+	ScoreWeight int8 `json:"score_weight"`
+	// default: as_info
+	// enum: none,as_info,as_content
+	ContentViewPropagation string `json:"content_view_propagation" validate:"oneof=none as_info as_content"`
+	// default: as_is
+	// enum: use_content_view_propagation,as_content_with_descendants,as_is
+	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` // nolint:lll
+	// default: true
+	GrantViewPropagation bool `json:"grant_view_propagation"`
+	// default: true
+	WatchPropagation bool `json:"watch_propagation"`
+	// default:true
+	EditPropagation bool        `json:"edit_propagation"`
+	Children        []itemChild `json:"children" validate:"children,dive"`
 }
 
 func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.DataStore) bool {
@@ -175,8 +193,13 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 				return apiError.Error // rollback
 			}
 
+			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissions, input.Children, formData, lockedStore)
+			if apiError != service.NoError {
+				return apiError.Error // rollback
+			}
+
 			// insertion
-			itemID = srv.insertItem(lockedStore, user, formData, &input, childrenPermissions)
+			itemID = srv.insertItem(lockedStore, user, formData, &input)
 			return nil
 		})
 	})
@@ -198,12 +221,10 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 // The validator checks that the user has rights to manage the parent item's children (can_edit >= children).
 func constructParentItemIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		hasAccess, err := store.Permissions().MatchingUserAncestors(user).WithWriteLock().
-			Where("item_id = ?", fl.Field().Interface().(int64)).
-			WherePermissionIsAtLeast("edit", "children").
-			HasRows()
+		found, err := store.Items().WhereUserHasPermissionOnItems(user, "edit", "children").
+			Where("items.id = ?", fl.Field().Interface().(int64)).HasRows()
 		service.MustNotBeError(err)
-		return hasAccess
+		return found
 	})
 }
 
@@ -223,6 +244,10 @@ func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 func constructChildrenValidator(store *database.DataStore, user *database.User, childrenPermissions *[]permission) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
+
+		if len(children) == 0 {
+			return true
+		}
 
 		idsMap := make(map[int64]bool, len(children))
 		ids := make([]int64, len(children))
@@ -263,7 +288,7 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
-	newItemRequest *NewItemRequest, childrenPermissions []permission) (itemID int64) {
+	newItemRequest *NewItemRequest) (itemID int64) {
 	itemMap := formData.ConstructPartialMapForDB("itemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
@@ -296,15 +321,31 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	stringMap["language_tag"] = newItemRequest.LanguageTag
 	service.MustNotBeError(store.ItemStrings().InsertMap(stringMap))
 
+	if !formData.IsSet("category") {
+		newItemRequest.Category = undefined
+	}
+	if !formData.IsSet("score_weight") {
+		newItemRequest.ScoreWeight = 1
+	}
+
+	for index := range newItemRequest.Children {
+		if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
+			newItemRequest.Children[index].Category = undefined
+		}
+		if !formData.IsSet(fmt.Sprintf("children[%d].score_weight", index)) {
+			newItemRequest.Children[index].ScoreWeight = 1
+		}
+	}
 	parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
 	parentChildSpec = append(parentChildSpec,
 		&insertItemItemsSpec{
 			ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order,
-			ContentViewPropagation: "as_info", UpperViewLevelsPropagation: "as_is",
+			Category: newItemRequest.Category, ScoreWeight: newItemRequest.ScoreWeight,
+			ContentViewPropagation: asInfo, UpperViewLevelsPropagation: asIs,
 			GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
 		})
 	parentChildSpec = append(parentChildSpec,
-		constructItemsItemsForChildren(childrenPermissions, newItemRequest.Children, store, itemID)...)
+		constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
 	insertItemItems(store, parentChildSpec)
 	service.MustNotBeError(store.ItemItems().After())
 

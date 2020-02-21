@@ -37,7 +37,7 @@ func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permiss
 				WHERE groups_ancestors_active.child_group_id = ?
 			) AS ancestors
 			ON ancestors.ancestor_group_id = permissions.group_id`, groupID).
-		WherePermissionIsAtLeast(permissionKind, neededPermission).
+		HavingMaxPermissionAtLeast(permissionKind, neededPermission).
 		Group("permissions.item_id")
 }
 

@@ -17,10 +17,10 @@ Feature: Get item view information
       | fr         | 0         | 17       | fr               |
       | info       | 0         | 22       |                  |
     And the database has the following table 'items':
-      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
-      | 200 | Course  | en                   | true     | true                      | All             | All                        | true           | 10                    | true                     | 10:20:30 | true             | true              | true      | forceYes    | true            | http://someurl | true     | true          |
-      | 210 | Chapter | en                   | true     | true                      | All             | All                        | true           | 10                    | true                     | 10:20:31 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
-      | 220 | Chapter | en                   | true     | true                      | All             | All                        | true           | 10                    | true                     | 10:20:32 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
+      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | entry_participant_type | duration | prompt_to_join_group_by_code | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
+      | 200 | Course  | en                   | true     | true                      | All             | All                        | true           | 10                    | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | true            | http://someurl | true     | true          |
+      | 210 | Chapter | en                   | true     | true                      | All             | All                        | true           | 10                    | true                     | User                   | 10:20:31 | true                         | true              | true      | forceYes    | true            | null           | true     | true          |
+      | 220 | Chapter | en                   | true     | true                      | All             | All                        | true           | 10                    | true                     | Team                   | 10:20:32 | true                         | true              | true      | forceYes    | true            | null           | true     | true          |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
       | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
@@ -85,10 +85,11 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
-      "group_code_enter": true,
+      "prompt_to_join_group_by_code": true,
       "has_attempts": true,
 
       "title_bar_visible": true,
@@ -122,10 +123,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "Team",
           "duration": "10:20:32",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": true,
 
           "string": {
@@ -150,10 +152,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "User",
           "duration": "10:20:31",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {
@@ -183,10 +186,11 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "allows_multiple_attempts": true,
+      "entry_participant_type": "User",
       "duration": "10:20:31",
       "no_score": true,
       "default_language_tag": "en",
-      "group_code_enter": true,
+      "prompt_to_join_group_by_code": true,
       "has_attempts": false,
 
       "title_bar_visible": true,
@@ -222,10 +226,11 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "allows_multiple_attempts": true,
+      "entry_participant_type": "User",
       "duration": "10:20:31",
       "no_score": true,
       "default_language_tag": "en",
-      "group_code_enter": true,
+      "prompt_to_join_group_by_code": true,
       "has_attempts": false,
 
       "title_bar_visible": true,
@@ -260,10 +265,11 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
-      "group_code_enter": true,
+      "prompt_to_join_group_by_code": true,
       "has_attempts": false,
 
       "title_bar_visible": true,
@@ -297,10 +303,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "Team",
           "duration": "10:20:32",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {
@@ -325,10 +332,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "User",
           "duration": "10:20:31",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {
@@ -358,10 +366,11 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
-      "group_code_enter": true,
+      "prompt_to_join_group_by_code": true,
       "has_attempts": false,
 
       "title_bar_visible": true,
@@ -395,10 +404,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "Team",
           "duration": "10:20:32",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {
@@ -421,10 +431,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "User",
           "duration": "10:20:31",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {
@@ -452,10 +463,11 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
-      "group_code_enter": true,
+      "prompt_to_join_group_by_code": true,
       "has_attempts": false,
 
       "title_bar_visible": true,
@@ -489,10 +501,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "Team",
           "duration": "10:20:32",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {
@@ -517,10 +530,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "User",
           "duration": "10:20:31",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": true,
 
           "string": {
@@ -550,10 +564,11 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
-      "group_code_enter": true,
+      "prompt_to_join_group_by_code": true,
       "has_attempts": false,
 
       "title_bar_visible": true,
@@ -587,10 +602,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "Team",
           "duration": "10:20:32",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {
@@ -613,10 +629,11 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "allows_multiple_attempts": true,
+          "entry_participant_type": "User",
           "duration": "10:20:31",
           "no_score": true,
           "default_language_tag": "en",
-          "group_code_enter": true,
+          "prompt_to_join_group_by_code": true,
           "has_attempts": false,
 
           "string": {

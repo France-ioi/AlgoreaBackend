@@ -12,6 +12,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
@@ -20,6 +21,8 @@ import (
 type Service struct {
 	service.Base
 }
+
+const undefined = "Undefined"
 
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
@@ -73,15 +76,42 @@ type permission struct {
 
 type itemChild struct {
 	// required: true
-	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set,child_item_id"`
+	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set"`
 	// default: 0
 	Order int32 `json:"order" sql:"column:child_order"`
+	// enum: Undefined,Discovery,Application,Validation,Challenge
+	// default: Undefined
+	// required: true
+	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
+	// default: 1
+	ScoreWeight int8 `json:"score_weight"`
+	// Can be set to 'as_info' if `can_grant_view` != 'none' or to 'as_content' if `can_grant_view` >= 'content'.
+	// Defaults to 'as_info' (if `can_grant_view` != 'none') or 'none'.
+	// enum: none,as_info,as_content
+	ContentViewPropagation string `json:"content_view_propagation" validate:"oneof=none as_info as_content"`
+	// Can be set to 'as_is' (if `can_grant_view` >= 'solution') or 'as_content_with_descendants'
+	// (if `can_grant_view` >= 'content_with_descendants') or 'use_content_view_propagation'.
+	// Defaults to 'as_is' (if `can_grant_view` >= 'solution') or 'as_content_with_descendants'
+	// (if `can_grant_view` >= 'content_with_descendants') or 'use_content_view_propagation' (otherwise).
+	// enum: use_content_view_propagation,as_content_with_descendants,as_is
+	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` // nolint:lll
+	// Can be set to true if `can_grant_view` >= 'solution_with_grant'.
+	// Defaults to true  if `can_grant_view` >= 'solution_with_grant', false otherwise.
+	GrantViewPropagation bool `json:"grant_view_propagation"`
+	// Can be set to true if `can_watch` >= 'answer_with_grant'.
+	// Defaults to true  if `can_watch` >= 'answer_with_grant', false otherwise.
+	WatchPropagation bool `json:"watch_propagation"`
+	// Can be set to true if `can_edit` >= 'all_with_grant'.
+	// Defaults to true  if `can_edit` >= 'all_with_grant', false otherwise.
+	EditPropagation bool `json:"edit_propagation"`
 }
 
 type insertItemItemsSpec struct {
 	ParentItemID               int64
 	ChildItemID                int64
 	Order                      int32
+	Category                   string
+	ScoreWeight                int8
 	ContentViewPropagation     string
 	UpperViewLevelsPropagation string
 	GrantViewPropagation       bool
@@ -90,40 +120,191 @@ type insertItemItemsSpec struct {
 }
 
 // constructItemsItemsForChildren constructs items_items rows to be inserted by itemCreate/itemEdit services.
-// `items_items.content_view_propagation` is set to 'as_info'
-// while values of other `items_items.*_propagation` columns depend on the user's permissions on each child item.
-func constructItemsItemsForChildren(childrenPermissions []permission, children []itemChild,
-	store *database.DataStore, itemID int64) []*insertItemItemsSpec {
+func constructItemsItemsForChildren(children []itemChild, itemID int64) []*insertItemItemsSpec {
+	parentChildSpec := make([]*insertItemItemsSpec, 0, len(children))
+	for _, child := range children {
+		parentChildSpec = append(parentChildSpec,
+			&insertItemItemsSpec{
+				ParentItemID:               itemID,
+				ChildItemID:                child.ItemID,
+				Order:                      child.Order,
+				Category:                   child.Category,
+				ScoreWeight:                child.ScoreWeight,
+				ContentViewPropagation:     child.ContentViewPropagation,
+				UpperViewLevelsPropagation: child.UpperViewLevelsPropagation,
+				GrantViewPropagation:       child.GrantViewPropagation,
+				WatchPropagation:           child.WatchPropagation,
+				EditPropagation:            child.EditPropagation,
+			})
+	}
+	return parentChildSpec
+}
+
+const (
+	asInfo                    = "as_info"
+	asIs                      = "as_is"
+	none                      = "none"
+	asContentWithDescendants  = "as_content_with_descendants"
+	useContentViewPropagation = "use_content_view_propagation"
+)
+
+func defaultContentViewPropagationForNewItemItems(canGrantViewGeneratedValue int, store *database.DataStore) string {
+	if canGrantViewGeneratedValue > store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "none") {
+		return asInfo
+	}
+	return none
+}
+
+func defaultUpperViewLevelsPropagationForNewItemItems(canGrantViewGeneratedValue int, store *database.DataStore) string {
+	if canGrantViewGeneratedValue >= store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "solution") {
+		return asIs
+	}
+	if canGrantViewGeneratedValue >= store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "content_with_descendants") {
+		return asContentWithDescendants
+	}
+	return useContentViewPropagation
+}
+
+func defaultGrantViewPropagationForNewItemItems(canGrantViewGeneratedValue int, store *database.DataStore) bool {
+	return canGrantViewGeneratedValue >= store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "solution_with_grant")
+}
+
+func defaultWatchPropagationForNewItemItems(canWatchGeneratedValue int, store *database.DataStore) bool {
+	return canWatchGeneratedValue >= store.PermissionsGranted().PermissionIndexByKindAndName("watch", "answer_with_grant")
+}
+
+func defaultEditPropagationForNewItemItems(canEditGeneratedValue int, store *database.DataStore) bool {
+	return canEditGeneratedValue >= store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all_with_grant")
+}
+
+func validateChildrenFieldsAndApplyDefaults(childrenPermissions []permission, children []itemChild,
+	formData *formdata.FormData, store *database.DataStore) service.APIError {
 	childrenPermissionsMap := make(map[int64]*permission, len(childrenPermissions))
 	for index := range childrenPermissions {
 		childrenPermissionsMap[childrenPermissions[index].ItemID] = &childrenPermissions[index]
 	}
 
-	permissionGrantedStore := store.PermissionsGranted()
-	parentChildSpec := make([]*insertItemItemsSpec, 0, len(children))
-	for _, child := range children {
-		permissions := childrenPermissionsMap[child.ItemID]
-
-		upperViewLevelsPropagation := "use_content_view_propagation"
-		if permissions.CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("solution") {
-			upperViewLevelsPropagation = "as_is"
-		} else if permissions.CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content_with_descendants") {
-			upperViewLevelsPropagation = "as_content_with_descendants"
+	for index := range children {
+		prefix := fmt.Sprintf("children[%d].", index)
+		if !formData.IsSet(prefix + "category") {
+			children[index].Category = undefined
 		}
-		parentChildSpec = append(parentChildSpec,
-			&insertItemItemsSpec{
-				ParentItemID: itemID, ChildItemID: child.ItemID, Order: child.Order,
-				ContentViewPropagation:     "as_info",
-				UpperViewLevelsPropagation: upperViewLevelsPropagation,
-				GrantViewPropagation: permissions.CanGrantViewGeneratedValue >=
-					permissionGrantedStore.PermissionIndexByKindAndName("grant_view", "solution_with_grant"),
-				WatchPropagation: permissions.CanWatchGeneratedValue >=
-					permissionGrantedStore.PermissionIndexByKindAndName("watch", "answer_with_grant"),
-				EditPropagation: permissions.CanEditGeneratedValue >=
-					permissionGrantedStore.PermissionIndexByKindAndName("edit", "all_with_grant"),
-			})
+		if !formData.IsSet(prefix + "score_weight") {
+			children[index].ScoreWeight = 1
+		}
+
+		childPermissions := childrenPermissionsMap[children[index].ItemID]
+		apiError := validateChildContentViewPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		if apiError != service.NoError {
+			return apiError
+		}
+
+		apiError = validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		if apiError != service.NoError {
+			return apiError
+		}
+
+		apiError = validateChildGrantViewPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		if apiError != service.NoError {
+			return apiError
+		}
+
+		apiError = validateChildWatchPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		if apiError != service.NoError {
+			return apiError
+		}
+
+		apiError = validateChildEditPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		if apiError != service.NoError {
+			return apiError
+		}
 	}
-	return parentChildSpec
+	return service.NoError
+}
+
+func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
+	childPermissions *permission, store *database.DataStore) service.APIError {
+	if formData.IsSet(prefix + "edit_propagation") {
+		if child.EditPropagation &&
+			childPermissions.CanEditGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all_with_grant") {
+			return service.ErrForbidden(errors.New("not enough permissions for setting edit_propagation"))
+		}
+	} else {
+		child.EditPropagation =
+			defaultEditPropagationForNewItemItems(childPermissions.CanEditGeneratedValue, store)
+	}
+	return service.NoError
+}
+
+func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
+	childPermissions *permission, store *database.DataStore) service.APIError {
+	if formData.IsSet(prefix + "watch_propagation") {
+		if child.WatchPropagation &&
+			childPermissions.CanWatchGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("watch", "answer_with_grant") {
+			return service.ErrForbidden(errors.New("not enough permissions for setting watch_propagation"))
+		}
+	} else {
+		child.WatchPropagation =
+			defaultWatchPropagationForNewItemItems(childPermissions.CanWatchGeneratedValue, store)
+	}
+	return service.NoError
+}
+
+func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
+	childPermissions *permission, store *database.DataStore) service.APIError {
+	if formData.IsSet(prefix + "grant_view_propagation") {
+		if child.GrantViewPropagation &&
+			childPermissions.CanGrantViewGeneratedValue <
+				store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "solution_with_grant") {
+			return service.ErrForbidden(errors.New("not enough permissions for setting grant_view_propagation"))
+		}
+	} else {
+		child.GrantViewPropagation =
+			defaultGrantViewPropagationForNewItemItems(childPermissions.CanGrantViewGeneratedValue, store)
+	}
+	return service.NoError
+}
+
+func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
+	child *itemChild, childPermissions *permission, store *database.DataStore) service.APIError {
+	if formData.IsSet(prefix + "upper_view_levels_propagation") {
+		var failed bool
+		switch child.UpperViewLevelsPropagation {
+		case asContentWithDescendants:
+			failed = childPermissions.CanGrantViewGeneratedValue <
+				store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "content_with_descendants")
+		case asIs:
+			failed = childPermissions.CanGrantViewGeneratedValue <
+				store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "solution")
+		}
+		if failed {
+			return service.ErrForbidden(errors.New("not enough permissions for setting upper_view_levels_propagation"))
+		}
+	} else {
+		child.UpperViewLevelsPropagation =
+			defaultUpperViewLevelsPropagationForNewItemItems(childPermissions.CanGrantViewGeneratedValue, store)
+	}
+	return service.NoError
+}
+
+func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
+	child *itemChild, childPermissions *permission, store *database.DataStore) service.APIError {
+	if formData.IsSet(prefix + "content_view_propagation") {
+		var failed bool
+		switch child.ContentViewPropagation {
+		case asInfo:
+			failed = childPermissions.CanGrantViewGeneratedValue == store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "none")
+		case "as_content":
+			failed = childPermissions.CanGrantViewGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "content")
+		}
+		if failed {
+			return service.ErrForbidden(errors.New("not enough permissions for setting content_view_propagation"))
+		}
+	} else {
+		child.ContentViewPropagation =
+			defaultContentViewPropagationForNewItemItems(childPermissions.CanGrantViewGeneratedValue, store)
+	}
+	return service.NoError
 }
 
 // insertItemsItems is used by itemCreate/itemEdit services to insert data constructed by
@@ -137,16 +318,17 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 
 	for index := range spec {
 		values = append(values,
-			spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order, spec[index].ContentViewPropagation,
+			spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order, spec[index].Category,
+			spec[index].ScoreWeight, spec[index].ContentViewPropagation,
 			spec[index].UpperViewLevelsPropagation, spec[index].GrantViewPropagation, spec[index].WatchPropagation,
 			spec[index].EditPropagation)
 	}
 
-	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?)"
+	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	// nolint:gosec
 	query :=
 		`INSERT INTO items_items (
-			parent_item_id, child_item_id, child_order,
+			parent_item_id, child_item_id, child_order, category, score_weight,
 			content_view_propagation, upper_view_levels_propagation, grant_view_propagation,
 			watch_propagation, edit_propagation) VALUES ` + valuesMarks
 	service.MustNotBeError(store.Exec(query, values...).Error())

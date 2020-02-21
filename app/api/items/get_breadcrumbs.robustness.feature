@@ -35,8 +35,8 @@ Feature: Get item information for breadcrumb - robustness
       | 13       | 22      | content_with_descendants |
       | 13       | 23      | content_with_descendants |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | child_order | difficulty |
-      | 22             | 23            | 1           | 0          |
+      | parent_item_id | child_item_id | child_order |
+      | 22             | 23            | 1           |
     And I am the user with id "11"
     When I send a GET request to "/items/21/22/23/breadcrumbs"
     Then the response code should be 400
@@ -50,9 +50,9 @@ Feature: Get item information for breadcrumb - robustness
       | 13       | 23      | content_with_descendants |
       | 13       | 24      | content_with_descendants |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | child_order | difficulty |
-      | 21             | 22            | 1           | 0          |
-      | 22             | 23            | 1           | 0          |
+      | parent_item_id | child_item_id | child_order |
+      | 21             | 22            | 1           |
+      | 22             | 23            | 1           |
     And I am the user with id "11"
     When I send a GET request to "/items/21/22/23/24/breadcrumbs"
     Then the response code should be 400
@@ -65,10 +65,10 @@ Feature: Get item information for breadcrumb - robustness
       | 13       | 22      | content_with_descendants |
       | 13       | 24      | content_with_descendants |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | child_order | difficulty |
-      | 21             | 22            | 1           | 0          |
-      | 22             | 23            | 1           | 0          |
-      | 23             | 24            | 1           | 0          |
+      | parent_item_id | child_item_id | child_order |
+      | 21             | 22            | 1           |
+      | 22             | 23            | 1           |
+      | 23             | 24            | 1           |
     And I am the user with id "11"
     When I send a GET request to "/items/21/22/24/23/breadcrumbs"
     Then the response code should be 403
@@ -80,9 +80,9 @@ Feature: Get item information for breadcrumb - robustness
       | 13       | 22      | content_with_descendants |
       | 13       | 23      | content_with_descendants |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | child_order | difficulty |
-      | 22             | 23            | 1           | 0          |
-      | 23             | 24            | 1           | 0          |
+      | parent_item_id | child_item_id | child_order |
+      | 22             | 23            | 1           |
+      | 23             | 24            | 1           |
     And I am the user with id "11"
     When I send a GET request to "/items/22/23/breadcrumbs"
     Then the response code should be 400
@@ -95,8 +95,8 @@ Feature: Get item information for breadcrumb - robustness
       | 13       | 22      | info               |
       | 13       | 23      | content            |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | child_order | difficulty |
-      | 22             | 23            | 1           | 0          |
+      | parent_item_id | child_item_id | child_order |
+      | 22             | 23            | 1           |
     And I am the user with id "11"
     When I send a GET request to "/items/21/22/23/breadcrumbs"
     Then the response code should be 403

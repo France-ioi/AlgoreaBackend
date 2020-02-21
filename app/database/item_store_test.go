@@ -135,7 +135,7 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 				dbRows = dbRows.AddRow(row.ItemID, permissionStore.ViewIndexByName(row.CanView))
 			}
 			args := make([]driver.Value, 0, len(tC.itemIDs)+2)
-			args = append(args, 123, permissionStore.ViewIndexByName("info"))
+			args = append(args, 123)
 			for _, id := range tC.itemIDs {
 				args = append(args, id)
 			}
@@ -146,6 +146,7 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 					questionMarks += strings.Repeat(",?", len(tC.itemIDs)-1)
 				}
 			}
+			args = append(args, permissionStore.ViewIndexByName("info"))
 			dbMock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
 					"MAX(can_grant_view_generated_value) AS can_grant_view_generated_value, "+
@@ -157,8 +158,9 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 					"SELECT * FROM groups_ancestors_active WHERE groups_ancestors_active.child_group_id = ? "+
 					") AS ancestors "+
 					"ON ancestors.ancestor_group_id = permissions.group_id "+
-					"WHERE (can_view_generated_value >= ?) AND (item_id IN ("+questionMarks+")) "+
-					"GROUP BY permissions.item_id") + "$").
+					"WHERE (item_id IN ("+questionMarks+")) "+
+					"GROUP BY permissions.item_id "+
+					"HAVING (MAX(can_view_generated_value) >= ?)") + "$").
 				WithArgs(args...).
 				WillReturnRows(dbRows)
 			result, err := permissionStore.Items().ValidateUserAccess(&User{GroupID: 123}, tC.itemIDs)
