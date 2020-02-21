@@ -126,7 +126,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 	formData.RegisterValidation("custom_prefix", func(fl validator.FieldLevel) bool {
 		return customPrefixRegexp.MatchString(fl.Field().Interface().(string))
 	})
-	formData.RegisterTranslation("custom prefix",
+	formData.RegisterTranslation("custom_prefix",
 		"The custom prefix should only consist of letters/digits/hyphens and be 2-14 characters long")
 
 	err = formData.ParseJSONRequestData(r)
@@ -160,16 +160,16 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 			LoginFixed:     func(b bool) *bool { return &b }(true),
 			Language:       func(s string) *string { return &s }(user.DefaultLanguage),
 		})
-	if err != nil {
-		srv.Store.UserBatches().Delete("group_prefix = ? AND custom_prefix = ?", input.GroupPrefix, input.CustomPrefix)
-	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			srv.Store.UserBatches().Delete("group_prefix = ? AND custom_prefix = ?", input.GroupPrefix, input.CustomPrefix)
+			panic(p)
+		}
+	}()
 	service.MustNotBeError(err)
 
-	result, err := srv.createBatchUsersInDB(input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
-	if err != nil {
-		srv.Store.UserBatches().Delete("group_prefix = ? AND custom_prefix = ?", input.GroupPrefix, input.CustomPrefix)
-	}
-	service.MustNotBeError(err)
+	result := srv.createBatchUsersInDB(input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&result)))
 	return service.NoError
@@ -245,10 +245,10 @@ type resultRow struct {
 }
 
 func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.Request, numberOfUsersToBeCreated int,
-	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User) ([]*resultRow, error) {
+	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User) []*resultRow {
 	result := make([]*resultRow, 0, len(subgroupsApprovals))
 
-	err := srv.Store.InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		domainConfig := domain.ConfigFromContext(r.Context())
 
 		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated)
@@ -323,6 +323,6 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 		}
 		service.MustNotBeError(store.Users().InsertMaps(usersToCreate))
 		return store.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
-	})
-	return result, err
+	}))
+	return result
 }
