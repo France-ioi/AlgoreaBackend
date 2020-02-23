@@ -218,10 +218,11 @@ type contestEnterResponse struct {
 		Success bool `json:"success"`
 		// required: true
 		Data struct {
+			// Nullable
 			// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 			// example: 838:59:59
 			// required: true
-			Duration string `json:"duration"`
+			Duration *string `json:"duration"`
 			// required: true
 			EnteredAt database.Time `json:"entered_at"`
 		} `json:"data"`
