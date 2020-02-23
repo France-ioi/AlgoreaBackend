@@ -59,8 +59,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter an individual contest
     Given the database table 'items' has also the following row:
-      | id | duration | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag |
-      | 50 | 01:01:01 | User                   | None                       | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag |
+      | 50 | 01:01:01 | 1                       | User                   | None                       | 99                            | fr                   |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
@@ -118,8 +118,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a team-only contest
     Given the database table 'items' has also the following row:
-      | id | duration | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 05:05:05 | Team                   | Half                       | 3                     | 98                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 05:05:05 | 1                       | Team                   | Half                       | 3                     | 98                            | fr                   |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
@@ -182,8 +182,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Reenter a contest as a team
     Given the database table 'items' has also the following row:
-      | id | duration | entry_participant_type | allows_multiple_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 01:01:01 | Team                   | 1                        | None                       | 10                    | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                       | 10                    | 99                            | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 99              | 11             | 2019-05-30 11:00:00 |
@@ -244,8 +244,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a contest that doesn't have items.contest_participants_group_id set
     Given the database table 'items' has also the following row:
-      | id | duration | entry_participant_type | contest_entering_condition | default_language_tag |
-      | 50 | 01:01:01 | User                   | None                       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
+      | 50 | 01:01:01 | 1                       | User                   | None                       | fr                   |
     And the database table 'permissions_generated' has also the following row:
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |

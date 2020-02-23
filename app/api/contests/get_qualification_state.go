@@ -79,7 +79,7 @@ type contestGetQualificationStateResponse struct {
 //                  * 'ready' otherwise.
 //
 //                Restrictions:
-//                  * `item_id` should be a timed contest;
+//                  * `item_id` should be a contest;
 //                  * `as_team_id` (if given) should be the current user's team having the `item_id` as the team item;
 //                  * `as_team_id` should be given if the contest is team-only and should not be given if the contest is user-only;
 //                  * the authenticated user (or his team) should have at least 'info' access to the item.
@@ -141,7 +141,7 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		ContestEnteringCondition string
 	}
 
-	err = store.Items().VisibleByID(groupID, itemID).Where("items.duration IS NOT NULL").
+	err = store.Items().VisibleByID(groupID, itemID).Where("items.requires_explicit_entry").
 		Select(`
 			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_contest,
 			items.contest_max_team_size, items.contest_entering_condition`).
