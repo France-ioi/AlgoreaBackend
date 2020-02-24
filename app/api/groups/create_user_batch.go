@@ -74,7 +74,7 @@ type subgroupApproval struct {
 //
 //   Restrictions:
 //
-//   * The authenticated user should be a manager of the group (or its ancestors) linked to the `group_prefix`
+//   * The authenticated user (or one of his group ancestors) should be a manager of the group linked to the `group_prefix`
 //     with at least 'can_manage:memberships', otherwise the 'forbidden' response is returned.
 //   * The 'subgroup.group_id'-s should be descendants of the group linked to the `group_prefix` or be the group itself,
 //     otherwise the 'forbidden' response is returned.
