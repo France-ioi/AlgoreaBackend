@@ -1,6 +1,5 @@
 Feature: Create a user batch - robustness
   Background:
-  Background:
     Given the database has the following table 'groups':
       | id | type    | name     | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
       | 2  | Base    | RootSelf | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
