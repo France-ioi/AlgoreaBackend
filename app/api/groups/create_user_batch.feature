@@ -51,7 +51,7 @@ Feature: Create a user batch
       }
       """
     And I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
       """
       {
         "custom_prefix":"custom",
