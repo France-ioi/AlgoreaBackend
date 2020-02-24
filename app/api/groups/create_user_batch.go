@@ -56,7 +56,7 @@ type subgroupApproval struct {
 	RequireWatchApproval              bool
 }
 
-// swagger:operation POST /user_batches groups createUserBatch
+// swagger:operation POST /user-batches groups createUserBatch
 // ---
 // summary: Create a user batch
 // description: >
