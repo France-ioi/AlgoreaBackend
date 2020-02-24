@@ -306,12 +306,13 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 			)
 
 			usersToCreate = append(usersToCreate, map[string]interface{}{
-				"temp_user":     0,
-				"registered_at": database.Now(),
-				"group_id":      userGroupID,
-				"login_id":      createdUser.ID,
-				"login":         createdUser.Login,
-				"creator_id":    user.GroupID,
+				"temp_user":        0,
+				"registered_at":    database.Now(),
+				"group_id":         userGroupID,
+				"login_id":         createdUser.ID,
+				"login":            createdUser.Login,
+				"default_language": user.DefaultLanguage,
+				"creator_id":       user.GroupID,
 			})
 
 			usersInSubgroup++
