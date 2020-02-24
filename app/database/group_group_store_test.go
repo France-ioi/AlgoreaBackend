@@ -196,6 +196,7 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(int64(i+1), 1))
 	}
 
+	mock.MatchExpectationsInOrder(false)
 	setMockExpectationsForCreateNewAncestors(mock)
 
 	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
