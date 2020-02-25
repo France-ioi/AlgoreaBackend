@@ -52,8 +52,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
   Scenario: The item is not visible to the current user (can_view = none)
     Given I am the user with id "21"
     And the database has the following table 'items':
-      | id | duration | default_language_tag |
-      | 50 | 00:00:01 | fr                   |
+      | id | requires_explicit_entry | default_language_tag |
+      | 50 | 1                       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 50      | none               |
@@ -64,8 +64,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
   Scenario: The item is not visible to the current user (no permissions)
     Given I am the user with id "21"
     And the database has the following table 'items':
-      | id | duration | default_language_tag |
-      | 50 | 00:00:01 | fr                   |
+      | id | requires_explicit_entry | default_language_tag |
+      | 50 | 1                       | fr                   |
     When I send a GET request to "/contests/50/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -84,8 +84,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: as_team_id is given while the item's entry_participant_type = User
     Given the database has the following table 'items':
-      | id | duration | entry_participant_type | default_language_tag |
-      | 50 | 00:00:00 | User                   | fr                   |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 50 | 1                       | User                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -98,8 +98,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: as_team_id is not given while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | duration | entry_participant_type | default_language_tag |
-      | 50 | 00:00:00 | Team                   | fr                   |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 50 | 1                       | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -113,8 +113,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: as_team_id is not a team related to the item while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | duration | entry_participant_type | default_language_tag |
-      | 60 | 00:00:00 | Team                   | fr                   |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 60 | 1                       | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 60      | info                     |
@@ -126,8 +126,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: The current user is not a member of as_team_id while the item's entry_participant_type = 'Team'
     Given the database has the following table 'items':
-      | id | duration | entry_participant_type | default_language_tag |
-      | 60 | 00:00:00 | Team                   | fr                   |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 60 | 1                       | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |

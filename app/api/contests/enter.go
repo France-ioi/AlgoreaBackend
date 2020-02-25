@@ -49,7 +49,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 	var qualificationState *contestGetQualificationStateResponse
 	var itemInfo struct {
 		Now                        *database.Time
-		Duration                   string
+		Duration                   *string
 		ContestParticipantsGroupID *int64
 	}
 	err := srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -87,7 +87,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 				Error())
 			service.MustNotBeError(store.Exec(`
 				INSERT INTO groups_groups (parent_group_id, child_group_id, expires_at)
-				VALUES(?, ?, DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND))
+				VALUES(?, ?, IFNULL(DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND), '9999-12-31 23:59:59'))
 				ON DUPLICATE KEY UPDATE expires_at = VALUES(expires_at)`,
 				itemInfo.ContestParticipantsGroupID, qualificationState.groupID,
 				itemInfo.Now, itemInfo.Duration, totalAdditionalTime).Error())
