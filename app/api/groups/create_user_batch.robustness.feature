@@ -1,6 +1,5 @@
 Feature: Create a user batch - robustness
   Background:
-  Background:
     Given the database has the following table 'groups':
       | id | type    | name     | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
       | 2  | Base    | RootSelf | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
@@ -45,7 +44,7 @@ Feature: Create a user batch - robustness
 
   Scenario: Missing required fields
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {}
     """
@@ -73,7 +72,7 @@ Feature: Create a user batch - robustness
 
   Scenario: Wrong field values
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": 123,
@@ -107,7 +106,7 @@ Feature: Create a user batch - robustness
 
   Scenario: Wrong field values (another set)
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": null,
@@ -142,7 +141,7 @@ Feature: Create a user batch - robustness
 
   Scenario: Wrong field values (one more set)
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": "",
@@ -176,7 +175,7 @@ Feature: Create a user batch - robustness
 
   Scenario Outline: Wrong group prefix
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": "<group_prefix>",
@@ -201,7 +200,7 @@ Feature: Create a user batch - robustness
 
   Scenario: postfix_length is too small
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": "test",
@@ -221,7 +220,7 @@ Feature: Create a user batch - robustness
 
   Scenario: subgroups[...].group_id is not a descendant of the prefix group
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": "test",
@@ -241,7 +240,7 @@ Feature: Create a user batch - robustness
 
   Scenario: user_batch_prefix.max_users exceeded
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": "test",
@@ -261,7 +260,7 @@ Feature: Create a user batch - robustness
 
   Scenario: (group_prefix, custom_prefix) pair already exists
     Given I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": "test",
@@ -285,7 +284,7 @@ Feature: Create a user batch - robustness
       """
       {"success": false}
       """
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
     """
     {
       "group_prefix": "test",

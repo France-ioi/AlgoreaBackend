@@ -7,8 +7,8 @@ Feature: Create a user batch
       | 4  | Friends | Friends  | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
       | 21 | User    | owner    | 2016-08-10 12:34:55 | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
-      | login | group_id | first_name  | last_name | allow_subgroups |
-      | owner | 21       | Jean-Michel | Blanquer  | 1               |
+      | login | group_id | first_name  | last_name | allow_subgroups | default_language |
+      | owner | 21       | Jean-Michel | Blanquer  | 1               | en               |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 3        | 21         | memberships           |
@@ -40,7 +40,7 @@ Feature: Create a user batch
   Scenario: Create a new user batch
     Given the time now is "2019-07-17T01:02:29+03:00"
     And the DB time now is "2019-07-16 22:02:28"
-    And the login module "create" endpoint with params "amount=2&language=fr&login_fixed=1&password_length=6&postfix_length=3&prefix=test_custom_" returns 200 with encoded body:
+    And the login module "create" endpoint with params "amount=2&language=en&login_fixed=1&password_length=6&postfix_length=3&prefix=test_custom_" returns 200 with encoded body:
       """
       {
         "success": true,
@@ -51,7 +51,7 @@ Feature: Create a user batch
       }
       """
     And I am the user with id "21"
-    When I send a POST request to "/user_batches" with the following body:
+    When I send a POST request to "/user-batches" with the following body:
       """
       {
         "custom_prefix":"custom",
@@ -98,10 +98,10 @@ Feature: Create a user batch
       | group_prefix | custom_prefix | size | creator_id | created_at          |
       | test         | custom        | 2    | 21         | 2019-07-16 22:02:28 |
     And the table "users" should be:
-      | group_id            | latest_login_at | latest_activity_at | temp_user | registered_at       | login_id  | login           | email | first_name  | last_name |
-      | 21                  | null            | null               | 0         | null                | null      | owner           | null  | Jean-Michel | Blanquer  |
-      | 5577006791947779410 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000029 | test_custom_jzk | null  | null        | null      |
-      | 8674665223082153551 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000030 | test_custom_ctc | null  | null        | null      |
+      | group_id            | latest_login_at | latest_activity_at | temp_user | registered_at       | login_id  | login           | default_language | email | first_name  | last_name |
+      | 21                  | null            | null               | 0         | null                | null      | owner           | en               | null  | Jean-Michel | Blanquer  |
+      | 5577006791947779410 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000029 | test_custom_jzk | en               | null  | null        | null      |
+      | 8674665223082153551 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000030 | test_custom_ctc | en               | null  | null        | null      |
     And the table "groups" should be:
       | id                  | name            | type    | description     | created_at          | is_open | send_emails |
       | 2                   | RootSelf        | Base    | null            | 2015-08-10 12:34:55 | false   | false       |

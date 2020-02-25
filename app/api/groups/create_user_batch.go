@@ -56,7 +56,7 @@ type subgroupApproval struct {
 	RequireWatchApproval              bool
 }
 
-// swagger:operation POST /user_batches groups createUserBatch
+// swagger:operation POST /user-batches groups createUserBatch
 // ---
 // summary: Create a user batch
 // description: >
@@ -74,7 +74,8 @@ type subgroupApproval struct {
 //
 //   Restrictions:
 //
-//   * The authenticated user should be a manager of the group (or its ancestors) linked to the `group_prefix`
+//   * The authenticated user (or one of his group ancestors) should be a manager of the group
+//     (directly, or of one of its ancestors) linked to the `group_prefix`
 //     with at least 'can_manage:memberships', otherwise the 'forbidden' response is returned.
 //   * The 'subgroup.group_id'-s should be descendants of the group linked to the `group_prefix` or be the group itself,
 //     otherwise the 'forbidden' response is returned.
@@ -306,12 +307,13 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 			)
 
 			usersToCreate = append(usersToCreate, map[string]interface{}{
-				"temp_user":     0,
-				"registered_at": database.Now(),
-				"group_id":      userGroupID,
-				"login_id":      createdUser.ID,
-				"login":         createdUser.Login,
-				"creator_id":    user.GroupID,
+				"temp_user":        0,
+				"registered_at":    database.Now(),
+				"group_id":         userGroupID,
+				"login_id":         createdUser.ID,
+				"login":            createdUser.Login,
+				"default_language": user.DefaultLanguage,
+				"creator_id":       user.GroupID,
 			})
 
 			usersInSubgroup++
