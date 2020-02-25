@@ -26,14 +26,10 @@ type userBatch struct {
 // summary: List user batches
 // description: >
 //
-//   Lists the batches of users whose prefix can be used in the given group (i.e., the `group_id` is a descendant of the prefix group).
-//
-//
-//   Restrictions:
-//
-//   * The authenticated user (or one of his group ancestors) should be a manager of the `group_id`
-//     (directly, or of one of its ancestors)
-//     with at least 'can_manage:memberships', otherwise the 'forbidden' response is returned.
+//   Lists the batches of users whose prefix can be used in the given group
+//   (i.e., the `group_id` is a descendant of the prefix group).
+//   Only those user batches are shown for which the authenticated user (or one of his group ancestors) is a manager of
+//   the prefix group (or its ancestor) with at least 'can_manage:memberships'.
 // parameters:
 // - name: group_id
 //   in: path
@@ -90,20 +86,17 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	found, err := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
-		Where("groups_ancestors_active.child_group_id = ?", groupID).
-		Where("can_manage != 'none'").HasRows()
-	service.MustNotBeError(err)
-	if !found {
-		return service.InsufficientAccessRightsError
-	}
+	managedByUser := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+		Where("can_manage != 'none'").
+		Select("groups_ancestors_active.child_group_id AS id")
+
+	prefixAncestors := srv.Store.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
+		Select("ancestor_group_id AS id")
 
 	query := srv.Store.UserBatches().
 		Joins("JOIN user_batch_prefixes USING(group_prefix)").
-		Joins(`
-			JOIN groups_ancestors_active
-				ON groups_ancestors_active.ancestor_group_id = user_batch_prefixes.group_id AND
-				   groups_ancestors_active.child_group_id = ?`, groupID).
+		Where(`user_batch_prefixes.group_id IN(?)`, managedByUser.QueryExpr()).
+		Where(`user_batch_prefixes.group_id IN(?)`, prefixAncestors.QueryExpr()).
 		Select("group_prefix, custom_prefix, size, creator_id")
 
 	query, apiErr := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{

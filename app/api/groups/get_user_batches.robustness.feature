@@ -28,12 +28,6 @@ Feature: List user batches (userBatchesView) - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
-  Scenario: User is not a manager of the group_id
-    Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/14"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
   Scenario: Invalid sorting rules given
     Given I am the user with id "21"
     When I send a GET request to "/user-batches/by-group/13?sort=code"
