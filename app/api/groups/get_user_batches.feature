@@ -40,7 +40,7 @@ Feature: List user batches (userBatchesView)
 
   Scenario: List user batches (default sort)
     Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/13"
+    When I send a GET request to "/user-batches/by-group/21"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -57,7 +57,7 @@ Feature: List user batches (userBatchesView)
 
   Scenario: List user batches (sorted by group_prefix desc, size desc)
     Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/13?sort=-group_prefix,-size"
+    When I send a GET request to "/user-batches/by-group/21?sort=-group_prefix,-size"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -74,7 +74,7 @@ Feature: List user batches (userBatchesView)
 
   Scenario: List user batches (sorted by custom_prefix desc)
     Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/13?sort=-custom_prefix"
+    When I send a GET request to "/user-batches/by-group/21?sort=-custom_prefix"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -91,7 +91,7 @@ Feature: List user batches (userBatchesView)
 
   Scenario: List user batches (sorted by size)
     Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/13?sort=size"
+    When I send a GET request to "/user-batches/by-group/21?sort=size"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -108,7 +108,7 @@ Feature: List user batches (userBatchesView)
 
   Scenario: List user batches (sorted by size, start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/13?sort=size&from.size=200&from.group_prefix=test&from.custom_prefix=custom"
+    When I send a GET request to "/user-batches/by-group/21?sort=size&from.size=200&from.group_prefix=test&from.custom_prefix=custom"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

@@ -26,7 +26,7 @@ type userBatch struct {
 // summary: List user batches
 // description: >
 //
-//   Lists existing batches of users whose group_prefix's `group_id` is one the input `group_id`'s descendants.
+//   Lists the batches of users whose prefix can be used in the given group (i.e., the `group_id` is a descendant of the prefix group).
 //
 //
 //   Restrictions:
@@ -102,8 +102,8 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 		Joins("JOIN user_batch_prefixes USING(group_prefix)").
 		Joins(`
 			JOIN groups_ancestors_active
-				ON groups_ancestors_active.ancestor_group_id = ? AND
-				   groups_ancestors_active.child_group_id = user_batch_prefixes.group_id`, groupID).
+				ON groups_ancestors_active.ancestor_group_id = user_batch_prefixes.group_id AND
+				   groups_ancestors_active.child_group_id = ?`, groupID).
 		Select("group_prefix, custom_prefix, size, creator_id")
 
 	query, apiErr := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
