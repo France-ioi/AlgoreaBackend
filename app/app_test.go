@@ -443,7 +443,7 @@ type createMissingDataTestCase struct {
 	config                    *config.Root
 	expectedGroupsToInsert    []groupSpec
 	expectedRelationsToCheck  []relationSpec
-	expectedRelationsToInsert []database.ParentChild
+	expectedRelationsToInsert []map[string]interface{}
 	relationsError            bool
 	skipRelations             bool
 }
@@ -462,8 +462,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
-			expectedRelationsToInsert: []database.ParentChild{
-				{ParentID: 1, ChildID: 2}, {ParentID: 2, ChildID: 4},
+			expectedRelationsToInsert: []map[string]interface{}{
+				{"parent_group_id": int64(1), "child_group_id": int64(2)},
+				{"parent_group_id": int64(2), "child_group_id": int64(4)},
 			},
 		},
 		{
@@ -479,8 +480,8 @@ func TestApplication_CreateMissingData(t *testing.T) {
 				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 6, ChildID: 8}},
 			},
-			expectedRelationsToInsert: []database.ParentChild{
-				{ParentID: 6, ChildID: 8},
+			expectedRelationsToInsert: []map[string]interface{}{
+				{"parent_group_id": int64(6), "child_group_id": int64(8)},
 			},
 		},
 		{
@@ -526,8 +527,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
-			expectedRelationsToInsert: []database.ParentChild{
-				{ParentID: 1, ChildID: 2}, {ParentID: 2, ChildID: 4},
+			expectedRelationsToInsert: []map[string]interface{}{
+				{"parent_group_id": int64(1), "child_group_id": int64(2)},
+				{"parent_group_id": int64(2), "child_group_id": int64(4)},
 			},
 			relationsError: true,
 		},
@@ -559,8 +561,8 @@ func TestApplication_CreateMissingData(t *testing.T) {
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
-			expectedRelationsToInsert: []database.ParentChild{
-				{ParentID: 2, ChildID: 4},
+			expectedRelationsToInsert: []map[string]interface{}{
+				{"parent_group_id": int64(2), "child_group_id": int64(4)},
 			},
 		},
 		{
@@ -588,8 +590,8 @@ func TestApplication_CreateMissingData(t *testing.T) {
 			var createdRelations bool
 			monkey.PatchInstanceMethod(reflect.TypeOf(&database.GroupGroupStore{}),
 				"CreateRelationsWithoutChecking",
-				func(store *database.GroupGroupStore, pairs []database.ParentChild) error {
-					assertlib.Equal(t, pairs, tt.expectedRelationsToInsert)
+				func(store *database.GroupGroupStore, relations []map[string]interface{}) error {
+					assertlib.Equal(t, tt.expectedRelationsToInsert, relations)
 					createdRelations = true
 					if tt.relationsError {
 						expectedError = errors.New("some error")

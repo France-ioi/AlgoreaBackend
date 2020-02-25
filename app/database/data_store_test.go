@@ -43,6 +43,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"RefreshTokens", func(store *DataStore) *DB { return store.RefreshTokens().Where("") }, "`refresh_tokens`"},
 		{"Sessions", func(store *DataStore) *DB { return store.Sessions().Where("") }, "`sessions`"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
+		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches`"},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -90,6 +91,7 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"RefreshTokens", func(store *DataStore) interface{} { return store.RefreshTokens() }, &RefreshTokenStore{}},
 		{"Sessions", func(store *DataStore) interface{} { return store.Sessions() }, &SessionStore{}},
 		{"Users", func(store *DataStore) interface{} { return store.Users() }, &UserStore{}},
+		{"UserBatches", func(store *DataStore) interface{} { return store.UserBatches() }, &UserBatchStore{}},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -363,5 +365,25 @@ func TestDataStore_InsertOrUpdateMap(t *testing.T) {
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
 		InsertOrUpdateMap(dataRow, []string{"sField", "sNullField"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRows := []map[string]interface{}{
+		{"id": int64(1), "sField": "some value", "sNullField": "value"},
+		{"id": int64(2), "sField": "another value", "sNullField": nil},
+	}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?), (?, ?, NULL) "+
+		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		WithArgs(int64(1), "some value", "value", int64(2), "another value").
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
+		InsertOrUpdateMaps(dataRows, []string{"sField", "sNullField"}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

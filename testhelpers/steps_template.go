@@ -1,7 +1,7 @@
 package testhelpers
 
 import (
-	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/cucumber/godog/gherkin"
 )
 
 func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { // nolint

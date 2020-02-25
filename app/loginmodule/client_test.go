@@ -312,14 +312,15 @@ func TestClient_UnlinkClient(t *testing.T) {
 			responseCode: 500,
 			response:     "Unexpected error",
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog:  `level=warning msg="Can't unlink the user (status code = 500, response = \"Unexpected error\")"`,
+			expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/accounts_manager/unlink_client ` +
+				`(status code = 500, response = \"Unexpected error\")"`,
 		},
 		{
 			name:         "corrupted base64",
 			responseCode: 200,
 			response:     "Some text",
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog: `level=warning msg="Can't decode response from the login module ` +
+			expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/accounts_manager/unlink_client ` +
 				`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
 		},
 		{
@@ -327,7 +328,7 @@ func TestClient_UnlinkClient(t *testing.T) {
 			responseCode: 200,
 			response:     encodeUnlinkClientResponse(`{"success":true}`, "anotherClientKey"),
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog: `level=warning msg="Can't parse response from the login module ` +
+			expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/unlink_client ` +
 				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
 				`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
 		},
@@ -336,7 +337,7 @@ func TestClient_UnlinkClient(t *testing.T) {
 			responseCode: 200,
 			response:     encodeUnlinkClientResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
 			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog:  `level=warning msg="Can't unlink the user. The login module returned an error: unknown error"`,
+			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/unlink_client: unknown error"`,
 		},
 	}
 	const moduleURL = "http://login.url.com"
@@ -356,6 +357,124 @@ func TestClient_UnlinkClient(t *testing.T) {
 			err := client.UnlinkClient(context.Background(), "clientID", "clientKeyclientKey", 123456)
 
 			assert.Equal(t, tt.expectedErr, err)
+			if tt.expectedLog != "" {
+				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+			}
+			assert.NoError(t, httpmock.AllStubsCalled())
+		})
+	}
+}
+
+func TestClient_CreateUsers(t *testing.T) {
+	tests := []struct {
+		name           string
+		params         *CreateUsersParams
+		urlParams      string
+		responseCode   int
+		response       string
+		expectedResult []CreateUsersResponseDataRow
+		expectedErr    error
+		expectedLog    string
+	}{
+		{
+			name:           "success",
+			responseCode:   200,
+			response:       encodeUnlinkClientResponse(`{"success":true, "data":[]}`, "clientKeyclientKey"),
+			expectedResult: []CreateUsersResponseDataRow{},
+		},
+		{
+			name: "success with all the parameters set",
+			params: &CreateUsersParams{
+				Prefix:         "pref",
+				Amount:         10,
+				PostfixLength:  3,
+				PasswordLength: 4,
+				LoginFixed:     func(b bool) *bool { return &b }(false),
+				Language:       func(s string) *string { return &s }("fr"),
+			},
+			urlParams:    "amount=10&client_id=clientID&language=fr&login_fixed=0&password_length=4&postfix_length=3&prefix=pref",
+			responseCode: 200,
+			response: encodeUnlinkClientResponse(`{
+				"success":true, "data":[
+					{"id":12345678901234, "login":"pref_abcd", "password": "efgh"},
+					{"id":12345678901235, "login":"pref_bcde", "password": "jklm"}
+				]}`, "clientKeyclientKey"),
+			expectedResult: []CreateUsersResponseDataRow{
+				{ID: 12345678901234, Login: "pref_abcd", Password: "efgh"},
+				{ID: 12345678901235, Login: "pref_bcde", Password: "jklm"},
+			},
+		},
+		{
+			name: "success with all the parameters set and login_fixed=true",
+			params: &CreateUsersParams{
+				Prefix:         "pref",
+				Amount:         10,
+				PostfixLength:  3,
+				PasswordLength: 4,
+				LoginFixed:     func(b bool) *bool { return &b }(true),
+				Language:       func(s string) *string { return &s }("en"),
+			},
+			urlParams:      "amount=10&client_id=clientID&language=en&login_fixed=1&password_length=4&postfix_length=3&prefix=pref",
+			responseCode:   200,
+			response:       encodeUnlinkClientResponse(`{"success":true, "data":[]}`, "clientKeyclientKey"),
+			expectedResult: []CreateUsersResponseDataRow{},
+		},
+		{
+			name:         "wrong status code",
+			responseCode: 500,
+			response:     "Unexpected error",
+			expectedErr:  errors.New("can't create users"),
+			expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/accounts_manager/create ` +
+				`(status code = 500, response = \"Unexpected error\")"`,
+		},
+		{
+			name:         "corrupted base64",
+			responseCode: 200,
+			response:     "Some text",
+			expectedErr:  errors.New("can't create users"),
+			expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/accounts_manager/create ` +
+				`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
+		},
+		{
+			name:         "can't unmarshal",
+			responseCode: 200,
+			response:     encodeUnlinkClientResponse(`{"success":true}`, "anotherClientKey"),
+			expectedErr:  errors.New("can't create users"),
+			expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/create ` +
+				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
+				`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
+		},
+		{
+			name:         "'success' is false",
+			responseCode: 200,
+			response:     encodeUnlinkClientResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
+			expectedErr:  errors.New("can't create users"),
+			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/create: unknown error"`,
+		},
+	}
+	const moduleURL = "http://login.url.com"
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			client := &Client{url: moduleURL}
+			httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+			defer httpmock.DeactivateAndReset()
+			responder := httpmock.NewStringResponder(tt.responseCode, tt.response)
+			if tt.urlParams == "" {
+				tt.urlParams = "amount=0&client_id=clientID&password_length=0&postfix_length=0&prefix="
+			}
+			httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+				moduleURL+"/platform_api/accounts_manager/create?"+tt.urlParams, responder))
+
+			hook, restoreLogFunc := logging.MockSharedLoggerHook()
+			defer restoreLogFunc()
+
+			if tt.params == nil {
+				tt.params = &CreateUsersParams{}
+			}
+			result, err := client.CreateUsers(context.Background(), "clientID", "clientKeyclientKey", tt.params)
+			assert.Equal(t, tt.expectedErr, err)
+			assert.Equal(t, tt.expectedResult, result)
 			if tt.expectedLog != "" {
 				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
 			}

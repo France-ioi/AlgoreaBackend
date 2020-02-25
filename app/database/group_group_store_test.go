@@ -171,7 +171,10 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	relations := []ParentChild{{ParentID: 1, ChildID: 2}, {ParentID: 3, ChildID: 4}}
+	relations := []map[string]interface{}{
+		{"parent_group_id": int64(1), "child_group_id": int64(2)},
+		{"parent_group_id": int64(3), "child_group_id": int64(4)},
+	}
 
 	mock.MatchExpectationsInOrder(true)
 	mock.ExpectBegin()
@@ -183,16 +186,17 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 		mock.ExpectExec("^" +
 			regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
 				"WHERE `parent_group_id` = ? FOR UPDATE), 0)") + "$").
-			WithArgs(relation.ParentID).
+			WithArgs(relation["parent_group_id"]).
 			WillReturnResult(sqlmock.NewResult(-1, 0))
 
 		mock.ExpectExec("^"+
 			regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `parent_group_id`) "+
-				"VALUES (?, @maxIChildOrder+1, ?)")+"$").
-			WithArgs(relation.ChildID, relation.ParentID).
+				"VALUES (?, @maxIChildOrder+?, ?)")+"$").
+			WithArgs(relation["child_group_id"], 1, relation["parent_group_id"]).
 			WillReturnResult(sqlmock.NewResult(int64(i+1), 1))
 	}
 
+	mock.MatchExpectationsInOrder(false)
 	setMockExpectationsForCreateNewAncestors(mock)
 
 	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
@@ -228,7 +232,7 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking_MustBeRunInTransaction(t
 
 	groupGroupStore := NewDataStore(db).GroupGroups()
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_ = groupGroupStore.CreateRelationsWithoutChecking([]ParentChild{{ParentID: 1, ChildID: 2}})
+		_ = groupGroupStore.CreateRelationsWithoutChecking([]map[string]interface{}{{"parent_group_id": 1, "child_group_id": 2}})
 	})
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

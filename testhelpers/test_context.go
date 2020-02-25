@@ -12,7 +12,7 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
-	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/cucumber/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql"      // use to force database/sql to use mysql
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 	"github.com/thingful/httpmock"
@@ -102,7 +102,7 @@ func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 
 	defer func() {
 		if err := httpmock.AllStubsCalled(); err != nil {
-			panic(err) // godog doesn't allow to return errors from handlers (see https://github.com/DATA-DOG/godog/issues/88)
+			panic(err) // godog doesn't allow to return errors from handlers (see https://github.com/cucumber/godog/issues/88)
 		}
 		httpmock.DeactivateAndReset()
 	}()

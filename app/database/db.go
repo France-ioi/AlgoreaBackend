@@ -457,20 +457,22 @@ func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...))
 }
 
-// insertMap reads fields from the given map and inserts the values which have been set
+// insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
 // into the given table
-func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) error {
-	query, values := conn.constructInsertMapStatement(dataMap, tableName)
+func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) error {
+	if len(dataMaps) == 0 {
+		return nil
+	}
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
 	return conn.db.Exec(query, values...).Error
 }
 
-func (conn *DB) constructInsertMapStatement(dataMap map[string]interface{}, tableName string) (query string, values []interface{}) {
+func (conn *DB) constructInsertMapsStatement(dataMaps []map[string]interface{}, tableName string) (query string, values []interface{}) {
 	// data for the building the SQL request
-	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...)", values...
-	var valueMarks = make([]string, 0, len(dataMap))
-	values = make([]interface{}, 0, len(dataMap))
-	keys := make([]string, 0, len(dataMap))
-	for key := range dataMap {
+	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...), ...", values...
+	values = make([]interface{}, 0, len(dataMaps)*len(dataMaps[0]))
+	keys := make([]string, 0, len(dataMaps[0]))
+	for key := range dataMaps[0] {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
@@ -478,25 +480,39 @@ func (conn *DB) constructInsertMapStatement(dataMap map[string]interface{}, tabl
 	for _, key := range keys {
 		escapedKeys = append(escapedKeys, QuoteName(key))
 	}
-	for _, key := range keys {
-		if dataMap[key] == nil {
-			valueMarks = append(valueMarks, "NULL")
-		} else {
-			valueMarks = append(valueMarks, "?")
-			values = append(values, dataMap[key])
+	var builder strings.Builder
+	// nolint:gosec
+	_, _ = builder.WriteString(fmt.Sprintf("INSERT INTO `%s` (%s) VALUES ", tableName, strings.Join(escapedKeys, ", ")))
+	for index, dataMap := range dataMaps {
+		_, _ = builder.WriteRune('(')
+		for keyIndex, key := range keys {
+			if dataMap[key] == nil {
+				_, _ = builder.WriteString("NULL")
+			} else {
+				_, _ = builder.WriteRune('?')
+				values = append(values, dataMap[key])
+			}
+			if keyIndex != len(keys)-1 {
+				_, _ = builder.WriteString(", ")
+			}
+		}
+		_, _ = builder.WriteRune(')')
+		if index != len(dataMaps)-1 {
+			_, _ = builder.WriteString(", ")
 		}
 	}
-	// nolint:gosec
-	query = fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
-		strings.Join(escapedKeys, ", "),
-		strings.Join(valueMarks, ", "))
+	query = builder.String()
 	return query, values
 }
 
-// insertOrUpdateMap reads fields from the given map and inserts the values which have been set
-// into the given table (like insertMap does). If it is a duplicate, the listed columns will be updated.
-func (conn *DB) insertOrUpdateMap(tableName string, dataMap map[string]interface{}, updateColumns []string) error {
-	query, values := conn.constructInsertMapStatement(dataMap, tableName)
+// insertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
+// (so all the maps should have the same keys)
+// into the given table (like insertMaps does). If it is a duplicate, the listed columns will be updated.
+func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]interface{}, updateColumns []string) error {
+	if len(dataMaps) == 0 {
+		return nil
+	}
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
 
 	var builder strings.Builder
 	_, _ = builder.WriteString(query)

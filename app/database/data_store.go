@@ -146,6 +146,11 @@ func (s *DataStore) Sessions() *SessionStore {
 	return &SessionStore{NewDataStoreWithTable(s.DB, "sessions")}
 }
 
+// UserBatches returns a UserBatchStore
+func (s *DataStore) UserBatches() *UserBatchStore {
+	return &UserBatchStore{NewDataStoreWithTable(s.DB, "user_batches")}
+}
+
 // NewID generates a positive random int64 to be used as id
 // !!! To be safe, the insertion should be be retried if the id conflicts with an existing entry
 func (s *DataStore) NewID() int64 {
@@ -202,11 +207,24 @@ func (s *DataStore) RetryOnDuplicateKeyError(keyName, nameInError string, f func
 // InsertMap reads fields from the given map and inserts the values which have been set
 // into the store's table
 func (s *DataStore) InsertMap(dataMap map[string]interface{}) error {
-	return s.DB.insertMap(s.tableName, dataMap)
+	return s.DB.insertMaps(s.tableName, []map[string]interface{}{dataMap})
+}
+
+// InsertMaps reads fields from the given map and inserts the values set in the first row (so all the rows should have the same keys)
+// into the store's table
+func (s *DataStore) InsertMaps(dataMaps []map[string]interface{}) error {
+	return s.DB.insertMaps(s.tableName, dataMaps)
 }
 
 // InsertOrUpdateMap reads fields from the given map and inserts the values which have been set
 // into the store's table (like InsertMap does). If it is a duplicate, the listed columns will be updated.
 func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColumns []string) error {
-	return s.DB.insertOrUpdateMap(s.tableName, dataMap, updateColumns)
+	return s.DB.insertOrUpdateMaps(s.tableName, []map[string]interface{}{dataMap}, updateColumns)
+}
+
+// InsertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
+// (so all the maps should have the same keys)
+// into the store's table (like InsertMaps does). If it is a duplicate, the listed columns will be updated.
+func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateColumns []string) error {
+	return s.DB.insertOrUpdateMaps(s.tableName, dataMap, updateColumns)
 }

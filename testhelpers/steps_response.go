@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/cucumber/godog/gherkin"
 	"github.com/pmezard/go-difflib/difflib"
 
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"

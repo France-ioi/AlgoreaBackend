@@ -143,7 +143,7 @@ func (app *Application) CreateMissingData() error {
 func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) error {
 	groupStore := store.Groups()
 	groupGroupStore := store.GroupGroups()
-	var relationsToCreate []database.ParentChild
+	var relationsToCreate []map[string]interface{}
 	var inserted bool
 	for _, domainConfig := range app.Config.Domains {
 		domainConfig := domainConfig
@@ -152,12 +152,13 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 			return err
 		}
 		inserted = inserted || insertedForDomain
-		for _, spec := range []database.ParentChild{
-			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootSelfGroup},
-			{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
+		for _, spec := range []map[string]interface{}{
+			{"parent_group_id": domainConfig.RootGroup, "child_group_id": domainConfig.RootSelfGroup},
+			{"parent_group_id": domainConfig.RootSelfGroup, "child_group_id": domainConfig.RootTempGroup},
 		} {
 			found, err := groupGroupStore.
-				Where("parent_group_id = ?", spec.ParentID).Where("child_group_id = ?", spec.ChildID).
+				Where("parent_group_id = ?", spec["parent_group_id"]).
+				Where("child_group_id = ?", spec["child_group_id"]).
 				Limit(1).HasRows()
 			if err != nil {
 				return err

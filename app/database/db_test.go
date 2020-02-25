@@ -788,26 +788,52 @@ func TestDB_Exec(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_insertMap(t *testing.T) {
+func TestDB_insertMaps(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
+	dataRows := []map[string]interface{}{{"id": int64(1), "sField": "some value", "sNullField": nil}}
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL)")).
 		WithArgs(int64(1), "some value").
 		WillReturnError(expectedError)
 
-	assert.Equal(t, expectedError, db.insertMap("myTable", dataRow))
+	assert.Equal(t, expectedError, db.insertMaps("myTable", dataRows))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_insertOrUpdateMap(t *testing.T) {
+func TestDB_insertMaps_MultipleRows(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
+	dataRows := []map[string]interface{}{
+		{"id": int64(1), "sField": "some value", "sNullField": "value"},
+		{"id": int64(2), "sField": "another value", "sNullField": nil},
+	}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?), (?, ?, NULL)")).
+		WithArgs(int64(1), "some value", "value", int64(2), "another value").
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, db.insertMaps("myTable", dataRows))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_insertMaps_WithEmptyArray(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	var dataRows []map[string]interface{}
+	assert.NoError(t, db.insertMaps("myTable", dataRows))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_insertOrUpdateMaps(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRows := []map[string]interface{}{{"id": int64(1), "sField": "some value", "sNullField": nil}}
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL)"+
@@ -815,7 +841,15 @@ func TestDB_insertOrUpdateMap(t *testing.T) {
 		WithArgs(int64(1), "some value").
 		WillReturnError(expectedError)
 
-	assert.Equal(t, expectedError, db.insertOrUpdateMap("myTable", dataRow, []string{"sField", "sNullField"}))
+	assert.Equal(t, expectedError, db.insertOrUpdateMaps("myTable", dataRows, []string{"sField", "sNullField"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_insertOrUpdateMaps_WithEmptyArray(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	var dataRows []map[string]interface{}
+	assert.NoError(t, db.insertOrUpdateMaps("myTable", dataRows, []string{"sField", "sNullField"}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
