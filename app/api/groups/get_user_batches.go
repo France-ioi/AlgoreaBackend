@@ -26,7 +26,7 @@ type userBatch struct {
 // summary: List user batches
 // description: >
 //
-//   Lists existing batches of users.
+//   Lists existing batches of users whose group_prefix's `group_id` is one the input `group_id`'s descendants.
 //
 //
 //   Restrictions:
