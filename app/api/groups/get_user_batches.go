@@ -58,7 +58,7 @@ type userBatch struct {
 //   in: query
 //   type: string
 // - name: limit
-//   description: Display the first N members
+//   description: Display the first N user batches
 //   in: query
 //   type: integer
 //   maximum: 1000
