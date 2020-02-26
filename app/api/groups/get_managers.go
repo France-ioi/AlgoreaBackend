@@ -99,7 +99,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		map[string]*service.FieldSortingParams{
 			"name": {ColumnName: "groups.name"},
 			"id":   {ColumnName: "groups.id", FieldType: "int64"}},
-		"name,id", "id", false)
+		"name,id", []string{"id"}, false)
 
 	if apiError != service.NoError {
 		return apiError

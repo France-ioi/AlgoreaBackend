@@ -48,10 +48,10 @@ func (d sortingDirection) conditionSign() string {
 // taking into the account the URL parameters 'from.*'.
 // When the `skipSortParameter` is true, the 'sort' request parameter is ignored.
 func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
-	defaultRules, tieBreakerFieldName string, skipSortParameter bool) (*database.DB, APIError) {
+	defaultRules string, tieBreakerFieldNames []string, skipSortParameter bool) (*database.DB, APIError) {
 	sortingRules := prepareSortingRulesAndAcceptedFields(r, defaultRules, skipSortParameter)
 
-	usedFields, fieldsDirections, err := parseSortingRules(sortingRules, acceptedFields, tieBreakerFieldName)
+	usedFields, fieldsDirections, err := parseSortingRules(sortingRules, acceptedFields, tieBreakerFieldNames)
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
@@ -80,7 +80,7 @@ func prepareSortingRulesAndAcceptedFields(r *http.Request, defaultRules string, 
 
 // parseSortingRules returns a slice with used fields and a map fieldName -> direction
 // It also checks that there are no unallowed fields in the rules.
-func parseSortingRules(sortingRules string, acceptedFields map[string]*FieldSortingParams, tieBreakerFieldName string) (
+func parseSortingRules(sortingRules string, acceptedFields map[string]*FieldSortingParams, tieBreakerFieldNames []string) (
 	usedFields []string, fieldsDirections map[string]sortingDirection, err error) {
 	sortStatements := strings.Split(sortingRules, ",")
 	usedFields = make([]string, 0, len(sortStatements)+1)
@@ -101,9 +101,11 @@ func parseSortingRules(sortingRules string, acceptedFields map[string]*FieldSort
 		}
 	}
 	if !includesUniqueField {
-		if fieldsDirections[tieBreakerFieldName] == 0 {
-			fieldsDirections[tieBreakerFieldName] = 1
-			usedFields = append(usedFields, tieBreakerFieldName)
+		for _, tieBreakerFieldName := range tieBreakerFieldNames {
+			if fieldsDirections[tieBreakerFieldName] == 0 {
+				fieldsDirections[tieBreakerFieldName] = 1
+				usedFields = append(usedFields, tieBreakerFieldName)
+			}
 		}
 	}
 	return

@@ -120,7 +120,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
 		"created_at": {ColumnName: "answers.created_at", FieldType: "time"},
 		"id":         {ColumnName: "answers.id", FieldType: "int64"},
-	}, "-created_at,id", "id", false)
+	}, "-created_at,id", []string{"id"}, false)
 	if apiError != service.NoError {
 		return apiError
 	}
