@@ -17,7 +17,6 @@ import (
 type groupGroup struct {
 	ParentGroupID              int64
 	ChildGroupID               int64
-	ChildOrder                 int64
 	ExpiresAt                  string
 	PersonalInfoViewApprovedAt *database.Time
 	LockMembershipApprovedAt   *database.Time
@@ -194,10 +193,10 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 			{GroupID: 20, MemberID: 5, Type: "leave_request"},
 		},
 		wantGroupGroups: []groupGroup{
-			{ParentGroupID: 20, ChildGroupID: 1, ChildOrder: 1},
-			{ParentGroupID: 20, ChildGroupID: 2, ChildOrder: 2},
-			{ParentGroupID: 20, ChildGroupID: 3, ChildOrder: 3},
-			{ParentGroupID: 20, ChildGroupID: 6, ChildOrder: 4},
+			{ParentGroupID: 20, ChildGroupID: 1},
+			{ParentGroupID: 20, ChildGroupID: 2},
+			{ParentGroupID: 20, ChildGroupID: 3},
+			{ParentGroupID: 20, ChildGroupID: 6},
 			{ParentGroupID: 20, ChildGroupID: 4},
 			{ParentGroupID: 20, ChildGroupID: 5},
 			{ParentGroupID: 20, ChildGroupID: 7},
@@ -229,7 +228,7 @@ func testTransitionAcceptingPendingRequest(name string, action database.GroupGro
 			acceptedID: "success", 30: "cycle",
 		}),
 		wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, nil,
-			[]groupGroup{{ParentGroupID: 20, ChildGroupID: acceptedID, ChildOrder: 1}}),
+			[]groupGroup{{ParentGroupID: 20, ChildGroupID: acceptedID}}),
 		wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, pendingType.PendingType(),
 			map[string]*groupPendingRequest{fmt.Sprintf("20_%d", acceptedID): nil}, nil),
 		wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
@@ -297,7 +296,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				30: "cycle",
 			},
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged,
-				nil, []groupGroup{{ParentGroupID: 20, ChildGroupID: 3, ChildOrder: 1}}),
+				nil, []groupGroup{{ParentGroupID: 20, ChildGroupID: 3}}),
 			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "join_request",
 				map[string]*groupPendingRequest{"20_3": nil, "20_7": {GroupID: 20, MemberID: 7, Type: "invitation"}},
 				[]groupPendingRequest{
@@ -788,7 +787,6 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 					{
 						ParentGroupID:              20,
 						ChildGroupID:               3,
-						ChildOrder:                 1,
 						PersonalInfoViewApprovedAt: tt.wantPersonalInfoViewApprovedAt,
 						LockMembershipApprovedAt:   tt.wantLockMembershipApprovedAt,
 						WatchApprovedAt:            tt.wantWatchApprovedAt,
@@ -936,7 +934,6 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 					{
 						ParentGroupID:              20,
 						ChildGroupID:               3,
-						ChildOrder:                 1,
 						PersonalInfoViewApprovedAt: tt.wantPersonalInfoViewApprovedAt,
 						LockMembershipApprovedAt:   tt.wantLockMembershipApprovedAt,
 						WatchApprovedAt:            tt.wantWatchApprovedAt,
@@ -1064,7 +1061,7 @@ func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitio
 func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupStore, expected []groupGroup) {
 	var groupsGroups []groupGroup
 	assert.NoError(t, groupGroupStore.Select(`
-			parent_group_id, child_group_id, child_order, expires_at, personal_info_view_approved_at,
+			parent_group_id, child_group_id, expires_at, personal_info_view_approved_at,
 			lock_membership_approved_at, watch_approved_at`).
 		Order("parent_group_id, child_group_id").Scan(&groupsGroups).Error())
 
@@ -1076,16 +1073,9 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 		return expected[i].ParentGroupID < expected[j].ParentGroupID ||
 			expected[i].ParentGroupID == expected[j].ParentGroupID && expected[i].ChildGroupID < expected[j].ChildGroupID
 	})
-	usedChildOrders := make(map[int64]bool, len(expected))
 	for index, row := range expected {
 		assert.Equal(t, row.ParentGroupID, groupsGroups[index].ParentGroupID, "wrong parent group id for row %#v", groupsGroups[index])
 		assert.Equal(t, row.ChildGroupID, groupsGroups[index].ChildGroupID, "wrong child group id for row %#v", groupsGroups[index])
-		if row.ChildOrder == 0 {
-			assert.Zero(t, groupsGroups[index].ChildOrder)
-		} else {
-			assert.False(t, usedChildOrders[groupsGroups[index].ChildOrder])
-			usedChildOrders[groupsGroups[index].ChildOrder] = true
-		}
 		if row.ExpiresAt == "" {
 			row.ExpiresAt = maxDateTime
 		}

@@ -159,7 +159,6 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 					map[string]interface{}{
 						"parent_group_id": 200, // contest participants group
 						"child_group_id":  14,
-						"child_order":     1,
 					}); err != nil {
 					return err
 				}
@@ -178,7 +177,6 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 					map[string]interface{}{
 						"parent_group_id": 100, // contest participants group
 						"child_group_id":  15,
-						"child_order":     1,
 					}); err != nil {
 					return err
 				}
@@ -197,7 +195,6 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 					map[string]interface{}{
 						"parent_group_id": 300, // contest participants group
 						"child_group_id":  17,
-						"child_order":     1,
 					}); err != nil {
 					return err
 				}
