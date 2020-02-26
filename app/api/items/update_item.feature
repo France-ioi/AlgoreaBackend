@@ -8,10 +8,10 @@ Background:
     | login | temp_user | group_id |
     | jdoe  | 0         | 11       |
   And the database has the following table 'items':
-    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
-    | 21 | Chapter | http://someurl1.com/ | en                   | 1        | Task 1  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
-    | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
-    | 60 | Chapter | http://someurl2.com/ | en                   | 1        | Task 3  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 1234                          |
+    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
+    | 21 | Chapter | http://someurl1.com/ | en                   | 1        | Task 1  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
+    | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
+    | 60 | Chapter | http://someurl2.com/ | en                   | 1        | Task 3  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                          |
   And the database has the following table 'items_items':
     | parent_item_id | child_item_id | child_order |
     | 21             | 60            | 0           |
@@ -54,8 +54,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-    | id | type   | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
-    | 50 | Course | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
+    | id | type   | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
+    | 50 | Course | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -172,8 +172,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         |             | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
+      | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | entering_time_min   | entering_time_max   | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
+      | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         |             | 1             | 1           | One             | Half                       | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -439,10 +439,12 @@ Background:
       | solution                 | content_view_propagation      | as_info                      |
       | content_with_descendants | content_view_propagation      | as_info                      |
       | content                  | content_view_propagation      | as_info                      |
+      | enter                    | content_view_propagation      | as_info                      |
       | solution_with_grant      | content_view_propagation      | none                         |
       | solution                 | content_view_propagation      | none                         |
       | content_with_descendants | content_view_propagation      | none                         |
       | content                  | content_view_propagation      | none                         |
+      | enter                    | content_view_propagation      | none                         |
       | none                     | content_view_propagation      | none                         |
       | solution_with_grant      | upper_view_levels_propagation | as_is                        |
       | solution                 | upper_view_levels_propagation | as_is                        |
@@ -450,12 +452,14 @@ Background:
       | solution                 | upper_view_levels_propagation | as_content_with_descendants  |
       | content_with_descendants | upper_view_levels_propagation | as_content_with_descendants  |
       | content                  | upper_view_levels_propagation | use_content_view_propagation |
+      | enter                    | upper_view_levels_propagation | use_content_view_propagation |
       | none                     | upper_view_levels_propagation | use_content_view_propagation |
       | solution_with_grant      | grant_view_propagation        | true                         |
       | solution_with_grant      | grant_view_propagation        | false                        |
       | solution                 | grant_view_propagation        | false                        |
       | content_with_descendants | grant_view_propagation        | false                        |
       | content                  | grant_view_propagation        | false                        |
+      | enter                    | grant_view_propagation        | false                        |
       | none                     | grant_view_propagation        | false                        |
 
   Scenario Outline: Sets items_items.watch_propagation/edit_propagation correctly

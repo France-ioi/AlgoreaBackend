@@ -150,7 +150,7 @@ func checkUserHasAppropriateCanGrantViewPermissionForItem(viewPermissionToSet st
 	user *database.User, itemID int64) bool {
 	requiredGrantViewPermission := viewPermissionToSet
 	if requiredGrantViewPermission == "info" { // no "info" in can_grant_view
-		requiredGrantViewPermission = "content"
+		requiredGrantViewPermission = "enter"
 	}
 	// permissions_generated.can_grant_view_generated should be >= data["can_view"]
 	found, err := s.Permissions().

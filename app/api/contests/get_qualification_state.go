@@ -21,7 +21,9 @@ type contestGetQualificationStateOtherMember struct {
 	Login string `json:"login"`
 	// required: true
 	GroupID int64 `json:"group_id,string"`
-	// whether at least one member's ancestor group has now() in the `can_enter_from` -` can_enter_until` range for this item
+	// whether at least one member's ancestor group has now()
+	// between `items.entering_time_min` (or `permissions_granted.can_enter_from`) and
+	// `items.entering_time_max` (or `permissions_granted.can_enter_until`) range for this item
 	// required: true
 	CanEnter bool `json:"can_enter"`
 }
@@ -36,7 +38,9 @@ type contestGetQualificationStateResponse struct {
 	// required: true
 	// enum: All,Half,One,None
 	EnteringCondition string `json:"entering_condition"`
-	// whether at least one user's ancestor group has now() in the `can_enter_from` -` can_enter_until` range for this item
+	// whether at least one user's ancestor group has NOW() between
+	// `permissions_granted.can_enter_from` and `permissions_granted.can_enter_until`
+	// and between `items.entering_time_min` and `items.entering_time_max` for this item
 	// required: true
 	CurrentUserCanEnter bool `json:"current_user_can_enter"`
 	// required: true
@@ -63,9 +67,10 @@ type contestGetQualificationStateResponse struct {
 //
 //                      * "None": no additional conditions (the team/user can enter the contest);
 //
-//                      * "One": the current time needs to be included in the
-//                        `groups_contest_items`.`can_enter_from`-`can_enter_until` time range
-//                        for the contest item and one of the group ancestors of either the user (if participating alone)
+//                      * "One": the current time needs to be between
+//                        `permissions_granted.can_enter_from` and `permissions_granted.can_enter_until`
+//                        and between `items.entering_time_min` and `items.entering_time_max`
+//                        for the item and one of the group ancestors of either the user (if participating alone)
 //                        or at least one member of the team;
 //
 //                      * "All": same but all members of the team;
@@ -246,16 +251,19 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 	if groupID != user.GroupID {
 		service.MustNotBeError(store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = groups_groups_active.child_group_id").
+			Joins("JOIN items ON items.id = ?", itemID).
 			Joins(`
 				LEFT JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id`).
 			Joins(`
-					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
-						groups_contest_items.item_id = ?`, itemID).
+					LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+						permissions_granted.item_id = items.id`).
 			Group("groups_groups_active.child_group_id").
 			Order("groups_groups_active.child_group_id").
 			Select(`
 					users.first_name, users.last_name, users.group_id AS group_id, users.login,
-					IFNULL(MAX(groups_contest_items.can_enter_from <= NOW() AND NOW() < groups_contest_items.can_enter_until), 0) AS can_enter`).
+					IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND
+					IFNULL(MAX(items.entering_time_min), '1000-01-01 00:00:00') <= NOW() AND
+						NOW() < IFNULL(MAX(items.entering_time_max), '9999-12-31 23:59:59') AS can_enter`).
 			Scan(&otherMembers).Error())
 		membersCount = int32(len(otherMembers))
 		var currentUserIndex int
@@ -274,14 +282,17 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 		membersCount = 1
 		otherMembers = []contestGetQualificationStateOtherMember{}
 		service.MustNotBeError(store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+			Joins("JOIN items ON items.id = ?", itemID).
 			Joins(`
-					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id
-						AND groups_contest_items.item_id = ?`, itemID).
+					LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id
+						AND permissions_granted.item_id = items.id`).
 			Group("groups_ancestors_active.child_group_id").
 			PluckFirst(`
 					IFNULL(
-						MAX(groups_contest_items.can_enter_from <= NOW() AND NOW() < groups_contest_items.can_enter_until), 0
-					) AS can_enter`, &currentUserCanEnter).
+						MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
+					) AND
+					IFNULL(MAX(items.entering_time_min), '1000-01-01 00:00:00') <= NOW() AND
+					NOW() < IFNULL(MAX(items.entering_time_max), '9999-12-31 23:59:59') AS can_enter`, &currentUserCanEnter).
 			Error())
 		if currentUserCanEnter {
 			qualifiedMembersCount = 1

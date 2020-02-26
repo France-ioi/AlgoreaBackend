@@ -37,9 +37,13 @@ type item struct {
 	// enum: All,Half,One,None
 	// default: None
 	ContestEnteringCondition string `json:"contest_entering_condition" validate:"oneof=All Half One None"`
-	ContestMaxTeamSize       int32  `json:"contest_max_team_size"`
-	TitleBarVisible          bool   `json:"title_bar_visible"`
-	AllowsMultipleAttempts   bool   `json:"allows_multiple_attempts"`
+	// Nullable
+	EnteringTimeMin *time.Time `json:"entering_time_min"`
+	// Nullable
+	EnteringTimeMax        *time.Time `json:"entering_time_max"`
+	ContestMaxTeamSize     int32      `json:"contest_max_team_size"`
+	TitleBarVisible        bool       `json:"title_bar_visible"`
+	AllowsMultipleAttempts bool       `json:"allows_multiple_attempts"`
 	// Nullable
 	// enum: User,Team
 	EntryParticipantType *string `json:"entry_participant_type" validate:"oneof=User Team"`

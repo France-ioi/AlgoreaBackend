@@ -44,13 +44,13 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | parent_item_id | child_item_id | child_order |
       | 20             | 30            | 1           |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 11       | 30      | content                  |
-      | 31       | 30      | content                  |
-      | 98       | 10      | info                     |
-      | 98       | 20      | info                     |
-      | 99       | 10      | info                     |
-      | 99       | 20      | info                     |
+      | group_id | item_id | can_view_generated |
+      | 11       | 30      | content            |
+      | 31       | 30      | content            |
+      | 98       | 10      | info               |
+      | 98       | 20      | info               |
+      | 99       | 10      | info               |
+      | 99       | 20      | info               |
     And the database has the following table 'attempts':
       | group_id | item_id | order |
       | 11       | 30      | 1     |
@@ -59,22 +59,25 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter an individual contest
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag |
-      | 50 | 01:01:01 | 1                       | User                   | None                       | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag | entering_time_min   | entering_time_max   |
+      | 50 | 01:01:01 | 1                       | User                   | None                       | 99                            | fr                   | 2007-01-01 00:00:00 | 5000-01-01 00:00:00 |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
     And the database table 'items_items' has also the following row:
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 1           |
+    And the database table 'permissions_granted' has also the following rows:
+      | group_id | item_id | can_enter_from      | can_enter_until     | source_group_id |
+      | 11       | 50      | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 | 11              |
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+      | group_id | item_id | additional_time |
+      | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
     When I send a POST request to "/contests/50/enter"
     Then the response code should be 201
@@ -118,23 +121,26 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a team-only contest
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 05:05:05 | 1                       | Team                   | Half                       | 3                     | 98                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag | entering_time_min | entering_time_max   |
+      | 60 | 05:05:05 | 1                       | Team                   | Half                       | 3                     | 98                            | fr                   | null              | 5000-01-01 00:00:00 |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
     And the database table 'items_items' has also the following row:
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
+    And the database table 'permissions_granted' has also the following rows:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 60      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | content                  |
       | 21       | 60      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 01:01:01        |
-      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 03:03:03        |
+      | group_id | item_id | additional_time |
+      | 11       | 60      | 01:01:01        |
+      | 31       | 60      | 02:02:02        |
+      | 41       | 60      | 03:03:03        |
     And I am the user with id "31"
     When I send a POST request to "/contests/60/enter?as_team_id=11"
     Then the response code should be 201
@@ -182,18 +188,21 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Reenter a contest as a team
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                       | 10                    | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag | entering_time_min   | entering_time_max |
+      | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                       | 10                    | 99                            | fr                   | 2007-01-01 00:00:00 | null              |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 99              | 11             | 2019-05-30 11:00:00 |
+    And the database table 'permissions_granted' has also the following rows:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 60      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | solution                 |
       | 31       | 60      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+      | group_id | item_id | additional_time |
+      | 11       | 60      | 02:02:02        |
     And the database table 'attempts' has also the following row:
       | group_id | item_id | started_at          | order |
       | 11       | 60      | 2019-05-29 11:00:00 | 1     |
@@ -246,14 +255,17 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     Given the database table 'items' has also the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
       | 50 | 01:01:01 | 1                       | User                   | None                       | fr                   |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database table 'permissions_generated' has also the following row:
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+      | group_id | item_id | additional_time |
+      | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
     When I send a POST request to "/contests/50/enter"
     Then the response code should be 201
@@ -290,14 +302,17 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the database table 'items_items' has also the following row:
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 1           |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+      | group_id | item_id | additional_time |
+      | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
     When I send a POST request to "/contests/50/enter"
     Then the response code should be 201
