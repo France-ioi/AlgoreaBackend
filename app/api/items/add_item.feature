@@ -40,8 +40,7 @@ Feature: Add item
         "image_url":"http://bit.ly/1234",
         "subtitle": "hard task",
         "description": "the goal of this task is ...",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 201
@@ -61,7 +60,7 @@ Feature: Add item
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
-      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
+      | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
@@ -127,7 +126,6 @@ Feature: Add item
         "subtitle": "hard task",
         "description": "the goal of this task is ...",
         "parent_item_id": "21",
-        "order": 100,
         "category": "Challenge",
         "score_weight": 3,
         "content_view_propagation": "as_content",
@@ -155,7 +153,7 @@ Feature: Add item
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category    | score_weight |
-      | 21                  | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Challenge   | 3            |
+      | 21                  | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Challenge   | 3            |
       | 5577006791947779410 | 12                  | 0           | as_info                  | as_is                         | 0                      | 0                 | 0                | Undefined   | 1            |
       | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Application | 2            |
     And the table "items_ancestors" should be:
@@ -205,8 +203,7 @@ Feature: Add item
       "full_screen": "",
       "language_tag": "sl",
       "title": "my title",
-      "parent_item_id": "21",
-      "order": 100
+      "parent_item_id": "21"
     }
     """
     Then the response code should be 201
@@ -226,7 +223,7 @@ Feature: Add item
       | 5577006791947779410 | sl           | my title | null      | null     | null        |
     And the table "items_items" should be:
       | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
-      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
+      | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
