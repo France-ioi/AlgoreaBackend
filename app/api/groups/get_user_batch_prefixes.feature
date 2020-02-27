@@ -22,7 +22,6 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
       | 14                | 14             |
       | 15                | 15             |
       | 16                | 13             |
-      | 16                | 15             |
       | 16                | 16             |
       | 16                | 21             |
       | 21                | 21             |
