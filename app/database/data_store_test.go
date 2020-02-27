@@ -44,6 +44,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"Sessions", func(store *DataStore) *DB { return store.Sessions().Where("") }, "`sessions`"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
 		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches`"},
+		{"UserBatchPrefixes", func(store *DataStore) *DB { return store.UserBatchPrefixes().Where("") }, "`user_batch_prefixes`"},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -92,6 +93,7 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"Sessions", func(store *DataStore) interface{} { return store.Sessions() }, &SessionStore{}},
 		{"Users", func(store *DataStore) interface{} { return store.Users() }, &UserStore{}},
 		{"UserBatches", func(store *DataStore) interface{} { return store.UserBatches() }, &UserBatchStore{}},
+		{"UserBatchPrefixes", func(store *DataStore) interface{} { return store.UserBatchPrefixes() }, &UserBatchPrefixStore{}},
 	}
 	for _, tt := range tests {
 		tt := tt
