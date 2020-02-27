@@ -28,6 +28,7 @@ type userBatchPrefix struct {
 // description: >
 //
 //   Lists the user-batch prefixes  with `allow_new` = 1 matching the input group's ancestors
+//   that are managed by the current user with 'can_manage:membership' permission
 //   (i.e., the `group_id` is a descendant of `user_batch_prefixes.group_id`).
 //
 //
@@ -82,12 +83,17 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 		return apiError
 	}
 
+	managedByUser := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+		Where("can_manage != 'none'").
+		Select("groups_ancestors_active.child_group_id AS id")
+
 	query := srv.Store.UserBatchPrefixes().
 		Joins(`
 			JOIN groups_ancestors_active
 				ON groups_ancestors_active.ancestor_group_id = user_batch_prefixes.group_id AND
 				   groups_ancestors_active.child_group_id = ?`, groupID).
 		Where("allow_new").
+		Where("user_batch_prefixes.group_id IN (?)", managedByUser.QueryExpr()).
 		Select(`
 			group_prefix, group_id, max_users,
 			(SELECT COUNT(*) FROM user_batches

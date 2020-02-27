@@ -1,17 +1,19 @@
 Feature: List user-batch prefixes (userBatchPrefixesView)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | type    |
-      | 13 | class   | -2    | Class   |
-      | 14 | class2  | -2    | Class   |
-      | 15 | friends | -2    | Friends |
-      | 21 | user    | -2    | User    |
+      | id | name    | type    |
+      | 13 | class   | Class   |
+      | 14 | class2  | Class   |
+      | 15 | friends | Friends |
+      | 16 | class3  | Class   |
+      | 21 | user    | User    |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
+      | 16       | 21         | none        |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 13                | 13             |
@@ -19,10 +21,15 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
       | 13                | 21             |
       | 14                | 14             |
       | 15                | 15             |
+      | 16                | 13             |
+      | 16                | 15             |
+      | 16                | 16             |
+      | 16                | 21             |
       | 21                | 21             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 21             |
+      | 16              | 13             |
     And the database has the following table 'user_batch_prefixes':
       | group_prefix | group_id | allow_new | max_users |
       | test         | 13       | 1         | 90        |
@@ -30,6 +37,7 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
       | test2        | 13       | 0         | 80        |
       | test3        | 15       | 1         | 70        |
       | test4        | 14       | 1         | 60        |
+      | test5        | 16       | 1         | 15        |
     And the database has the following table 'user_batches':
       | group_prefix | custom_prefix | size | creator_id |
       | test         | custom        | 100  | null       |
