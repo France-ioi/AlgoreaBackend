@@ -523,5 +523,3 @@ Feature: Get qualification state (contestGetQualificationState)
     | entering_time_min   | entering_time_max   |
     | 5099-12-31 23:59:59 | 9999-12-31 23:59:59 |
     | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 |
-    | null                | 2008-12-31 23:59:59 |
-    | 5099-12-31 23:59:59 | null                |

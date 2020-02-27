@@ -289,9 +289,11 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 			}
 		}
 
+		fieldType := field.Type()
+
 		// For now, all the fields from nested structures will be set in the root map.
 		// Yet the nested structures themselves will not be in the map
-		if field.Kind() != reflect.Struct {
+		if field.Kind() != reflect.Struct || fieldType.PkgPath()+"/"+fieldType.Name() == "time/Time" {
 			resultMap[dbName] = field.Interface()
 		}
 

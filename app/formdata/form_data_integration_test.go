@@ -588,6 +588,16 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 		{
+			"timestamp",
+			&struct {
+				Time time.Time `json:"time"`
+			}{},
+			`{"time": "2019-05-30T11:00:00Z"}`,
+			map[string]interface{}{
+				"time": time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC),
+			},
+		},
+		{
 			"structure with squash",
 			&struct {
 				Struct struct {

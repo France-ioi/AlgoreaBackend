@@ -262,8 +262,7 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 			Select(`
 					users.first_name, users.last_name, users.group_id AS group_id, users.login,
 					IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND
-					IFNULL(MAX(items.entering_time_min), '1000-01-01 00:00:00') <= NOW() AND
-						NOW() < IFNULL(MAX(items.entering_time_max), '9999-12-31 23:59:59') AS can_enter`).
+					MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`).
 			Scan(&otherMembers).Error())
 		membersCount = int32(len(otherMembers))
 		var currentUserIndex int
@@ -291,8 +290,7 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 					IFNULL(
 						MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
 					) AND
-					IFNULL(MAX(items.entering_time_min), '1000-01-01 00:00:00') <= NOW() AND
-					NOW() < IFNULL(MAX(items.entering_time_max), '9999-12-31 23:59:59') AS can_enter`, &currentUserCanEnter).
+					MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
 			Error())
 		if currentUserCanEnter {
 			qualifiedMembersCount = 1
