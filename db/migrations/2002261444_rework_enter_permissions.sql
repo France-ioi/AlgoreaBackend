@@ -1,9 +1,9 @@
 -- +migrate Up
 ALTER TABLE `permissions_granted`
     ADD COLUMN `can_enter_from` DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59'
-        COMMENT 'Time from which the group can “enter” this item' AFTER `can_view`,
+        COMMENT 'Time from which the group can “enter” this item, superseded by `items.entering_time_min`' AFTER `can_view`,
     ADD COLUMN `can_enter_until` DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59'
-        COMMENT 'Time until which the group can “enter” this item' AFTER `can_enter_from`,
+        COMMENT 'Time until which the group can “enter” this item, superseded by `items.entering_time_max`' AFTER `can_enter_from`,
     MODIFY COLUMN `can_grant_view` ENUM('none','enter','content','content_with_descendants','solution','solution_with_grant') NOT NULL DEFAULT 'none'
         COMMENT 'The level of visibility that the group can give on this item to other groups on which it has the right to';
 
