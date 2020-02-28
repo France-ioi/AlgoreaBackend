@@ -3,8 +3,6 @@ package database
 import (
 	"errors"
 	"time"
-
-	"github.com/jinzhu/gorm"
 )
 
 // GroupGroupStore implements database operations on `groups_groups`
@@ -67,15 +65,9 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 }
 
 func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
-	s.mustBeInTransaction()
-	mustNotBeError(s.db.Exec(
-		"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `parent_group_id` = ? FOR UPDATE), 0)",
-		parentGroupID).Error)
-
 	relationMap := map[string]interface{}{
 		"parent_group_id": parentGroupID,
 		"child_group_id":  childGroupID,
-		"child_order":     gorm.Expr("@maxIChildOrder+1"),
 	}
 	mustNotBeError(s.GroupGroups().InsertMap(relationMap))
 }
@@ -87,21 +79,9 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	parentRelations := make(map[int64][]map[string]interface{})
-	for _, relation := range relations {
-		parentRelations[relation["parent_group_id"].(int64)] = append(parentRelations[relation["parent_group_id"].(int64)], relation)
-	}
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
 		groupGroupStore := store.GroupGroups()
-		for parentID, groupedRelations := range parentRelations {
-			for index := range groupedRelations {
-				groupedRelations[index]["child_order"] = gorm.Expr("@maxIChildOrder+?", index+1)
-			}
-			mustNotBeError(s.Exec(
-				"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `parent_group_id` = ? FOR UPDATE), 0)",
-				parentID).Error())
-			mustNotBeError(s.InsertMaps(groupedRelations))
-		}
+		mustNotBeError(s.InsertMaps(relations))
 		groupGroupStore.createNewAncestors()
 		return nil
 	}))

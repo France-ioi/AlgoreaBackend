@@ -46,8 +46,8 @@ Feature: Add a parent-child relation between two groups - robustness
       | 25                | 25             |
       | 27                | 27             |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | child_order |
-      | 13              | 11             | 1           |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
 
   Scenario: Parent group id is wrong
     Given I am the user with id "21"
