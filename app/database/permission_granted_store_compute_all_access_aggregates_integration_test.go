@@ -674,6 +674,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_Propagates(t *testing.T) {
 			column: "can_grant_view", propagationColumn: "grant_view_propagation",
 			tests: []testStruct{
 				{parentValue: "none", propagationMode: true, expectedValue: "none"},
+				{parentValue: "enter", propagationMode: true, expectedValue: "enter"},
+				{parentValue: "enter", propagationMode: false, expectedValue: "none"},
 				{parentValue: "content", propagationMode: true, expectedValue: "content"},
 				{parentValue: "content", propagationMode: false, expectedValue: "none"},
 				{parentValue: "content_with_descendants", propagationMode: true, expectedValue: "content_with_descendants"},

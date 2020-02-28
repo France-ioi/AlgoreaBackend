@@ -290,6 +290,7 @@ Feature: Update item - robustness
     Examples:
       | field                         | value                       | permission_column        | permission_value         | error                                                            |
       | content_view_propagation      | as_content                  | can_grant_view_generated | none                     | Not enough permissions for setting content_view_propagation      |
+      | content_view_propagation      | as_content                  | can_grant_view_generated | enter                    | Not enough permissions for setting content_view_propagation      |
       | content_view_propagation      | as_info                     | can_grant_view_generated | none                     | Not enough permissions for setting content_view_propagation      |
       | upper_view_levels_propagation | as_is                       | can_grant_view_generated | content_with_descendants | Not enough permissions for setting upper_view_levels_propagation |
       | upper_view_levels_propagation | as_content_with_descendants | can_grant_view_generated | content                  | Not enough permissions for setting upper_view_levels_propagation |

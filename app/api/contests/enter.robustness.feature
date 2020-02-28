@@ -172,15 +172,20 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
       | 60 | 1                       | Team                   | All                        | 3                     | fr                   |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 60      | 11              | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 51              | 2007-01-01 10:21:21 | 2008-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 51       | 60      | 2007-01-01 10:21 | 2008-12-31 23:59:59 |
+      | group_id | item_id |
+      | 11       | 60      |
+      | 41       | 60      |
+      | 51       | 60      |
     And I am the user with id "31"
     When I send a POST request to "/contests/60/enter?as_team_id=11"
     Then the response code should be 403
@@ -196,14 +201,17 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at   |
       | 99              | 31             | <expires_at> |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 31       | 50      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 31       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+      | group_id | item_id | additional_time |
+      | 31       | 50      | 02:02:02        |
     And the database has the following table 'attempts':
       | group_id | item_id | started_at          | order |
       | 31       | 50      | 2019-05-29 11:00:00 | 1     |
@@ -226,13 +234,16 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 99              | 11             |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 60      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | solution                 |
       | 31       | 60      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+      | group_id | item_id | additional_time |
+      | 11       | 60      | 02:02:02        |
     And the database has the following table 'attempts':
       | group_id | item_id | started_at          | order |
       | 11       | 60      | 2019-05-29 11:00:00 | 1     |
