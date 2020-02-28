@@ -22,11 +22,13 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
       | 14                | 14             |
       | 15                | 15             |
       | 16                | 13             |
+      | 16                | 15             |
       | 16                | 16             |
       | 16                | 21             |
       | 21                | 21             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 13              | 15             |
       | 13              | 21             |
       | 16              | 13             |
     And the database has the following table 'user_batch_prefixes':
