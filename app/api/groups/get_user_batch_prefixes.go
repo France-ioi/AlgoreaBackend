@@ -14,9 +14,8 @@ type userBatchPrefix struct {
 	GroupPrefix string `json:"group_prefix"`
 	// required: true
 	GroupID int64 `json:"group_id,string"`
-	// Nullable
 	// required: true
-	MaxUsers *int `json:"max_users"`
+	MaxUsers int `json:"max_users"`
 	// total number of users in the batches already using this group_prefix
 	// required: true
 	TotalSize int `json:"total_size"`

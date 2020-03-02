@@ -6,7 +6,7 @@ WHERE `prefix` NOT LIKE '%\_';
 CREATE TABLE `user_batch_prefixes` (
     `group_prefix` VARCHAR(13) NOT NULL PRIMARY KEY COMMENT 'Prefix used in front of all batches',
     `group_id` BIGINT(20) DEFAULT NULL COMMENT 'Group (and its descendants) in which managers can create users in batch. NULL if the group was deleted, in which case batches should be cleaned manually.',
-    `max_users` MEDIUMINT UNSIGNED DEFAULT NULL COMMENT 'Maximum number of users that can be created under this prefix',
+    `max_users` MEDIUMINT UNSIGNED NOT NULL DEFAULT 1000 COMMENT 'Maximum number of users that can be created under this prefix',
     `allow_new` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Whether this prefix can be used for new user batches',
     CONSTRAINT `fk_user_batch_prefixes_group_id_groups_id`
         FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE SET NULL

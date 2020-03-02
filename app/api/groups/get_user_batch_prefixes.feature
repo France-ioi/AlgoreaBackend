@@ -34,7 +34,7 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
     And the database has the following table 'user_batch_prefixes':
       | group_prefix | group_id | allow_new | max_users |
       | test         | 13       | 1         | 90        |
-      | test1        | 13       | 1         | null      |
+      | test1        | 13       | 1         | 1000      |
       | test2        | 13       | 0         | 80        |
       | test3        | 15       | 1         | 70        |
       | test4        | 14       | 1         | 60        |
@@ -57,7 +57,7 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
     """
     [
       {"group_id": "13", "group_prefix": "test", "max_users": 90, "total_size": 2},
-      {"group_id": "13", "group_prefix": "test1", "max_users": null, "total_size": 2},
+      {"group_id": "13", "group_prefix": "test1", "max_users": 1000, "total_size": 2},
       {"group_id": "15", "group_prefix": "test3", "max_users": 70, "total_size": 0}
     ]
     """
@@ -69,7 +69,7 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
     And the response body should be, in JSON:
     """
     [
-      {"group_id": "13", "group_prefix": "test1", "max_users": null, "total_size": 2},
+      {"group_id": "13", "group_prefix": "test1", "max_users": 1000, "total_size": 2},
       {"group_id": "13", "group_prefix": "test", "max_users": 90, "total_size": 2}
     ]
     """
@@ -82,6 +82,6 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
     """
     [
       {"group_id": "13", "group_prefix": "test", "max_users": 90, "total_size": 2},
-      {"group_id": "13", "group_prefix": "test1", "max_users": null, "total_size": 2}
+      {"group_id": "13", "group_prefix": "test1", "max_users": 1000, "total_size": 2}
     ]
     """
