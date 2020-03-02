@@ -246,15 +246,15 @@ const groupGroupMarksAttemptsAsChangedFixture = `
 		- {ancestor_item_id: 2, child_item_id: 3}
 	groups: [{id: 101}, {id: 102}, {id: 103}, {id: 104}, {id: 105}, {id: 106}, {id: 107}, {id: 108}]
 	groups_groups:
-		- {parent_group_id: 101, child_group_id: 102, child_order: 1}
-		- {parent_group_id: 101, child_group_id: 103, child_order: 2}
-		- {parent_group_id: 101, child_group_id: 104, child_order: 3}
-		- {parent_group_id: 101, child_group_id: 105, child_order: 4}
-		- {parent_group_id: 101, child_group_id: 106, child_order: 5}
-		- {parent_group_id: 102, child_group_id: 103, child_order: 1}
-		- {parent_group_id: 104, child_group_id: 105, child_order: 1}
-		- {parent_group_id: 107, child_group_id: 105, child_order: 1}
-		- {parent_group_id: 108, child_group_id: 104, child_order: 1, expires_at: 2019-05-30 11:00:00}
+		- {parent_group_id: 101, child_group_id: 102}
+		- {parent_group_id: 101, child_group_id: 103}
+		- {parent_group_id: 101, child_group_id: 104}
+		- {parent_group_id: 101, child_group_id: 105}
+		- {parent_group_id: 101, child_group_id: 106}
+		- {parent_group_id: 102, child_group_id: 103}
+		- {parent_group_id: 104, child_group_id: 105}
+		- {parent_group_id: 107, child_group_id: 105}
+		- {parent_group_id: 108, child_group_id: 104, expires_at: 2019-05-30 11:00:00}
 	permissions_generated:
 		- {group_id: 102, item_id: 1, can_view_generated: info}
 		- {group_id: 101, item_id: 1, can_view_generated: none}
@@ -342,7 +342,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T)
 				return nil
 			}))
 			assert.NoError(t, dataStore.GroupGroups().InsertMap(map[string]interface{}{
-				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID, "expires_at": test.expiresAt, "child_order": 1,
+				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID, "expires_at": test.expiresAt,
 			}))
 
 			assertAttemptsMarkedAsChanged(t, dataStore, test.expectedChanged)

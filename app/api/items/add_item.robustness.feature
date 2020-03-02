@@ -46,8 +46,7 @@ Feature: Add item - robustness
       {
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 400
@@ -76,8 +75,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "title": "my title",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 400
@@ -106,8 +104,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "language_tag": "sl",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 400
@@ -136,8 +133,7 @@ Feature: Add item - robustness
       {
         "type": "Chapter",
         "language_tag": "sl",
-        "title": "my title",
-        "order": 100
+        "title": "my title"
       }
       """
     Then the response code should be 400
@@ -167,8 +163,7 @@ Feature: Add item - robustness
         "type": "Course",
         "language_tag": 123,
         "title": "my title",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 400
@@ -198,8 +193,7 @@ Feature: Add item - robustness
         "type": "Course",
         "language_tag": "unknown",
         "title": "my title",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 400
@@ -230,8 +224,7 @@ Feature: Add item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "sfaewr20",
-        "order": 100
+        "parent_item_id": "sfaewr20"
       }
       """
     Then the response code should be 400
@@ -261,8 +254,7 @@ Feature: Add item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "404",
-        "order": 100
+        "parent_item_id": "404"
       }
       """
     Then the response code should be 400
@@ -292,8 +284,7 @@ Feature: Add item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "<parent_item>",
-        "order": 100
+        "parent_item_id": "<parent_item>"
       }
       """
     Then the response code should be 400
@@ -327,8 +318,7 @@ Feature: Add item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 401
@@ -481,7 +471,6 @@ Feature: Add item - robustness
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "4",
-        "order": 100,
         "children": [
           {"item_id": "21", "order": 1},
           {"item_id": "21", "order": 2}
@@ -516,7 +505,6 @@ Feature: Add item - robustness
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
-        "order": 100,
         "children": [
           {"item_id": "4", "order": 1},
           {"item_id": "22", "order": 2}
@@ -551,7 +539,6 @@ Feature: Add item - robustness
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
-        "order": 100,
         "children": [
           {"item_id": "21", "order": 1}
         ]
@@ -575,7 +562,6 @@ Feature: Add item - robustness
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
-        "order": 100,
         "children": [
           {"item_id": "4", "order": 1}
         ]

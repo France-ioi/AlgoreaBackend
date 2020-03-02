@@ -40,8 +40,7 @@ Feature: Add item
         "image_url":"http://bit.ly/1234",
         "subtitle": "hard task",
         "description": "the goal of this task is ...",
-        "parent_item_id": "21",
-        "order": 100
+        "parent_item_id": "21"
       }
       """
     Then the response code should be 201
@@ -54,14 +53,14 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_tag | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 5577006791947779410 | Course | null | sl                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0              | 0                     | 0                        | null     | 0               | 0        | 0                            | null                          |
+      | id                  | type   | url  | default_language_tag | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
+      | 5577006791947779410 | Course | null | sl                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0              | 0                     | 0                        | null     | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                          |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
-      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
+      | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
@@ -111,6 +110,8 @@ Feature: Add item
         "fixed_ranks": true,
         "validation_type": "AllButOne",
         "contest_entering_condition": "All",
+        "entering_time_min": "2007-01-01T01:02:03Z",
+        "entering_time_max": "3007-01-01T01:02:03Z",
         "teams_editable": true,
         "contest_max_team_size": 2345,
         "allows_multiple_attempts": true,
@@ -125,7 +126,6 @@ Feature: Add item
         "subtitle": "hard task",
         "description": "the goal of this task is ...",
         "parent_item_id": "21",
-        "order": 100,
         "category": "Challenge",
         "score_weight": 3,
         "content_view_propagation": "as_content",
@@ -146,14 +146,14 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | entry_participant_type | duration | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 5577006791947779410 | Course | http://myurl.com/ | sl                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1                        | Team                   | 01:02:03 | 1               | 1        | 1                            | 8674665223082153551           |
+      | id                  | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | entry_participant_type | duration | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
+      | 5577006791947779410 | Course | http://myurl.com/ | sl                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1                        | Team                   | 01:02:03 | 1               | 1        | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 8674665223082153551           |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category    | score_weight |
-      | 21                  | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Challenge   | 3            |
+      | 21                  | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Challenge   | 3            |
       | 5577006791947779410 | 12                  | 0           | as_info                  | as_is                         | 0                      | 0                 | 0                | Undefined   | 1            |
       | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Application | 2            |
     And the table "items_ancestors" should be:
@@ -203,8 +203,7 @@ Feature: Add item
       "full_screen": "",
       "language_tag": "sl",
       "title": "my title",
-      "parent_item_id": "21",
-      "order": 100
+      "parent_item_id": "21"
     }
     """
     Then the response code should be 201
@@ -224,7 +223,7 @@ Feature: Add item
       | 5577006791947779410 | sl           | my title | null      | null     | null        |
     And the table "items_items" should be:
       | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
-      | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
+      | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |

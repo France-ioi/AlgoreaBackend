@@ -76,15 +76,10 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnRows(sqlmock.NewRows([]string{"1"}))
-	mock.ExpectExec("^" +
-		regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
-			"WHERE `parent_group_id` = ? FOR UPDATE), 0)") + "$").
-		WithArgs(parentGroupID).
-		WillReturnResult(sqlmock.NewResult(-1, 0))
 
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `parent_group_id`) "+
-			"VALUES (?, @maxIChildOrder+1, ?)")+"$").
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `parent_group_id`) "+
+			"VALUES (?, ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -182,19 +177,11 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
 
-	for i, relation := range relations {
-		mock.ExpectExec("^" +
-			regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
-				"WHERE `parent_group_id` = ? FOR UPDATE), 0)") + "$").
-			WithArgs(relation["parent_group_id"]).
-			WillReturnResult(sqlmock.NewResult(-1, 0))
-
-		mock.ExpectExec("^"+
-			regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `parent_group_id`) "+
-				"VALUES (?, @maxIChildOrder+?, ?)")+"$").
-			WithArgs(relation["child_group_id"], 1, relation["parent_group_id"]).
-			WillReturnResult(sqlmock.NewResult(int64(i+1), 1))
-	}
+	mock.ExpectExec("^"+
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `parent_group_id`) "+
+			"VALUES (?, ?), (?, ?)")+"$").
+		WithArgs(int64(2), int64(1), int64(4), int64(3)).
+		WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
 	mock.MatchExpectationsInOrder(false)
 	setMockExpectationsForCreateNewAncestors(mock)
@@ -276,15 +263,9 @@ func TestGroupGroupStore_createRelation(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectBegin()
-	mock.ExpectExec("^" +
-		regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
-			"WHERE `parent_group_id` = ? FOR UPDATE), 0)") + "$").
-		WithArgs(parentGroupID).
-		WillReturnResult(sqlmock.NewResult(-1, 0))
-
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `parent_group_id`) "+
-			"VALUES (?, @maxIChildOrder+1, ?)")+"$").
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `parent_group_id`) "+
+			"VALUES (?, ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()

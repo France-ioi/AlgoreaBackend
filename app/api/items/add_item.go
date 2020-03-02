@@ -36,10 +36,12 @@ type item struct {
 
 	// enum: All,Half,One,None
 	// default: None
-	ContestEnteringCondition string `json:"contest_entering_condition" validate:"oneof=All Half One None"`
-	ContestMaxTeamSize       int32  `json:"contest_max_team_size"`
-	TitleBarVisible          bool   `json:"title_bar_visible"`
-	AllowsMultipleAttempts   bool   `json:"allows_multiple_attempts"`
+	ContestEnteringCondition string    `json:"contest_entering_condition" validate:"oneof=All Half One None"`
+	EnteringTimeMin          time.Time `json:"entering_time_min"`
+	EnteringTimeMax          time.Time `json:"entering_time_max"`
+	ContestMaxTeamSize       int32     `json:"contest_max_team_size"`
+	TitleBarVisible          bool      `json:"title_bar_visible"`
+	AllowsMultipleAttempts   bool      `json:"allows_multiple_attempts"`
 	// Nullable
 	// enum: User,Team
 	EntryParticipantType *string `json:"entry_participant_type" validate:"oneof=User Team"`
@@ -85,8 +87,6 @@ type NewItemRequest struct {
 
 	// required: true
 	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id"`
-	// default: 0
-	Order int32 `json:"order"`
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// default: Undefined
 	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
@@ -336,10 +336,17 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			newItemRequest.Children[index].ScoreWeight = 1
 		}
 	}
+
+	var order int32
+	service.MustNotBeError(store.ItemItems().WithWriteLock().
+		Where("parent_item_id = ?", newItemRequest.ParentItemID).
+		PluckFirst("IFNULL(MAX(`child_order`), 0)+1", &order).Error())
+
 	parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
 	parentChildSpec = append(parentChildSpec,
 		&insertItemItemsSpec{
-			ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order,
+			ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID,
+			Order:    order,
 			Category: newItemRequest.Category, ScoreWeight: newItemRequest.ScoreWeight,
 			ContentViewPropagation: asInfo, UpperViewLevelsPropagation: asIs,
 			GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,

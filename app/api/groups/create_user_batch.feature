@@ -111,11 +111,11 @@ Feature: Create a user batch
       | 5577006791947779410 | test_custom_jzk | User    | test_custom_jzk | 2019-07-16 22:02:28 | false   | false       |
       | 8674665223082153551 | test_custom_ctc | User    | test_custom_ctc | 2019-07-16 22:02:28 | false   | false       |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id      | child_order | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at   |
-      | 2               | 5577006791947779410 | 1           | null                           | null                        | null                |
-      | 2               | 8674665223082153551 | 2           | null                           | null                        | null                |
-      | 3               | 8674665223082153551 | 1           | 2019-07-16 22:02:28            | 2019-07-16 22:02:28         | 2019-07-16 22:02:28 |
-      | 4               | 5577006791947779410 | 1           | 2019-07-16 22:02:28            | null                        | null                |
+      | parent_group_id | child_group_id      | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at   |
+      | 2               | 5577006791947779410 | null                           | null                        | null                |
+      | 2               | 8674665223082153551 | null                           | null                        | null                |
+      | 3               | 8674665223082153551 | 2019-07-16 22:02:28            | 2019-07-16 22:02:28         | 2019-07-16 22:02:28 |
+      | 4               | 5577006791947779410 | 2019-07-16 22:02:28            | null                        | null                |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |

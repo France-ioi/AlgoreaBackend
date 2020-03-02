@@ -67,12 +67,12 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | requires_explicit_entry | entry_participant_type   | contest_entering_condition | default_language_tag |
       | 50 | 00:00:00 | 1                       | <entry_participant_type> | <entering_condition>       | fr                   |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 31       | 50      | 31              | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from      | can_enter_until     |
-      | 31       | 50      | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
     And I am the user with id "31"
     When I send a GET request to "/contests/50/qualification-state"
     Then the response code should be 200
@@ -139,15 +139,15 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 3                     | fr                   |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 60      | 11              | 9999-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 51              | 2007-01-01 10:21:21 | 2008-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 51       | 60      | 2007-01-01 10:21 | 2008-12-31 23:59:59 |
     And I am the user with id "31"
     When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
     Then the response code should be 200
@@ -187,14 +187,14 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 3                     | fr                   |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "31"
     When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
     Then the response code should be 200
@@ -234,15 +234,15 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 3                     | fr                   |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 51              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "31"
     When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
     Then the response code should be 200
@@ -282,15 +282,15 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 2                     | fr                   |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 51              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "31"
     When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
     Then the response code should be 200
@@ -493,3 +493,33 @@ Feature: Get qualification state (contestGetQualificationState)
       "state": "ready"
     }
     """
+
+  Scenario Outline: The user cannot enter because of entering_time_min/entering_time_max
+    Given the database has the following table 'items':
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag | entering_time_min   | entering_time_max   |
+      | 50 | 00:00:00 | 1                       | User                   | None                       | fr                   | <entering_time_min> | <entering_time_max> |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 10       | 50      | content                  |
+      | 11       | 50      | none                     |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
+    And I am the user with id "31"
+    When I send a GET request to "/contests/50/qualification-state"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": false,
+      "entering_condition": "None",
+      "other_members": [],
+      "state": "ready"
+    }
+    """
+  Examples:
+    | entering_time_min   | entering_time_max   |
+    | 5099-12-31 23:59:59 | 9999-12-31 23:59:59 |
+    | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 |
