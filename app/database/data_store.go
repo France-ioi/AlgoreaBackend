@@ -151,6 +151,11 @@ func (s *DataStore) UserBatches() *UserBatchStore {
 	return &UserBatchStore{NewDataStoreWithTable(s.DB, "user_batches")}
 }
 
+// UserBatchPrefixes returns a UserBatchPrefixStore
+func (s *DataStore) UserBatchPrefixes() *UserBatchPrefixStore {
+	return &UserBatchPrefixStore{NewDataStoreWithTable(s.DB, "user_batch_prefixes")}
+}
+
 // NewID generates a positive random int64 to be used as id
 // !!! To be safe, the insertion should be be retried if the id conflicts with an existing entry
 func (s *DataStore) NewID() int64 {

@@ -18,7 +18,7 @@ type userBatch struct {
 	Size int `json:"size"`
 	// Nullable
 	// required: true
-	CreatorID *int64 `json:"creator_id"`
+	CreatorID *int64 `json:"creator_id,string"`
 }
 
 // swagger:operation GET /user-batches/by-group/{group_id} groups userBatchesView
@@ -56,7 +56,7 @@ type userBatch struct {
 //   description: Start the page from the batch next to the batch with `user_batches.size` = `from.size`
 //                (`from.group_prefix` & `from.custom_prefix` are required when `from.size` is given)
 //   in: query
-//   type: string
+//   type: integer
 // - name: limit
 //   description: Display the first N user batches
 //   in: query
@@ -74,8 +74,6 @@ type userBatch struct {
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) service.APIError {
