@@ -32,7 +32,7 @@ import (
 //   type: integer
 // responses:
 //   "200":
-//     "$ref": "#/responses/updatedResponse"
+//     "$ref": "#/responses/deletedResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
