@@ -66,7 +66,3 @@ Feature: Remove user batch (userBatchRemove)
     And the table "users" should not contain login "test_custom_user,test_custom_another_user"
     And the table "groups" should stay unchanged but the rows with name "test_custom_user,test_custom_another_user"
     And the table "groups" should not contain name "test_custom_user,test_custom_another_user"
-    And the table "groups_groups" should stay unchanged but the rows with child_group_id "22,23"
-    And the table "groups_groups" should not contain child_group_id "22,23"
-    And the table "groups_ancestors" should not contain child_group_id "22,23"
-    And the table "groups_ancestors" should not contain ancestor_group_id "22,23"
