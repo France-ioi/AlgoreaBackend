@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -97,6 +98,9 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		HasRows()
 	service.MustNotBeError(err)
 	if found {
+		logging.Warnf(
+			"User with group_id = %d failed to delete a user batch because of locked membership (group_prefix = '%s', custom_prefix = '%s')",
+			user.GroupID, groupPrefix, customPrefix)
 		return service.ErrUnprocessableEntity(errors.New("there are users with locked membership"))
 	}
 

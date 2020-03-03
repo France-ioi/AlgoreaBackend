@@ -87,3 +87,7 @@ Feature: Remove user batch (userBatchRemove) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
+    And logs should contain:
+      """
+      User with group_id = 21 failed to delete a user batch because of locked membership (group_prefix = 'test', custom_prefix = 'custom')
+      """
