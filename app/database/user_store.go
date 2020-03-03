@@ -47,6 +47,18 @@ func (s *UserStore) DeleteWithTraps(user *User) (err error) {
 	})
 }
 
+// DeleteWithTrapsByScope deletes users matching the given scope.
+// It also removes linked rows in the same way as DeleteTemporaryWithTraps.
+func (s *UserStore) DeleteWithTrapsByScope(scopeFunc func(store *DataStore) *DB) (err error) {
+	defer recoverPanics(&err)
+
+	s.executeBatchesInTransactions(func(store *DataStore) int {
+		scope := scopeFunc(store)
+		return store.Users().deleteWithTraps(scope)
+	})
+	return nil
+}
+
 func (s *UserStore) executeBatchesInTransactions(f func(store *DataStore) int) {
 	for {
 		var usersDeleted int
