@@ -122,6 +122,44 @@ func (ctx *TestContext) DBHasUsers(data *gherkin.DataTable) error { // nolint
 	return ctx.DBHasTable("users", data)
 }
 
+func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { // nolint
+	gormDB, err := database.Open(ctx.db())
+	if err != nil {
+		return err
+	}
+
+	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+		return store.GroupGroups().After()
+	})
+	if err != nil {
+		return err
+	}
+
+	ctx.dbTableData["groups_ancestors"] = &gherkin.DataTable{
+		Rows: []*gherkin.TableRow{
+			{Cells: []*gherkin.TableCell{{Value: "ancestor_group_id"}, {Value: "child_group_id"}, {Value: "expires_at"}}},
+		},
+	}
+
+	var groupsAncestors []map[string]interface{}
+	err = gormDB.Table("groups_ancestors").Select("ancestor_group_id, child_group_id, expires_at").
+		Order("ancestor_group_id, child_group_id, expires_at").ScanIntoSliceOfMaps(&groupsAncestors).Error()
+
+	if err != nil {
+		return err
+	}
+
+	for _, row := range groupsAncestors {
+		ctx.dbTableData["groups_ancestors"].Rows = append(ctx.dbTableData["groups_ancestors"].Rows,
+			&gherkin.TableRow{
+				Cells: []*gherkin.TableCell{
+					{Value: row["ancestor_group_id"].(string)}, {Value: row["child_group_id"].(string)}, {Value: row["expires_at"].(string)},
+				},
+			})
+	}
+	return nil
+}
+
 func (ctx *TestContext) TableShouldBeEmpty(tableName string) error { // nolint
 	db := ctx.db()
 	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName)) //nolint:gosec

@@ -59,6 +59,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/current-user/teams/by-item/{item_id}", service.AppHandler(srv.getCurrentUserTeamByItem).ServeHTTP)
 	router.Post("/user-batches", service.AppHandler(srv.createUserBatch).ServeHTTP)
 	router.Get("/user-batches/by-group/{group_id}", service.AppHandler(srv.getUserBatches).ServeHTTP)
+	router.Delete("/user-batches/{group_prefix}/{custom_prefix}", service.AppHandler(srv.removeUserBatch).ServeHTTP)
 	router.Get("/groups/{group_id}/user-batch-prefixes", service.AppHandler(srv.getUserBatchPrefixes).ServeHTTP)
 }
 

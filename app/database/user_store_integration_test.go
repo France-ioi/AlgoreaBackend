@@ -88,6 +88,45 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
 }
 
+func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
+	currentTime := time.Now().UTC().Truncate(time.Second)
+	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
+	defer testhelpers.RestoreDBTime()
+
+	db := setupDBForDeleteWithTrapsTests(t, currentTime)
+	defer func() { _ = db.Close() }()
+
+	store := database.NewDataStore(db)
+	assert.NoError(t, store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
+		return store.Users().Where("group_id % 2 = 0")
+	}))
+
+	assertTableColumn(t, db, "users", "group_id", []int64{5001})
+	assertTableColumn(t, db, "groups", "id", []int64{1, 5001, 7000})
+	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5001, 7000})
+	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5001, 7000})
+	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5001, 7000})
+	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5001})
+	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5001, 7000})
+	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5001})
+	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 7000})
+	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001})
+	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 7000})
+	for _, table := range []string{"permissions_generated", "permissions_granted", "attempts"} {
+		assertTableColumn(t, db, table, "group_id", []int64{5001})
+	}
+	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
+	assertTableColumn(t, db, "answers", "author_id", []int64{5001})
+	for _, table := range []string{"users_threads", "filters", "refresh_tokens"} {
+		assertTableColumn(t, db, table, "user_id", []int64{5001})
+	}
+
+	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
+	found, err := store.GroupAncestors().Where("ancestor_group_id = 1 AND child_group_id = 7000").HasRows()
+	assert.NoError(t, err)
+	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
+}
+
 func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *database.DB {
 	db := testhelpers.SetupDBWithFixtureString(`
 			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}]`, `

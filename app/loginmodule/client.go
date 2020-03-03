@@ -109,6 +109,20 @@ func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey strin
 	return resultRows, nil
 }
 
+// DeleteUsers deletes users specified by the given login prefix from the login module
+func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, loginPrefix string) error {
+	urlParams := map[string]string{
+		"prefix": loginPrefix,
+	}
+	_, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/delete",
+		urlParams, clientID, clientKey)
+	if err != nil {
+		return errors.New("can't delete users")
+	}
+
+	return nil
+}
+
 // UnlinkClient discards our client authorization for the login module user
 func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey string, userLoginID int64) error {
 	_, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/unlink_client",

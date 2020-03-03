@@ -273,7 +273,7 @@ func Test_convertUserProfile(t *testing.T) {
 	}
 }
 
-func encodeUnlinkClientResponse(response, clientSecret string) string {
+func encodeAccountsManagerResponse(response, clientSecret string) string {
 	const size = 16
 	mod := len(response) % size
 	if mod != 0 {
@@ -294,75 +294,104 @@ func encodeUnlinkClientResponse(response, clientSecret string) string {
 	return base64.StdEncoding.EncodeToString(encrypted)
 }
 
-func TestClient_UnlinkClient(t *testing.T) {
-	tests := []struct {
-		name         string
-		responseCode int
-		response     string
-		expectedErr  error
-		expectedLog  string
+func TestClient_AccountsManagerEndpoints(t *testing.T) {
+	for _, testSuite := range []struct {
+		endpoint     string
+		errorMessage string
+		urlParams    string
+		action       func(*Client) error
 	}{
 		{
-			name:         "success",
-			responseCode: 200,
-			response:     encodeUnlinkClientResponse(`{"success":true}`, "clientKeyclientKey"),
-		},
+			endpoint:     "unlink_client",
+			errorMessage: "can't unlink the user",
+			urlParams:    "user_id=123456",
+			action: func(client *Client) error {
+				return client.UnlinkClient(context.Background(), "clientID", "clientKeyclientKey", 123456)
+			}},
 		{
-			name:         "wrong status code",
-			responseCode: 500,
-			response:     "Unexpected error",
-			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/accounts_manager/unlink_client ` +
-				`(status code = 500, response = \"Unexpected error\")"`,
+			endpoint:     "delete",
+			errorMessage: "can't delete users",
+			urlParams:    "prefix=prefix_subprefix_",
+			action: func(client *Client) error {
+				return client.DeleteUsers(context.Background(), "clientID", "clientKeyclientKey", "prefix_subprefix_")
+			},
 		},
-		{
-			name:         "corrupted base64",
-			responseCode: 200,
-			response:     "Some text",
-			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/accounts_manager/unlink_client ` +
-				`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
-		},
-		{
-			name:         "can't unmarshal",
-			responseCode: 200,
-			response:     encodeUnlinkClientResponse(`{"success":true}`, "anotherClientKey"),
-			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/unlink_client ` +
-				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
-				`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
-		},
-		{
-			name:         "'success' is false",
-			responseCode: 200,
-			response:     encodeUnlinkClientResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
-			expectedErr:  errors.New("can't unlink the user"),
-			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/unlink_client: unknown error"`,
-		},
-	}
-	const moduleURL = "http://login.url.com"
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			client := &Client{url: moduleURL}
-			httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-			defer httpmock.DeactivateAndReset()
-			responder := httpmock.NewStringResponder(tt.responseCode, tt.response)
-			httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-				moduleURL+"/platform_api/accounts_manager/unlink_client?client_id=clientID&user_id=123456", responder))
-
-			hook, restoreLogFunc := logging.MockSharedLoggerHook()
-			defer restoreLogFunc()
-
-			err := client.UnlinkClient(context.Background(), "clientID", "clientKeyclientKey", 123456)
-
-			assert.Equal(t, tt.expectedErr, err)
-			if tt.expectedLog != "" {
-				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+	} {
+		testSuite := testSuite
+		t.Run(testSuite.endpoint, func(t *testing.T) {
+			tests := []struct {
+				name         string
+				responseCode int
+				response     string
+				expectedErr  error
+				expectedLog  string
+			}{
+				{
+					name:         "success",
+					responseCode: 200,
+					response:     encodeAccountsManagerResponse(`{"success":true}`, "clientKeyclientKey"),
+				},
+				{
+					name:         "wrong status code",
+					responseCode: 500,
+					response:     "Unexpected error",
+					expectedErr:  errors.New(testSuite.errorMessage),
+					expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/accounts_manager/` +
+						testSuite.endpoint + ` (status code = 500, response = \"Unexpected error\")"`,
+				},
+				{
+					name:         "corrupted base64",
+					responseCode: 200,
+					response:     "Some text",
+					expectedErr:  errors.New(testSuite.errorMessage),
+					expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/accounts_manager/` +
+						testSuite.endpoint + ` (status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
+				},
+				{
+					name:         "can't unmarshal",
+					responseCode: 200,
+					response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
+					expectedErr:  errors.New(testSuite.errorMessage),
+					expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/` +
+						testSuite.endpoint +
+						` (decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
+						`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
+				},
+				{
+					name:         "'success' is false",
+					responseCode: 200,
+					response:     encodeAccountsManagerResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
+					expectedErr:  errors.New(testSuite.errorMessage),
+					expectedLog: `level=warning msg="The login module returned an error for /platform_api/accounts_manager/` +
+						testSuite.endpoint + `: unknown error"`,
+				},
 			}
-			assert.NoError(t, httpmock.AllStubsCalled())
+			const moduleURL = "http://login.url.com"
+			for _, tt := range tests {
+				tt := tt
+				t.Run(tt.name, func(t *testing.T) {
+					client := &Client{url: moduleURL}
+					httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+					defer httpmock.DeactivateAndReset()
+					responder := httpmock.NewStringResponder(tt.responseCode, tt.response)
+					httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+						moduleURL+"/platform_api/accounts_manager/"+testSuite.endpoint+"?client_id=clientID&"+testSuite.urlParams, responder))
+
+					hook, restoreLogFunc := logging.MockSharedLoggerHook()
+					defer restoreLogFunc()
+
+					err := testSuite.action(client)
+
+					assert.Equal(t, tt.expectedErr, err)
+					if tt.expectedLog != "" {
+						assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+					}
+					assert.NoError(t, httpmock.AllStubsCalled())
+				})
+			}
 		})
 	}
+
 }
 
 func TestClient_CreateUsers(t *testing.T) {
@@ -379,7 +408,7 @@ func TestClient_CreateUsers(t *testing.T) {
 		{
 			name:           "success",
 			responseCode:   200,
-			response:       encodeUnlinkClientResponse(`{"success":true, "data":[]}`, "clientKeyclientKey"),
+			response:       encodeAccountsManagerResponse(`{"success":true, "data":[]}`, "clientKeyclientKey"),
 			expectedResult: []CreateUsersResponseDataRow{},
 		},
 		{
@@ -394,7 +423,7 @@ func TestClient_CreateUsers(t *testing.T) {
 			},
 			urlParams:    "amount=10&client_id=clientID&language=fr&login_fixed=0&password_length=4&postfix_length=3&prefix=pref",
 			responseCode: 200,
-			response: encodeUnlinkClientResponse(`{
+			response: encodeAccountsManagerResponse(`{
 				"success":true, "data":[
 					{"id":12345678901234, "login":"pref_abcd", "password": "efgh"},
 					{"id":12345678901235, "login":"pref_bcde", "password": "jklm"}
@@ -416,7 +445,7 @@ func TestClient_CreateUsers(t *testing.T) {
 			},
 			urlParams:      "amount=10&client_id=clientID&language=en&login_fixed=1&password_length=4&postfix_length=3&prefix=pref",
 			responseCode:   200,
-			response:       encodeUnlinkClientResponse(`{"success":true, "data":[]}`, "clientKeyclientKey"),
+			response:       encodeAccountsManagerResponse(`{"success":true, "data":[]}`, "clientKeyclientKey"),
 			expectedResult: []CreateUsersResponseDataRow{},
 		},
 		{
@@ -438,7 +467,7 @@ func TestClient_CreateUsers(t *testing.T) {
 		{
 			name:         "can't unmarshal",
 			responseCode: 200,
-			response:     encodeUnlinkClientResponse(`{"success":true}`, "anotherClientKey"),
+			response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
 			expectedErr:  errors.New("can't create users"),
 			expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/create ` +
 				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
@@ -447,7 +476,7 @@ func TestClient_CreateUsers(t *testing.T) {
 		{
 			name:         "'success' is false",
 			responseCode: 200,
-			response:     encodeUnlinkClientResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
+			response:     encodeAccountsManagerResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
 			expectedErr:  errors.New("can't create users"),
 			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/create: unknown error"`,
 		},
