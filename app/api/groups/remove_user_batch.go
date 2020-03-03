@@ -26,7 +26,7 @@ import (
 //       (/platform_api/accounts_manager/delete with the `prefix` parameter);
 //
 //     * deletes all users with "{group_prefix}\_{custom_prefix}\_" as prefix
-//       (ignoring the membership locks on groups the authenticated user manage (but not others!));
+//       (ignoring the membership locks on groups that the authenticated user manages (but not others!));
 //
 //     * deletes the user batch entry.
 //
