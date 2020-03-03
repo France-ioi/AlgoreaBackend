@@ -7,7 +7,7 @@ ALTER TABLE `groups`
         COMMENT 'If not ''none'', requires (for joining) members to approve that managers may be able to view or edit their personal information'
             AFTER `lock_user_deletion_until`,
     ADD COLUMN `require_lock_membership_approval_until` DATETIME DEFAULT NULL
-        COMMENT 'If not null or in the future, requires (for joining) members to approve that they will not be able to leave the group without approval until the given date'
+        COMMENT 'If not null and in the future, requires (for joining) members to approve that they will not be able to leave the group without approval until the given date'
             AFTER `require_personal_info_access_approval`,
     ADD COLUMN `require_watch_approval` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether it requires (for joining) members to approve that managers may be able to watch their results and answers'
