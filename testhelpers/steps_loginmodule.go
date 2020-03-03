@@ -125,6 +125,16 @@ func (ctx *TestContext) encodeLoginModuleResponse(preprocessedBody string) (stri
 
 func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( // nolint
 	params string, statusCode int, body *gherkin.DocString) error {
+	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create", params, statusCode, body)
+}
+
+func (ctx *TestContext) TheLoginModuleDeleteEndpointWithParamsReturns( // nolint
+	params string, statusCode int, body *gherkin.DocString) error {
+	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("delete", params, statusCode, body)
+}
+
+func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns( // nolint
+	endpoint, params string, statusCode int, body *gherkin.DocString) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedParams, err := ctx.preprocessString(params)
 	if err != nil {
@@ -145,6 +155,6 @@ func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( // nolint
 	}
 	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/create?"+urlValues.Encode(), responder))
+		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/"+endpoint+"?"+urlValues.Encode(), responder))
 	return nil
 }
