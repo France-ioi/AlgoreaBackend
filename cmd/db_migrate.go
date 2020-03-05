@@ -61,7 +61,8 @@ func init() { // nolint:gochecknoinits
 				_, err = db.Exec("ANALYZE TABLE `attempts`")
 				assertNoError(err, "Cannot execute ANALYZE TABLE")
 				err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-					assertNoError(store.Attempts().ComputeAllAttempts(), "Cannot compute attempts")
+					assertNoError(store.GroupGroups().After(), "Cannot compute groups_groups")
+					assertNoError(store.ItemItems().After(), "Cannot compute items_items")
 					assertNoError(store.PermissionsGranted().After(), "Cannot compute permissions_generated")
 					return nil
 				})
