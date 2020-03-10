@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -58,9 +60,10 @@ type item struct {
 
 type itemWithRequiredType struct {
 	item `json:"item,squash"`
+	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
-	// enum: Chapter,Task,Course
-	Type string `json:"type" validate:"set,oneof=Chapter Task Course"`
+	// enum: Chapter,Task,Course,Skill
+	Type string `json:"type" validate:"set,oneof=Chapter Task Course Skill,type_skill"`
 }
 
 // swagger:ignore
@@ -78,15 +81,17 @@ type newItemString struct {
 // NewItemRequest is the expected input for new created item
 // swagger:model itemCreateRequest
 type NewItemRequest struct {
-	// Nullable fields are of pointer types
-	itemWithRequiredType `json:"item,squash"`
 	// `default_language_tag` of the item
 	// required: true
 	LanguageTag   string `json:"language_tag" validate:"set,language_tag"`
 	newItemString `json:"string,squash"`
 
 	// required: true
-	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id"`
+	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id,parent_item_type"`
+
+	// Nullable fields are of pointer types
+	itemWithRequiredType `json:"item,squash"`
+
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// default: Undefined
 	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
@@ -102,16 +107,16 @@ type NewItemRequest struct {
 	GrantViewPropagation bool `json:"grant_view_propagation"`
 	// default: true
 	WatchPropagation bool `json:"watch_propagation"`
-	// default:true
+	// default: true
 	EditPropagation bool        `json:"edit_propagation"`
-	Children        []itemChild `json:"children" validate:"children,dive"`
+	Children        []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
 
 func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.DataStore) bool {
 	if len(in.Children) == 0 {
 		return true
 	}
-	ids := make([]int64, len(in.Children)+1)
+	ids := make([]int64, len(in.Children))
 	for index := range in.Children {
 		if in.Children[index].ItemID == in.ParentItemID {
 			return false
@@ -140,6 +145,8 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //       `is_owner` = 1).
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
+//       (The only allowed parent-child relations are skills-*, chapter-task, chapter-course, chapter-chapter.
+//       Otherwise the "bad request" error is returned.)
 //
 //     * (if `duration` is set) creates a participants group, links `contest_participants_group_id` to it,
 //       and gives this group 'can_view:content' permission on the new item.
@@ -178,8 +185,9 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	apiError := service.NoError
 	var itemID int64
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		var childrenPermissions []permission
-		registerAddItemValidators(formData, store, user, &childrenPermissions)
+		var parentInfo parentItemInfo
+		var childrenInfoMap map[int64]permissionAndType
+		registerAddItemValidators(formData, store, user, &parentInfo, &childrenInfoMap)
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -193,7 +201,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 				return apiError.Error // rollback
 			}
 
-			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissions, input.Children, formData, lockedStore)
+			apiError = validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, lockedStore)
 			if apiError != service.NoError {
 				return apiError.Error // rollback
 			}
@@ -219,12 +227,23 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 
 // constructParentItemIDValidator constructs a validator for the ParentItemID field.
 // The validator checks that the user has rights to manage the parent item's children (can_edit >= children).
-func constructParentItemIDValidator(store *database.DataStore, user *database.User) validator.Func {
+func constructParentItemIDValidator(store *database.DataStore, user *database.User, parentInfo *parentItemInfo) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		found, err := store.Items().WhereUserHasPermissionOnItems(user, "edit", "children").
-			Where("items.id = ?", fl.Field().Interface().(int64)).HasRows()
+		err := store.Items().WhereUserHasPermissionOnItems(user, "edit", "children").
+			Where("items.id = ?", fl.Field().Interface().(int64)).Select("items.type").
+			Limit(1).Scan(&parentInfo).Error()
+		if gorm.IsRecordNotFoundError(err) {
+			return false
+		}
 		service.MustNotBeError(err)
-		return found
+		return true
+	})
+}
+
+// constructParentItemTypeValidator constructs a validator checking that the parent item is not a Task or a Course.
+func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func {
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		return parentInfo.Type != course && parentInfo.Type != task
 	})
 }
 
@@ -238,10 +257,22 @@ func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 	})
 }
 
+// constructTypeSkillValidator constructs a validator for the Type field.
+// The validator checks that the parent item's type is 'Skill' when the item's type is 'Skill'.
+func constructTypeSkillValidator(parentInfo *parentItemInfo) validator.Func {
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		if parentInfo.Type == "" || fl.Field().String() != skill {
+			return true
+		}
+		return parentInfo.Type == skill
+	})
+}
+
 // constructChildrenValidator constructs a validator for the Children field.
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
-func constructChildrenValidator(store *database.DataStore, user *database.User, childrenPermissions *[]permission) validator.Func {
+func constructChildrenValidator(store *database.DataStore, user *database.User,
+	childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
 
@@ -259,20 +290,73 @@ func constructChildrenValidator(store *database.DataStore, user *database.User, 
 			return false
 		}
 
-		service.MustNotBeError(store.Permissions().VisibleToUser(user).Where("item_id IN (?)", ids).
-			Scan(childrenPermissions).Error())
-		return len(*childrenPermissions) == len(ids)
+		var childrenInfo []permissionAndType
+		service.MustNotBeError(store.Items().
+			Where("item_id IN (?)", ids).
+			WhereUserHasViewPermissionOnItems(user, "info").
+			WithWriteLock().
+			Select("permissions.*, items.type").
+			Scan(&childrenInfo).Error())
+
+		*childrenInfoMap = make(map[int64]permissionAndType, len(childrenInfo))
+		for index := range childrenInfo {
+			(*childrenInfoMap)[childrenInfo[index].ItemID] = childrenInfo[index]
+		}
+
+		return len(*childrenInfoMap) == len(ids)
 	})
 }
 
+// constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task or a Course).
+func constructChildrenAllowedValidator(
+	defaultItemType string, childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		if len(*childrenInfoMap) == 0 {
+			return true
+		}
+		var itemType string
+		if fl.Top().Elem().FieldByName("Type").IsValid() {
+			itemType = fl.Top().Elem().FieldByName("Type").String()
+		} else {
+			itemType = defaultItemType
+		}
+		return itemType != task && itemType != course
+	})
+}
+
+// constructChildTypeNonSkillValidator constructs a validator for the Children field that check
+// if a child's type is not 'Skill' when the items's type is not 'Skill'.
+func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		child := fl.Field().Interface().(itemChild)
+
+		itemType := fl.Top().Elem().FieldByName("Type").String()
+		if itemType == skill {
+			return true
+		}
+		return (*childrenInfoMap)[child.ItemID].Type != skill
+	})
+}
+
+type parentItemInfo struct {
+	Type string
+}
+
 func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	childrenPermissions *[]permission) {
-	formData.RegisterValidation("parent_item_id", constructParentItemIDValidator(store, user))
+	parentInfo *parentItemInfo, childrenInfoMap *map[int64]permissionAndType) { // nolint:gocritic
+	formData.RegisterValidation("parent_item_id", constructParentItemIDValidator(store, user, parentInfo))
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should be able to manage its children")
+	formData.RegisterValidation("parent_item_type", constructParentItemTypeValidator(parentInfo))
+	formData.RegisterTranslation("parent_item_type",
+		"parent item cannot be Task or Course")
 
 	registerLanguageTagValidator(formData, store)
-	registerChildrenValidator(formData, store, user, childrenPermissions)
+	formData.RegisterValidation("type_skill", constructTypeSkillValidator(parentInfo))
+	formData.RegisterTranslation("type_skill", "type can be equal to 'Skill' only if the parent item is a skill")
+	registerChildrenValidator(formData, store, user, "", childrenInfoMap)
+	formData.RegisterValidation("child_type_non_skill", constructChildTypeNonSkillValidator(childrenInfoMap))
+	formData.RegisterTranslation("child_type_non_skill", "a skill cannot be a child of a non-skill item")
 }
 
 func registerLanguageTagValidator(formData *formdata.FormData, store *database.DataStore) {
@@ -281,10 +365,13 @@ func registerLanguageTagValidator(formData *formdata.FormData, store *database.D
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	childrenPermissions *[]permission) {
-	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenPermissions))
+	itemType string, childrenInfoMap *map[int64]permissionAndType) { // nolint:gocritic
+	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenInfoMap))
 	formData.RegisterTranslation("children",
 		"children IDs should be unique and each should be visible to the user")
+
+	formData.RegisterValidation("children_allowed", constructChildrenAllowedValidator(itemType, childrenInfoMap))
+	formData.RegisterTranslation("children_allowed", "a task or a course cannot have children items")
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,

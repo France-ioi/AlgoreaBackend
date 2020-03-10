@@ -25,7 +25,7 @@ type navigationItemCommonFields struct {
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
-	// enum: Chapter,Task,Course
+	// enum: Chapter,Task,Course,Skill
 	Type string `json:"type"`
 
 	// required: true

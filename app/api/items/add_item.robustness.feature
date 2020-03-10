@@ -7,12 +7,15 @@ Feature: Add item - robustness
       | id | name    | type    |
       | 30 | Friends | Friends |
     And the database has the following table 'items':
-      | id | teams_editable | no_score | default_language_tag |
-      | 4  | false          | false    | fr                   |
-      | 21 | false          | false    | fr                   |
-      | 22 | false          | false    | fr                   |
-      | 23 | false          | false    | fr                   |
-      | 24 | false          | false    | fr                   |
+      | id | teams_editable | no_score | default_language_tag | type    |
+      | 4  | false          | false    | fr                   | Chapter |
+      | 5  | false          | false    | fr                   | Skill   |
+      | 21 | false          | false    | fr                   | Chapter |
+      | 22 | false          | false    | fr                   | Chapter |
+      | 23 | false          | false    | fr                   | Chapter |
+      | 24 | false          | false    | fr                   | Chapter |
+      | 25 | false          | false    | fr                   | Chapter |
+      | 26 | false          | false    | fr                   | Skill   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -22,9 +25,12 @@ Feature: Add item - robustness
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 4       | solution           | children           |
+      | 11       | 5       | solution           | children           |
       | 11       | 21      | solution           | children           |
       | 11       | 22      | none               | none               |
       | 11       | 24      | info               | none               |
+      | 11       | 25      | info               | none               |
+      | 11       | 26      | info               | none               |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | source_group_id | can_edit |
       | 11       | 4       | solution | 11              | children |
@@ -363,7 +369,8 @@ Feature: Add item - robustness
     Examples:
       | field                      | value         | error                                                                          |
       | full_screen                | "wrong value" | full_screen must be one of [forceYes forceNo default]                          |
-      | type                       | "Wrong"       | type must be one of [Chapter Task Course]                                      |
+      | type                       | "Wrong"       | type must be one of [Chapter Task Course Skill]                                |
+      | type                       | "Skill"       | type can be equal to 'Skill' only if the parent item is a skill                |
       | validation_type            | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]      |
       | contest_entering_condition | "Wrong"       | contest_entering_condition must be one of [All Half One None]                  |
       | duration                   | "12:34"       | invalid duration                                                               |
@@ -377,12 +384,152 @@ Feature: Add item - robustness
       | score_weight               | "wrong"       | expected type 'int8', got unconvertible type 'string'                          |
       | entry_participant_type     | "Class"       | entry_participant_type must be one of [User Team]                              |
 
+  Scenario: Type is Skill while the parent items's type is not Skill
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Skill",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent_item_id": "21"
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "type": ["type can be equal to 'Skill' only if the parent item is a skill"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: A child is a skill while the item is not a skill
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Chapter",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent_item_id": "4",
+        "children": [
+          {"item_id": "26", "order": 1}
+        ]
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "children[0]": ["a skill cannot be a child of a non-skill item"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario Outline: Parent item cannot have children
+    Given I am the user with id "11"
+    And the database table 'items' has also the following row:
+      | id | default_language_tag | type   |
+      | 90 | fr                   | <type> |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_view_generated | can_edit_generated |
+      | 11       | 90      | info               | children           |
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Task",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent_item_id": "90"
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "parent_item_id": ["parent item cannot be Task or Course"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+    Examples:
+      | type   |
+      | Task   |
+      | Course |
+
+  Scenario Outline: The new item cannot have children
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "<type>",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent_item_id": "21",
+        "children": [
+          {"item_id": "24", "order": 1}
+        ]
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "children": ["a task or a course cannot have children items"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+    Examples:
+      | type   |
+      | Task   |
+      | Course |
+
   Scenario Outline: Wrong optional field value in the array of children
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
@@ -426,7 +573,7 @@ Feature: Add item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
