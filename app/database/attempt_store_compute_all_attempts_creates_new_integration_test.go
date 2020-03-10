@@ -35,13 +35,19 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 			- {id: 111, default_language_tag: fr}
 			- {id: 222, default_language_tag: fr}
 			- {id: 333, default_language_tag: fr}
+			- {id: 444, default_language_tag: fr, entry_participant_type: User}
+			- {id: 555, default_language_tag: fr, entry_participant_type: Team}
 		items_items:
 			- {parent_item_id: 111, child_item_id: 222, child_order: 1}
 			- {parent_item_id: 222, child_item_id: 333, child_order: 1}
+			- {parent_item_id: 444, child_item_id: 333, child_order: 1}
+			- {parent_item_id: 555, child_item_id: 333, child_order: 1}
 		items_ancestors:
 			- {ancestor_item_id: 111, child_item_id: 222}
 			- {ancestor_item_id: 111, child_item_id: 333}
 			- {ancestor_item_id: 222, child_item_id: 333}
+			- {ancestor_item_id: 444, child_item_id: 333}
+			- {ancestor_item_id: 555, child_item_id: 333}
 		attempts:
 			- {group_id: 3, item_id: 333, order: 1, result_propagation_state: to_be_propagated}
 	`)

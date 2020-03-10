@@ -42,7 +42,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 		// Insert missing attempts for chapters having descendants with attempts marked as 'to_be_recomputed'/'to_be_propagated'.
 		// We only create attempts for chapters which are (or have ancestors which are) visible to the group that attempted
-		// to solve the descendant items.
+		// to solve the descendant items. Chapters with explicit entry (items.entry_participant_type IS NOT NULL) are skipped).
 		// (this query can take more than 25 seconds when executed for the first time after the db migration)
 		mustNotBeError(ds.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 			return retryStore.Exec(`
@@ -52,6 +52,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 					descendants.group_id, items_ancestors.ancestor_item_id, 1, 'to_be_recomputed'
 				FROM attempts AS descendants
 				JOIN items_ancestors ON items_ancestors.child_item_id = descendants.item_id
+				JOIN items ON items.id = items_ancestors.ancestor_item_id AND items.entry_participant_type IS NULL
 				LEFT JOIN attempts AS existing ON (
 					existing.group_id = descendants.group_id AND
 					existing.item_id = items_ancestors.ancestor_item_id

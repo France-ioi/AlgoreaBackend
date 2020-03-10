@@ -192,7 +192,6 @@ Feature: Add item
       | group_id | item_id             | result_propagation_state |
       | 11       | 12                  | done                     |
       | 11       | 21                  | done                     |
-      | 11       | 5577006791947779410 | done                     |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"
