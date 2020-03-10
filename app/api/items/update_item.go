@@ -9,6 +9,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/validator"
+
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -21,15 +23,13 @@ type itemWithDefaultLanguageTagAndOptionalType struct {
 	// minLength: 1
 	// maxLength: 6
 	DefaultLanguageTag string `json:"default_language_tag" validate:"min=1,max=6"`
-	// enum: Chapter,Task,Course
-	Type string `json:"type" validate:"oneof=Chapter Task Course"`
 }
 
 // updateItemRequest is the expected input for item updating
 // swagger:model itemEditRequest
 type updateItemRequest struct {
 	itemWithDefaultLanguageTagAndOptionalType `json:"item,squash"`
-	Children                                  []itemChild `json:"children" validate:"children"`
+	Children                                  []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
 
 func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore, itemID int64) bool {
@@ -109,8 +109,29 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		var childrenPermissions []permission
-		registerChildrenValidator(formData, store, user, &childrenPermissions)
+		var itemInfo struct {
+			ContestParticipantsGroupID *int64
+			Type                       string
+			CanEditGenerated           string
+		}
+		err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
+			Joins("JOIN items ON items.id = item_id").
+			Where("item_id = ?", itemID).
+			HavingMaxPermissionAtLeast("edit", "children").
+			Select("items.contest_participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated").
+			Group("item_id").
+			Scan(&itemInfo).Error()
+
+		if gorm.IsRecordNotFoundError(err) {
+			apiError = service.ErrForbidden(errors.New("no access rights to edit the item"))
+			return apiError.Error // rollback
+		}
+		service.MustNotBeError(err)
+
+		var childrenInfoMap map[int64]permissionAndType
+		registerChildrenValidator(formData, store, user, itemInfo.Type, &childrenInfoMap)
+		formData.RegisterValidation("child_type_non_skill", constructUpdateItemChildTypeNonSkillValidator(itemInfo.Type, &childrenInfoMap))
+		formData.RegisterTranslation("child_type_non_skill", "a skill cannot be a child of a non-skill item")
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -123,32 +144,19 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return nil // Nothing to do
 		}
 
-		neededEditPermission := "children"
-		errorSubject := neededEditPermission
-		if len(itemData) > 0 {
-			neededEditPermission = "all"
-			errorSubject = "properties"
-		}
-
-		var participantsGroupID *int64
-		err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
-			Joins("JOIN items ON items.id = item_id").
-			Where("item_id = ?", itemID).
-			WherePermissionIsAtLeast("edit", neededEditPermission).
-			PluckFirst("items.contest_participants_group_id", &participantsGroupID).Error()
-
-		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.ErrForbidden(errors.New("no access rights to edit the item's " + errorSubject))
+		if len(itemData) > 0 &&
+			store.PermissionsGranted().PermissionIndexByKindAndName("edit", itemInfo.CanEditGenerated) <
+				store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all") {
+			apiError = service.ErrForbidden(errors.New("no access rights to edit the item's properties"))
 			return apiError.Error // rollback
 		}
-		service.MustNotBeError(err)
 
-		apiError = updateItemInDB(itemData, participantsGroupID, store, itemID)
+		apiError = updateItemInDB(itemData, itemInfo.ContestParticipantsGroupID, store, itemID)
 		if apiError != service.NoError {
 			return apiError.Error // rollback
 		}
 
-		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenPermissions)
+		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenInfoMap)
 		return err
 	})
 
@@ -181,7 +189,7 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 }
 
 func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.DataStore, itemID int64,
-	input *updateItemRequest, childrenPermissions []permission) (apiError service.APIError, err error) {
+	input *updateItemRequest, childrenPermissionMap map[int64]permissionAndType) (apiError service.APIError, err error) {
 	if formData.IsSet("children") {
 		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
 			service.MustNotBeError(lockedStore.ItemItems().Delete("parent_item_id = ?", itemID).Error())
@@ -191,7 +199,7 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 				return apiError.Error // rollback
 			}
 
-			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissions, input.Children, formData, lockedStore)
+			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissionMap, input.Children, formData, lockedStore)
 			if apiError != service.NoError {
 				return apiError.Error // rollback
 			}
@@ -208,4 +216,17 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 		service.MustNotBeError(attemptStore.ComputeAllAttempts())
 	}
 	return apiError, err
+}
+
+// constructUpdateItemChildTypeNonSkillValidator constructs a validator for the Children field that checks
+// if a child's type is not 'Skill' when the items's type is not 'Skill'.
+func constructUpdateItemChildTypeNonSkillValidator(itemType string,
+	childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		child := fl.Field().Interface().(itemChild)
+		if itemType == skill {
+			return true
+		}
+		return (*childrenInfoMap)[child.ItemID].Type != skill
+	})
 }

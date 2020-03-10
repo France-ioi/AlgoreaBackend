@@ -4,12 +4,15 @@ Feature: Update item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id | default_language_tag |
-      | 4  | fr                   |
-      | 21 | fr                   |
-      | 22 | fr                   |
-      | 50 | fr                   |
-      | 60 | fr                   |
+      | id | default_language_tag | type    |
+      | 4  | fr                   | Chapter |
+      | 21 | fr                   | Chapter |
+      | 22 | fr                   | Chapter |
+      | 23 | fr                   | Skill   |
+      | 24 | fr                   | Task    |
+      | 25 | fr                   | Course  |
+      | 50 | fr                   | Chapter |
+      | 60 | fr                   | Chapter |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -23,11 +26,17 @@ Feature: Update item - robustness
       | 11       | 4       | solution           | none               | false              |
       | 11       | 21      | solution           | none               | false              |
       | 11       | 22      | none               | children           | false              |
+      | 11       | 23      | info               | none               | false              |
+      | 11       | 24      | solution           | children           | false              |
+      | 11       | 25      | solution           | all                | false              |
       | 11       | 50      | solution           | all                | false              |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | can_edit | is_owner | source_group_id |
       | 11       | 4       | solution | none     | false    | 11              |
       | 11       | 21      | solution | none     | false    | 11              |
+      | 11       | 23      | info     | none     | false    | 11              |
+      | 11       | 24      | solution | children | false    | 11              |
+      | 11       | 25      | solution | all      | false    | 11              |
       | 11       | 50      | solution | all      | false    | 11              |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
@@ -69,7 +78,6 @@ Feature: Update item - robustness
     | default_language_tag       | "unknow"      | default language should exist and there should be item's strings in this language  |
     | default_language_tag       | "sl"          | default language should exist and there should be item's strings in this language  | # no strings for the tag
     | full_screen                | "wrong value" | full_screen must be one of [forceYes forceNo default]                              |
-    | type                       | "Wrong"       | type must be one of [Chapter Task Course]                                          |
     | validation_type            | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]          |
     | contest_entering_condition | "Wrong"       | contest_entering_condition must be one of [All Half One None]                      |
     | duration                   | "12:34"       | invalid duration                                                                   |
@@ -121,7 +129,7 @@ Feature: Update item - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "No access rights to edit the item's properties"
+    And the response error message should contain "No access rights to edit the item"
     And the table "items" should stay unchanged
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
@@ -133,7 +141,7 @@ Feature: Update item - robustness
     When I send a PUT request to "/items/22" with the following body:
       """
       {
-        "type": "Course"
+        "url": "http://someurl.com"
       }
       """
     Then the response code should be 403
@@ -153,7 +161,7 @@ Feature: Update item - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "No access rights to edit the item's children"
+    And the response error message should contain "No access rights to edit the item"
     And the table "items" should stay unchanged
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
@@ -297,3 +305,65 @@ Feature: Update item - robustness
       | grant_view_propagation        | true                        | can_grant_view_generated | solution                 | Not enough permissions for setting grant_view_propagation        |
       | watch_propagation             | true                        | can_watch_generated      | answer                   | Not enough permissions for setting watch_propagation             |
       | edit_propagation              | true                        | can_edit_generated       | all                      | Not enough permissions for setting edit_propagation             |
+
+  Scenario: A child is a skill while the item is not a skill
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/22" with the following body:
+      """
+      {
+        "children": [
+          {"item_id": "23", "order": 0}
+        ]
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "children[0]": ["a skill cannot be a child of a non-skill item"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario Outline: The item cannot have children
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/<item_id>" with the following body:
+      """
+      {
+        "children": [
+          {"item_id": "21", "order": 1}
+        ]
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "children": ["a task or a course cannot have children items"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+    Examples:
+      | item_id |
+      | 24      |
+      | 25      |

@@ -23,6 +23,9 @@ type Service struct {
 }
 
 const undefined = "Undefined"
+const course = "Course"
+const task = "Task"
+const skill = "Skill"
 
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
@@ -66,12 +69,18 @@ func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.T
 	return service.NoError
 }
 
-type permission struct {
+// Permission represents item permissions + ItemID
+type Permission struct {
 	ItemID                     int64
 	CanViewGeneratedValue      int
 	CanGrantViewGeneratedValue int
 	CanWatchGeneratedValue     int
 	CanEditGeneratedValue      int
+}
+
+type permissionAndType struct {
+	*Permission
+	Type string
 }
 
 type itemChild struct {
@@ -142,6 +151,7 @@ func constructItemsItemsForChildren(children []itemChild, itemID int64) []*inser
 
 const (
 	asInfo                    = "as_info"
+	asContent                 = "as_content"
 	asIs                      = "as_is"
 	none                      = "none"
 	asContentWithDescendants  = "as_content_with_descendants"
@@ -177,13 +187,8 @@ func defaultEditPropagationForNewItemItems(canEditGeneratedValue int, store *dat
 	return canEditGeneratedValue >= store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all_with_grant")
 }
 
-func validateChildrenFieldsAndApplyDefaults(childrenPermissions []permission, children []itemChild,
+func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permissionAndType, children []itemChild,
 	formData *formdata.FormData, store *database.DataStore) service.APIError {
-	childrenPermissionsMap := make(map[int64]*permission, len(childrenPermissions))
-	for index := range childrenPermissions {
-		childrenPermissionsMap[childrenPermissions[index].ItemID] = &childrenPermissions[index]
-	}
-
 	for index := range children {
 		prefix := fmt.Sprintf("children[%d].", index)
 		if !formData.IsSet(prefix + "category") {
@@ -193,28 +198,33 @@ func validateChildrenFieldsAndApplyDefaults(childrenPermissions []permission, ch
 			children[index].ScoreWeight = 1
 		}
 
-		childPermissions := childrenPermissionsMap[children[index].ItemID]
-		apiError := validateChildContentViewPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		childPermissions := childrenInfoMap[children[index].ItemID]
+		apiError := validateChildContentViewPropagationAndApplyDefaultValue(
+			formData, prefix, &children[index], childPermissions.Permission, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
-		apiError = validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		apiError = validateChildUpperViewLevelsPropagationAndApplyDefaultValue(
+			formData, prefix, &children[index], childPermissions.Permission, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
-		apiError = validateChildGrantViewPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		apiError = validateChildGrantViewPropagationAndApplyDefaultValue(
+			formData, prefix, &children[index], childPermissions.Permission, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
-		apiError = validateChildWatchPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		apiError = validateChildWatchPropagationAndApplyDefaultValue(
+			formData, prefix, &children[index], childPermissions.Permission, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
-		apiError = validateChildEditPropagationAndApplyDefaultValue(formData, prefix, &children[index], childPermissions, store)
+		apiError = validateChildEditPropagationAndApplyDefaultValue(
+			formData, prefix, &children[index], childPermissions.Permission, store)
 		if apiError != service.NoError {
 			return apiError
 		}
@@ -223,7 +233,7 @@ func validateChildrenFieldsAndApplyDefaults(childrenPermissions []permission, ch
 }
 
 func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
-	childPermissions *permission, store *database.DataStore) service.APIError {
+	childPermissions *Permission, store *database.DataStore) service.APIError {
 	if formData.IsSet(prefix + "edit_propagation") {
 		if child.EditPropagation &&
 			childPermissions.CanEditGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all_with_grant") {
@@ -237,7 +247,7 @@ func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormDat
 }
 
 func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
-	childPermissions *permission, store *database.DataStore) service.APIError {
+	childPermissions *Permission, store *database.DataStore) service.APIError {
 	if formData.IsSet(prefix + "watch_propagation") {
 		if child.WatchPropagation &&
 			childPermissions.CanWatchGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("watch", "answer_with_grant") {
@@ -251,7 +261,7 @@ func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormDa
 }
 
 func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
-	childPermissions *permission, store *database.DataStore) service.APIError {
+	childPermissions *Permission, store *database.DataStore) service.APIError {
 	if formData.IsSet(prefix + "grant_view_propagation") {
 		if child.GrantViewPropagation &&
 			childPermissions.CanGrantViewGeneratedValue <
@@ -265,8 +275,9 @@ func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.Fo
 	return service.NoError
 }
 
+// nolint:dupl
 func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
-	child *itemChild, childPermissions *permission, store *database.DataStore) service.APIError {
+	child *itemChild, childPermissions *Permission, store *database.DataStore) service.APIError {
 	if formData.IsSet(prefix + "upper_view_levels_propagation") {
 		var failed bool
 		switch child.UpperViewLevelsPropagation {
@@ -287,14 +298,16 @@ func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formd
 	return service.NoError
 }
 
+// nolint:dupl
 func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
-	child *itemChild, childPermissions *permission, store *database.DataStore) service.APIError {
+	child *itemChild, childPermissions *Permission, store *database.DataStore) service.APIError {
 	if formData.IsSet(prefix + "content_view_propagation") {
 		var failed bool
 		switch child.ContentViewPropagation {
 		case asInfo:
-			failed = childPermissions.CanGrantViewGeneratedValue == store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "none")
-		case "as_content":
+			failed =
+				childPermissions.CanGrantViewGeneratedValue == store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "none")
+		case asContent:
 			failed = childPermissions.CanGrantViewGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "content")
 		}
 		if failed {

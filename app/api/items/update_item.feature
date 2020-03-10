@@ -48,14 +48,14 @@ Background:
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "type": "Course"
+        "url": "http://someurl3.com/"
       }
       """
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-    | id | type   | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
-    | 50 | Course | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
+    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
+    | 50 | Chapter | http://someurl3.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 1              | 10                    | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -92,7 +92,6 @@ Background:
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "type": "Course",
         "url": "http://myurl.com/",
         "text_id": "Task number 1",
         "title_bar_visible": true,
@@ -121,8 +120,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 50 | Course | http://myurl.com/ | sl                   | 0              | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | All                        | 0              | 2345                  | 0                        | 01:02:03 | 0               | 0                            | 5577006791947779410           |
+      | id | type    | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
+      | 50 | Chapter | http://myurl.com/ | sl                   | 0              | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | All                        | 0              | 2345                  | 0                        | 01:02:03 | 0               | 0                            | 5577006791947779410           |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
