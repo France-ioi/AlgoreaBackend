@@ -363,7 +363,7 @@ Feature: Add item - robustness
     Examples:
       | field                      | value         | error                                                                          |
       | full_screen                | "wrong value" | full_screen must be one of [forceYes forceNo default]                          |
-      | type                       | "Wrong"       | type must be one of [Chapter Task Course]                                      |
+      | type                       | "Wrong"       | type must be one of [Chapter Task Course Skill]                                |
       | validation_type            | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]      |
       | contest_entering_condition | "Wrong"       | contest_entering_condition must be one of [All Half One None]                  |
       | duration                   | "12:34"       | invalid duration                                                               |

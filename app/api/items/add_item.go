@@ -59,8 +59,8 @@ type item struct {
 type itemWithRequiredType struct {
 	item `json:"item,squash"`
 	// required: true
-	// enum: Chapter,Task,Course
-	Type string `json:"type" validate:"set,oneof=Chapter Task Course"`
+	// enum: Chapter,Task,Course,Skill
+	Type string `json:"type" validate:"set,oneof=Chapter Task Course Skill,type_skill"`
 }
 
 // swagger:ignore
