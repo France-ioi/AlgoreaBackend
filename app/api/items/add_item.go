@@ -145,6 +145,8 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //       `is_owner` = 1).
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
+//       (The only allowed parent-child relations are skills-*, chapter-task, chapter-course.
+//       Otherwise the "bad request" error is returned.)
 //
 //     * (if `duration` is set) creates a participants group, links `contest_participants_group_id` to it,
 //       and gives this group 'can_view:content' permission on the new item.
