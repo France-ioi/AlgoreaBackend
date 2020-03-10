@@ -259,7 +259,7 @@ func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 // The validator checks that the parent item's type is 'Skill' when the item's type is 'Skill'.
 func constructTypeSkillValidator(parentInfo *parentItemInfo) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		if fl.Field().String() != skill {
+		if parentInfo.Type == "" || fl.Field().String() != skill {
 			return true
 		}
 		return parentInfo.Type == skill
