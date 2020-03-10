@@ -248,7 +248,9 @@ func (f *FormData) getUsedKeysPathFromValidatorPath(path string) string {
 		prefix = structName + "."
 	}
 	path = strings.TrimPrefix(path, prefix)
+	path = strings.Replace(path, ".<squash>", "", -1)
 	path = strings.Replace(path, "<squash>.", "", -1)
+	path = strings.Replace(path, "<squash>", "", -1)
 	return path
 }
 

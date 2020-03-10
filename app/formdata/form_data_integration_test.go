@@ -152,7 +152,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			&struct {
 				Struct struct {
 					Name string `json:"name" validate:"min=1"`
-				} `json:"struct,squash" validate:"set"`
+				} `json:"struct,squash"`
 			}{},
 			`{"name": ""}}`,
 			"invalid input data",
@@ -605,7 +605,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 					OtherStruct struct {
 						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
 					} `json:"other_struct" validate:"set"`
-				} `json:"struct,squash" validate:"set"`
+				} `json:"struct,squash"`
 			}{},
 			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
@@ -698,7 +698,7 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 					OtherStruct struct {
 						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
 					} `json:"other_struct" validate:"set"`
-				} `json:"struct,squash" validate:"set"`
+				} `json:"struct,squash"`
 			}{},
 			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},

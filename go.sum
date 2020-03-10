@@ -14,8 +14,8 @@ github.com/DATA-DOG/go-sqlmock v1.3.2 h1:2L2f5t3kKnCLxnClDD/PrDfExFFa1wjESgxHG/B
 github.com/DATA-DOG/go-sqlmock v1.3.2/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003 h1:xWP0YlXTxXy/6cCYG52fFYHodOaAjmH5/09zTxPb42Q=
 github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003/go.mod h1:MUWZRkw6DRv0+CydtqmPpc6Dn2/scLBrgCx5S7XqiaE=
-github.com/France-ioi/validator v9.29.2-0.20190902165131-fab02af38e92+incompatible h1:+gi8lBTZhjPB4oxL3mIpVKZQGpro2yfjKIurmVm2iO0=
-github.com/France-ioi/validator v9.29.2-0.20190902165131-fab02af38e92+incompatible/go.mod h1:E1tfbGctgL/lY9mtL8AemtTbTYzmy0XF+Mm54eLu43E=
+github.com/France-ioi/validator v9.29.2-0.20200309120401-c5f787f2a0e8+incompatible h1:bB4nKFPrcrZlPf9eA8hOFAn6TVMpM9jSK4/mbYgsZFA=
+github.com/France-ioi/validator v9.29.2-0.20200309120401-c5f787f2a0e8+incompatible/go.mod h1:E1tfbGctgL/lY9mtL8AemtTbTYzmy0XF+Mm54eLu43E=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=

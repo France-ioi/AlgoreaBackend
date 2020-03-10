@@ -14,7 +14,7 @@ require (
 	github.com/CloudyKit/jet v2.1.3-0.20180809161101-62edd43e4f88+incompatible
 	github.com/DATA-DOG/go-sqlmock v1.3.2
 	github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003
-	github.com/France-ioi/validator v9.29.2-0.20190902165131-fab02af38e92+incompatible
+	github.com/France-ioi/validator v9.29.2-0.20200309120401-c5f787f2a0e8+incompatible
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
 	github.com/akrylysov/algnhsa v0.0.0-20190203201208-70f315bb89bd
 	github.com/aws/aws-lambda-go v1.8.2
