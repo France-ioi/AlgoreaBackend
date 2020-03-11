@@ -42,19 +42,30 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 
 		// Insert missing attempts for chapters having descendants with attempts marked as 'to_be_recomputed'/'to_be_propagated'.
 		// We only create attempts for chapters which are (or have ancestors which are) visible to the group that attempted
-		// to solve the descendant items.
+		// to solve the descendant items. Chapters requiring explicit entry are skipped).
 		// (this query can take more than 25 seconds when executed for the first time after the db migration)
 		mustNotBeError(ds.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 			return retryStore.Exec(`
-				INSERT INTO attempts (id, group_id, item_id, ` + "`order`, " + `result_propagation_state)
+				INSERT INTO attempts (id, group_id, item_id, latest_activity_at, ` + "`order`, " + `result_propagation_state)
+				WITH RECURSIVE ancestors (ancestor_item_id, child_item_id) AS (
+					SELECT items_items.parent_item_id, items_items.child_item_id
+					FROM items_items
+					JOIN items ON items.id = items_items.parent_item_id
+					WHERE NOT items.requires_explicit_entry
+					UNION
+					SELECT items_items.parent_item_id, ancestors.child_item_id
+					FROM items_items
+					JOIN ancestors ON ancestors.ancestor_item_id = items_items.child_item_id
+					JOIN items ON items.id = items_items.parent_item_id
+					WHERE NOT items.requires_explicit_entry)
 				SELECT
 					FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000,
-					descendants.group_id, items_ancestors.ancestor_item_id, 1, 'to_be_recomputed'
+					descendants.group_id, ancestors.ancestor_item_id, '1000-01-01 00:00:00', 1, 'to_be_recomputed'
 				FROM attempts AS descendants
-				JOIN items_ancestors ON items_ancestors.child_item_id = descendants.item_id
+				JOIN ancestors ON ancestors.child_item_id = descendants.item_id
 				LEFT JOIN attempts AS existing ON (
 					existing.group_id = descendants.group_id AND
-					existing.item_id = items_ancestors.ancestor_item_id
+					existing.item_id = ancestors.ancestor_item_id
 				)
 				WHERE (
 					descendants.result_propagation_state = 'to_be_recomputed' OR
@@ -65,7 +76,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 						JOIN groups_ancestors_active
 							ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id
 						WHERE
-							permissions_generated.item_id = items_ancestors.ancestor_item_id AND
+							permissions_generated.item_id = ancestors.ancestor_item_id AND
 							permissions_generated.can_view_generated != 'none' AND
 							groups_ancestors_active.child_group_id = descendants.group_id
 						LIMIT 1
@@ -77,12 +88,12 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 							permissions_generated.item_id IN (
 								SELECT grand_ancestors.ancestor_item_id
 								FROM items_ancestors AS grand_ancestors
-								WHERE grand_ancestors.child_item_id = items_ancestors.ancestor_item_id
+								WHERE grand_ancestors.child_item_id = ancestors.ancestor_item_id
 							) AND permissions_generated.can_view_generated != 'none' AND
 							groups_ancestors_active.child_group_id = descendants.group_id
 						LIMIT 1
 				))
-				GROUP BY descendants.group_id, items_ancestors.ancestor_item_id
+				GROUP BY descendants.group_id, ancestors.ancestor_item_id
 			`).Error()
 		}))
 
@@ -174,8 +185,10 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 					JOIN items
 						ON target_attempts.item_id = items.id
 					SET
-						target_attempts.latest_activity_at = IFNULL(children_stats.latest_activity_at,
-							target_attempts.latest_activity_at),
+						target_attempts.latest_activity_at = GREATEST(
+							IFNULL(children_stats.latest_activity_at, '1000-01-01 00:00:00'),
+							target_attempts.latest_activity_at
+						),
 						target_attempts.tasks_tried = IFNULL(children_stats.tasks_tried, 0),
 						target_attempts.tasks_with_help = IFNULL(children_stats.tasks_with_help, 0),
 						target_attempts.validated_at = CASE
