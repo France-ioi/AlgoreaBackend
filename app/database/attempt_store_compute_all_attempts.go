@@ -50,12 +50,14 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 				WITH RECURSIVE ancestors (ancestor_item_id, child_item_id) AS (
 					SELECT items_items.parent_item_id, items_items.child_item_id
 					FROM items_items
-					JOIN items ON items.id = items_items.parent_item_id AND NOT items.requires_explicit_entry
+					JOIN items ON items.id = items_items.parent_item_id
+					WHERE NOT items.requires_explicit_entry
 					UNION
 					SELECT items_items.parent_item_id, ancestors.child_item_id
 					FROM items_items
 					JOIN ancestors ON ancestors.ancestor_item_id = items_items.child_item_id
-					JOIN items ON items.id = items_items.parent_item_id AND NOT items.requires_explicit_entry)
+					JOIN items ON items.id = items_items.parent_item_id
+					WHERE NOT items.requires_explicit_entry)
 				SELECT
 					FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000,
 					descendants.group_id, ancestors.ancestor_item_id, '1000-01-01 00:00:00', 1, 'to_be_recomputed'
