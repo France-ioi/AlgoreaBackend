@@ -14,6 +14,7 @@ import (
 type existingAttemptsRow struct {
 	GroupID                int64
 	ItemID                 int64
+	LatestActivityAt       string
 	ResultPropagationState string
 }
 
@@ -49,7 +50,7 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 			- {ancestor_item_id: 444, child_item_id: 333}
 			- {ancestor_item_id: 555, child_item_id: 333}
 		attempts:
-			- {group_id: 3, item_id: 333, order: 1, result_propagation_state: to_be_propagated}
+			- {group_id: 3, item_id: 333, order: 1, latest_activity_at: "2019-05-30 11:00:00", result_propagation_state: to_be_propagated}
 	`)
 	mergedFixtures = append(mergedFixtures, fixtures...)
 	db := testhelpers.SetupDBWithFixtureString(mergedFixtures...)
@@ -61,13 +62,15 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 	})
 	assert.NoError(t, err)
 
+	const expectedDate = "2019-05-30 11:00:00"
 	for i := range expectedNewAttempts {
 		expectedNewAttempts[i].ResultPropagationState = "done"
+		expectedNewAttempts[i].LatestActivityAt = expectedDate
 	}
 	expectedNewAttempts = append(expectedNewAttempts,
-		existingAttemptsRow{GroupID: 3, ItemID: 333, ResultPropagationState: "done"})
+		existingAttemptsRow{GroupID: 3, ItemID: 333, LatestActivityAt: expectedDate, ResultPropagationState: "done"})
 	var result []existingAttemptsRow
-	assert.NoError(t, attemptStore.Select("group_id, item_id, result_propagation_state").
+	assert.NoError(t, attemptStore.Select("group_id, item_id, latest_activity_at, result_propagation_state").
 		Order("group_id, item_id").Scan(&result).Error())
 	assert.Equal(t, expectedNewAttempts, result)
 }

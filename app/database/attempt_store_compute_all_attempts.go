@@ -46,10 +46,10 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 		// (this query can take more than 25 seconds when executed for the first time after the db migration)
 		mustNotBeError(ds.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 			return retryStore.Exec(`
-				INSERT INTO attempts (id, group_id, item_id, ` + "`order`, " + `result_propagation_state)
+				INSERT INTO attempts (id, group_id, item_id, latest_activity_at, ` + "`order`, " + `result_propagation_state)
 				SELECT
 					FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000,
-					descendants.group_id, items_ancestors.ancestor_item_id, 1, 'to_be_recomputed'
+					descendants.group_id, items_ancestors.ancestor_item_id, '1000-01-01 00:00:00', 1, 'to_be_recomputed'
 				FROM attempts AS descendants
 				JOIN items_ancestors ON items_ancestors.child_item_id = descendants.item_id
 				JOIN items ON items.id = items_ancestors.ancestor_item_id AND items.entry_participant_type IS NULL
@@ -175,8 +175,10 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 					JOIN items
 						ON target_attempts.item_id = items.id
 					SET
-						target_attempts.latest_activity_at = IFNULL(children_stats.latest_activity_at,
-							target_attempts.latest_activity_at),
+						target_attempts.latest_activity_at = GREATEST(
+							IFNULL(children_stats.latest_activity_at, '1000-01-01 00:00:00'),
+							target_attempts.latest_activity_at
+						),
 						target_attempts.tasks_tried = IFNULL(children_stats.tasks_tried, 0),
 						target_attempts.tasks_with_help = IFNULL(children_stats.tasks_with_help, 0),
 						target_attempts.validated_at = CASE

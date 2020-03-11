@@ -102,6 +102,31 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates_OnCommonData(t *testing.T) {
 	assertAggregatesEqual(t, attemptStore, expected)
 }
 
+func TestAttemptStore_ComputeAllAttempts_Aggregates_KeepsLastActivityAtIfItIsGreater(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common")
+	defer func() { _ = db.Close() }()
+
+	expectedLatestActivityAt1 := database.Time(time.Date(2019, 5, 29, 11, 0, 0, 0, time.UTC))
+	expectedLatestActivityAt2 := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
+
+	attemptStore := database.NewDataStore(db).Attempts()
+	assert.NoError(t, attemptStore.ByID(12).Updates(map[string]interface{}{
+		"latest_activity_at": time.Time(expectedLatestActivityAt2),
+	}).Error())
+
+	err := attemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.Attempts().ComputeAllAttempts()
+	})
+	assert.NoError(t, err)
+
+	expected := []aggregatesResultRow{
+		{ID: 11, ResultPropagationState: "done", LatestActivityAt: expectedLatestActivityAt1},
+		{ID: 12, ResultPropagationState: "done", LatestActivityAt: expectedLatestActivityAt2},
+		{ID: 22, ResultPropagationState: "done", LatestActivityAt: expectedLatestActivityAt2},
+	}
+	assertAggregatesEqual(t, attemptStore, expected)
+}
+
 func TestAttemptStore_ComputeAllAttempts_Aggregates_EditScore(t *testing.T) {
 	for _, test := range []struct {
 		name                  string
