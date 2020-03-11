@@ -36,19 +36,20 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 			- {id: 111, default_language_tag: fr}
 			- {id: 222, default_language_tag: fr}
 			- {id: 333, default_language_tag: fr}
-			- {id: 444, default_language_tag: fr, entry_participant_type: User}
-			- {id: 555, default_language_tag: fr, entry_participant_type: Team}
+			- {id: 444, default_language_tag: fr, requires_explicit_entry: 1}
+			- {id: 555, default_language_tag: fr}
 		items_items:
 			- {parent_item_id: 111, child_item_id: 222, child_order: 1}
 			- {parent_item_id: 222, child_item_id: 333, child_order: 1}
 			- {parent_item_id: 444, child_item_id: 333, child_order: 1}
-			- {parent_item_id: 555, child_item_id: 333, child_order: 1}
+			- {parent_item_id: 555, child_item_id: 444, child_order: 1}
 		items_ancestors:
 			- {ancestor_item_id: 111, child_item_id: 222}
 			- {ancestor_item_id: 111, child_item_id: 333}
 			- {ancestor_item_id: 222, child_item_id: 333}
 			- {ancestor_item_id: 444, child_item_id: 333}
 			- {ancestor_item_id: 555, child_item_id: 333}
+			- {ancestor_item_id: 555, child_item_id: 444}
 		attempts:
 			- {group_id: 3, item_id: 333, order: 1, latest_activity_at: "2019-05-30 11:00:00", result_propagation_state: to_be_propagated}
 	`)
@@ -115,6 +116,10 @@ func TestAttemptStore_ComputeAllAttempts_CreatesNew(t *testing.T) {
 				"but only for visible items's descendants",
 			fixtures:            []string{`permissions_generated: [{group_id: 1, item_id: 222, can_view_generated: info}]`},
 			expectedNewAttempts: []existingAttemptsRow{{GroupID: 3, ItemID: 222}},
+		},
+		{
+			name:     "should not create new attempts for items requiring explicit entry",
+			fixtures: []string{`permissions_generated: [{group_id: 1, item_id: 555, can_view_generated: info}]`},
 		},
 	} {
 		test := test
