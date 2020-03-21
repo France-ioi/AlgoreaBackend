@@ -25,7 +25,7 @@ import (
 // summary: Register a hint request
 // description: >
 //
-//   Saves the hint request into `attempts` and generates a new task token.
+//   Saves the hint request into `results` and generates a new task token.
 //
 //
 //   Restrictions:
@@ -122,8 +122,11 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		hintsGivenCountString := strconv.Itoa(len(hintsRequestedParsed))
 		requestData.TaskToken.HintsGivenCount = &hintsGivenCountString
 
-		// Update attempts with the hint request
-		service.MustNotBeError(store.Attempts().ByID(requestData.TaskToken.Converted.AttemptID).
+		// Update results with the hint request
+		service.MustNotBeError(store.Results().
+			Where("participant_id = ?", requestData.TaskToken.Converted.ParticipantID).
+			Where("attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
+			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID).
 			UpdateColumn(map[string]interface{}{
 				"tasks_with_help":          1,
 				"result_propagation_state": "to_be_propagated",
@@ -155,7 +158,11 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
 	user *database.User, r *http.Request) ([]formdata.Anything, error) {
 	var hintsRequested *string
-	err := store.Attempts().ByID(taskToken.Converted.AttemptID).WithWriteLock().
+	err := store.Results().
+		Where("participant_id = ?", taskToken.Converted.ParticipantID).
+		Where("attempt_id = ?", taskToken.Converted.AttemptID).
+		Where("item_id = ?", taskToken.Converted.LocalItemID).
+		WithWriteLock().
 		PluckFirst("hints_requested", &hintsRequested).Error()
 	var hintsRequestedParsed []formdata.Anything
 	if err == nil && hintsRequested != nil {
@@ -163,9 +170,9 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
 			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-				"idUser":      user.GroupID,
-				"idItemLocal": taskToken.Converted.LocalItemID,
-				"idAttempt":   taskToken.Converted.AttemptID,
+				"idUser":      taskToken.UserID,
+				"idItemLocal": taskToken.LocalItemID,
+				"idAttempt":   taskToken.AttemptID,
 			})
 			logging.GetLogEntry(r).Warnf("Unable to parse hints_requested (%s) having value %q: %s", fieldsForLoggingMarshaled,
 				*hintsRequested, hintsErr.Error())

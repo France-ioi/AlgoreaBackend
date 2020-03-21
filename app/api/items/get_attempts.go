@@ -15,8 +15,6 @@ type itemAttemptsViewResponseRow struct {
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
-	Order int32 `json:"order"`
-	// required: true
 	ScoreComputed float32 `json:"score_computed"`
 	// required: true
 	Validated bool `json:"validated"`
@@ -40,7 +38,7 @@ type itemAttemptsViewResponseRow struct {
 // swagger:operation GET /items/{item_id}/attempts items itemAttemptsView
 // ---
 // summary: List attempts for a task
-// description: Returns attempts made by the current user (if `as_team_id` is not given) or
+// description: Returns attempts (with results) made by the current user (if `as_team_id` is not given) or
 //              `as_team_id` (otherwise) while solving the task given in `item_id`.
 //
 //
@@ -62,20 +60,13 @@ type itemAttemptsViewResponseRow struct {
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [order,id]
+//   default: [id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [order,-order,id,-id]
-// - name: from.order
-//   description: Start the page from the attempt next to the attempt with `attempts.order` = `from.order` and
-//                `attempts.id` = `from.id` (`from.id` is required when `from.order` is present)
-//   in: query
-//   type: integer
-//   format: int32
+//     enum: [id,-id]
 // - name: from.id
-//   description: Start the page from the attempt next to the attempt with `attempts.order` = `from.order` and
-//                `attempts.id` = `from.id` (`from.order` is required when `from.id` is present)
+//   description: Start the page from the attempt next to the attempt with `results.attempt_id` = `from.id`
 //   in: query
 //   type: integer
 //   format: int64
@@ -129,19 +120,19 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.Attempts().Where("attempts.group_id = ?", groupID).
+	query := srv.Store.Results().Where("results.participant_id = ?", groupID).
 		Where("item_id = ?", itemID).
+		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Joins("LEFT JOIN users AS creators ON creators.group_id = attempts.creator_id").
 		Select(`
-			attempts.id, attempts.order, attempts.score_computed, attempts.validated,
-			attempts.started_at, creators.login AS user_creator__login,
+			attempts.id, results.score_computed, results.validated,
+			results.started_at, creators.login AS user_creator__login,
 			creators.first_name AS user_creator__first_name, creators.last_name AS user_creator__last_name,
 			creators.group_id AS user_creator__group_id`)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"order": {ColumnName: "attempts.order", FieldType: "int64"},
-		"id":    {ColumnName: "attempts.id", FieldType: "int64"},
-	}, "order,id", []string{"id"}, false)
+		"id": {ColumnName: "results.attempt_id", FieldType: "int64"},
+	}, "id", []string{"id"}, false)
 	if apiError != service.NoError {
 		return apiError
 	}

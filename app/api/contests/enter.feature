@@ -52,9 +52,13 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 99       | 10      | info               |
       | 99       | 20      | info               |
     And the database has the following table 'attempts':
-      | group_id | item_id | order |
-      | 11       | 30      | 1     |
-      | 31       | 30      | 1     |
+      | id | participant_id | created_at          |
+      | 0  | 11             | 2019-05-30 11:00:00 |
+      | 0  | 31             | 2019-05-30 11:00:00 |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id |
+      | 0          | 11             | 30      |
+      | 0          | 31             | 30      |
     And the DB time now is "3019-10-10 10:10:10"
 
   Scenario: Enter an individual contest
@@ -93,12 +97,17 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | started_at          | creator_id | order |
-      | 11       | 30      | null                | null       | 1     |
-      | 31       | 10      | null                | null       | 1     |
-      | 31       | 20      | null                | null       | 1     |
-      | 31       | 30      | null                | null       | 1     |
-      | 31       | 50      | 3019-10-10 10:10:10 | 31         | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 1  | 31             | 3019-10-10 10:10:10 | 31         | 0                 | 50           |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | 11             | 30      | null                |
+      | 0          | 31             | 10      | null                |
+      | 0          | 31             | 20      | null                |
+      | 0          | 31             | 30      | null                |
+      | 1          | 31             | 50      | 3019-10-10 10:10:10 |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |
@@ -156,13 +165,18 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | started_at          | creator_id | order | result_propagation_state |
-      | 11       | 10      | null                | null       | 1     | done                     |
-      | 11       | 20      | null                | null       | 1     | done                     |
-      | 11       | 30      | null                | null       | 1     | done                     |
-      | 11       | 60      | 3019-10-10 10:10:10 | 31         | 1     | done                     |
-      | 31       | 20      | null                | null       | 1     | done                     |
-      | 31       | 30      | null                | null       | 1     | done                     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 1  | 11             | 3019-10-10 10:10:10 | 31         | 0                 | 60           |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
+      | 0          | 11             | 10      | null                | done                     |
+      | 0          | 11             | 20      | null                | done                     |
+      | 0          | 11             | 30      | null                | done                     |
+      | 0          | 31             | 20      | null                | done                     |
+      | 0          | 31             | 30      | null                | done                     |
+      | 1          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |
@@ -204,8 +218,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 60      | 02:02:02        |
     And the database table 'attempts' has also the following row:
-      | group_id | item_id | started_at          | order |
-      | 11       | 60      | 2019-05-29 11:00:00 | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           |
+    And the database table 'results' has also the following row:
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 11             | 60      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
     When I send a POST request to "/contests/60/enter?as_team_id=11"
     Then the response code should be 201
@@ -221,13 +238,19 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | started_at          | creator_id | order | result_propagation_state |
-      | 11       | 20      | null                | null       | 1     | done                     |
-      | 11       | 30      | null                | null       | 1     | done                     |
-      | 11       | 60      | 2019-05-29 11:00:00 | null       | 1     | done                     |
-      | 11       | 60      | 3019-10-10 10:10:10 | 31         | 2     | done                     |
-      | 31       | 20      | null                | null       | 1     | done                     |
-      | 31       | 30      | null                | null       | 1     | done                     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           |
+      | 2  | 11             | 3019-10-10 10:10:10 | 31         | 0                 | 60           |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
+      | 0          | 11             | 20      | null                | done                     |
+      | 0          | 11             | 30      | null                | done                     |
+      | 0          | 31             | 20      | null                | done                     |
+      | 0          | 31             | 30      | null                | done                     |
+      | 1          | 11             | 60      | 2019-05-29 11:00:00 | done                     |
+      | 2          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |
@@ -281,10 +304,15 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | started_at          | creator_id | order | result_propagation_state |
-      | 11       | 30      | null                | null       | 1     | done                     |
-      | 31       | 30      | null                | null       | 1     | done                     |
-      | 31       | 50      | 3019-10-10 10:10:10 | 31         | 1     | done                     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 1  | 31             | 3019-10-10 10:10:10 | 31         | 0                 | 50           |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
+      | 0          | 11             | 30      | null                | done                     |
+      | 0          | 31             | 30      | null                | done                     |
+      | 1          | 31             | 50      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And logs should contain:
@@ -328,12 +356,17 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     }
     """
     And the table "attempts" should be:
-      | group_id | item_id | started_at          | creator_id | order |
-      | 11       | 30      | null                | null       | 1     |
-      | 31       | 10      | null                | null       | 1     |
-      | 31       | 20      | null                | null       | 1     |
-      | 31       | 30      | null                | null       | 1     |
-      | 31       | 50      | 3019-10-10 10:10:10 | 31         | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 1  | 31             | 3019-10-10 10:10:10 | 31         | 0                 | 50           |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | 11             | 30      | null                |
+      | 0          | 31             | 10      | null                |
+      | 0          | 31             | 20      | null                |
+      | 0          | 31             | 30      | null                |
+      | 1          | 31             | 50      | 3019-10-10 10:10:10 |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |

@@ -12,53 +12,58 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func TestPermissionGeneratedStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T) {
+func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {
 		name            string
 		groupID         int64
 		itemID          int64
 		canView         string
-		expectedChanged []groupItemPair
+		expectedChanged []resultPrimaryKey
 	}{
 		{
-			name:            "make a parent item visible",
-			groupID:         104,
-			itemID:          2,
-			canView:         "info",
-			expectedChanged: []groupItemPair{{104, 3}, {105, 3}},
+			name:    "make a parent item visible",
+			groupID: 104,
+			itemID:  2,
+			canView: "info",
+			expectedChanged: []resultPrimaryKey{
+				{104, 1, 3}, {105, 1, 3},
+			},
 		},
 		{
-			name:            "make an ancestor item visible",
-			groupID:         104,
-			itemID:          1,
-			canView:         "info",
-			expectedChanged: []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
+			name:    "make an ancestor item visible",
+			groupID: 104,
+			itemID:  1,
+			canView: "info",
+			expectedChanged: []resultPrimaryKey{
+				{104, 1, 2}, {104, 1, 3},
+				{105, 1, 2}, {105, 1, 3},
+			},
 		},
 		{
 			name:            "make a parent item invisible",
 			groupID:         104,
 			itemID:          2,
 			canView:         "none",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:            "make an item visible",
 			groupID:         104,
 			itemID:          3,
 			canView:         "info",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:            "make a parent item visible for an expired membership",
 			groupID:         108,
 			itemID:          2,
 			canView:         "none",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksAttemptsAsChangedFixture)
+			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
@@ -70,41 +75,46 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *t
 				"group_id": test.groupID, "item_id": test.itemID, "can_view_generated": test.canView,
 			}))
 
-			assertAttemptsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
 		})
 	}
 }
 
-func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T) {
+func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {
 		name            string
 		groupID         int64
 		itemID          int64
 		canView         string
-		expectedChanged []groupItemPair
+		expectedChanged []resultPrimaryKey
 		noChanges       bool
 		updateExisting  bool
 	}{
 		{
-			name:            "make a parent item visible",
-			groupID:         104,
-			itemID:          2,
-			canView:         "info",
-			expectedChanged: []groupItemPair{{104, 3}, {105, 3}},
+			name:    "make a parent item visible",
+			groupID: 104,
+			itemID:  2,
+			canView: "info",
+			expectedChanged: []resultPrimaryKey{
+				{104, 1, 3}, {105, 1, 3},
+			},
 		},
 		{
-			name:            "make an ancestor item visible",
-			groupID:         104,
-			itemID:          1,
-			canView:         "info",
-			expectedChanged: []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
+			name:    "make an ancestor item visible",
+			groupID: 104,
+			itemID:  1,
+			canView: "info",
+			expectedChanged: []resultPrimaryKey{
+				{104, 1, 2}, {104, 1, 3},
+				{105, 1, 2}, {105, 1, 3},
+			},
 		},
 		{
 			name:            "make an ancestor item invisible",
 			groupID:         108,
 			itemID:          1,
 			canView:         "none",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 			updateExisting:  true,
 		},
 		{
@@ -112,7 +122,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			groupID:         104,
 			itemID:          3,
 			canView:         "info",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:           "switch ancestor from invisible to visible",
@@ -120,16 +130,17 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			itemID:         1,
 			canView:        "info",
 			updateExisting: true,
-			expectedChanged: []groupItemPair{
-				{105, 2}, {105, 3},
-				{107, 2}, {107, 3}},
+			expectedChanged: []resultPrimaryKey{
+				{105, 1, 2}, {105, 1, 3},
+				{107, 1, 2}, {107, 1, 3},
+			},
 		},
 		{
 			name:            "make a parent item visible for an expired membership",
 			groupID:         108,
 			itemID:          2,
 			canView:         "info",
-			expectedChanged: []groupItemPair{{108, 3}},
+			expectedChanged: []resultPrimaryKey{{108, 1, 3}},
 		},
 		{
 			name:            "no changes",
@@ -137,7 +148,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			itemID:          1,
 			canView:         "info",
 			updateExisting:  true,
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 			noChanges:       true,
 		},
 	} {
@@ -148,7 +159,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 				fixures = append(fixures,
 					fmt.Sprintf("permissions_generated: [{group_id: %d, item_id: %d}]", test.groupID, test.itemID))
 			}
-			fixures = append(fixures, groupGroupMarksAttemptsAsChangedFixture)
+			fixures = append(fixures, groupGroupMarksResultsAsChangedFixture)
 			db := testhelpers.SetupDBWithFixtureString(fixures...)
 			defer func() { _ = db.Close() }()
 
@@ -168,7 +179,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *t
 			} else {
 				assert.Equal(t, int64(1), result.RowsAffected())
 			}
-			assertAttemptsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
 		})
 	}
 }

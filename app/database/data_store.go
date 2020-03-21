@@ -141,6 +141,11 @@ func (s *DataStore) RefreshTokens() *RefreshTokenStore {
 	return &RefreshTokenStore{NewDataStoreWithTable(s.DB, "refresh_tokens")}
 }
 
+// Results returns a ResultStore
+func (s *DataStore) Results() *ResultStore {
+	return &ResultStore{NewDataStoreWithTable(s.DB, "results")}
+}
+
 // Sessions returns a SessionStore
 func (s *DataStore) Sessions() *SessionStore {
 	return &SessionStore{NewDataStoreWithTable(s.DB, "sessions")}

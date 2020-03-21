@@ -24,6 +24,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	expectedTaskToken.Converted.UserID = 556371821693219925
 	expectedTaskToken.Converted.LocalItemID = 901756573345831409
 	expectedTaskToken.Converted.AttemptID = 100
+	expectedTaskToken.Converted.ParticipantID = 556371821693219925
 	expectedHintToken := token.Hint{}
 	expectedHintToken.Converted.UserID = 556371821693219925
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedHintToken)

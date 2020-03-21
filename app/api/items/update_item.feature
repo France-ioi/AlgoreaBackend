@@ -38,10 +38,13 @@ Background:
     | ancestor_group_id | child_group_id |
     | 11                | 11             |
   And the database has the following table 'attempts':
-    | group_id | item_id | score_computed | order | result_propagation_state |
-    | 11       | 21      | 0              | 1     | done                     |
-    | 11       | 50      | 10             | 1     | done                     |
-    | 11       | 70      | 20             | 1     | done                     |
+    | id | participant_id |
+    | 0  | 11             |
+  And the database has the following table 'results':
+    | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+    | 0          | 11             | 21      | 0              | done                     |
+    | 0          | 11             | 50      | 10             | done                     |
+    | 0          | 11             | 70      | 20             | done                     |
   And the database has the following table 'languages':
     | tag |
     | en  |
@@ -90,10 +93,10 @@ Background:
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
-    And the database table 'attempts' has also the following rows:
-      | group_id | item_id | order | score_computed | result_propagation_state |
-      | 11       | 112     | 1     | 50             | done                     |
-      | 11       | 134     | 1     | 60             | done                     |
+    And the database table 'results' has also the following rows:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 112     | 50             | done                     |
+      | 0          | 11             | 134     | 60             | done                     |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -162,10 +165,11 @@ Background:
       | 5577006791947779410 | 50      | content            | none                     | none                | none               | false              |
       | 5577006791947779410 | 112     | info               | none                     | none                | none               | false              |
       | 5577006791947779410 | 134     | info               | none                     | none                | none               | false              |
-    And the table "attempts" should stay unchanged but the row with item_id "50"
-    And the table "attempts" at item_id "50" should be:
-      | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 50      | 56.666668      | 1     | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "results" at item_id "50" should be:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 50      | 56.666668      | done                     |
 
   Scenario: Valid (with skill items)
     Given I am the user with id "11"
@@ -184,10 +188,10 @@ Background:
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
-    And the database table 'attempts' has also the following rows:
-      | group_id | item_id | order | score_computed | result_propagation_state |
-      | 11       | 112     | 1     | 50             | done                     |
-      | 11       | 134     | 1     | 60             | done                     |
+    And the database table 'results' has also the following rows:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 112     | 50             | done                     |
+      | 0          | 11             | 134     | 60             | done                     |
     When I send a PUT request to "/items/70" with the following body:
       """
       {
@@ -220,25 +224,26 @@ Background:
       | id | type | name |
       | 11 | User | jdoe |
     And the table "permissions_granted" should be:
-      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
-      | 11                  | 21      | solution | none           | none      | none     | false    | 11                  | 0                                                       |
-      | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
-      | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
-      | 11                  | 70      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
-      | 11                  | 112     | solution | content        | answer    | all      | false    | 11                  | 0                                                       |
-      | 11                  | 134     | none     | none           | none      | none     | true     | 11                  | 0                                                       |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11       | 21      | solution | none           | none      | none     | false    | 11              | 0                                                       |
+      | 11       | 50      | none     | none           | none      | none     | true     | 11              | 0                                                       |
+      | 11       | 60      | none     | none           | none      | none     | true     | 11              | 0                                                       |
+      | 11       | 70      | none     | none           | none      | none     | true     | 11              | 0                                                       |
+      | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 0                                                       |
+      | 11       | 134     | none     | none           | none      | none     | true     | 11              | 0                                                       |
     And the table "permissions_generated" should be:
-      | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 11                  | 21      | solution           | none                     | none                | none               | false              |
-      | 11                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-      | 11                  | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-      | 11                  | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-      | 11                  | 112     | solution           | content                  | answer              | all                | false              |
-      | 11                  | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-    And the table "attempts" should stay unchanged but the row with item_id "70"
-    And the table "attempts" at item_id "70" should be:
-      | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 70      | 56.666668      | 1     | done                     |
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11       | 21      | solution           | none                     | none                | none               | false              |
+      | 11       | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 112     | solution           | content                  | answer              | all                | false              |
+      | 11       | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with item_id "70"
+    And the table "results" at item_id "70" should be:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 70      | 56.666668      | done                     |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"
@@ -307,10 +312,11 @@ Background:
       | 11                  | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11                  | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11                  | 112     | solution           | content                  | answer              | all                | false              |
-    And the table "attempts" should stay unchanged but the row with item_id "50"
-    And the table "attempts" at item_id "50" should be:
-      | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 50      | 0              | 1     | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "results" at item_id "50" should be:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 50      | 0              | done                     |
 
   Scenario: Valid without any fields
     Given I am the user with id "11"
@@ -346,10 +352,11 @@ Background:
       | 50               | 21            |
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "attempts" should stay unchanged but the row with item_id "50"
-    And the table "attempts" at item_id "50" should be:
-      | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 50      | 0              | 1     | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "results" at item_id "50" should be:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 50      | 0              | done                     |
 
   Scenario: Keep existing contest participants group
     Given I am the user with id "11"
@@ -382,7 +389,7 @@ Background:
       | 60 | 12:34:56 | 1234                          |
     And the table "groups" should stay unchanged
 
-  Scenario: Recomputes attempts if no_score is given
+  Scenario: Recomputes results if no_score is given
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
@@ -400,12 +407,13 @@ Background:
     And the table "items_ancestors" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "attempts" should stay unchanged but the row with item_id "50"
-    And the table "attempts" at item_id "50" should be:
-      | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 50      | 0              | 1     | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "results" at item_id "50" should be:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 50      | 0              | done                     |
 
-  Scenario: Recomputes attempts if validation_type is given
+  Scenario: Recomputes results if validation_type is given
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
@@ -423,10 +431,11 @@ Background:
     And the table "items_ancestors" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "attempts" should stay unchanged but the row with item_id "50"
-    And the table "attempts" at item_id "50" should be:
-      | group_id | item_id | score_computed | order | result_propagation_state |
-      | 11       | 50      | 0              | 1     | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "results" at item_id "50" should be:
+      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
+      | 0          | 11             | 50      | 0              | done                     |
 
 
   Scenario Outline: Sets default values of items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly for each can_grant_view

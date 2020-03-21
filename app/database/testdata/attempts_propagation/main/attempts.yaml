@@ -1,10 +1,2 @@
-- { id: 11, item_id: 1, group_id: 101, order: 1, result_propagation_state: to_be_propagated}
-- { id: 12, item_id: 2, group_id: 101, order: 1, result_propagation_state: to_be_propagated}
-- { id: 13, item_id: 3, group_id: 101, order: 1, result_propagation_state: to_be_propagated}
-- { id: 14, item_id: 4, group_id: 101, order: 1, result_propagation_state: to_be_propagated}
-- { id: 15, item_id: 5, group_id: 101, order: 1, result_propagation_state: to_be_propagated}
-- { id: 21, item_id: 1, group_id: 102, order: 1, result_propagation_state: to_be_propagated}
-- { id: 22, item_id: 2, group_id: 102, order: 1, result_propagation_state: to_be_propagated}
-- { id: 23, item_id: 3, group_id: 102, order: 1, result_propagation_state: to_be_propagated}
-- { id: 24, item_id: 4, group_id: 102, order: 1, result_propagation_state: to_be_propagated}
-- { id: 25, item_id: 5, group_id: 102, order: 1, result_propagation_state: to_be_propagated}
+- {id: 1, participant_id: 101}
+- {id: 1, participant_id: 102}

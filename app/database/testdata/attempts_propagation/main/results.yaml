@@ -1,0 +1,10 @@
+- {attempt_id: 1, item_id: 1, participant_id: 101, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 2, participant_id: 101, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 3, participant_id: 101, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 4, participant_id: 101, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 5, participant_id: 101, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 1, participant_id: 102, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 2, participant_id: 102, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 3, participant_id: 102, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 4, participant_id: 102, result_propagation_state: to_be_propagated}
+- {attempt_id: 1, item_id: 5, participant_id: 102, result_propagation_state: to_be_propagated}

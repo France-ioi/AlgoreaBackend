@@ -25,6 +25,7 @@ import (
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
 //     * `answers`: all attributes;
 //     * `attempts`: the user's or his teams' attempts, all attributes;
+//     * `results`: the user's or his teams' attempt results, all attributes;
 //     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
 //     * `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;
 //     * `group_pending_requests`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`;
@@ -116,16 +117,36 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 			columns := getColumnsList(srv.Store, databaseName, "attempts", nil)
 			service.MustNotBeError(srv.Store.Attempts().
 				Select(columns).
-				Where("group_id = ?", user.GroupID).
+				Where("participant_id = ?", user.GroupID).
 				UnionAll(
 					srv.Store.Attempts().
 						Select(columns).
-						Where("group_id IN (?)",
+						Where("participant_id IN (?)",
 							srv.Store.GroupGroups().WhereUserIsMember(user).
 								Select("`groups`.id").
 								Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
 								QueryExpr()).
 						QueryExpr()).
+				Order("participant_id, id").
+				ScanAndHandleMaps(streamerFunc(w)).Error())
+		})
+
+		writeComma(w)
+		writeJSONObjectArrayElement("results", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "results", nil)
+			service.MustNotBeError(srv.Store.Results().
+				Select(columns).
+				Where("participant_id = ?", user.GroupID).
+				UnionAll(
+					srv.Store.Results().
+						Select(columns).
+						Where("participant_id IN (?)",
+							srv.Store.GroupGroups().WhereUserIsMember(user).
+								Select("`groups`.id").
+								Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
+								QueryExpr()).
+						QueryExpr()).
+				Order("participant_id, attempt_id, item_id").
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 	}

@@ -1,0 +1,6 @@
+- {attempt_id: 1, participant_id: 1, item_id: 1}
+- {attempt_id: 1, participant_id: 2, item_id: 1}
+- {attempt_id: 1, participant_id: 3, item_id: 1}
+- {attempt_id: 1, participant_id: 4, item_id: 1}
+- {attempt_id: 1, participant_id: 5, item_id: 1}
+- {attempt_id: 1, participant_id: 10, item_id: 1}

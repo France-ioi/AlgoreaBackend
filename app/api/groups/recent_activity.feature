@@ -24,19 +24,23 @@ Feature: Get recent activity for group_id and item_id
       | 21                | 21             |
       | 31                | 31             |
     And the database has the following table 'attempts':
-      | id  | item_id | group_id | order |
-      | 100 | 200     | 11       | 1     |
-      | 101 | 200     | 11       | 2     |
+      | id | participant_id |
+      | 0  | 11             |
+      | 1  | 11             |
+    And the database has the following table 'results':
+      | attempt_id | item_id | participant_id |
+      | 0          | 200     | 11             |
+      | 1          | 200     | 11             |
     And the database has the following table 'answers':
-      | id | author_id | attempt_id | type       | state   | created_at          |
-      | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 |
-      | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 |
-      | 3  | 11        | 101        | Submission | Current | 2017-05-30 06:38:38 |
-      | 4  | 11        | 101        | Saved      | Current | 2017-05-30 06:38:38 |
-      | 5  | 11        | 101        | Current    | Current | 2017-05-30 06:38:38 |
-      | 6  | 31        | 101        | Submission | Current | 2017-05-29 06:38:38 |
-      | 7  | 31        | 100        | Submission | Current | 2017-05-29 06:38:38 |
-      | 8  | 31        | 101        | Submission | Current | 2017-05-30 06:38:38 |
+      | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
+      | 2  | 11        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 1  | 11        | 11             | 0          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 3  | 11        | 11             | 1          | 200     | Submission | Current | 2017-05-30 06:38:38 |
+      | 4  | 11        | 11             | 1          | 200     | Saved      | Current | 2017-05-30 06:38:38 |
+      | 5  | 11        | 11             | 1          | 200     | Current    | Current | 2017-05-30 06:38:38 |
+      | 6  | 31        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 7  | 31        | 11             | 0          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 8  | 31        | 11             | 1          | 200     | Submission | Current | 2017-05-30 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | graded_at           | score |
       | 2         | 2017-05-29 06:38:38 | 100   |

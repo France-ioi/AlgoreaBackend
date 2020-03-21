@@ -16,15 +16,18 @@ Feature: Update the 'current' answer
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | order |
-      | 200 | 101      | 50      | 1     |
+      | id | participant_id |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id |
+      | 1          | 101            | 50      |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 100 | 101       | 200        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 100 | 101       | 101            | 1          | 50      | 2017-05-29 06:38:38 |
 
   Scenario: Invalid attempt_id
     Given I am the user with id "101"
-    When I send a PUT request to "/attempts/abc/answers/current" with the following body:
+    When I send a PUT request to "/items/50/attempts/abc/answers/current" with the following body:
       """
       {
         "answer": "print 1",
@@ -35,9 +38,35 @@ Feature: Update the 'current' answer
     And the response error message should contain "Wrong value for attempt_id (should be int64)"
     And the table "answers" should stay unchanged
 
+  Scenario: Invalid item_id
+    Given I am the user with id "101"
+    When I send a PUT request to "/items/abc/attempts/1/answers/current" with the following body:
+      """
+      {
+        "answer": "print 1",
+        "state": "some state"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for item_id (should be int64)"
+    And the table "answers" should stay unchanged
+
+  Scenario: Invalid as_team_id
+    Given I am the user with id "101"
+    When I send a PUT request to "/items/50/attempts/1/answers/current?as_team_id=abc" with the following body:
+      """
+      {
+        "answer": "print 1",
+        "state": "some state"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+    And the table "answers" should stay unchanged
+
   Scenario: Missing answer
     Given I am the user with id "101"
-    When I send a PUT request to "/attempts/100/answers/current" with the following body:
+    When I send a PUT request to "/items/50/attempts/1/answers/current" with the following body:
       """
       {
         "state": "some state"
@@ -59,7 +88,7 @@ Feature: Update the 'current' answer
 
   Scenario: Missing state
     Given I am the user with id "101"
-    When I send a PUT request to "/attempts/100/answers/current" with the following body:
+    When I send a PUT request to "/items/50/attempts/1/answers/current" with the following body:
       """
       {
         "answer": "print 1"
@@ -81,7 +110,7 @@ Feature: Update the 'current' answer
 
   Scenario: User not found
     Given I am the user with id "404"
-    When I send a PUT request to "/attempts/100/answers/current" with the following body:
+    When I send a PUT request to "/items/50/attempts/1/answers/current" with the following body:
       """
       {
         "answer": "print 1",
@@ -94,7 +123,7 @@ Feature: Update the 'current' answer
 
   Scenario: No access
     Given I am the user with id "101"
-    When I send a PUT request to "/attempts/300/answers/current" with the following body:
+    When I send a PUT request to "/items/50/attempts/404/answers/current" with the following body:
       """
       {
         "answer": "print 1",

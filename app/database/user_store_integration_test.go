@@ -35,8 +35,11 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 5002, 7000})
 	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001, 5002})
 	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 5002, 7000})
-	for _, table := range []string{"permissions_granted", "permissions_generated", "attempts"} {
+	for _, table := range []string{"permissions_granted", "permissions_generated"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002})
+	}
+	for _, table := range []string{"attempts", "results"} {
+		assertTableColumn(t, db, table, "participant_id", []int64{5001, 5002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5001, 5002})
@@ -73,8 +76,11 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5000, 5002, 7000})
 	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5000, 5002})
 	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5000, 5002, 7000})
-	for _, table := range []string{"permissions_generated", "permissions_granted", "attempts"} {
+	for _, table := range []string{"permissions_generated", "permissions_granted"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002})
+	}
+	for _, table := range []string{"attempts", "results"} {
+		assertTableColumn(t, db, table, "participant_id", []int64{5000, 5002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5000})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5000, 5002})
@@ -112,8 +118,11 @@ func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
 	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 7000})
 	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001})
 	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 7000})
-	for _, table := range []string{"permissions_generated", "permissions_granted", "attempts"} {
+	for _, table := range []string{"permissions_generated", "permissions_granted"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5001})
+	}
+	for _, table := range []string{"attempts", "results"} {
+		assertTableColumn(t, db, table, "participant_id", []int64{5001})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5001})
@@ -131,8 +140,14 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 	db := testhelpers.SetupDBWithFixtureString(`
 			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}]`, `
 			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 7000}]
-			attempts: [{id: 2000, group_id: 5000, item_id: 1, order: 1}, {id: 2001, group_id: 5001, item_id: 1, order: 1},
-			           {id: 2002, group_id: 5002, item_id: 1, order: 1}]
+			attempts:
+				- {id: 1, participant_id: 5000}
+				- {id: 1, participant_id: 5001}
+				- {id: 1, participant_id: 5002}
+			results:
+				- {attempt_id: 1, participant_id: 5000, item_id: 1}
+				- {attempt_id: 1, participant_id: 5001, item_id: 1}
+				- {attempt_id: 1, participant_id: 5002, item_id: 1}
 			users:
 				- {temp_user: 1, login: 500, group_id: 5000} # should be deleted
 				- {login: 501, temp_user: 1, group_id: 5001}
@@ -144,9 +159,9 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {user_id: 5001, expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
 			users_threads: [{user_id: 5000, thread_id: 1}, {user_id: 5001, thread_id: 1}, {user_id: 5002, thread_id: 1}]
 			answers:
-				- {author_id: 5000, attempt_id: 2000, created_at: 2019-05-30 11:00:00}
-				- {author_id: 5001, attempt_id: 2001, created_at: 2019-05-30 11:00:00}
-				- {author_id: 5002, attempt_id: 2002, created_at: 2019-05-30 11:00:00}
+				- {author_id: 5000, attempt_id: 1, participant_id: 5000, item_id: 1, created_at: 2019-05-30 11:00:00}
+				- {author_id: 5001, attempt_id: 1, participant_id: 5001, item_id: 1, created_at: 2019-05-30 11:00:00}
+				- {author_id: 5002, attempt_id: 1, participant_id: 5002, item_id: 1, created_at: 2019-05-30 11:00:00}
 			filters: [{user_id: 5000}, {user_id: 5001}, {user_id: 5002}]
 			refresh_tokens: [{user_id: 5000, refresh_token: token}, {user_id: 5001, refresh_token: token2},
 			                 {user_id: 5002, refresh_token: token3}]

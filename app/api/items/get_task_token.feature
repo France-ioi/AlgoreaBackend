@@ -37,12 +37,17 @@ Feature: Get a task token with a refreshed attempt for an item
   Scenario: User is able to fetch a task token
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id | group_id | item_id | order | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
-      | 1  | 101      | 50      | 1     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 2  | 101      | 50      | 2     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
-      | 3  | 102      | 50      | 1     | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 4  | 101      | 51      | 1     | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-    When I send a GET request to "/attempts/2/task-token"
+      | id | participant_id |
+      | 0  | 101            |
+      | 0  | 102            |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
+      | 0          | 101            | 50      | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 0          | 101            | 51      | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 0          | 102            | 50      | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 1          | 101            | 50      | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
+    When I send a GET request to "/items/50/attempts/1/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
@@ -54,32 +59,38 @@ Feature: Get a task token with a refreshed attempt for an item
           "bIsAdmin": false,
           "bReadAnswers": true,
           "bSubmissionPossible": true,
-          "idAttempt": "2",
+          "idAttempt": "101/1",
           "idUser": "101",
           "idItemLocal": "50",
           "idItem": "task1",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "4",
           "sHintsRequested": "[1,2,3,4]",
-          "randomSeed": "2",
+          "randomSeed": "12601247502642542026",
           "platformName": "{{app().TokenConfig.PlatformName}}"
         }
       }
       """
-    And the table "attempts" should stay unchanged but the row with id "2"
-    And the table "attempts" at id "2" should be:
-      | id | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 2  | 101      | 50      | 0              | 0           | done                     | 1                                                         | null                                                        | null                                                     | null                                                | 1                                                 |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with attempt_id "1"
+    And the table "results" at attempt_id "1" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 1          | 101            | 50      | 0              | 0           | done                     | 1                                                         | null                                                        | null                                                     | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token as a team
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id | group_id | item_id | order | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
-      | 1  | 102      | 60      | 1     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 2  | 102      | 60      | 2     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
-      | 3  | 101      | 60      | 1     | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 4  | 102      | 61      | 1     | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-    When I send a GET request to "/attempts/2/task-token"
+      | id | participant_id |
+      | 0  | 101            |
+      | 0  | 102            |
+      | 1  | 102            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
+      | 0          | 101            | 60      | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 0          | 102            | 60      | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 0          | 102            | 61      | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
+      | 1          | 102            | 60      | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
+    When I send a GET request to "/items/60/attempts/1/task-token?as_team_id=102"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
@@ -91,29 +102,33 @@ Feature: Get a task token with a refreshed attempt for an item
           "bIsAdmin": false,
           "bReadAnswers": true,
           "bSubmissionPossible": true,
-          "idAttempt": "2",
+          "idAttempt": "102/1",
           "idUser": "101",
           "idItemLocal": "60",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "4",
           "sHintsRequested": "[1,2,3,4]",
           "sSupportedLangProg": "c,python",
-          "randomSeed": "2",
+          "randomSeed": "17292903417420170135",
           "platformName": "{{app().TokenConfig.PlatformName}}"
         }
       }
       """
-    And the table "attempts" should stay unchanged but the row with id "2"
-    And the table "attempts" at id "2" should be:
-      | id | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 2  | 102      | 60      | 0              | 0           | done                     | 1                                                         | null                                                        | null                                                     | null                                                | 1                                                 |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged but the row with attempt_id "1"
+    And the table "results" at attempt_id "1" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 1          | 102            | 60      | 0              | 0           | done                     | 1                                                         | null                                                        | null                                                     | null                                                | 1                                                 |
 
   Scenario: Keeps previous started_at values
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id | group_id | item_id | order | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
-      | 2  | 101      | 50      | 1     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
-    When I send a GET request to "/attempts/2/task-token"
+      | id | participant_id | created_at          |
+      | 0  | 101            | 2017-05-29 05:38:38 |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
+      | 0          | 101            | 50      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+    When I send a GET request to "/items/50/attempts/0/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
@@ -125,18 +140,18 @@ Feature: Get a task token with a refreshed attempt for an item
           "bIsAdmin": false,
           "bReadAnswers": true,
           "bSubmissionPossible": true,
-          "idAttempt": "2",
+          "idAttempt": "101/0",
           "idUser": "101",
           "idItemLocal": "50",
           "idItem": "task1",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "0",
-          "randomSeed": "2",
+          "randomSeed": "2147886519731235493",
           "platformName": "{{app().TokenConfig.PlatformName}}"
         }
       }
       """
-    And the table "attempts" should stay unchanged but the row with id "2"
-    And the table "attempts" at id "2" should be:
-      | id | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
-      | 2  | 101      | 50      | 0              | 0           | done                     | 1                                                         | null                                                        | null                                                     | null                                                | 2017-05-29 06:38:38 |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
+      | 0          | 101            | 50      | 0              | 0           | done                     | 1                                                         | null                                                        | null                                                     | null                                                | 2017-05-29 06:38:38 |

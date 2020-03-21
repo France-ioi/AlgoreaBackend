@@ -57,7 +57,7 @@ Feature: Submit a new answer - robustness
       """
       {
         "idUser": "101",
-        "idAttempt": "100",
+        "idAttempt": "100/2",
         "idItemLocal": "50",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -144,7 +144,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "20",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "100/1",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -166,7 +166,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "404",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "100/1",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -188,7 +188,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "100/1",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """

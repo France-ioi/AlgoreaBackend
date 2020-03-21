@@ -107,8 +107,11 @@ Feature: Create an attempt for an item - robustness
       | group_id | item_id | can_view_generated |
       | 104      | 50      | content            |
     And the database has the following table 'attempts':
-      | group_id | item_id | order |
-      | 104      | 50      | 1     |
+      | id | participant_id |
+      | 0  | 104            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id |
+      | 0          | 104            | 50      |
     When I send a POST request to "/items/50/attempts?as_team_id=104"
     Then the response code should be 422
     And the response error message should contain "The item doesn't allow multiple attempts"

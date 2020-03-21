@@ -22,7 +22,7 @@ import (
 //
 //
 //                `groups_groups.expires_at` of affected `items.contest_participants_group_id` members is set to
-//                `attempts.started_at` + `items.duration` + total additional time.
+//                `results.started_at` + `items.duration` + total additional time.
 //
 //
 //                Restrictions:
@@ -158,8 +158,8 @@ func setAdditionalTimeForGroupInContest(
 						changed_group_descendants.ancestor_group_id = ?`, groupID).
 			// ... and have entered the contest, ...
 			Joins(`
-				JOIN attempts AS contest_participations
-					ON contest_participations.group_id = groups_groups_active.child_group_id AND
+				JOIN results AS contest_participations
+					ON contest_participations.participant_id = groups_groups_active.child_group_id AND
 						contest_participations.started_at IS NOT NULL AND
 						contest_participations.item_id = ?`, itemID).
 			// ... we get all the ancestors to calculate the total additional time

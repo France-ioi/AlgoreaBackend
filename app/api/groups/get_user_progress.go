@@ -18,7 +18,7 @@ type groupUserProgressResponseRow struct {
 	GroupID int64 `json:"group_id,string"`
 	// required:true
 	ItemID int64 `json:"item_id,string"`
-	// The best score across all user's or user teams' attempts. If there are no attempts, the score is 0.
+	// The best score across all user's or user teams' results. If there are no results, the score is 0.
 	// required:true
 	Score float32 `json:"score"`
 	// Whether the user or one of his teams has the item validated
@@ -27,23 +27,23 @@ type groupUserProgressResponseRow struct {
 	// Nullable
 	// required:true
 	LatestActivityAt *database.Time `json:"latest_activity_at"`
-	// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
-	// If there are no attempts, the number of hints is 0.
+	// Number of hints requested for the result with the best score (if multiple, take the first one, chronologically).
+	// If there are no results, the number of hints is 0.
 	// required:true
 	HintsRequested int32 `json:"hints_requested"`
-	// Number of submissions for the attempt with the best score (if multiple, take the first one, chronologically).
-	// If there are no attempts, the number of submissions is 0.
+	// Number of submissions for the result with the best score (if multiple, take the first one, chronologically).
+	// If there are no results, the number of submissions is 0.
 	// required:true
 	Submissions int32 `json:"submissions"`
 	// Time spent by the user (or his teams) (in seconds):
 	//
-	//   1) if no attempts yet: 0
+	//   1) if no results yet: 0
 	//
-	//   2) if one attempt validated: min(`validated_at`) - min(`started_at`)
-	//     (i.e., time between the first time the user (or one of his teams) started one (any) attempt
+	//   2) if one result validated: min(`validated_at`) - min(`started_at`)
+	//     (i.e., time between the first time the user (or one of his teams) started one (any) result
 	//      and the time he (or one of his teams) first validated the task)
 	//
-	//   3) if no attempts validated: `now` - min(`started_at`)
+	//   3) if no results validated: `now` - min(`started_at`)
 	// required:true
 	TimeSpent int32 `json:"time_spent"`
 }
@@ -58,8 +58,8 @@ type groupUserProgressResponseRow struct {
 //              display the result of all user self-groups among the descendants of the given group
 //              (including those in teams).
 //
-//              For each user, only the attempt corresponding to his best score counts
-//              (across all his teams and his own attempts), disregarding whether or not
+//              For each user, only the result corresponding to his best score counts
+//              (across all his teams and his own results), disregarding whether or not
 //              the score was done in a team which is descendant of the input group.
 // parameters:
 // - name: group_id
@@ -166,16 +166,16 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Select(`
 			items.id AS item_id,
 			groups.id AS group_id,
-			IFNULL(MAX(attempt_with_best_score.score_computed), 0) AS score,
-			IFNULL(MAX(attempt_with_best_score.validated), 0) AS validated,
-			MAX(last_attempt.latest_activity_at) AS latest_activity_at,
-			IFNULL(MAX(attempt_with_best_score.hints_cached), 0) AS hints_requested,
-			IFNULL(MAX(attempt_with_best_score.submissions), 0) AS submissions,
-			IF(MAX(attempt_with_best_score.group_id) IS NULL,
+			IFNULL(MAX(result_with_best_score.score_computed), 0) AS score,
+			IFNULL(MAX(result_with_best_score.validated), 0) AS validated,
+			MAX(last_result.latest_activity_at) AS latest_activity_at,
+			IFNULL(MAX(result_with_best_score.hints_cached), 0) AS hints_requested,
+			IFNULL(MAX(result_with_best_score.submissions), 0) AS submissions,
+			IF(MAX(result_with_best_score.participant_id) IS NULL,
 				0,
-				IF(MAX(attempt_with_best_score.validated),
-					TIMESTAMPDIFF(SECOND, MIN(first_attempt.started_at), MIN(first_validated_attempt.validated_at)),
-					TIMESTAMPDIFF(SECOND, MIN(first_attempt.started_at), NOW())
+				IF(MAX(result_with_best_score.validated),
+					TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), MIN(first_validated_result.validated_at)),
+					TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), NOW())
 				)
 			) AS time_spent`).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
@@ -188,102 +188,136 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				teams.id = team_links.parent_group_id`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, score_computed, score_obtained_at
-				FROM attempts
-				WHERE group_id = groups.id AND item_id = items.id
-				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
+				SELECT participant_id, attempt_id, score_computed, score_obtained_at
+				FROM results
+				WHERE participant_id = groups.id AND item_id = items.id
+				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
-			) AS attempt_with_best_score_for_user ON 1`).
+			) AS result_with_best_score_for_user ON 1`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, score_computed, score_obtained_at
-				FROM attempts
-				WHERE group_id = teams.id AND item_id = items.id
-				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
+				SELECT participant_id, attempt_id, score_computed, score_obtained_at
+				FROM results
+				WHERE participant_id = teams.id AND item_id = items.id
+				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
-			) AS attempt_with_best_score_for_team ON 1`).
+			) AS result_with_best_score_for_team ON 1`).
 		Joins(`
-			LEFT JOIN attempts AS attempt_with_best_score
-			ON attempt_with_best_score.id = IF(attempt_with_best_score_for_team.score_computed IS NOT NULL AND
-				attempt_with_best_score_for_user.score_computed IS NOT NULL AND (
-				attempt_with_best_score_for_team.score_computed > attempt_with_best_score_for_user.score_computed OR
+			LEFT JOIN results AS result_with_best_score
+			ON result_with_best_score.participant_id = IF(result_with_best_score_for_team.score_computed IS NOT NULL AND
+				result_with_best_score_for_user.score_computed IS NOT NULL AND (
+				result_with_best_score_for_team.score_computed > result_with_best_score_for_user.score_computed OR
 					(
-						attempt_with_best_score_for_team.score_computed = attempt_with_best_score_for_user.score_computed AND
-						attempt_with_best_score_for_team.score_obtained_at < attempt_with_best_score_for_user.score_obtained_at
+						result_with_best_score_for_team.score_computed = result_with_best_score_for_user.score_computed AND
+						result_with_best_score_for_team.score_obtained_at < result_with_best_score_for_user.score_obtained_at
 					)
-				) OR attempt_with_best_score_for_user.score_computed IS NULL,
-				attempt_with_best_score_for_team.id,
-				attempt_with_best_score_for_user.id
-			)`).
+				) OR result_with_best_score_for_user.score_computed IS NULL,
+				result_with_best_score_for_team.participant_id,
+				result_with_best_score_for_user.participant_id
+			) AND result_with_best_score.attempt_id = IF(result_with_best_score_for_team.score_computed IS NOT NULL AND
+				result_with_best_score_for_user.score_computed IS NOT NULL AND (
+				result_with_best_score_for_team.score_computed > result_with_best_score_for_user.score_computed OR
+					(
+						result_with_best_score_for_team.score_computed = result_with_best_score_for_user.score_computed AND
+						result_with_best_score_for_team.score_obtained_at < result_with_best_score_for_user.score_obtained_at
+					)
+				) OR result_with_best_score_for_user.score_computed IS NULL,
+				result_with_best_score_for_team.attempt_id,
+				result_with_best_score_for_user.attempt_id
+			) AND result_with_best_score.item_id = items.id`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, latest_activity_at FROM attempts
-				WHERE group_id = groups.id AND item_id = items.id AND latest_activity_at IS NOT NULL
+				SELECT participant_id, attempt_id, latest_activity_at FROM results
+				WHERE participant_id = groups.id AND item_id = items.id AND latest_activity_at IS NOT NULL
 				ORDER BY latest_activity_at DESC LIMIT 1
-			) AS last_attempt_of_user ON 1`).
+			) AS last_result_of_user ON 1`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, latest_activity_at FROM attempts
-				WHERE group_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
+				SELECT participant_id, attempt_id, latest_activity_at FROM results
+				WHERE participant_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
 				ORDER BY latest_activity_at DESC LIMIT 1
-			) AS last_attempt_of_team ON 1`).
+			) AS last_result_of_team ON 1`).
 		Joins(`
-			LEFT JOIN attempts AS last_attempt
-			ON last_attempt.id = IF(
+			LEFT JOIN results AS last_result
+			ON last_result.participant_id = IF(
 				(
-					last_attempt_of_team.id IS NOT NULL AND
-					last_attempt_of_user.id IS NOT NULL AND
-					last_attempt_of_team.latest_activity_at > last_attempt_of_user.latest_activity_at
-				) OR last_attempt_of_user.id IS NULL,
-				last_attempt_of_team.id,
-				last_attempt_of_user.id
-			)`).
+					last_result_of_team.participant_id IS NOT NULL AND
+					last_result_of_user.participant_id IS NOT NULL AND
+					last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
+				) OR last_result_of_user.participant_id IS NULL,
+				last_result_of_team.participant_id,
+				last_result_of_user.participant_id
+			) AND last_result.attempt_id = IF(
+				(
+					last_result_of_team.participant_id IS NOT NULL AND
+					last_result_of_user.participant_id IS NOT NULL AND
+					last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
+				) OR last_result_of_user.participant_id IS NULL,
+				last_result_of_team.attempt_id,
+				last_result_of_user.attempt_id
+			) AND last_result.item_id = items.id`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, started_at FROM attempts
-				WHERE group_id = groups.id AND item_id = items.id AND started_at IS NOT NULL
+				SELECT participant_id, attempt_id, started_at FROM results
+				WHERE participant_id = groups.id AND item_id = items.id AND started_at IS NOT NULL
 				ORDER BY started_at LIMIT 1
-			) AS first_attempt_of_user ON 1`).
+			) AS first_result_of_user ON 1`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, started_at FROM attempts
-				WHERE group_id = teams.id AND item_id = items.id AND started_at IS NOT NULL
+				SELECT participant_id, attempt_id, started_at FROM results
+				WHERE participant_id = teams.id AND item_id = items.id AND started_at IS NOT NULL
 				ORDER BY started_at LIMIT 1
-			) AS first_attempt_of_team ON 1`).
+			) AS first_result_of_team ON 1`).
 		Joins(`
-			LEFT JOIN attempts AS first_attempt
-			ON first_attempt.id = IF(
+			LEFT JOIN results AS first_result
+			ON first_result.participant_id = IF(
 				(
-					first_attempt_of_team.id IS NOT NULL AND
-					first_attempt_of_user.id IS NOT NULL AND
-					first_attempt_of_team.started_at < first_attempt_of_user.started_at
-				) OR first_attempt_of_user.id IS NULL,
-				first_attempt_of_team.id,
-				first_attempt_of_user.id
-			)`).
+					first_result_of_team.participant_id IS NOT NULL AND
+					first_result_of_user.participant_id IS NOT NULL AND
+					first_result_of_team.started_at < first_result_of_user.started_at
+				) OR first_result_of_user.participant_id IS NULL,
+				first_result_of_team.participant_id,
+				first_result_of_user.participant_id
+			) AND first_result.attempt_id = IF(
+				(
+					first_result_of_team.participant_id IS NOT NULL AND
+					first_result_of_user.participant_id IS NOT NULL AND
+					first_result_of_team.started_at < first_result_of_user.started_at
+				) OR first_result_of_user.participant_id IS NULL,
+				first_result_of_team.attempt_id,
+				first_result_of_user.attempt_id
+			) AND first_result.item_id = items.id`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, validated_at FROM attempts
-				WHERE group_id = groups.id AND item_id = items.id AND validated_at IS NOT NULL
+				SELECT participant_id, attempt_id, validated_at FROM results
+				WHERE participant_id = groups.id AND item_id = items.id AND validated_at IS NOT NULL
 				ORDER BY validated_at LIMIT 1
-			) AS first_validated_attempt_of_user ON 1`).
+			) AS first_validated_result_of_user ON 1`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, validated_at FROM attempts
-				WHERE group_id = teams.id AND item_id = items.id AND validated_at IS NOT NULL
+				SELECT participant_id, attempt_id, validated_at FROM results
+				WHERE participant_id = teams.id AND item_id = items.id AND validated_at IS NOT NULL
 				ORDER BY validated_at LIMIT 1
-			) AS first_validated_attempt_of_team ON 1`).
+			) AS first_validated_result_of_team ON 1`).
 		Joins(`
-			LEFT JOIN attempts AS first_validated_attempt
-			ON first_validated_attempt.id = IF(
+			LEFT JOIN results AS first_validated_result
+			ON first_validated_result.participant_id = IF(
 				(
-					first_validated_attempt_of_team.id IS NOT NULL AND
-					first_validated_attempt_of_user.id IS NOT NULL AND
-					first_validated_attempt_of_team.validated_at < first_validated_attempt_of_user.validated_at
-				) OR first_attempt_of_user.id IS NULL,
-				first_validated_attempt_of_team.id,
-				first_validated_attempt_of_user.id
-			)`).
+					first_validated_result_of_team.participant_id IS NOT NULL AND
+					first_validated_result_of_user.participant_id IS NOT NULL AND
+					first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
+				) OR first_result_of_user.participant_id IS NULL,
+				first_validated_result_of_team.participant_id,
+				first_validated_result_of_user.participant_id
+			) AND first_validated_result.attempt_id = IF(
+				(
+					first_validated_result_of_team.participant_id IS NOT NULL AND
+					first_validated_result_of_user.participant_id IS NOT NULL AND
+					first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
+				) OR first_result_of_user.participant_id IS NULL,
+				first_validated_result_of_team.attempt_id,
+				first_validated_result_of_user.attempt_id
+			) AND first_validated_result.item_id = items.id`).
 		Where("groups.id IN (?)", userIDs).
 		Group("groups.id, items.id").
 		Order(gorm.Expr(
@@ -292,7 +326,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Order(gorm.Expr(
 			"FIELD(items.id"+strings.Repeat(", ?", len(itemIDs))+")",
 			itemIDs...)).
-		Order("MIN(attempt_with_best_score.score_computed), MAX(attempt_with_best_score.score_obtained_at)").
+		Order("MIN(result_with_best_score.score_computed), MAX(result_with_best_score.score_obtained_at)").
 		Scan(&result).Error())
 
 	render.Respond(w, r, result)

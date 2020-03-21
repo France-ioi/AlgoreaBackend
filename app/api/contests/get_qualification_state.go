@@ -164,15 +164,15 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		return nil, apiError
 	}
 
-	contestParticipationQuery := store.Attempts().
-		Joins("JOIN items ON items.id = attempts.item_id").
+	contestParticipationQuery := store.Results().
+		Joins("JOIN items ON items.id = results.item_id").
 		// check the participation is not expired
 		Joins(`
 			LEFT JOIN groups_groups_active
 				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
-					groups_groups_active.child_group_id = attempts.group_id`).
+					groups_groups_active.child_group_id = results.participant_id`).
 		Where("item_id = ?", itemID).
-		Where("attempts.group_id = ?", groupID).
+		Where("results.participant_id = ?", groupID).
 		Where("started_at IS NOT NULL")
 	if lock {
 		contestParticipationQuery = contestParticipationQuery.WithWriteLock()

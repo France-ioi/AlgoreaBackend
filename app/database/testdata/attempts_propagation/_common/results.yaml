@@ -1,0 +1,3 @@
+- { attempt_id: 1, item_id: 1, participant_id: 101, latest_activity_at: "2019-05-29 11:00:00", result_propagation_state: to_be_propagated}
+- { attempt_id: 1, item_id: 2, participant_id: 101, latest_activity_at: "2019-05-29 11:00:00",  result_propagation_state: done}
+- { attempt_id: 1, item_id: 2, participant_id: 102, latest_activity_at: "2019-05-30 11:00:00", score_edit_rule: "diff", result_propagation_state: to_be_propagated}

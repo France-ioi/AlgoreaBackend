@@ -34,10 +34,15 @@ Feature: Get groups attempts for current user and item_id
       | 13       | 210     | info                     |
       | 23       | 210     | content_with_descendants |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | score_computed | order | validated_at        | started_at          | creator_id |
-      | 150 | 11       | 200     | 100            | 2     | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 21         |
-      | 151 | 11       | 200     | 99             | 1     | null                | 2018-05-29 06:38:38 | null       |
-      | 250 | 23       | 210     | 99             | 1     | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 11         |
+      | id | participant_id | created_at          | creator_id |
+      | 1  | 11             | 2018-05-29 05:38:38 | 21         |
+      | 0  | 11             | 2018-05-29 05:38:38 | null       |
+      | 0  | 23             | 2019-05-29 05:38:38 | 11         |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | score_computed | validated_at        | started_at          |
+      | 1          | 11             | 200     | 100            | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 |
+      | 0          | 11             | 200     | 99             | null                | 2018-05-29 06:38:38 |
+      | 0          | 23             | 210     | 99             | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 |
 
   Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id
     Given I am the user with id "11"
@@ -47,16 +52,14 @@ Feature: Get groups attempts for current user and item_id
     """
     [
       {
-        "id": "151",
-        "order": 1,
+        "id": "0",
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
         "validated": false
       },
       {
-        "id": "150",
-        "order": 2,
+        "id": "1",
         "score_computed": 100,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
@@ -77,8 +80,7 @@ Feature: Get groups attempts for current user and item_id
     """
     [
       {
-        "id": "151",
-        "order": 1,
+        "id": "0",
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
@@ -89,14 +91,13 @@ Feature: Get groups attempts for current user and item_id
 
   Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (reverse order)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/attempts?sort=-order,id"
+    When I send a GET request to "/items/200/attempts?sort=-id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "150",
-        "order": 2,
+        "id": "1",
         "score_computed": 100,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
@@ -107,8 +108,7 @@ Feature: Get groups attempts for current user and item_id
         "validated": true
       },
       {
-        "id": "151",
-        "order": 1,
+        "id": "0",
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
@@ -119,14 +119,13 @@ Feature: Get groups attempts for current user and item_id
 
   Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (reverse order, start from the second row)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/attempts?sort=-order,id&from.order=1&from.id=150"
+    When I send a GET request to "/items/200/attempts?sort=-id&from.id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "151",
-        "order": 1,
+        "id": "0",
         "score_computed": 99,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
@@ -143,8 +142,7 @@ Feature: Get groups attempts for current user and item_id
     """
     [
       {
-        "id": "250",
-        "order": 1,
+        "id": "0",
         "score_computed": 99,
         "started_at": "2019-05-29T06:38:38Z",
         "user_creator": {

@@ -91,11 +91,10 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	var attemptID int64
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		attemptStore := store.Attempts()
 		if !allowsMultipleAttempts {
 			var found bool
-			found, err = attemptStore.
-				Where("group_id = ?", groupID).Where("item_id = ?", itemID).WithWriteLock().HasRows()
+			found, err = store.Results().
+				Where("participant_id = ?", groupID).Where("item_id = ?", itemID).WithWriteLock().HasRows()
 			service.MustNotBeError(err)
 			if found {
 				apiError = service.ErrUnprocessableEntity(errors.New("the item doesn't allow multiple attempts"))
@@ -103,7 +102,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 			}
 		}
 
-		attemptID, err = attemptStore.CreateNew(groupID, itemID, user.GroupID)
+		attemptID, err = store.Attempts().CreateNew(groupID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
 		return nil

@@ -37,8 +37,11 @@ Feature: Invite users
       | 555      | 20      | content            |
       | 101      | 30      | content            |
     And the database has the following table 'attempts':
-      | group_id | item_id | order | result_propagation_state |
-      | 101      | 30      | 1     | done                     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 101            | 30      | done                     |
 
   Scenario: Successfully invite users
     Given I am the user with id "21"
@@ -81,6 +84,7 @@ Feature: Invite users
       | 13       | 102       | invitation_created | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
     Given I am the user with id "21"
@@ -123,6 +127,7 @@ Feature: Invite users
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Convert join-requests into invitations or make them accepted depending on approvals
     Given I am the user with id "21"
@@ -174,7 +179,8 @@ Feature: Invite users
       | 444               | 444            | 1       |
       | 555               | 101            | 0       |
       | 555               | 555            | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 101      | 20      | done                     |
-      | 101      | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 101            | 20      | done                     |
+      | 0          | 101            | 30      | done                     |

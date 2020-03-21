@@ -39,8 +39,11 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 15       | 20      | info               |
       | 21       | 30      | content            |
     And the database has the following table 'attempts':
-      | group_id | item_id | order | result_propagation_state |
-      | 21       | 30      | 1     | done                     |
+      | id | participant_id |
+      | 0  | 21             |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 21             | 30      | done                     |
 
   Scenario: Successfully join a group
     Given I am the user with id "21"
@@ -72,10 +75,11 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 14                | 14             | 1       |
       | 15                | 15             | 1       |
       | 21                | 21             | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 21       | 20      | done                     |
-      | 21       | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 21             | 20      | done                     |
+      | 0          | 21             | 30      | done                     |
 
   Scenario: Updates the code_expires_at
     Given I am the user with id "21"
@@ -111,10 +115,11 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 14                | 14             | 1       |
       | 15                | 15             | 1       |
       | 21                | 21             | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 21       | 20      | done                     |
-      | 21       | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 21             | 20      | done                     |
+      | 0          | 21             | 30      | done                     |
 
   Scenario: Doesn't update the code_expires_at if code_lifetime is null
     Given I am the user with id "21"
@@ -146,10 +151,11 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 14                | 21             | 0       |
       | 15                | 15             | 1       |
       | 21                | 21             | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 21       | 20      | done                     |
-      | 21       | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 21             | 20      | done                     |
+      | 0          | 21             | 30      | done                     |
 
   Scenario: Successfully join a group that requires approvals
     Given I am the user with id "21"
@@ -182,7 +188,8 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 15                | 15             | 1       |
       | 15                | 21             | 0       |
       | 21                | 21             | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 21       | 20      | done                     |
-      | 21       | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 21             | 20      | done                     |
+      | 0          | 21             | 30      | done                     |

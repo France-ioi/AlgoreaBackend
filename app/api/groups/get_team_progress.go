@@ -18,7 +18,7 @@ type groupTeamProgressResponseRow struct {
 	GroupID int64 `json:"group_id,string"`
 	// required:true
 	ItemID int64 `json:"item_id,string"`
-	// Current score. If there are no attempts, the score is 0
+	// Current score. If there are no results, the score is 0
 	// required:true
 	Score float32 `json:"score"`
 	// Whether the team has the item validated
@@ -27,23 +27,23 @@ type groupTeamProgressResponseRow struct {
 	// Nullable
 	// required:true
 	LatestActivityAt *database.Time `json:"latest_activity_at"`
-	// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
-	// If there are no attempts, the number of hints is 0.
+	// Number of hints requested for the result with the best score (if multiple, take the first one, chronologically).
+	// If there are no results, the number of hints is 0.
 	// required:true
 	HintsRequested int32 `json:"hints_requested"`
-	// Number of submissions for the attempt with the best score (if multiple, take the first one, chronologically).
-	// If there are no attempts, the number of submissions is 0.
+	// Number of submissions for the result with the best score (if multiple, take the first one, chronologically).
+	// If there are no results, the number of submissions is 0.
 	// required:true
 	Submissions int32 `json:"submissions"`
 	// Time spent by the team (in seconds):
 	//
-	//   1) if no attempts yet: 0
+	//   1) if no results yet: 0
 	//
-	//   2) if one attempt validated: min(`validated_at`) - min(`started_at`)
+	//   2) if one result validated: min(`validated_at`) - min(`started_at`)
 	//     (i.e., time between the first time it started one (any) attempt
 	//      and the time he first validated the task)
 	//
-	//   3) if no attempts validated: `now` - min(`started_at`)
+	//   3) if no results validated: `now` - min(`started_at`)
 	// required:true
 	TimeSpent int32 `json:"time_spent"`
 }
@@ -151,31 +151,31 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Select(`
 			items.id AS item_id,
 			groups.id AS group_id,
-			IFNULL(attempt_with_best_score.score_computed, 0) AS score,
-			IFNULL(attempt_with_best_score.validated, 0) AS validated,
-			(SELECT MAX(latest_activity_at) FROM attempts WHERE group_id = groups.id AND item_id = items.id) AS latest_activity_at,
-			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_requested,
-			IFNULL(attempt_with_best_score.submissions, 0) AS submissions,
-			IF(attempt_with_best_score.group_id IS NULL,
+			IFNULL(result_with_best_score.score_computed, 0) AS score,
+			IFNULL(result_with_best_score.validated, 0) AS validated,
+			(SELECT MAX(latest_activity_at) FROM results WHERE participant_id = groups.id AND item_id = items.id) AS latest_activity_at,
+			IFNULL(result_with_best_score.hints_cached, 0) AS hints_requested,
+			IFNULL(result_with_best_score.submissions, 0) AS submissions,
+			IF(result_with_best_score.participant_id IS NULL,
 				0,
 				(
-					SELECT IF(attempt_with_best_score.validated,
+					SELECT IF(result_with_best_score.validated,
 						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
 						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
 					)
-					FROM attempts
-					WHERE group_id = groups.id AND item_id = items.id
+					FROM results
+					WHERE participant_id = groups.id AND item_id = items.id
 				)
 			) AS time_spent`).
 		Joins(`JOIN items ON items.id IN ?`, itemsQuery.SubQuery()).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT score_computed, validated, hints_cached, submissions, group_id
-				FROM attempts
-				WHERE group_id = groups.id AND item_id = items.id
-				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
+				SELECT score_computed, validated, hints_cached, submissions, participant_id
+				FROM results
+				WHERE participant_id = groups.id AND item_id = items.id
+				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
-			) AS attempt_with_best_score ON 1`).
+			) AS result_with_best_score ON 1`).
 		Where("groups.id IN (?)", teamIDs).
 		Order(gorm.Expr(
 			"FIELD(groups.id"+strings.Repeat(", ?", len(teamIDs))+")",

@@ -37,9 +37,18 @@ func TestAttemptStore_ComputeAllAttempts_Unlocks_UpdatesOldRecords(t *testing.T)
 }
 
 func testUnlocks(db *database.DB, t *testing.T) {
-	attemptStore := database.NewDataStore(db).Attempts()
-	for _, id := range []int64{11, 13, 14} {
-		assert.NoError(t, attemptStore.Where("id = ?", id).UpdateColumn(
+	resultStore := database.NewDataStore(db).Results()
+	for _, ids := range []struct {
+		ParticipantID int64
+		AttemptID     int64
+		ItemID        int64
+	}{
+		{ParticipantID: 101, AttemptID: 1, ItemID: 1},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 3},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 4},
+	} {
+		assert.NoError(t, resultStore.Where("participant_id = ? AND attempt_id = ? AND item_id = ?",
+			ids.ParticipantID, ids.AttemptID, ids.ItemID).UpdateColumn(
 			"score_computed", 100,
 		).Error())
 	}
@@ -55,7 +64,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		"unlocking_item_id": 4, "unlocked_item_id": 4003, "score": 101,
 	}))
 
-	err := attemptStore.InTransaction(func(s *database.DataStore) error {
+	err := resultStore.InTransaction(func(s *database.DataStore) error {
 		return s.Attempts().ComputeAllAttempts()
 	})
 	assert.NoError(t, err)
@@ -85,7 +94,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		Where("can_view != 'content'").Count(&count).Error())
 	assert.Zero(t, count)
 
-	found, err := dataStore.Attempts().Where("group_id = 101").Where("item_id = 2001").HasRows()
+	found, err := dataStore.Results().Where("participant_id = 101").Where("item_id = 2001").HasRows()
 	assert.NoError(t, err)
-	assert.True(t, found, "should have created a new attempt for the unlocked item 2001")
+	assert.True(t, found, "should have created a new result for the unlocked item 2001")
 }

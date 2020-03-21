@@ -30,15 +30,18 @@ Feature: Ask for a hint
   Scenario: User is able to ask for a hint
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | hints_cached | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 1     |
-      | 200 | 101      | 10      | null                   | 0            | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested        | hints_cached |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 4            |
+      | 0          | 101            | 10      | null                   | 0            |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -48,7 +51,7 @@ Feature: Ask for a hint
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -69,7 +72,7 @@ Feature: Ask for a hint
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
@@ -81,23 +84,27 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
 
   Scenario: User is able to ask for a hint with a minimal hint token
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
-      | 200 | 101      | 10      | null                   | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested        |
+      | 0          | 101            | 10      | null                   |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -107,7 +114,7 @@ Feature: Ask for a hint
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -128,7 +135,7 @@ Feature: Ask for a hint
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
@@ -140,23 +147,27 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
 
   Scenario: User is able to ask for an already given hint
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
-      | 200 | 101      | 10      | null                   | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested        |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] |
+      | 0          | 101            | 10      | null                   |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -166,7 +177,7 @@ Feature: Ask for a hint
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": "hint"
       }
@@ -187,7 +198,7 @@ Feature: Ask for a hint
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
@@ -199,23 +210,27 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested   | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 4            | [0,1,"hint",null] | done                     | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null              | done                     | 1                                                         | null                                                  |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested   | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null              | done                     | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 4            | [0,1,"hint",null] | done                     | 1                                                         | 1                                                     |
 
   Scenario: Can't parse hints_requested
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested | order |
-      | 100 | 101      | 50      | not an array    | 1     |
-      | 200 | 101      | 10      | null            | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested |
+      | 0          | 101            | 50      | not an array    |
+      | 0          | 101            | 10      | null            |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -225,7 +240,7 @@ Feature: Ask for a hint
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -246,7 +261,7 @@ Feature: Ask for a hint
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
@@ -258,11 +273,12 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 1            | [{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null               | done                     | 1                                                         | null                                                  |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null               | done                     | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 1            | [{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
     And logs should contain:
       """
-      Unable to parse hints_requested ({"idAttempt":100,"idItemLocal":50,"idUser":101}) having value "not an array": invalid character 'o' in literal null (expecting 'u')
+      Unable to parse hints_requested ({"idAttempt":"101/0","idItemLocal":"50","idUser":"101"}) having value "not an array": invalid character 'o' in literal null (expecting 'u')
       """

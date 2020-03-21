@@ -11,8 +11,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func TestItemItemStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T) {
-	db := testhelpers.SetupDBWithFixtureString(groupGroupMarksAttemptsAsChangedFixture)
+func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 	defer func() { _ = db.Close() }()
 
 	dataStore := database.NewDataStore(db)
@@ -20,9 +20,9 @@ func TestItemItemStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T) {
 		"parent_item_id": 1, "child_item_id": 2, "child_order": 1,
 	}))
 
-	assertAttemptsMarkedAsChanged(t, dataStore, []groupItemPair{
-		{101, 2}, {102, 2}, {103, 2},
-		{104, 2}, {105, 2}, {106, 2},
-		{107, 2}, {108, 2},
+	assertResultsMarkedAsChanged(t, dataStore, []resultPrimaryKey{
+		{101, 1, 2}, {102, 1, 2}, {103, 1, 2},
+		{104, 1, 2}, {105, 1, 2}, {106, 1, 2},
+		{107, 1, 2}, {108, 1, 2},
 	})
 }

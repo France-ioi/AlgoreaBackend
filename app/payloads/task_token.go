@@ -3,6 +3,7 @@ package payloads
 import (
 	"crypto/rsa"
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -37,9 +38,10 @@ type TaskToken struct {
 
 // TaskTokenConverted contains converted field values of TaskToken payload
 type TaskTokenConverted struct {
-	UserID      int64
-	LocalItemID int64
-	AttemptID   int64
+	UserID        int64
+	LocalItemID   int64
+	ParticipantID int64
+	AttemptID     int64
 }
 
 // Bind validates a task token and converts some needed field values.
@@ -54,7 +56,7 @@ func (tt *TaskToken) Bind() error {
 		return errors.New("wrong idItemLocal")
 	}
 
-	tt.Converted.AttemptID, err = strconv.ParseInt(tt.AttemptID, 10, 64)
+	_, err = fmt.Sscanf(tt.AttemptID, "%d/%d", &tt.Converted.ParticipantID, &tt.Converted.AttemptID)
 	if err != nil {
 		return errors.New("wrong idAttempt")
 	}

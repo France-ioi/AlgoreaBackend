@@ -18,15 +18,14 @@ func TestAnswerStore_WithMethods(t *testing.T) {
 			expectedQuery: "SELECT `answers`.* FROM `answers` JOIN users ON users.group_id = answers.author_id",
 		},
 		{
-			name: "WithAttempts",
+			name: "WithResults",
 			expectedQuery: "SELECT `answers`.* FROM `answers` " +
-				"JOIN attempts ON attempts.id = answers.attempt_id",
+				"JOIN results ON results.participant_id = answers.participant_id AND " +
+				"results.attempt_id = answers.attempt_id AND results.item_id = answers.item_id",
 		},
 		{
-			name: "WithItems",
-			expectedQuery: "SELECT `answers`.* FROM `answers` " +
-				"JOIN attempts ON attempts.id = answers.attempt_id " +
-				"JOIN items ON items.id = attempts.item_id",
+			name:          "WithItems",
+			expectedQuery: "SELECT `answers`.* FROM `answers` JOIN items ON items.id = answers.item_id",
 		},
 	}
 	for _, testCase := range tests {

@@ -42,17 +42,22 @@ Background:
     | 23       | 200     | content_with_descendants |
     | 23       | 210     | info                     |
   And the database has the following table 'attempts':
-    | id | group_id | item_id | order |
-    | 1  | 11       | 200     | 1     |
-    | 2  | 11       | 200     | 2     |
-    | 3  | 11       | 210     | 1     |
-    | 4  | 13       | 200     | 1     |
+    | id | participant_id |
+    | 1  | 11             |
+    | 2  | 11             |
+    | 1  | 13             |
+  And the database has the following table 'results':
+    | attempt_id | participant_id | item_id |
+    | 1          | 11             | 200     |
+    | 2          | 11             | 200     |
+    | 1          | 11             | 210     |
+    | 1          | 13             | 200     |
   And the database has the following table 'answers':
-    | id | author_id | attempt_id | type       | state   | created_at          |
-    | 1  | 11        | 1          | Submission | Current | 2017-05-29 06:37:38 |
-    | 2  | 11        | 2          | Submission | Current | 2017-05-29 06:38:38 |
-    | 3  | 11        | 3          | Submission | Current | 2017-05-29 06:39:38 |
-    | 4  | 25        | 4          | Submission | Current | 2017-05-29 06:39:38 |
+    | id | author_id | attempt_id | participant_id | item_id | type       | state   | created_at          |
+    | 1  | 11        | 1          | 11             | 200     | Submission | Current | 2017-05-29 06:37:38 |
+    | 2  | 11        | 2          | 11             | 200     | Submission | Current | 2017-05-29 06:38:38 |
+    | 3  | 11        | 1          | 11             | 210     | Submission | Current | 2017-05-29 06:39:38 |
+    | 4  | 25        | 1          | 13             | 200     | Submission | Current | 2017-05-29 06:39:38 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
     | 1         | 100   | 2018-05-29 06:38:38 |
@@ -61,7 +66,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (same user)
     Given I am the user with id "11"
-    When I send a GET request to "/answers?item_id=200&author_id=11"
+    When I send a GET request to "/items/200/answers?author_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -93,7 +98,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (different user)
     Given I am the user with id "21"
-    When I send a GET request to "/answers?item_id=200&author_id=11"
+    When I send a GET request to "/items/200/answers?author_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -125,7 +130,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (different user, no approval to view personal info)
     Given I am the user with id "21"
-    When I send a GET request to "/answers?item_id=200&author_id=25"
+    When I send a GET request to "/items/200/answers?author_id=25"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -146,7 +151,7 @@ Background:
 
   Scenario: 'Content' access on the item+user_group pair (same user)
     Given I am the user with id "11"
-    When I send a GET request to "/answers?item_id=210&author_id=11"
+    When I send a GET request to "/items/210/answers?author_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -167,7 +172,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (same user) [with limit]
     Given I am the user with id "11"
-    When I send a GET request to "/answers?item_id=200&author_id=11&limit=1"
+    When I send a GET request to "/items/200/answers?author_id=11&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -188,7 +193,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (same user) [with limit and reversed order]
     Given I am the user with id "11"
-    When I send a GET request to "/answers?item_id=200&author_id=11&limit=1&sort=created_at,id"
+    When I send a GET request to "/items/200/answers?author_id=11&limit=1&sort=created_at,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -209,7 +214,7 @@ Background:
 
   Scenario: Start from the second row
     Given I am the user with id "21"
-    When I send a GET request to "/answers?item_id=200&author_id=11&from.created_at=2017-05-29T06:38:38Z&from.id=2"
+    When I send a GET request to "/items/200/answers?author_id=11&from.created_at=2017-05-29T06:38:38Z&from.id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

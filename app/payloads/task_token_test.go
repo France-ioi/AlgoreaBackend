@@ -17,8 +17,8 @@ func TestTaskToken_Bind(t *testing.T) {
 	}{
 		{
 			name:          "okay",
-			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AttemptID: "100"},
-			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AttemptID: int64(100)},
+			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AttemptID: "100/1"},
+			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, ParticipantID: int64(100), AttemptID: int64(1)},
 		},
 		{
 			name:      "wrong idUser",
@@ -33,6 +33,11 @@ func TestTaskToken_Bind(t *testing.T) {
 		{
 			name:      "wrong idAttempt",
 			taskToken: TaskToken{UserID: "10", LocalItemID: "20", AttemptID: "abc"},
+			wantErr:   errors.New("wrong idAttempt"),
+		},
+		{
+			name:      "wrong idAttempt (only one number)",
+			taskToken: TaskToken{UserID: "10", LocalItemID: "20", AttemptID: "123"},
 			wantErr:   errors.New("wrong idAttempt"),
 		},
 	}

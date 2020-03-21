@@ -12,7 +12,8 @@ import (
 )
 
 type stateResultRow struct {
-	GroupID                int64
+	ParticipantID          int64
+	AttemptID              int64
 	ItemID                 int64
 	ResultPropagationState string
 }
@@ -21,21 +22,21 @@ func TestAttemptStore_ComputeAllAttempts_WithCyclicGraph(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("attempts_propagation/cyclic")
 	defer func() { _ = db.Close() }()
 
-	attemptStore := database.NewDataStore(db).Attempts()
+	resultStore := database.NewDataStore(db).Results()
 
-	err := attemptStore.InTransaction(func(s *database.DataStore) error {
+	err := resultStore.InTransaction(func(s *database.DataStore) error {
 		return s.Attempts().ComputeAllAttempts()
 	})
 	assert.NoError(t, err)
 
 	var result []stateResultRow
-	assert.NoError(t, attemptStore.Select("group_id, item_id, result_propagation_state").
-		Order("group_id, item_id, `order`").Scan(&result).Error())
+	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, result_propagation_state").
+		Order("participant_id, item_id, attempt_id").Scan(&result).Error())
 	assert.Equal(t, []stateResultRow{
-		{GroupID: 101, ItemID: 1, ResultPropagationState: "to_be_recomputed"},
-		{GroupID: 101, ItemID: 2, ResultPropagationState: "to_be_recomputed"},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 1, ResultPropagationState: "to_be_recomputed"},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 2, ResultPropagationState: "to_be_recomputed"},
 		// another user
-		{GroupID: 102, ItemID: 2, ResultPropagationState: "done"},
-		{GroupID: 102, ItemID: 3, ResultPropagationState: "done"},
+		{ParticipantID: 102, AttemptID: 1, ItemID: 2, ResultPropagationState: "done"},
+		{ParticipantID: 102, AttemptID: 1, ItemID: 3, ResultPropagationState: "done"},
 	}, result)
 }

@@ -90,11 +90,16 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 60      | 00:01:00        |
       | 21       | 70      | 00:01:00        |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order | result_propagation_state |
-      | 13       | 50      | 3018-05-29 06:38:38 | 1     | done                     |
-      | 13       | 70      | 3018-05-29 06:38:38 | 1     | done                     |
-      | 14       | 50      | 3019-05-29 06:38:38 | 1     | done                     |
-      | 31       | 70      | 3017-05-29 06:38:38 | 1     | done                     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           |
+      | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           |
+      | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
+      | 1          | 13             | 50      | 3018-05-29 06:38:38 | done                     |
+      | 1          | 13             | 70      | 3018-05-29 06:38:38 | done                     |
+      | 1          | 14             | 50      | 3019-05-29 06:38:38 | done                     |
+      | 1          | 31             | 70      | 3017-05-29 06:38:38 | done                     |
 
   Scenario: Updates an existing row
     Given I am the user with id "21"
@@ -145,6 +150,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 31             | 0       | 9999-12-31 23:59:59 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Creates a new row
     Given I am the user with id "21"
@@ -196,6 +202,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 31             | 0       | 9999-12-31 23:59:59 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Doesn't create a new row when seconds=0
     Given I am the user with id "21"
@@ -206,6 +213,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Creates a new row for a user group
     Given I am the user with id "21"
@@ -257,3 +265,4 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 31             | 0       | 3017-04-24 07:38:42 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged

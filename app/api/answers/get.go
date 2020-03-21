@@ -17,8 +17,8 @@ import (
 //     `answers.attempt_id`.
 //
 //   * The user should be able to see answers related to his group's attempts so
-//     the user should be a member of the `attempts.group_id` team or
-//     `attempts.group_id` should be equal to the user's self group.
+//     the user should be a member of the `answers.participant_id` team or
+//     `answers.participant_id` should be equal to the user's self group.
 // parameters:
 // - name: answer_id
 //   in: path
@@ -46,7 +46,7 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 	err = srv.Store.Answers().Visible(user).
 		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
 		Where("answers.id = ?", answerID).
-		Select(`answers.id, answers.author_id, attempts.item_id, answers.attempt_id,
+		Select(`answers.id, answers.author_id, answers.item_id, answers.attempt_id, answers.participant_id,
 			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
 			gradings.graded_at`).
 		ScanIntoSliceOfMaps(&result).Error()

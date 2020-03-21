@@ -87,7 +87,6 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("listener_computeAllAttempts", computeAllAttemptsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	mock.ExpectExec("^UPDATE ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectPrepare("^UPDATE ")
 	mock.ExpectExec("^UPDATE ").WillReturnResult(sqlmock.NewResult(-1, 0))

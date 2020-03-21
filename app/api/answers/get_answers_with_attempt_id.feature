@@ -35,15 +35,19 @@ Background:
     | 13       | 210     | content                  |
     | 41       | 200     | content_with_descendants |
   And the database has the following table 'attempts':
-    | id  | group_id | item_id | order |
-    | 100 | 11       | 200     | 1     |
-    | 101 | 11       | 200     | 2     |
-    | 102 | 11       | 210     | 1     |
+    | id | participant_id |
+    | 1  | 11             |
+    | 2  | 11             |
+  And the database has the following table 'results':
+    | attempt_id | participant_id | item_id |
+    | 1          | 11             | 200     |
+    | 2          | 11             | 200     |
+    | 1          | 11             | 210     |
   And the database has the following table 'answers':
-    | id | author_id | attempt_id | type       | state   | created_at          |
-    | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 |
-    | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 |
-    | 3  | 11        | 102        | Submission | Current | 2017-05-29 06:38:38 |
+    | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
+    | 1  | 11        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+    | 2  | 11        | 11             | 2          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+    | 3  | 11        | 11             | 1          | 210     | Submission | Current | 2017-05-29 06:38:38 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
     | 1         | 100   | 2018-05-29 06:38:38 |
@@ -52,7 +56,7 @@ Background:
 
   Scenario: Full access on the item and the user is a member of the attempt's group
     Given I am the user with id "11"
-    When I send a GET request to "/answers?attempt_id=100"
+    When I send a GET request to "/items/200/answers?attempt_id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -73,7 +77,7 @@ Background:
 
   Scenario: Full access on the item and the user is a manager of attempt's group
     Given I am the user with id "21"
-    When I send a GET request to "/answers?attempt_id=100"
+    When I send a GET request to "/items/200/answers?attempt_id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -94,7 +98,7 @@ Background:
 
   Scenario: Full access on the item and the user's self group is the attempts.group_id
     Given I am the user with id "11"
-    When I send a GET request to "/answers?attempt_id=101"
+    When I send a GET request to "/items/200/answers?attempt_id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -115,7 +119,7 @@ Background:
 
   Scenario: 'Content' access on the item and the user's self group is the attempts.group_id
     Given I am the user with id "11"
-    When I send a GET request to "/answers?attempt_id=102"
+    When I send a GET request to "/items/210/answers?attempt_id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

@@ -64,14 +64,19 @@ Feature: Export the short version of the current user's data
       | id  | default_language_tag |
       | 404 | fr                   |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | order |
-      | 111 | 11       | 404     | 1     |
-      | 112 | 2        | 404     | 1     |
-      | 113 | 1        | 404     | 1     |
+      | id | participant_id |
+      | 0  | 11             |
+      | 0  | 2              |
+      | 0  | 1              |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id |
+      | 0          | 11             | 404     |
+      | 0          | 2              | 404     |
+      | 0          | 1              | 404     |
     And the database has the following table 'answers':
-      | id | author_id | attempt_id | created_at          |
-      | 1  | 11        | 111        | 2019-07-09 20:02:28 |
-      | 2  | 31        | 113        | 2019-07-09 20:02:28 |
+      | id | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 1  | 11        | 11             | 0          | 404     | 2019-07-09 20:02:28 |
+      | 2  | 31        | 1              | 0          | 404     | 2019-07-09 20:02:28 |
 
   Scenario: Full data
     Given I am the user with id "11"

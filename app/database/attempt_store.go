@@ -1,48 +1,68 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import (
+	"strings"
+
+	"github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
+)
 
 // AttemptStore implements database operations on `attempts`
 type AttemptStore struct {
 	*DataStore
 }
 
-// CreateNew inserts a new row into attempts with group_id=groupID, item_id=itemID, creator_id=creatorID.
-// It also sets order, started_at, latest_activity_at
-func (s *AttemptStore) CreateNew(groupID, itemID, creatorID int64) (newID int64, err error) {
+// CreateNew inserts a new result with attempt_id = 0 if there are no results yet,
+// or creates a new attempt (with id > 0) with a new result otherwise.
+// It also sets attempts.created_at, results.started_at, results.latest_activity_at.
+func (s *AttemptStore) CreateNew(participantID, itemID, creatorID int64) (attemptID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
 
-	mustNotBeError(s.Exec(
-		"SET @maxIOrder = IFNULL((SELECT MAX(`order`) FROM `attempts` WHERE `group_id` = ? AND item_id = ? FOR UPDATE), 0)",
-		groupID, itemID).Error())
+	err = s.Results().InsertMap(map[string]interface{}{
+		"participant_id": participantID, "attempt_id": 0, "item_id": itemID, "started_at": Now(), "latest_activity_at": Now(),
+	})
 
-	mustNotBeError(s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-		store := NewDataStore(db)
-		newID = store.NewID()
-		return store.db.Exec(`
-			INSERT INTO attempts (id, group_id, item_id, creator_id, `+"`order`"+`, started_at, latest_activity_at)
-			VALUES (?, ?, ?, ?, @maxIOrder+1, NOW(), NOW())`,
-			newID, groupID, itemID, creatorID).Error
-	}))
-	return newID, nil
+	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, "PRIMARY") {
+		mustNotBeError(s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+			mustNotBeError(s.Where("participant_id = ?", participantID).WithWriteLock().
+				PluckFirst("MAX(id) + 1", &attemptID).Error())
+			return s.InsertMap(map[string]interface{}{
+				"id": attemptID, "participant_id": participantID, "creator_id": creatorID,
+				"parent_attempt_id": 0, "root_item_id": itemID, "created_at": Now(),
+			})
+		}))
+
+		mustNotBeError(s.Results().InsertMap(map[string]interface{}{
+			"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID, "started_at": Now(), "latest_activity_at": Now(),
+		}))
+	} else {
+		mustNotBeError(err)
+	}
+	return attemptID, nil
 }
 
-// GetAttemptItemIDIfUserHasAccess returns attempts.item_id if:
-//  1) the user has at least 'content' access to this item
-//  2) the user is a member of attempts.group_id or the user's group_id = attempts.group_id
-func (s *AttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, user *User) (found bool, itemID int64, err error) {
+// GetAttemptParticipantIDIfUserHasAccess returns results.participant_id if:
+//  1) the user has at least 'content' access to the item
+//  2) the user is a member of results.participant_id or the user's group_id = results.participant_id
+func (s *AttemptStore) GetAttemptParticipantIDIfUserHasAccess(attemptID, itemID int64, user *User) (found bool, participantID int64, err error) {
 	recoverPanics(&err)
 	mustNotBeError(err)
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
+
+	s.Results().Where("results.item_id = ? AND results.attempt_id = ?", itemID, attemptID).
+		Joins("JOIN ? AS permissions ON results.item_id = permissions.item_id",
+			s.Permissions().WithViewPermissionForUser(user, "content").
+				Where("item_id = ?", itemID).SubQuery())
 	err = s.Items().WhereUserHasViewPermissionOnItems(user, "content").
-		Joins("JOIN attempts ON attempts.item_id = items.id AND attempts.id = ?", attemptID).
-		Where("attempts.group_id = ? OR attempts.group_id IN ?",
+		Joins("JOIN results ON results.item_id = items.id AND results.attempt_id = ?", attemptID).
+		Where("results.participant_id = ? OR results.participant_id IN ?",
 			user.GroupID, usersGroupsQuery.SubQuery()).
-		PluckFirst("items.id", &itemID).Error()
+		Where("items.id = ?", itemID).
+		PluckFirst("results.participant_id", &participantID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, 0, nil
 	}
 	mustNotBeError(err)
-	return true, itemID, nil
+	return true, participantID, nil
 }
