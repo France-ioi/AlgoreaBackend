@@ -13,6 +13,8 @@ ALTER TABLE `groups_propagate`
     ADD CONSTRAINT `fk_groups_propagate_id_groups_id`
         FOREIGN KEY (`id`) REFERENCES `groups`(`id`) ON DELETE CASCADE;
 
+DROP TRIGGER `after_delete_groups`;
+
 -- +migrate Down
 ALTER TABLE `groups_contest_items`
     DROP FOREIGN KEY `fk_groups_contest_items_group_id_groups_id`,
@@ -20,3 +22,7 @@ ALTER TABLE `groups_contest_items`
 
 ALTER TABLE `groups_propagate`
     DROP FOREIGN KEY `fk_groups_propagate_id_groups_id`;
+
+-- +migrate StatementBegin
+CREATE TRIGGER `after_delete_groups` AFTER DELETE ON `groups` FOR EACH ROW BEGIN DELETE FROM groups_propagate where id = OLD.id ; END
+-- +migrate StatementEnd
