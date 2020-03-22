@@ -99,8 +99,8 @@ func (s *ResultStore) Propagate() (err error) {
 						groups_ancestors_active.child_group_id = results_to_insert.participant_id
 					LIMIT 1
 			)) AND (
-				(attempts.root_item_id IS NULL OR attempts.root_item_id = results_to_insert.item_id OR
-				 root_item_descendant.ancestor_item_id IS NOT NULL)))
+				attempts.root_item_id IS NULL OR attempts.root_item_id = results_to_insert.item_id OR
+				root_item_descendant.ancestor_item_id IS NOT NULL))
 			GROUP BY results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id
 			ON DUPLICATE KEY UPDATE result_propagation_state = 'to_be_recomputed'
 		`).Error())
