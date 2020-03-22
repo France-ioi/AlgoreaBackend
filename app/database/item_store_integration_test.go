@@ -130,6 +130,31 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	}
 }
 
+func insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(db *database.DB, parentGroupID, childGroupID, itemID int64) error {
+	store := database.NewDataStore(db)
+	if err := store.GroupGroups().InsertMap(
+		map[string]interface{}{
+			"parent_group_id": parentGroupID,
+			"child_group_id":  childGroupID,
+		}); err != nil {
+		return err
+	}
+	if err := store.Attempts().InsertMap(
+		map[string]interface{}{
+			"id":             1,
+			"participant_id": childGroupID,
+		}); err != nil {
+		return err
+	}
+	return store.Results().InsertMap(
+		map[string]interface{}{
+			"item_id":        itemID,
+			"participant_id": childGroupID,
+			"started_at":     database.Now(),
+			"attempt_id":     1,
+		})
+}
+
 func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights_for_time_limited_contest")
 	defer func() { _ = db.Close() }()
@@ -155,80 +180,20 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active contest is OK and it is from another competition, but the user has full access to the time-limited chapter",
 			initFunc: func(db *database.DB) error {
-				store := database.NewDataStore(db)
-				if err := store.GroupGroups().InsertMap(
-					map[string]interface{}{
-						"parent_group_id": 200, // contest participants group
-						"child_group_id":  14,
-					}); err != nil {
-					return err
-				}
-				if err := store.Attempts().InsertMap(
-					map[string]interface{}{
-						"id":             1,
-						"participant_id": 14,
-					}); err != nil {
-					return err
-				}
-				return store.Results().InsertMap(
-					map[string]interface{}{
-						"item_id":        500, // chapter
-						"participant_id": 14,
-						"started_at":     database.Now(),
-						"attempt_id":     1,
-					})
+				return insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(
+					db, 200 /* contest participants group */, 14, 500 /*chapter*/)
 			},
 			itemID: 15, userID: 14, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK and it is the task's time-limited chapter",
 			initFunc: func(db *database.DB) error {
-				store := database.NewDataStore(db)
-				if err := store.GroupGroups().InsertMap(
-					map[string]interface{}{
-						"parent_group_id": 100, // contest participants group
-						"child_group_id":  15,
-					}); err != nil {
-					return err
-				}
-				if err := store.Attempts().InsertMap(
-					map[string]interface{}{
-						"id":             1,
-						"participant_id": 15,
-					}); err != nil {
-					return err
-				}
-				return store.Results().
-					InsertMap(map[string]interface{}{
-						"item_id":        115,
-						"participant_id": 15,
-						"started_at":     database.Now(),
-						"attempt_id":     1,
-					})
+				return insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(
+					db, 100 /* contest participants group */, 15, 115)
 			},
 			itemID: 15, userID: 15, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK, but it is not an ancestor of the task and the user doesn't have full access to the task's chapter",
 			initFunc: func(db *database.DB) error {
-				store := database.NewDataStore(db)
-				if err := store.GroupGroups().InsertMap(
-					map[string]interface{}{
-						"parent_group_id": 300, // contest participants group
-						"child_group_id":  17,
-					}); err != nil {
-					return err
-				}
-				if err := store.Attempts().InsertMap(
-					map[string]interface{}{
-						"id":             1,
-						"participant_id": 17,
-					}); err != nil {
-					return err
-				}
-				return store.Results().
-					InsertMap(map[string]interface{}{
-						"item_id":        114,
-						"participant_id": 17,
-						"started_at":     database.Now(),
-						"attempt_id":     1,
-					})
+				return insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(
+					db, 300 /* contest participants group */, 17, 114)
 			},
 			itemID: 15, userID: 17, wantHasAccess: false,
 			wantReason: errors.New("the exercise for which you wish to submit an answer is a part " +

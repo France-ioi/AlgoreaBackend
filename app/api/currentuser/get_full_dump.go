@@ -114,40 +114,14 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 		writeComma(w)
 		writeJSONObjectArrayElement("attempts", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "attempts", nil)
-			service.MustNotBeError(srv.Store.Attempts().
-				Select(columns).
-				Where("participant_id = ?", user.GroupID).
-				UnionAll(
-					srv.Store.Attempts().
-						Select(columns).
-						Where("participant_id IN (?)",
-							srv.Store.GroupGroups().WhereUserIsMember(user).
-								Select("`groups`.id").
-								Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
-								QueryExpr()).
-						QueryExpr()).
-				Order("participant_id, id").
-				ScanAndHandleMaps(streamerFunc(w)).Error())
+			service.MustNotBeError(buildQueryForGettingAttemptsOrResults(srv.Store.Attempts().DataStore, user, databaseName, "attempts").
+				Order("participant_id, id").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("results", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "results", nil)
-			service.MustNotBeError(srv.Store.Results().
-				Select(columns).
-				Where("participant_id = ?", user.GroupID).
-				UnionAll(
-					srv.Store.Results().
-						Select(columns).
-						Where("participant_id IN (?)",
-							srv.Store.GroupGroups().WhereUserIsMember(user).
-								Select("`groups`.id").
-								Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
-								QueryExpr()).
-						QueryExpr()).
-				Order("participant_id, attempt_id, item_id").
-				ScanAndHandleMaps(streamerFunc(w)).Error())
+			service.MustNotBeError(buildQueryForGettingAttemptsOrResults(srv.Store.Results().DataStore, user, databaseName, "results").
+				Order("participant_id, attempt_id, item_id").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 	}
 
@@ -268,4 +242,20 @@ func writeValue(w io.Writer, value interface{}) {
 func isDateColumnName(name string) bool {
 	return strings.HasSuffix(name, "_at") || strings.HasSuffix(name, "_since") ||
 		strings.HasSuffix(name, "_until") || name == "at"
+}
+
+func buildQueryForGettingAttemptsOrResults(store *database.DataStore, user *database.User, databaseName, tableName string) *database.DB {
+	columns := getColumnsList(store, databaseName, tableName, nil)
+	return store.
+		Select(columns).
+		Where("participant_id = ?", user.GroupID).
+		UnionAll(
+			store.
+				Select(columns).
+				Where("participant_id IN (?)",
+					store.GroupGroups().WhereUserIsMember(user).
+						Select("`groups`.id").
+						Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
+						QueryExpr()).
+				QueryExpr())
 }

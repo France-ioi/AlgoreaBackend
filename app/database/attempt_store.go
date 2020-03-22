@@ -45,7 +45,8 @@ func (s *AttemptStore) CreateNew(participantID, itemID, creatorID int64) (attemp
 // GetAttemptParticipantIDIfUserHasAccess returns results.participant_id if:
 //  1) the user has at least 'content' access to the item
 //  2) the user is a member of results.participant_id or the user's group_id = results.participant_id
-func (s *AttemptStore) GetAttemptParticipantIDIfUserHasAccess(attemptID, itemID int64, user *User) (found bool, participantID int64, err error) {
+func (s *AttemptStore) GetAttemptParticipantIDIfUserHasAccess(
+	attemptID, itemID int64, user *User) (found bool, participantID int64, err error) {
 	recoverPanics(&err)
 	mustNotBeError(err)
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")

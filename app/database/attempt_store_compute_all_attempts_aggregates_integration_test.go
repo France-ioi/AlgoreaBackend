@@ -70,7 +70,8 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates(t *testing.T) {
 	expected := []aggregatesResultRow{
 		{ParticipantID: 101, AttemptID: 1, ItemID: 1, LatestActivityAt: database.Time(oldDate), TasksTried: 1, TasksWithHelp: 2,
 			ScoreComputed: 10, ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(currentDate), TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10,
+		{ParticipantID: 101, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(currentDate), TasksTried: 1 + 5 + 9,
+			TasksWithHelp:          2 + 6 + 10,
 			ScoreComputed:          23.3333, /* (10*1 + 20*2 + 30*3) / (1 + 2 + 3) */
 			ResultPropagationState: "done"}, // from 1, 3, 4
 		{ParticipantID: 101, AttemptID: 1, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
@@ -173,9 +174,12 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates_EditScore(t *testing.T) {
 			expectedLatestActivityAt2 := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
 
 			expected := []aggregatesResultRow{
-				{ParticipantID: 101, AttemptID: 1, ItemID: 1, ScoreComputed: 10, ResultPropagationState: "done", LatestActivityAt: expectedLatestActivityAt1},
-				{ParticipantID: 101, AttemptID: 1, ItemID: 2, ScoreComputed: test.expectedComputedScore, ResultPropagationState: "done", LatestActivityAt: expectedLatestActivityAt1},
-				{ParticipantID: 102, AttemptID: 1, ItemID: 2, ResultPropagationState: "done", LatestActivityAt: expectedLatestActivityAt2},
+				{ParticipantID: 101, AttemptID: 1, ItemID: 1, ScoreComputed: 10, ResultPropagationState: "done",
+					LatestActivityAt: expectedLatestActivityAt1},
+				{ParticipantID: 101, AttemptID: 1, ItemID: 2, ScoreComputed: test.expectedComputedScore,
+					ResultPropagationState: "done", LatestActivityAt: expectedLatestActivityAt1},
+				{ParticipantID: 102, AttemptID: 1, ItemID: 2, ResultPropagationState: "done",
+					LatestActivityAt: expectedLatestActivityAt2},
 			}
 			assertAggregatesEqual(t, resultStore, expected)
 		})

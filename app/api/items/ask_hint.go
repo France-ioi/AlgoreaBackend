@@ -104,7 +104,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []formdata.Anything
-		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, user, r)
+		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, r)
 		if err == gorm.ErrRecordNotFound {
 			apiError = service.ErrNotFound(errors.New("can't find previously requested hints info"))
 			return apiError.Error // rollback
@@ -156,7 +156,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 }
 
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
-	user *database.User, r *http.Request) ([]formdata.Anything, error) {
+	r *http.Request) ([]formdata.Anything, error) {
 	var hintsRequested *string
 	err := store.Results().
 		Where("participant_id = ?", taskToken.Converted.ParticipantID).

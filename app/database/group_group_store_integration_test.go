@@ -510,5 +510,6 @@ func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, e
 		delete(expectedChangedResultsMap,
 			resultPrimaryKey{ParticipantID: dbResult.ParticipantID, AttemptID: dbResult.AttemptID, ItemID: dbResult.ItemID})
 	}
-	assert.Empty(t, expectedChangedResultsMap, "Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
+	assert.Empty(t, expectedChangedResultsMap,
+		"Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
 }

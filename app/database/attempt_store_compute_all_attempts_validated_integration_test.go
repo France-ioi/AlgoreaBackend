@@ -21,6 +21,12 @@ type validatedResultRow struct {
 	ResultPropagationState string
 }
 
+func (r validatedResultRow) LessThan(other validatedResultRow) bool {
+	return r.ParticipantID < other.ParticipantID ||
+		r.ParticipantID == other.ParticipantID && r.AttemptID < other.AttemptID ||
+		r.ParticipantID == other.ParticipantID && r.AttemptID == other.AttemptID && r.ItemID < other.ItemID
+}
+
 func testAttemptStoreComputeAllAttemptsValidated(t *testing.T, fixtures []string,
 	validationType string,
 	prepareFunc func(*testing.T, *database.ResultStore), expectedResults []validatedResultRow) {
@@ -267,10 +273,7 @@ func buildExpectedValidatedResultRows(validatedMap map[string]bool) []validatedR
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].ParticipantID < result[j].ParticipantID ||
-			result[i].ParticipantID == result[j].ParticipantID && result[i].AttemptID < result[j].AttemptID ||
-			result[i].ParticipantID == result[j].ParticipantID && result[i].AttemptID == result[j].AttemptID &&
-				result[i].ItemID < result[j].ItemID
+		return result[i].LessThan(result[j])
 	})
 
 	return result

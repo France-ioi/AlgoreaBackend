@@ -30,7 +30,8 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 		// with appropriate attempt_id.
 		// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
 		// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
-		// to solve the descendant items. Chapters requiring explicit entry or placed outside of the scope of the attempts's root item are skipped).
+		// to solve the descendant items. Chapters requiring explicit entry or placed outside of the scope
+		// of the attempts's root item are skipped).
 		// (This query can take more than 30 seconds to run when executed for the first time after the db migration)
 		mustNotBeError(ds.Exec(`
 			INSERT INTO results (participant_id, attempt_id, item_id, latest_activity_at, result_propagation_state)
@@ -63,7 +64,8 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 					JOIN items ON items.id = items_items.parent_item_id
 					LEFT JOIN results AS existing
 						ON existing.participant_id = results_to_insert.participant_id AND
-							 existing.attempt_id = IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AND
+							 existing.attempt_id =
+						     IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
 					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
 								(existing.result_propagation_state IS NULL OR existing.result_propagation_state != 'to_be_propagated')
