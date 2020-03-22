@@ -19,18 +19,18 @@ type unlocksResultRow struct {
 	Origin        string
 }
 
-func TestAttemptStore_ComputeAllAttempts_Unlocks(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/unlocks")
+func TestResultStore_Propagate_Unlocks(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Unlocks_UpdatesOldRecords(t *testing.T) {
+func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture(
-		"attempts_propagation/_common",
-		"attempts_propagation/unlocks",
-		"attempts_propagation/unlocks_old_records")
+		"results_propagation/_common",
+		"results_propagation/unlocks",
+		"results_propagation/unlocks_old_records")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
@@ -65,7 +65,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	}))
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 

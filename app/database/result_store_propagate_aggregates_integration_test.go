@@ -23,8 +23,8 @@ type aggregatesResultRow struct {
 	ScoreComputed          float32
 }
 
-func TestAttemptStore_ComputeAllAttempts_Aggregates(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/aggregates")
+func TestResultStore_Propagate_Aggregates(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/aggregates")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -63,7 +63,7 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates(t *testing.T) {
 	}).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -89,13 +89,13 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates(t *testing.T) {
 	assertAggregatesEqual(t, resultStore, expected)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Aggregates_OnCommonData(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common")
+func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -110,8 +110,8 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates_OnCommonData(t *testing.T) {
 	assertAggregatesEqual(t, resultStore, expected)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Aggregates_KeepsLastActivityAtIfItIsGreater(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common")
+func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
 	expectedLatestActivityAt1 := database.Time(time.Date(2019, 5, 29, 11, 0, 0, 0, time.UTC))
@@ -123,7 +123,7 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates_KeepsLastActivityAtIfItIsGre
 	}).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -135,7 +135,7 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates_KeepsLastActivityAtIfItIsGre
 	assertAggregatesEqual(t, resultStore, expected)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Aggregates_EditScore(t *testing.T) {
+func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 	for _, test := range []struct {
 		name                  string
 		editRule              string
@@ -151,7 +151,7 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates_EditScore(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixture("attempts_propagation/_common")
+			db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 			defer func() { _ = db.Close() }()
 
 			resultStore := database.NewDataStore(db).Results()
@@ -166,7 +166,7 @@ func TestAttemptStore_ComputeAllAttempts_Aggregates_EditScore(t *testing.T) {
 				}).Error())
 
 			err := resultStore.InTransaction(func(s *database.DataStore) error {
-				return s.Attempts().ComputeAllAttempts()
+				return s.Results().Propagate()
 			})
 			assert.NoError(t, err)
 

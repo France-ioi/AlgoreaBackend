@@ -13,23 +13,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAttemptStore_ComputeAllAttempts_RecoverError(t *testing.T) {
+func TestResultStore_Propagate_RecoverError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	expectedError := errors.New("some error")
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("listener_computeAllAttempts", 10).WillReturnError(expectedError)
+		WithArgs("listener_propagate", 10).WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.Equal(t, expectedError, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestAttemptStore_ComputeAllAttempts_RecoverRuntimeError(t *testing.T) {
+func TestResultStore_Propagate_RecoverRuntimeError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
@@ -51,7 +51,7 @@ func TestAttemptStore_ComputeAllAttempts_RecoverRuntimeError(t *testing.T) {
 		}()
 
 		_ = NewDataStore(db).InTransaction(func(s *DataStore) error {
-			return s.Attempts().ComputeAllAttempts()
+			return s.Results().Propagate()
 		})
 
 		return false, nil
@@ -63,27 +63,27 @@ func TestAttemptStore_ComputeAllAttempts_RecoverRuntimeError(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestAttemptStore_ComputeAllAttempts_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
+func TestResultStore_Propagate_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("listener_computeAllAttempts", 10).
-		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('listener_computeAllAttempts', 1)"}).AddRow(int64(0)))
+		WithArgs("listener_propagate", 10).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('listener_propagate', 1)"}).AddRow(int64(0)))
 	dbMock.ExpectRollback()
 
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestAttemptStore_ComputeAllAttempts_CannotBeCalledWithoutTransaction(t *testing.T) {
+func TestResultStore_Propagate_CannotBeCalledWithoutTransaction(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	attemptStore := NewDataStore(db).Attempts()
+	resultStore := NewDataStore(db).Results()
 	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
 		defer func() {
 			if p := recover(); p != nil {
@@ -91,7 +91,7 @@ func TestAttemptStore_ComputeAllAttempts_CannotBeCalledWithoutTransaction(t *tes
 				panicValue = p
 			}
 		}()
-		_ = attemptStore.ComputeAllAttempts()
+		_ = resultStore.Propagate()
 		return false, nil
 	}()
 

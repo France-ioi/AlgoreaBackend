@@ -97,7 +97,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			"latest_activity_at":       database.Now(),
 			"result_propagation_state": "to_be_propagated",
 		}).Error())
-		return store.Attempts().ComputeAllAttempts()
+		return store.Results().Propagate()
 	})
 
 	if apiError != service.NoError {

@@ -62,7 +62,7 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 
 	resultStore := database.NewDataStore(db).Results()
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -79,7 +79,7 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 	assert.Equal(t, expectedNewResults, result)
 }
 
-func TestAttemptStore_ComputeAllAttempts_CreatesNew(t *testing.T) {
+func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 	for _, test := range []struct {
 		name               string
 		fixtures           []string

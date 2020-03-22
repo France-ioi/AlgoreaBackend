@@ -32,8 +32,8 @@ func constructExpectedResultsForValidatedAtTests(t11, t12, t13, t14, t23, t24 *t
 		{ParticipantID: 102, AttemptID: 1, ItemID: 2, ValidatedAt: nil, ResultPropagationState: "done"},
 	}
 }
-func TestAttemptStore_ComputeAllAttempts_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/validated_at")
+func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -59,7 +59,7 @@ func TestAttemptStore_ComputeAllAttempts_NonCategories_SetsValidatedAtToMaxOfChi
 		UpdateColumn("validated_at", skippedDate).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -71,9 +71,9 @@ func TestAttemptStore_ComputeAllAttempts_NonCategories_SetsValidatedAtToMaxOfChi
 			&oldestForItem4AndWinner, &skippedInItem3, &skippedInItem4), result)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren( // nolint:lll
+func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren( // nolint:lll
 	t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -90,7 +90,7 @@ func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToMaxOfValida
 			Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -101,9 +101,9 @@ func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToMaxOfValida
 		constructExpectedResultsForValidatedAtTests(&expectedDate, nil, &oldDate, nil, nil, nil), result)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToNull_IfSomeCategoriesAreNotValidated(
+func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategoriesAreNotValidated(
 	t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -122,7 +122,7 @@ func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToNull_IfSome
 		UpdateColumn("category", "Validation").Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -133,9 +133,9 @@ func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToNull_IfSome
 		constructExpectedResultsForValidatedAtTests(&expectedDate, nil, &oldDate, nil, nil, nil), result)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Categories_ValidatedAtShouldBeMaxOfChildrensWithCategoryValidation_IfAllAreValidated(
+func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithCategoryValidation_IfAllAreValidated(
 	t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -159,7 +159,7 @@ func TestAttemptStore_ComputeAllAttempts_Categories_ValidatedAtShouldBeMaxOfChil
 		UpdateColumn("category", "Validation").Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 
@@ -170,9 +170,9 @@ func TestAttemptStore_ComputeAllAttempts_Categories_ValidatedAtShouldBeMaxOfChil
 		constructExpectedResultsForValidatedAtTests(&oldDate, &expectedDate, &oldDate, nil, nil, &expectedDate), result)
 }
 
-func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems( // nolint:lll
+func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems( // nolint:lll
 	t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -202,7 +202,7 @@ func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToMaxOfValida
 	}).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 

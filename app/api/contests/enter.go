@@ -106,7 +106,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			service.MustNotBeError(store.GroupGroups().After())
 			// Upserting into groups_groups may mark some attempts as 'to_be_propagated',
 			// so we need to recompute them
-			service.MustNotBeError(store.Attempts().ComputeAllAttempts())
+			service.MustNotBeError(store.Results().Propagate())
 		} else {
 			logging.GetLogEntry(r).Warnf("items.contest_participants_group_id is not set for the item with id = %d", qualificationState.itemID)
 		}

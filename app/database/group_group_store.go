@@ -59,7 +59,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		groupGroupStore := store.GroupGroups()
 		groupGroupStore.createRelation(parentGroupID, childGroupID)
 		groupGroupStore.createNewAncestors()
-		return store.Attempts().ComputeAllAttempts()
+		return store.Results().Propagate()
 	}))
 	return err
 }

@@ -18,14 +18,14 @@ type stateResultRow struct {
 	ResultPropagationState string
 }
 
-func TestAttemptStore_ComputeAllAttempts_WithCyclicGraph(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("attempts_propagation/cyclic")
+func TestResultStore_Propagate_WithCyclicGraph(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("results_propagation/cyclic")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Attempts().ComputeAllAttempts()
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 

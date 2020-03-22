@@ -214,7 +214,7 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 		// results data of the task will be zeroed
 		service.MustNotBeError(store.Results().Where("item_id = ?", itemID).
 			UpdateColumn("result_propagation_state", "to_be_recomputed").Error())
-		service.MustNotBeError(store.Attempts().ComputeAllAttempts())
+		service.MustNotBeError(store.Results().Propagate())
 	}
 	return apiError, err
 }

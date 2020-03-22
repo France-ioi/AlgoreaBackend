@@ -5,27 +5,27 @@ import (
 	"time"
 )
 
-const computeAllAttemptsLockName = "listener_computeAllAttempts"
-const computeAllAttemptsLockTimeout = 10 * time.Second
+const propagateLockName = "listener_propagate"
+const propagateLockTimeout = 10 * time.Second
 
-// ComputeAllAttempts recomputes fields of attempts
-// For attempts marked with result_propagation_state = 'to_be_propagated'/'to_be_recomputed':
-// 1. We mark all their ancestors in attempts as 'to_be_recomputed'
-//  (we consider a row in attempts as an ancestor if it has the same value in group_id and
+// Propagate recomputes fields of results
+// For results marked with result_propagation_state = 'to_be_propagated'/'to_be_recomputed':
+// 1. We mark all their ancestors in results as 'to_be_recomputed'
+//  (we consider a row in results as an ancestor if it has the same value in group_id and
 //  its item_id is an ancestor of the original row's item_id).
 // 2. We process all objects that are marked as 'to_be_recomputed' and that have no children marked as 'to_be_recomputed'.
 //  Then, if an object has children, we update
 //    latest_activity_at, tasks_tried, tasks_with_help, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new permissions_granted for each unlocked item according to corresponding item_unlocking_rules.
-func (s *AttemptStore) ComputeAllAttempts() (err error) {
+func (s *ResultStore) Propagate() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
 	var groupsUnlocked int64
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(computeAllAttemptsLockName, computeAllAttemptsLockTimeout, func(ds *DataStore) error {
+	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(ds *DataStore) error {
 		// We mark as 'to_be_recomputed' results of all ancestors of items marked as 'to_be_recomputed'/'to_be_propagated'
 		// with appropriate attempt_id.
 		// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
@@ -286,7 +286,7 @@ func (s *AttemptStore) ComputeAllAttempts() (err error) {
 		mustNotBeError(s.PermissionsGranted().After())
 		// we should compute attempts again as new permissions were set and
 		// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-		return s.ComputeAllAttempts()
+		return s.Propagate()
 	}
 	return nil
 }

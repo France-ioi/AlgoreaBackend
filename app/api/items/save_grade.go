@@ -187,7 +187,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+ // nolint:gosec
 			updateExpr+" WHERE results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", values...).
 			Error()) // nolint:gosec
-	service.MustNotBeError(store.Attempts().ComputeAllAttempts())
+	service.MustNotBeError(store.Results().Propagate())
 	return validated, true
 }
 
