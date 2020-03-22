@@ -70,7 +70,7 @@ func TestResultStore_Propagate(t *testing.T) {
 				return s.Results().Propagate()
 			})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("AttemptStore.computeAllAttempts() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ResultStore.Propagate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

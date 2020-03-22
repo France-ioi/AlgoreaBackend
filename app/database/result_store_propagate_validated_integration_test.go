@@ -27,7 +27,7 @@ func (r validatedResultRow) LessThan(other validatedResultRow) bool {
 		r.ParticipantID == other.ParticipantID && r.AttemptID == other.AttemptID && r.ItemID < other.ItemID
 }
 
-func testAttemptStoreComputeAllAttemptsValidated(t *testing.T, fixtures []string,
+func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 	validationType string,
 	prepareFunc func(*testing.T, *database.ResultStore), expectedResults []validatedResultRow) {
 	db := testhelpers.SetupDBWithFixture(fixtures...)
@@ -63,7 +63,7 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			testAttemptStoreComputeAllAttemptsValidated(t,
+			testResultStorePropagateValidated(t,
 				[]string{"results_propagation/_common"},
 				tt.name,
 				func(t *testing.T, resultStore *database.ResultStore) {
@@ -79,7 +79,7 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 
 func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(
 	t *testing.T) {
-	testAttemptStoreComputeAllAttemptsValidated(t,
+	testResultStorePropagateValidated(t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
 		func(t *testing.T, resultStore *database.ResultStore) {
@@ -93,7 +93,7 @@ func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhe
 
 func TestResultStore_Propagate_ValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(
 	t *testing.T) {
-	testAttemptStoreComputeAllAttemptsValidated(t,
+	testResultStorePropagateValidated(t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
 		nil,
@@ -244,7 +244,7 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
-			testAttemptStoreComputeAllAttemptsValidated(t, testCase.fixtures,
+			testResultStorePropagateValidated(t, testCase.fixtures,
 				testCase.validationType, testCase.prepareFunc, testCase.expectedResults)
 		})
 	}
