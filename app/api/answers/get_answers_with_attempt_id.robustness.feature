@@ -28,6 +28,7 @@ Background:
     | 13       | 190     | none                     |
     | 13       | 200     | content_with_descendants |
     | 13       | 210     | info                     |
+    | 21       | 190     | content_with_descendants |
   And the database has the following table 'attempts':
     | id | participant_id |
     | 1  | 13             |

@@ -65,6 +65,13 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
     And the response error message should contain "Wrong value for item_id (should be int64)"
     And the table "attempts" should stay unchanged
 
+  Scenario: Invalid as_team_id
+    Given I am the user with id "101"
+    When I send a GET request to "/items/50/attempts/0/task-token?as_team_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+    And the table "attempts" should stay unchanged
+
   Scenario: User not found
     Given I am the user with id "404"
     When I send a GET request to "/items/50/attempts/0/task-token"
@@ -110,6 +117,13 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
   Scenario: as_team_id is a team for a different item
     Given I am the user with id "101"
     When I send a GET request to "/items/60/attempts/0/task-token?as_team_id=104"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "attempts" should stay unchanged
+
+  Scenario: No result in the DB
+    Given I am the user with id "101"
+    When I send a GET request to "/items/60/attempts/0/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged
