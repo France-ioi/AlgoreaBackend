@@ -19,9 +19,15 @@ type existingResultsRow struct {
 	ResultPropagationState string
 }
 
-func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []string,
-	expectedNewResults []existingResultsRow) {
-	mergedFixtures := make([]string, 0, len(fixtures)+1)
+type resultStorePropagateCreatesNewTestCase struct {
+	name               string
+	fixtures           []string
+	expectedNewResults []existingResultsRow
+	rootItemID         *int64
+}
+
+func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropagateCreatesNewTestCase) {
+	mergedFixtures := make([]string, 0, len(testCase.fixtures)+1)
 	mergedFixtures = append(mergedFixtures, `
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]
 		groups_ancestors:
@@ -56,10 +62,14 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 		results:
 			- {participant_id: 3, attempt_id: 1, item_id: 333, latest_activity_at: "2019-05-30 11:00:00", result_propagation_state: to_be_propagated}
 	`)
-	mergedFixtures = append(mergedFixtures, fixtures...)
+	mergedFixtures = append(mergedFixtures, testCase.fixtures...)
 	db := testhelpers.SetupDBWithFixtureString(mergedFixtures...)
 	defer func() { _ = db.Close() }()
 
+	if testCase.rootItemID != nil {
+		assert.NoError(t, database.NewDataStore(db).Attempts().Where("participant_id = 3 AND id = 1").
+			UpdateColumn("root_item_id", testCase.rootItemID).Error())
+	}
 	resultStore := database.NewDataStore(db).Results()
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
 		return s.Results().Propagate()
@@ -67,24 +77,20 @@ func testAttemptStoreComputeAllAttemptsCreatesNew(t *testing.T, fixtures []strin
 	assert.NoError(t, err)
 
 	const expectedDate = "2019-05-30 11:00:00"
-	for i := range expectedNewResults {
-		expectedNewResults[i].ResultPropagationState = "done"
-		expectedNewResults[i].LatestActivityAt = expectedDate
+	for i := range testCase.expectedNewResults {
+		testCase.expectedNewResults[i].ResultPropagationState = "done"
+		testCase.expectedNewResults[i].LatestActivityAt = expectedDate
 	}
-	expectedNewResults = append(expectedNewResults,
+	testCase.expectedNewResults = append(testCase.expectedNewResults,
 		existingResultsRow{ParticipantID: 3, AttemptID: 1, ItemID: 333, LatestActivityAt: expectedDate, ResultPropagationState: "done"})
 	var result []existingResultsRow
 	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, latest_activity_at, result_propagation_state").
 		Order("participant_id, attempt_id, item_id").Scan(&result).Error())
-	assert.Equal(t, expectedNewResults, result)
+	assert.Equal(t, testCase.expectedNewResults, result)
 }
 
 func TestResultStore_Propagate_CreatesNew(t *testing.T) {
-	for _, test := range []struct {
-		name               string
-		fixtures           []string
-		expectedNewResults []existingResultsRow
-	}{
+	for _, test := range []resultStorePropagateCreatesNewTestCase{
 		{name: "should not create new results if no permissions for parent items"},
 		{
 			name:     "should not create new results if can_view_generated = none for ancestor items",
@@ -128,10 +134,16 @@ func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 			name:     "should not create new results for items requiring explicit entry",
 			fixtures: []string{`permissions_generated: [{group_id: 1, item_id: 555, can_view_generated: info}]`},
 		},
+		{
+			name:               "should not create new results for items above the root_item_id",
+			fixtures:           []string{`permissions_generated: [{group_id: 3, item_id: 111, can_view_generated: info}]`},
+			expectedNewResults: []existingResultsRow{{ParticipantID: 3, AttemptID: 1, ItemID: 222}},
+			rootItemID:         ptrInt64(222),
+		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testAttemptStoreComputeAllAttemptsCreatesNew(t, test.fixtures, test.expectedNewResults)
+			testResultStorePropagateCreatesNew(t, &test)
 		})
 	}
 }
