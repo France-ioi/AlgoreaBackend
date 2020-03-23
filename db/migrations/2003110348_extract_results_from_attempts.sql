@@ -62,8 +62,8 @@ FROM `results` WHERE id IN (
     ) ordered WHERE `order` > 0
 );
 
-INSERT IGNORE INTO `attempts` (participant_id, id, created_at)
-SELECT `id`, 0, `created_at` FROM `groups` WHERE `type` IN ('User', 'Team');
+INSERT IGNORE INTO `attempts` (participant_id, id, creator_id, created_at)
+SELECT `id`, 0, IF(groups.type = 'User', groups.id, NULL), `created_at` FROM `groups` WHERE `type` IN ('User', 'Team');
 
 INSERT INTO `results` (id, participant_id, item_id, attempt_id, `order`)
 SELECT `id`, `participant_id`, `item_id`, ROW_NUMBER() OVER (PARTITION BY `participant_id` ORDER BY `item_id`, `order`, started_at), -1
