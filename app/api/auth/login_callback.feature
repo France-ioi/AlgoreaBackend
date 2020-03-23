@@ -85,6 +85,9 @@ Feature: Login callback
       | 2                   | 2                   | true    |
       | 2                   | 5577006791947779410 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |
+    And the table "attempts" should be:
+      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+      | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be empty
     And the table "login_states" should be empty
     And the table "sessions" should be:
@@ -207,6 +210,7 @@ Feature: Login callback
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "group_membership_changes" should be empty
+    And the table "attempts" should stay unchanged
     And the table "login_states" should be:
       | cookie                           | state                            | expires_at          |
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
@@ -295,6 +299,7 @@ Feature: Login callback
       | 2                 | 11             | false   |
       | 11                | 11             | true    |
     And the table "group_membership_changes" should be empty
+    And the table "attempts" should stay unchanged
 
   Scenario: Sets insecure cookies for HTTP
     Given the time now is "2019-07-16T22:02:29Z"

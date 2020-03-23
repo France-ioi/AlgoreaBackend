@@ -254,6 +254,7 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 
 		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated)
 		usersToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
+		attemptsToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
 		usersInSubgroup := 0
 		var currentResultRow *resultRow
 		currentSubgroupIndex := -1
@@ -316,6 +317,13 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 				"creator_id":       user.GroupID,
 			})
 
+			attemptsToCreate = append(attemptsToCreate, map[string]interface{}{
+				"participant_id": userGroupID,
+				"id":             0,
+				"creator_id":     userGroupID,
+				"created_at":     database.Now(),
+			})
+
 			usersInSubgroup++
 			currentResultRow.Users = append(currentResultRow.Users, resultRowUser{
 				UserID:   userGroupID,
@@ -324,6 +332,7 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 			})
 		}
 		service.MustNotBeError(store.Users().InsertMaps(usersToCreate))
+		service.MustNotBeError(store.Attempts().InsertMaps(attemptsToCreate))
 		return store.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
 	}))
 	return result
