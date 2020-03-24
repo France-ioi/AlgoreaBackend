@@ -17,6 +17,8 @@ import (
 //
 //   * There should be a row in the `results` table with `attempt_id` = `{attempt_id}`,
 //     `participant_id` = the user's group (or `{as_team_id}` if given), `item_id` = `{item_id}`
+//
+//   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:
 // - name: attempt_id
 //   in: path

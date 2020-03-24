@@ -34,7 +34,7 @@ CREATE TABLE `attempts` (
     -- CONSTRAINT `attempts_participant_id_parent_attempt_id_attempts_participant_id_id`
     --    FOREIGN KEY (`participant_id`, `parent_attempt_id`) REFERENCES `attempts`(`participant_id`, `id`) SET NULL,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
-    COMMENT 'Attempts of participants (team or user) to solve a subtree of items. An attempt may have several answers. Every participant has a default attempt.';
+    COMMENT 'Attempts of participants (team or user) to solve a subtree of items. An attempt may have several answers for a same item. Every participant has a default attempt.';
 
 
 INSERT INTO `attempts` (participant_id, id, creator_id, parent_attempt_id, root_item_id, created_at)

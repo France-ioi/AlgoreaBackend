@@ -11,8 +11,11 @@ const propagateLockTimeout = 10 * time.Second
 // Propagate recomputes fields of results
 // For results marked with result_propagation_state = 'to_be_propagated'/'to_be_recomputed':
 // 1. We mark all their ancestors in results as 'to_be_recomputed'
-//  (we consider a row in results as an ancestor if it has the same value in group_id and
-//  its item_id is an ancestor of the original row's item_id).
+//  (we consider a row in results as an ancestor if
+//    a) it has the same value in group_id
+//    b) its item_id is an ancestor of the original row's item_id
+//    c) its attempt_id is equal to the original row's attempt_id for original rows with root_item_id != item_id or
+//       its attempt_id is equal to the original row's parent_attempt_id for original rows with root_item_id = item_id).
 // 2. We process all objects that are marked as 'to_be_recomputed' and that have no children marked as 'to_be_recomputed'.
 //  Then, if an object has children, we update
 //    latest_activity_at, tasks_tried, tasks_with_help, validated_at.
