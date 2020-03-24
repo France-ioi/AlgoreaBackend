@@ -24,14 +24,13 @@ func (s *AttemptStore) CreateNew(participantID, itemID, creatorID int64) (attemp
 	})
 
 	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, "PRIMARY") {
-		mustNotBeError(s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-			mustNotBeError(s.Where("participant_id = ?", participantID).WithWriteLock().
-				PluckFirst("MAX(id) + 1", &attemptID).Error())
-			return s.InsertMap(map[string]interface{}{
-				"id": attemptID, "participant_id": participantID, "creator_id": creatorID,
-				"parent_attempt_id": 0, "root_item_id": itemID, "created_at": Now(),
-			})
+		mustNotBeError(s.InsertMap(map[string]interface{}{
+			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", s.Attempts().Select("IFNULL(MAX(id)+1, 0)").
+				Where("participant_id = ?", participantID).WithWriteLock().SubQuery()),
+			"participant_id": participantID, "creator_id": creatorID,
+			"parent_attempt_id": 0, "root_item_id": itemID, "created_at": Now(),
 		}))
+		mustNotBeError(s.Where("participant_id = ?", participantID).PluckFirst("MAX(id)", &attemptID).Error())
 
 		mustNotBeError(s.Results().InsertMap(map[string]interface{}{
 			"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID, "started_at": Now(), "latest_activity_at": Now(),
