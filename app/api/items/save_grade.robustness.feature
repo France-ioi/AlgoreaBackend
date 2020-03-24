@@ -31,11 +31,14 @@ Feature: Save grading result - robustness
       | 101      | 70      | content            |
       | 101      | 80      | content            |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested        |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 123 | 101       | 100        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: Wrong JSON in request
@@ -56,7 +59,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "404",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -66,7 +69,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "404",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -91,7 +94,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "20",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -101,7 +104,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -126,7 +129,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -136,7 +139,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "20",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -161,7 +164,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -172,7 +175,7 @@ Feature: Save grading result - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "idAttempt": "101",
+        "idAttempt": "101/1",
         "score": "100",
         "idUserAnswer": "123"
       }
@@ -196,7 +199,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -207,7 +210,7 @@ Feature: Save grading result - robustness
         "idUser": "101",
         "idItemLocal": "51",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "score": "100",
         "idUserAnswer": "123"
       }
@@ -231,7 +234,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -241,7 +244,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "123"
@@ -266,7 +269,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "123"
@@ -290,7 +293,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "123"
@@ -315,7 +318,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -339,7 +342,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -363,7 +366,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -388,7 +391,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -398,7 +401,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "20",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -424,7 +427,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -434,7 +437,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "60",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -460,7 +463,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -470,7 +473,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -497,7 +500,7 @@ Feature: Save grading result - robustness
         "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -532,7 +535,7 @@ Feature: Save grading result - robustness
         "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -542,7 +545,7 @@ Feature: Save grading result - robustness
         "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idAttempt": "110",
+        "idAttempt": "110/0",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -567,7 +570,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -577,7 +580,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -602,7 +605,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -612,7 +615,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "abc",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -633,12 +636,15 @@ Feature: Save grading result - robustness
 
   Scenario: The answer has been already graded
     Given I am the user with id "101"
-    And the database has the following table 'attempts':
-      | id  | group_id | item_id | validated_at        | order |
-      | 105 | 101      | 80      | 2018-05-29 06:38:38 | 2     |
+    And the database table 'attempts' has also the following row:
+      | id | participant_id |
+      | 1  | 101            |
+    And the database table 'results' has also the following row:
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 1          | 101            | 80      | 2018-05-29 06:38:38 |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 124 | 101       | 105        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 124 | 101       | 101            | 105        | 80      | 2017-05-29 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | score | graded_at           |
       | 124       | 0     | 2017-05-29 06:38:38 |
@@ -647,7 +653,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "80",
-        "idAttempt": "105",
+        "idAttempt": "101/1",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -658,7 +664,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "80",
-        "idAttempt": "105",
+        "idAttempt": "101/1",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "124"
@@ -675,7 +681,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "The answer has been already graded or is not found"
     And logs should contain:
     """
-    A user tries to replay a score token with a different score value ({"idAttempt":105,"idItem":80,"idUser":101,"idUserAnswer":124,"newScore":100,"oldScore":0})
+    A user tries to replay a score token with a different score value ({"idAttempt":"101/1","idItem":"80","idUser":"101","idUserAnswer":"124","newScore":100,"oldScore":0})
     """
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
@@ -687,7 +693,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "80",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -698,7 +704,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "80",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "124"

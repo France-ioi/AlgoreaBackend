@@ -23,9 +23,12 @@ Feature: Submit a new answer
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | result_propagation_state | order |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | done                     | 1     |
-      | 101 | 101      | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | done                     | 1     |
+      | id | participant_id |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | result_propagation_state |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | done                     |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | done                     |
 
   Scenario: User is able to submit a new answer
     Given I am the user with id "101"
@@ -35,7 +38,7 @@ Feature: Submit a new answer
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/1",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -55,7 +58,7 @@ Feature: Submit a new answer
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItem": null,
-            "idAttempt": "100",
+            "idAttempt": "101/1",
             "itemUrl": "",
             "idItemLocal": "50",
             "platformName": "algrorea_backend",
@@ -71,12 +74,12 @@ Feature: Submit a new answer
       }
       """
     And the table "answers" should be:
-      | author_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 100        | Submission | print 1 | 1                                                 |
-    And the table "attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |
-      | 101 | 101      | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |
+      | author_id | participant_id | attempt_id | item_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 101            | 1          | 50      | Submission | print 1 | 1                                                 |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with id "101"
@@ -87,7 +90,7 @@ Feature: Submit a new answer
         "idItem": "50",
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/1",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "idItemLocal": "50",
         "randomSeed": "100",
@@ -110,7 +113,7 @@ Feature: Submit a new answer
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItem": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/1",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "idItemLocal": "50",
             "platformName": "algrorea_backend",
@@ -126,9 +129,9 @@ Feature: Submit a new answer
       }
       """
     And the table "answers" should be:
-      | author_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 100        | Submission | print(2) | 1                                                 |
-    And the table "attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |
-      | 101 | 101      | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |
+      | author_id | participant_id | attempt_id | item_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 101            | 1          | 50      | Submission | print(2) | 1                                                 |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |

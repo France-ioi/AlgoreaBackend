@@ -26,7 +26,7 @@ import (
 // summary: Save the grade
 // description: >
 //
-//   Saves the grade returned by a grading app into the `gradings` table and updates the attempt in the DB.
+//   Saves the grade returned by a grading app into the `gradings` table and updates the attempt results in the DB.
 //   When the `score` = 100 (full score), the service unlocks dependent locked items (if any) and updates `bAccessSolutions`
 //   of the task token.
 //
@@ -142,7 +142,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		return validated, false
 	}
 
-	// Build query to update attempts
+	// Build query to update results
 	columnsToUpdate := []string{
 		"tasks_tried",
 		"score_obtained_at",
@@ -180,11 +180,14 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
-	values = append(values, requestData.TaskToken.Converted.AttemptID)
+	values = append(values,
+		requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+		requestData.TaskToken.Converted.LocalItemID)
 	service.MustNotBeError(
-		store.DB.Exec("UPDATE attempts JOIN answers ON answers.id = ? "+ // nolint:gosec
-			updateExpr+" WHERE attempts.id = ?", values...).Error()) // nolint:gosec
-	service.MustNotBeError(store.Attempts().ComputeAllAttempts())
+		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+ // nolint:gosec
+			updateExpr+" WHERE results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", values...).
+			Error()) // nolint:gosec
+	service.MustNotBeError(store.Results().Propagate())
 	return validated, true
 }
 
@@ -210,10 +213,10 @@ func saveNewScoreIntoGradings(store *database.DataStore, user *database.User,
 		if oldScore != nil {
 			if *oldScore != score {
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-					"idAttempt":    requestData.TaskToken.Converted.AttemptID,
-					"idItem":       requestData.TaskToken.Converted.LocalItemID,
-					"idUser":       user.GroupID,
-					"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
+					"idAttempt":    requestData.TaskToken.AttemptID,
+					"idItem":       requestData.TaskToken.LocalItemID,
+					"idUser":       strconv.FormatInt(user.GroupID, 10),
+					"idUserAnswer": requestData.ScoreToken.UserAnswerID,
 					"newScore":     score,
 					"oldScore":     *oldScore,
 				})

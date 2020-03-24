@@ -63,12 +63,16 @@ Feature: Get item view information
       | tag |
       | fr  |
     And the database has the following table 'attempts':
-      | group_id | item_id | order | started_at          |
-      | 11       | 200     | 1     | 2019-05-30 11:00:00 |
-      | 11       | 210     | 1     | null                |
-      | 11       | 220     | 1     | 2019-05-30 11:00:00 |
-      | 13       | 210     | 1     | 2019-05-30 11:00:00 |
-      | 13       | 220     | 1     | null                |
+      | id | participant_id | created_at          |
+      | 0  | 11             | 2019-05-30 10:00:00 |
+      | 0  | 13             | 2019-05-30 10:00:00 |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | 11             | 200     | 2019-05-30 11:00:00 |
+      | 0          | 11             | 210     | null                |
+      | 0          | 11             | 220     | 2019-05-30 11:00:00 |
+      | 0          | 13             | 210     | 2019-05-30 11:00:00 |
+      | 0          | 13             | 220     | null                |
 
   Scenario: Full access on all items (as user)
     Given I am the user with id "11"

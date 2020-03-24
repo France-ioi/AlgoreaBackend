@@ -125,6 +125,13 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 		userData["group_id"] = selfGroupID
 
 		service.MustNotBeError(s.Users().InsertMap(userData))
+		service.MustNotBeError(s.Attempts().InsertMap(map[string]interface{}{
+			"participant_id": selfGroupID,
+			"id":             0,
+			"creator_id":     selfGroupID,
+			"created_at":     database.Now(),
+		}))
+
 		return selfGroupID
 	}
 

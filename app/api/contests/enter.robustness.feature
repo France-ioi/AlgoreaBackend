@@ -213,8 +213,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | additional_time |
       | 31       | 50      | 02:02:02        |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order |
-      | 31       | 50      | 2019-05-29 11:00:00 | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 31             | 2019-05-29 11:00:00 | 31         | 0                 | 50           |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 31             | 50      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
     When I send a POST request to "/contests/50/enter"
     Then the response code should be 403
@@ -245,8 +248,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | additional_time |
       | 11       | 60      | 02:02:02        |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order |
-      | 11       | 60      | 2019-05-29 11:00:00 | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 11             | 60      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
     When I send a POST request to "/contests/60/enter?as_team_id=11"
     Then the response code should be 403

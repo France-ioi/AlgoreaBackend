@@ -431,7 +431,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			if shouldPropagatePermissions {
 				dataStore.PermissionsGranted().computeAllAccess()
 			}
-			mustNotBeError(dataStore.Attempts().ComputeAllAttempts())
+			mustNotBeError(dataStore.Results().Propagate())
 		}
 		return nil
 	}))

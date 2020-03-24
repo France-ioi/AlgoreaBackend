@@ -81,20 +81,23 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		}
 
 		answerID, err = store.Answers().SubmitNewAnswer(
-			user.GroupID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
+			user.GroupID, requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+			requestData.TaskToken.Converted.LocalItemID, *requestData.Answer)
 		service.MustNotBeError(err)
 
-		attemptsScope := store.Attempts().ByID(requestData.TaskToken.Converted.AttemptID)
+		resultsScope := store.Results().Where("participant_id = ?", requestData.TaskToken.Converted.ParticipantID).
+			Where("attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
+			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID)
 		service.MustNotBeError(
-			attemptsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
+			resultsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
 
-		service.MustNotBeError(attemptsScope.UpdateColumn(map[string]interface{}{
+		service.MustNotBeError(resultsScope.UpdateColumn(map[string]interface{}{
 			"submissions":              gorm.Expr("submissions + 1"),
 			"latest_submission_at":     database.Now(),
 			"latest_activity_at":       database.Now(),
 			"result_propagation_state": "to_be_propagated",
 		}).Error())
-		return store.Attempts().ComputeAllAttempts()
+		return store.Results().Propagate()
 	})
 
 	if apiError != service.NoError {

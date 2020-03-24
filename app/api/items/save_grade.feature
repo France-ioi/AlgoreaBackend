@@ -40,20 +40,24 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a high score and attempt_id
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | latest_activity_at  | hints_requested        | order |
-      | 100 | 101      | 50      | 2019-05-30 11:00:00 | [0,  1, "hint" , null] | 1     |
-      | 101 | 101      | 60      | 2019-05-29 11:00:00 | [0,  1, "hint" , null] | 2     |
-      | 102 | 101      | 10      | 2019-05-30 11:00:00 | null                   | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | latest_activity_at  | hints_requested        |
+      | 0          | 101            | 10      | 2019-05-30 11:00:00 | null                   |
+      | 0          | 101            | 50      | 2019-05-30 11:00:00 | [0,  1, "hint" , null] |
+      | 1          | 101            | 60      | 2019-05-29 11:00:00 | [0,  1, "hint" , null] |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 123 | 101       | 100        | 2017-05-29 06:38:38 |
-      | 124 | 101       | 101        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "randomSeed": "456",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -64,7 +68,7 @@ Feature: Save grading result
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -86,7 +90,7 @@ Feature: Save grading result
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "randomSeed": "456",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -101,29 +105,34 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 100   | 1                                                |
-    And the table "attempts" should be:
-      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
-      | 100 | 100            | 1           | 1         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
-      | 101 | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null                |
-      | 102 | 50             | 1           | 1         | done                     | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
+      | 0          | 101            | 10      | 50             | 1           | 1         | done                     | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
+      | 0          | 101            | 50      | 100            | 1           | 1         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
+      | 1          | 101            | 60      | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null                |
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | latest_activity_at  | order | score_edit_rule   | score_edit_value   |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 | 1     | <score_edit_rule> | <score_edit_value> |
-      | 101 | 101      | 60      | [0,  1, "hint" , null] | 2019-05-29 11:00:00 | 2     | null              | null               |
-      | 102 | 101      | 10      | null                   | 2019-05-30 11:00:00 | 1     | null              | null               |
+      | id | participant_id |
+      | 0  | 101            |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested        | latest_activity_at  | score_edit_rule   | score_edit_value   |
+      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 | null              | null               |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 | <score_edit_rule> | <score_edit_value> |
+      | 1          | 101            | 60      | [0,  1, "hint" , null] | 2019-05-29 11:00:00 | null              | null               |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 123 | 101       | 100        | 2017-05-29 06:38:38 |
-      | 124 | 101       | 101        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101       | 101            | 1          | 60      | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -133,7 +142,7 @@ Feature: Save grading result
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "<score>",
         "idUserAnswer": "123"
@@ -155,7 +164,7 @@ Feature: Save grading result
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "randomSeed": "",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -170,11 +179,12 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | <score> | 1                                                |
-    And the table "attempts" should be:
-      | id  | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
-      | 100 | <score_computed> | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
-      | 101 | 0                | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null         |
-      | 102 | <parent_score>   | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | null                | null         |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
+      | 0          | 101            | 10      | <parent_score>   | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | null                | null         |
+      | 0          | 101            | 50      | <score_computed> | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
+      | 1          | 101            | 60      | 0                | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | null                | null         |
   Examples:
     | score | score_edit_rule | score_edit_value | score_computed | parent_score |
     | 99    | null            | null             | 99             | 49.5         |
@@ -187,19 +197,23 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | score_obtained_at   | latest_activity_at  | order |
-      | 100 | 101      | 50      | 2017-04-29 06:38:38 | 2019-05-30 11:00:00 | 1     |
-      | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 | 2     |
+      | id | participant_id |
+      | 0  | 101            |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | score_obtained_at   | latest_activity_at  |
+      | 0          | 101            | 50      | 2017-04-29 06:38:38 | 2019-05-30 11:00:00 |
+      | 1          | 101            | 60      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 123 | 101       | 100        | 2017-05-29 06:38:38 |
-      | 124 | 101       | 101        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101       | 101            | 1          | 60      | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "60",
-        "idAttempt": "100",
+        "idAttempt": "101/1",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -209,7 +223,7 @@ Feature: Save grading result
       {
         "idUser": "101",
         "idItemLocal": "60",
-        "idAttempt": "100",
+        "idAttempt": "101/1",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "99",
         "idUserAnswer": "124"
@@ -231,7 +245,7 @@ Feature: Save grading result
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "60",
-            "idAttempt": "100",
+            "idAttempt": "101/1",
             "randomSeed": "",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -246,33 +260,37 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 99    | 1                                                |
-    And the table "attempts" should be:
-      | group_id | item_id | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
-      | 101      | 50      | 99             | 1           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
-      | 101      | 60      | 0              | 0           | 0         | done                     | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | participant_id | attempt_id | item_id | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
+      | 101            | 0          | 50      | 0              | 0           | 0         | done                     | 2019-05-30 11:00:00 | null                 | 2017-04-29 06:38:38 | null         |
+      | 101            | 1          | 60      | 99             | 1           | 0         | done                     | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
 
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 123 | 101       | 100        | 2018-05-29 06:38:38 |
-      | 124 | 101       | 101        | 2018-05-29 06:38:38 |
-      | 125 | 101       | 100        | 2018-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 0          | 10      | 2018-05-29 06:38:38 |
+      | 124 | 101       | 101            | 0          | 50      | 2018-05-29 06:38:38 |
+      | 125 | 101       | 101            | 0          | 10      | 2018-05-29 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | score | graded_at           |
       | 123       | 5     | 2018-05-29 06:38:38 |
       | 125       | 20    | 2018-05-29 06:38:38 |
     And the database has the following table 'attempts':
-      | group_id | item_id | score_computed | score_obtained_at   | order | score_edit_rule   | score_edit_value   |
-      | 101      | 10      | 20             | 2018-05-29 06:38:38 | 1     | null              | null               |
-      | 101      | 50      | 20             | 2018-05-29 06:38:38 | 1     | <score_edit_rule> | <score_edit_value> |
-      | 101      | 60      | 20             | 2018-05-29 06:38:38 | 1     | null              | null               |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | score_computed | score_obtained_at   | score_edit_rule   | score_edit_value   |
+      | 101            | 0          | 10      | 20             | 2018-05-29 06:38:38 | null              | null               |
+      | 101            | 0          | 50      | 20             | 2018-05-29 06:38:38 | <score_edit_rule> | <score_edit_value> |
+      | 101            | 0          | 60      | 20             | 2018-05-29 06:38:38 | null              | null               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "60",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -282,7 +300,7 @@ Feature: Save grading result
       {
         "idUser": "101",
         "idItemLocal": "60",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "<score>",
         "idUserAnswer": "124"
@@ -304,7 +322,7 @@ Feature: Save grading result
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "60",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -322,6 +340,7 @@ Feature: Save grading result
       | 124       | <score> | 1                                                |
       | 125       | 20      | 0                                                |
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
     Examples:
       | score | score_edit_rule | score_edit_value |
       | 19    | null            | null             |
@@ -333,20 +352,23 @@ Feature: Save grading result
   Scenario: Should keep previous validated_at if it is earlier
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | group_id | item_id | validated_at        | order |
-      | 101      | 10      | 2016-05-29 06:38:37 | 1     |
-      | 101      | 50      | 2016-05-29 06:38:37 | 1     |
-      | 101      | 60      | 2018-05-29 06:38:37 | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 0          | 101            | 10      | 2016-05-29 06:38:37 |
+      | 0          | 101            | 50      | 2016-05-29 06:38:37 |
+      | 0          | 101            | 60      | 2015-05-29 06:38:37 |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 123 | 101       | 100        | 2017-05-29 06:38:38 |
-      | 124 | 101       | 101        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "60",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -356,7 +378,7 @@ Feature: Save grading result
       {
         "idUser": "101",
         "idItemLocal": "60",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "124"
@@ -378,7 +400,7 @@ Feature: Save grading result
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "60",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -394,21 +416,25 @@ Feature: Save grading result
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 100   | 1                                                |
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | validated_at        | order |
-      | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 0          | 101            | 50      | 2018-05-29 06:38:38 |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 123 | 101       | 100        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -419,7 +445,7 @@ Feature: Save grading result
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -441,7 +467,7 @@ Feature: Save grading result
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "50",
-            "idAttempt": "100",
+            "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "bAccessSolutions": true,
@@ -457,17 +483,20 @@ Feature: Save grading result
   Scenario: Platform doesn't support tokens
     Given I am the user with id "101"
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | validated_at        | order |
-      | 100 | 101      | 70      | 2018-05-29 06:38:38 | 2     |
+      | id | participant_id |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 1          | 101            | 70      | 2018-05-29 06:38:38 |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | created_at          |
-      | 125 | 101       | 100        | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/1",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -477,7 +506,7 @@ Feature: Save grading result
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "100",
+        "idAttempt": "101/1",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "125",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -500,7 +529,7 @@ Feature: Save grading result
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "101",
             "idItemLocal": "70",
-            "idAttempt": "100",
+            "idAttempt": "101/1",
             "itemUrl": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"

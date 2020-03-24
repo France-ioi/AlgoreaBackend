@@ -128,4 +128,8 @@ Feature: Create a user batch
       | 21                  | 21                  | true    |
       | 5577006791947779410 | 5577006791947779410 | true    |
       | 8674665223082153551 | 8674665223082153551 | true    |
+    And the table "attempts" should be:
+      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+      | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
+      | 8674665223082153551 | 0  | 8674665223082153551 | true                                              | null              | null         |
     And the table "group_membership_changes" should be empty

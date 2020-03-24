@@ -18,35 +18,35 @@ type groupGroupProgressResponseRow struct {
 	// required:true
 	ItemID int64 `json:"item_id,string"`
 	// Average score of all "end-members".
-	// The score of an "end-member" is the max of his `groups_attempt.score` or 0 if no attempts.
+	// The score of an "end-member" is the max of his `results.score` or 0 if no results.
 	// required:true
 	AverageScore float32 `json:"average_score"`
 	// % (float [0,1]) of "end-members" who have validated the task.
-	// An "end-member" has validated a task if one of his attempts has `attempts.validated` = 1.
-	// No attempts for an "end-member" is considered as not validated.
+	// An "end-member" has validated a task if one of his results has `results.validated` = 1.
+	// No results for an "end-member" is considered as not validated.
 	// required:true
 	ValidationRate float32 `json:"validation_rate"`
 	// Average number of hints requested by each "end-member".
-	// The number of hints requested of an "end-member" is the `attempts.hints_cached`
-	// of the attempt with the best score
-	// (if several with the same score, we use the first attempt chronologically on `score_obtained_at`).
+	// The number of hints requested of an "end-member" is the `results.hints_cached`
+	// of the result with the best score
+	// (if several with the same score, we use the first result chronologically on `score_obtained_at`).
 	// required:true
 	AvgHintsRequested float32 `json:"avg_hints_requested"`
 	// Average number of submissions made by each "end-member".
-	// The number of submissions made by an "end-member" is the `attempts.submissions`.
-	// of the attempt with the best score
-	// (if several with the same score, we use the first attempt chronologically on `score_obtained_at`).
+	// The number of submissions made by an "end-member" is the `results.submissions`.
+	// of the result with the best score
+	// (if several with the same score, we use the first result chronologically on `score_obtained_at`).
 	// required:true
 	AvgSubmissions float32 `json:"avg_submissions"`
 	// Average time spent among all the "end-members" (in seconds). The time spent by an "end-member" is computed as:
 	//
-	//   1) if no attempts yet: 0
+	//   1) if no results yet: 0
 	//
-	//   2) if one attempt validated: min(`validated_at`) - min(`started_at`)
-	//     (i.e., time between the first time it started one (any) attempt
+	//   2) if one result validated: min(`validated_at`) - min(`started_at`)
+	//     (i.e., time between the first time it started one (any) result
 	//      and the time he first validated the task)
 	//
-	//   3) if no attempts validated: `now` - min(`started_at`)
+	//   3) if no results validated: `now` - min(`started_at`)
 	// required:true
 	AvgTimeSpent float32 `json:"avg_time_spent"`
 }
@@ -194,31 +194,31 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		SELECT
 			end_members.id,
 			items.id AS item_id,
-			IFNULL(attempt_with_best_score.score, 0) AS score,
-			IFNULL(attempt_with_best_score.validated, 0) AS validated,
-			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_cached,
-			IFNULL(attempt_with_best_score.submissions, 0) AS submissions,
-			IF(attempt_with_best_score.group_id IS NULL,
+			IFNULL(result_with_best_score.score, 0) AS score,
+			IFNULL(result_with_best_score.validated, 0) AS validated,
+			IFNULL(result_with_best_score.hints_cached, 0) AS hints_cached,
+			IFNULL(result_with_best_score.submissions, 0) AS submissions,
+			IF(result_with_best_score.participant_id IS NULL,
 				0,
 				(
-					SELECT IF(attempt_with_best_score.validated,
+					SELECT IF(result_with_best_score.validated,
 						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
 						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
 					)
-					FROM attempts
-					WHERE group_id = end_members.id AND item_id = items.id
+					FROM results
+					WHERE participant_id = end_members.id AND item_id = items.id
 				)
 			) AS time_spent
 		FROM ? AS end_members`, endMembers.SubQuery()).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT score_computed AS score, validated, hints_cached, submissions, group_id
-				FROM attempts
-				WHERE group_id = end_members.id AND item_id = items.id
-				ORDER BY group_id, item_id, score DESC, score_obtained_at
+				SELECT score_computed AS score, validated, hints_cached, submissions, participant_id
+				FROM results
+				WHERE participant_id = end_members.id AND item_id = items.id
+				ORDER BY participant_id, item_id, score DESC, score_obtained_at
 				LIMIT 1
-			) AS attempt_with_best_score ON 1`)
+			) AS result_with_best_score ON 1`)
 
 	var result []groupGroupProgressResponseRow
 	// It still takes more than 2 minutes to complete on large data sets

@@ -3,6 +3,9 @@ Feature: Save an answer
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
+    And the database table 'groups' has also the following row:
+      | id | type |
+      | 13 | Team |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 101               | 101            |
@@ -16,16 +19,20 @@ Feature: Save an answer
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | order |
-      | 100 | 13       | 50      | 1     |
-      | 200 | 101      | 50      | 1     |
+      | id | participant_id |
+      | 1  | 13             |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id |
+      | 1          | 13             | 50      |
+      | 1          | 101            | 50      |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | type       | created_at          |
-      | 100 | 101       | 200        | Submission | 2017-05-29 06:38:38 |
+      | id  | author_id | attempt_id | participant_id | item_id | type       | created_at          |
+      | 100 | 101       | 1          | 101            | 50      | Submission | 2017-05-29 06:38:38 |
 
   Scenario: User is able to save an answer
     Given I am the user with id "101"
-    When I send a POST request to "/attempts/200/answers" with the following body:
+    When I send a POST request to "/items/50/attempts/1/answers" with the following body:
       """
       {
         "answer": "print 1",
@@ -41,13 +48,13 @@ Feature: Save an answer
       }
       """
     And the table "answers" should be:
-      | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 200        | Submission | null    | null       | 0                                                 |
-      | 101       | 200        | Saved      | print 1 | some state | 1                                                 |
+      | author_id | attempt_id | participant_id | item_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 1          | 101            | 50      | Submission | null    | null       | 0                                                 |
+      | 101       | 1          | 101            | 50      | Saved      | print 1 | some state | 1                                                 |
 
-  Scenario: User is able to save an answer for a team attempt
+  Scenario: User is able to save an answer as a team
     Given I am the user with id "101"
-    When I send a POST request to "/attempts/100/answers" with the following body:
+    When I send a POST request to "/items/50/attempts/1/answers?as_team_id=13" with the following body:
       """
       {
         "answer": "print 1",
@@ -63,6 +70,6 @@ Feature: Save an answer
       }
       """
     And the table "answers" should be:
-      | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 100        | Saved      | print 1 | some state | 1                                                 |
-      | 101       | 200        | Submission | null    | null       | 0                                                 |
+      | author_id | attempt_id | participant_id | item_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 1          | 13             | 50      | Saved      | print 1 | some state | 1                                                 |
+      | 101       | 1          | 101            | 50      | Submission | null    | null       | 0                                                 |

@@ -27,9 +27,12 @@ Feature: Ask for a hint - robustness
       | 101      | 10      | content            |
       | 101      | 50      | content            |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | hints_requested        | order |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
-      | 200 | 101      | 10      | null                   | 1     |
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | hints_requested        |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] |
+      | 0          | 101            | 10      | null                   |
     And time is frozen
 
   Scenario: Wrong JSON in request
@@ -49,7 +52,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "404",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -59,7 +62,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "404",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -82,7 +85,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "20",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -92,7 +95,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -115,7 +118,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -125,7 +128,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=555555555555555555",
         "askedHint": {"rotorIndex":1}
       }
@@ -148,7 +151,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -158,7 +161,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "20",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -181,7 +184,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -191,7 +194,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "101",
+        "idAttempt": "101/1",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -214,7 +217,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -223,8 +226,8 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "101",
-        "idAttempt": "100",
         "idItemLocal": "51",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -247,7 +250,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -257,7 +260,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -280,7 +283,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "10",
-        "idAttempt": "101",
+        "idAttempt": "101/2",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -290,7 +293,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "10",
-        "idAttempt": "101",
+        "idAttempt": "101/2",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
@@ -313,7 +316,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -323,7 +326,7 @@ Feature: Ask for a hint - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100",
+        "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936"
       }
       """

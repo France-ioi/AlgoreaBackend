@@ -1,7 +1,6 @@
 package answers
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -11,17 +10,17 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /answers answers itemAnswersView
+// swagger:operation GET /items/{item_id}/answers answers itemAnswersView
 // ---
 // summary: List answers
 // description: Return answers (i.e., saved answers, current answer and submissions)
 //   for a given item and user, or from a given attempt.
 //
-//   * One of (`author_id`, `item_id`) pair or `attempt_id` is required.
+//   * One of `author_id` or `attempt_id` is required.
 //
 //   * The user should have at least 'content' access to the item.
 //
-//   * If `item_id` and `author_id` are given, the authenticated user should be the input `author_id`
+//   * If `author_id` is given, the authenticated user should be the input `author_id`
 //     or a manager of a group containing the input `author_id`.
 //
 //   * If `attempt_id` is given, the authenticated user should be a member of the group
@@ -31,10 +30,11 @@ import (
 //   Users `first_name` and `last_name` are only shown for the authenticated user or if the user
 //   approved access to their personal info for some group managed by the authenticated user.
 // parameters:
-// - name: author_id
-//   in: query
-//   type: integer
 // - name: item_id
+//   in: path
+//   type: integer
+//   required: true
+// - name: author_id
 //   in: query
 //   type: integer
 // - name: attempt_id
@@ -78,14 +78,24 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
-//   "404":
-//     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
-	dataQuery := srv.Store.Answers().WithUsers().WithAttempts().
+	itemID, itemIDError := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+	if itemIDError != nil {
+		return service.ErrInvalidRequest(itemIDError)
+	}
+
+	found, err := srv.Store.Permissions().WithViewPermissionForUser(user, "content").
+		Where("item_id = ?", itemID).HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return service.InsufficientAccessRightsError
+	}
+
+	dataQuery := srv.Store.Answers().WithUsers().WithResults().
 		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
 		Select(`
 			answers.id, answers.type, answers.created_at, gradings.score,
@@ -93,28 +103,28 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name`,
 			user.GroupID, user.GroupID).
+		Where("answers.item_id = ?", itemID).
 		WithPersonalInfoViewApprovals(user)
 
 	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
-	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")
 
-	if authorIDError != nil || itemIDError != nil { // attempt_id
+	if authorIDError != nil { // attempt_id
 		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
 		if attemptIDError != nil {
-			return service.ErrInvalidRequest(fmt.Errorf("either author_id & item_id or attempt_id must be present"))
+			return service.ErrInvalidRequest(fmt.Errorf("either author_id or attempt_id must be present"))
 		}
 
 		if result := srv.checkAccessRightsForGetAnswersByAttemptID(attemptID, user); result != service.NoError {
 			return result
 		}
 
-		dataQuery = dataQuery.Where("attempt_id = ?", attemptID)
-	} else { // author_id + item_id
-		if result := srv.checkAccessRightsForGetAnswersByAuthorIDAndItemID(authorID, itemID, user); result != service.NoError {
+		dataQuery = dataQuery.Where("answers.attempt_id = ?", attemptID)
+	} else { // author_id
+		if result := srv.checkAccessRightsForGetAnswersByAuthorID(authorID, user); result != service.NoError {
 			return result
 		}
 
-		dataQuery = dataQuery.Where("item_id = ? AND author_id = ?", itemID, authorID)
+		dataQuery = dataQuery.Where("author_id = ?", authorID)
 	}
 
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
@@ -195,14 +205,11 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *database.User) service.APIError {
 	var count int64
-	itemsUserCanAccess := srv.Store.Permissions().WithViewPermissionForUser(user, "content")
-
 	groupsManagedByUser := srv.Store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	service.MustNotBeError(srv.Store.Attempts().ByID(attemptID).
-		Joins("JOIN ? rights ON rights.item_id = attempts.item_id", itemsUserCanAccess.SubQuery()).
-		Where("(attempts.group_id IN ?) OR (attempts.group_id IN ?) OR attempts.group_id = ?",
+		Where("(attempts.participant_id IN ?) OR (attempts.participant_id IN ?) OR attempts.participant_id = ?",
 			groupsManagedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
 			user.GroupID).
@@ -213,7 +220,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	return service.NoError
 }
 
-func (srv *Service) checkAccessRightsForGetAnswersByAuthorIDAndItemID(authorID, itemID int64, user *database.User) service.APIError {
+func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(authorID int64, user *database.User) service.APIError {
 	if authorID != user.GroupID {
 		count := 0
 		err := srv.Store.GroupAncestors().ManagedByUser(user).
@@ -223,17 +230,6 @@ func (srv *Service) checkAccessRightsForGetAnswersByAuthorIDAndItemID(authorID, 
 		if count == 0 {
 			return service.InsufficientAccessRightsError
 		}
-	}
-
-	accessDetails, err := srv.Store.Items().GetAccessDetailsForIDs(user, []int64{itemID})
-	service.MustNotBeError(err)
-
-	if len(accessDetails) == 0 || accessDetails[0].IsForbidden() {
-		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
-	}
-
-	if accessDetails[0].IsInfo() {
-		return service.ErrForbidden(errors.New("insufficient access rights on the given item id"))
 	}
 
 	return service.NoError

@@ -62,3 +62,6 @@ Feature: Create a temporary user
     And the table "sessions" should be:
       | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 | user_id             | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at)) < 3 | issuer  |
       | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                     | 5577006791947779410 | true                                             | backend |
+    And the table "attempts" should be:
+      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+      | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |

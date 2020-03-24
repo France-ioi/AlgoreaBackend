@@ -147,7 +147,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 			user.GroupID, user.GroupID).
 		WithPersonalInfoViewApprovals(user).
 		JoinsUserAndDefaultItemStrings(user).
-		Where("attempts.item_id IN ?", itemDescendants.SubQuery()).
+		Where("answers.item_id IN ?", itemDescendants.SubQuery()).
 		Where("answers.type='Submission'").
 		WhereItemsAreVisible(user.GroupID).
 		WhereUsersAreDescendantsOfGroup(groupID)

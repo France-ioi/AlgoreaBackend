@@ -65,8 +65,11 @@ Feature: Accept group requests
       | 13       | 20      | content            |
       | 31       | 30      | content            |
     And the database has the following table 'attempts':
-      | group_id | item_id | order | result_propagation_state |
-      | 31       | 30      | 1     | done                     |
+      | id | participant_id |
+      | 0  | 31             |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 31             | 30      | done                     |
 
   Scenario: Accept requests
     Given I am the user with id "21"
@@ -132,10 +135,11 @@ Feature: Accept group requests
       | 151               | 151            | 1       |
       | 161               | 161            | 1       |
       | 444               | 444            | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 31       | 20      | done                     |
-      | 31       | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 31             | 20      | done                     |
+      | 0          | 31             | 30      | done                     |
 
   Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
     Given I am the user with id "21"
@@ -177,6 +181,7 @@ Feature: Accept group requests
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Checks approvals if required
     Given I am the user with id "21"
@@ -200,3 +205,4 @@ Feature: Accept group requests
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged

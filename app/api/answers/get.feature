@@ -31,14 +31,14 @@ Background:
     | group_id | item_id | can_view_generated       |
     | 13       | 200     | content                  |
     | 23       | 210     | content_with_descendants |
-  And the database has the following table 'attempts':
-    | id  | group_id | item_id | order |
-    | 150 | 11       | 200     | 1     |
-    | 250 | 13       | 210     | 1     |
+  And the database has the following table 'results':
+    | attempt_id | participant_id | item_id |
+    | 1          | 11             | 200     |
+    | 1          | 13             | 210     |
   And the database has the following table 'answers':
-    | id  | author_id | attempt_id | type       | state   | answer   | created_at          |
-    | 101 | 11        | 150        | Submission | Current | print(1) | 2017-05-29 06:38:38 |
-    | 102 | 11        | 250        | Submission | Current | print(2) | 2017-05-29 06:38:38 |
+    | id  | author_id | participant_id | attempt_id | item_id | type       | state   | answer   | created_at          |
+    | 101 | 11        | 11             | 1          | 200     | Submission | Current | print(1) | 2017-05-29 06:38:38 |
+    | 102 | 11        | 13             | 1          | 210     | Submission | Current | print(2) | 2017-05-29 06:38:38 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
     | 101       | 100   | 2018-05-29 06:38:38 |
@@ -52,7 +52,8 @@ Background:
     """
     {
       "id": "101",
-      "attempt_id": "150",
+      "attempt_id": "1",
+      "participant_id": "11",
       "score": 100.0,
       "answer": "print(1)",
       "state": "Current",
@@ -72,7 +73,8 @@ Background:
     """
     {
       "id": "102",
-      "attempt_id": "250",
+      "attempt_id": "1",
+      "participant_id": "13",
       "score": 100,
       "answer": "print(2)",
       "state": "Current",

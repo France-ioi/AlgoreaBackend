@@ -181,6 +181,6 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 	if dbMap["can_view"] != nil && dbMap["can_view"] != "none" {
 		// permissionGrantedStore.After() implicitly (via triggers) marks some attempts as to_be_propagated
 		// when a item becomes visible, so we should propagate attempts here
-		service.MustNotBeError(s.Attempts().ComputeAllAttempts())
+		service.MustNotBeError(s.Results().Propagate())
 	}
 }

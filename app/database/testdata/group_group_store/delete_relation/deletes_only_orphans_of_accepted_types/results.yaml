@@ -1,0 +1,10 @@
+- {attempt_id: 1, participant_id: 1, item_id: 1}
+- {attempt_id: 1, participant_id: 2, item_id: 1}
+- {attempt_id: 1, participant_id: 3, item_id: 1}
+- {attempt_id: 1, participant_id: 4, item_id: 1}
+- {attempt_id: 1, participant_id: 5, item_id: 1}
+- {attempt_id: 1, participant_id: 6, item_id: 1}
+- {attempt_id: 1, participant_id: 7, item_id: 1}
+- {attempt_id: 1, participant_id: 8, item_id: 1}
+- {attempt_id: 1, participant_id: 9, item_id: 1}
+- {attempt_id: 1, participant_id: 11, item_id: 11}

@@ -148,7 +148,7 @@ type itemResponse struct {
 // summary: Get an item
 // description: Returns data related to the specified item, its children,
 //              and the current user's (or the team's given in `as_team_id`) interactions with them
-//              (from tables `items`, `items_items`, `items_string`, `attempts`).
+//              (from tables `items`, `items_items`, `items_string`, `results`).
 //
 //
 //              * If the specified item is not visible by the current user (or the team given in `as_team_id`),
@@ -277,7 +277,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database
 		items.no_score,
 		items.default_language_tag,
 		items.prompt_to_join_group_by_code,
-		EXISTS(SELECT 1 FROM attempts WHERE group_id = ? AND item_id = items.id AND started_at IS NOT NULL) AS has_attempts, `
+		EXISTS(SELECT 1 FROM results WHERE participant_id = ? AND item_id = items.id AND started_at IS NOT NULL) AS has_attempts, `
 
 	rootItemQuery := s.ByID(rootID).Select(
 		commonColumns+`items.title_bar_visible,

@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,39 +13,65 @@ import (
 )
 
 func TestGroupStore_CreateNew(t *testing.T) {
-	db := testhelpers.SetupDBWithFixtureString()
-	defer func() { _ = db.Close() }()
+	for _, test := range []struct {
+		groupType            string
+		shouldCreateAttempts bool
+	}{
+		{groupType: "Class", shouldCreateAttempts: false},
+		{groupType: "Team", shouldCreateAttempts: true},
+	} {
+		test := test
+		t.Run(test.groupType, func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixtureString()
+			defer func() { _ = db.Close() }()
 
-	var newID int64
-	var err error
-	dataStore := database.NewDataStore(db)
-	assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-		newID, err = store.Groups().CreateNew(ptrString("Some group"), ptrString("Class"), ptrInt64(123))
-		return err
-	}))
-	assert.True(t, newID > 0)
-	type resultType struct {
-		Name         *string
-		Type         *string
-		TeamItemID   *int64
-		CreatedAtSet bool
+			var newID int64
+			var err error
+			dataStore := database.NewDataStore(db)
+			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+				newID, err = store.Groups().CreateNew("Some group", test.groupType, ptrInt64(123))
+				return err
+			}))
+			assert.True(t, newID > 0)
+			type resultType struct {
+				Name         string
+				Type         string
+				TeamItemID   *int64
+				CreatedAtSet bool
+			}
+			var result resultType
+			assert.NoError(t, dataStore.Groups().ByID(newID).
+				Select("name, type, team_item_id, ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
+				Take(&result).Error())
+			assert.Equal(t, resultType{
+				Name:         "Some group",
+				Type:         test.groupType,
+				TeamItemID:   ptrInt64(123),
+				CreatedAtSet: true,
+			}, result)
+
+			found, err := dataStore.GroupAncestors().
+				Where("ancestor_group_id = ?", newID).
+				Where("child_group_id = ?", newID).HasRows()
+			assert.NoError(t, err)
+			assert.True(t, found)
+
+			var attempts []map[string]interface{}
+			assert.NoError(t, dataStore.Attempts().
+				Select(`
+					participant_id, id, creator_id, parent_attempt_id, root_item_id,
+					ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set`).
+				ScanIntoSliceOfMaps(&attempts).Error())
+			var expectedAttempts []map[string]interface{}
+			if test.shouldCreateAttempts {
+				expectedAttempts = []map[string]interface{}{
+					{"participant_id": strconv.FormatInt(newID, 10), "id": "0", "creator_id": nil, "parent_attempt_id": nil,
+						"root_item_id": nil, "created_at_set": "1"},
+				}
+			}
+			assert.Equal(t, expectedAttempts, attempts)
+		})
 	}
-	var result resultType
-	assert.NoError(t, dataStore.Groups().ByID(newID).
-		Select("name, type, team_item_id, ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
-		Take(&result).Error())
-	assert.Equal(t, resultType{
-		Name:         ptrString("Some group"),
-		Type:         ptrString("Class"),
-		TeamItemID:   ptrInt64(123),
-		CreatedAtSet: true,
-	}, result)
-
-	found, err := dataStore.GroupAncestors().
-		Where("ancestor_group_id = ?", newID).
-		Where("child_group_id = ?", newID).HasRows()
-	assert.NoError(t, err)
-	assert.True(t, found)
 }
 
 func ptrString(s string) *string { return &s }

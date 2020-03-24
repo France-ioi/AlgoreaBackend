@@ -70,14 +70,19 @@ Feature: Export the current user's data
       | 404 | fr                   |
       | 405 | fr                   |
     And the database has the following table 'attempts':
-      | id  | group_id | item_id | order | latest_activity_at  |
-      | 111 | 11       | 404     | 1     | 2019-05-30 11:00:00 |
-      | 112 | 2        | 404     | 1     | 2019-05-29 11:00:00 |
-      | 113 | 1        | 405     | 1     | 2019-05-28 11:00:00 |
+      | id | participant_id | created_at          |
+      | 0  | 11             | 2019-05-28 11:00:00 |
+      | 0  | 2              | 2019-05-28 11:00:00 |
+      | 0  | 1              | 2019-05-28 11:00:00 |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | latest_activity_at  |
+      | 0          | 11             | 404     | 2019-05-30 11:00:00 |
+      | 0          | 2              | 404     | 2019-05-29 11:00:00 |
+      | 0          | 1              | 405     | 2019-05-28 11:00:00 |
     And the database has the following table 'answers':
-      | id | author_id | attempt_id | created_at          |
-      | 1  | 11        | 111        | 2019-07-09 21:02:28 |
-      | 2  | 21        | 113        | 2019-07-09 21:02:28 |
+      | id | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 1  | 11        | 11             | 0          | 404     | 2019-07-09 21:02:28 |
+      | 2  | 21        | 1              | 0          | 405     | 2019-07-09 21:02:28 |
 
   Scenario: Full data
     Given I am the user with id "11"
@@ -103,24 +108,34 @@ Feature: Export the current user's data
       },
       "attempts": [
         {
-          "id": "111", "validated": 0,
-          "order": 1, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
-          "group_id": "11", "item_id": "404", "creator_id": null,
-          "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "result_propagation_state": "done",
-          "score_obtained_at": null, "hints_requested": null,
-          "latest_activity_at": "2019-05-30T11:00:00Z", "latest_submission_at": null,
-          "latest_hint_at": null, "score_edit_comment": null,
-          "started_at": null, "validated_at": null
+          "id": "0", "participant_id": "2", "creator_id": null,
+          "created_at": "2019-05-28T11:00:00Z", "parent_attempt_id": null, "root_item_id": null
         },
         {
-          "id": "112", "validated": 0,
-          "order": 1, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
-          "group_id": "2", "item_id": "404", "creator_id": null,
+          "id": "0", "participant_id": "11", "creator_id": null,
+          "created_at": "2019-05-28T11:00:00Z", "parent_attempt_id": null, "root_item_id": null
+        }
+      ],
+      "results": [
+        {
+          "attempt_id": "0", "validated": 0,
+          "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
+          "participant_id": "2", "item_id": "404",
           "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "result_propagation_state": "done",
           "score_obtained_at": null, "hints_requested": null,
           "latest_activity_at": "2019-05-29T11:00:00Z", "latest_submission_at": null,
+          "latest_hint_at": null, "score_edit_comment": null,
+          "started_at": null, "validated_at": null
+        },
+        {
+          "attempt_id": "0", "validated": 0,
+          "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
+          "participant_id": "11", "item_id": "404",
+          "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
+          "tasks_with_help": 0, "result_propagation_state": "done",
+          "score_obtained_at": null, "hints_requested": null,
+          "latest_activity_at": "2019-05-30T11:00:00Z", "latest_submission_at": null,
           "latest_hint_at": null, "score_edit_comment": null,
           "started_at": null, "validated_at": null
         }
@@ -230,7 +245,7 @@ Feature: Export the current user's data
       ],
       "answers": [
         {
-          "id": "1", "attempt_id": "111", "author_id": "11", "answer": null,
+          "id": "1", "attempt_id": "0", "participant_id": "11", "item_id": "404", "author_id": "11", "answer": null,
           "state": null, "created_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }
       ]
@@ -258,6 +273,7 @@ Feature: Export the current user's data
         "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0
       },
       "attempts": [],
+      "results": [],
       "groups_groups": [],
       "group_managers": [],
       "group_membership_changes": [],

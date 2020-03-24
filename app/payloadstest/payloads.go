@@ -9,7 +9,7 @@ var TaskPayloadFromAlgoreaPlatform = map[string]interface{}{
 	"itemUrl":             "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
 	"bIsAdmin":            false,
 	"bSubmissionPossible": true,
-	"idAttempt":           "100",
+	"idAttempt":           "556371821693219925/100",
 	"platformName":        "test_dmitry",
 	"sLogin":              "test",
 	"bHintsAllowed":       false,

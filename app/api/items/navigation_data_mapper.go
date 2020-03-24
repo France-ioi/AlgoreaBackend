@@ -15,7 +15,7 @@ type rawNavigationItem struct {
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title *string
 
-	// max from attempts of the current user
+	// max from results of the current user
 	UserBestScore float32 `sql:"column:best_score"`
 	UserValidated bool    `sql:"column:validated"`
 
@@ -64,11 +64,11 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID int64, 
 		JoinsUserAndDefaultItemStrings(user).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT MAX(attempts.score_computed) AS best_score,
-				       MAX(attempts.validated) AS validated
-				FROM attempts
-				WHERE attempts.item_id = items.id AND attempts.group_id = ?
-				GROUP by attempts.group_id, attempts.item_id
+				SELECT MAX(results.score_computed) AS best_score,
+				       MAX(results.validated) AS validated
+				FROM results
+				WHERE results.item_id = items.id AND results.participant_id = ?
+				GROUP BY results.participant_id, results.item_id
 			) AS best_scores ON 1`, groupID).
 		Order("item_grandparent_id, parent_item_id, child_order")
 

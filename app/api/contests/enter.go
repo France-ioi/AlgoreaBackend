@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -67,11 +68,22 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			Select("NOW() AS now, items.duration, items.contest_participants_group_id").
 			WithWriteLock().Take(&itemInfo).Error())
 
-		service.MustNotBeError(store.Exec(`
-			INSERT INTO attempts (group_id, item_id, started_at, creator_id, `+"`order`"+`)
-			SELECT ?, ?, ?, ?, IFNULL((SELECT MAX(`+"`order`"+`) FROM attempts WHERE group_id = ? AND item_id = ? FOR UPDATE), 0) + 1`,
-			qualificationState.groupID, qualificationState.itemID,
-			itemInfo.Now, srv.GetUser(r).GroupID, qualificationState.groupID, qualificationState.itemID).Error())
+		user := srv.GetUser(r)
+		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
+			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
+				Where("participant_id = ?", qualificationState.groupID).WithWriteLock().SubQuery()),
+			"participant_id": qualificationState.groupID, "created_at": itemInfo.Now,
+			"creator_id": user.GroupID, "parent_attempt_id": 0, "root_item_id": qualificationState.itemID,
+		}))
+		var attemptID int64
+		service.MustNotBeError(store.Attempts().
+			Where("participant_id = ?", qualificationState.groupID).
+			PluckFirst("MAX(id)", &attemptID).Error())
+
+		service.MustNotBeError(store.Results().InsertMap(map[string]interface{}{
+			"attempt_id": attemptID, "participant_id": qualificationState.groupID,
+			"item_id": qualificationState.itemID, "started_at": itemInfo.Now,
+		}))
 
 		if itemInfo.ContestParticipantsGroupID != nil {
 			var totalAdditionalTime int64
@@ -94,7 +106,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			service.MustNotBeError(store.GroupGroups().After())
 			// Upserting into groups_groups may mark some attempts as 'to_be_propagated',
 			// so we need to recompute them
-			service.MustNotBeError(store.Attempts().ComputeAllAttempts())
+			service.MustNotBeError(store.Results().Propagate())
 		} else {
 			logging.GetLogEntry(r).Warnf("items.contest_participants_group_id is not set for the item with id = %d", qualificationState.itemID)
 		}

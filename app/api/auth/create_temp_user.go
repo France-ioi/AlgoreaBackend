@@ -69,6 +69,13 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 			"description": login,
 		}).Error())
 
+		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
+			"participant_id": userID,
+			"id":             0,
+			"creator_id":     userID,
+			"created_at":     database.Now(),
+		}))
+
 		domainConfig := domain.ConfigFromContext(r.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(
 			[]map[string]interface{}{{"parent_group_id": domainConfig.RootTempGroupID, "child_group_id": userID}}))

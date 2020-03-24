@@ -71,7 +71,7 @@ func (s *GroupStore) TeamsMembersForItem(groupsToCheck []int64, teamItemID int64
 
 // CreateNew creates a new group with given name, type, and team_item_id.
 // It also runs GroupGroupStore.createNewAncestors().
-func (s *GroupStore) CreateNew(name, groupType *string, teamItemID *int64) (groupID int64, err error) {
+func (s *GroupStore) CreateNew(name, groupType string, teamItemID *int64) (groupID int64, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
@@ -84,6 +84,14 @@ func (s *GroupStore) CreateNew(name, groupType *string, teamItemID *int64) (grou
 			"created_at":   Now(),
 		})
 	}))
+	if groupType == "Team" {
+		mustNotBeError(s.Attempts().InsertMap(map[string]interface{}{
+			"participant_id": groupID,
+			"id":             0,
+			"creator_id":     nil,
+			"created_at":     Now(),
+		}))
+	}
 	s.GroupGroups().createNewAncestors()
 	return groupID, nil
 }

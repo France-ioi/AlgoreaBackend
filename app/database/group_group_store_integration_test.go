@@ -203,8 +203,11 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.NoError(t, dataStore.Table("filters").Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.Attempts().Order("group_id").
-		Pluck("group_id", &ids).Error())
+	assert.NoError(t, dataStore.Attempts().Order("participant_id").
+		Pluck("participant_id", &ids).Error())
+	assert.Equal(t, remainingGroupIDs, ids)
+	assert.NoError(t, dataStore.Results().Order("participant_id").
+		Pluck("participant_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
 
 	var grantedPermissions []grantedPermission
@@ -235,7 +238,7 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 }
 
 const done = "done"
-const groupGroupMarksAttemptsAsChangedFixture = `
+const groupGroupMarksResultsAsChangedFixture = `
 	items:
 		- {id: 1, default_language_tag: fr}
 		- {id: 2, default_language_tag: fr}
@@ -262,78 +265,90 @@ const groupGroupMarksAttemptsAsChangedFixture = `
 		- {group_id: 107, item_id: 1, can_view_generated: none}
 		- {group_id: 108, item_id: 1, can_view_generated: solution}
 	attempts:
-		- {group_id: 101, item_id: 1, order: 1}
-		- {group_id: 102, item_id: 1, order: 1}
-		- {group_id: 103, item_id: 1, order: 1}
-		- {group_id: 104, item_id: 1, order: 1}
-		- {group_id: 105, item_id: 1, order: 1}
-		- {group_id: 106, item_id: 1, order: 1}
-		- {group_id: 107, item_id: 1, order: 1}
-		- {group_id: 108, item_id: 1, order: 1}
-		- {group_id: 101, item_id: 2, order: 1}
-		- {group_id: 102, item_id: 2, order: 1}
-		- {group_id: 103, item_id: 2, order: 1}
-		- {group_id: 104, item_id: 2, order: 1}
-		- {group_id: 105, item_id: 2, order: 1}
-		- {group_id: 106, item_id: 2, order: 1}
-		- {group_id: 107, item_id: 2, order: 1}
-		- {group_id: 108, item_id: 2, order: 1}
-		- {group_id: 101, item_id: 3, order: 1}
-		- {group_id: 102, item_id: 3, order: 1}
-		- {group_id: 103, item_id: 3, order: 1}
-		- {group_id: 104, item_id: 3, order: 1}
-		- {group_id: 105, item_id: 3, order: 1}
-		- {group_id: 106, item_id: 3, order: 1}
-		- {group_id: 107, item_id: 3, order: 1}
-		- {group_id: 108, item_id: 3, order: 1}`
+		- {id: 1, participant_id: 101}
+		- {id: 1, participant_id: 102}
+		- {id: 1, participant_id: 103}
+		- {id: 1, participant_id: 104}
+		- {id: 1, participant_id: 105}
+		- {id: 1, participant_id: 106}
+		- {id: 1, participant_id: 107}
+		- {id: 1, participant_id: 108}
+	results:
+		- {attempt_id: 1, participant_id: 101, item_id: 1}
+		- {attempt_id: 1, participant_id: 102, item_id: 1}
+		- {attempt_id: 1, participant_id: 103, item_id: 1}
+		- {attempt_id: 1, participant_id: 104, item_id: 1}
+		- {attempt_id: 1, participant_id: 105, item_id: 1}
+		- {attempt_id: 1, participant_id: 106, item_id: 1}
+		- {attempt_id: 1, participant_id: 107, item_id: 1}
+		- {attempt_id: 1, participant_id: 108, item_id: 1}
+		- {attempt_id: 1, participant_id: 101, item_id: 2}
+		- {attempt_id: 1, participant_id: 102, item_id: 2}
+		- {attempt_id: 1, participant_id: 103, item_id: 2}
+		- {attempt_id: 1, participant_id: 104, item_id: 2}
+		- {attempt_id: 1, participant_id: 105, item_id: 2}
+		- {attempt_id: 1, participant_id: 106, item_id: 2}
+		- {attempt_id: 1, participant_id: 107, item_id: 2}
+		- {attempt_id: 1, participant_id: 108, item_id: 2}
+		- {attempt_id: 1, participant_id: 101, item_id: 3}
+		- {attempt_id: 1, participant_id: 102, item_id: 3}
+		- {attempt_id: 1, participant_id: 103, item_id: 3}
+		- {attempt_id: 1, participant_id: 104, item_id: 3}
+		- {attempt_id: 1, participant_id: 105, item_id: 3}
+		- {attempt_id: 1, participant_id: 106, item_id: 3}
+		- {attempt_id: 1, participant_id: 107, item_id: 3}
+		- {attempt_id: 1, participant_id: 108, item_id: 3}`
 
-func TestGroupGroupStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T) {
+func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {
 		name            string
 		parentGroupID   int64
 		childGroupID    int64
 		expiresAt       string
-		expectedChanged []groupItemPair
+		expectedChanged []resultPrimaryKey
 	}{
 		{
-			name:            "group joins another group",
-			parentGroupID:   103,
-			childGroupID:    104,
-			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
+			name:          "group joins another group",
+			parentGroupID: 103,
+			childGroupID:  104,
+			expiresAt:     "9999-12-31 23:59:59",
+			expectedChanged: []resultPrimaryKey{
+				{104, 1, 2}, {104, 1, 3},
+				{105, 1, 2}, {105, 1, 3},
+			},
 		},
 		{
 			name:            "group joins a group, but the relation is expired",
 			parentGroupID:   103,
 			childGroupID:    104,
 			expiresAt:       "2019-05-30 11:00:00",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
-			name:            "group having no attempts joins another group",
+			name:            "group having no results joins another group",
 			parentGroupID:   105,
 			childGroupID:    103,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:            "parent group has no permissions on ancestor items",
 			parentGroupID:   106,
 			childGroupID:    104,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:            "no new visible item ancestors after joining a group",
 			parentGroupID:   105,
 			childGroupID:    102,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksAttemptsAsChangedFixture)
+			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -345,27 +360,30 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksAttemptsAsChanged(t *testing.T)
 				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID, "expires_at": test.expiresAt,
 			}))
 
-			assertAttemptsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
 		})
 	}
 }
 
-func TestGroupGroupStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T) {
+func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {
 		name            string
 		parentGroupID   int64
 		childGroupID    int64
 		expiresAt       string
-		expectedChanged []groupItemPair
+		expectedChanged []resultPrimaryKey
 		doNotSetExpired bool
 		noChanges       bool
 	}{
 		{
-			name:            "restore an expired relation",
-			parentGroupID:   103,
-			childGroupID:    104,
-			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{{104, 2}, {104, 3}, {105, 2}, {105, 3}},
+			name:          "restore an expired relation",
+			parentGroupID: 103,
+			childGroupID:  104,
+			expiresAt:     "9999-12-31 23:59:59",
+			expectedChanged: []resultPrimaryKey{
+				{104, 1, 2}, {104, 1, 3},
+				{105, 1, 2}, {105, 1, 3},
+			},
 		},
 		{
 			name:            "expire the relation",
@@ -373,28 +391,28 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T)
 			childGroupID:    104,
 			doNotSetExpired: true,
 			expiresAt:       "2019-05-30 11:00:00",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
-			name:            "group having no attempts joins another group",
+			name:            "group having no results joins another group",
 			parentGroupID:   105,
 			childGroupID:    103,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:            "parent group has no permissions on ancestor items",
 			parentGroupID:   106,
 			childGroupID:    104,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:            "no new visible item ancestors after joining a group",
 			parentGroupID:   105,
 			childGroupID:    102,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 		},
 		{
 			name:            "no changes",
@@ -402,7 +420,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T)
 			childGroupID:    102,
 			doNotSetExpired: true,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []groupItemPair{},
+			expectedChanged: []resultPrimaryKey{},
 			noChanges:       true,
 		},
 	} {
@@ -415,7 +433,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T)
 			db := testhelpers.SetupDBWithFixtureString(
 				fmt.Sprintf("groups_groups: [{parent_group_id: %d, child_group_id: %d, expires_at: %s}]",
 					test.parentGroupID, test.childGroupID, expiresAt),
-				groupGroupMarksAttemptsAsChangedFixture)
+				groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -435,7 +453,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksAttemptsAsChanged(t *testing.T)
 			} else {
 				assert.Equal(t, int64(1), result.RowsAffected())
 			}
-			assertAttemptsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
 		})
 	}
 }
@@ -458,34 +476,40 @@ func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChild
 	assert.EqualError(t, result.Error(), expectedErrorMessage)
 }
 
-type groupItemPair struct {
-	GroupID int64
-	ItemID  int64
+type resultPrimaryKey struct {
+	ParticipantID int64
+	AttemptID     int64
+	ItemID        int64
 }
 
-func assertAttemptsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, expectedChanged []groupItemPair) {
-	type attemptRow struct {
-		GroupID                int64
+func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, expectedChanged []resultPrimaryKey) {
+	type resultRow struct {
+		ParticipantID          int64
+		AttemptID              int64
 		ItemID                 int64
 		ResultPropagationState string
 	}
-	var attempts []attemptRow
-	assert.NoError(t, dataStore.Attempts().Select("group_id, item_id, result_propagation_state").
-		Order("group_id, item_id").Scan(&attempts).Error())
+	var results []resultRow
+	assert.NoError(t, dataStore.Results().Select("participant_id, attempt_id, item_id, result_propagation_state").
+		Order("participant_id, attempt_id, item_id").Scan(&results).Error())
 
-	expectedChangedPairsMap := make(map[groupItemPair]bool, len(expectedChanged))
-	for _, attempt := range expectedChanged {
-		expectedChangedPairsMap[attempt] = true
+	expectedChangedResultsMap := make(map[resultPrimaryKey]bool, len(expectedChanged))
+	for _, result := range expectedChanged {
+		expectedChangedResultsMap[result] = true
 	}
-	for _, dbAttempt := range attempts {
+	for _, dbResult := range results {
 		expectedState := done
-		if expectedChangedPairsMap[groupItemPair{GroupID: dbAttempt.GroupID, ItemID: dbAttempt.ItemID}] {
+		if expectedChangedResultsMap[resultPrimaryKey{
+			ParticipantID: dbResult.ParticipantID, AttemptID: dbResult.AttemptID, ItemID: dbResult.ItemID,
+		}] {
 			expectedState = "to_be_propagated"
 		}
-		assert.Equal(t, expectedState, dbAttempt.ResultPropagationState,
-			"Wrong result propagation state for attempt with group_id=%d, item_id=%d",
-			dbAttempt.GroupID, dbAttempt.ItemID)
-		delete(expectedChangedPairsMap, groupItemPair{GroupID: dbAttempt.GroupID, ItemID: dbAttempt.ItemID})
+		assert.Equal(t, expectedState, dbResult.ResultPropagationState,
+			"Wrong result propagation state for result with participant_id=%d, attempt_id=%d, item_id=%d",
+			dbResult.ParticipantID, dbResult.AttemptID, dbResult.ItemID)
+		delete(expectedChangedResultsMap,
+			resultPrimaryKey{ParticipantID: dbResult.ParticipantID, AttemptID: dbResult.AttemptID, ItemID: dbResult.ItemID})
 	}
-	assert.Empty(t, expectedChangedPairsMap, "Cannot find attempts that should be marked as 'to_be_propagated': %#v", expectedChangedPairsMap)
+	assert.Empty(t, expectedChangedResultsMap,
+		"Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
 }

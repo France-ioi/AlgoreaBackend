@@ -32,8 +32,11 @@ Feature: User sends a request to join a group
       | 11       | 20      | content            |
       | 21       | 30      | content            |
     And the database has the following table 'attempts':
-      | group_id | item_id | order | result_propagation_state |
-      | 21       | 30      | 1     | done                     |
+      | id | participant_id |
+      | 0  | 21             |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 21             | 30      | done                     |
 
   Scenario: Successfully send a request
     Given I am the user with id "21"
@@ -56,6 +59,7 @@ Feature: User sends a request to join a group
       | 11       | 21        | join_request_created | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Try to recreate a request that already exists
     Given I am the user with id "21"
@@ -72,6 +76,7 @@ Feature: User sends a request to join a group
     And the table "group_pending_requests" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
 
   Scenario: Automatically accepts the request if the user can manage group memberships
     Given I am the user with id "21"
@@ -103,7 +108,8 @@ Feature: User sends a request to join a group
       | 11                | 21             | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 21       | 20      | done                     |
-      | 21       | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 21             | 20      | done                     |
+      | 0          | 21             | 30      | done                     |

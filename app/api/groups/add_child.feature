@@ -36,8 +36,11 @@ Feature: Add a parent-child relation between two groups
       | 13       | 20      | content            |
       | 21       | 30      | content            |
     And the database has the following table 'attempts':
-      | group_id | item_id | order | result_propagation_state |
-      | 11       | 30      | 1     | done                     |
+      | id | participant_id |
+      | 0  | 11             |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id |
+      | 0          | 11             | 30      |
 
   Scenario: User is a manager of the two groups, has the needed permissions, and is allowed to create sub-groups
     Given I am the user with id "21"
@@ -60,10 +63,11 @@ Feature: Add a parent-child relation between two groups
       | 13                | 13             | 1       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-    And the table "attempts" should be:
-      | group_id | item_id | result_propagation_state |
-      | 11       | 20      | done                     |
-      | 11       | 30      | done                     |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | result_propagation_state |
+      | 0          | 11             | 20      | done                     |
+      | 0          | 11             | 30      | done                     |
     When I send a POST request to "/groups/13/relations/14"
     Then the response code should be 201
     And the response body should be, in JSON:

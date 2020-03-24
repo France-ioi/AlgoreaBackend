@@ -340,8 +340,11 @@ Feature: Get qualification state (contestGetQualificationState)
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order |
-      | 31       | 50      | 2019-05-30 15:00:00 | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 31             | 50      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 100             | 31             |
@@ -376,8 +379,11 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order |
-      | 11       | 60      | 2019-05-30 15:00:00 | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 100             | 11             |
@@ -430,8 +436,11 @@ Feature: Get qualification state (contestGetQualificationState)
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order |
-      | 31       | 50      | 2019-05-30 15:00:00 | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 31             | 50      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 31             | 2019-05-30 20:00:00 |
@@ -460,8 +469,11 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And the database has the following table 'attempts':
-      | group_id | item_id | started_at          | order |
-      | 11       | 60      | 2019-05-30 15:00:00 | 1     |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 11             | 2019-05-30 20:00:00 |

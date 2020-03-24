@@ -15,10 +15,10 @@ import (
 type createGroupRequest struct {
 	// required: true
 	// minLength: 1
-	Name *string `json:"name" validate:"set,min=1"`
+	Name string `json:"name" validate:"set,min=1"`
 	// required: true
 	// enum: Class,Team,Club,Friends,Other,Session
-	Type *string `json:"type" validate:"set,oneof=Class Team Club Friends Other Session"`
+	Type string `json:"type" validate:"set,oneof=Class Team Club Friends Other Session"`
 	// only if `type` = "Team"
 	// type: string
 	// format: int64
@@ -76,7 +76,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if input.ItemID != nil && *input.Type != "Team" {
+	if input.ItemID != nil && input.Type != "Team" {
 		return service.ErrInvalidRequest(errors.New("only teams can be created with item_id set"))
 	}
 

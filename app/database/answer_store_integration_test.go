@@ -16,46 +16,53 @@ func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 121}]
 		users: [{group_id: 121}]
-		attempts: [{id: 56, group_id: 121, item_id: 34, order: 1}]`)
+		attempts: [{id: 56, participant_id: 121}]
+		results: [{participant_id: 121, attempt_id: 56, item_id: 456}]`)
 	defer func() { _ = db.Close() }()
 
 	answerStore := database.NewDataStore(db).Answers()
 	tests := []struct {
-		name      string
-		authorID  int64
-		attemptID int64
-		answer    string
+		name          string
+		authorID      int64
+		participantID int64
+		attemptID     int64
+		itemID        int64
+		answer        string
 	}{
-		{name: "with attemptID", authorID: 121, attemptID: 56, answer: "my answer"},
+		{name: "with attemptID", authorID: 121, participantID: 121, attemptID: 56, itemID: 456, answer: "my answer"},
 	}
 
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			newID, err := answerStore.SubmitNewAnswer(test.authorID, test.attemptID, test.answer)
+			newID, err := answerStore.SubmitNewAnswer(test.authorID, test.participantID, test.attemptID, test.itemID, test.answer)
 
 			assert.NoError(t, err)
 			assert.NotZero(t, newID)
 
 			type answer struct {
-				AuthorID     int64
-				AttemptID    int64
-				Type         string
-				Answer       string
-				CreatedAtSet bool
+				AuthorID      int64
+				ParticipantID int64
+				AttemptID     int64
+				ItemID        int64
+				Type          string
+				Answer        string
+				CreatedAtSet  bool
 			}
 			var insertedAnswer answer
 			assert.NoError(t,
 				answerStore.ByID(newID).
-					Select("author_id, attempt_id, type, answer, "+
+					Select("author_id, participant_id, attempt_id, item_id, type, answer, "+
 						"ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
 					Scan(&insertedAnswer).Error())
 			assert.Equal(t, answer{
-				AuthorID:     test.authorID,
-				AttemptID:    test.attemptID,
-				Type:         "Submission",
-				Answer:       test.answer,
-				CreatedAtSet: true,
+				AuthorID:      test.authorID,
+				ParticipantID: test.participantID,
+				AttemptID:     test.attemptID,
+				ItemID:        test.itemID,
+				Type:          "Submission",
+				Answer:        test.answer,
+				CreatedAtSet:  true,
 			}, insertedAnswer)
 		})
 	}
@@ -72,8 +79,9 @@ func TestAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (full access)",
 			fixture: `
-				attempts: [{id: 100, group_id: 111, item_id: 50, order: 1}]
-				answers: [{id: 200, author_id: 111, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
+				attempts: [{participant_id: 111, id: 1}]
+				results: [{participant_id: 111, attempt_id: 1, item_id: 50}]
+				answers: [{id: 200, author_id: 111, participant_id: 111, attempt_id: 100, item_id: 50, created_at: 2018-03-22 08:44:55}]`,
 			answerID:      200,
 			userID:        111,
 			expectedFound: true,
@@ -81,8 +89,9 @@ func TestAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (content access)",
 			fixture: `
-				attempts: [{id: 100, group_id: 101, item_id: 50, order: 1}]
-				answers: [{id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
+				attempts: [{id: 1, participant_id: 101}]
+				results: [{participant_id: 101, attempt_id: 1, item_id: 50}]
+				answers: [{id: 200, author_id: 101, participant_id: 101, attempt_id: 1, item_id: 50, created_at: 2018-03-22 08:44:55}]`,
 			answerID:      200,
 			userID:        101,
 			expectedFound: true,
@@ -93,16 +102,19 @@ func TestAnswerStore_Visible(t *testing.T) {
 			answerID: 200,
 			fixture: `
 				attempts:
-					- {id: 100, group_id: 102, item_id: 60, order: 1}
+					- {id: 1, participant_id: 102}
+				results:
+					- {participant_id: 102, attempt_id: 1, item_id: 60}
 				answers:
-					- {id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}`,
+					- {id: 200, author_id: 101, participant_id: 102, attempt_id: 1, item_id: 60, created_at: 2018-03-22 08:44:55}`,
 			expectedFound: true,
 		},
 		{
 			name: "user not found",
 			fixture: `
-				attempts: [{id: 100, group_id: 121, item_id: 50, order: 1}]
-				answers: [{id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
+				attempts: [{id: 1, participant_id: 121}]
+				results: [{participant_id: 121, attempt_id: 1, item_id: 50}]
+				answers: [{id: 200, author_id: 101, participant_id: 121, attempt_id: 1, item_id: 50, created_at: 2018-03-22 08:44:55}]`,
 			userID:        404,
 			answerID:      100,
 			expectedFound: false,
@@ -112,8 +124,9 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   121,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 200, group_id: 121, item_id: 50, order: 1}]
-				answers: [{id: 100, author_id: 121, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
+				attempts: [{id: 1, participant_id: 121}]
+				results: [{participant_id: 121, attempt_id: 1, item_id: 50}]
+				answers: [{id: 100, author_id: 121, participant_id: 121, attempt_id: 1, item_id: 50, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -121,8 +134,9 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   101,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 200, group_id: 101, item_id: 51, order: 1}]
-				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
+				attempts: [{id: 1, participant_id: 101}]
+				results: [{participant_id: 101, attempt_id: 1, item_id: 51}]
+				answers: [{id: 100, author_id: 101, participant_id: 101, attempt_id: 200, item_id: 51, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -130,7 +144,8 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   101,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 100, group_id: 101, item_id: 50, order: 1}]`,
+				attempts: [{id: 1, participant_id: 101}]
+				results: [{participant_id: 101, attempt_id: 1, item_id: 50}]`,
 			expectedFound: false,
 		},
 		{
@@ -138,8 +153,9 @@ func TestAnswerStore_Visible(t *testing.T) {
 			userID:   101,
 			answerID: 100,
 			fixture: `
-				attempts: [{id: 200, group_id: 103, item_id: 60, order: 1}]
-				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
+				attempts: [{id: 1, participant_id: 103}]
+				results: [{participant_id: 103, attempt_id: 1, item_id: 60}]
+				answers: [{id: 100, author_id: 101, participant_id: 103, attempt_id: 1, item_id: 60, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 	}
