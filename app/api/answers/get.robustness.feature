@@ -17,7 +17,7 @@ Feature: Feature: Get user's answer by user_answer_id
     And the database has the following table 'attempts':
       | id | participant_id |
       | 1  | 11             |
-      | 2  | 13             |
+      | 1  | 13             |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id |
       | 1          | 11             | 200     |
