@@ -68,7 +68,6 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			Select("NOW() AS now, items.duration, items.contest_participants_group_id").
 			WithWriteLock().Take(&itemInfo).Error())
 
-
 		user := srv.GetUser(r)
 		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
 			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
