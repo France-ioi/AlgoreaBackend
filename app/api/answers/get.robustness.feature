@@ -3,6 +3,7 @@ Feature: Feature: Get user's answer by user_answer_id
     Given the database has the following table 'groups':
       | id | name | type |
       | 11 | jdoe | User |
+      | 13 | team | Team |
     And the database has the following table 'users':
       | login | group_id |
       | jdoe  | 11       |
