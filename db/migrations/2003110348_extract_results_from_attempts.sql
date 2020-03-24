@@ -24,8 +24,6 @@ CREATE TABLE `attempts` (
     `creator_id` BIGINT(20) DEFAULT NULL COMMENT 'The user who created this attempt',
     CONSTRAINT `fk_attempts_creator_id_users_group_id` FOREIGN KEY (`creator_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL,
     `parent_attempt_id` BIGINT(20) DEFAULT NULL COMMENT 'The attempt from which this one was forked. NULL for the default attempt.',
-    INDEX `id` (`id`),
-    CONSTRAINT `fk_attempts_parent_attempt_id_attempts_id`FOREIGN KEY (`parent_attempt_id`) REFERENCES `attempts`(`id`) ON DELETE SET NULL,
     `root_item_id` BIGINT(20) DEFAULT NULL COMMENT 'The item on which the attempt was created',
     CONSTRAINT `fk_attempts_root_item_id_items_id`FOREIGN KEY (`root_item_id`) REFERENCES `items`(`id`) ON DELETE SET NULL,
     `created_at` DATETIME NOT NULL DEFAULT NOW()
