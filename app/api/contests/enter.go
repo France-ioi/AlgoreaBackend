@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -67,19 +68,19 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			Select("NOW() AS now, items.duration, items.contest_participants_group_id").
 			WithWriteLock().Take(&itemInfo).Error())
 
-		var attemptID int64
-		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-			service.MustNotBeError(retryStore.Attempts().
-				Where("participant_id = ?", qualificationState.groupID).
-				WithWriteLock().
-				PluckFirst("IFNULL(MAX(id), 0) + 1", &attemptID).Error())
 
-			user := srv.GetUser(r)
-			return retryStore.Attempts().InsertMap(map[string]interface{}{
-				"id": attemptID, "participant_id": qualificationState.groupID, "created_at": itemInfo.Now,
-				"creator_id": user.GroupID, "parent_attempt_id": 0, "root_item_id": qualificationState.itemID,
-			})
+		user := srv.GetUser(r)
+		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
+			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
+				Where("participant_id = ?", qualificationState.groupID).WithWriteLock().SubQuery()),
+			"participant_id": qualificationState.groupID, "created_at": itemInfo.Now,
+			"creator_id": user.GroupID, "parent_attempt_id": 0, "root_item_id": qualificationState.itemID,
 		}))
+		var attemptID int64
+		service.MustNotBeError(store.Attempts().
+			Where("participant_id = ?", qualificationState.groupID).
+			PluckFirst("MAX(id)", &attemptID).Error())
+
 		service.MustNotBeError(store.Results().InsertMap(map[string]interface{}{
 			"attempt_id": attemptID, "participant_id": qualificationState.groupID,
 			"item_id": qualificationState.itemID, "started_at": itemInfo.Now,
