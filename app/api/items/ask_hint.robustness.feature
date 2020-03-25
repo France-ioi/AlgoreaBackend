@@ -27,12 +27,14 @@ Feature: Ask for a hint - robustness
       | 101      | 10      | content            |
       | 101      | 50      | content            |
     And the database has the following table 'attempts':
-      | id | participant_id |
-      | 0  | 101            |
+      | id | participant_id | allows_submissions_until |
+      | 0  | 101            | 9999-12-31 23:59:59      |
+      | 1  | 101            | 2019-05-30 11:00:00      |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | hints_requested        |
       | 0          | 101            | 50      | [0,  1, "hint" , null] |
       | 0          | 101            | 10      | null                   |
+      | 1          | 101            | 10      | null                   |
     And time is frozen
 
   Scenario: Wrong JSON in request
@@ -306,7 +308,7 @@ Feature: Ask for a hint - robustness
       }
       """
     Then the response code should be 404
-    And the response error message should contain "Can't find previously requested hints info"
+    And the response error message should contain "No result or the attempt is expired"
     And the table "attempts" should stay unchanged
 
   Scenario: missing askedHint
@@ -339,4 +341,37 @@ Feature: Ask for a hint - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Asked hint should not be empty"
+    And the table "attempts" should stay unchanged
+
+  Scenario: The attempt is expired (doesn't allow submissions anymore)
+    Given I am the user with id "101"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "10",
+        "idAttempt": "101/1",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "10",
+        "idAttempt": "101/1",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
+    When I send a POST request to "/items/ask-hint" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
+      }
+      """
+    Then the response code should be 404
+    And the response error message should contain "No result or the attempt is expired"
     And the table "attempts" should stay unchanged

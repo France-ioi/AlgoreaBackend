@@ -31,8 +31,11 @@ import (
 //   Restrictions:
 //
 //     * `task_token` should belong to the current user, otherwise the "bad request" response is returned.
-//     * the current user should have submission rights to the `task_token`'s item,
+//     * The current user should have submission rights to the `task_token`'s item,
 //       otherwise the "forbidden" response is returned.
+//     * There should be a row in the `results` with `participant_id`, `attempt_id`, and `item_id` matching the tokens
+//       and `attempts.allows_submissions_until` should be equal to time in the future,
+//       otherwise the "not found" response is returned.
 // parameters:
 // - in: body
 //   name: data
@@ -74,6 +77,8 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIError {
@@ -106,7 +111,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		var hintsRequestedParsed []formdata.Anything
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, r)
 		if err == gorm.ErrRecordNotFound {
-			apiError = service.ErrNotFound(errors.New("can't find previously requested hints info"))
+			apiError = service.ErrNotFound(errors.New("no result or the attempt is expired"))
 			return apiError.Error // rollback
 		}
 		service.MustNotBeError(err)
@@ -159,9 +164,11 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 	r *http.Request) ([]formdata.Anything, error) {
 	var hintsRequested *string
 	err := store.Results().
-		Where("participant_id = ?", taskToken.Converted.ParticipantID).
-		Where("attempt_id = ?", taskToken.Converted.AttemptID).
-		Where("item_id = ?", taskToken.Converted.LocalItemID).
+		Where("results.participant_id = ?", taskToken.Converted.ParticipantID).
+		Where("results.attempt_id = ?", taskToken.Converted.AttemptID).
+		Where("results.item_id = ?", taskToken.Converted.LocalItemID).
+		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
+		Where("NOW() < attempts.allows_submissions_until").
 		WithWriteLock().
 		PluckFirst("hints_requested", &hintsRequested).Error()
 	var hintsRequestedParsed []formdata.Anything

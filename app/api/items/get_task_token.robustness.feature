@@ -37,11 +37,12 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
       | 103      | 60      | content            |
       | 104      | 60      | content            |
     And the database has the following table 'attempts':
-      | id | participant_id | created_at          |
-      | 0  | 101            | 2017-05-29 05:38:38 |
-      | 0  | 102            | 2017-05-29 05:38:38 |
-      | 0  | 103            | 2017-05-29 05:38:38 |
-      | 0  | 104            | 2017-05-29 05:38:38 |
+      | id | participant_id | created_at          | allows_submissions_until |
+      | 0  | 101            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
+      | 0  | 102            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
+      | 0  | 103            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
+      | 0  | 104            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
+      | 1  | 101            | 2017-05-29 05:38:38 | 2019-05-30 11:00:00      |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
       | 0          | 101            | 50      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
@@ -49,7 +50,7 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
       | 0          | 102            | 60      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
       | 0          | 103            | 60      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
       | 0          | 104            | 60      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
-    And time is frozen
+      | 1          | 101            | 60      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
 
   Scenario: Invalid attempt_id
     Given I am the user with id "101"
@@ -124,6 +125,13 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
   Scenario: No result in the DB
     Given I am the user with id "101"
     When I send a GET request to "/items/60/attempts/0/task-token"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "attempts" should stay unchanged
+
+  Scenario: The attempt is expired (doesn't allow submissions)
+    Given I am the user with id "101"
+    When I send a GET request to "/items/60/attempts/1/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged
