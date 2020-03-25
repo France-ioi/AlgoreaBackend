@@ -143,7 +143,7 @@ func setAdditionalTimeForGroupInContest(
 			groupID, itemID, additionalTimeInSeconds).Error())
 	}
 
-	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS total_additional_times").Error())
+	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS new_expires_at").Error())
 	service.MustNotBeError(store.Exec(`
 		CREATE TEMPORARY TABLE new_expires_at (
 			PRIMARY KEY child_group_id (child_group_id)
