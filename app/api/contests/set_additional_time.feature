@@ -90,10 +90,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 60      | 00:01:00        |
       | 21       | 70      | 00:01:00        |
     And the database has the following table 'attempts':
-      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
-      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           |
-      | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           |
-      | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 2018-12-31 23:59:59      |
+      | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
+      | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      |
+      | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
       | 1          | 13             | 50      | 3018-05-29 06:38:38 | done                     |
@@ -149,7 +150,12 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 14             | 0       | 9999-12-31 23:59:59 |
       | 36                | 31             | 0       | 9999-12-31 23:59:59 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should be:
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 2018-12-31 23:59:59      |
+      | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
+      | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      |
+      | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 3019-07-03 06:39:37      |
     And the table "results" should stay unchanged
 
   Scenario: Creates a new row
@@ -264,5 +270,10 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 14             | 0       | 9999-12-31 23:59:59 |
       | 36                | 31             | 0       | 3017-04-24 07:38:42 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should be:
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 2018-12-31 23:59:59      |
+      | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
+      | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 3017-04-24 07:38:42      |
+      | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
     And the table "results" should stay unchanged

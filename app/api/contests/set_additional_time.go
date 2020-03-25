@@ -21,7 +21,8 @@ import (
 //                If no `groups_contest_items` and `seconds` == 0, succeed without doing any change.
 //
 //
-//                `groups_groups.expires_at` of affected `items.contest_participants_group_id` members is set to
+//                `groups_groups.expires_at` & `attempts.allows_submissions_until` (for the latest attempt) of affected
+//                `items.contest_participants_group_id` members is set to
 //                `results.started_at` + `items.duration` + total additional time.
 //
 //
@@ -177,7 +178,6 @@ func setAdditionalTimeForGroupInContest(
 				) AS expires_at`, durationInSeconds).
 			WithWriteLock().QueryExpr()).Error())
 
-	//nolint:gosec
 	result := store.Exec(`
 		UPDATE groups_groups
 		JOIN new_expires_at
@@ -186,7 +186,23 @@ func setAdditionalTimeForGroupInContest(
 		WHERE NOW() < groups_groups.expires_at AND groups_groups.parent_group_id = ?`,
 		participantsGroupID)
 	service.MustNotBeError(result.Error())
-	if result.RowsAffected() > 0 {
+
+	groupsGroupsModified := result.RowsAffected() > 0
+
+	service.MustNotBeError(store.Exec(`
+		UPDATE attempts
+		JOIN new_expires_at
+			ON new_expires_at.child_group_id = attempts.participant_id
+		SET attempts.allows_submissions_until = new_expires_at.expires_at
+		WHERE
+			attempts.root_item_id = ? AND
+			attempts.id =
+				(SELECT id FROM (
+					SELECT MAX(id) AS id FROM attempts WHERE participant_id = new_expires_at.child_group_id AND root_item_id = ? FOR UPDATE
+				) AS latest_attempt) AND
+			NOW() < allows_submissions_until
+	`, itemID, itemID).Error())
+	if groupsGroupsModified {
 		service.MustNotBeError(store.GroupGroups().After())
 	}
 	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
