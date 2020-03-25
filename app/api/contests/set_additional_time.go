@@ -189,6 +189,12 @@ func setAdditionalTimeForGroupInContest(
 
 	groupsGroupsModified := result.RowsAffected() > 0
 
+	// We are assuming here that a participant has only at most one ongoing participation at a moment.
+	// This assumption impacts, for instance, this scenario:
+	//
+	//   * a user starts a first attempt at 2:00 which ends at 3:00,
+	//   * the user starts a second attempt at 3:01 which will end at 4:01,
+	//   * at 3:05, an admin adds 15min to the contest -> only the second attempt gets the 15m extra.
 	service.MustNotBeError(store.Exec(`
 		UPDATE attempts
 		JOIN new_expires_at
