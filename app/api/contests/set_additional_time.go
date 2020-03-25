@@ -183,7 +183,7 @@ func setAdditionalTimeForGroupInContest(
 		JOIN new_expires_at
 			ON new_expires_at.child_group_id = groups_groups.child_group_id
 		SET groups_groups.expires_at = new_expires_at.expires_at
-		WHERE NOW() < groups_groups.expires_at AND groups_groups.parent_group_id = ?`,
+		WHERE groups_groups.parent_group_id = ?`,
 		participantsGroupID)
 	service.MustNotBeError(result.Error())
 
@@ -199,8 +199,7 @@ func setAdditionalTimeForGroupInContest(
 			attempts.id =
 				(SELECT id FROM (
 					SELECT MAX(id) AS id FROM attempts WHERE participant_id = new_expires_at.child_group_id AND root_item_id = ? FOR UPDATE
-				) AS latest_attempt) AND
-			NOW() < allows_submissions_until
+				) AS latest_attempt)
 	`, itemID, itemID).Error())
 	if groupsGroupsModified {
 		service.MustNotBeError(store.GroupGroups().After())

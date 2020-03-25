@@ -152,7 +152,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
     And the table "attempts" should be:
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
-      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 2018-12-31 23:59:59      |
+      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 3018-07-03 06:39:37      |
       | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
       | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      |
       | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 3019-07-03 06:39:37      |
