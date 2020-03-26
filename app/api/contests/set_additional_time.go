@@ -21,7 +21,8 @@ import (
 //                If no `groups_contest_items` and `seconds` == 0, succeed without doing any change.
 //
 //
-//                `groups_groups.expires_at` of affected `items.contest_participants_group_id` members is set to
+//                `groups_groups.expires_at` & `attempts.allows_submissions_until` (for the latest attempt) of affected
+//                `items.contest_participants_group_id` members is set to
 //                `results.started_at` + `items.duration` + total additional time.
 //
 //
@@ -142,52 +143,77 @@ func setAdditionalTimeForGroupInContest(
 			groupID, itemID, additionalTimeInSeconds).Error())
 	}
 
-	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS total_additional_times").Error())
+	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS new_expires_at").Error())
 	service.MustNotBeError(store.Exec(`
 		CREATE TEMPORARY TABLE new_expires_at (
 			PRIMARY KEY child_group_id (child_group_id)
 		)
 		?`,
-		// For each of groups participating in the contest ...
-		store.ActiveGroupGroups().
-			Where("groups_groups_active.parent_group_id = ?", participantsGroupID).
+		// For each of groups participating/participated in the contest ...
+		store.GroupGroups().
+			Where("groups_groups.parent_group_id = ?", participantsGroupID).
 			// ... that are descendants of `groupID` (so affected by the change) ...
 			Joins(`
-				JOIN groups_ancestors AS changed_group_descendants
-					ON changed_group_descendants.child_group_id = groups_groups_active.child_group_id AND
+				JOIN groups_ancestors_active AS changed_group_descendants
+					ON changed_group_descendants.child_group_id = groups_groups.child_group_id AND
 						changed_group_descendants.ancestor_group_id = ?`, groupID).
 			// ... and have entered the contest, ...
 			Joins(`
 				JOIN results AS contest_participations
-					ON contest_participations.participant_id = groups_groups_active.child_group_id AND
+					ON contest_participations.participant_id = groups_groups.child_group_id AND
 						contest_participations.started_at IS NOT NULL AND
 						contest_participations.item_id = ?`, itemID).
 			// ... we get all the ancestors to calculate the total additional time
-			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id").
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
 			Joins(`
 				JOIN groups_contest_items
 					ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
 						groups_contest_items.item_id = contest_participations.item_id`).
-			Group("groups_groups_active.child_group_id").
+			Group("groups_groups.child_group_id").
 			Select(`
-				groups_groups_active.child_group_id,
+				groups_groups.child_group_id,
 				DATE_ADD(
 					MIN(contest_participations.started_at),
 					INTERVAL (? + IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)) SECOND
 				) AS expires_at`, durationInSeconds).
 			WithWriteLock().QueryExpr()).Error())
 
-	//nolint:gosec
+	// we always modify groups_groups.expires_at, no matter if it has been expired or not
 	result := store.Exec(`
 		UPDATE groups_groups
 		JOIN new_expires_at
 			ON new_expires_at.child_group_id = groups_groups.child_group_id
 		SET groups_groups.expires_at = new_expires_at.expires_at
-		WHERE NOW() < groups_groups.expires_at AND groups_groups.parent_group_id = ?`,
-		participantsGroupID)
+		WHERE groups_groups.parent_group_id = ?`, participantsGroupID)
 	service.MustNotBeError(result.Error())
-	if result.RowsAffected() > 0 {
+
+	groupsGroupsModified := result.RowsAffected() > 0
+
+	// We are assuming here that a participant has only at most one ongoing participation at a moment.
+	// This assumption impacts, for instance, this scenario:
+	//
+	//   * a user starts a first attempt at 2:00 which ends at 3:00,
+	//   * the user starts a second attempt at 3:01 which will end at 4:01,
+	//   * at 3:05, an admin adds 15min to the contest -> only the second attempt gets the 15m extra.
+	//
+	// We only update attempts.allows_submission_until if the participation is active or
+	// if the change makes it active.
+	service.MustNotBeError(store.Exec(`
+		UPDATE attempts
+		JOIN new_expires_at
+			ON new_expires_at.child_group_id = attempts.participant_id
+		SET attempts.allows_submissions_until = new_expires_at.expires_at
+		WHERE
+			attempts.root_item_id = ? AND
+			attempts.id =
+				(SELECT id FROM (
+					SELECT MAX(id) AS id FROM attempts WHERE participant_id = new_expires_at.child_group_id AND root_item_id = ? FOR UPDATE
+				) AS latest_attempt) AND
+			(NOW() < new_expires_at.expires_at OR NOW() < attempts.allows_submissions_until)
+	`, itemID, itemID).Error())
+	if groupsGroupsModified {
 		service.MustNotBeError(store.GroupGroups().After())
+		service.MustNotBeError(store.Results().Propagate())
 	}
 	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 }

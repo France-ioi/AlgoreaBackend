@@ -2,6 +2,7 @@ package contests
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -68,12 +69,26 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			Select("NOW() AS now, items.duration, items.contest_participants_group_id").
 			WithWriteLock().Take(&itemInfo).Error())
 
+		var totalAdditionalTime int64
+		service.MustNotBeError(store.ActiveGroupAncestors().
+			Where("groups_ancestors_active.child_group_id = ?", qualificationState.groupID).
+			Joins(`
+					LEFT JOIN groups_contest_items
+						ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
+							groups_contest_items.item_id = ?`, qualificationState.itemID).
+			Group("groups_ancestors_active.child_group_id").
+			WithWriteLock().
+			PluckFirst("IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)", &totalAdditionalTime).
+			Error())
+
 		user := srv.GetUser(r)
 		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
 			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
 				Where("participant_id = ?", qualificationState.groupID).WithWriteLock().SubQuery()),
 			"participant_id": qualificationState.groupID, "created_at": itemInfo.Now,
 			"creator_id": user.GroupID, "parent_attempt_id": 0, "root_item_id": qualificationState.itemID,
+			"allows_submissions_until": gorm.Expr("IFNULL(DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND), '9999-12-31 23:59:59')",
+				(*time.Time)(itemInfo.Now), itemInfo.Duration, totalAdditionalTime),
 		}))
 		var attemptID int64
 		service.MustNotBeError(store.Attempts().
@@ -86,17 +101,6 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		}))
 
 		if itemInfo.ContestParticipantsGroupID != nil {
-			var totalAdditionalTime int64
-			service.MustNotBeError(store.ActiveGroupAncestors().
-				Where("groups_ancestors_active.child_group_id = ?", qualificationState.groupID).
-				Joins(`
-					LEFT JOIN groups_contest_items
-						ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
-							groups_contest_items.item_id = ?`, qualificationState.itemID).
-				Group("groups_ancestors_active.child_group_id").
-				WithWriteLock().
-				PluckFirst("IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)", &totalAdditionalTime).
-				Error())
 			service.MustNotBeError(store.Exec(`
 				INSERT INTO groups_groups (parent_group_id, child_group_id, expires_at)
 				VALUES(?, ?, IFNULL(DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND), '9999-12-31 23:59:59'))

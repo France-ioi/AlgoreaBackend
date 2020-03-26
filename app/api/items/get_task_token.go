@@ -33,8 +33,9 @@ import (
 //       and the current user should be a member of this team,
 //     * the user (or `{as_team_id}`) should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
-//     * there should be a row with `participant_id` equal to the user's group (or `{as_team_id}`),
+//     * there should be a row in the `results` table with `participant_id` equal to the user's group (or `{as_team_id}`),
 //       `attempt_id` = `{attempt_id}`, `item_id` = `{item_id}`,
+//     * the attempt with (`participant_id`, `{attempt_id}`) should have allows_submissions_until in the future,
 //
 //   otherwise the 'forbidden' error is returned.
 // parameters:
@@ -143,13 +144,16 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		service.MustNotBeError(err)
 
 		resultScope := store.Results().
-			Where("participant_id = ?", groupID).
-			Where("attempt_id = ?", attemptID).
-			Where("item_id = ?", itemID)
+			Where("results.participant_id = ?", groupID).
+			Where("results.attempt_id = ?", attemptID).
+			Where("results.item_id = ?", itemID)
 
 		// load the result data
 		err = resultScope.WithWriteLock().
-			Select("hints_requested, hints_cached").Take(&resultInfo).Error()
+			Select("hints_requested, hints_cached").
+			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
+			Where("NOW() < attempts.allows_submissions_until").
+			Take(&resultInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
 			apiError = service.InsufficientAccessRightsError

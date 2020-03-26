@@ -23,9 +23,13 @@ import (
 // description: Generate and return an answer token from user's answer and task token.
 //   It is used to bind an answer with task parameters so that the TaskGrader can check if they have not been altered.
 //
-//   * task_token.idUser should be the current user
+//   * task_token.idUser should be the current user.
 //
-//   * The user should have submission rights on `task_token.idItemLocal`
+//   * The user should have submission rights on `task_token.idItemLocal`.
+//
+//   * The attempt should allow submission (`allows_submissions_until` should be a time in the future).
+//
+//   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:
 // - name: answer information
 //   in: body
@@ -85,11 +89,19 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			requestData.TaskToken.Converted.LocalItemID, *requestData.Answer)
 		service.MustNotBeError(err)
 
-		resultsScope := store.Results().Where("participant_id = ?", requestData.TaskToken.Converted.ParticipantID).
-			Where("attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
-			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID)
-		service.MustNotBeError(
-			resultsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
+		resultsScope := store.Results().Where("results.participant_id = ?", requestData.TaskToken.Converted.ParticipantID).
+			Where("results.attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
+			Where("results.item_id = ?", requestData.TaskToken.Converted.LocalItemID)
+
+		err = resultsScope.WithWriteLock().Select("hints_requested, hints_cached").
+			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
+			Where("NOW() < attempts.allows_submissions_until").
+			Scan(&hintsInfo).Error()
+		if gorm.IsRecordNotFoundError(err) {
+			apiError = service.ErrForbidden(errors.New("the attempt has expired"))
+			return apiError.Error // rollback
+		}
+		service.MustNotBeError(err)
 
 		service.MustNotBeError(resultsScope.UpdateColumn(map[string]interface{}{
 			"submissions":              gorm.Expr("submissions + 1"),

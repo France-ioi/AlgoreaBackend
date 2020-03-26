@@ -12,9 +12,17 @@ Feature: Submit a new answer - robustness
     And the database has the following table 'items':
       | id | read_only | default_language_tag |
       | 50 | 1         | fr                   |
+      | 60 | 0         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
+      | 101      | 60      | content            |
+    And the database has the following table 'attempts':
+      | participant_id | id | allows_submissions_until |
+      | 101            | 1  | 2019-05-30 11:00:00      |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id |
+      | 101            | 1          | 60      |
 
   Scenario: Wrong JSON in request
     Given I am the user with id "101"
@@ -201,4 +209,26 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 403
     And the response error message should contain "Item is read-only"
+    And the table "answers" should stay unchanged
+
+  Scenario: The attempt is expired (doesn't allow submissions anymore)
+    Given I am the user with id "101"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "60",
+        "idAttempt": "101/1",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    When I send a POST request to "/answers" with the following body:
+      """
+      {
+        "task_token": "{{userTaskToken}}",
+        "answer": "print(1)"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "The attempt has expired"
     And the table "answers" should stay unchanged
