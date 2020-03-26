@@ -242,7 +242,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
 
-  Scenario: Doesn't update attempts.allows_multiple_submissions if both old and new values are in the past
+  Scenario: Doesn't update attempts.allows_submissions_until if both old and new values are in the past
     Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/15/additional-times?seconds=-10"
     Then the response code should be 200
