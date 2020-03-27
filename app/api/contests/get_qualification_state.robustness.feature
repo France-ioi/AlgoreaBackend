@@ -111,19 +111,6 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: as_team_id is not a team related to the item while the item's entry_participant_type = Team
-    Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
-      | 60 | 1                       | Team                   | fr                   |
-    And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 10       | 60      | info                     |
-      | 21       | 60      | content_with_descendants |
-    And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=10"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
   Scenario: The current user is not a member of as_team_id while the item's entry_participant_type = 'Team'
     Given the database has the following table 'items':
       | id | requires_explicit_entry | entry_participant_type | default_language_tag |

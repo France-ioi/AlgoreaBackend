@@ -58,8 +58,9 @@ type contestGetQualificationStateResponse struct {
 //                returns the qualification state, i.e. whether the participant can enter the contest, and info on each team member.
 //
 //                The qualification state is one of:
-//                  * 'already_started' if the participant has an `attempts` row for the item
-//                    with non-null `started_at` and is an active member of the item's "contest participants" group;
+//                  * 'already_started' if the participant has an `results` row for the item
+//                    with non-null `started_at` and linked to an unexpired (allowing submissions) attempt,
+//                    and the participant is an active member of the item's "contest participants" group;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -85,7 +86,7 @@ type contestGetQualificationStateResponse struct {
 //
 //                Restrictions:
 //                  * `item_id` should be a contest;
-//                  * `as_team_id` (if given) should be the current user's team having the `item_id` as the team item;
+//                  * `as_team_id` (if given) should be the current user's team;
 //                  * `as_team_id` should be given if the contest is team-only and should not be given if the contest is user-only;
 //                  * the authenticated user (or his team) should have at least 'info' access to the item.
 //
@@ -160,13 +161,14 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		return nil, service.InsufficientAccessRightsError
 	}
 
-	if apiError := srv.checkTeamID(groupID, itemID, user, store); apiError != service.NoError {
+	if apiError := srv.checkTeamID(groupID, user, store); apiError != service.NoError {
 		return nil, apiError
 	}
 
 	contestParticipationQuery := store.Results().
 		Joins("JOIN items ON items.id = results.item_id").
 		// check the participation is not expired
+		Joins(`JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id`).
 		Joins(`
 			LEFT JOIN groups_groups_active
 				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
@@ -177,18 +179,21 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	if lock {
 		contestParticipationQuery = contestParticipationQuery.WithWriteLock()
 	}
-	var isActive, alreadyStarted bool
-	err = contestParticipationQuery.PluckFirst("groups_groups_active.parent_group_id IS NOT NULL", &isActive).Error()
-	if !gorm.IsRecordNotFoundError(err) {
-		service.MustNotBeError(err)
-		alreadyStarted = true
+	var participationInfo struct {
+		IsStarted bool
+		IsActive  bool
 	}
+	err = contestParticipationQuery.Select(`
+		IFNULL(MAX(1), 0) AS is_started,
+		IFNULL(MAX(groups_groups_active.parent_group_id IS NOT NULL AND NOW() < attempts.allows_submissions_until), 0) AS is_active`).
+		Scan(&participationInfo).Error()
+	service.MustNotBeError(err)
 
 	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount :=
 		srv.getQualificatonInfo(groupID, itemID, user, store)
 	state := computeQualificationState(
-		alreadyStarted, isActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
-		contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
+		participationInfo.IsStarted, participationInfo.IsActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest,
+		contestInfo.ContestMaxTeamSize, contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
 
 	result := &contestGetQualificationStateResponse{
 		State:               string(state),
@@ -204,17 +209,14 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	return result, service.NoError
 }
 
-func (srv *Service) checkTeamID(
-	groupID, itemID int64, user *database.User, store *database.DataStore) service.APIError {
+func (srv *Service) checkTeamID(groupID int64, user *database.User, store *database.DataStore) service.APIError {
 	if groupID != user.GroupID {
-		var teamGroupID int64
-		err := store.Groups().TeamGroupForTeamItemAndUser(itemID, user).
-			PluckFirst("groups.id", &teamGroupID).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			return service.InsufficientAccessRightsError
-		}
+		found, err := store.Groups().ByID(groupID).Where("type = 'Team'").
+			Joins(`
+				JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id AND
+					groups_groups_active.child_group_id = ?`, user.GroupID).HasRows()
 		service.MustNotBeError(err)
-		if teamGroupID != groupID {
+		if !found {
 			return service.InsufficientAccessRightsError
 		}
 	}

@@ -506,6 +506,59 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
 
+  Scenario: State is ready for a team-only contest because the all its started attempts has expired
+    Given the database table 'groups' has also the following row:
+      | id  | type                |
+      | 100 | ContestParticipants |
+    And the database has the following table 'items':
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                       | 3                     | 100                           | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
+    And the database has the following table 'attempts':
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+      | 2  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+      | 3  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
+      | 2          | 11             | 60      | 2019-05-30 15:00:00 |
+      | 3          | 11             | 60      | null                |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 100             | 11             |
+    And I am the user with id "31"
+    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": false,
+      "entering_condition": "None",
+      "max_team_size": 3,
+      "other_members": [
+        {
+          "can_enter": false,
+          "first_name": "Jane",
+          "group_id": "41",
+          "last_name": null,
+          "login": "jane"
+        },
+        {
+          "can_enter": false,
+          "first_name": "Jack",
+          "group_id": "51",
+          "last_name": "Daniel",
+          "login": "jack"
+        }
+      ],
+      "state": "ready"
+    }
+    """
+
   Scenario Outline: The user cannot enter because of entering_time_min/entering_time_max
     Given the database has the following table 'items':
       | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag | entering_time_min   | entering_time_max   |
