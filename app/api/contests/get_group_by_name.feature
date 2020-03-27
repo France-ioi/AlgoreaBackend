@@ -1,16 +1,16 @@
 Feature: Get group by name (contestGetGroupByName)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type    | team_item_id |
-      | 10 | Parent  | Club    | null         |
-      | 11 | Group A | Friends | null         |
-      | 13 | Group B | Team    | 60           |
-      | 14 | Group B | Other   | null         |
-      | 15 | Team    | Team    | 60           |
-      | 21 | owner   | User    | null         |
-      | 31 | john    | User    | null         |
-      | 41 | jane    | User    | null         |
-      | 50 | Group D | Class   | null         |
+      | id | name    | type    |
+      | 10 | Parent  | Club    |
+      | 11 | Group A | Team    |
+      | 13 | Group B | Team    |
+      | 14 | Group B | Other   |
+      | 15 | Team    | Team    |
+      | 21 | owner   | User    |
+      | 31 | john    | User    |
+      | 41 | jane    | User    |
+      | 50 | Group D | Class   |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -56,7 +56,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 42                | 42             |
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
-      | 50 | 00:00:00 | User                   | fr                   |
+      | 50 | 00:00:00 | null                   | fr                   |
       | 60 | 00:00:01 | Team                   | fr                   |
       | 10 | 00:00:02 | User                   | fr                   |
       | 70 | 00:00:03 | Team                   | fr                   |
@@ -206,7 +206,7 @@ Feature: Get group by name (contestGetGroupByName)
     {
       "group_id": "11",
       "name": "Group A",
-      "type": "Friends",
+      "type": "Team",
       "additional_time": 0,
       "total_additional_time": 0
     }
@@ -221,7 +221,7 @@ Feature: Get group by name (contestGetGroupByName)
     {
       "group_id": "11",
       "name": "Group A",
-      "type": "Friends",
+      "type": "Team",
       "additional_time": 60,
       "total_additional_time": 3660
     }

@@ -48,11 +48,13 @@ type contestInfo struct {
 	TotalAdditionalTime int32 `json:"total_additional_time"`
 }
 
-func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.User) (bool, error) {
-	var isTeamOnly bool
+const team = "Team"
+
+func (srv *Service) getParticipantTypeForContestManagedByUser(itemID int64, user *database.User) (*string, error) {
+	var participantType *string
 	err := srv.Store.Items().ContestManagedByUser(itemID, user).
-		PluckFirst("IFNULL(items.entry_participant_type = 'Team', 0)", &isTeamOnly).Error()
-	return isTeamOnly, err
+		PluckFirst("items.entry_participant_type", &participantType).Error()
+	return participantType, err
 }
 
 type qualificationState string

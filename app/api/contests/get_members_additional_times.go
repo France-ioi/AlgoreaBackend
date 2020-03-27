@@ -90,7 +90,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		return service.ErrInvalidRequest(err)
 	}
 
-	isTeamOnly, err := srv.isTeamOnlyContestManagedByUser(itemID, user)
+	participantType, err := srv.getParticipantTypeForContestManagedByUser(itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -104,18 +104,25 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 
 	query := srv.Store.ActiveGroupAncestors().Where("groups_ancestors_active.ancestor_group_id = ?", groupID)
 
-	if isTeamOnly {
-		query = query.
-			Joins(`
-				JOIN `+"`groups`"+` AS found_group
-					ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'Team' AND
-						(found_group.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
-						 found_group.team_item_id = ?)`, itemID, itemID)
+	if participantType != nil {
+		if *participantType == team {
+			query = query.
+				Joins(`
+					JOIN `+"`groups`"+` AS found_group
+						ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'Team' AND
+						   (found_group.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
+						   found_group.team_item_id = ?)`, itemID, itemID)
+		} else {
+			query = query.
+				Joins(`
+					JOIN ` + "`groups`" + ` AS found_group
+						ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'User'`)
+		}
 	} else {
 		query = query.
 			Joins(`
 				JOIN ` + "`groups`" + ` AS found_group
-					ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'User'`)
+					ON found_group.id = groups_ancestors_active.child_group_id`)
 	}
 
 	query = query.

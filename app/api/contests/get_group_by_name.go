@@ -72,7 +72,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	isTeamOnly, err := srv.isTeamOnlyContestManagedByUser(itemID, user)
+	participantType, err := srv.getParticipantTypeForContestManagedByUser(itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -104,27 +104,24 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		HavingMaxPermissionGreaterThan("view", "none").
 		Order("groups.id")
 
-	if isTeamOnly {
-		query = query.
-			Joins(`
-				LEFT JOIN groups_ancestors_active AS found_group_descendants
-					ON found_group_descendants.ancestor_group_id = groups.id`).
-			Joins(`
-				LEFT JOIN `+"`groups`"+` AS team
-					ON team.id = found_group_descendants.child_group_id AND team.type = 'Team' AND
-						(groups.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
-						 groups.team_item_id = ?)`, itemID, itemID).
-			Joins(`
-				LEFT JOIN groups_groups_active
-					ON groups_groups_active.parent_group_id = team.id`).
-			Joins(`
-				LEFT JOIN `+"`groups`"+` AS user_group
-					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'User' AND
-						user_group.name LIKE ?`, groupName).
-			Group("groups.id, user_group.id").
-			Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)
+	if participantType != nil {
+		query = query.Where("groups.type = ?", *participantType)
+		if *participantType == team {
+			query = query.
+				Joins(`
+					LEFT JOIN groups_groups_active
+						ON groups_groups_active.parent_group_id = groups.id`).
+				Joins(`
+					LEFT JOIN `+"`groups`"+` AS user_group
+						ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'User' AND
+							user_group.name LIKE ?`, groupName).
+				Group("groups.id, user_group.id").
+				Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)
+		} else {
+			query = query.Where("groups.name LIKE ?", groupName)
+		}
 	} else {
-		query = query.
+		query = query.Where("groups.type IN ('Team', 'User')").
 			Where("groups.name LIKE ?", groupName)
 	}
 
