@@ -21,6 +21,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 11       | 21         |
       | 14       | 21         |
       | 31       | 21         |
+      | 41       | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 11             |
@@ -72,11 +73,13 @@ Feature: Get group by name (contestGetGroupByName)
       | 13       | 50      | content                  |
       | 13       | 60      | info                     |
       | 15       | 60      | info                     |
+      | 21       | 10      | content_with_descendants |
       | 21       | 50      | solution                 |
       | 21       | 60      | content_with_descendants |
       | 21       | 70      | content_with_descendants |
       | 31       | 50      | content_with_descendants |
       | 31       | 70      | content_with_descendants |
+      | 41       | 10      | content                  |
       | 41       | 70      | content                  |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
@@ -90,6 +93,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 21       | 70      | 00:01:00        |
       | 31       | 50      | 00:01:00        |
       | 31       | 70      | 00:01:00        |
+      | 41       | 10      | 00:02:00        |
       | 41       | 70      | 00:01:00        |
 
   Scenario: Content access for group, solutions access for user, additional time from parent groups
@@ -167,24 +171,24 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Group is a user group (team contest) [through invitationAccepted]
+  Scenario: Group is a user group (user-only contest)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/by-name?name=john"
+    When I send a GET request to "/contests/10/groups/by-name?name=jane"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
-      "group_id": "15",
-      "name": "Team",
-      "type": "Team",
-      "additional_time": 45,
-      "total_additional_time": 45
+      "group_id": "41",
+      "name": "jane",
+      "type": "User",
+      "additional_time": 120,
+      "total_additional_time": 120
     }
     """
 
-  Scenario: Group is a user group (team contest) [through requestAccepted]
+  Scenario: Group is a user group (team contest)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/by-name?name=jane"
+    When I send a GET request to "/contests/60/groups/by-name?name=john"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
