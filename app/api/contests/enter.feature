@@ -1,14 +1,14 @@
 Feature: Enters a contest as a group (user self or team) (contestEnter)
   Background:
     Given the database has the following table 'groups':
-      | id | name         | type                | team_item_id |
-      | 11 | Team 2       | Team                | 60           |
-      | 21 | owner        | User                | null         |
-      | 31 | john         | User                | null         |
-      | 41 | jane         | User                | null         |
-      | 51 | jack         | User                | null         |
-      | 98 | item60-group | ContestParticipants | null         |
-      | 99 | item50-group | ContestParticipants | null         |
+      | id | name         | type                |
+      | 11 | Team 2       | Team                |
+      | 21 | owner        | User                |
+      | 31 | john         | User                |
+      | 41 | jane         | User                |
+      | 51 | jack         | User                |
+      | 98 | item60-group | ContestParticipants |
+      | 99 | item50-group | ContestParticipants |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
