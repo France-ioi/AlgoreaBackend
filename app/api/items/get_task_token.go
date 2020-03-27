@@ -14,7 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation GET /items/{item_id}/attempts/{attempt_id}/task-token answers itemTaskTokenGet
+// swagger:operation GET /items/{item_id}/attempts/{attempt_id}/task-token items itemTaskTokenGet
 // ---
 // summary: Get a task token
 // description: >
