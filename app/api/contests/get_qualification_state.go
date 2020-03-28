@@ -59,8 +59,7 @@ type contestGetQualificationStateResponse struct {
 //
 //                The qualification state is one of:
 //                  * 'already_started' if the participant has an `results` row for the item
-//                    with non-null `started_at` and linked to an unexpired (allowing submissions) attempt,
-//                    and the participant is an active member of the item's "contest participants" group;
+//                    with non-null `started_at` and linked to an unexpired (allowing submissions) attempt;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -169,10 +168,6 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		Joins("JOIN items ON items.id = results.item_id").
 		// check the participation is not expired
 		Joins(`JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id`).
-		Joins(`
-			LEFT JOIN groups_groups_active
-				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
-					groups_groups_active.child_group_id = results.participant_id`).
 		Where("item_id = ?", itemID).
 		Where("results.participant_id = ?", groupID).
 		Where("started_at IS NOT NULL")
@@ -185,7 +180,7 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	}
 	err = contestParticipationQuery.Select(`
 		IFNULL(MAX(1), 0) AS is_started,
-		IFNULL(MAX(groups_groups_active.parent_group_id IS NOT NULL AND NOW() < attempts.allows_submissions_until), 0) AS is_active`).
+		IFNULL(MAX(NOW() < attempts.allows_submissions_until), 0) AS is_active`).
 		Scan(&participationInfo).Error()
 	service.MustNotBeError(err)
 

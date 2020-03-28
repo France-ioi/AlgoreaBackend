@@ -218,8 +218,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 60      | 02:02:02        |
     And the database table 'attempts' has also the following row:
-      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
-      | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           | 2019-05-30 11:00:00      |
     And the database table 'results' has also the following row:
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 11             | 60      | 2019-05-29 11:00:00 |
@@ -241,7 +241,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         | 9999-12-31 23:59:59      |
       | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         | 9999-12-31 23:59:59      |
-      | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           | 9999-12-31 23:59:59      |
+      | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           | 2019-05-30 11:00:00      |
       | 2  | 11             | 3019-10-10 10:10:10 | 31         | 0                 | 60           | 3019-10-10 13:13:13      |
     And the table "results" should be:
       | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
