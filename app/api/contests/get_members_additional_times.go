@@ -13,13 +13,13 @@ import (
 // ---
 // summary: List additional times on a contest
 // description: >
-//                For all
+//                For all descendant
 //
-//                  * descendant teams linked to the item via `team_item_id` if `items.entry_participant_type` = 'Team'
+//                  * teams if `items.entry_participant_type` = 'Team'
 //                  * end-users groups otherwise
 //
-//                having at least 'info' access to the item, the service returns their
-//                `group_id`, `name`, `type` and `additional_time` & `total_additional_time`.
+//                linked to the item via `attempts.root_item_id` and having at least 'info' access to the item,
+//                the service returns their `group_id`, `name`, `type` and `additional_time` & `total_additional_time`.
 //
 //
 //                * `additional_time` defaults to 0 if no such `groups_contest_items`
@@ -102,30 +102,13 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.ActiveGroupAncestors().Where("groups_ancestors_active.ancestor_group_id = ?", groupID)
-
-	if participantType != nil {
-		if *participantType == team {
-			query = query.
-				Joins(`
-					JOIN `+"`groups`"+` AS found_group
-						ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'Team' AND
-						   (found_group.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
-						   found_group.team_item_id = ?)`, itemID, itemID)
-		} else {
-			query = query.
-				Joins(`
-					JOIN ` + "`groups`" + ` AS found_group
-						ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = 'User'`)
-		}
-	} else {
-		query = query.
-			Joins(`
-				JOIN ` + "`groups`" + ` AS found_group
-					ON found_group.id = groups_ancestors_active.child_group_id`)
-	}
-
-	query = query.
+	query := srv.Store.ActiveGroupAncestors().Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
+		Joins(`
+			JOIN `+"`groups`"+` AS found_group
+				ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = ?`, participantType).
+		Joins(`
+			JOIN attempts
+				ON attempts.participant_id = found_group.id AND attempts.root_item_id = ?`, itemID).
 		Joins(`
 			JOIN groups_ancestors_active AS found_group_ancestors
 				ON found_group_ancestors.child_group_id = found_group.id`).

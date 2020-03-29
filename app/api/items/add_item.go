@@ -44,9 +44,8 @@ type item struct {
 	ContestMaxTeamSize       int32     `json:"contest_max_team_size"`
 	TitleBarVisible          bool      `json:"title_bar_visible"`
 	AllowsMultipleAttempts   bool      `json:"allows_multiple_attempts"`
-	// Nullable
 	// enum: User,Team
-	EntryParticipantType *string `json:"entry_participant_type" validate:"oneof=User Team"`
+	EntryParticipantType string `json:"entry_participant_type" validate:"oneof=User Team"`
 	// Nullable
 	//
 	// MySQL time (max value is 838:59:59)

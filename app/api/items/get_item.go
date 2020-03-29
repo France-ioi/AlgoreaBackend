@@ -68,10 +68,9 @@ type itemCommonFields struct {
 	ContestMaxTeamSize int32 `json:"contest_max_team_size"`
 	// required: true
 	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
-	// Nullable
 	// required: true
 	// enum: User,Team
-	EntryParticipantType *string `json:"entry_participant_type"`
+	EntryParticipantType string `json:"entry_participant_type"`
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	// Nullable
@@ -226,7 +225,7 @@ type rawItem struct {
 	TeamsEditable            bool
 	ContestMaxTeamSize       int32
 	AllowsMultipleAttempts   bool
-	EntryParticipantType     *string
+	EntryParticipantType     string
 	Duration                 *string
 	NoScore                  bool
 	DefaultLanguageTag       string

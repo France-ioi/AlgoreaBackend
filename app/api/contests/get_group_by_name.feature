@@ -57,7 +57,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 42                | 42             |
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
-      | 50 | 00:00:00 | null                   | fr                   |
+      | 50 | 00:00:00 | Team                   | fr                   |
       | 60 | 00:00:01 | Team                   | fr                   |
       | 10 | 00:00:02 | User                   | fr                   |
       | 70 | 00:00:03 | Team                   | fr                   |
@@ -158,16 +158,16 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Group is a user group (non-team contest)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/by-name?name=john"
+    When I send a GET request to "/contests/10/groups/by-name?name=jane"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
-      "group_id": "31",
-      "name": "john",
+      "group_id": "41",
+      "name": "jane",
       "type": "User",
-      "additional_time": 60,
-      "total_additional_time": 60
+      "additional_time": 120,
+      "total_additional_time": 120
     }
     """
 
@@ -213,20 +213,5 @@ Feature: Get group by name (contestGetGroupByName)
       "type": "Team",
       "additional_time": 0,
       "total_additional_time": 0
-    }
-    """
-
-  Scenario: Group is an ancestor group (non-team contest)
-    Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/by-name?name=Group%20A"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "group_id": "11",
-      "name": "Group A",
-      "type": "Team",
-      "additional_time": 60,
-      "total_additional_time": 3660
     }
     """

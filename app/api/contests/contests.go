@@ -50,8 +50,8 @@ type contestInfo struct {
 
 const team = "Team"
 
-func (srv *Service) getParticipantTypeForContestManagedByUser(itemID int64, user *database.User) (*string, error) {
-	var participantType *string
+func (srv *Service) getParticipantTypeForContestManagedByUser(itemID int64, user *database.User) (string, error) {
+	var participantType string
 	err := srv.Store.Items().ContestManagedByUser(itemID, user).
 		PluckFirst("items.entry_participant_type", &participantType).Error()
 	return participantType, err

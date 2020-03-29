@@ -94,35 +94,30 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 			LEFT JOIN groups_contest_items AS main_group_contest_item ON main_group_contest_item.group_id = groups.id AND
 				main_group_contest_item.item_id = ?`, itemID).
 		Where("groups.id IN ?", groupsManagedByUserSubQuery).
+		Where("groups.type = ?", participantType).
 		Select(`
-				groups.id AS group_id,
-				groups.name,
-				groups.type,
-				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
-				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
+			groups.id AS group_id,
+			groups.name,
+			groups.type,
+			IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
+			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 		Group("groups.id").
 		HavingMaxPermissionGreaterThan("view", "none").
 		Order("groups.id")
 
-	if participantType != nil {
-		query = query.Where("groups.type = ?", *participantType)
-		if *participantType == team {
-			query = query.
-				Joins(`
-					LEFT JOIN groups_groups_active
-						ON groups_groups_active.parent_group_id = groups.id`).
-				Joins(`
-					LEFT JOIN `+"`groups`"+` AS user_group
-						ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'User' AND
-							user_group.name LIKE ?`, groupName).
-				Group("groups.id, user_group.id").
-				Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)
-		} else {
-			query = query.Where("groups.name LIKE ?", groupName)
-		}
+	if participantType == team {
+		query = query.
+			Joins(`
+				LEFT JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = groups.id`).
+			Joins(`
+				LEFT JOIN `+"`groups`"+` AS user_group
+					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'User' AND
+						user_group.name LIKE ?`, groupName).
+			Group("groups.id, user_group.id").
+			Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)
 	} else {
-		query = query.Where("groups.type IN ('Team', 'User')").
-			Where("groups.name LIKE ?", groupName)
+		query = query.Where("groups.name LIKE ?", groupName)
 	}
 
 	var result contestInfo

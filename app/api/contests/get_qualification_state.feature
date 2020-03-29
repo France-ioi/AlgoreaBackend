@@ -39,8 +39,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type   | contest_entering_condition | default_language_tag |
-      | 50 | 00:00:00 | 1                       | <entry_participant_type> | <entering_condition>       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | <entering_condition>       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
@@ -57,16 +57,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
   Examples:
-    | entry_participant_type | entering_condition | expected_state |
-    | User                   | None               | ready          |
-    | null                   | All                | not_ready      |
-    | User                   | Half               | not_ready      |
-    | null                   | One                | not_ready      |
+    | entering_condition | expected_state |
+    | None               | ready          |
+    | All                | not_ready      |
+    | Half               | not_ready      |
+    | One                | not_ready      |
 
   Scenario Outline: State is ready for an individual contest
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type   | contest_entering_condition | default_language_tag |
-      | 50 | 00:00:00 | 1                       | <entry_participant_type> | <entering_condition>       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | <entering_condition>       | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 31              | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
@@ -86,11 +86,11 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entry_participant_type | entering_condition |
-      | null                   | None               |
-      | User                   | All                |
-      | null                   | Half               |
-      | User                   | One                |
+      | entering_condition |
+      | None               |
+      | All                |
+      | Half               |
+      | One                |
 
   Scenario Outline: Team-only contest when no one can enter
     Given the database has the following table 'items':

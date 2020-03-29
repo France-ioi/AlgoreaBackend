@@ -1,6 +1,6 @@
 -- +migrate Up
 ALTER TABLE `items`
-    ADD COLUMN `entry_participant_type` ENUM('User', 'Team')
+    ADD COLUMN `entry_participant_type` ENUM('User', 'Team') NOT NULL DEFAULT 'User'
         COMMENT 'For explicit-entry items, the type of participants who can enter'
             AFTER `default_language_id`;
 
