@@ -142,7 +142,6 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	if map[userGroupRelationAction]bool{
 		createGroupJoinRequestAction: true, acceptInvitationAction: true, createAcceptedGroupJoinRequestAction: true,
 	}[action] {
-
 		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action)
 		if apiError != service.NoError {
 			return apiError, "", database.GroupApprovals{}

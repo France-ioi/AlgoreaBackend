@@ -252,14 +252,14 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 			Joins(`
 				LEFT JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id`).
 			Joins(`
-					LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
-						permissions_granted.item_id = items.id`).
+				LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+					permissions_granted.item_id = items.id`).
 			Group("groups_groups_active.child_group_id").
 			Order("groups_groups_active.child_group_id").
 			Select(`
-					users.first_name, users.last_name, users.group_id AS group_id, users.login,
-					IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND
-					MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`).
+				users.first_name, users.last_name, users.group_id AS group_id, users.login,
+				IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`).
 			Scan(&otherMembers).Error())
 		membersCount = int32(len(otherMembers))
 		var currentUserIndex int
@@ -280,14 +280,14 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 		service.MustNotBeError(store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Joins("JOIN items ON items.id = ?", itemID).
 			Joins(`
-					LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id
-						AND permissions_granted.item_id = items.id`).
+				LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id
+					AND permissions_granted.item_id = items.id`).
 			Group("groups_ancestors_active.child_group_id").
 			PluckFirst(`
-					IFNULL(
-						MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
-					) AND
-					MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
+				IFNULL(
+					MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
+				) AND
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
 			Error())
 		if currentUserCanEnter {
 			qualifiedMembersCount = 1
