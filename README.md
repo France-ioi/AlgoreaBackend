@@ -2,7 +2,7 @@
 
 ## Requirements
 
-This project requires Go >=1.11 with modules enabled (GO111MODULE=on). However, we recommend to develop into your $GOPATH (old style) as the linter does not support modules for now.
+This project requires Go >=1.13.
 
 ## Running the app
 
