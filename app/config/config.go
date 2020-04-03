@@ -4,6 +4,7 @@ import (
 	"log"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
@@ -97,8 +98,9 @@ func Load() *Root {
 	setDefaults(viperConfig)
 
 	// through env variables
-	viperConfig.SetEnvPrefix("algorea") // env variables must be prefixed by "ALGOREA_"
-	viperConfig.AutomaticEnv()          // read in environment variables
+	viperConfig.SetEnvPrefix("algorea")                           // env variables must be prefixed by "ALGOREA_"
+	viperConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "__")) // substructs use "__" as key separator
+	viperConfig.AutomaticEnv()                                    // read in environment variables
 
 	// through the config file
 	viperConfig.SetConfigName(configName)

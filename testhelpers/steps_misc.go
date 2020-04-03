@@ -34,7 +34,7 @@ func (ctx *TestContext) RunFallbackServer() error { // nolint
 		return err
 	}
 
-	_ = os.Setenv("ALGOREA_REVERSEPROXY.SERVER", backendURL.String()) // nolint
+	_ = os.Setenv("ALGOREA_REVERSEPROXY__SERVER", backendURL.String()) // nolint
 	ctx.setupApp()
 	return nil
 }
