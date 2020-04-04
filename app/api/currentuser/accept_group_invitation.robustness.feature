@@ -1,16 +1,19 @@
 Feature: User accepts an invitation to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type    | team_item_id | require_personal_info_access_approval |
-      | 11 | Class   | null         | none                                  |
-      | 13 | Friends | null         | none                                  |
-      | 14 | Team    | 1234         | none                                  |
-      | 15 | Team    | 1234         | none                                  |
-      | 16 | Team    | null         | view                                  |
-      | 21 | User    | null         | none                                  |
+      | id | type    | require_personal_info_access_approval |
+      | 11 | Class   | none                                  |
+      | 13 | Friends | none                                  |
+      | 14 | Team    | none                                  |
+      | 15 | Team    | none                                  |
+      | 16 | Team    | view                                  |
+      | 21 | User    | none                                  |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
+    And the database has the following table 'items':
+      | id   | default_language_tag |
+      | 1234 | fr                   |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 11                | 11             |
@@ -30,6 +33,10 @@ Feature: User accepts an invitation to join a group - robustness
       | 13       | 21        | invitation   |
       | 15       | 21        | invitation   |
       | 16       | 21        | invitation   |
+    And the database has the following table 'attempts':
+      | participant_id | id | root_item_id |
+      | 14             | 1  | 1234         |
+      | 15             | 2  | 1234         |
 
   Scenario: User tries to create a cycle in the group relations graph
     Given I am the user with id "21"
@@ -61,7 +68,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: User tries to accept an invitation to join a team while being a member of another team with the same team_item_id
+  Scenario: User tries to accept an invitation to join a team while being a member of another team participating in same contests
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/15/accept"
     Then the response code should be 422
@@ -70,7 +77,7 @@ Feature: User accepts an invitation to join a group - robustness
     {
       "success": false,
       "message": "Unprocessable Entity",
-      "error_text": "You are already on a team for this item"
+      "error_text": "Team's participations are in conflict with the user's participations"
     }
     """
     And the table "groups_groups" should stay unchanged

@@ -24,8 +24,9 @@ import (
 //   otherwise the 'forbidden' error is returned.
 //
 //
-//   If the `{parent_group_id}` corresponds to a team with `team_item_id` set, the service skips users
-//   who are members of other teams with the same `team_item_id` (result = "in_another_team").
+//   If the `{parent_group_id}` corresponds to a team, the service skips users
+//   who are members of other teams having attempts for the same contests as `{parent_group_id}`
+//   (expired attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
 //
 //
 //   There should be a row with `type` = 'join_request' and `group_id` = `{parent_group_id}`
@@ -40,10 +41,6 @@ import (
 //   The action should not create cycles in the groups relations graph, otherwise
 //   the `group_id` gets skipped with `cycle` as the result.
 //   The response status code on success (200) doesn't depend on per-group results.
-//
-//
-//   _Warning:_ The service doesn't check if the authenticated user or requesting users have access rights
-//   on `team_item_id` when the `parent_group_id` represents a team.
 // parameters:
 // - name: parent_group_id
 //   in: path

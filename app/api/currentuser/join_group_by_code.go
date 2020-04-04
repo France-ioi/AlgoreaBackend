@@ -1,7 +1,6 @@
 package currentuser
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/jinzhu/gorm"
@@ -26,7 +25,8 @@ import (
 //   * If there is no team with `is_public` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `code`,
 //     the forbidden error is returned.
 //
-//   * If the team has `team_item_id` set and the user is already on a team with the same `team_item_id`,
+//   * If the group is a team and the user is already on a team that has attempts for same contest
+//     while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
 //     the unprocessable entity error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
@@ -34,9 +34,6 @@ import (
 //
 //   * If the group requires some approvals from the user and those are not given in `approval`,
 //     the unprocessable entity error is returned with a list of missing approvals.
-//
-//
-//   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` of the team.
 // parameters:
 // - name: code
 //   in: query
@@ -77,7 +74,6 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var groupInfo struct {
 			ID                 int64
-			TeamItemID         *int64
 			CodeEndIsNull      bool
 			CodeLifetimeIsNull bool
 		}
@@ -85,7 +81,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			Where("type = 'Team'").Where("is_public").
 			Where("code LIKE ?", code).
 			Where("code_expires_at IS NULL OR NOW() < code_expires_at").
-			Select("id, team_item_id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null").
+			Select("id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
 			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
@@ -94,16 +90,9 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 		}
 		service.MustNotBeError(errInTransaction)
 
-		if groupInfo.TeamItemID != nil {
-			var found bool
-			found, err = store.Groups().TeamsMembersForItem([]int64{user.GroupID}, *groupInfo.TeamItemID).
-				WithWriteLock().
-				Where("groups.id != ?", groupInfo.ID).HasRows()
-			service.MustNotBeError(err)
-			if found {
-				apiError = service.ErrUnprocessableEntity(errors.New("you are already on a team for this item"))
-				return apiError.Error // rollback
-			}
+		apiError = checkIfCurrentParticipationsConflictWithExistingMemberships(store, groupInfo.ID, user)
+		if apiError != service.NoError {
+			return apiError.Error // rollback
 		}
 
 		if groupInfo.CodeEndIsNull && !groupInfo.CodeLifetimeIsNull {

@@ -46,8 +46,9 @@ const maxAllowedLoginsToInvite = 100
 //
 //   * Logins not corresponding to valid users are ignored (result = "not_found").
 //
-//   * If the `parent_group_id` corresponds to a team with `team_item_id` set, the service skips users
-//     who are members of other teams with the same `team_item_id` (result = "in_another_team").
+//   * If the `parent_group_id` corresponds to a team, the service skips users
+//     who are members of other teams participating in same contests as `parent_group_id`
+//     (expired attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
 //
 //   * Pending group requests from users listed in `logins` become accepted (result = "success")
 //     if all needed approvals are given, or replaced by invitations otherwise.
@@ -66,10 +67,6 @@ const maxAllowedLoginsToInvite = 100
 //
 //   The authenticated user should be a manager of the `parent_group_id` with `can_manage` >= 'memberships',
 //   otherwise the 'forbidden' error is returned.
-//
-//
-//   _Warning:_ The service doesn't check if the authenticated user or listed users have access rights
-//   on `team_item_id` when the `parent_group_id` represents a team.
 // consumes:
 // - application/json
 // parameters:
@@ -187,19 +184,28 @@ func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupI
 }
 
 func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groupsToCheck []int64) []int64 {
-	var parentGroupInfo struct {
-		Type       string
-		TeamItemID *int64
-	}
-	const teamType = "Team"
-	service.MustNotBeError(store.Groups().ByID(parentGroupID).WithWriteLock().Select("type, team_item_id").
-		Take(&parentGroupInfo).Error())
-	if parentGroupInfo.Type != teamType || parentGroupInfo.TeamItemID == nil {
+	found, err := store.Groups().ByID(parentGroupID).Where("type = 'Team'").WithWriteLock().HasRows()
+	service.MustNotBeError(err)
+	if !found {
 		return nil
 	}
+
+	contestsQuery := store.Attempts().
+		Where("participant_id = ?", parentGroupID).
+		Where("root_item_id IS NOT NULL").
+		Group("root_item_id").WithWriteLock()
+
 	var otherTeamsMembers []int64
-	service.MustNotBeError(store.Groups().TeamsMembersForItem(groupsToCheck, *parentGroupInfo.TeamItemID).WithWriteLock().
-		Where("groups.id != ?", parentGroupID).
-		Pluck("child_group_id", &otherTeamsMembers).Error())
+	service.MustNotBeError(store.ActiveGroupGroups().Where("child_group_id IN (?)", groupsToCheck).
+		Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id").
+		Joins("JOIN (?) AS teams_contests", contestsQuery. // all the team's attempts (not only active ones)
+									Select("root_item_id AS item_id, MAX(NOW() < attempts.allows_submissions_until) AS is_active").QueryExpr()).
+		Joins("JOIN items ON items.id = teams_contests.item_id").
+		Joins("JOIN attempts ON attempts.participant_id = groups.id AND attempts.root_item_id = items.id").
+		Where("groups.type = 'Team'").
+		Where("parent_group_id != ?", parentGroupID).
+		Where("(teams_contests.is_active AND NOW() < attempts.allows_submissions_until) OR NOT items.allows_multiple_attempts").
+		WithWriteLock().Pluck("child_group_id", &otherTeamsMembers).Error())
+
 	return otherTeamsMembers
 }

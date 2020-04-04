@@ -1,17 +1,20 @@
 Feature: Join a group using a code (groupsJoinByCode) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type  | code       | code_expires_at     | code_lifetime | is_public | team_item_id | require_watch_approval |
-      | 11 | Team  | 3456789abc | 2017-04-29 06:38:38 | null          | true      | null         | 0                      |
-      | 12 | Team  | abc3456789 | null                | null          | true      | null         | 1                      |
-      | 14 | Team  | cba9876543 | null                | null          | true      | 1234         | 0                      |
-      | 15 | Team  | 75987654ab | null                | null          | false     | null         | 0                      |
-      | 16 | Class | dcef123492 | null                | null          | false     | null         | 0                      |
-      | 17 | Team  | 5987654abc | null                | null          | true      | 1234         | 0                      |
-      | 21 | User  | null       | null                | null          | false     | null         | 0                      |
+      | id | type  | code       | code_expires_at     | code_lifetime | is_public | require_watch_approval |
+      | 11 | Team  | 3456789abc | 2017-04-29 06:38:38 | null          | true      | 0                      |
+      | 12 | Team  | abc3456789 | null                | null          | true      | 1                      |
+      | 14 | Team  | cba9876543 | null                | null          | true      | 0                      |
+      | 15 | Team  | 75987654ab | null                | null          | false     | 0                      |
+      | 16 | Class | dcef123492 | null                | null          | false     | 0                      |
+      | 17 | Team  | 5987654abc | null                | null          | true      | 0                      |
+      | 21 | User  | null       | null                | null          | false     | 0                      |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 21       |
+    And the database has the following table 'items':
+      | id   | default_language_tag |
+      | 1234 | fr                   |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 11                | 11             |
@@ -28,6 +31,10 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type       |
       | 11       | 21        | invitation |
+    And the database has the following table 'attempts':
+      | participant_id | id | root_item_id |
+      | 14             | 1  | 1234         |
+      | 17             | 2  | 1234         |
 
   Scenario: No code
     Given I am the user with id "21"
@@ -106,7 +113,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Join a team while being a member of another team with the same team_item_id
+  Scenario: Join a team while being a member of another team participating in same contests
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=5987654abc"
     Then the response code should be 422
@@ -115,7 +122,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     {
       "success": false,
       "message": "Unprocessable Entity",
-      "error_text": "You are already on a team for this item"
+      "error_text": "Team's participations are in conflict with the user's participations"
     }
     """
     And the table "groups_groups" should stay unchanged

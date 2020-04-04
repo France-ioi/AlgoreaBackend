@@ -18,7 +18,8 @@ import (
 //   The invitation gets removed from `group_pending_requests`.
 //   The service also refreshes the access rights.
 //
-//   * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,
+//   * If the group is a team and the user is already on a team that has attempts for same contest
+//     while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
 //     the unprocessable entity error is returned.
 //
 //   * There should be a row in `group_pending_requests` with the `{group_id}` as a parent as `group_id`
@@ -27,9 +28,6 @@ import (
 //
 //   * If some of approvals required by the group are missing in `approvals`,
 //     the unprocessable entity error is returned with a list of missing approvals.
-//
-//
-//   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` when the group is a team.
 // parameters:
 // - name: group_id
 //   in: path
