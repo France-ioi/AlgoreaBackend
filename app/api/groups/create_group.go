@@ -66,7 +66,6 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 		return service.InsufficientAccessRightsError
 	}
 
-	apiError := service.NoError
 	var groupID int64
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		groupID, err = store.Groups().CreateNew(input.Name, input.Type)
@@ -79,10 +78,6 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 			"can_watch_members":      1,
 		})
 	})
-
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	// response
