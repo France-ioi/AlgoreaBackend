@@ -112,6 +112,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -119,6 +120,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -160,6 +162,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -167,6 +170,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -207,6 +211,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -214,6 +219,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -255,6 +261,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -262,6 +269,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -303,6 +311,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -310,6 +319,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -342,9 +352,6 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'attempts':
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
       | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 31             | 50      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 100             | 31             |
@@ -381,9 +388,6 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'attempts':
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 100             | 11             |
@@ -399,6 +403,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -406,6 +411,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -438,9 +444,6 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'attempts':
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           | 2019-05-30 20:00:00      |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 31             | 50      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 31             | 2019-05-30 20:00:00 |
@@ -471,9 +474,6 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'attempts':
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 11             | 2019-05-30 20:00:00 |
@@ -489,6 +489,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -496,6 +497,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -522,11 +524,6 @@ Feature: Get qualification state (contestGetQualificationState)
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
       | 2  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
       | 3  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
-      | 2          | 11             | 60      | 2019-05-30 15:00:00 |
-      | 3          | 11             | 60      | null                |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 100             | 11             |
@@ -542,6 +539,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -549,6 +547,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
