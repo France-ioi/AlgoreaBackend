@@ -87,7 +87,7 @@ Feature: Invite users
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
 
-  Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
+  Scenario: Successfully invite users into a team skipping those who are members of other teams participating in the same contests
     Given I am the user with id "21"
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |

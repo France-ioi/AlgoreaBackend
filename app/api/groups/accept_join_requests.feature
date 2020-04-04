@@ -144,7 +144,7 @@ Feature: Accept group requests
       | 0          | 31             | 20      | done                     |
       | 0          | 31             | 30      | done                     |
 
-  Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
+  Scenario: Accept requests for a team while skipping members of other teams participating in the same contests
     Given I am the user with id "21"
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id |
