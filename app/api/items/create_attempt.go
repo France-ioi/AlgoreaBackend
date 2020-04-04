@@ -25,7 +25,7 @@ import (
 //
 //     * if `as_team_id` is given, it should be a user's parent team group,
 //     * the group creating the attempt should have at least 'content' access to the item,
-//     * the item should be either 'Task' or 'Course',
+//     * the item should be either 'Task', 'Course', or 'Chapter',
 //
 //   otherwise the 'forbidden' error is returned.
 //
@@ -80,7 +80,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 
 	var allowsMultipleAttempts bool
 	err = srv.Store.Items().ByID(itemID).WhereGroupHasViewPermissionOnItems(groupID, "content").
-		Where("items.type IN('Task','Course')").
+		Where("items.type IN('Task','Course','Chapter')").
 		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError

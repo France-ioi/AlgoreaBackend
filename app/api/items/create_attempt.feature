@@ -30,6 +30,7 @@ Feature: Create an attempt for an item
       | group_id | item_id | can_view_generated       |
       | 101      | 50      | content                  |
       | 102      | 60      | content                  |
+      | 111      | 10      | content_with_descendants |
       | 111      | 50      | content_with_descendants |
     And the database has the following table 'attempts':
       | id | participant_id |
@@ -37,9 +38,9 @@ Feature: Create an attempt for an item
       | 0  | 102            |
       | 0  | 111            |
 
-  Scenario: User is able to create an attempt for his self group
+  Scenario Outline: User is able to create an attempt for his self group
     Given I am the user with id "111"
-    When I send a POST request to "/items/50/attempts"
+    When I send a POST request to "/items/<item_id>/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -49,8 +50,12 @@ Feature: Create an attempt for an item
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 0          | 111            | 50      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
+      | attempt_id | participant_id | item_id   | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 0          | 111            | <item_id> | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
+  Examples:
+    | item_id |
+    | 50      |
+    | 10      |
 
   Scenario: User is able to create an attempt as a team
     Given I am the user with id "101"
