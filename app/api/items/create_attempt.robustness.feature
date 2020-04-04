@@ -1,11 +1,11 @@
 Feature: Create an attempt for an item - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  | team_item_id | type  |
-      | 101 | null         | User  |
-      | 102 | 60           | Team  |
-      | 103 | 60           | Class |
-      | 104 | 50           | Team  |
+      | id  | type  |
+      | 101 | User  |
+      | 102 | Team  |
+      | 103 | Class |
+      | 104 | Team  |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |
@@ -84,21 +84,14 @@ Feature: Create an attempt for an item - robustness
     Given I am the user with id "101"
     When I send a POST request to "/items/60/attempts?as_team_id=102"
     Then the response code should be 403
-    And the response error message should contain "Can't use given as_team_id as a user's team for the item"
+    And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
 
   Scenario: as_team_id is not a team
     Given I am the user with id "101"
     When I send a POST request to "/items/60/attempts?as_team_id=103"
     Then the response code should be 403
-    And the response error message should contain "Can't use given as_team_id as a user's team for the item"
-    And the table "attempts" should stay unchanged
-
-  Scenario: as_team_id is a team for a different item
-    Given I am the user with id "101"
-    When I send a POST request to "/items/60/attempts?as_team_id=104"
-    Then the response code should be 403
-    And the response error message should contain "Can't use given as_team_id as a user's team for the item"
+    And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
 
   Scenario: There is an attempt for the (group, item) pair already, but items.allows_multiple_attempts = 0

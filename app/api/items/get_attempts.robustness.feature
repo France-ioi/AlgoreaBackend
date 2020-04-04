@@ -5,10 +5,10 @@ Feature: Get groups attempts for current user and item_id - robustness
       | jdoe  | 11       | John       | Doe       |
       | jane  | 12       | Jane       | Doe       |
     And the database has the following table 'groups':
-      | id | type  | team_item_id |
-      | 13 | Team  | 210          |
-      | 14 | Class | 210          |
-      | 15 | Team  | 220          |
+      | id | type  |
+      | 13 | Team  |
+      | 14 | Class |
+      | 15 | Team  |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 12             |
@@ -72,18 +72,11 @@ Feature: Get groups attempts for current user and item_id - robustness
     Given I am the user with id "11"
     When I send a GET request to "/items/210/attempts?as_team_id=13"
     Then the response code should be 403
-    And the response error message should contain "Can't use given as_team_id as a user's team for the item"
+    And the response error message should contain "Can't use given as_team_id as a user's team"
 
   Scenario: as_team_id is not a team
     Given I am the user with id "12"
     When I send a GET request to "/items/210/attempts?as_team_id=14"
     Then the response code should be 403
-    And the response error message should contain "Can't use given as_team_id as a user's team for the item"
-    And the table "attempts" should stay unchanged
-
-  Scenario: as_team_id is a team for a different item
-    Given I am the user with id "12"
-    When I send a GET request to "/items/210/attempts?as_team_id=15"
-    Then the response code should be 403
-    And the response error message should contain "Can't use given as_team_id as a user's team for the item"
+    And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged

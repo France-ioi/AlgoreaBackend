@@ -1,11 +1,11 @@
 Feature: Get a task token with a refreshed attempt for an item - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  | team_item_id | type  |
-      | 101 | null         | User  |
-      | 102 | 60           | Team  |
-      | 103 | 60           | Class |
-      | 104 | 50           | Team  |
+      | id  | type  |
+      | 101 | User  |
+      | 102 | Team  |
+      | 103 | Class |
+      | 104 | Team  |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |
@@ -111,13 +111,6 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
   Scenario: Attempt group is not a team
     Given I am the user with id "101"
     When I send a GET request to "/items/60/attempts/0/task-token?as_team_id=103"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "attempts" should stay unchanged
-
-  Scenario: as_team_id is a team for a different item
-    Given I am the user with id "101"
-    When I send a GET request to "/items/60/attempts/0/task-token?as_team_id=104"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged

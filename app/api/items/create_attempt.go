@@ -23,8 +23,7 @@ import (
 //
 //   Restrictions:
 //
-//     * if `as_team_id` is given, it should be a user's parent team group with `groups.team_item_id`
-//       pointing to one of the item's ancestors or the item itself.
+//     * if `as_team_id` is given, it should be a user's parent team group,
 //     * the group creating the attempt should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
 //
@@ -72,10 +71,10 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		}
 
 		var found bool
-		found, err = srv.Store.Groups().TeamGroupForItemAndUser(itemID, user).Where("groups.id = ?", groupID).HasRows()
+		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team for the item"))
+			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
 		}
 	}
 
