@@ -29,24 +29,22 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			var err error
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				newID, err = store.Groups().CreateNew("Some group", test.groupType, ptrInt64(123))
+				newID, err = store.Groups().CreateNew("Some group", test.groupType)
 				return err
 			}))
 			assert.True(t, newID > 0)
 			type resultType struct {
 				Name         string
 				Type         string
-				TeamItemID   *int64
 				CreatedAtSet bool
 			}
 			var result resultType
 			assert.NoError(t, dataStore.Groups().ByID(newID).
-				Select("name, type, team_item_id, ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
+				Select("name, type, ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
 				Take(&result).Error())
 			assert.Equal(t, resultType{
 				Name:         "Some group",
 				Type:         test.groupType,
-				TeamItemID:   ptrInt64(123),
 				CreatedAtSet: true,
 			}, result)
 

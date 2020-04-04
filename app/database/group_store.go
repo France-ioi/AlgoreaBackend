@@ -51,19 +51,18 @@ func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 		Where("groups.type = 'Team'")
 }
 
-// CreateNew creates a new group with given name, type, and team_item_id.
+// CreateNew creates a new group with given name and type.
 // It also runs GroupGroupStore.createNewAncestors().
-func (s *GroupStore) CreateNew(name, groupType string, teamItemID *int64) (groupID int64, err error) {
+func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 		groupID = retryStore.NewID()
 		return retryStore.Groups().InsertMap(map[string]interface{}{
-			"id":           groupID,
-			"name":         name,
-			"type":         groupType,
-			"team_item_id": teamItemID,
-			"created_at":   Now(),
+			"id":         groupID,
+			"name":       name,
+			"type":       groupType,
+			"created_at": Now(),
 		})
 	}))
 	if groupType == "Team" {

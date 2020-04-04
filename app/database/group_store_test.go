@@ -74,6 +74,6 @@ func TestGroupStore_CreateNew_MustBeRunInTransaction(t *testing.T) {
 
 	groupStore := NewDataStore(db).Groups()
 	assert.PanicsWithValue(t, ErrNoTransaction,
-		func() { _, _ = groupStore.CreateNew("", "", nil) })
+		func() { _, _ = groupStore.CreateNew("", "") })
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
