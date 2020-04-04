@@ -28,14 +28,14 @@ CREATE TABLE `attempts` (
     CONSTRAINT `fk_attempts_root_item_id_items_id`FOREIGN KEY (`root_item_id`) REFERENCES `items`(`id`) ON DELETE SET NULL,
     `created_at` DATETIME NOT NULL DEFAULT NOW()
         COMMENT 'Time at which the attempt was manually created or was first marked as started (should be when it is first visited).',
-    INDEX `participant_id_parent_attempt_id_root_item_id` (`participant_id`, `parent_attempt_id`, `root_item_id`)
+    INDEX `participant_id_parent_attempt_id_root_item_id` (`participant_id`, `parent_attempt_id`, `root_item_id`),
+    INDEX `participant_id_root_item_id` (`participant_id`, `root_item_id`)
     -- We cannot add the following constraint because it would set both `participant_id` and `parent_attempt_id` to NULL
     -- on deletion of the parent attempt.
     -- CONSTRAINT `attempts_participant_id_parent_attempt_id_attempts_participant_id_id`
     --    FOREIGN KEY (`participant_id`, `parent_attempt_id`) REFERENCES `attempts`(`participant_id`, `id`) SET NULL,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     COMMENT 'Attempts of participants (team or user) to solve a subtree of items. An attempt may have several answers for a same item. Every participant has a default attempt.';
-
 
 INSERT INTO `attempts` (participant_id, id, creator_id, parent_attempt_id, root_item_id, created_at)
 SELECT participant_id, 0, (
