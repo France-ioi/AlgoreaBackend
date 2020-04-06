@@ -92,7 +92,7 @@ type contestGetQualificationStateResponse struct {
 //
 //                Restrictions:
 //                  * `item_id` should be a contest;
-//                  * `as_team_id` (if given) should be the current user's team;
+//                  * `as_team_id` (if given) should be one of the current user's teams;
 //                  * `as_team_id` should be given if the contest is team-only and should not be given if the contest is user-only;
 //                  * the authenticated user (or his team) should have at least 'info' access to the item.
 //
