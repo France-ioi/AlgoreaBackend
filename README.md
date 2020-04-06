@@ -25,7 +25,7 @@ The easiest way to run the backend for consumer it is to run it in a container w
 * Seed the database:
 
   ```docker-compose run backend /bin/sh -c "sleep 1; ALGOREA_DATABASE__CONNECTION__USER="root"; ALGOREA_DATABASE__CONNECTION__PASSWD="a_root_db_password"; AlgoreaBackend db-restore; AlgoreaBackend db-migrate; AlgoreaBackend install;"```
-* Run `docker-compose up` to launch the docker compose setup (db+backend)
+* Launch the docker compose setup (db+backend): `docker-compose up`
 * Visit `http://127.0.0.1:8080/status` with your browser, you should get a success status message.
 
 If needed, you can cannot on the MySQL CLI using:
