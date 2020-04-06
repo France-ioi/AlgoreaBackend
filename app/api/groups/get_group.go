@@ -37,7 +37,7 @@ type groupViewResponse struct {
 	// required:true
 	CreatedAt *database.Time `json:"created_at"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,User,Session
+	// enum: Class,Team,Club,Friends,Other,Session
 	Type string `json:"type"`
 	// Nullable
 	// required:true
@@ -66,7 +66,7 @@ type groupViewResponse struct {
 //
 //
 //   The authenticated user should be a manager of `group_id` OR a descendant of the group OR  the group's `is_public`=1,
-//   otherwise the 'forbidden' error is returned.
+//   otherwise the 'forbidden' error is returned. If the group is a user group, the 'forbidden' error is returned as well.
 //
 //
 //   Note: `code*` fields are omitted when the user is not a manager of the group.
@@ -110,6 +110,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 				ON groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
 		Where("manager_access.found OR groups_descendants.ancestor_group_id IS NOT NULL OR groups.is_public").
 		Where("groups.id = ?", groupID).
+		Where("groups.type != 'User'").
 		Select(
 			`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
 			groups.type, groups.activity_id, groups.is_open, groups.is_public,
