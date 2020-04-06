@@ -20,7 +20,7 @@ import (
 //
 //
 //   The authenticated user should be a manager of the `{parent_group_id}` with `can_manage` >= 'memberships',
-//   otherwise the 'forbidden' error is returned.
+//   otherwise the 'forbidden' error is returned.  If the group is a user group, the 'forbidden' error is returned as well.
 //
 //
 //   There should be a row with `type` = 'leave_request' and `group_id` = `{parent_group_id}`

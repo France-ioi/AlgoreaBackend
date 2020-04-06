@@ -76,6 +76,19 @@ Feature: Accept requests to leave a group - robustness
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user group
+    Given I am the user with id "21"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage  |
+      | 21       | 21         | memberships |
+    When I send a POST request to "/groups/21/leave-requests/reject?group_ids=31,141,21,11,13"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: Fails when the parent group id is wrong
     Given I am the user with id "21"
     When I send a POST request to "/groups/abc/leave-requests/reject?group_ids=31,141,21,11,13"

@@ -12,6 +12,7 @@ Feature: List user-batch prefixes (userBatchPrefixesView) - robustness
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 14       | 21         | none        |
+      | 21       | 21         | memberships |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 13                | 13             |
@@ -31,6 +32,12 @@ Feature: List user-batch prefixes (userBatchPrefixesView) - robustness
   Scenario: User is not a manager of the group_id
     Given I am the user with id "21"
     When I send a GET request to "/groups/14/user-batch-prefixes"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: User is has enough permissions to manage the group, but the group is a user group
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/21/user-batch-prefixes"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
