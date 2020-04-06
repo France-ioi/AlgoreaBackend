@@ -1,0 +1,5 @@
+.git/
+**/*.sql
+!db/schema/*
+!db/migrations/*
+log/

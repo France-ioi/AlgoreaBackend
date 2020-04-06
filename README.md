@@ -4,7 +4,7 @@
 
 This project requires Go >=1.13.
 
-## Running the app
+## Running the app (for development)
 
 Compile the app:
 ```
@@ -17,7 +17,23 @@ You can then run the app: (call `./bin/AlgoreaBackend` to print the list of avai
 ```
 For instance, you can launch the web server using `./bin/AlgoreaBackend serve`.
 
-## Running the setup
+## Running the setup (as API consumer)
+
+The easiest way to run the backend for consumer it is to run it in a container with its database. To do that:
+
+* clone this repository (or download the `docker-compose.yml` file and replace `build: .` by `image: franceioi/algoreabackend:latest` to use the public image)
+* Seed the database:
+
+  ```docker-compose run backend /bin/sh -c "sleep 1; ALGOREA_DATABASE__CONNECTION__USER="root"; ALGOREA_DATABASE__CONNECTION__PASSWD="a_root_db_password"; AlgoreaBackend db-restore; AlgoreaBackend db-migrate; AlgoreaBackend install;"```
+* Run `docker-compose up` to launch the docker compose setup (db+backend)
+* Visit `http://127.0.0.1:8080/status` with your browser, you should get a success status message.
+
+If needed, you can cannot on the MySQL CLI using:
+```
+docker exec -it algoreabackend_db_1 mysql -h localhost -u algorea -pa_db_password  --protocol=TCP algorea_db
+```
+
+## Running the setup (as dev)
 
 The application needs a database (MySQL) to run and requires it for a major part of its tests.
 
