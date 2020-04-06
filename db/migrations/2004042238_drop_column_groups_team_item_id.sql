@@ -1,4 +1,6 @@
 -- +migrate Up
+UPDATE `groups` SET `team_item_id` = NULL WHERE `team_item_id` = 0;
+
 UPDATE `groups` SET activity_id = team_item_id WHERE team_item_id IS NOT NULL;
 ALTER TABLE `groups` DROP COLUMN `team_item_id`;
 
