@@ -1,13 +1,13 @@
 Feature: Get qualification state (contestGetQualificationState) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name   | type | team_item_id |
-      | 10 | Team 1 | Team | 50           |
-      | 11 | Team 2 | Team | 60           |
-      | 21 | owner  | User | null         |
-      | 31 | john   | User | null         |
-      | 41 | jane   | User | null         |
-      | 51 | jack   | User | null         |
+      | id | name   | type |
+      | 10 | Team 1 | Team |
+      | 11 | Team 2 | Team |
+      | 21 | owner  | User |
+      | 31 | john   | User |
+      | 41 | jane   | User |
+      | 51 | jack   | User |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -108,19 +108,6 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
     When I send a GET request to "/contests/50/qualification-state"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
-  Scenario: as_team_id is not a team related to the item while the item's entry_participant_type = Team
-    Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
-      | 60 | 1                       | Team                   | fr                   |
-    And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 10       | 60      | info                     |
-      | 21       | 60      | content_with_descendants |
-    And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=10"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 

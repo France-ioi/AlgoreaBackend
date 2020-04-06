@@ -13,11 +13,11 @@ import (
 
 // swagger:operation GET /current-user/teams/by-item/{item_id} groups teamGetByItemID
 // ---
-// summary: Get current user's team for item
+// summary: Get current user's team for a contest
 // description: >
-//   The team identified by `item_id` i.e. a group which:
+//   The team identified by `{item_id}` i.e. a group which:
 //
-//     * has `team_item_id` equal to the input `item_id`,
+//     * has an active and unexpired attempt with `root_item_id` = `{item_id}`,
 //
 //     * is a direct parent (i.e. via `groups_groups`) of the authenticated user’s `selfGroup`,
 //

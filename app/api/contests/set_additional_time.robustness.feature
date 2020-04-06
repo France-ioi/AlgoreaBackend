@@ -22,8 +22,8 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 31                | 31             |
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
-      | 50 | 00:00:00 | null                   | fr                   |
-      | 60 | null     | null                   | fr                   |
+      | 50 | 00:00:00 | User                   | fr                   |
+      | 60 | null     | User                   | fr                   |
       | 10 | 00:00:02 | User                   | fr                   |
       | 70 | 00:00:03 | User                   | fr                   |
       | 80 | 00:00:04 | Team                   | fr                   |

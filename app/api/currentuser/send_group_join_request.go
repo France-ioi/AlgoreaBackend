@@ -22,7 +22,8 @@ import (
 //
 //     * `groups.is_public` should be 1, otherwise the 'forbidden' response is returned.
 //
-//     * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,
+//     * If the group is a team and the user is already on a team that has attempts for same contest
+//       while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
 //       the unprocessable entity error is returned.
 //
 //     * If there is already a row in `group_pending_requests` with
@@ -47,9 +48,6 @@ import (
 //
 //   In both cases, if some approvals required by the group are missing in `approvals`,
 //   the unprocessable entity error with a list of missing approvals is returned.
-//
-//
-//   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` when the group is a team.
 // parameters:
 // - name: group_id
 //   in: path

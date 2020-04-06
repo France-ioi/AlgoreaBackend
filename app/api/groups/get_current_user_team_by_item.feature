@@ -1,12 +1,12 @@
 Feature: Get current user's team for item (teamGetByItemID)
   Background:
     Given the database has the following table 'groups':
-      | id | type | team_item_id |
-      | 12 | User | null         |
-      | 13 | User | null         |
-      | 14 | User | null         |
-      | 20 | Team | 100          |
-      | 21 | Team | 100          |
+      | id | type |
+      | 12 | User |
+      | 13 | User |
+      | 14 | User |
+      | 20 | Team |
+      | 21 | Team |
     And the database has the following table 'users':
       | login | group_id |
       | user  | 12       |
@@ -20,6 +20,10 @@ Feature: Get current user's team for item (teamGetByItemID)
       | 21              | 12             |
       | 21              | 13             |
       | 21              | 14             |
+    And the database has the following table 'attempts':
+      | participant_id | id | root_item_id |
+      | 20             | 1  | 100          |
+      | 21             | 1  | 100          |
 
   Scenario: The user joined the team by invitation
     Given I am the user with id "12"

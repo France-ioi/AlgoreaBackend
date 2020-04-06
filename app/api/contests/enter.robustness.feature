@@ -1,14 +1,14 @@
 Feature: Enters a contest as a group (user self or team) (contestEnter) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name         | type                | team_item_id |
-      | 10 | Team 1       | Team                | 50           |
-      | 11 | Team 2       | Team                | 60           |
-      | 21 | owner        | User                | null         |
-      | 31 | john         | User                | null         |
-      | 41 | jane         | User                | null         |
-      | 51 | jack         | User                | null         |
-      | 99 | item50-group | ContestParticipants | null         |
+      | id | name         | type                |
+      | 10 | Team 1       | Team                |
+      | 11 | Team 2       | Team                |
+      | 21 | owner        | User                |
+      | 31 | john         | User                |
+      | 41 | jane         | User                |
+      | 51 | jack         | User                |
+      | 99 | item50-group | ContestParticipants |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |

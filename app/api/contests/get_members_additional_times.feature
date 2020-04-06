@@ -1,17 +1,17 @@
 Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime)
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type    | team_item_id |
-      | 10 | Parent      | Club    | null         |
-      | 11 | Group A     | Friends | null         |
-      | 13 | Group B     | Team    | 60           |
-      | 14 | Group B     | Other   | null         |
-      | 15 | Team        | Team    | 10           |
-      | 16 | Team for 70 | Team    | 70           |
-      | 17 | Team wo/acc | Team    | 60           |
-      | 21 | owner       | User    | null         |
-      | 31 | john        | User    | null         |
-      | 41 | jane        | User    | null         |
+      | id | name        | type    |
+      | 10 | Parent      | Club    |
+      | 11 | Group A     | Friends |
+      | 13 | Group B     | Team    |
+      | 14 | Group B     | Other   |
+      | 15 | Team        | Team    |
+      | 16 | Team for 70 | Team    |
+      | 17 | Team wo/acc | Team    |
+      | 21 | owner       | User    |
+      | 31 | john        | User    |
+      | 41 | jane        | User    |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -108,6 +108,12 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 31       | 50      | 00:01:00        |
       | 31       | 70      | 00:01:00        |
       | 41       | 70      | 00:01:00        |
+    And the database has the following table 'attempts':
+      | participant_id | id | root_item_id |
+      | 13             | 1  | 60           |
+      | 15             | 1  | 60           |
+      | 31             | 1  | 50           |
+      | 41             | 1  | 50           |
 
   Scenario: Non-team contest
     Given I am the user with id "21"

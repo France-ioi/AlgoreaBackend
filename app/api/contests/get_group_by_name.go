@@ -72,7 +72,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	isTeamOnly, err := srv.isTeamOnlyContestManagedByUser(itemID, user)
+	participantType, err := srv.getParticipantTypeForContestManagedByUser(itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -94,29 +94,22 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 			LEFT JOIN groups_contest_items AS main_group_contest_item ON main_group_contest_item.group_id = groups.id AND
 				main_group_contest_item.item_id = ?`, itemID).
 		Where("groups.id IN ?", groupsManagedByUserSubQuery).
+		Where("groups.type = ?", participantType).
 		Select(`
-				groups.id AS group_id,
-				groups.name,
-				groups.type,
-				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
-				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
+			groups.id AS group_id,
+			groups.name,
+			groups.type,
+			IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
+			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 		Group("groups.id").
 		HavingMaxPermissionGreaterThan("view", "none").
 		Order("groups.id")
 
-	if isTeamOnly {
+	if participantType == team {
 		query = query.
 			Joins(`
-				LEFT JOIN groups_ancestors_active AS found_group_descendants
-					ON found_group_descendants.ancestor_group_id = groups.id`).
-			Joins(`
-				LEFT JOIN `+"`groups`"+` AS team
-					ON team.id = found_group_descendants.child_group_id AND team.type = 'Team' AND
-						(groups.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
-						 groups.team_item_id = ?)`, itemID, itemID).
-			Joins(`
 				LEFT JOIN groups_groups_active
-					ON groups_groups_active.parent_group_id = team.id`).
+					ON groups_groups_active.parent_group_id = groups.id`).
 			Joins(`
 				LEFT JOIN `+"`groups`"+` AS user_group
 					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'User' AND
@@ -124,8 +117,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 			Group("groups.id, user_group.id").
 			Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)
 	} else {
-		query = query.
-			Where("groups.name LIKE ?", groupName)
+		query = query.Where("groups.name LIKE ?", groupName)
 	}
 
 	var result contestInfo

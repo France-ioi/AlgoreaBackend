@@ -1,16 +1,16 @@
 Feature: Get group by name (contestGetGroupByName)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type    | team_item_id |
-      | 10 | Parent  | Club    | null         |
-      | 11 | Group A | Friends | null         |
-      | 13 | Group B | Team    | 60           |
-      | 14 | Group B | Other   | null         |
-      | 15 | Team    | Team    | 60           |
-      | 21 | owner   | User    | null         |
-      | 31 | john    | User    | null         |
-      | 41 | jane    | User    | null         |
-      | 50 | Group D | Class   | null         |
+      | id | name    | type    |
+      | 10 | Parent  | Club    |
+      | 11 | Group A | Team    |
+      | 13 | Group B | Team    |
+      | 14 | Group B | Other   |
+      | 15 | Team    | Team    |
+      | 21 | owner   | User    |
+      | 31 | john    | User    |
+      | 41 | jane    | User    |
+      | 50 | Group D | Class   |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -21,6 +21,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 11       | 21         |
       | 14       | 21         |
       | 31       | 21         |
+      | 41       | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 11             |
@@ -56,7 +57,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 42                | 42             |
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
-      | 50 | 00:00:00 | User                   | fr                   |
+      | 50 | 00:00:00 | Team                   | fr                   |
       | 60 | 00:00:01 | Team                   | fr                   |
       | 10 | 00:00:02 | User                   | fr                   |
       | 70 | 00:00:03 | Team                   | fr                   |
@@ -72,11 +73,13 @@ Feature: Get group by name (contestGetGroupByName)
       | 13       | 50      | content                  |
       | 13       | 60      | info                     |
       | 15       | 60      | info                     |
+      | 21       | 10      | content_with_descendants |
       | 21       | 50      | solution                 |
       | 21       | 60      | content_with_descendants |
       | 21       | 70      | content_with_descendants |
       | 31       | 50      | content_with_descendants |
       | 31       | 70      | content_with_descendants |
+      | 41       | 10      | content                  |
       | 41       | 70      | content                  |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
@@ -90,6 +93,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 21       | 70      | 00:01:00        |
       | 31       | 50      | 00:01:00        |
       | 31       | 70      | 00:01:00        |
+      | 41       | 10      | 00:02:00        |
       | 41       | 70      | 00:01:00        |
 
   Scenario: Content access for group, solutions access for user, additional time from parent groups
@@ -154,37 +158,37 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Group is a user group (non-team contest)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/by-name?name=john"
+    When I send a GET request to "/contests/10/groups/by-name?name=jane"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
-      "group_id": "31",
-      "name": "john",
+      "group_id": "41",
+      "name": "jane",
       "type": "User",
-      "additional_time": 60,
-      "total_additional_time": 60
+      "additional_time": 120,
+      "total_additional_time": 120
     }
     """
 
-  Scenario: Group is a user group (team contest) [through invitationAccepted]
+  Scenario: Group is a user group (user-only contest)
+    Given I am the user with id "21"
+    When I send a GET request to "/contests/10/groups/by-name?name=jane"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "group_id": "41",
+      "name": "jane",
+      "type": "User",
+      "additional_time": 120,
+      "total_additional_time": 120
+    }
+    """
+
+  Scenario: Group is a user group (team contest)
     Given I am the user with id "21"
     When I send a GET request to "/contests/60/groups/by-name?name=john"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "group_id": "15",
-      "name": "Team",
-      "type": "Team",
-      "additional_time": 45,
-      "total_additional_time": 45
-    }
-    """
-
-  Scenario: Group is a user group (team contest) [through requestAccepted]
-    Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/by-name?name=jane"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -206,23 +210,8 @@ Feature: Get group by name (contestGetGroupByName)
     {
       "group_id": "11",
       "name": "Group A",
-      "type": "Friends",
+      "type": "Team",
       "additional_time": 0,
       "total_additional_time": 0
-    }
-    """
-
-  Scenario: Group is an ancestor group (non-team contest)
-    Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/by-name?name=Group%20A"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "group_id": "11",
-      "name": "Group A",
-      "type": "Friends",
-      "additional_time": 60,
-      "total_additional_time": 3660
     }
     """

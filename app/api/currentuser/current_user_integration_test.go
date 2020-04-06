@@ -24,35 +24,43 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			name: "parent group is not a team",
 			fixture: `
 				groups:
-					- {id: 1, is_public: 1, type: "Class", team_item_id: 1234}
-					- {id: 2, type: Team, team_item_id: 1234}
-					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 1, is_public: 1, type: "Class"}
+					- {id: 2, type: Team}
+					- {id: 3, type: "Team"}
 					- {id: 10, type: User}
-				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
+				items: [{id: 1234, default_language_tag: fr}]
+				groups_groups: [{parent_group_id: 2, child_group_id: 10}]
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234}
+					- {participant_id: 2, id: 1, root_item_id: 1234}
+					- {participant_id: 3, id: 1, root_item_id: 1234}`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team without team_item_id",
+			name: "parent group is a team",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
-					- {id: 2, type: Team, team_item_id: 1234}
-					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 2, type: Team}
+					- {id: 3, type: "Team"}
 					- {id: 10, type: User}
-				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
+				groups_groups: [{parent_group_id: 2, child_group_id: 10}]
+				items: [{id: 1234, default_language_tag: fr}]
+				attempts:
+					- {participant_id: 2, id: 1, root_item_id: 1234}`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with team_item_id, but the user is not on teams",
+			name: "parent group is a team with attempts for the given contest, but the user is not on teams",
 			fixture: `
 				groups:
-					- {id: 1, is_public: 1, type: "Team", team_item_id: 1234}
-					- {id: 2, type: Team, team_item_id: 1234}
-					- {id: 3, type: "Team", "team_item_id": 1234}
-					- {id: 4, type: "Class", "team_item_id": 1234}
-					- {id: 5, type: "Friends", "team_item_id": 1234}
-					- {id: 6, type: "Other", "team_item_id": 1234}
-					- {id: 7, type: "Club", "team_item_id": 1234}
+					- {id: 1, is_public: 1, type: "Team"}
+					- {id: 2, type: Team}
+					- {id: 3, type: "Team"}
+					- {id: 4, type: "Class"}
+					- {id: 5, type: "Friends"}
+					- {id: 6, type: "Other"}
+					- {id: 7, type: "Club"}
 					- {id: 10, type: User}
 					- {id: 11, type: User}
 					- {id: 12, type: User}
@@ -63,36 +71,114 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 					- {parent_group_id: 4, child_group_id: 10}
 					- {parent_group_id: 5, child_group_id: 10}
 					- {parent_group_id: 6, child_group_id: 10}
-					- {parent_group_id: 7, child_group_id: 10}`,
+					- {parent_group_id: 7, child_group_id: 10}
+				items: [{id: 1234, default_language_tag: fr}]
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234}
+					- {participant_id: 4, id: 1, root_item_id: 1234}`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with team_item_id, but the user is on teams with mismatching team_item_id",
+			name: "parent group is a team with attempts, but the user is on teams with attempts for other contests",
 			fixture: `
 				groups:
-					- {id: 1, is_public: 1, type: "Team", team_item_id: 1234}
-					- {id: 2, type: Team, team_item_id: 2345}
+					- {id: 1, is_public: 1, type: "Team"}
+					- {id: 2, type: Team}
 					- {id: 3, type: Team}
-					- {id: 4, type: Team, team_item_id: 2345}
-					- {id: 5, type: Team, team_item_id: 2345}
+					- {id: 4, type: Team}
+					- {id: 5, type: Team}
 					- {id: 10, type: User}
 				groups_groups:
 					- {parent_group_id: 2, child_group_id: 10}
 					- {parent_group_id: 3, child_group_id: 10}
 					- {parent_group_id: 4, child_group_id: 10}
-					- {parent_group_id: 5, child_group_id: 10}`,
+					- {parent_group_id: 5, child_group_id: 10}
+				items:
+					- {id: 1234, default_language_tag: fr}
+					- {id: 2345, default_language_tag: fr}
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234}
+					- {participant_id: 2, id: 1, root_item_id: 2345}`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id",
+			name: "parent group is a team with attempts and the user is on a team with attempts for the same contest",
 			fixture: `
 				groups:
-					- {id: 1, is_public: 1, type: "Team", team_item_id: 1234}
-					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 1, is_public: 1, type: "Team"}
+					- {id: 2, type: Team}
 					- {id: 10, type: User}
+				items: [{id: 1234, default_language_tag: fr}]
 				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10}`,
-			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
+					- {parent_group_id: 2, child_group_id: 10}
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234}
+					- {participant_id: 2, id: 1, root_item_id: 1234}`,
+			wantAPIError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
+		},
+		{
+			name: "parent group is a team with attempts and the user is on a team with attempts " +
+				"for the same contest (contest allows multiple attempts)",
+			fixture: `
+				groups:
+					- {id: 1, is_public: 1, type: "Team"}
+					- {id: 2, type: Team}
+					- {id: 10, type: User}
+				items: [{id: 1234, default_language_tag: fr, allows_multiple_attempts: 1}]
+				groups_groups:
+					- {parent_group_id: 2, child_group_id: 10}
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234}
+					- {participant_id: 2, id: 1, root_item_id: 1234}`,
+			wantAPIError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
+		},
+		{
+			name: "parent group is a team with attempts and the user is on a team with expired attempts for the same contest " +
+				"(contest allows multiple attempts)",
+			fixture: `
+				groups:
+					- {id: 1, is_public: 1, type: "Team"}
+					- {id: 2, type: Team}
+					- {id: 10, type: User}
+				items: [{id: 1234, default_language_tag: fr, allows_multiple_attempts: 1}]
+				groups_groups:
+					- {parent_group_id: 2, child_group_id: 10}
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234}
+					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
+			wantAPIError: service.NoError,
+		},
+		{
+			name: "parent group is a team with expired attempts and the user is on a team with expired attempts for the same contest " +
+				"(contest allows multiple attempts)",
+			fixture: `
+				groups:
+					- {id: 1, is_public: 1, type: "Team"}
+					- {id: 2, type: Team}
+					- {id: 10, type: User}
+				items: [{id: 1234, default_language_tag: fr, allows_multiple_attempts: 1}]
+				groups_groups:
+					- {parent_group_id: 2, child_group_id: 10}
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}
+					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
+			wantAPIError: service.NoError,
+		},
+		{
+			name: "parent group is a team with expired attempts and the user is on a team with expired attempts for the same contest " +
+				"(contest doesn't allow multiple attempts)",
+			fixture: `
+				groups:
+					- {id: 1, is_public: 1, type: "Team"}
+					- {id: 2, type: Team}
+					- {id: 10, type: User}
+				items: [{id: 1234, default_language_tag: fr, allows_multiple_attempts: 0}]
+				groups_groups:
+					- {parent_group_id: 2, child_group_id: 10}
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}
+					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
+			wantAPIError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
 		},
 	}
 	for _, tt := range tests {

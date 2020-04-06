@@ -26,6 +26,9 @@ type contestGetQualificationStateOtherMember struct {
 	// `items.entering_time_max` (or `permissions_granted.can_enter_until`) range for this item
 	// required: true
 	CanEnter bool `json:"can_enter"`
+	// true if the user has an active attempt as a member of another team for this contest or
+	// when the user has an expired attempt as a member of another team while the contest doesn't allow multiple attempts
+	AttemptsRestrictionViolated bool `json:"attempts_restriction_violated"`
 }
 
 // swagger:model contestGetQualificationStateResponse
@@ -58,8 +61,8 @@ type contestGetQualificationStateResponse struct {
 //                returns the qualification state, i.e. whether the participant can enter the contest, and info on each team member.
 //
 //                The qualification state is one of:
-//                  * 'already_started' if the participant has an `attempts` row for the item
-//                    with non-null `started_at` and is an active member of the item's "contest participants" group;
+//                  * 'already_started' if the participant has an `attempts` row for the contest
+//                    (with `attempts.root_item_id` = `{item_id}`) allowing submissions;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -77,15 +80,19 @@ type contestGetQualificationStateResponse struct {
 //
 //                      * "Half": same but half of the members (ceil-rounded) of the team;
 //
-//                  * 'not_ready' if the participant has an `attempts` row for the item
-//                    with non-null `started_at` and is NOT an active member of the item's "contest participants" group
-//                    while the item's `allows_multiple_attempts` is false;
+//                  * 'not_ready' if the participant has an `attempts` row for the contest (with `attempts.root_item_id` = `{item_id}`)
+//                    while the item's `allows_multiple_attempts` is false or
+//                    if the participant has an active attempt for the contest;
+//
+//                  * 'not_ready' if at least one of the team's members as a member of another team
+//                    has an `attempts` row for the contest (with `attempts.root_item_id` = `{item_id}`)
+//                    while the item's `allows_multiple_attempts` is false or an active (not expired) attempt;
 //
 //                  * 'ready' otherwise.
 //
 //                Restrictions:
 //                  * `item_id` should be a contest;
-//                  * `as_team_id` (if given) should be the current user's team having the `item_id` as the team item;
+//                  * `as_team_id` (if given) should be one of the current user's teams;
 //                  * `as_team_id` should be given if the contest is team-only and should not be given if the contest is user-only;
 //                  * the authenticated user (or his team) should have at least 'info' access to the item.
 //
@@ -160,35 +167,32 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		return nil, service.InsufficientAccessRightsError
 	}
 
-	if apiError := srv.checkTeamID(groupID, itemID, user, store); apiError != service.NoError {
+	if apiError := srv.checkTeamID(groupID, user, store); apiError != service.NoError {
 		return nil, apiError
 	}
 
-	contestParticipationQuery := store.Results().
-		Joins("JOIN items ON items.id = results.item_id").
-		// check the participation is not expired
-		Joins(`
-			LEFT JOIN groups_groups_active
-				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
-					groups_groups_active.child_group_id = results.participant_id`).
-		Where("item_id = ?", itemID).
-		Where("results.participant_id = ?", groupID).
-		Where("started_at IS NOT NULL")
+	contestParticipationQuery := store.Attempts().
+		Joins("JOIN items ON items.id = attempts.root_item_id").
+		Where("attempts.root_item_id = ?", itemID).
+		Where("attempts.participant_id = ?", groupID)
 	if lock {
 		contestParticipationQuery = contestParticipationQuery.WithWriteLock()
 	}
-	var isActive, alreadyStarted bool
-	err = contestParticipationQuery.PluckFirst("groups_groups_active.parent_group_id IS NOT NULL", &isActive).Error()
-	if !gorm.IsRecordNotFoundError(err) {
-		service.MustNotBeError(err)
-		alreadyStarted = true
+	var participationInfo struct {
+		IsStarted bool
+		IsActive  bool
 	}
+	err = contestParticipationQuery.Select(`
+		IFNULL(MAX(1), 0) AS is_started,
+		IFNULL(MAX(NOW() < attempts.allows_submissions_until), 0) AS is_active`).
+		Scan(&participationInfo).Error()
+	service.MustNotBeError(err)
 
-	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount :=
-		srv.getQualificatonInfo(groupID, itemID, user, store)
+	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount, attemptsViolationsFound :=
+		srv.getQualificatonInfo(groupID, itemID, user, store, lock)
 	state := computeQualificationState(
-		alreadyStarted, isActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
-		contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
+		participationInfo.IsStarted, participationInfo.IsActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest,
+		contestInfo.ContestMaxTeamSize, contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount, attemptsViolationsFound)
 
 	result := &contestGetQualificationStateResponse{
 		State:               string(state),
@@ -204,17 +208,11 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	return result, service.NoError
 }
 
-func (srv *Service) checkTeamID(
-	groupID, itemID int64, user *database.User, store *database.DataStore) service.APIError {
+func (srv *Service) checkTeamID(groupID int64, user *database.User, store *database.DataStore) service.APIError {
 	if groupID != user.GroupID {
-		var teamGroupID int64
-		err := store.Groups().TeamGroupForTeamItemAndUser(itemID, user).
-			PluckFirst("groups.id", &teamGroupID).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			return service.InsufficientAccessRightsError
-		}
+		found, err := store.Groups().TeamGroupForUser(groupID, user).HasRows()
 		service.MustNotBeError(err)
-		if teamGroupID != groupID {
+		if !found {
 			return service.InsufficientAccessRightsError
 		}
 	}
@@ -222,7 +220,8 @@ func (srv *Service) checkTeamID(
 }
 
 func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
-	maxTeamSize int32, contestEnteringCondition string, membersCount, qualifiedMembersCount int32) qualificationState {
+	maxTeamSize int32, contestEnteringCondition string, membersCount, qualifiedMembersCount int32,
+	attemptsViolationsFound bool) qualificationState {
 	var state qualificationState
 	if hasAlreadyStarted && isActive {
 		state = alreadyStarted
@@ -233,7 +232,7 @@ func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttemp
 			state = notReady
 		}
 	}
-	if hasAlreadyStarted && !isActive && !allowsMultipleAttempts {
+	if attemptsViolationsFound || hasAlreadyStarted && !isActive && !allowsMultipleAttempts {
 		state = notReady
 	}
 	return state
@@ -241,32 +240,60 @@ func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttemp
 
 func isContestEnteringConditionSatisfied(contestEnteringCondition string, membersCount, qualifiedMembersCount int32) bool {
 	return contestEnteringCondition == "None" ||
-		(contestEnteringCondition == "All" && qualifiedMembersCount == membersCount ||
-			contestEnteringCondition == "Half" && membersCount <= qualifiedMembersCount*2 ||
-			contestEnteringCondition == "One" && qualifiedMembersCount >= 1)
+		contestEnteringCondition == "All" && qualifiedMembersCount == membersCount ||
+		contestEnteringCondition == "Half" && membersCount <= qualifiedMembersCount*2 ||
+		contestEnteringCondition == "One" && qualifiedMembersCount >= 1
 }
 
-func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.User, store *database.DataStore) (
-	membersCount int32, otherMembers []contestGetQualificationStateOtherMember, currentUserCanEnter bool, qualifiedMembersCount int32) {
+func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (
+	membersCount int32, otherMembers []contestGetQualificationStateOtherMember, currentUserCanEnter bool, qualifiedMembersCount int32,
+	attemptsViolationsFound bool) {
 	if groupID != user.GroupID {
-		service.MustNotBeError(store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
+		canEnterQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = groups_groups_active.child_group_id").
 			Joins("JOIN items ON items.id = ?", itemID).
 			Joins(`
 				LEFT JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id`).
 			Joins(`
-					LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
-						permissions_granted.item_id = items.id`).
+				LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+					permissions_granted.item_id = items.id`).
 			Group("groups_groups_active.child_group_id").
 			Order("groups_groups_active.child_group_id").
 			Select(`
-					users.first_name, users.last_name, users.group_id AS group_id, users.login,
-					IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND
-					MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`).
-			Scan(&otherMembers).Error())
+				users.first_name, users.last_name, users.group_id AS group_id, users.login,
+				IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`)
+		if lock {
+			canEnterQuery = canEnterQuery.WithWriteLock()
+		}
+		service.MustNotBeError(canEnterQuery.Scan(&otherMembers).Error())
 		membersCount = int32(len(otherMembers))
+
+		participatingSomewhereElseQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
+			Joins("JOIN groups_groups_active AS all_teams_relations ON all_teams_relations.child_group_id = groups_groups_active.child_group_id").
+			Joins("JOIN `groups` AS groups_to_check ON groups_to_check.id = all_teams_relations.parent_group_id AND groups_to_check.type = 'Team'").
+			Joins("JOIN items ON items.id = ?", itemID).
+			Joins("JOIN attempts ON attempts.participant_id = groups_to_check.id AND attempts.root_item_id = items.id").
+			Where("groups_to_check.id != groups_groups_active.parent_group_id"). // except for this team
+			Group("groups_groups_active.child_group_id").
+			Having("MAX(NOW() < attempts.allows_submissions_until) OR NOT MAX(items.allows_multiple_attempts)")
+		if lock {
+			participatingSomewhereElseQuery = participatingSomewhereElseQuery.WithWriteLock()
+		}
+		var usersViolatingAttemptsRestriction []int64
+		service.MustNotBeError(participatingSomewhereElseQuery.
+			Pluck("groups_groups_active.child_group_id", &usersViolatingAttemptsRestriction).Error())
+
+		violationsMap := make(map[int64]bool, len(usersViolatingAttemptsRestriction))
+		for _, userID := range usersViolatingAttemptsRestriction {
+			violationsMap[userID] = true
+		}
+
+		attemptsViolationsFound = len(usersViolatingAttemptsRestriction) > 0
+
 		var currentUserIndex int
 		for index := range otherMembers {
+			otherMembers[index].AttemptsRestrictionViolated = violationsMap[otherMembers[index].GroupID]
 			if otherMembers[index].GroupID == user.GroupID {
 				currentUserCanEnter = otherMembers[index].CanEnter
 				currentUserIndex = index
@@ -275,26 +302,33 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 				qualifiedMembersCount++
 			}
 		}
+
 		// remove the current user from the members list
 		otherMembers = append(otherMembers[:currentUserIndex], otherMembers[currentUserIndex+1:]...)
 	} else {
 		membersCount = 1
 		otherMembers = []contestGetQualificationStateOtherMember{}
-		service.MustNotBeError(store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+		canEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Joins("JOIN items ON items.id = ?", itemID).
 			Joins(`
-					LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id
-						AND permissions_granted.item_id = items.id`).
-			Group("groups_ancestors_active.child_group_id").
+				LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id
+					AND permissions_granted.item_id = items.id`).
+			Group("groups_ancestors_active.child_group_id")
+		if lock {
+			canEnterQuery = canEnterQuery.WithWriteLock()
+		}
+
+		service.MustNotBeError(canEnterQuery.
 			PluckFirst(`
-					IFNULL(
-						MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
-					) AND
-					MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
+				IFNULL(
+					MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
+				) AND
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
 			Error())
 		if currentUserCanEnter {
 			qualifiedMembersCount = 1
 		}
 	}
-	return membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount
+
+	return membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount, attemptsViolationsFound
 }

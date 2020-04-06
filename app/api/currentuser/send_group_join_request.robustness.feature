@@ -1,19 +1,22 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | is_public | type    | team_item_id | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
-      | 11 | 1         | Class   | null         | none                                  | null                                   | 0                      |
-      | 13 | 1         | Friends | null         | none                                  | null                                   | 0                      |
-      | 14 | 1         | Team    | 1234         | none                                  | null                                   | 0                      |
-      | 15 | 0         | Club    | null         | none                                  | null                                   | 0                      |
-      | 16 | 1         | Team    | 1234         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
-      | 17 | 1         | Team    | 1234         | none                                  | null                                   | 0                      |
-      | 21 | 0         | User    | null         | none                                  | null                                   | 0                      |
-      | 23 | 0         | User    | null         | none                                  | null                                   | 0                      |
+      | id | is_public | type    | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
+      | 11 | 1         | Class   | none                                  | null                                   | 0                      |
+      | 13 | 1         | Friends | none                                  | null                                   | 0                      |
+      | 14 | 1         | Team    | none                                  | null                                   | 0                      |
+      | 15 | 0         | Club    | none                                  | null                                   | 0                      |
+      | 16 | 1         | Team    | edit                                  | 9999-12-31 23:59:59                    | 1                      |
+      | 17 | 1         | Team    | none                                  | null                                   | 0                      |
+      | 21 | 0         | User    | none                                  | null                                   | 0                      |
+      | 23 | 0         | User    | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
       | 23       | jane  |
+    And the database has the following table 'items':
+      | id   | default_language_tag |
+      | 1234 | fr                   |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 17       | 21         | memberships |
@@ -36,6 +39,11 @@ Feature: User sends a request to join a group - robustness
       | group_id | member_id | type         |
       | 11       | 21        | invitation   |
       | 14       | 21        | join_request |
+    And the database has the following table 'attempts':
+      | participant_id | id | root_item_id |
+      | 14             | 1  | 1234         |
+      | 16             | 2  | 1234         |
+      | 17             | 3  | 1234         |
 
   Scenario: User tries to create a cycle in the group relations graph
     Given I am the user with id "21"
@@ -71,7 +79,7 @@ Feature: User sends a request to join a group - robustness
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: User tries to send a request to join a team while being a member of another team with the same team_item_id
+  Scenario: User tries to send a request to join a team while being a member of another team participating in same contests
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-requests/14"
     Then the response code should be 422
@@ -80,7 +88,7 @@ Feature: User sends a request to join a group - robustness
     {
       "success": false,
       "message": "Unprocessable Entity",
-      "error_text": "You are already on a team for this item"
+      "error_text": "Team's participations are in conflict with the user's participations"
     }
     """
     And the table "group_pending_requests" should stay unchanged
@@ -88,7 +96,7 @@ Feature: User sends a request to join a group - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Team owner tries to send a request to join a team while being a member of another team with the same team_item_id
+  Scenario: Team owner tries to send a request to join a team while being a member of another team participating in same contests
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-requests/17"
     Then the response code should be 422
@@ -97,7 +105,7 @@ Feature: User sends a request to join a group - robustness
     {
       "success": false,
       "message": "Unprocessable Entity",
-      "error_text": "You are already on a team for this item"
+      "error_text": "Team's participations are in conflict with the user's participations"
     }
     """
     And the table "groups_groups" should stay unchanged

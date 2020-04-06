@@ -28,9 +28,7 @@ import (
 //
 //   Restrictions:
 //
-//     * if `{as_team_id}` is given, it should be a team with `groups.team_item_id`
-//       pointing to one of ancestors of `{item_id}` or the `{item_id}` itself,
-//       and the current user should be a member of this team,
+//     * if `{as_team_id}` is given, it should be a team and the current user should be a member of this team,
 //     * the user (or `{as_team_id}`) should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
 //     * there should be a row in the `results` table with `participant_id` equal to the user's group (or `{as_team_id}`),
@@ -119,7 +117,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		// if `as_team_id` is given, it should be the user's team related to the item
 		if groupID != user.GroupID {
 			var found bool
-			found, err = store.Groups().TeamGroupForItemAndUser(itemID, user).WithWriteLock().
+			found, err = store.Groups().TeamGroupForUser(groupID, user).WithWriteLock().
 				Where("groups.id = ?", groupID).HasRows()
 			service.MustNotBeError(err)
 			if !found {

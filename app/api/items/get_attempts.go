@@ -106,10 +106,10 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		var found bool
-		found, err = srv.Store.Groups().TeamGroupForItemAndUser(itemID, user).Where("groups.id = ?", groupID).HasRows()
+		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team for the item"))
+			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
 		}
 	}
 

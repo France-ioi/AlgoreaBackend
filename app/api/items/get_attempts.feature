@@ -1,11 +1,11 @@
 Feature: Get groups attempts for current user and item_id
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type  | team_item_id |
-      | 11 | jdoe    | User  | null         |
-      | 13 | Group B | Class | null         |
-      | 21 | other   | User  | null         |
-      | 23 | Group C | Team  | 210          |
+      | id | name    | type  |
+      | 11 | jdoe    | User  |
+      | 13 | Group B | Class |
+      | 21 | other   | User  |
+      | 23 | Group C | Team  |
     And the database has the following table 'users':
       | login | group_id | first_name | last_name |
       | jdoe  | 11       | John       | Doe       |

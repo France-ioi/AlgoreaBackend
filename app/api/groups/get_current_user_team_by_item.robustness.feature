@@ -1,17 +1,17 @@
 Feature: Get current user's team for item (teamGetByItemID) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type  | team_item_id |
-      | 11 | User  | null         |
-      | 12 | User  | null         |
-      | 13 | User  | null         |
-      | 14 | User  | null         |
-      | 15 | User  | null         |
-      | 16 | User  | null         |
-      | 17 | User  | null         |
-      | 19 | User  | null         |
-      | 20 | Team  | 100          |
-      | 21 | Class | 100          |
+      | id | type  |
+      | 11 | User  |
+      | 12 | User  |
+      | 13 | User  |
+      | 14 | User  |
+      | 15 | User  |
+      | 16 | User  |
+      | 17 | User  |
+      | 19 | User  |
+      | 20 | Team  |
+      | 21 | Class |
     And the database has the following table 'users':
       | login  | group_id |
       | owner  | 11       |

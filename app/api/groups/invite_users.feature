@@ -1,14 +1,14 @@
 Feature: Invite users
   Background:
     Given the database has the following table 'groups':
-      | id  | type  | team_item_id | require_personal_info_access_approval |
-      | 13  | Team  | 1234         | none                                  |
-      | 21  | User  | null         | none                                  |
-      | 101 | User  | null         | none                                  |
-      | 102 | User  | null         | none                                  |
-      | 103 | User  | null         | none                                  |
-      | 444 | Team  | 1234         | none                                  |
-      | 555 | Class | null         | view                                  |
+      | id  | type  | require_personal_info_access_approval |
+      | 13  | Team  | none                                  |
+      | 21  | User  | none                                  |
+      | 101 | User  | none                                  |
+      | 102 | User  | none                                  |
+      | 103 | User  | none                                  |
+      | 444 | Team  | none                                  |
+      | 555 | Class | view                                  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -23,9 +23,10 @@ Feature: Invite users
       | 102               | 102            |
       | 103               | 103            |
     And the database has the following table 'items':
-      | id | default_language_tag |
-      | 20 | fr                   |
-      | 30 | fr                   |
+      | id   | default_language_tag |
+      | 20   | fr                   |
+      | 30   | fr                   |
+      | 1234 | fr                   |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 20               | 30            |
@@ -86,7 +87,7 @@ Feature: Invite users
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
 
-  Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
+  Scenario: Successfully invite users into a team skipping those who are members of other teams participating in the same contests
     Given I am the user with id "21"
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
@@ -102,6 +103,10 @@ Feature: Invite users
       | 444               | 101            |
       | 444               | 102            |
       | 444               | 444            |
+    And the database table 'attempts' has also the following rows:
+      | participant_id | id | root_item_id |
+      | 13             | 1  | 1234         |
+      | 444            | 2  | 1234         |
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {

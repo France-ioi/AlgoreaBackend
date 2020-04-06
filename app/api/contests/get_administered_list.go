@@ -27,10 +27,9 @@ type contestAdminListRow struct {
 	// Nullable
 	// required: true
 	LanguageTag *string `gorm:"column:title_language_tag" json:"language_tag"`
-	// Nullable
 	// required: true
 	// enum: User,Team
-	EntryParticipantType *string `json:"entry_participant_type"`
+	EntryParticipantType string `json:"entry_participant_type"`
 	// required: true
 	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
 	// required: true

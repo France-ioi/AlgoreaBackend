@@ -1,24 +1,27 @@
 Feature: Accept group requests
   Background:
     Given the database has the following table 'groups':
-      | id  | type    | team_item_id | require_personal_info_access_approval |
-      | 11  | Class   | null         | none                                  |
-      | 13  | Team    | 1234         | none                                  |
-      | 14  | Friends | null         | view                                  |
-      | 21  | User    | null         | none                                  |
-      | 31  | User    | null         | none                                  |
-      | 111 | User    | null         | none                                  |
-      | 121 | User    | null         | none                                  |
-      | 122 | User    | null         | none                                  |
-      | 123 | User    | null         | none                                  |
-      | 131 | User    | null         | none                                  |
-      | 141 | User    | null         | none                                  |
-      | 151 | User    | null         | none                                  |
-      | 161 | User    | null         | none                                  |
-      | 444 | Team    | 1234         | none                                  |
+      | id  | type    | require_personal_info_access_approval |
+      | 11  | Class   | none                                  |
+      | 13  | Team    | none                                  |
+      | 14  | Friends | view                                  |
+      | 21  | User    | none                                  |
+      | 31  | User    | none                                  |
+      | 111 | User    | none                                  |
+      | 121 | User    | none                                  |
+      | 122 | User    | none                                  |
+      | 123 | User    | none                                  |
+      | 131 | User    | none                                  |
+      | 141 | User    | none                                  |
+      | 151 | User    | none                                  |
+      | 161 | User    | none                                  |
+      | 444 | Team    | none                                  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
+    And the database has the following table 'items':
+      | id   | default_language_tag |
+      | 1234 | fr                   |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 11                | 11             |
@@ -141,7 +144,7 @@ Feature: Accept group requests
       | 0          | 31             | 20      | done                     |
       | 0          | 31             | 30      | done                     |
 
-  Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
+  Scenario: Accept requests for a team while skipping members of other teams participating in the same contests
     Given I am the user with id "21"
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id |
@@ -157,6 +160,10 @@ Feature: Accept group requests
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
+    And the database table 'attempts' has also the following rows:
+      | participant_id | id | root_item_id |
+      | 13             | 1  | 1234         |
+      | 444            | 2  | 1234         |
     When I send a POST request to "/groups/13/join-requests/accept?group_ids=31,141,21,11,13,122,151,161"
     Then the response code should be 200
     And the response body should be, in JSON:

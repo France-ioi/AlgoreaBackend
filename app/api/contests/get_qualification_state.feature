@@ -1,13 +1,13 @@
 Feature: Get qualification state (contestGetQualificationState)
   Background:
     Given the database has the following table 'groups':
-      | id | name   | type | team_item_id |
-      | 10 | Team 1 | Team | 50           |
-      | 11 | Team 2 | Team | 60           |
-      | 21 | owner  | User | null         |
-      | 31 | john   | User | null         |
-      | 41 | jane   | User | null         |
-      | 51 | jack   | User | null         |
+      | id | name   | type |
+      | 10 | Team 1 | Team |
+      | 11 | Team 2 | Team |
+      | 21 | owner  | User |
+      | 31 | john   | User |
+      | 41 | jane   | User |
+      | 51 | jack   | User |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -39,8 +39,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type   | contest_entering_condition | default_language_tag |
-      | 50 | 00:00:00 | 1                       | <entry_participant_type> | <entering_condition>       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | <entering_condition>       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
@@ -57,16 +57,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
   Examples:
-    | entry_participant_type | entering_condition | expected_state |
-    | User                   | None               | ready          |
-    | null                   | All                | not_ready      |
-    | User                   | Half               | not_ready      |
-    | null                   | One                | not_ready      |
+    | entering_condition | expected_state |
+    | None               | ready          |
+    | All                | not_ready      |
+    | Half               | not_ready      |
+    | One                | not_ready      |
 
   Scenario Outline: State is ready for an individual contest
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type   | contest_entering_condition | default_language_tag |
-      | 50 | 00:00:00 | 1                       | <entry_participant_type> | <entering_condition>       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | <entering_condition>       | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 31              | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
@@ -86,11 +86,11 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entry_participant_type | entering_condition |
-      | null                   | None               |
-      | User                   | All                |
-      | null                   | Half               |
-      | User                   | One                |
+      | entering_condition |
+      | None               |
+      | All                |
+      | Half               |
+      | One                |
 
   Scenario Outline: Team-only contest when no one can enter
     Given the database has the following table 'items':
@@ -112,6 +112,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -119,6 +120,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -160,6 +162,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -167,6 +170,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -207,6 +211,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -214,6 +219,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -255,6 +261,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -262,6 +269,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -303,6 +311,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -310,6 +319,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": true,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -342,9 +352,6 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'attempts':
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
       | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 31             | 50      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 100             | 31             |
@@ -381,9 +388,6 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'attempts':
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 100             | 11             |
@@ -399,6 +403,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -406,6 +411,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -436,11 +442,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'attempts':
-      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
-      | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 31             | 50      | 2019-05-30 15:00:00 |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           | 2019-05-30 20:00:00      |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 31             | 2019-05-30 20:00:00 |
@@ -469,11 +472,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And the database has the following table 'attempts':
-      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
-      | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           |
-    And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 11             | 60      | 2019-05-30 15:00:00 |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 11             | 2019-05-30 20:00:00 |
@@ -489,6 +489,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "other_members": [
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jane",
           "group_id": "41",
           "last_name": null,
@@ -496,6 +497,7 @@ Feature: Get qualification state (contestGetQualificationState)
         },
         {
           "can_enter": false,
+          "attempts_restriction_violated": false,
           "first_name": "Jack",
           "group_id": "51",
           "last_name": "Daniel",
@@ -503,6 +505,109 @@ Feature: Get qualification state (contestGetQualificationState)
         }
       ],
       "state": "ready"
+    }
+    """
+
+  Scenario: State is ready for a team-only contest because the all its started attempts has expired
+    Given the database table 'groups' has also the following row:
+      | id  | type                |
+      | 100 | ContestParticipants |
+    And the database has the following table 'items':
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                       | 3                     | 100                           | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
+    And the database has the following table 'attempts':
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+      | 2  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+      | 3  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 100             | 11             |
+    And I am the user with id "31"
+    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": false,
+      "entering_condition": "None",
+      "max_team_size": 3,
+      "other_members": [
+        {
+          "can_enter": false,
+          "attempts_restriction_violated": false,
+          "first_name": "Jane",
+          "group_id": "41",
+          "last_name": null,
+          "login": "jane"
+        },
+        {
+          "can_enter": false,
+          "attempts_restriction_violated": false,
+          "first_name": "Jack",
+          "group_id": "51",
+          "last_name": "Daniel",
+          "login": "jack"
+        }
+      ],
+      "state": "ready"
+    }
+    """
+
+  Scenario: State is not ready for a team-only contest because the team's users have a conflicting participation
+    Given the database table 'groups' has also the following row:
+      | id  | type                |
+      | 100 | ContestParticipants |
+    And the database has the following table 'items':
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                       | 3                     | 100                           | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
+    And the database has the following table 'attempts':
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+      | 2  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+      | 3  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 100             | 11             |
+    And the database table 'attempts' has also the following row:
+      | participant_id | id | root_item_id |
+      | 10             | 1  | 60           |
+    And I am the user with id "31"
+    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": false,
+      "entering_condition": "None",
+      "max_team_size": 3,
+      "other_members": [
+        {
+          "can_enter": false,
+          "attempts_restriction_violated": true,
+          "first_name": "Jane",
+          "group_id": "41",
+          "last_name": null,
+          "login": "jane"
+        },
+        {
+          "can_enter": false,
+          "attempts_restriction_violated": true,
+          "first_name": "Jack",
+          "group_id": "51",
+          "last_name": "Daniel",
+          "login": "jack"
+        }
+      ],
+      "state": "not_ready"
     }
     """
 
