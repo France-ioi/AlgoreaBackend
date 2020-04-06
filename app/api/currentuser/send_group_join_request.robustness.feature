@@ -9,7 +9,7 @@ Feature: User sends a request to join a group - robustness
       | 16 | 1         | Team    | edit                                  | 9999-12-31 23:59:59                    | 1                      |
       | 17 | 1         | Team    | none                                  | null                                   | 0                      |
       | 21 | 0         | User    | none                                  | null                                   | 0                      |
-      | 23 | 0         | User    | none                                  | null                                   | 0                      |
+      | 23 | 1         | User    | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -193,3 +193,18 @@ Feature: User sends a request to join a group - robustness
       "data": {"missing_approvals": ["watch"]}
     }
     """
+
+  Scenario: Can't send request to a user group
+    Given I am the user with id "23"
+    When I send a POST request to "/current-user/group-requests/23?approvals=personal_info_view,lock_membership"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: Can't send request to a user group even while being a group manager
+    Given I am the user with id "23"
+    And the database table 'group_managers' has also the following rows:
+      | group_id | manager_id | can_manage  |
+      | 23       | 23         | memberships |
+    When I send a POST request to "/current-user/group-requests/23?approvals=personal_info_view,lock_membership"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"

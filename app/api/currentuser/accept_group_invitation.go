@@ -24,10 +24,12 @@ import (
 //
 //   * There should be a row in `group_pending_requests` with the `{group_id}` as a parent as `group_id`
 //     and the authenticated user’s `group_id` as `member_id` with `type`='invitation'.
-//     Otherwise the unprocessable entity error is returned.
+//     Otherwise the "not found" error is returned.
 //
 //   * If some of approvals required by the group are missing in `approvals`,
 //     the unprocessable entity error is returned with a list of missing approvals.
+//
+//   * If the group doesn't exist or is a user group, the "forbidden" response is returned.
 // parameters:
 // - name: group_id
 //   in: path
