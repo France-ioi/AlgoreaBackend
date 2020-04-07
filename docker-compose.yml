@@ -23,18 +23,18 @@ services:
     links:
       - db
     environment:
-      ALGOREA_ENV: test
+      ALGOREA_ENV: dev
       ALGOREA_DATABASE__CONNECTION__ADDR: db
       ALGOREA_DATABASE__CONNECTION__USER: algorea
       ALGOREA_DATABASE__CONNECTION__PASSWD: a_db_password
       ALGOREA_DATABASE__CONNECTION__DBNAME: algorea_db
-      ALGOREA_LOGGING__FORMAT: json
-      ALGOREA_LOGGING__OUTPUT: file
-      ALGOREA_LOGGING__LOGSQLQUERIES: 1
+      ALGOREA_LOGGING__FORMAT: text
+      ALGOREA_LOGGING__OUTPUT: stdout
+      ALGOREA_LOGGING__LOGSQLQUERIES: 0
       ALGOREA_LOGGING__LEVEL: debug
     command: >
       /bin/sh -c "
         echo \"Wait 1sec for MySQL to be ready...\";
-        sleep 1;
+        sleep 2;
         AlgoreaBackend serve;
       "
