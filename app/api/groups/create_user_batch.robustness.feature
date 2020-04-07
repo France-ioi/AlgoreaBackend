@@ -19,6 +19,7 @@ Feature: Create a user batch - robustness
       | 2                 | 21             |
       | 3                 | 3              |
       | 3                 | 4              |
+      | 3                 | 21             |
       | 4                 | 4              |
       | 21                | 21             |
     And the database has the following table 'user_batch_prefixes':
@@ -226,6 +227,26 @@ Feature: Create a user batch - robustness
       "group_prefix": "test",
       "custom_prefix": "1234567890",
       "subgroups": [{"count": 1, "group_id": 2}],
+      "postfix_length": 3,
+      "password_length": 7
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "user_batches" should stay unchanged
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: subgroups[...].group_id is a user
+    Given I am the user with id "21"
+    When I send a POST request to "/user-batches" with the following body:
+    """
+    {
+      "group_prefix": "test",
+      "custom_prefix": "1234567890",
+      "subgroups": [{"count": 1, "group_id": 21}],
       "postfix_length": 3,
       "password_length": 7
     }

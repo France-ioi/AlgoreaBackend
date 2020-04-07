@@ -156,7 +156,7 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Group is a user group (non-team contest)
+  Scenario: Group is a user (non-team contest)
     Given I am the user with id "21"
     When I send a GET request to "/contests/10/groups/by-name?name=jane"
     Then the response code should be 200
@@ -171,7 +171,7 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Group is a user group (user-only contest)
+  Scenario: Group is a user (user-only contest)
     Given I am the user with id "21"
     When I send a GET request to "/contests/10/groups/by-name?name=jane"
     Then the response code should be 200
@@ -186,7 +186,7 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Group is a user group (team contest)
+  Scenario: Group is a user (team contest)
     Given I am the user with id "21"
     When I send a GET request to "/contests/60/groups/by-name?name=john"
     Then the response code should be 200

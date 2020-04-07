@@ -1,11 +1,11 @@
 Feature: Remove members from a group (groupRemoveMembers)
   Background:
     Given the database has the following table 'groups':
-      | id |
-      | 11 |
-      | 13 |
-      | 21 |
-      | 31 |
+      | id | type |
+      | 11 | User |
+      | 13 | Club |
+      | 21 | User |
+      | 31 | User |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
@@ -18,6 +18,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 13                | 13             |
       | 13                | 21             |
       | 21                | 21             |
+      | 31                | 31             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 11             |
@@ -26,6 +27,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | group_id | manager_id | can_manage            |
       | 13       | 31         | none                  |
       | 13       | 21         | memberships_and_group |
+      | 31       | 31         | memberships_and_group |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
@@ -38,6 +40,14 @@ Feature: Remove members from a group (groupRemoveMembers)
   Scenario: Fails when the user is a manager of the parent group, but doesn't have enough permissions on it
     Given I am the user with id "31"
     When I send a DELETE request to "/groups/13/members?user_ids=1,2"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the user has enough permissions on the group, but the group is a user
+    Given I am the user with id "31"
+    When I send a DELETE request to "/groups/31/members?user_ids=1,2"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

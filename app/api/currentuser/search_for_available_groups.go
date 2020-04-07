@@ -19,8 +19,8 @@ const minSearchStringLength = 3
 // summary: Search for available groups
 // description: >
 //   Searches for groups that can be joined freely, based on a substring of their name.
-//   Returns groups with `is_public`=1, whose `name` has `search` as a substring, and for that the current user
-//   is not already a member and don’t have pending requests/invitations.
+//   Returns groups with `is_public` = 1 and `type` != 'User', whose `name` has `search` as a substring,
+//   and for that the current user is not already a member and don’t have pending requests/invitations.
 //
 //
 //   Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
@@ -114,6 +114,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 			groups.type,
 			groups.description`).
 		Where("groups.is_public").
+		Where("type != 'User'").
 		Where("groups.id NOT IN ?", skipGroups).
 		Where("groups.id NOT IN ?", skipPending).
 		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)

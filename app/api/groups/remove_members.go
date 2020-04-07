@@ -20,7 +20,7 @@ import (
 //
 //
 //   The authenticated user should be a manager of the `group_id` with `can_manage` >= 'memberships',
-//   otherwise the 'forbidden' error is returned.
+//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 //
 //
 //   Each of the input `user_ids` should have the input `group_id` as a parent in `groups_groups`,

@@ -1,19 +1,19 @@
 Feature: Accept group requests - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  |
-      | 11  |
-      | 12  |
-      | 13  |
-      | 14  |
-      | 21  |
-      | 31  |
-      | 111 |
-      | 121 |
-      | 122 |
-      | 123 |
-      | 131 |
-      | 141 |
+      | id  | type  |
+      | 11  | User  |
+      | 12  | User  |
+      | 13  | Club  |
+      | 14  | Class |
+      | 21  | User  |
+      | 31  | Class |
+      | 111 | User  |
+      | 121 | User  |
+      | 122 | User  |
+      | 123 | User  |
+      | 131 | User  |
+      | 141 | User  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
@@ -21,11 +21,13 @@ Feature: Accept group requests - robustness
       | jane  | 12       | Jane        | Doe       | 1     |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
+      | 12       | 12         | memberships |
       | 13       | 21         | memberships |
       | 13       | 12         | none        |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 11                | 11             |
+      | 12                | 12             |
       | 13                | 13             |
       | 13                | 111            |
       | 13                | 121            |
@@ -63,6 +65,16 @@ Feature: Accept group requests - robustness
   Scenario: Fails when the user is a manager of the parent group, but doesn't have enough rights to manage memberships
     Given I am the user with id "12"
     When I send a POST request to "/groups/13/join-requests/accept?group_ids=31,141,21,11,13"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user
+    Given I am the user with id "12"
+    When I send a POST request to "/groups/12/join-requests/accept?group_ids=31,141,21,11,13"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

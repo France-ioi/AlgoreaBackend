@@ -30,7 +30,7 @@ import (
 //                  * `item_id` should be a timed contest;
 //                  * the authenticated user should have at least `content_with_descendants` access on the input item;
 //                  * the authenticated user should be a manager of the `group_id`;
-//                  * if the contest is team-only (`items.entry_participant_type` = 'Team'), then the group should not be a user group.
+//                  * if the contest is team-only (`items.entry_participant_type` = 'Team'), then the group should not be a user.
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:

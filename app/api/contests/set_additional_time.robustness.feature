@@ -139,7 +139,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should stay unchanged
 
-  Scenario: Team contest and the User group
+  Scenario: Team contest and a user
     Given I am the user with id "21"
     When I send a PUT request to "/contests/80/groups/31/additional-times?seconds=0"
     Then the response code should be 403

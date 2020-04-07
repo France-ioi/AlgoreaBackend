@@ -75,8 +75,10 @@ func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.Us
 
 func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *database.User, groupID int64) service.APIError {
 	found, err := store.GroupAncestors().ManagedByUser(user).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id").
 		Where("groups_ancestors.child_group_id = ?", groupID).
-		Where("group_managers.can_manage != 'none'").HasRows()
+		Where("group_managers.can_manage != 'none'").
+		Where("groups.type != 'User'").HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError

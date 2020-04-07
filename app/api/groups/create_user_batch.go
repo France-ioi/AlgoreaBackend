@@ -22,6 +22,7 @@ import (
 
 type createUserBatchRequestSubgroup struct {
 	// required: true
+	// should not be a user
 	GroupID int64 `json:"group_id,string" validate:"set"`
 	// required: true
 	// minimum: 1
@@ -79,6 +80,7 @@ type subgroupApproval struct {
 //     with at least 'can_manage:memberships', otherwise the 'forbidden' response is returned.
 //   * The 'subgroup.group_id'-s should be descendants of the group linked to the `group_prefix` or be the group itself,
 //     otherwise the 'forbidden' response is returned.
+//   * The 'subgroup.group_id'-s should not be of type 'User', otherwise the 'forbidden' response is returned.
 //   * The `group_prefix.allow_new` should be true, otherwise the 'forbidden' response is returned.
 //   * 32^`postfix_length` should be greater than 2 * sum of `subgroups.count`
 //     (to prevent being unable to generate unique logins), otherwise the 'bad request' response is returned.
@@ -209,6 +211,7 @@ func (srv *Service) checkCreateUserBatchRequestParameters(user *database.User, i
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id").
 		Where("ancestor_group_id = ?", prefixInfo.GroupID).
 		Where("groups.id IN(?)", subgroupIDs).
+		Where("groups.type != 'User'").
 		Select(`
 			require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
 			IFNULL(require_lock_membership_approval_until > NOW(), 0) AS require_lock_membership_approval,

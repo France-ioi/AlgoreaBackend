@@ -1,11 +1,11 @@
 Feature: Invite users - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  |
-      | 11  |
-      | 13  |
-      | 21  |
-      | 22  |
+      | id  | type  |
+      | 11  | User  |
+      | 13  | Class |
+      | 21  | User  |
+      | 22  | User  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -15,11 +15,13 @@ Feature: Invite users - robustness
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 13       | 22         | none        |
+      | 22       | 22         | memberships |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 11                | 11             |
       | 13                | 13             |
       | 21                | 21             |
+      | 22                | 22             |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
@@ -39,6 +41,21 @@ Feature: Invite users - robustness
   Scenario: Fails when the user is a manager of the parent group, but doesn't have enough rights to manage memberships
     Given I am the user with id "22"
     When I send a POST request to "/groups/13/invitations" with the following body:
+      """
+      {
+        "logins": ["john", "jane", "owner", "barack"]
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user
+    Given I am the user with id "22"
+    When I send a POST request to "/groups/22/invitations" with the following body:
       """
       {
         "logins": ["john", "jane", "owner", "barack"]

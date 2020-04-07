@@ -12,6 +12,7 @@ Feature: Search for groups available to the current user
       | 8  | Club    | Another %%%Club                           | Another club group     | 1         |
       | 9  | Friends | Some other friends                        | Another friends group  | 1         |
       | 10 | Class   | The third class                           | The third class        | 1         |
+      | 11 | User    | Another %%%User                           | Another user group     | 1         |
       | 21 | User    | (the) user self                           |                        | 0         |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | grade |

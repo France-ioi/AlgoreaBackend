@@ -176,7 +176,8 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	var parentGroup parentGroupInfo
 
 	// The group should exist (and optionally should have `is_public` = 1)
-	query := store.Groups().ByID(groupID).WithWriteLock().Select(`
+	query := store.Groups().ByID(groupID).
+		Where("type != 'User'").WithWriteLock().Select(`
 		type, require_personal_info_access_approval,
 		IFNULL(NOW() < require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
 		require_watch_approval`)

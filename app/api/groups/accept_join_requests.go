@@ -21,7 +21,7 @@ import (
 //
 //
 //   The authenticated user should be a manager of the `{parent_group_id}` with `can_manage` >= 'memberships',
-//   otherwise the 'forbidden' error is returned.
+//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 //
 //
 //   If the `{parent_group_id}` corresponds to a team, the service skips users
