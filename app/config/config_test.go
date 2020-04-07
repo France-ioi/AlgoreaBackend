@@ -45,7 +45,7 @@ func TestLoad(t *testing.T) {
 		_ = os.Remove(tmpTestFileName)
 	}()
 
-	_ = os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
+	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "999")
 	conf := Load()
 
 	// test config override
