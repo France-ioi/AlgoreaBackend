@@ -23,9 +23,6 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id |
       | 11                | 11             |
-      | 11                | 31             |
-      | 11                | 41             |
-      | 11                | 51             |
       | 21                | 21             |
       | 31                | 31             |
       | 41                | 41             |
@@ -100,7 +97,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         | 9999-12-31 23:59:59      |
       | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         | 9999-12-31 23:59:59      |
-      | 1  | 31             | 3019-10-10 10:10:10 | 31         | 0                 | 50           | 3019-10-10 13:13:13      |
+      | 1  | 31             | 3019-10-10 10:10:10 | 31         | 0                 | 50           | 3019-10-10 11:11:11      |
     And the table "results" should be:
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 11             | 30      | null                |
@@ -113,19 +110,16 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 11              | 31             | 9999-12-31 23:59:59 |
       | 11              | 41             | 9999-12-31 23:59:59 |
       | 11              | 51             | 9999-12-31 23:59:59 |
-      | 99              | 31             | 3019-10-10 13:13:13 |
+      | 99              | 31             | 3019-10-10 11:11:11 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
-      | 11                | 31             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 41             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 51             | 0       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
       | 41                | 41             | 1       | 9999-12-31 23:59:59 |
       | 51                | 51             | 1       | 9999-12-31 23:59:59 |
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
-      | 99                | 31             | 0       | 3019-10-10 13:13:13 |
+      | 99                | 31             | 0       | 3019-10-10 11:11:11 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Enter a team-only contest
@@ -174,7 +168,6 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 0          | 11             | 10      | null                | done                     |
       | 0          | 11             | 20      | null                | done                     |
       | 0          | 11             | 30      | null                | done                     |
-      | 0          | 31             | 20      | null                | done                     |
       | 0          | 31             | 30      | null                | done                     |
       | 1          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should be:
@@ -186,17 +179,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
-      | 11                | 31             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 41             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 51             | 0       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
       | 41                | 41             | 1       | 9999-12-31 23:59:59 |
       | 51                | 51             | 1       | 9999-12-31 23:59:59 |
       | 98                | 11             | 0       | 3019-10-10 16:16:16 |
-      | 98                | 31             | 0       | 3019-10-10 16:16:16 |
-      | 98                | 41             | 0       | 3019-10-10 16:16:16 |
-      | 98                | 51             | 0       | 3019-10-10 16:16:16 |
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
@@ -247,7 +234,6 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
       | 0          | 11             | 20      | null                | done                     |
       | 0          | 11             | 30      | null                | done                     |
-      | 0          | 31             | 20      | null                | done                     |
       | 0          | 31             | 30      | null                | done                     |
       | 1          | 11             | 60      | 2019-05-29 11:00:00 | done                     |
       | 2          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
@@ -260,18 +246,12 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
-      | 11                | 31             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 41             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 51             | 0       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
       | 41                | 41             | 1       | 9999-12-31 23:59:59 |
       | 51                | 51             | 1       | 9999-12-31 23:59:59 |
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
       | 99                | 11             | 0       | 3019-10-10 13:13:13 |
-      | 99                | 31             | 0       | 3019-10-10 13:13:13 |
-      | 99                | 41             | 0       | 3019-10-10 13:13:13 |
-      | 99                | 51             | 0       | 3019-10-10 13:13:13 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Enter a contest that doesn't have items.contest_participants_group_id set
@@ -307,7 +287,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 0  | 11             | 2019-05-30 11:00:00 | null       | null              | null         | 9999-12-31 23:59:59      |
       | 0  | 31             | 2019-05-30 11:00:00 | null       | null              | null         | 9999-12-31 23:59:59      |
-      | 1  | 31             | 3019-10-10 10:10:10 | 31         | 0                 | 50           | 3019-10-10 13:13:13      |
+      | 1  | 31             | 3019-10-10 10:10:10 | 31         | 0                 | 50           | 3019-10-10 11:11:11      |
     And the table "results" should be:
       | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
       | 0          | 11             | 30      | null                | done                     |
@@ -376,9 +356,6 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
-      | 11                | 31             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 41             | 0       | 9999-12-31 23:59:59 |
-      | 11                | 51             | 0       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
       | 41                | 41             | 1       | 9999-12-31 23:59:59 |

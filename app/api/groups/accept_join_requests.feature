@@ -26,10 +26,6 @@ Feature: Accept group requests
       | ancestor_group_id | child_group_id |
       | 11                | 11             |
       | 13                | 13             |
-      | 13                | 111            |
-      | 13                | 121            |
-      | 13                | 123            |
-      | 13                | 151            |
       | 14                | 14             |
       | 21                | 21             |
       | 31                | 31             |
@@ -120,12 +116,6 @@ Feature: Accept group requests
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
-      | 13                | 31             | 0       |
-      | 13                | 111            | 0       |
-      | 13                | 121            | 0       |
-      | 13                | 123            | 0       |
-      | 13                | 141            | 0       |
-      | 13                | 151            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
       | 31                | 31             | 1       |
@@ -139,10 +129,7 @@ Feature: Accept group requests
       | 161               | 161            | 1       |
       | 444               | 444            | 1       |
     And the table "attempts" should stay unchanged
-    And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 31             | 20      | done                     |
-      | 0          | 31             | 30      | done                     |
+    And the table "results" should stay unchanged
 
   Scenario: Accept requests for a team while skipping members of other teams participating in the same contests
     Given I am the user with id "21"
