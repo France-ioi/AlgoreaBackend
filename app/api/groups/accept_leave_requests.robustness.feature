@@ -76,7 +76,7 @@ Feature: Accept requests to leave a group - robustness
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user group
+  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user
     Given I am the user with id "21"
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |

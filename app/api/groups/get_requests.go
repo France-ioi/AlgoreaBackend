@@ -80,7 +80,7 @@ type groupRequestsViewResponseRow struct {
 //
 //
 //   The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
-//   otherwise the 'forbidden' error is returned. If the group is a user group, the 'forbidden' error is returned as well.
+//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 // parameters:
 // - name: group_id
 //   in: path

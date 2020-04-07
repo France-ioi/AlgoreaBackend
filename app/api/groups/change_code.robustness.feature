@@ -42,7 +42,7 @@ Feature: Change the code of the given group - robustness
     And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
 
-  Scenario: User has enough permissions to manage the group, but the group is a user group
+  Scenario: User has enough permissions to manage the group, but the group is a user
     Given I am the user with id "31"
     And the generated group code is "newpassword"
     When I send a POST request to "/groups/21/code"

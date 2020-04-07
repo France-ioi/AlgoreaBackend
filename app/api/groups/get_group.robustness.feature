@@ -27,7 +27,7 @@ Feature: Get group by groupID (groupView) - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Should fail when group_id is a user group
+  Scenario: Should fail when group_id is a user
     Given I am the user with id "21"
     When I send a GET request to "/groups/21"
     Then the response code should be 403

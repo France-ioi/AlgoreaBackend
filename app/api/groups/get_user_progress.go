@@ -73,12 +73,12 @@ type groupUserProgressResponseRow struct {
 //   items:
 //     type: integer
 // - name: from.name
-//   description: Start the page from the user group next to the user group with `groups.name` = `from.name` and `groups.id` = `from.id`
+//   description: Start the page from the user next to the user with `groups.name` = `from.name` and `groups.id` = `from.id`
 //                (`from.id` is required when `from.name` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the user group next to the user group with `groups.name`=`from.name` and `groups.id`=`from.id`
+//   description: Start the page from the user next to the user with `groups.name`=`from.name` and `groups.id`=`from.id`
 //                (`from.name` is required when from.id is present)
 //   in: query
 //   type: integer

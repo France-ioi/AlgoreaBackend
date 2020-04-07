@@ -239,7 +239,7 @@ Feature: Create a user batch - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: subgroups[...].group_id is a user group
+  Scenario: subgroups[...].group_id is a user
     Given I am the user with id "21"
     When I send a POST request to "/user-batches" with the following body:
     """

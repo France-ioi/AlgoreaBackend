@@ -75,7 +75,7 @@ func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
 // CreateRelationsWithoutChecking creates multiple direct relations at once
 // without checking for possible cycles in the graph and without deletion of old relations.
 // This method is only suitable to create relations with new groups.
-// Callers must check that parent groups are not user groups.
+// Callers must check that parent groups are not users.
 func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]interface{}) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)

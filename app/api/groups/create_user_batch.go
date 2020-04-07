@@ -22,7 +22,7 @@ import (
 
 type createUserBatchRequestSubgroup struct {
 	// required: true
-	// should not be a user group
+	// should not be a user
 	GroupID int64 `json:"group_id,string" validate:"set"`
 	// required: true
 	// minimum: 1

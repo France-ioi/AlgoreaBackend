@@ -53,7 +53,7 @@ Feature: Invite users - robustness
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user group
+  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user
     Given I am the user with id "22"
     When I send a POST request to "/groups/22/invitations" with the following body:
       """

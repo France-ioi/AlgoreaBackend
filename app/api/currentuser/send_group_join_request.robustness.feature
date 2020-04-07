@@ -194,13 +194,13 @@ Feature: User sends a request to join a group - robustness
     }
     """
 
-  Scenario: Can't send request to a user group
+  Scenario: Can't send request to a user
     Given I am the user with id "23"
     When I send a POST request to "/current-user/group-requests/23?approvals=personal_info_view,lock_membership"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: Can't send request to a user group even while being a group manager
+  Scenario: Can't send request to a user even while being a group manager
     Given I am the user with id "23"
     And the database table 'group_managers' has also the following rows:
       | group_id | manager_id | can_manage  |

@@ -45,7 +45,7 @@ Feature: Remove members from a group (groupRemoveMembers)
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Fails when the user has enough permissions on the group, but the group is a user group
+  Scenario: Fails when the user has enough permissions on the group, but the group is a user
     Given I am the user with id "31"
     When I send a DELETE request to "/groups/31/members?user_ids=1,2"
     Then the response code should be 403

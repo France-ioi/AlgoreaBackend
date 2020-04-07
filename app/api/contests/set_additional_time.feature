@@ -360,7 +360,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
     And the table "results" should stay unchanged
 
-  Scenario: Creates a new row for a user group
+  Scenario: Creates a new row for a user
     Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/31/additional-times?seconds=-3020399"
     Then the response code should be 200

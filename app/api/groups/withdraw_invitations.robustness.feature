@@ -61,7 +61,7 @@ Feature: Withdraw group invitations - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user group
+  Scenario: Fails when the user has enough rights to manage memberships, but the group is a user
     Given I am the user with id "12"
     When I send a POST request to "/groups/12/invitations/withdraw?group_ids=31,141,21,11,13"
     Then the response code should be 403

@@ -66,7 +66,7 @@ type groupViewResponse struct {
 //
 //
 //   The authenticated user should be a manager of `group_id` OR a descendant of the group OR  the group's `is_public`=1,
-//   otherwise the 'forbidden' error is returned. If the group is a user group, the 'forbidden' error is returned as well.
+//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 //
 //
 //   Note: `code*` fields are omitted when the user is not a manager of the group.

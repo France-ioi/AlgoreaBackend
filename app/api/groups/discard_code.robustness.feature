@@ -38,7 +38,7 @@ Feature: Discard the code of the given group - robustness
     And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
 
-  Scenario: User has enough permissions to manage the group, but the group is a user group
+  Scenario: User has enough permissions to manage the group, but the group is a user
     Given I am the user with id "31"
     When I send a DELETE request to "/groups/21/code"
     Then the response code should be 403

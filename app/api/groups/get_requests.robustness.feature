@@ -33,7 +33,7 @@ Feature: Get requests for group_id - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: User has enough permissions on the group, but the group is a user group
+  Scenario: User has enough permissions on the group, but the group is a user
     Given I am the user with id "31"
     When I send a GET request to "/groups/21/requests"
     Then the response code should be 403

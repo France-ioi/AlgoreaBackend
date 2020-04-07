@@ -97,7 +97,7 @@ Feature: User accepts an invitation to join a group - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Fails if the group is a user group
+  Scenario: Fails if the group is a user
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/21/accept"
     Then the response code should be 403
