@@ -36,26 +36,26 @@ Feature: Get item view information
       | 15              | 14             |
       | 26              | 11             |
       | 26              | 22             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 13             |
-      | 13                | 11             |
-      | 15                | 14             |
-      | 13                | 17             |
-      | 26                | 11             |
-      | 26                | 22             |
-      | 26                | 26             |
+    And the groups ancestors are computed
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
       | 200            | 210           | 2           | Discovery | as_info                  |
       | 200            | 220           | 1           | Discovery | as_info                  |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
+      | 11       | 200     | solution                 |
+      | 11       | 210     | solution                 |
+      | 11       | 220     | solution                 |
       | 13       | 200     | solution                 |
       | 13       | 210     | solution                 |
       | 13       | 220     | solution                 |
       | 15       | 210     | content_with_descendants |
+      | 17       | 200     | solution                 |
+      | 17       | 210     | solution                 |
+      | 17       | 220     | solution                 |
+      | 22       | 200     | solution                 |
+      | 22       | 210     | info                     |
+      | 22       | 220     | info                     |
       | 26       | 200     | solution                 |
       | 26       | 210     | info                     |
       | 26       | 220     | info                     |

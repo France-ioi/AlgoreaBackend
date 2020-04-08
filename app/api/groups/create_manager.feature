@@ -10,13 +10,10 @@ Feature: Make a user a group manager (groupManagerCreate)
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 1                 | 1              |
-      | 1                 | 2              |
-      | 2                 | 2              |
-      | 21                | 21             |
-      | 22                | 22             |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 1               | 2              |
+    And the groups ancestors are computed
     And the database has the following table 'group_managers':
       | manager_id | group_id | can_manage            |
       | 21         | 1        | memberships_and_group |

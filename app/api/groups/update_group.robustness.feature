@@ -17,14 +17,7 @@ Feature: Update a group (groupEdit) - robustness
       | 13       | 21         |
       | 14       | 21         |
       | 15       | 21         |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 13                | 11             |
-      | 13                | 13             |
-      | 14                | 14             |
-      | 15                | 15             |
-      | 21                | 21             |
-      | 31                | 31             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id   | default_language_tag |
       | 123  | fr                   |

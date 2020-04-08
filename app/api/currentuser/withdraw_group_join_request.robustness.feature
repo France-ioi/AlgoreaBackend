@@ -10,11 +10,7 @@ Feature: User withdraws a request to join a group - robustness
       | group_id | login |
       | 21       | john  |
       | 22       | jane  |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 14                | 14             |
-      | 21                | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | at                  |
       | 14       | 21        | join_request | 2019-05-30 11:00:00 |

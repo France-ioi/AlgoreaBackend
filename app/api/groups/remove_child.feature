@@ -22,6 +22,7 @@ Feature: Remove a direct parent-child relation between two groups
       | 22              | 11             |
       | 22              | 13             |
       | 22              | 14             |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type       |
       | 13       | 11        | invitation |
@@ -34,17 +35,6 @@ Feature: Remove a direct parent-child relation between two groups
       | 22       | 11        |
       | 22       | 13        |
       | 22       | 14        |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 11             |
-      | 13                | 13             |
-      | 14                | 14             |
-      | 21                | 21             |
-      | 22                | 11             |
-      | 22                | 13             |
-      | 22                | 14             |
-      | 22                | 22             |
 
   Scenario: User deletes a relation
     Given I am the user with id "21"

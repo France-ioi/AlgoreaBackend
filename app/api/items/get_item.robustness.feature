@@ -16,15 +16,7 @@ Background:
     | 13              | 11             |
     | 16              | 14             |
     | 17              | 14             |
-  And the database has the following table 'groups_ancestors':
-    | ancestor_group_id | child_group_id |
-    | 11                | 11             |
-    | 13                | 13             |
-    | 13                | 11             |
-    | 16                | 14             |
-    | 16                | 16             |
-    | 17                | 14             |
-    | 17                | 17             |
+  And the groups ancestors are computed
   And the database has the following table 'items':
     | id  | type    | teams_editable | no_score | default_language_tag |
     | 190 | Chapter | false          | false    | fr                   |

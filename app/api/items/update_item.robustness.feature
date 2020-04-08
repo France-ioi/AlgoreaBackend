@@ -38,9 +38,7 @@ Feature: Update item - robustness
       | 11       | 24      | solution | children | false    | 11              |
       | 11       | 25      | solution | all      | false    | 11              |
       | 11       | 50      | solution | all      | false    | 11              |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
+    And the groups ancestors are computed
     And the database has the following table 'languages':
       | tag |
       | sl  |

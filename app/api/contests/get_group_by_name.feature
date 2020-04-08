@@ -1,16 +1,16 @@
 Feature: Get group by name (contestGetGroupByName)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type    |
-      | 10 | Parent  | Club    |
-      | 11 | Group A | Team    |
-      | 13 | Group B | Team    |
-      | 14 | Group B | Other   |
-      | 15 | Team    | Team    |
-      | 21 | owner   | User    |
-      | 31 | john    | User    |
-      | 41 | jane    | User    |
-      | 50 | Group D | Class   |
+      | id | name    | type  |
+      | 10 | Parent  | Club  |
+      | 11 | Group A | Class |
+      | 13 | Group B | Team  |
+      | 14 | Group B | Other |
+      | 15 | Team    | Team  |
+      | 21 | owner   | User  |
+      | 31 | john    | User  |
+      | 41 | jane    | User  |
+      | 50 | Group D | Class |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -35,26 +35,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 50              | 14             |
       | 50              | 15             |
       | 50              | 31             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 10                | 10             |
-      | 10                | 11             |
-      | 10                | 13             |
-      | 10                | 15             |
-      | 11                | 11             |
-      | 11                | 13             |
-      | 11                | 15             |
-      | 13                | 13             |
-      | 14                | 14             |
-      | 15                | 15             |
-      | 15                | 31             |
-      | 15                | 41             |
-      | 21                | 21             |
-      | 50                | 50             |
-      | 31                | 31             |
-      | 32                | 32             |
-      | 41                | 41             |
-      | 42                | 42             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
       | 50 | 00:00:00 | Team                   | fr                   |
@@ -198,20 +179,5 @@ Feature: Get group by name (contestGetGroupByName)
       "type": "Team",
       "additional_time": 45,
       "total_additional_time": 45
-    }
-    """
-
-  Scenario: Group is an ancestor group (team contest)
-    Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/by-name?name=Group%20A"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "group_id": "11",
-      "name": "Group A",
-      "type": "Team",
-      "additional_time": 0,
-      "total_additional_time": 0
     }
     """

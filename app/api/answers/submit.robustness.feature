@@ -3,12 +3,10 @@ Feature: Submit a new answer - robustness
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 101               | 101            |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 22              | 13             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | read_only | default_language_tag |
       | 50 | 1         | fr                   |

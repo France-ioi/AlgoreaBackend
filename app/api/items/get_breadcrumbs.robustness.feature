@@ -22,11 +22,7 @@ Feature: Get item breadcrumbs - robustness
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 11             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 13             |
-      | 13                | 11             |
+    And the groups ancestors are computed
 
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing), but user has full access to all
     Given the database has the following table 'permissions_generated':

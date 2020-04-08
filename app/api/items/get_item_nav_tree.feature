@@ -1,13 +1,14 @@
 Feature: Get item for tree navigation
   Background:
     Given the database has the following table 'groups':
-      | id | name      | text_id | grade | type |
-      | 11 | jdoe      |         | -2    | User |
-      | 13 | Group B   |         | -2    | Team |
-      | 14 | info_root |         | -2    | User |
-      | 16 | info_mid  |         | -2    | User |
-      | 18 | french    |         | -2    | User |
-      | 19 | Group C   |         | -2    | Team |
+      | id | name      | text_id | grade | type  |
+      | 11 | jdoe      |         | -2    | User  |
+      | 12 | Group A   |         | -2    | Class |
+      | 13 | Group B   |         | -2    | Team  |
+      | 14 | info_root |         | -2    | User  |
+      | 16 | info_mid  |         | -2    | User  |
+      | 18 | french    |         | -2    | User  |
+      | 19 | Group C   |         | -2    | Team  |
     And the database has the following table 'languages':
       | tag |
       | fr  |
@@ -19,18 +20,10 @@ Feature: Get item for tree navigation
       | fr_user   | 0         | 18       | fr               |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 12              | 11             |
       | 13              | 11             |
       | 19              | 11             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 13             |
-      | 13                | 11             |
-      | 14                | 14             |
-      | 16                | 16             |
-      | 18                | 18             |
-      | 19                | 11             |
-      | 19                | 19             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id  | type    | default_language_tag | teams_editable | no_score |
       | 200 | Course  | en                   | false          | false    |
@@ -46,6 +39,12 @@ Feature: Get item for tree navigation
       | 11       | 200     | solution                 |
       | 11       | 210     | content                  |
       | 11       | 230     | info                     |
+      | 12       | 210     | content_with_descendants |
+      | 12       | 211     | content_with_descendants |
+      | 12       | 220     | content_with_descendants |
+      | 12       | 230     | content_with_descendants |
+      | 12       | 231     | content_with_descendants |
+      | 12       | 232     | content_with_descendants |
       | 13       | 200     | content_with_descendants |
       | 13       | 210     | content_with_descendants |
       | 13       | 220     | content_with_descendants |

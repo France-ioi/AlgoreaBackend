@@ -36,11 +36,7 @@ Feature: Create item - robustness
       | 11       | 4       | solution | 11              | children |
       | 11       | 21      | solution | 11              | children |
       | 11       | 23      | solution | 11              | none     |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 30                | 30             |
-      | 30                | 11             |
+    And the groups ancestors are computed
     And the database has the following table 'languages':
       | tag |
       | sl  |

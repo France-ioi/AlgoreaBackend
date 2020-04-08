@@ -33,21 +33,10 @@ Feature: Add a parent-child relation between two groups - robustness
       | 16       | 27         | memberships_and_group |
       | 18       | 27         | memberships_and_group |
       | 19       | 27         | memberships_and_group |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 11             |
-      | 13                | 13             |
-      | 15                | 15             |
-      | 16                | 16             |
-      | 18                | 18             |
-      | 19                | 19             |
-      | 21                | 21             |
-      | 25                | 25             |
-      | 27                | 27             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 11             |
+    And the groups ancestors are computed
 
   Scenario: Parent group id is wrong
     Given I am the user with id "21"

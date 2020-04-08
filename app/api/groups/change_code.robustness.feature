@@ -18,13 +18,7 @@ Feature: Change the code of the given group - robustness
       | 13       | 21         | memberships |
       | 13       | 31         | none        |
       | 21       | 31         | memberships |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 11             |
-      | 13                | 13             |
-      | 21                | 21             |
-      | 31                | 31             |
+    And the groups ancestors are computed
 
   Scenario: User is not a manager of the group
     Given I am the user with id "41"

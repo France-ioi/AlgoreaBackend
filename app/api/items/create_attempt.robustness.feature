@@ -13,14 +13,7 @@ Feature: Create an attempt for an item - robustness
       | parent_group_id | child_group_id |
       | 103             | 101            |
       | 104             | 101            |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 101               | 101            |
-      | 102               | 102            |
-      | 103               | 101            |
-      | 103               | 103            |
-      | 104               | 101            |
-      | 104               | 104            |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   |

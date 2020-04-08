@@ -13,11 +13,7 @@ Feature: Discard the code of the given group - robustness
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
       | user  | 0         | 41       | John        | Doe       | en               |
       | jane  | 0         | 31       | Jane        | Doe       | en               |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 13                | 11             |
-      | 21                | 21             |
-      | 31                | 31             |
+    And the groups ancestors are computed
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |

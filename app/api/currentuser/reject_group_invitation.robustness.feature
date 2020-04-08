@@ -9,11 +9,7 @@ Feature: User rejects an invitation to join a group - robustness
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 14                | 14             |
-      | 21                | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | join_request |

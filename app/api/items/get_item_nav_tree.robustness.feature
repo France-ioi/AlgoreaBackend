@@ -13,13 +13,7 @@ Background:
     | parent_group_id | child_group_id |
     | 13              | 11             |
     | 15              | 11             |
-  And the database has the following table 'groups_ancestors':
-    | ancestor_group_id | child_group_id |
-    | 11                | 11             |
-    | 13                | 11             |
-    | 13                | 13             |
-    | 15                | 11             |
-    | 15                | 15             |
+  And the groups ancestors are computed
   And the database has the following table 'items':
     | id  | type    | teams_editable | no_score | default_language_tag |
     | 190 | Chapter | false          | false    | fr                   |

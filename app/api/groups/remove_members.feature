@@ -30,29 +30,6 @@ Feature: Remove members from a group (groupRemoveMembers)
       | jenna  | 101      |
       | jannet | 111      |
       | judith | 121      |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 13                | 13             |
-      | 13                | 51             |
-      | 13                | 61             |
-      | 13                | 91             |
-      | 13                | 111            |
-      | 13                | 131            |
-      | 14                | 14             |
-      | 14                | 41             |
-      | 21                | 21             |
-      | 31                | 31             |
-      | 41                | 41             |
-      | 51                | 51             |
-      | 61                | 61             |
-      | 71                | 71             |
-      | 81                | 81             |
-      | 91                | 91             |
-      | 101               | 101            |
-      | 111               | 111            |
-      | 121               | 121            |
-      | 131               | 131            |
-      | 132               | 132            |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 51             |
@@ -61,6 +38,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 13              | 111            |
       | 13              | 131            |
       | 14              | 41             |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
