@@ -50,9 +50,9 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 	return count == 0
 }
 
-// swagger:operation PUT /items/{item_id} items itemEdit
+// swagger:operation PUT /items/{item_id} items itemUpdate
 // ---
-// summary: Edit an item
+// summary: Update an item
 // description: >
 //
 //   Changes the given item's properties using the input data.
