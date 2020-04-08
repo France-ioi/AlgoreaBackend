@@ -10,8 +10,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model itemAttemptsViewResponseRow
-type itemAttemptsViewResponseRow struct {
+// swagger:model attemptsListResponseRow
+type attemptsListResponseRow struct {
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
@@ -35,7 +35,7 @@ type itemAttemptsViewResponseRow struct {
 	} `json:"user_creator" gorm:"embedded;embedded_prefix:user_creator__"`
 }
 
-// swagger:operation GET /items/{item_id}/attempts items itemAttemptsView
+// swagger:operation GET /items/{item_id}/attempts items attemptsList
 // ---
 // summary: List attempts for a task
 // description: Returns attempts (with results) made by the current user (if `as_team_id` is not given) or
@@ -82,7 +82,7 @@ type itemAttemptsViewResponseRow struct {
 //     schema:
 //       type: array
 //       items:
-//         "$ref": "#/definitions/itemAttemptsViewResponseRow"
+//         "$ref": "#/definitions/attemptsListResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -91,7 +91,7 @@ type itemAttemptsViewResponseRow struct {
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -136,7 +136,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	if apiError != service.NoError {
 		return apiError
 	}
-	var result []itemAttemptsViewResponseRow
+	var result []attemptsListResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	for index := range result {
