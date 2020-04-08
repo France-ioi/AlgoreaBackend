@@ -135,11 +135,10 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			groups.id as id, groups.name, groups.type, groups.grade,
 			groups.is_open, groups.is_public, groups.code,
 			(
-				SELECT COUNT(*) FROM `+"`groups`"+` AS user_groups
-				JOIN groups_ancestors_active
-				ON groups_ancestors_active.child_group_id = user_groups.id AND
-					groups_ancestors_active.ancestor_group_id != groups_ancestors_active.child_group_id
-				WHERE user_groups.type = 'User' AND groups_ancestors_active.ancestor_group_id = groups.id
+				SELECT COUNT(DISTINCT users.group_id) FROM users
+				JOIN groups_groups_active ON groups_groups_active.child_group_id = users.group_id
+				JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id
+				WHERE groups_ancestors_active.ancestor_group_id = groups.id
 			) AS user_count`).
 		Where("groups.id IN(?)",
 			srv.Store.ActiveGroupGroups().

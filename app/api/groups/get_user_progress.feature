@@ -40,9 +40,11 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 1        | 21         |
+      | 51       | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
+      | 1               | 67             |
       | 3               | 13             |
       | 11              | 14             |
       | 11              | 17             |
@@ -63,74 +65,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 16              | 65             |
       | 16              | 67             |
       | 20              | 21             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 1                 | 1              |
-      | 1                 | 11             |
-      | 1                 | 12             |
-      | 1                 | 14             |
-      | 1                 | 17             |
-      | 1                 | 18             |
-      | 1                 | 51             |
-      | 1                 | 53             |
-      | 1                 | 55             |
-      | 1                 | 59             |
-      | 1                 | 63             |
-      | 1                 | 65             |
-      | 1                 | 67             |
-      | 3                 | 3              |
-      | 3                 | 13             |
-      | 3                 | 15             |
-      | 3                 | 16             |
-      | 3                 | 61             |
-      | 3                 | 63             |
-      | 3                 | 65             |
-      | 3                 | 69             |
-      | 11                | 11             |
-      | 11                | 14             |
-      | 11                | 17             |
-      | 11                | 18             |
-      | 11                | 51             |
-      | 11                | 53             |
-      | 11                | 55             |
-      | 11                | 59             |
-      | 11                | 63             |
-      | 11                | 65             |
-      | 11                | 67             |
-      | 12                | 12             |
-      | 13                | 13             |
-      | 13                | 15             |
-      | 13                | 16             |
-      | 13                | 51             |
-      | 13                | 53             |
-      | 13                | 55             |
-      | 13                | 59             |
-      | 13                | 61             |
-      | 13                | 63             |
-      | 13                | 65             |
-      | 13                | 67             |
-      | 13                | 69             |
-      | 14                | 14             |
-      | 14                | 51             |
-      | 14                | 53             |
-      | 14                | 55             |
-      | 15                | 15             |
-      | 15                | 51             |
-      | 15                | 53             |
-      | 15                | 55             |
-      | 15                | 59             |
-      | 15                | 61             |
-      | 15                | 63             |
-      | 15                | 65             |
-      | 15                | 69             |
-      | 15                | 67             |
-      | 16                | 16             |
-      | 16                | 63             |
-      | 16                | 65             |
-      | 16                | 67             |
-      | 20                | 20             |
-      | 20                | 21             |
-      | 21                | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id  | type    | default_language_tag |
       | 200 | Chapter | fr                   |

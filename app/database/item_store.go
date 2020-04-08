@@ -292,15 +292,14 @@ func (s *ItemStore) getActiveContestItemIDForUser(user *User) *int64 {
 
 	err := s.
 		Select("items.id AS item_id").
-		Joins(`
-			JOIN groups_ancestors_active
-				ON groups_ancestors_active.child_group_id = ?`, user.GroupID).
+		Joins("LEFT JOIN groups_groups_active AS user_link ON user_link.child_group_id = ?", user.GroupID).
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
-					groups_groups_active.child_group_id = groups_ancestors_active.child_group_id`).
+					(groups_groups_active.child_group_id = user_link.parent_group_id OR groups_groups_active.child_group_id = ?)`,
+			user.GroupID).
 		Joins(`JOIN results AS contest_participations ON contest_participations.item_id = items.id AND
-			contest_participations.participant_id = groups_ancestors_active.ancestor_group_id AND
+			contest_participations.participant_id = groups_groups_active.child_group_id AND
 			contest_participations.started_at IS NOT NULL`).
 		Group("items.id").
 		Order("MIN(contest_participations.started_at) DESC").

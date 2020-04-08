@@ -28,6 +28,7 @@ Feature: Export the short version of the current user's data
       | 5               | 11             |
       | 6               | 11             |
       | 9               | 11             |
+    And the groups ancestors are computed
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 1        | 11         | memberships           | 1                      | 0                 |
@@ -44,22 +45,6 @@ Feature: Export the short version of the current user's data
       | 4        | 11        | join_request_refused | 2019-07-10 00:02:28 | 11           |
       | 7        | 11        | removed              | 2019-07-10 03:02:28 | 31           |
       | 8        | 11        | left                 | 2019-07-10 04:02:28 | 11           |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 1                 | 1              |
-      | 2                 | 2              |
-      | 2                 | 11             |
-      | 3                 | 3              |
-      | 4                 | 4              |
-      | 5                 | 5              |
-      | 5                 | 11             |
-      | 6                 | 6              |
-      | 6                 | 11             |
-      | 7                 | 7              |
-      | 8                 | 8              |
-      | 9                 | 9              |
-      | 9                 | 11             |
-      | 11                | 11             |
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 404 | fr                   |

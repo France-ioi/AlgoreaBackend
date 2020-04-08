@@ -30,48 +30,6 @@ Feature: Get group children (groupChildrenView)
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 11             |
-      | 13                | 13             |
-      | 13                | 21             |
-      | 13                | 23             |
-      | 13                | 24             |
-      | 13                | 25             |
-      | 13                | 26             |
-      | 13                | 27             |
-      | 13                | 28             |
-      | 13                | 29             |
-      | 13                | 30             |
-      | 13                | 51             |
-      | 13                | 53             |
-      | 13                | 90             |
-      | 21                | 21             |
-      | 23                | 23             |
-      | 23                | 51             |
-      | 23                | 53             |
-      | 23                | 90             |
-      | 24                | 24             |
-      | 25                | 25             |
-      | 25                | 53             |
-      | 26                | 26             |
-      | 27                | 27             |
-      | 27                | 53             |
-      | 28                | 28             |
-      | 29                | 29             |
-      | 30                | 30             |
-      | 42                | 42             |
-      | 43                | 43             |
-      | 44                | 44             |
-      | 45                | 45             |
-      | 46                | 46             |
-      | 47                | 47             |
-      | 51                | 51             |
-      | 53                | 53             |
-      | 90                | 51             |
-      | 90                | 53             |
-      | 90                | 90             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 21             |
@@ -88,6 +46,7 @@ Feature: Get group children (groupChildrenView)
       | 25              | 53             |
       | 27              | 53             |
       | 90              | 51             |
+    And the groups ancestors are computed
 
   Scenario: User is a manager of the parent group, rows are sorted by name by default, User is skipped
     Given I am the user with id "21"
@@ -97,7 +56,7 @@ Feature: Get group children (groupChildrenView)
     """
     [
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
@@ -114,7 +73,7 @@ Feature: Get group children (groupChildrenView)
     """
     [
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
@@ -133,7 +92,7 @@ Feature: Get group children (groupChildrenView)
     """
     [
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
@@ -166,7 +125,7 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
@@ -183,7 +142,7 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 2},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
