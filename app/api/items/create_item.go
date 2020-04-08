@@ -174,7 +174,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
 
