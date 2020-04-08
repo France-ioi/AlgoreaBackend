@@ -11,12 +11,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /items/{ids}/breadcrumbs items itemsBreadCrumbsData
+// swagger:operation GET /items/{ids}/breadcrumbs items itemBreadcrumbsGet
 // ---
-// summary: Get breadcrumbs
+// summary: Get item breadcrumbs
 // description: >
 //
-//   Returns titles for items listed in `ids` in the user's preferred language (if exist) or the items'
+//   Returns brief item information for items listed in `ids` in the user's preferred language (if exist) or the items'
 //   default language.
 //
 //

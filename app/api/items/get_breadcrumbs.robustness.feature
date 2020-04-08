@@ -1,4 +1,4 @@
-Feature: Get item information for breadcrumb - robustness
+Feature: Get item breadcrumbs - robustness
   Background:
     Given the database has the following table 'groups':
       | id | name    | text_id | grade | type  |
