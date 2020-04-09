@@ -1,4 +1,4 @@
-Feature: Get answers with (item_id, author_id) pair
+Feature: List answers by (item_id, author_id) pair
 Background:
   Given the database has the following table 'groups':
     | id | name    | text_id | grade | type  |

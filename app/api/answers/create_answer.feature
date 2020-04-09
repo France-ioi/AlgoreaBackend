@@ -1,4 +1,4 @@
-Feature: Save an answer
+Feature: Create a 'saved' answer
   Background:
     Given the database has the following users:
       | login | group_id |

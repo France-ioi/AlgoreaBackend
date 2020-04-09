@@ -1,4 +1,4 @@
-Feature: Get item answers - robustness
+Feature: List answers - robustness
 Background:
   Given the database has the following table 'groups':
     | id | name | type |

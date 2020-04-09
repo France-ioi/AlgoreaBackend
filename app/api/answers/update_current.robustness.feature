@@ -1,4 +1,4 @@
-Feature: Update the 'current' answer
+Feature: Update participant's current answer
   Background:
     Given the database has the following users:
       | login | group_id |
