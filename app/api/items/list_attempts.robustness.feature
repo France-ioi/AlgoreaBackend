@@ -1,4 +1,4 @@
-Feature: Get groups attempts for current user and item_id - robustness
+Feature: List attempts for current user and item_id - robustness
   Background:
     Given the database has the following users:
       | login | group_id | first_name | last_name |

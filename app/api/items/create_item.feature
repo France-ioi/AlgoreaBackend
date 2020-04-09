@@ -1,4 +1,4 @@
-Feature: Add item
+Feature: Create item
 
   Background:
     Given the database has the following table 'groups':

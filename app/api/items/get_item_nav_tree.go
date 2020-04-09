@@ -46,8 +46,8 @@ type navigationItemCommonFields struct {
 	Children []navigationItemChild `json:"children"`
 }
 
-// swagger:model itemsNavigationDataResponse
-type navigationDataResponse struct {
+// swagger:model itemNavigationTreeResponse
+type navigationTreeResponse struct {
 	*navigationItemCommonFields
 }
 
@@ -63,9 +63,9 @@ type navigationItemChild struct {
 	ContentViewPropagation string `json:"content_view_propagation"`
 }
 
-// swagger:operation GET /items/{item_id}/as-nav-tree items itemsNavigationData
+// swagger:operation GET /items/{item_id}/nav-tree items itemNavigationTreeGet
 // ---
-// summary: Get navigation data
+// summary: Get the navigation tree of an item
 // description: >
 //
 //   Returns data needed to display the navigation menu (for `item_id`, its children, and its grandchildren), only items
@@ -91,7 +91,7 @@ type navigationItemChild struct {
 //   "200":
 //     description: OK. Navigation data
 //     schema:
-//       "$ref": "#/definitions/itemsNavigationDataResponse"
+//       "$ref": "#/definitions/itemNavigationTreeResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -100,7 +100,7 @@ type navigationItemChild struct {
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemNavigationTree(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -118,7 +118,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
-	response := navigationDataResponse{
+	response := navigationTreeResponse{
 		srv.fillNavigationCommonFieldsWithDBData(&rawData[0]),
 	}
 	idMap := map[int64]*rawNavigationItem{}

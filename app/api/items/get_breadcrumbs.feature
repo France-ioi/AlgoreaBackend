@@ -1,4 +1,4 @@
-Feature: Get item information for breadcrumb
+Feature: Get item breadcrumbs
 
 Background:
   Given the database has the following table 'groups':

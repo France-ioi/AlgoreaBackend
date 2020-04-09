@@ -1,4 +1,4 @@
-Feature: Get groups attempts for current user and item_id
+Feature: List attempts for current user and item_id
   Background:
     Given the database has the following table 'groups':
       | id | name    | type  |

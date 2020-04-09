@@ -12,9 +12,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// itemStringEditRequest is the expected input for item's strings updating
-// swagger:model itemStringEditRequest
-type itemStringEditRequest struct {
+// itemStringUpdateRequest is the expected input for item's strings updating
+// swagger:model itemStringUpdateRequest
+type itemStringUpdateRequest struct {
 	// maxLength: 200
 	Title string `json:"title" validate:"max=200"`
 	// Nullable
@@ -27,9 +27,9 @@ type itemStringEditRequest struct {
 	Description *string `json:"description"`
 }
 
-// swagger:operation PUT /items/{item_id}/strings/{language_tag} items itemStringEdit
+// swagger:operation PUT /items/{item_id}/strings/{language_tag} items itemStringUpdate
 // ---
-// summary: Edit the strings of an item
+// summary: Update an item string entry
 // description: >
 //
 //   Updates the corresponding `items_strings` row identified by `item_id` and `language_tag` if exists or
@@ -55,7 +55,7 @@ type itemStringEditRequest struct {
 //   required: true
 //   description: New item property values
 //   schema:
-//     "$ref": "#/definitions/itemStringEditRequest"
+//     "$ref": "#/definitions/itemStringUpdateRequest"
 // responses:
 //   "200":
 //     "$ref": "#/responses/updatedResponse"
@@ -83,7 +83,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		useDefaultLanguage = false
 	}
 
-	input := itemStringEditRequest{}
+	input := itemStringUpdateRequest{}
 	data := formdata.NewFormData(&input)
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {

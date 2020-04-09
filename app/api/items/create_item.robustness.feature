@@ -1,4 +1,4 @@
-Feature: Add item - robustness
+Feature: Create item - robustness
   Background:
     Given the database has the following users:
       | login | temp_user | group_id |

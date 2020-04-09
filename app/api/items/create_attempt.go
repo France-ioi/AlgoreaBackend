@@ -12,11 +12,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /items/{item_id}/attempts items itemAttemptCreate
+// swagger:operation POST /items/{item_id}/attempts items attemptCreate
 // ---
 // summary: Create an attempt
 // description: >
-//   Create a new attempt for the given item with `creator_id` equal to `group_id` of the current user and make it
+//   Creates a new attempt for the given item with `creator_id` equal to `group_id` of the current user and make it
 //   active for the user.
 //   If `as_team_id` is given, the created attempt is linked to the `as_team_id` group instead of the user's self group.
 //

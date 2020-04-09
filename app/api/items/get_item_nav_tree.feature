@@ -120,7 +120,7 @@ Feature: Get item for tree navigation
 
   Scenario: Get tree structure
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/as-nav-tree"
+    When I send a GET request to "/items/200/nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -234,7 +234,7 @@ Feature: Get item for tree navigation
 
   Scenario: Should return only one node if the root item doesn't have children
     Given I am the user with id "11"
-    When I send a GET request to "/items/232/as-nav-tree"
+    When I send a GET request to "/items/232/nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -255,7 +255,7 @@ Feature: Get item for tree navigation
 
   Scenario: Should return a subtree having two levels if the root item doesn't have grandchildren
     Given I am the user with id "11"
-    When I send a GET request to "/items/230/as-nav-tree"
+    When I send a GET request to "/items/230/nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -307,7 +307,7 @@ Feature: Get item for tree navigation
 
   Scenario: Should return only one node if the user has only info access to the root item
     Given I am the user with id "14"
-    When I send a GET request to "/items/200/as-nav-tree"
+    When I send a GET request to "/items/200/nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -328,7 +328,7 @@ Feature: Get item for tree navigation
 
   Scenario: Should skip children of nodes with 'info' access
     Given I am the user with id "16"
-    When I send a GET request to "/items/200/as-nav-tree"
+    When I send a GET request to "/items/200/nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -395,7 +395,7 @@ Feature: Get item for tree navigation
 
   Scenario: Should prefer the user's default language for titles
     Given I am the user with id "18"
-    When I send a GET request to "/items/200/as-nav-tree"
+    When I send a GET request to "/items/200/nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -509,7 +509,7 @@ Feature: Get item for tree navigation
 
   Scenario: Get tree structure (as team)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/as-nav-tree?as_team_id=13"
+    When I send a GET request to "/items/200/nav-tree?as_team_id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -623,7 +623,7 @@ Feature: Get item for tree navigation
 
   Scenario: Get tree structure (as another team)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/as-nav-tree?as_team_id=19"
+    When I send a GET request to "/items/200/nav-tree?as_team_id=19"
     Then the response code should be 200
     And the response body should be, in JSON:
       """

@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-func Test_insertItemItems_DoesNothingWhenSpecIsEmpty(t *testing.T) {
+func Test_createItemItems_DoesNothingWhenSpecIsEmpty(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
