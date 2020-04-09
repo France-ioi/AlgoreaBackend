@@ -6,10 +6,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /items/{item_id}/attempts/{attempt_id}/answers/current answers itemAnswerUpdateCurrent
+// swagger:operation PUT /items/{item_id}/attempts/{attempt_id}/answers/current answers currentAnswerUpdate
 // ---
 // summary: Update current answer
-// description: Update user's current answer. Used for auto-saving while working on a task.
+// description: Update participant's current answer. Used for auto-saving while working on a task.
 //
 //   * The authenticated user should have at least 'content' access to the `{item_id}`.
 //
@@ -48,6 +48,6 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) updateCurrentAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	return srv.saveAnswerWithType(rw, httpReq, true)
 }
