@@ -1,4 +1,4 @@
-Feature: Update item strings
+Feature: Update an item string entry
 
   Background:
     Given the database has the following table 'groups':

@@ -1,4 +1,4 @@
-Feature: Update item strings - robustness
+Feature: Update an item string entry - robustness
 
   Background:
     Given the database has the following table 'groups':
