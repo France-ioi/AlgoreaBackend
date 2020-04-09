@@ -1,4 +1,4 @@
-Feature: Update the 'current' answer
+Feature: Create a 'saved' answer - robustness
   Background:
     Given the database has the following users:
       | login | group_id |

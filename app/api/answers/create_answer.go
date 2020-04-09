@@ -10,10 +10,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /items/{item_id}/attempts/{attempt_id}/answers answers itemAnswerSave
+// swagger:operation POST /items/{item_id}/attempts/{attempt_id}/answers answers answerCreate
 // ---
-// summary: Save an answer
-// description: Allows user to "save" a current snapshot of an answer manually.
+// summary: Create a "saved" answer
+// description: Creates a "saved" answer from a current snapshot.
 //
 //   * The authenticated user should have at least 'content' access to the `{item_id}`.
 //
@@ -54,7 +54,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) save(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) answerCreate(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	return srv.saveAnswerWithType(rw, httpReq, false)
 }
 
