@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /answers/{answer_id} answers itemAnswerGet
+// swagger:operation GET /answers/{answer_id} answers answerGet
 // ---
 // summary: Get an answer
 // description: Return the answer identified by the given `answer_id`.
@@ -35,7 +35,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	answerID, err := service.ResolveURLQueryPathInt64Field(httpReq, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
