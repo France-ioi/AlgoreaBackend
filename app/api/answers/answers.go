@@ -28,7 +28,7 @@ type answerData struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
-	router.Get("/items/{item_id}/answers", service.AppHandler(srv.getAnswers).ServeHTTP)
+	router.Get("/items/{item_id}/answers", service.AppHandler(srv.listAnswers).ServeHTTP)
 	router.Get("/answers/{answer_id}", service.AppHandler(srv.get).ServeHTTP)
 	router.Post("/answers", service.AppHandler(srv.submit).ServeHTTP)
 	router.Post("/items/{item_id}/attempts/{attempt_id}/answers", service.AppHandler(srv.save).ServeHTTP)

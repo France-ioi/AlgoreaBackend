@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /items/{item_id}/answers answers itemAnswersView
+// swagger:operation GET /items/{item_id}/answers answers answersList
 // ---
 // summary: List answers
 // description: Return answers (i.e., saved answers, current answer and submissions)
@@ -80,7 +80,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
 	itemID, itemIDError := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")

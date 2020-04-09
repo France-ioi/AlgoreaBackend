@@ -1,4 +1,4 @@
-Feature: Get answers with attempt_id
+Feature: List answers by attempt_id
 Background:
   Given the database has the following table 'groups':
     | id | name    | text_id | grade | type  |
