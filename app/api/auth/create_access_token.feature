@@ -1,4 +1,4 @@
-Feature: Request a new access token
+Feature: Create a new access token
   Background:
     Given the database has the following table 'groups':
       | id | name        | type |
