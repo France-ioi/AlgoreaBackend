@@ -15,7 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /auth/temp-user auth userCreateTmp
+// swagger:operation POST /auth/temp-user auth tempUserCreate
 // ---
 // summary: Create a temporary user
 // description: Creates a temporary user and generates an access token valid for 2 hours
