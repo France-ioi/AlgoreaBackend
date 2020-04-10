@@ -38,9 +38,9 @@ func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() 
 
 var userIDsInProgress userIDsInProgressMap
 
-// swagger:operation POST /auth/token auth authTokenCreate
+// swagger:operation POST /auth/token auth accessTokenCreate
 // ---
-// summary: Request a new access token
+// summary: Create a new access token
 // description: Creates a new access token (locally for temporary users or via the login module for normal users) and
 //              saves it in the DB keeping only the input token (from authorization headers) and the new token.
 //              Since the login module responds with both access and refresh tokens, the service updates the user's
@@ -55,7 +55,7 @@ var userIDsInProgress userIDsInProgressMap
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createToken(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	oldAccessToken := auth.BearerTokenFromContext(r.Context())
 

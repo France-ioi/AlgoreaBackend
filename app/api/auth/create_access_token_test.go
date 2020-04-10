@@ -19,7 +19,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
 
-func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
+func TestService_createAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	expectedClientID := "1234"
 	expectedClientSecret := "secret"
 	loginModuleStubServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,9 +64,9 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 				srv.Config.Auth.ClientSecret = expectedClientSecret
 				if timeout {
 					router.With(middleware.Timeout(0)).
-						Post("/auth/token", service.AppHandler(srv.createToken).ServeHTTP)
+						Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
 				} else {
-					router.Post("/auth/token", service.AppHandler(srv.createToken).ServeHTTP)
+					router.Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
 				}
 			})
 		assert.NoError(t, err)
@@ -92,7 +92,7 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	(*sync.Map)(&userIDsInProgress).Store(int64(2), mutexChannel) // lock the user
 	mutexChannel <- true
 	go doRequest(false)
-	mutexChannel <- true // wait until createToken() reads from the channel (meaning the service is inside the for loop)
+	mutexChannel <- true // wait until createAccessToken() reads from the channel (meaning the service is inside the for loop)
 	close(mutexChannel)
 	(*sync.Map)(&userIDsInProgress).Delete(int64(2)) // here the service gets unlocked
 	<-done                                           // wait until the service finishes
