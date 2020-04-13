@@ -5,6 +5,7 @@ package database_test
 import (
 	"testing"
 
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -48,6 +49,53 @@ func TestResultStore_ExistsForUserTeam(t *testing.T) {
 			found, err := database.NewDataStore(db).Results().ExistsForUserTeam(user, test.participantTeamID, test.attemptID, test.itemID)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedResult, found)
+		})
+	}
+}
+
+func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		attempts:
+			- {participant_id: 11, id: 1, root_item_id: 112, allows_submissions_until: 3019-05-30 12:00:00}
+			- {participant_id: 11, id: 2, root_item_id: 112}
+			- {participant_id: 12, id: 2, root_item_id: 114, allows_submissions_until: 2019-05-30 12:00:00}
+			- {participant_id: 12, id: 3, root_item_id: 114}
+		results:
+			- {participant_id: 11, attempt_id: 1, item_id: 12, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 11, attempt_id: 2, item_id: 12, hints_requested: '[0,1,"hint",null]', hints_cached: 4,
+				started_at: 2019-07-30 11:00:00}
+			- {participant_id: 12, attempt_id: 2, item_id: 14, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 12, attempt_id: 3, item_id: 14}`)
+	defer func() { _ = db.Close() }()
+
+	tests := []struct {
+		name          string
+		participantID int64
+		attemptID     int64
+		itemID        int64
+		wantHintsInfo *database.HintsInfo
+		wantError     error
+	}{
+		{name: "empty info", participantID: 11, attemptID: 1, itemID: 12, wantHintsInfo: &database.HintsInfo{}},
+		{name: "with info", participantID: 11, attemptID: 2, itemID: 12,
+			wantHintsInfo: &database.HintsInfo{
+				HintsRequested: ptrString(`[0,1,"hint",null]`),
+				HintsCached:    4,
+			}},
+		{name: "not started", participantID: 12, attemptID: 3, itemID: 14, wantHintsInfo: nil,
+			wantError: gorm.ErrRecordNotFound},
+		{name: "finished", participantID: 12, attemptID: 2, itemID: 14, wantHintsInfo: nil,
+			wantError: gorm.ErrRecordNotFound},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				hintsInfo, err := store.Results().GetHintsInfoForActiveAttempt(test.participantID, test.attemptID, test.itemID)
+				assert.Equal(t, test.wantHintsInfo, hintsInfo)
+				assert.Equal(t, test.wantError, err)
+				return nil
+			}))
 		})
 	}
 }

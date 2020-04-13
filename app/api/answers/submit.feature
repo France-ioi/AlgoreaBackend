@@ -24,9 +24,9 @@ Feature: Submit a new answer
       | id | participant_id |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | result_propagation_state |
-      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | done                     |
-      | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | started_at          | result_propagation_state |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
 
   Scenario: User is able to submit a new answer
     Given I am the user with id "101"

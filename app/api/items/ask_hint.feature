@@ -31,9 +31,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested        | hints_cached |
-      | 0          | 101            | 50      | [0,  1, "hint" , null] | 4            |
-      | 0          | 101            | 10      | null                   | 0            |
+      | attempt_id | participant_id | item_id | hints_requested        | hints_cached | started_at          |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 4            | 2019-05-30 11:00:00 |
+      | 0          | 101            | 10      | null                   | 0            | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -94,9 +94,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested        |
-      | 0          | 101            | 10      | null                   |
-      | 0          | 101            | 50      | [0,  1, "hint" , null] |
+      | attempt_id | participant_id | item_id | hints_requested        | started_at          |
+      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -157,9 +157,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested        |
-      | 0          | 101            | 50      | [0,  1, "hint" , null] |
-      | 0          | 101            | 10      | null                   |
+      | attempt_id | participant_id | item_id | hints_requested        | started_at          |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
+      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -220,9 +220,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested |
-      | 0          | 101            | 50      | not an array    |
-      | 0          | 101            | 10      | null            |
+      | attempt_id | participant_id | item_id | hints_requested | started_at          |
+      | 0          | 101            | 50      | not an array    | 2019-05-30 11:00:00 |
+      | 0          | 101            | 10      | null            | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

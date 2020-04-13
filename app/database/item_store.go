@@ -212,17 +212,16 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 	return true, nil
 }
 
-// CheckSubmissionRights checks if the user can submit an answer for the given item (task):
-// 1. If the task is inside a time-limited chapter, the method checks that the task is a part of
-//    the user's active contest (or the user has full access to one of the task's chapters)
-// 2. The method also checks that the item (task) exists and is not read-only and
-//    the user has at least content:view permission on the item.
-func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess bool, reason, err error) {
+// CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),
+// i.e. the item (task) exists and is not read-only and the participant has at least content:view permission on the item;
+func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAccess bool, reason, err error) {
+	s.mustBeInTransaction()
 	recoverPanics(&err)
 
 	var readOnly bool
-	err = s.Visible(user.GroupID).WherePermissionIsAtLeast("view", "content").
+	err = s.Visible(participantID).WherePermissionIsAtLeast("view", "content").
 		Where("id = ?", itemID).
+		WithWriteLock().
 		PluckFirst("read_only", &readOnly).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, errors.New("no access to the task item"), nil
@@ -233,84 +232,7 @@ func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess b
 		return false, errors.New("item is read-only"), nil
 	}
 
-	hasRights, reason := s.checkSubmissionRightsForTimeLimitedContest(itemID, user)
-	if !hasRights {
-		return hasRights, reason, nil
-	}
-
 	return true, nil, nil
-}
-
-func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, user *User) (bool, error) {
-	// TODO: handle case where the item is both in a contest and in a non-contest chapter the user has access to
-
-	// ItemID & FullAccess for time-limited ancestors of the item
-	// to which the user has at least 'info' access.
-	// Note that while an answer is always related to a task,
-	// tasks cannot be time-limited, only chapters can.
-	// So, actually here we select time-limited chapters that are ancestors of the task.
-	var contestItems []struct {
-		ItemID     int64
-		FullAccess bool
-	}
-
-	mustNotBeError(s.Visible(user.GroupID).
-		Select("items.id AS item_id, can_view_generated_value >= ? AS full_access",
-			s.PermissionsGranted().ViewIndexByName("content_with_descendants")).
-		Joins("JOIN items_ancestors ON items_ancestors.ancestor_item_id = items.id").
-		Where("items_ancestors.child_item_id = ?", itemID).
-		Where("items.duration IS NOT NULL").
-		Group("items.id").Scan(&contestItems).Error())
-
-	// The item is not time-limited itself and it doesn't have time-limited ancestors the user has access to.
-	// Or maybe the user doesn't have access to the item at all... We ignore this possibility here
-	if len(contestItems) == 0 {
-		return true, nil // The user can submit an answer
-	}
-
-	activeContestItemID := s.getActiveContestItemIDForUser(user)
-	if activeContestItemID == nil {
-		return false, errors.New("the contest has not started yet or has already finished")
-	}
-
-	for i := range contestItems {
-		if contestItems[i].FullAccess || *activeContestItemID == contestItems[i].ItemID {
-			return true, nil
-		}
-	}
-
-	return false, errors.New(
-		"the exercise for which you wish to submit an answer is a part " +
-			"of a different competition than the one in progress")
-}
-
-func (s *ItemStore) getActiveContestItemIDForUser(user *User) *int64 {
-	// Get id of the item if the user has already started it, but hasn't finished yet
-	// Note: the current API doesn't allow users to have more than one active contest
-	// Note: results rows with 'started_at' should exist to make this function return the info
-	var itemID int64
-
-	err := s.
-		Select("items.id AS item_id").
-		Joins("LEFT JOIN groups_groups_active AS user_link ON user_link.child_group_id = ?", user.GroupID).
-		Joins(`
-			JOIN groups_groups_active
-				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
-					(groups_groups_active.child_group_id = user_link.parent_group_id OR groups_groups_active.child_group_id = ?)`,
-			user.GroupID).
-		Joins(`JOIN results AS contest_participations ON contest_participations.item_id = items.id AND
-			contest_participations.participant_id = groups_groups_active.child_group_id AND
-			contest_participations.started_at IS NOT NULL`).
-		Group("items.id").
-		Order("MIN(contest_participations.started_at) DESC").
-		PluckFirst("items.id", &itemID).Error()
-
-	if gorm.IsRecordNotFoundError(err) {
-		return nil
-	}
-	mustNotBeError(err)
-
-	return &itemID
 }
 
 // ContestManagedByUser returns a composable query

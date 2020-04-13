@@ -194,7 +194,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100/1",
+        "idAttempt": "101/1",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -228,5 +228,5 @@ Feature: Submit a new answer - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "The attempt has expired"
+    And the response error message should contain "No active attempt found"
     And the table "answers" should stay unchanged

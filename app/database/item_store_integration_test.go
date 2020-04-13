@@ -102,197 +102,35 @@ func TestItemStore_IsValidHierarchy(t *testing.T) {
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
-	user := &database.User{GroupID: 10}
 
 	tests := []struct {
 		name          string
+		participantID int64
+		attemptID     int64
 		itemID        int64
 		wantHasAccess bool
 		wantReason    error
 		wantError     error
 	}{
-		{name: "normal", itemID: 13, wantHasAccess: true, wantReason: nil, wantError: nil},
-		{name: "read-only", itemID: 12, wantHasAccess: false, wantReason: errors.New("item is read-only"), wantError: nil},
-		{name: "no access", itemID: 10, wantHasAccess: false, wantReason: errors.New("no access to the task item"), wantError: nil},
-		{name: "info access", itemID: 10, wantHasAccess: false, wantReason: errors.New("no access to the task item"), wantError: nil},
-		{name: "finished time-limited", itemID: 14, wantHasAccess: false,
-			wantReason: errors.New("the contest has not started yet or has already finished"), wantError: nil},
+		{name: "normal", participantID: 10, attemptID: 1, itemID: 13, wantHasAccess: true, wantReason: nil, wantError: nil},
+		{name: "read-only", participantID: 10, attemptID: 2, itemID: 12, wantHasAccess: false,
+			wantReason: errors.New("item is read-only"), wantError: nil},
+		{name: "no access", participantID: 11, attemptID: 1, itemID: 10, wantHasAccess: false,
+			wantReason: errors.New("no access to the task item"), wantError: nil},
+		{name: "info access", participantID: 11, attemptID: 2, itemID: 10, wantHasAccess: false,
+			wantReason: errors.New("no access to the task item"), wantError: nil},
 	}
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			hasAccess, reason, err := database.NewDataStore(db).Items().CheckSubmissionRights(test.itemID, user)
-			assert.Equal(t, test.wantHasAccess, hasAccess)
-			assert.Equal(t, test.wantReason, reason)
-			assert.Equal(t, test.wantError, err)
-			assert.NoError(t, err)
-		})
-	}
-}
-
-func insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(db *database.DB, parentGroupID, childGroupID, itemID int64) error {
-	store := database.NewDataStore(db)
-	if err := store.GroupGroups().InsertMap(
-		map[string]interface{}{
-			"parent_group_id": parentGroupID,
-			"child_group_id":  childGroupID,
-		}); err != nil {
-		return err
-	}
-	if err := store.Attempts().InsertMap(
-		map[string]interface{}{
-			"id":             1,
-			"participant_id": childGroupID,
-		}); err != nil {
-		return err
-	}
-	return store.Results().InsertMap(
-		map[string]interface{}{
-			"item_id":        itemID,
-			"participant_id": childGroupID,
-			"started_at":     database.Now(),
-			"attempt_id":     1,
-		})
-}
-
-func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights_for_time_limited_contest")
-	defer func() { _ = db.Close() }()
-
-	tests := []struct {
-		name          string
-		itemID        int64
-		userID        int64
-		wantHasAccess bool
-		wantReason    error
-		initFunc      func(*database.DB) error
-	}{
-		{name: "no items", itemID: 404, userID: 11, wantHasAccess: true, wantReason: nil},
-		{name: "user has no active contest", itemID: 14, userID: 11, wantHasAccess: false,
-			wantReason: errors.New("the contest has not started yet or has already finished")},
-		{name: "user's active team contest has expired", itemID: 14, userID: 12, wantHasAccess: false,
-			wantReason: errors.New("the contest has not started yet or has already finished")},
-		{name: "user's active team contest has expired (again)", itemID: 14, userID: 12, wantHasAccess: false,
-			wantReason: errors.New("the contest has not started yet or has already finished")},
-		{name: "user's active contest has expired", itemID: 15, userID: 13, wantHasAccess: false,
-			wantReason: errors.New("the contest has not started yet or has already finished")},
-		{name: "user's active contest has expired (again)", itemID: 15, userID: 13, wantHasAccess: false,
-			wantReason: errors.New("the contest has not started yet or has already finished")},
-		{name: "user's active contest is OK and it is from another competition, but the user has full access to the time-limited chapter",
-			initFunc: func(db *database.DB) error {
-				return insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(
-					db, 200 /* contest participants group */, 14, 500 /*chapter*/)
-			},
-			itemID: 15, userID: 14, wantHasAccess: true, wantReason: nil},
-		{name: "user's active contest is OK and it is the task's time-limited chapter",
-			initFunc: func(db *database.DB) error {
-				return insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(
-					db, 100 /* contest participants group */, 15, 115)
-			},
-			itemID: 15, userID: 15, wantHasAccess: true, wantReason: nil},
-		{name: "user's active contest is OK, but it is not an ancestor of the task and the user doesn't have full access to the task's chapter",
-			initFunc: func(db *database.DB) error {
-				return insertDataChainForCheckSubmissionRightsForTimeLimitedContestTest(
-					db, 300 /* contest participants group */, 17, 114)
-			},
-			itemID: 15, userID: 17, wantHasAccess: false,
-			wantReason: errors.New("the exercise for which you wish to submit an answer is a part " +
-				"of a different competition than the one in progress")},
-	}
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			var err error
-			if test.initFunc != nil {
-				err = test.initFunc(db)
-				if err != nil {
-					t.Error(err)
-					return
-				}
-			}
-			err = database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-				user := &database.User{}
-				assert.NoError(t, user.LoadByID(store, test.userID))
-
-				hasAccess, reason := store.Items().CheckSubmissionRightsForTimeLimitedContest(test.itemID, user)
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				hasAccess, reason, err := store.Items().CheckSubmissionRights(test.participantID, test.itemID)
 				assert.Equal(t, test.wantHasAccess, hasAccess)
 				assert.Equal(t, test.wantReason, reason)
+				assert.Equal(t, test.wantError, err)
+				assert.NoError(t, err)
 				return nil
-			})
-			assert.NoError(t, err)
-		})
-	}
-}
-
-func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
-	db := testhelpers.SetupDBWithFixtureString(`
-		groups: [{id: 101}, {id: 102}, {id: 103}, {id: 104}, {id: 105}, {id: 106},
-		         {id: 200}, {id: 300}, {id: 400}, {id: 500}]
-		users:
-			- {login: 1, group_id: 101}
-			- {login: 2, group_id: 102}
-			- {login: 3, group_id: 103}
-			- {login: 4, group_id: 104}
-			- {login: 5, group_id: 105}
-			- {login: 6, group_id: 106}
-		items:
-			- {id: 12, contest_participants_group_id: 200, default_language_tag: fr}
-			- {id: 13, contest_participants_group_id: 300, default_language_tag: fr}
-			- {id: 14, duration: 10:00:00, contest_participants_group_id: 400, default_language_tag: fr}
-			- {id: 15, contest_participants_group_id: 500, default_language_tag: fr}
-		groups_ancestors:
-			- {ancestor_group_id: 101, child_group_id: 101}
-			- {ancestor_group_id: 102, child_group_id: 102}
-			- {ancestor_group_id: 103, child_group_id: 103}
-			- {ancestor_group_id: 104, child_group_id: 104}
-			- {ancestor_group_id: 105, child_group_id: 105}
-			- {ancestor_group_id: 106, child_group_id: 106}
-		groups_contest_items:
-			- {group_id: 102, item_id: 12} # not started
-			- {group_id: 104, item_id: 14, additional_time: 00:01:00} # ok
-			- {group_id: 105, item_id: 15}  # ok with team mode
-			- {group_id: 106, item_id: 14, additional_time: 00:01:00} # multiple
-			- {group_id: 106, item_id: 15, additional_time: 00:01:00} # multiple
-		attempts:
-			- {id: 1, participant_id: 103}
-			- {id: 1, participant_id: 104}
-			- {id: 1, participant_id: 105}
-			- {id: 1, participant_id: 106}
-		results:
-			- {participant_id: 103, attempt_id: 1, item_id: 13, started_at: 2019-03-22 08:44:55} # finished
-			- {participant_id: 104, attempt_id: 1, item_id: 14, started_at: 2019-03-22 08:44:55} # ok
-			- {participant_id: 105, attempt_id: 1, item_id: 15, started_at: 2019-04-22 08:44:55}  # ok with team mode
-			- {participant_id: 106, attempt_id: 1, item_id: 14, started_at: 2019-03-22 08:44:55} # multiple
-			- {participant_id: 106, attempt_id: 1, item_id: 15, started_at: 2019-03-22 08:43:55} # multiple
-		groups_groups:
-			- {parent_group_id: 300, child_group_id: 103, expires_at: 2019-03-22 09:44:55}
-			- {parent_group_id: 400, child_group_id: 104}
-			- {parent_group_id: 500, child_group_id: 105}
-			- {parent_group_id: 400, child_group_id: 106}
-			- {parent_group_id: 500, child_group_id: 106}`)
-	defer func() { _ = db.Close() }()
-
-	tests := []struct {
-		name   string
-		userID int64
-		want   *int64
-	}{
-		{name: "no item", userID: 101, want: nil},
-		{name: "not started", userID: 102, want: nil},
-		{name: "finished", userID: 103, want: nil},
-		{name: "ok", userID: 104, want: ptrInt64(14)},
-		{name: "ok with team mode", userID: 105, want: ptrInt64(15)},
-		{name: "ok with multiple active contests", userID: 106, want: ptrInt64(14)},
-	}
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			store := database.NewDataStore(db)
-			user := &database.User{}
-			assert.NoError(t, user.LoadByID(store, test.userID))
-
-			got := store.Items().GetActiveContestItemIDForUser(user)
-			assert.Equal(t, test.want, got)
+			}))
 		})
 	}
 }

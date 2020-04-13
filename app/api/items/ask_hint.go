@@ -33,7 +33,7 @@ import (
 //     * `task_token` should belong to the current user, otherwise the "bad request" response is returned.
 //     * The current user should have submission rights to the `task_token`'s item,
 //       otherwise the "forbidden" response is returned.
-//     * There should be a row in the `results` with `participant_id`, `attempt_id`, and `item_id` matching the tokens
+//     * There should be a "started" row in the `results` with `participant_id`, `attempt_id`, and `item_id` matching the tokens
 //       and `attempts.allows_submissions_until` should be equal to time in the future,
 //       otherwise the "not found" response is returned.
 // parameters:
@@ -97,20 +97,22 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		return apiError
 	}
 
-	var hasAccess bool
-	var reason error
-	hasAccess, reason, err = srv.Store.Items().CheckSubmissionRights(requestData.TaskToken.Converted.LocalItemID, user)
-	service.MustNotBeError(err)
-
-	if !hasAccess {
-		return service.ErrForbidden(reason)
-	}
-
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+		var hasAccess bool
+		var reason error
+		hasAccess, reason, err = store.Items().
+			CheckSubmissionRights(requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.LocalItemID)
+		service.MustNotBeError(err)
+
+		if !hasAccess {
+			apiError = service.ErrForbidden(reason)
+			return apiError.Error // rollback
+		}
+
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []formdata.Anything
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, r)
-		if err == gorm.ErrRecordNotFound {
+		if gorm.IsRecordNotFoundError(err) {
 			apiError = service.ErrNotFound(errors.New("no result or the attempt is expired"))
 			return apiError.Error // rollback
 		}
@@ -162,18 +164,11 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
 	r *http.Request) ([]formdata.Anything, error) {
-	var hintsRequested *string
-	err := store.Results().
-		Where("results.participant_id = ?", taskToken.Converted.ParticipantID).
-		Where("results.attempt_id = ?", taskToken.Converted.AttemptID).
-		Where("results.item_id = ?", taskToken.Converted.LocalItemID).
-		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
-		Where("NOW() < attempts.allows_submissions_until").
-		WithWriteLock().
-		PluckFirst("hints_requested", &hintsRequested).Error()
+	hintsInfo, err := store.Results().
+		GetHintsInfoForActiveAttempt(taskToken.Converted.ParticipantID, taskToken.Converted.AttemptID, taskToken.Converted.LocalItemID)
 	var hintsRequestedParsed []formdata.Anything
-	if err == nil && hintsRequested != nil {
-		hintsErr := json.Unmarshal([]byte(*hintsRequested), &hintsRequestedParsed)
+	if err == nil && hintsInfo.HintsRequested != nil {
+		hintsErr := json.Unmarshal([]byte(*hintsInfo.HintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
 			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
@@ -182,7 +177,7 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 				"idAttempt":   taskToken.AttemptID,
 			})
 			logging.GetLogEntry(r).Warnf("Unable to parse hints_requested (%s) having value %q: %s", fieldsForLoggingMarshaled,
-				*hintsRequested, hintsErr.Error())
+				*hintsInfo.HintsRequested, hintsErr.Error())
 		}
 	}
 	return hintsRequestedParsed, err
