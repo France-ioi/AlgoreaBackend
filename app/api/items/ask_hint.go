@@ -33,7 +33,7 @@ import (
 //     * `task_token` should belong to the current user, otherwise the "bad request" response is returned.
 //     * The current user should have submission rights to the `task_token`'s item,
 //       otherwise the "forbidden" response is returned.
-//     * There should be a "started" row in the `results` with `participant_id`, `attempt_id`, and `item_id` matching the tokens
+//     * There should be a row in the `results` with `participant_id`, `attempt_id`, and `item_id` matching the tokens
 //       and `attempts.allows_submissions_until` should be equal to time in the future,
 //       otherwise the "not found" response is returned.
 // parameters:

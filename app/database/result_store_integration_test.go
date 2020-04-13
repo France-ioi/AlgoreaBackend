@@ -59,13 +59,11 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 			- {participant_id: 11, id: 1, root_item_id: 112, allows_submissions_until: 3019-05-30 12:00:00}
 			- {participant_id: 11, id: 2, root_item_id: 112}
 			- {participant_id: 12, id: 2, root_item_id: 114, allows_submissions_until: 2019-05-30 12:00:00}
-			- {participant_id: 12, id: 3, root_item_id: 114}
 		results:
 			- {participant_id: 11, attempt_id: 1, item_id: 12, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 11, attempt_id: 2, item_id: 12, hints_requested: '[0,1,"hint",null]', hints_cached: 4,
 				started_at: 2019-07-30 11:00:00}
-			- {participant_id: 12, attempt_id: 2, item_id: 14, started_at: 2019-05-30 11:00:00}
-			- {participant_id: 12, attempt_id: 3, item_id: 14}`)
+			- {participant_id: 12, attempt_id: 2, item_id: 14}`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
@@ -82,8 +80,6 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 				HintsRequested: ptrString(`[0,1,"hint",null]`),
 				HintsCached:    4,
 			}},
-		{name: "not started", participantID: 12, attemptID: 3, itemID: 14, wantHintsInfo: nil,
-			wantError: gorm.ErrRecordNotFound},
 		{name: "finished", participantID: 12, attemptID: 2, itemID: 14, wantHintsInfo: nil,
 			wantError: gorm.ErrRecordNotFound},
 	}

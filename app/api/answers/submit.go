@@ -27,8 +27,7 @@ import (
 //
 //   * The user should have submission rights on `task_token.idItemLocal`.
 //
-//   * The attempt should allow submission (`results.started_at != NULL and
-//     `attempts.allows_submissions_until` should be a time in the future).
+//   * The attempt should allow submission (`attempts.allows_submissions_until` should be a time in the future).
 //
 //   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:

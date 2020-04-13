@@ -27,7 +27,7 @@ type HintsInfo struct {
 	HintsCached    int32
 }
 
-// GetHintsInfoForActiveAttempt returns HintsInfo of the started result
+// GetHintsInfoForActiveAttempt returns HintsInfo of the result
 // identified by given participantID, attemptID, itemID and linked to an active attempt.
 // If such a result doesn't exist, the gorm.ErrRecordNotFound error is returned.
 func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, itemID int64) (result *HintsInfo, err error) {
@@ -37,7 +37,6 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 	var hintsInfo HintsInfo
 	mustNotBeError(s.Results().
 		ByID(participantID, attemptID, itemID).
-		Where("results.started_at IS NOT NULL").
 		WithWriteLock().Select("hints_requested, hints_cached").
 		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Where("NOW() < attempts.allows_submissions_until").
