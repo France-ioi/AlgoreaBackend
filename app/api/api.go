@@ -42,6 +42,6 @@ func (ctx *Ctx) Router() *chi.Mux {
 	r.Group((&answers.Service{Base: base}).SetRoutes)
 	r.Group((&currentuser.Service{Base: base}).SetRoutes)
 	r.Get("/status", ctx.status)
-	r.NotFound(ctx.notFound)
+	r.NotFound(service.NotFound)
 	return r
 }
