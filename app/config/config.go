@@ -26,11 +26,6 @@ type Server struct {
 	Domain       string
 }
 
-// ReverseProxy is the part of the config for the Reverse Proxy
-type ReverseProxy struct {
-	Server string
-}
-
 // Logging for all config related to logger
 type Logging struct {
 	Format           string
@@ -65,13 +60,12 @@ type Domain struct {
 
 // Root is the root of the app configuration
 type Root struct {
-	Server       Server
-	Database     Database
-	ReverseProxy ReverseProxy
-	Logging      Logging
-	Auth         Auth
-	Token        Token
-	Domains      []Domain
+	Server   Server
+	Database Database
+	Logging  Logging
+	Auth     Auth
+	Token    Token
+	Domains  []Domain
 }
 
 const defaultConfigName = "config"
@@ -138,9 +132,6 @@ func setDefaults(c *viper.Viper) {
 	c.SetDefault("logging.output", "file")
 	c.SetDefault("logging.level", "info")
 	c.SetDefault("logging.logSqlQueries", true)
-
-	// reverse proxy
-	c.SetDefault("reverseproxy.server", "http://localhost:3000")
 }
 
 func configDirectory() string {

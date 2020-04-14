@@ -31,5 +31,3 @@ domains:
     rootGroup: 1
     rootSelfGroup: 2
     rootTempGroup: 4
-# reverseProxy: # server to which requests which do not match any route will be sent
-#   server: "http://localhost:3000"
