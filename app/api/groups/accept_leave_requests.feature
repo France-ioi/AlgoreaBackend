@@ -19,25 +19,6 @@ Feature: Accept requests to leave a group
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | expires_at          |
-      | 11                | 11             | 9999-12-31 23:59:59 |
-      | 13                | 13             | 9999-12-31 23:59:59 |
-      | 13                | 111            | 9999-12-31 23:59:59 |
-      | 13                | 121            | 9999-12-31 23:59:59 |
-      | 13                | 123            | 9999-12-31 23:59:59 |
-      | 13                | 141            | 2019-05-30 11:00:00 |
-      | 13                | 151            | 9999-12-31 23:59:59 |
-      | 14                | 14             | 9999-12-31 23:59:59 |
-      | 21                | 21             | 9999-12-31 23:59:59 |
-      | 31                | 31             | 9999-12-31 23:59:59 |
-      | 111               | 111            | 9999-12-31 23:59:59 |
-      | 121               | 121            | 9999-12-31 23:59:59 |
-      | 122               | 122            | 9999-12-31 23:59:59 |
-      | 123               | 123            | 9999-12-31 23:59:59 |
-      | 141               | 141            | 9999-12-31 23:59:59 |
-      | 151               | 151            | 9999-12-31 23:59:59 |
-      | 161               | 161            | 9999-12-31 23:59:59 |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | expires_at          |
       | 13              | 31             | 9999-12-31 23:59:59 |
@@ -46,6 +27,7 @@ Feature: Accept requests to leave a group
       | 13              | 123            | 9999-12-31 23:59:59 |
       | 13              | 141            | 2019-05-30 11:00:00 |
       | 13              | 151            | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
@@ -96,23 +78,4 @@ Feature: Accept requests to leave a group
     And the table "group_membership_changes" should be:
       | group_id | member_id | action                 | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 31        | leave_request_accepted | 21           | 1                                         |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self | expires_at          |
-      | 11                | 11             | 1       | 9999-12-31 23:59:59 |
-      | 13                | 13             | 1       | 9999-12-31 23:59:59 |
-      | 13                | 111            | 0       | 9999-12-31 23:59:59 |
-      | 13                | 121            | 0       | 9999-12-31 23:59:59 |
-      | 13                | 123            | 0       | 9999-12-31 23:59:59 |
-      | 13                | 151            | 0       | 9999-12-31 23:59:59 |
-      | 14                | 14             | 1       | 9999-12-31 23:59:59 |
-      | 21                | 21             | 1       | 9999-12-31 23:59:59 |
-      | 31                | 31             | 1       | 9999-12-31 23:59:59 |
-      | 111               | 111            | 1       | 9999-12-31 23:59:59 |
-      | 121               | 121            | 1       | 9999-12-31 23:59:59 |
-      | 122               | 122            | 1       | 9999-12-31 23:59:59 |
-      | 123               | 123            | 1       | 9999-12-31 23:59:59 |
-      | 131               | 131            | 1       | 9999-12-31 23:59:59 |
-      | 141               | 141            | 1       | 9999-12-31 23:59:59 |
-      | 151               | 151            | 1       | 9999-12-31 23:59:59 |
-      | 161               | 161            | 1       | 9999-12-31 23:59:59 |
-      | 444               | 444            | 1       | 9999-12-31 23:59:59 |
+    And the table "groups_ancestors" should stay unchanged

@@ -21,30 +21,6 @@ Feature: Get members of group_id
       | 13       | 21         |
       | 13       | 91         |
       | 22       | 21         |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 13             |
-      | 13                | 51             |
-      | 13                | 61             |
-      | 13                | 91             |
-      | 14                | 11             |
-      | 14                | 14             |
-      | 14                | 21             |
-      | 14                | 31             |
-      | 21                | 21             |
-      | 22                | 13             |
-      | 22                | 22             |
-      | 22                | 51             |
-      | 22                | 61             |
-      | 22                | 91             |
-      | 31                | 31             |
-      | 41                | 41             |
-      | 51                | 51             |
-      | 61                | 61             |
-      | 71                | 71             |
-      | 81                | 81             |
-      | 91                | 91             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | expires_at          | personal_info_view_approved_at |
       | 13              | 51             | 9999-12-31 23:59:59 | null                           | # still shows personal info because of 22-51
@@ -56,6 +32,7 @@ Feature: Get members of group_id
       | 14              | 41             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
       | 22              | 13             | 9999-12-31 23:59:59 | null                           |
       | 22              | 51             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
+    And the groups ancestors are computed
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                  | initiator_id |
       | 13       | 11        | invitation_refused    | 2017-11-29 06:38:38 | 31           |

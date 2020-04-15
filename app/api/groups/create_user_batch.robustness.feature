@@ -13,15 +13,12 @@ Feature: Create a user batch - robustness
       | group_id | manager_id | can_manage            |
       | 3        | 21         | memberships           |
       | 4        | 21         | memberships_and_group |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 2                 | 2              |
-      | 2                 | 21             |
-      | 3                 | 3              |
-      | 3                 | 4              |
-      | 3                 | 21             |
-      | 4                 | 4              |
-      | 21                | 21             |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 2               | 21             |
+      | 3               | 4              |
+      | 3               | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'user_batch_prefixes':
       | group_prefix | group_id | allow_new | max_users |
       | test         | 3        | 1         | 2         |

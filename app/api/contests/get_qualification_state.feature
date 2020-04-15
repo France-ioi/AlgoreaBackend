@@ -22,20 +22,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11              | 31             |
       | 11              | 41             |
       | 11              | 51             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 10                | 10             |
-      | 10                | 31             |
-      | 10                | 41             |
-      | 10                | 51             |
-      | 11                | 11             |
-      | 11                | 31             |
-      | 11                | 41             |
-      | 11                | 51             |
-      | 21                | 21             |
-      | 31                | 31             |
-      | 41                | 41             |
-      | 51                | 51             |
+    And the groups ancestors are computed
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':

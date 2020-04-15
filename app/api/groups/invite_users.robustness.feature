@@ -16,12 +16,7 @@ Feature: Invite users - robustness
       | 13       | 21         | memberships |
       | 13       | 22         | none        |
       | 22       | 22         | memberships |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 13             |
-      | 21                | 21             |
-      | 22                | 22             |
+    And the groups ancestors are computed
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"

@@ -15,14 +15,7 @@ Background:
     | 13              | 11             |
     | 13              | 21             |
     | 23              | 21             |
-  And the database has the following table 'groups_ancestors':
-    | ancestor_group_id | child_group_id |
-    | 11                | 11             |
-    | 13                | 13             |
-    | 13                | 11             |
-    | 13                | 21             |
-    | 23                | 21             |
-    | 23                | 23             |
+  And the groups ancestors are computed
   And the database has the following table 'items':
     | id  | default_language_tag |
     | 200 | fr                   |

@@ -10,13 +10,7 @@ Feature: Join a group using a code (groupsJoinByCode)
     And the database has the following table 'users':
       | group_id |
       | 21       |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 12                | 12             |
-      | 14                | 14             |
-      | 15                | 15             |
-      | 21                | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | invitation   |
@@ -67,19 +61,9 @@ Feature: Join a group using a code (groupsJoinByCode)
     And the table "group_membership_changes" should be:
       | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 11       | 21        | joined_by_code | 21           | 1                                         |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 11                | 21             | 0       |
-      | 12                | 12             | 1       |
-      | 14                | 14             | 1       |
-      | 15                | 15             | 1       |
-      | 21                | 21             | 1       |
+    And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
-    And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 21             | 20      | done                     |
-      | 0          | 21             | 30      | done                     |
+    And the table "results" should stay unchanged
 
   Scenario: Updates the code_expires_at
     Given I am the user with id "21"
@@ -107,19 +91,9 @@ Feature: Join a group using a code (groupsJoinByCode)
     And the table "group_membership_changes" should be:
       | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 12       | 21        | joined_by_code | 21           | 1                                         |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
-      | 12                | 21             | 0       |
-      | 14                | 14             | 1       |
-      | 15                | 15             | 1       |
-      | 21                | 21             | 1       |
+    And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
-    And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 21             | 20      | done                     |
-      | 0          | 21             | 30      | done                     |
+    And the table "results" should stay unchanged
 
   Scenario: Doesn't update the code_expires_at if code_lifetime is null
     Given I am the user with id "21"
@@ -143,19 +117,9 @@ Feature: Join a group using a code (groupsJoinByCode)
     And the table "group_membership_changes" should be:
       | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 14       | 21        | joined_by_code | 21           | 1                                         |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 15                | 15             | 1       |
-      | 21                | 21             | 1       |
+    And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
-    And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 21             | 20      | done                     |
-      | 0          | 21             | 30      | done                     |
+    And the table "results" should stay unchanged
 
   Scenario: Successfully join a group that requires approvals
     Given I am the user with id "21"
@@ -180,16 +144,6 @@ Feature: Join a group using a code (groupsJoinByCode)
     And the table "group_membership_changes" should be:
       | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 15       | 21        | joined_by_code | 21           | 1                                         |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
-      | 14                | 14             | 1       |
-      | 15                | 15             | 1       |
-      | 15                | 21             | 0       |
-      | 21                | 21             | 1       |
+    And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
-    And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 21             | 20      | done                     |
-      | 0          | 21             | 30      | done                     |
+    And the table "results" should stay unchanged

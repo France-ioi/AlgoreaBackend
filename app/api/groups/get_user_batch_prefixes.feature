@@ -14,23 +14,12 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 16       | 21         | none        |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 13                | 13             |
-      | 13                | 15             |
-      | 13                | 21             |
-      | 14                | 14             |
-      | 15                | 15             |
-      | 16                | 13             |
-      | 16                | 15             |
-      | 16                | 16             |
-      | 16                | 21             |
-      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 15             |
       | 13              | 21             |
       | 16              | 13             |
+    And the groups ancestors are computed
     And the database has the following table 'user_batch_prefixes':
       | group_prefix | group_id | allow_new | max_users |
       | test         | 13       | 1         | 90        |

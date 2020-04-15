@@ -249,9 +249,16 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 	membersCount int32, otherMembers []contestGetQualificationStateOtherMember, currentUserCanEnter bool, qualifiedMembersCount int32,
 	attemptsViolationsFound bool) {
 	if groupID != user.GroupID {
+		teamCanEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+			Joins(`
+				LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+					permissions_granted.item_id = ?`, itemID).
+			Select("IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AS can_enter")
+
 		canEnterQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = groups_groups_active.child_group_id").
 			Joins("JOIN items ON items.id = ?", itemID).
+			Joins(`JOIN ? AS team`, teamCanEnterQuery.SubQuery()).
 			Joins(`
 				LEFT JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id`).
 			Joins(`
@@ -261,7 +268,7 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 			Order("groups_groups_active.child_group_id").
 			Select(`
 				users.first_name, users.last_name, users.group_id AS group_id, users.login,
-				IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND
+				(MAX(team.can_enter) OR IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0)) AND
 				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`)
 		if lock {
 			canEnterQuery = canEnterQuery.WithWriteLock()

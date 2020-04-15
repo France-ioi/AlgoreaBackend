@@ -24,26 +24,12 @@ Feature: Withdraw group invitations - robustness
       | 12       | 12         | memberships |
       | 13       | 21         | memberships |
       | 13       | 12         | none        |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 12                | 12             |
-      | 13                | 13             |
-      | 13                | 111            |
-      | 13                | 121            |
-      | 13                | 123            |
-      | 14                | 14             |
-      | 21                | 21             |
-      | 31                | 31             |
-      | 111               | 111            |
-      | 121               | 121            |
-      | 122               | 122            |
-      | 123               | 123            |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 111            |
       | 13              | 121            |
       | 13              | 123            |
+    And the groups ancestors are computed
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"

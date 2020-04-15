@@ -11,15 +11,10 @@ Feature: List user batches (userBatchesView)
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 13                | 13             |
-      | 13                | 21             |
-      | 14                | 14             |
-      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'user_batch_prefixes':
       | group_prefix | group_id | allow_new |
       | test         | 13       | 1         |

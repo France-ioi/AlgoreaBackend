@@ -16,13 +16,7 @@ Feature: Get recent activity for group_id and item_id
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 13              | 11             | 2019-05-30 11:00:00            |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 11             |
-      | 13                | 13             |
-      | 21                | 21             |
-      | 31                | 31             |
+    And the groups ancestors are computed
     And the database has the following table 'attempts':
       | id | participant_id |
       | 0  | 11             |

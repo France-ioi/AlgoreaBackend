@@ -20,21 +20,11 @@ Feature: User sends a request to join a group - robustness
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 17       | 21         | memberships |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 13             |
-      | 14                | 14             |
-      | 15                | 15             |
-      | 16                | 16             |
-      | 16                | 21             |
-      | 17                | 17             |
-      | 21                | 13             |
-      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 16              | 21             |
       | 21              | 13             |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | invitation   |

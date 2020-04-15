@@ -3,9 +3,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     Given the database has the following users:
       | login      | group_id | default_language |
       | possesseur | 21       | fr               |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 21                | 21             |
+    And the groups ancestors are computed
 
   Scenario: Wrong sort
     Given I am the user with id "21"

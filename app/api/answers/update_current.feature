@@ -6,12 +6,10 @@ Feature: Update the 'current' answer
     And the database table 'groups' has also the following row:
       | id | type |
       | 13 | Team |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 101               | 101            |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 101            |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | default_language_tag |
       | 50 | fr                   |

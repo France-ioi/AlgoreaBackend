@@ -27,7 +27,7 @@ import (
 //
 //   * The user should have submission rights on `task_token.idItemLocal`.
 //
-//   * The attempt should allow submission (`allows_submissions_until` should be a time in the future).
+//   * The attempt should allow submission (`attempts.allows_submissions_until` should be a time in the future).
 //
 //   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:
@@ -67,16 +67,14 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	}
 
 	var answerID int64
-	var hintsInfo struct {
-		HintsRequested *string
-		HintsCached    int32
-	}
+	var hintsInfo *database.HintsInfo
 	apiError := service.NoError
 
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
-		hasAccess, reason, err = store.Items().CheckSubmissionRights(requestData.TaskToken.Converted.LocalItemID, user)
+		hasAccess, reason, err = store.Items().
+			CheckSubmissionRights(requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.LocalItemID)
 		service.MustNotBeError(err)
 
 		if !hasAccess {
@@ -84,31 +82,29 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			return apiError.Error // rollback
 		}
 
+		hintsInfo, err = store.Results().GetHintsInfoForActiveAttempt(
+			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID, requestData.TaskToken.Converted.LocalItemID)
+
+		if gorm.IsRecordNotFoundError(err) {
+			apiError = service.ErrForbidden(errors.New("no active attempt found"))
+			return apiError.Error // rollback
+		}
+		service.MustNotBeError(err)
+
 		answerID, err = store.Answers().SubmitNewAnswer(
 			user.GroupID, requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 			requestData.TaskToken.Converted.LocalItemID, *requestData.Answer)
 		service.MustNotBeError(err)
 
-		resultsScope := store.Results().Where("results.participant_id = ?", requestData.TaskToken.Converted.ParticipantID).
-			Where("results.attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
-			Where("results.item_id = ?", requestData.TaskToken.Converted.LocalItemID)
-
-		err = resultsScope.WithWriteLock().Select("hints_requested, hints_cached").
-			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
-			Where("NOW() < attempts.allows_submissions_until").
-			Scan(&hintsInfo).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.ErrForbidden(errors.New("the attempt has expired"))
-			return apiError.Error // rollback
-		}
-		service.MustNotBeError(err)
-
-		service.MustNotBeError(resultsScope.UpdateColumn(map[string]interface{}{
-			"submissions":              gorm.Expr("submissions + 1"),
-			"latest_submission_at":     database.Now(),
-			"latest_activity_at":       database.Now(),
-			"result_propagation_state": "to_be_propagated",
-		}).Error())
+		service.MustNotBeError(store.Results().
+			ByID(requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+				requestData.TaskToken.Converted.LocalItemID).
+			UpdateColumn(map[string]interface{}{
+				"submissions":              gorm.Expr("submissions + 1"),
+				"latest_submission_at":     database.Now(),
+				"latest_activity_at":       database.Now(),
+				"result_propagation_state": "to_be_propagated",
+			}).Error())
 		return store.Results().Propagate()
 	})
 

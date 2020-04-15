@@ -3,12 +3,10 @@ Feature: Submit a new answer
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 101               | 101            |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 22              | 13             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | default_language_tag |
       | 10 | fr                   |
@@ -26,9 +24,9 @@ Feature: Submit a new answer
       | id | participant_id |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | result_propagation_state |
-      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | done                     |
-      | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | started_at          | result_propagation_state |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
 
   Scenario: User is able to submit a new answer
     Given I am the user with id "101"

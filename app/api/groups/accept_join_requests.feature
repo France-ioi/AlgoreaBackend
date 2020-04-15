@@ -22,29 +22,13 @@ Feature: Accept group requests
     And the database has the following table 'items':
       | id   | default_language_tag |
       | 1234 | fr                   |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 13             |
-      | 13                | 111            |
-      | 13                | 121            |
-      | 13                | 123            |
-      | 13                | 151            |
-      | 14                | 14             |
-      | 21                | 21             |
-      | 31                | 31             |
-      | 111               | 111            |
-      | 121               | 121            |
-      | 122               | 122            |
-      | 123               | 123            |
-      | 151               | 151            |
-      | 161               | 161            |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at |
       | 13              | 111            | null                           | null                        | null              |
       | 13              | 121            | null                           | null                        | null              |
       | 13              | 123            | null                           | null                        | null              |
       | 13              | 151            | null                           | null                        | null              |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
       | 13       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00 |
@@ -120,12 +104,6 @@ Feature: Accept group requests
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
-      | 13                | 31             | 0       |
-      | 13                | 111            | 0       |
-      | 13                | 121            | 0       |
-      | 13                | 123            | 0       |
-      | 13                | 141            | 0       |
-      | 13                | 151            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
       | 31                | 31             | 1       |
@@ -139,10 +117,7 @@ Feature: Accept group requests
       | 161               | 161            | 1       |
       | 444               | 444            | 1       |
     And the table "attempts" should stay unchanged
-    And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 31             | 20      | done                     |
-      | 0          | 31             | 30      | done                     |
+    And the table "results" should stay unchanged
 
   Scenario: Accept requests for a team while skipping members of other teams participating in the same contests
     Given I am the user with id "21"
@@ -151,12 +126,7 @@ Feature: Accept group requests
       | 444             | 31             |
       | 444             | 141            |
       | 444             | 161            |
-    And the database table 'groups_ancestors' has also the following rows:
-      | ancestor_group_id | child_group_id |
-      | 444               | 31             |
-      | 444               | 141            |
-      | 444               | 161            |
-      | 444               | 444            |
+    And the groups ancestors are computed
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |

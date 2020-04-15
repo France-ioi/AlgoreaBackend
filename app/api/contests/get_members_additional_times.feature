@@ -36,37 +36,11 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 11              | 15             |
       | 11              | 16             |
       | 11              | 17             |
-      | 14              | 14             |
+      | 14              | 31             |
+      | 14              | 41             |
       | 15              | 31             |
       | 15              | 41             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 10                | 10             |
-      | 10                | 11             |
-      | 10                | 13             |
-      | 10                | 14             |
-      | 10                | 15             |
-      | 10                | 16             |
-      | 10                | 31             |
-      | 10                | 41             |
-      | 11                | 11             |
-      | 11                | 13             |
-      | 11                | 14             |
-      | 11                | 15             |
-      | 11                | 16             |
-      | 11                | 17             |
-      | 11                | 31             |
-      | 11                | 41             |
-      | 13                | 13             |
-      | 14                | 14             |
-      | 15                | 15             |
-      | 15                | 31             |
-      | 15                | 41             |
-      | 16                | 16             |
-      | 17                | 17             |
-      | 21                | 21             |
-      | 31                | 31             |
-      | 41                | 41             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
       | 50 | 00:00:00 | User                   | fr                   |

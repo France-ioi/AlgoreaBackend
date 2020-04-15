@@ -99,9 +99,11 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 	writeComma(w)
 	writeJSONObjectArrayElement("joined_groups", w, func(writer io.Writer) {
-		service.MustNotBeError(srv.Store.GroupAncestors().UserAncestors(user).
-			Where("child_group_id != ancestor_group_id").
-			Joins("JOIN `groups` ON `groups`.id = ancestor_group_id").
+		service.MustNotBeError(srv.Store.ActiveGroupGroups().
+			Where("groups_groups_active.child_group_id = ?", user.GroupID).
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id").
+			Joins("JOIN `groups` ON `groups`.id = groups_ancestors_active.ancestor_group_id").
+			Group("groups.id").
 			Select("`groups`.id, `groups`.name").Order("`groups`.id").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 

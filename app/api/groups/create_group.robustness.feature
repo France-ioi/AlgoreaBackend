@@ -13,11 +13,7 @@ Feature: Create a group (groupCreate) - robustness
       | john   | 0         | 51       |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 21                | 21             |
-      | 31                | 31             |
-      | 51                | 51             |
+    And the groups ancestors are computed
 
   Scenario: No name
     Given I am the user with id "21"

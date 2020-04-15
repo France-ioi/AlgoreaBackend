@@ -61,63 +61,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 16              | 65             |
       | 16              | 67             |
       | 20              | 21             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 1                 | 1              |
-      | 1                 | 11             |
-      | 1                 | 12             |
-      | 1                 | 14             |
-      | 1                 | 16             |
-      | 1                 | 17             |
-      | 1                 | 18             |
-      | 1                 | 51             |
-      | 1                 | 53             |
-      | 1                 | 55             |
-      | 1                 | 59             |
-      | 1                 | 63             |
-      | 1                 | 65             |
-      | 1                 | 67             |
-      | 3                 | 3              |
-      | 3                 | 13             |
-      | 3                 | 15             |
-      | 3                 | 61             |
-      | 3                 | 63             |
-      | 3                 | 65             |
-      | 3                 | 69             |
-      | 11                | 11             |
-      | 11                | 14             |
-      | 11                | 16             |
-      | 11                | 17             |
-      | 11                | 18             |
-      | 11                | 51             |
-      | 11                | 53             |
-      | 11                | 55             |
-      | 11                | 59             |
-      | 11                | 63             |
-      | 11                | 65             |
-      | 11                | 67             |
-      | 12                | 12             |
-      | 13                | 13             |
-      | 13                | 15             |
-      | 13                | 61             |
-      | 13                | 63             |
-      | 13                | 65             |
-      | 13                | 69             |
-      | 14                | 14             |
-      | 14                | 51             |
-      | 14                | 53             |
-      | 14                | 55             |
-      | 15                | 15             |
-      | 15                | 61             |
-      | 15                | 63             |
-      | 15                | 65             |
-      | 16                | 16             |
-      | 16                | 63             |
-      | 16                | 65             |
-      | 16                | 67             |
-      | 20                | 20             |
-      | 20                | 21             |
-      | 21                | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id  | type    | default_language_tag |
       | 200 | Chapter | fr                   |

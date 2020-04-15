@@ -14,16 +14,7 @@ Feature: List attempts for current user and item_id - robustness
       | 13              | 12             |
       | 14              | 12             |
       | 15              | 12             |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 12                | 12             |
-      | 13                | 12             |
-      | 13                | 13             |
-      | 14                | 12             |
-      | 14                | 14             |
-      | 15                | 12             |
-      | 15                | 15             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id  | allows_multiple_attempts | default_language_tag |
       | 210 | 1                        | fr                   |

@@ -15,20 +15,7 @@ Feature: Delete the current user - robustness
       | 2               | 4              | null                        |
       | 2               | 21             | null                        |
       | 50              | 21             | 2019-05-30 11:00:00         |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 1                 | 1              |
-      | 1                 | 2              |
-      | 1                 | 4              |
-      | 1                 | 21             |
-      | 1                 | 50             |
-      | 2                 | 2              |
-      | 2                 | 4              |
-      | 2                 | 21             |
-      | 4                 | 4              |
-      | 21                | 21             |
-      | 50                | 21             |
-      | 50                | 50             |
+    And the groups ancestors are computed
     And the database has the following table 'users':
       | temp_user | login | group_id | login_id |
       | 0         | user  | 21       | 1234567  |

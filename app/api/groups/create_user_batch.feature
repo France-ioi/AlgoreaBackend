@@ -13,14 +13,11 @@ Feature: Create a user batch
       | group_id | manager_id | can_manage            |
       | 3        | 21         | memberships           |
       | 4        | 21         | memberships_and_group |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 2                 | 2              |
-      | 2                 | 21             |
-      | 3                 | 3              |
-      | 3                 | 4              |
-      | 4                 | 4              |
-      | 21                | 21             |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 2               | 21             |
+      | 3               | 4              |
+    And the groups ancestors are computed
     And the database has the following table 'user_batch_prefixes':
       | group_prefix | group_id | allow_new | max_users |
       | test         | 3        | 1         | 2         |
@@ -112,16 +109,21 @@ Feature: Create a user batch
       | 8674665223082153551 | test_custom_ctc | User    | test_custom_ctc | 2019-07-16 22:02:28 | false   | false       |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id      | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at   |
+      | 2               | 21                  | null                           | null                        | null                |
       | 2               | 5577006791947779410 | null                           | null                        | null                |
       | 2               | 8674665223082153551 | null                           | null                        | null                |
+      | 3               | 4                   | null                           | null                        | null                |
       | 3               | 8674665223082153551 | 2019-07-16 22:02:28            | 2019-07-16 22:02:28         | 2019-07-16 22:02:28 |
       | 4               | 5577006791947779410 | 2019-07-16 22:02:28            | null                        | null                |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 21                  | false   |
       | 2                   | 5577006791947779410 | false   |
       | 2                   | 8674665223082153551 | false   |
       | 3                   | 3                   | true    |
+      | 3                   | 4                   | false   |
+      | 3                   | 5577006791947779410 | false   |
       | 3                   | 8674665223082153551 | false   |
       | 4                   | 4                   | true    |
       | 4                   | 5577006791947779410 | false   |

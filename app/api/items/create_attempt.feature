@@ -12,12 +12,7 @@ Feature: Create an attempt for an item
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 102             | 101            |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 101               | 101            |
-      | 102               | 101            |
-      | 102               | 102            |
-      | 111               | 111            |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag |
       | 10 | null                                                                    | Chapter | 0                        | fr                   |

@@ -18,5 +18,28 @@ func (s *ResultStore) ExistsForUserTeam(user *User, participantTeamID, attemptID
 
 // ByID returns a composable query for getting a result row by the primary key (participant_id, attemptID, itemID)
 func (s *ResultStore) ByID(participantID, attemptID, itemID int64) *DB {
-	return s.Where("participant_id = ? AND attempt_id = ? AND item_id = ?", participantID, attemptID, itemID)
+	return s.Where("results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", participantID, attemptID, itemID)
+}
+
+// HintsInfo contains information on requested hints and their cached count
+type HintsInfo struct {
+	HintsRequested *string
+	HintsCached    int32
+}
+
+// GetHintsInfoForActiveAttempt returns HintsInfo of the result
+// identified by given participantID, attemptID, itemID and linked to an active attempt.
+// If such a result doesn't exist, the gorm.ErrRecordNotFound error is returned.
+func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, itemID int64) (result *HintsInfo, err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	var hintsInfo HintsInfo
+	mustNotBeError(s.Results().
+		ByID(participantID, attemptID, itemID).
+		WithWriteLock().Select("hints_requested, hints_cached").
+		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
+		Where("NOW() < attempts.allows_submissions_until").
+		Scan(&hintsInfo).Error())
+	return &hintsInfo, nil
 }

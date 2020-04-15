@@ -8,17 +8,11 @@ Feature: User leaves a group
     And the database has the following table 'users':
       | group_id |
       | 21       |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 11                | 21             |
-      | 14                | 14             |
-      | 14                | 21             |
-      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 11              | 21             | 2019-05-30 11:00:00         |
       | 14              | 21             | null                        |
+    And the groups ancestors are computed
 
   Scenario: Successfully leave a group
     Given I am the user with id "21"

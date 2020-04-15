@@ -3,12 +3,10 @@ Feature: Submit a new answer - robustness
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 101               | 101            |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 22              | 13             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | read_only | default_language_tag |
       | 50 | 1         | fr                   |
@@ -196,7 +194,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "101",
         "idItemLocal": "50",
-        "idAttempt": "100/1",
+        "idAttempt": "101/1",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -230,5 +228,5 @@ Feature: Submit a new answer - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "The attempt has expired"
+    And the response error message should contain "No active attempt found"
     And the table "answers" should stay unchanged

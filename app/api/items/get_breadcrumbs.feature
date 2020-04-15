@@ -27,11 +27,7 @@ Background:
   And the database has the following table 'groups_groups':
     | parent_group_id | child_group_id |
     | 13              | 11             |
-  And the database has the following table 'groups_ancestors':
-    | ancestor_group_id | child_group_id |
-    | 11                | 11             |
-    | 13                | 13             |
-    | 13                | 11             |
+  And the groups ancestors are computed
 
 Scenario: Full access on all breadcrumb
   Given the database has the following table 'permissions_generated':

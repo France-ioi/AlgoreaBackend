@@ -14,6 +14,7 @@ Feature: Delete the current user
       | 2               | 4              |
       | 2               | 21             |
       | 4               | 31             |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | at                  |
       | 100      | 21        | 2019-05-30 11:00:00 |
@@ -22,22 +23,6 @@ Feature: Delete the current user
       | group_id | member_id | at                  |
       | 100      | 21        | 2019-05-30 11:00:00 |
       | 100      | 31        | 2019-05-30 11:00:00 |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 1                 | 1              |
-      | 1                 | 2              |
-      | 1                 | 4              |
-      | 1                 | 21             |
-      | 1                 | 31             |
-      | 2                 | 2              |
-      | 2                 | 4              |
-      | 2                 | 21             |
-      | 2                 | 31             |
-      | 4                 | 4              |
-      | 4                 | 31             |
-      | 21                | 21             |
-      | 31                | 31             |
-      | 100               | 100            |
     And the database has the following table 'users':
       | temp_user | login    | group_id | login_id |
       | 0         | user     | 21       | 1234567  |

@@ -32,6 +32,10 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	relationsTable := objectName + "_" + objectName
 
+	var additionalJoin string
+	if objectName == groups {
+		additionalJoin = " JOIN `groups` AS parent ON parent.id = groups_groups.parent_group_id AND parent.type != 'Team' "
+	}
 	// Next queries will be executed in the loop
 
 	// We mark as "processing" all objects that were marked as 'todo' and that have no parents not marked as 'done'
@@ -48,6 +52,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 					JOIN ` + objectName + `_propagate
 						ON ` + objectName + `_propagate.id = ` + relationsTable + `.parent_` + singleObjectName + `_id AND
 							 ` + objectName + `_propagate.ancestors_computation_state <> 'done'
+					` + additionalJoin + `
 				WHERE ` + relationsTable + `.child_` + singleObjectName + `_id = children.id
 				FOR UPDATE
 			) has_undone_parents FOR UPDATE
@@ -62,7 +67,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	if objectName == groups {
 		expiresAtColumn = ", expires_at"
-		expiresAtValueJoin = ", LEAST(groups_ancestors_join.expires_at, groups_groups_select.expires_at)"
+		expiresAtValueJoin = ", LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at)"
 		ignore = ""
 	}
 
@@ -82,23 +87,24 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		)
 		SELECT
 			`+objectName+`_ancestors_join.ancestor_`+singleObjectName+`_id,
-			`+relationsTable+`_select.child_`+singleObjectName+`_id
+			`+relationsTable+`.child_`+singleObjectName+`_id
 			`+expiresAtValueJoin+`
-		FROM `+relationsTable+` AS `+relationsTable+`_select
+		FROM `+relationsTable+` AS `+relationsTable+`
+		`+additionalJoin+`
 		JOIN `+objectName+`_ancestors AS `+objectName+`_ancestors_join ON (
-			`+objectName+`_ancestors_join.child_`+singleObjectName+`_id = `+relationsTable+`_select.parent_`+singleObjectName+`_id
+			`+objectName+`_ancestors_join.child_`+singleObjectName+`_id = `+relationsTable+`.parent_`+singleObjectName+`_id
 		)
 		JOIN `+objectName+`_propagate ON (
-			`+relationsTable+`_select.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
+			`+relationsTable+`.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
 		)
 		WHERE
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`) // #nosec
 	if objectName == groups {
 		recomputeQueries[1] += `
-				AND NOW() < groups_groups_select.expires_at AND
-				NOW() < LEAST(groups_ancestors_join.expires_at, groups_groups_select.expires_at)
+				AND NOW() < groups_groups.expires_at AND
+				NOW() < LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at)
 			ON DUPLICATE KEY UPDATE
-				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_join.expires_at, groups_groups_select.expires_at))`
+				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at))`
 		recomputeQueries = append(recomputeQueries, `
 			INSERT IGNORE INTO `+objectName+`_ancestors
 			(

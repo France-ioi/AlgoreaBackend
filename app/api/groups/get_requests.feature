@@ -19,12 +19,6 @@ Feature: Get requests for group_id
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 11                | 11             |
-      | 13                | 11             |
-      | 13                | 13             |
-      | 21                | 21             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 21             |
@@ -41,6 +35,7 @@ Feature: Get requests for group_id
       | 13              | 122            |
       | 13              | 123            |
       | 13              | 124            |
+    And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | at                        |
       | 13       | 21        | invitation   | {{relativeTime("-170h")}} |

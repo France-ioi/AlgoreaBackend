@@ -169,26 +169,14 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.NoError
 	}
 
-	users := srv.Store.ActiveGroupGroups().
-		Select("child.id").
-		Joins("JOIN `groups` AS parent ON parent.id = groups_groups_active.parent_group_id AND parent.type != 'Team'").
-		Joins("JOIN `groups` AS child ON child.id = groups_groups_active.child_group_id and child.type = 'User'").
-		Joins(`
-			JOIN groups_ancestors_active
-			ON groups_ancestors_active.ancestor_group_id IN (?) AND
-				groups_ancestors_active.child_group_id = parent.id`, ancestorGroupIDs).
-		Group("child.id")
-
-	teams := srv.Store.Table("`groups` FORCE INDEX(type)").
+	endMembers := srv.Store.Groups().
 		Select("groups.id").
 		Joins(`
 			JOIN groups_ancestors_active
 			ON groups_ancestors_active.ancestor_group_id IN (?) AND
 				groups_ancestors_active.child_group_id = groups.id`, ancestorGroupIDs).
-		Where("groups.type='Team'").
+		Where("groups.type = 'Team' OR groups.type = 'User'").
 		Group("groups.id")
-
-	endMembers := users.Union(teams.SubQuery())
 
 	endMembersStats := srv.Store.Raw(`
 		SELECT

@@ -15,13 +15,7 @@ Feature: Change item access rights for a group - robustness
       | group_id | manager_id | can_grant_group_access |
       | 23       | 21         | 1                      |
       | 25       | 21         | 0                      |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 21                | 21             |
-      | 23                | 23             |
-      | 25                | 23             |
-      | 25                | 25             |
-      | 31                | 31             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 100 | fr                   |

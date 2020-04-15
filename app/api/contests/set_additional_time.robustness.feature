@@ -14,12 +14,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | group_id | manager_id |
       | 13       | 21         |
       | 31       | 21         |
-    And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id |
-      | 12                | 12             |
-      | 13                | 13             |
-      | 21                | 21             |
-      | 31                | 31             |
+    And the groups ancestors are computed
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
       | 50 | 00:00:00 | User                   | fr                   |
