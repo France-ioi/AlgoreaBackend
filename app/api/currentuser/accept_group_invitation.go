@@ -20,6 +20,7 @@ import (
 //
 //   * If the group is a team and the user is already on a team that has attempts for same contest
 //     while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
+//     or if the group membership is frozen,
 //     the unprocessable entity error is returned.
 //
 //   * There should be a row in `group_pending_requests` with the `{group_id}` as a parent as `group_id`

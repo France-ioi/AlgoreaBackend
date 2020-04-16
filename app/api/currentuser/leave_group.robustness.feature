@@ -1,12 +1,13 @@
 Feature: User leaves a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | require_lock_membership_approval_until |
-      | 11 | null                                   |
-      | 14 | null                                   |
-      | 15 | 2037-04-29                             |
-      | 21 | null                                   |
-      | 31 | null                                   |
+      | id | require_lock_membership_approval_until | frozen_membership |
+      | 11 | null                                   | false             |
+      | 14 | null                                   | false             |
+      | 15 | 2037-04-29                             | false             |
+      | 16 | null                                   | true              |
+      | 21 | null                                   | false             |
+      | 31 | null                                   | false             |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -15,6 +16,7 @@ Feature: User leaves a group - robustness
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 14              | 21             | null                        |
       | 15              | 31             | 2019-05-30 11:00:00         |
+      | 16              | 31             | null                        |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
@@ -59,5 +61,11 @@ Feature: User leaves a group - robustness
   Scenario: Fails if lock_user_deletion_until > NOW()
     Given I am the user with id "31"
     When I send a DELETE request to "/current-user/group-memberships/15"
+    Then the response code should be 403
+    And the response error message should contain "User deletion is locked for this group"
+
+  Scenario: Fails if the group membership is frozen
+    Given I am the user with id "31"
+    When I send a DELETE request to "/current-user/group-memberships/16"
     Then the response code should be 403
     And the response error message should contain "User deletion is locked for this group"

@@ -21,7 +21,7 @@ import (
 //     Otherwise the "not found" error is returned.
 //
 //   * The user cannot leave the group if `NOW()` < `groups.require_lock_membership_approval_until` and
-//     `groups_groups.lock_membership_approved` is set.
+//     `groups_groups.lock_membership_approved` is set or if the group membership is frozen.
 // parameters:
 // - name: group_id
 //   in: path

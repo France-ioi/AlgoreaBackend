@@ -1,15 +1,16 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | is_public | type    | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
-      | 11 | 1         | Class   | none                                  | null                                   | 0                      |
-      | 13 | 1         | Friends | none                                  | null                                   | 0                      |
-      | 14 | 1         | Team    | none                                  | null                                   | 0                      |
-      | 15 | 0         | Club    | none                                  | null                                   | 0                      |
-      | 16 | 1         | Team    | edit                                  | 9999-12-31 23:59:59                    | 1                      |
-      | 17 | 1         | Team    | none                                  | null                                   | 0                      |
-      | 21 | 0         | User    | none                                  | null                                   | 0                      |
-      | 23 | 1         | User    | none                                  | null                                   | 0                      |
+      | id | is_public | type    | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | frozen_membership |
+      | 11 | 1         | Class   | none                                  | null                                   | 0                      | false             |
+      | 13 | 1         | Friends | none                                  | null                                   | 0                      | false             |
+      | 14 | 1         | Team    | none                                  | null                                   | 0                      | false             |
+      | 15 | 0         | Club    | none                                  | null                                   | 0                      | false             |
+      | 16 | 1         | Team    | edit                                  | 9999-12-31 23:59:59                    | 1                      | false             |
+      | 17 | 1         | Team    | none                                  | null                                   | 0                      | false             |
+      | 18 | 1         | Team    | none                                  | null                                   | 0                      | true              |
+      | 21 | 0         | User    | none                                  | null                                   | 0                      | false             |
+      | 23 | 1         | User    | none                                  | null                                   | 0                      | false             |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -198,3 +199,32 @@ Feature: User sends a request to join a group - robustness
     When I send a POST request to "/current-user/group-requests/23?approvals=personal_info_view,lock_membership"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: Can't send request to a group with frozen membership
+    Given I am the user with id "23"
+    When I send a POST request to "/current-user/group-requests/18"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Group membership is frozen"
+    }
+    """
+
+  Scenario: Can't send request to a group with frozen membership even while being a group manager
+    Given I am the user with id "23"
+    And the database table 'group_managers' has also the following rows:
+      | group_id | manager_id | can_manage  |
+      | 18       | 21         | memberships |
+    When I send a POST request to "/current-user/group-requests/18"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Group membership is frozen"
+    }
+    """
