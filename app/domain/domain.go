@@ -2,8 +2,6 @@ package domain
 
 import (
 	"context"
-
-	"github.com/spf13/viper"
 )
 
 type ctxKey int
@@ -19,6 +17,7 @@ type Configuration struct {
 	RootTempGroupID int64
 }
 
+// AppConfigItem is one item of the configuration list
 type AppConfigItem struct {
 	Domains       []string
 	RootGroup     int64
@@ -31,9 +30,4 @@ func ConfigFromContext(ctx context.Context) *Configuration {
 	conf := ctx.Value(ctxDomainConfig).(*Configuration)
 	confCopy := *conf
 	return &confCopy
-}
-
-func ParseConfig(config *viper.Viper) (appConfig []AppConfigItem) {
-	config.Unmarshal(&appConfig)
-	return
 }

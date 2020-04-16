@@ -66,7 +66,9 @@ func New() (*Application, error) {
 	serverConfig.SetDefault("readTimeout", 60)
 	serverConfig.SetDefault("writeTimeout", 60)
 
-	apiCtx := api.NewCtx(db, serverConfig, config.Sub(domainsConfigKey), config.Sub(authConfigKey), tokenConfig)
+	domainsConfig := DomainsConfig(config)
+
+	apiCtx := api.NewCtx(db, serverConfig, config.Sub(authConfigKey), domainsConfig, tokenConfig)
 
 	// Set up middlewares
 	router := chi.NewRouter()
@@ -78,7 +80,7 @@ func New() (*Application, error) {
 	router.Use(middleware.Recoverer)          // must be before logger so that it an log panics
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
-	router.Use(domain.Middleware(domain.ParseConfig(config.Sub(domainsConfigKey))))
+	router.Use(domain.Middleware(domainsConfig))
 
 	if appenv.IsEnvDev() {
 		router.Mount("/debug", middleware.Profiler())
@@ -97,7 +99,7 @@ func New() (*Application, error) {
 func (app *Application) CheckConfig() error {
 	groupStore := database.NewDataStore(app.Database).Groups()
 	groupGroupStore := groupStore.ActiveGroupGroups()
-	for _, domainConfig := range domain.ParseConfig(app.Config.Sub(domainsConfigKey)) {
+	for _, domainConfig := range DomainsConfig(app.Config) {
 		for _, spec := range []struct {
 			name string
 			id   int64
@@ -147,12 +149,11 @@ func (app *Application) CreateMissingData() error {
 
 func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) error {
 
-	appDomainConfig := domain.ParseConfig(app.Config.Sub(domainsConfigKey))
 	groupStore := store.Groups()
 	groupGroupStore := store.GroupGroups()
 	var relationsToCreate []map[string]interface{}
 	var inserted bool
-	for _, domainConfig := range appDomainConfig {
+	for _, domainConfig := range DomainsConfig(app.Config) {
 		domainConfig := domainConfig
 		insertedForDomain, err := insertRootGroups(groupStore, &domainConfig)
 		if err != nil {

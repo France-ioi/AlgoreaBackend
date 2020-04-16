@@ -11,6 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/api/items"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
@@ -19,14 +20,14 @@ import (
 type Ctx struct {
 	db           *database.DB
 	serverConfig *viper.Viper
-	domainConfig *viper.Viper
 	authConfig   *viper.Viper
+	domainConfig []domain.AppConfigItem
 	tokenConfig  *token.Config
 }
 
 // NewCtx creates a API context
-func NewCtx(db *database.DB, serverConfig, domainConfig, authConfig *viper.Viper, tokenConfig *token.Config) *Ctx {
-	return &Ctx{db, serverConfig, domainConfig, authConfig, tokenConfig}
+func NewCtx(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.AppConfigItem, tokenConfig *token.Config) *Ctx {
+	return &Ctx{db, serverConfig, authConfig, domainConfig, tokenConfig}
 }
 
 // Router provides routes for the whole API
@@ -36,8 +37,8 @@ func (ctx *Ctx) Router() *chi.Mux {
 	base := service.Base{
 		Store:        database.NewDataStore(ctx.db),
 		ServerConfig: ctx.serverConfig,
-		DomainConfig: ctx.domainConfig,
 		AuthConfig:   ctx.authConfig,
+		DomainConfig: ctx.domainConfig,
 		TokenConfig:  ctx.tokenConfig,
 	}
 	r.Group((&auth.Service{Base: base}).SetRoutes)

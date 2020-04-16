@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
@@ -70,7 +71,7 @@ func LoadConfig() *viper.Viper {
 	config.SetDefault(loggingConfigKey, map[string]interface{}{})
 	config.SetDefault(authConfigKey, map[string]interface{}{})
 	config.SetDefault(tokenConfigKey, map[string]interface{}{})
-	config.SetDefault(domainsConfigKey, map[string]interface{}{})
+	config.SetDefault(domainsConfigKey, []interface{}{})
 
 	return config
 }
@@ -81,8 +82,8 @@ func configDirectory() string {
 	return filepath.Dir(codeDir + "/../conf/")
 }
 
-// DBConfig returns the db connection config from the app config
-// Only for tests and commands
+// DBConfig returns the db connection config from the app config.
+// Panic in case of error. Only for tests and commands
 func DBConfig(appConfig *viper.Viper) *mysql.Config {
 	var dbConfig *mysql.Config
 	if err := appConfig.Sub(databaseConfigKey).Sub("connection").Unmarshal(&dbConfig); err != nil {
@@ -92,7 +93,7 @@ func DBConfig(appConfig *viper.Viper) *mysql.Config {
 }
 
 // TokenConfig returns the token config from the app config
-// Only for tests and commands
+// Panic in case of error. Only for tests and commands
 func TokenConfig(appConfig *viper.Viper) *token.Config {
 	config, err := token.Initialize(appConfig.Sub(tokenConfigKey))
 	if err != nil {
@@ -111,4 +112,13 @@ func AuthConfig(appConfig *viper.Viper) *viper.Viper {
 // Only for tests and commands
 func LoggingConfig(appConfig *viper.Viper) *viper.Viper {
 	return appConfig.Sub(loggingConfigKey)
+}
+
+// DomainsConfig returns the domains config from the app config
+// Panic in case of error.
+func DomainsConfig(appConfig *viper.Viper) (config []domain.AppConfigItem) {
+	if err := appConfig.UnmarshalKey(domainsConfigKey, &config); err != nil {
+		panic("Unable to load 'Domains' config")
+	}
+	return
 }

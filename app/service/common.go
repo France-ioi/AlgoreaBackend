@@ -5,6 +5,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/spf13/viper"
 )
@@ -21,8 +22,8 @@ type AuthConfig struct {
 type Base struct {
 	Store        *database.DataStore
 	ServerConfig *viper.Viper
-	DomainConfig *viper.Viper
 	AuthConfig   *viper.Viper
+	DomainConfig []domain.AppConfigItem
 	TokenConfig  *token.Config
 }
 
