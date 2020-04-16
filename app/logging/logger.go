@@ -7,14 +7,21 @@ import (
 	"runtime"
 
 	"github.com/sirupsen/logrus" //nolint:depguard
-
-	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/spf13/viper"
 )
+
+type configuration struct {
+	Format           string
+	Output           string
+	Level            string
+	LogSQLQueries    bool
+	LogRawSQLQueries bool
+}
 
 // Logger is wrapper around a logger and keeping the logging config so that it can be reused by other loggers
 type Logger struct {
 	*logrus.Logger
-	config *config.Logging
+	config *configuration
 }
 
 var (
@@ -31,21 +38,31 @@ const outputStderr = "stderr"
 const outputFile = "file"
 
 // Configure applies the given logging configuration to the logger
-func (l *Logger) Configure(conf config.Logging) {
-	l.config = &conf
+// (may panic if the configuration is invalid)
+func (l *Logger) Configure(config *viper.Viper) {
+
+	// set default values (if not configured)
+	config.SetDefault("format", "json")
+	config.SetDefault("output", "file")
+	config.SetDefault("level", "info")
+	config.SetDefault("logSqlQueries", true)
+
+	if err := config.Unmarshal(&l.config); err != nil {
+		panic("Enable to load the 'logging' configuration")
+	}
 
 	// Format
-	switch conf.Format {
+	switch l.config.Format {
 	case formatText:
-		l.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, ForceColors: conf.Output != outputFile})
+		l.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, ForceColors: l.config.Output != outputFile})
 	case formatJSON:
 		l.SetFormatter(&logrus.JSONFormatter{})
 	default:
-		panic("Logging format must be either 'text' or 'json'. Got: " + conf.Format)
+		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.Format)
 	}
 
 	// Output
-	switch conf.Output {
+	switch l.config.Output {
 	case outputStdout:
 		l.SetOutput(os.Stdout)
 	case outputStderr:
@@ -61,11 +78,11 @@ func (l *Logger) Configure(conf config.Logging) {
 			l.SetOutput(f)
 		}
 	default:
-		panic("Logging output must be either 'stdout', 'stderr' or 'file'. Got: " + conf.Output)
+		panic("Logging output must be either 'stdout', 'stderr' or 'file'. Got: " + l.config.Output)
 	}
 
 	// Level
-	if level, err := logrus.ParseLevel(conf.Level); err != nil {
+	if level, err := logrus.ParseLevel(l.config.Level); err != nil {
 		l.Errorf("Unable to parse logging level config, use default (%s)", l.GetLevel().String())
 	} else {
 		l.SetLevel(level)

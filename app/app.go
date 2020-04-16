@@ -1,17 +1,16 @@
 package app
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
@@ -22,42 +21,52 @@ import (
 // Application is the core state of the app
 type Application struct {
 	HTTPHandler *chi.Mux
-	Config      *config.Root
+	Config      *viper.Viper
 	Database    *database.DB
-	TokenConfig *token.Config
+}
+
+type ServerConfig struct {
+	Port         int32
+	ReadTimeout  int32
+	WriteTimeout int32
+	Domain       string
+	RootPath     string
 }
 
 // New configures application resources and routes.
 func New() (*Application, error) {
 	var err error
 
-	conf := config.Load() // exits on errors
+	config := LoadConfig()
 
 	// Apply the config to the global logger
-	logging.SharedLogger.Configure(conf.Logging)
+	logging.SharedLogger.Configure(config.Sub(loggingConfigKey))
 
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	conf.Database.Connection.ParseTime = false // should be false!
-	if conf.Database.Connection.Net == "" {
-		return nil, errors.New("database.connection.net should be set")
-	}
-
+	// Init DB
 	var db *database.DB
-	dbConfig := conf.Database.Connection.FormatDSN()
-	if db, err = database.Open(dbConfig); err != nil {
+	if db, err = database.OpenFromConfig(config.Sub(databaseConfigKey)); err != nil {
 		logging.WithField("module", "database").Error(err)
 		return nil, err
 	}
 
-	tokenConfig, err := token.Initialize(&conf.Token)
+	// Load token config
+	tokenConfig, err := token.Initialize(config.Sub(tokenConfigKey))
 	if err != nil {
 		logging.Error(err)
 		return nil, err
 	}
 
-	apiCtx := api.NewCtx(conf, db, tokenConfig)
+	// "Server" config
+	serverConfig := config.Sub(serverConfigKey)
+	serverConfig.SetDefault("rootpath", "/")
+	serverConfig.SetDefault("port", 8080)
+	serverConfig.SetDefault("readTimeout", 60)
+	serverConfig.SetDefault("writeTimeout", 60)
+
+	apiCtx := api.NewCtx(db, serverConfig, config.Sub(domainsConfigKey), config.Sub(authConfigKey), tokenConfig)
 
 	// Set up middlewares
 	router := chi.NewRouter()
@@ -69,18 +78,18 @@ func New() (*Application, error) {
 	router.Use(middleware.Recoverer)          // must be before logger so that it an log panics
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
-	router.Use(domain.Middleware(conf.Domains))
+	router.Use(domain.Middleware(domain.ParseConfig(config.Sub(domainsConfigKey))))
 
 	if appenv.IsEnvDev() {
 		router.Mount("/debug", middleware.Profiler())
 	}
-	router.Mount(conf.Server.RootPath, apiCtx.Router())
+
+	router.Mount(serverConfig.GetString("RootPath"), apiCtx.Router())
 
 	return &Application{
 		HTTPHandler: router,
-		Config:      conf,
+		Config:      config,
 		Database:    db,
-		TokenConfig: tokenConfig,
 	}, nil
 }
 
@@ -88,7 +97,7 @@ func New() (*Application, error) {
 func (app *Application) CheckConfig() error {
 	groupStore := database.NewDataStore(app.Database).Groups()
 	groupGroupStore := groupStore.ActiveGroupGroups()
-	for _, domainConfig := range app.Config.Domains {
+	for _, domainConfig := range domain.ParseConfig(app.Config.Sub(domainsConfigKey)) {
 		for _, spec := range []struct {
 			name string
 			id   int64
@@ -137,11 +146,13 @@ func (app *Application) CreateMissingData() error {
 }
 
 func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) error {
+
+	appDomainConfig := domain.ParseConfig(app.Config.Sub(domainsConfigKey))
 	groupStore := store.Groups()
 	groupGroupStore := store.GroupGroups()
 	var relationsToCreate []map[string]interface{}
 	var inserted bool
-	for _, domainConfig := range app.Config.Domains {
+	for _, domainConfig := range appDomainConfig {
 		domainConfig := domainConfig
 		insertedForDomain, err := insertRootGroups(groupStore, &domainConfig)
 		if err != nil {
@@ -170,7 +181,7 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 	return nil
 }
 
-func insertRootGroups(groupStore *database.GroupStore, domainConfig *config.Domain) (bool, error) {
+func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.AppConfigItem) (bool, error) {
 	var inserted bool
 	for _, spec := range []struct {
 		name string

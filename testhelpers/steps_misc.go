@@ -14,6 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -111,7 +112,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 	signerName = strings.TrimSpace(signerName)
 	switch signerName {
 	case "the app":
-		privateKey = ctx.application.TokenConfig.PrivateKey
+		privateKey = app.TokenConfig(ctx.application.Config).PrivateKey
 	case "the task platform":
 		privateKey = tokentest.TaskPlatformPrivateKeyParsed
 	default:

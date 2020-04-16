@@ -10,8 +10,8 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 // nolint:gosec
@@ -36,11 +36,11 @@ func init() { // nolint:gochecknoinits
 			}
 
 			// load config
-			conf := config.Load()
+			dbConf := app.DBConfig(app.LoadConfig())
 
 			// open DB
 			var db *sql.DB
-			db, err = sql.Open("mysql", conf.Database.Connection.FormatDSN())
+			db, err = sql.Open("mysql", dbConf.FormatDSN())
 			assertNoError(err, "Unable to connect to the database: ")
 			defer func() { _ = db.Close() }()
 
@@ -55,7 +55,7 @@ func init() { // nolint:gochecknoinits
 			rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                             FROM   information_schema.tables
                             WHERE  table_type   = 'BASE TABLE'
-                              AND  table_schema = '` + conf.Database.Connection.DBName + "'")
+                              AND  table_schema = '` + dbConf.DBName + "'")
 			assertNoError(err, "Unable to query the database: ")
 
 			defer func() { _ = rows.Close() }()
@@ -75,18 +75,18 @@ func init() { // nolint:gochecknoinits
 
 			// restore the schema
 			// note: current solution is not really great as it makes some assumptions of the config :-/
-			host, port, err := net.SplitHostPort(conf.Database.Connection.Addr)
+			host, port, err := net.SplitHostPort(dbConf.Addr)
 			if err != nil {
-				host = conf.Database.Connection.Addr
+				host = dbConf.Addr
 				port = "3306"
 			}
 			command := exec.Command(
 				"mysql",
 				"-h"+host,
 				"-P"+port,
-				"-D"+conf.Database.Connection.DBName,
-				"-u"+conf.Database.Connection.User,
-				"-p"+conf.Database.Connection.Passwd,
+				"-D"+dbConf.DBName,
+				"-u"+dbConf.User,
+				"-p"+dbConf.Passwd,
 				"--protocol=TCP",
 				"-e"+"source db/schema/schema.sql",
 			)

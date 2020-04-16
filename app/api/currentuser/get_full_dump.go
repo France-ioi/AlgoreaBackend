@@ -54,7 +54,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	w.Header().Set("Content-Disposition", "attachment; filename=user_data.json")
 	w.WriteHeader(200)
 
-	databaseName := srv.Config.Database.Connection.DBName
+	var databaseName string
+	service.MustNotBeError(srv.Store.Raw("SELECT DATABASE() as db").PluckFirst("db", &databaseName).Error())
 
 	_, err := w.Write([]byte("{"))
 	service.MustNotBeError(err)

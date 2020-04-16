@@ -59,9 +59,9 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 			func(router *chi.Mux, baseService *service.Base) {
 				srv := &Service{Base: *baseService}
 				srv.Config = &config.Root{}
-				srv.Config.Auth.LoginModuleURL = loginModuleStubServer.URL
-				srv.Config.Auth.ClientID = expectedClientID
-				srv.Config.Auth.ClientSecret = expectedClientSecret
+				srv.AuthConfig.LoginModuleURL = loginModuleStubServer.URL
+				srv.AuthConfig.ClientID = expectedClientID
+				srv.AuthConfig.ClientSecret = expectedClientSecret
 				if timeout {
 					router.With(middleware.Timeout(0)).
 						Post("/auth/token", service.AppHandler(srv.refreshAccessToken).ServeHTTP)

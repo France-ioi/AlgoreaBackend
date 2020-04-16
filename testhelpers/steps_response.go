@@ -9,6 +9,7 @@ import (
 	"github.com/cucumber/godog/gherkin"
 	"github.com/pmezard/go-difflib/difflib"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -69,7 +70,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		if err != nil {
 			return err
 		}
-		reflect.ValueOf(act).Elem().FieldByName("PublicKey").Set(reflect.ValueOf(ctx.application.TokenConfig.PublicKey))
+		reflect.ValueOf(act).Elem().FieldByName("PublicKey").Set(reflect.ValueOf(app.TokenConfig(ctx.application.Config).PublicKey))
 	}
 
 	// re-encode actual response too

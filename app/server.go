@@ -18,11 +18,12 @@ type Server struct {
 // NewServer creates and configures an APIServer serving all application routes.
 func NewServer(app *Application) (*Server, error) {
 	log.Println("Configuring server...")
+	serverConfig := app.Config.Sub(serverConfigKey)
 
 	srv := http.Server{
-		Addr:         fmt.Sprintf(":%d", app.Config.Server.Port),
-		ReadTimeout:  time.Duration(app.Config.Server.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(app.Config.Server.WriteTimeout) * time.Second,
+		Addr:         fmt.Sprintf(":%d", serverConfig.GetInt("Port")),
+		ReadTimeout:  time.Duration(serverConfig.GetInt64("ReadTimeout")) * time.Second,
+		WriteTimeout: time.Duration(serverConfig.GetInt64("WriteTimeout")) * time.Second,
 		Handler:      app.HTTPHandler,
 	}
 
