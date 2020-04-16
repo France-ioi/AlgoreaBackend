@@ -10,7 +10,7 @@ import (
 
 func TestDbOk(t *testing.T) {
 	assert := assertlib.New(t)
-	ctx := &Ctx{config: nil, db: nil, reverseProxy: nil}
+	ctx := &Ctx{config: nil, db: nil}
 	assert.HTTPSuccess(ctx.status, "GET", "", nil)
 	assert.HTTPBodyContains(ctx.status, "GET", "", nil, "The web service is responding! The database connection fails.")
 }
@@ -18,7 +18,7 @@ func TestDbOk(t *testing.T) {
 func TestDbNotOk(t *testing.T) {
 	assert := assertlib.New(t)
 	dbMock, _ := database.NewDBMock()
-	ctx := &Ctx{config: nil, db: dbMock, reverseProxy: nil}
+	ctx := &Ctx{config: nil, db: dbMock}
 	assert.HTTPSuccess(ctx.status, "GET", "", nil)
 	assert.HTTPBodyContains(ctx.status, "GET", "", nil, "The web service is responding! The database connection is established.")
 }

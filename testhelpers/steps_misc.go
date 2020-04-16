@@ -5,10 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -24,20 +20,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
-
-func (ctx *TestContext) RunFallbackServer() error { // nolint
-	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Got-Query", r.URL.Path)
-	}))
-	backendURL, err := url.Parse(backend.URL)
-	if err != nil {
-		return err
-	}
-
-	_ = os.Setenv("ALGOREA_REVERSEPROXY__SERVER", backendURL.String()) // nolint
-	ctx.setupApp()
-	return nil
-}
 
 func (ctx *TestContext) IAmUserWithID(userID int64) error { // nolint
 	ctx.userID = userID

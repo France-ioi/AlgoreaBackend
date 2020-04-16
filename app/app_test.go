@@ -14,7 +14,6 @@ import (
 	"github.com/sirupsen/logrus" //nolint:depguard
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -51,18 +50,6 @@ func TestNew_DBErr(t *testing.T) {
 	assert.Equal(logrus.ErrorLevel, logMsg.Level)
 	assert.Equal("db opening error", logMsg.Message)
 	assert.Equal("database", logMsg.Data["module"])
-}
-
-func TestNew_APIErr(t *testing.T) {
-	assert := assertlib.New(t)
-	patch := monkey.Patch(api.NewCtx,
-		func(conf *config.Root, db *database.DB, tokenConfig *token.Config) (*api.Ctx, error) {
-			return nil, errors.New("api creation error")
-		})
-	defer patch.Unpatch()
-	app, err := New()
-	assert.Nil(app)
-	assert.EqualError(err, "api creation error")
 }
 
 func TestNew_TokenErr(t *testing.T) {
@@ -218,10 +205,7 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 		return
 	}
 	defer func() { _ = response.Body.Close() }()
-	assert.Equal(502, response.StatusCode)
-	body, err := ioutil.ReadAll(response.Body)
-	assert.NoError(err)
-	assert.Equal("", string(body))
+	assert.Equal(404, response.StatusCode)
 }
 
 type relationSpec struct {

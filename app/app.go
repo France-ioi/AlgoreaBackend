@@ -57,11 +57,7 @@ func New() (*Application, error) {
 		return nil, err
 	}
 
-	var apiCtx *api.Ctx
-	if apiCtx, err = api.NewCtx(conf, db, tokenConfig); err != nil {
-		logging.Error(err)
-		return nil, err
-	}
+	apiCtx := api.NewCtx(conf, db, tokenConfig)
 
 	// Set up middlewares
 	router := chi.NewRouter()

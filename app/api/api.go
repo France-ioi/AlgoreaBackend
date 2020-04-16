@@ -1,9 +1,6 @@
 package api
 
 import (
-	"net/http/httputil"
-	"net/url"
-
 	"github.com/go-chi/chi"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/answers"
@@ -20,22 +17,14 @@ import (
 
 // Ctx is the context of the root of the API
 type Ctx struct {
-	config       *config.Root
-	db           *database.DB
-	reverseProxy *httputil.ReverseProxy
-	tokenConfig  *token.Config
+	config      *config.Root
+	db          *database.DB
+	tokenConfig *token.Config
 }
 
 // NewCtx creates a API context
-func NewCtx(conf *config.Root, db *database.DB, tokenConfig *token.Config) (*Ctx, error) {
-	var err error
-	var proxyURL *url.URL
-
-	if proxyURL, err = url.Parse(conf.ReverseProxy.Server); err != nil {
-		return nil, err
-	}
-	proxy := httputil.NewSingleHostReverseProxy(proxyURL)
-	return &Ctx{config: conf, db: db, reverseProxy: proxy, tokenConfig: tokenConfig}, nil
+func NewCtx(conf *config.Root, db *database.DB, tokenConfig *token.Config) *Ctx {
+	return &Ctx{config: conf, db: db, tokenConfig: tokenConfig}
 }
 
 // Router provides routes for the whole API
@@ -53,6 +42,6 @@ func (ctx *Ctx) Router() *chi.Mux {
 	r.Group((&answers.Service{Base: base}).SetRoutes)
 	r.Group((&currentuser.Service{Base: base}).SetRoutes)
 	r.Get("/status", ctx.status)
-	r.NotFound(ctx.notFound)
+	r.NotFound(service.NotFound)
 	return r
 }
