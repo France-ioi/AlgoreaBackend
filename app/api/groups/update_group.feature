@@ -9,6 +9,7 @@ Feature: Update a group (groupEdit)
       | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
       | 24 | other   | -4    | other           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
       | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 41 | john    | -4    | john            | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
       | 50 | Admins  | -4    | Admins          | 2019-04-06 09:26:40 | Club    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | default_language |
@@ -20,14 +21,16 @@ Feature: Update a group (groupEdit)
       | 15       | 50         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 13              | 41             |
       | 50              | 21             |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         |
-      | 13       | 21        | invitation   |
-      | 13       | 24        | join_request |
-      | 13       | 31        | join_request |
-      | 14       | 31        | join_request |
+      | group_id | member_id | type          |
+      | 13       | 21        | invitation    |
+      | 13       | 24        | join_request  |
+      | 13       | 31        | join_request  |
+      | 13       | 41        | leave_request |
+      | 14       | 31        | join_request  |
     And the database has the following table 'items':
       | id   | default_language_tag |
       | 123  | fr                   |
@@ -57,6 +60,8 @@ Feature: Update a group (groupEdit)
       "activity_id": "5678",
 
       "require_members_to_join_parent": true,
+      "frozen_membership": false,
+
       "organizer": "Association France-ioi",
       "address_line1": "Chez Jacques-Henri Jourdan,",
       "address_line2": "42, rue de Cronstadt",
@@ -73,9 +78,10 @@ Feature: Update a group (groupEdit)
       | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | 5678        | false   | false     | ybabbxnlyo | 99:59:59      | 2019-12-31 23:59:59 | false        | true                           | Association France-ioi | Chez Jacques-Henri Jourdan, | 42, rue de Cronstadt | 75015            | Paris        | France          | 2019-05-03 11:00:00 |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should be:
-      | group_id | member_id | type         |
-      | 13       | 21        | invitation   |
-      | 14       | 31        | join_request |
+      | group_id | member_id | type          |
+      | 13       | 21        | invitation    |
+      | 13       | 41        | leave_request |
+      | 14       | 31        | join_request  |
     And the table "group_membership_changes" should be:
       | group_id | member_id | action               | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 24        | join_request_refused | 1                                         |
@@ -210,3 +216,38 @@ Feature: Update a group (groupEdit)
       | id | name    | grade | description | created_at          | type    | activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_contest |
       | 15 | Group D | -4    | Group D     | 2019-04-06 09:26:40 | Session | 123         | true                | true    | false     | null | null          | null            | false        |
     And the table "groups_groups" should stay unchanged
+
+  Scenario: Pending requests stay unchanged when 'frozen_membership' is not changed
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/14" with the following body:
+    """
+    {
+      "frozen_membership": false
+    }
+    """
+    Then the response should be "updated"
+    And the table "groups" should stay unchanged but the row with id "14"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should stay unchanged
+
+  Scenario: Removes pending requests and invitations when 'frozen_membership' becomes true
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "frozen_membership": true
+    }
+    """
+    Then the response should be "updated"
+    And the table "groups" should stay unchanged but the row with id "14"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type          |
+      | 14       | 31        | join_request  |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action                | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 13       | 21        | invitation_withdrawn  | 1                                         |
+      | 13       | 24        | join_request_refused  | 1                                         |
+      | 13       | 31        | join_request_refused  | 1                                         |
+      | 13       | 41        | leave_request_refused | 1                                         |

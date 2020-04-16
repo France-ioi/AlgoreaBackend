@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -37,6 +40,11 @@ type groupUpdateInput struct {
 	OpenContest       bool `json:"open_contest"`
 
 	RequireMembersToJoinParent bool `json:"require_members_to_join_parent"`
+
+	// Can be changed only from false to true
+	// (changing auto-rejects all pending join/leave requests and withdraws all pending invitations)
+	FrozenMembership bool `json:"frozen_membership" validate:"frozen_membership"`
+
 	// Nullable
 	Organizer *string `json:"organizer"`
 	// Nullable
@@ -51,6 +59,13 @@ type groupUpdateInput struct {
 	AddressCountry *string `json:"address_country"`
 	// Nullable
 	ExpectedStart *time.Time `json:"expected_start"`
+}
+
+type currentGroupDataType struct {
+	IsPublic          bool
+	ActivityID        *int64
+	IsOfficialSession bool
+	FrozenMembership  bool
 }
 
 // swagger:operation PUT /groups/{group_id} groups groupEdit
@@ -99,38 +114,38 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 	user := srv.GetUser(r)
 
-	formData, err := validateUpdateGroupInput(r)
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
 		groupStore := s.Groups()
 
-		var currentGroupData []struct {
-			IsPublic          bool
-			ActivityID        *int64
-			IsOfficialSession bool
-		}
+		var currentGroupData currentGroupDataType
 
-		service.MustNotBeError(groupStore.ManagedBy(user).
-			Select("groups.is_public, groups.activity_id, groups.is_official_session").WithWriteLock().
-			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error())
-		if len(currentGroupData) < 1 {
+		err = groupStore.ManagedBy(user).
+			Select("groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership").WithWriteLock().
+			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error()
+		if gorm.IsRecordNotFoundError(err) {
 			apiErr = service.InsufficientAccessRightsError
+			return apiErr.Error // rollback
+		}
+		service.MustNotBeError(err)
+
+		var formData *formdata.FormData
+		formData, err = validateUpdateGroupInput(r, &currentGroupData)
+		if err != nil {
+			apiErr = service.ErrInvalidRequest(err)
 			return apiErr.Error // rollback
 		}
 
 		dbMap := formData.ConstructMapForDB()
 
-		apiErr = validateActivityIDAndIsOfficial(s, user, currentGroupData[0].ActivityID, currentGroupData[0].IsOfficialSession, dbMap)
+		apiErr = validateActivityIDAndIsOfficial(s, user, currentGroupData.ActivityID, currentGroupData.IsOfficialSession, dbMap)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
 
 		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, user.GroupID, dbMap, currentGroupData[0].IsPublic))
+			groupStore, groupID, user.GroupID, dbMap, currentGroupData.IsPublic, currentGroupData.FrozenMembership))
 
 		// update the group
 		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())
@@ -200,26 +215,55 @@ func validateActivityID(store *database.DataStore, user *database.User, activity
 // (removes them from group_pending_requests and inserts appropriate group_membership_changes
 // with `action` = 'join_request_refused') if is_public is changed from true to false
 func refuseSentGroupRequestsIfNeeded(
-	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{}, previousIsPublicValue bool) error {
+	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
+	previousIsPublicValue, previousFrozenMembershipValue bool) error {
+	var shouldRefusePending bool
+
+	pendingTypesToHandle := make([]string, 0, 3)
+	pendingTypesToHandle = append(pendingTypesToHandle, "join_request")
+
 	// if is_public is going to be changed from true to false
 	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && previousIsPublicValue {
+		shouldRefusePending = true
+	}
+	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !previousFrozenMembershipValue {
+		shouldRefusePending = true
+		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
+	}
+
+	if shouldRefusePending {
 		service.MustNotBeError(store.Exec(`
 			INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)
-			SELECT group_id, member_id, 'join_request_refused', NOW(), ?
+			SELECT group_id, member_id,
+				CASE type
+					WHEN 'join_request' THEN 'join_request_refused'
+					WHEN 'leave_request' THEN 'leave_request_refused'
+					WHEN 'invitation' THEN 'invitation_withdrawn'
+				END,
+				NOW(), ?
 			FROM group_pending_requests
-			WHERE group_id = ? AND type = 'join_request'
-			FOR UPDATE`, initiatorID, groupID).Error())
+			WHERE group_id = ? AND type IN (?)
+			FOR UPDATE`, initiatorID, groupID, pendingTypesToHandle).Error())
 		// refuse sent group requests
 		return store.GroupPendingRequests().
-			Where("type = 'join_request'").
+			Where("type IN (?)", pendingTypesToHandle).
 			Where("group_id = ?", groupID).
 			Delete().Error()
 	}
 	return nil
 }
 
-func validateUpdateGroupInput(r *http.Request) (*formdata.FormData, error) {
+func validateUpdateGroupInput(r *http.Request, currentGroupData *currentGroupDataType) (*formdata.FormData, error) {
 	formData := formdata.NewFormData(&groupUpdateInput{})
+	formData.RegisterValidation("frozen_membership", func(fl validator.FieldLevel) bool {
+		if !formData.IsSet("frozen_membership") || fl.Field().Bool() == currentGroupData.FrozenMembership ||
+			!currentGroupData.FrozenMembership {
+			return true
+		}
+		// frozen_membership is going to be changed from true to false
+		return false
+	})
+	formData.RegisterTranslation("frozen_membership", "can only be changed from false to true")
 	err := formData.ParseJSONRequestData(r)
 	return formData, err
 }
