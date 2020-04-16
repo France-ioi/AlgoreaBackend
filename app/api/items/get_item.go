@@ -63,7 +63,7 @@ type itemCommonFields struct {
 	// enum: All,Half,One,None
 	ContestEnteringCondition string `json:"contest_entering_condition"`
 	// required: true
-	TeamsEditable bool `json:"teams_editable"`
+	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// required: true
 	ContestMaxTeamSize int32 `json:"contest_max_team_size"`
 	// required: true
@@ -222,7 +222,7 @@ type rawItem struct {
 	DisplayDetailsInParent   bool
 	ValidationType           string
 	ContestEnteringCondition string
-	TeamsEditable            bool
+	EntryFrozenTeams         bool
 	ContestMaxTeamSize       int32
 	AllowsMultipleAttempts   bool
 	EntryParticipantType     string
@@ -268,7 +268,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database
 		items.display_details_in_parent,
 		items.validation_type,
 		items.contest_entering_condition,
-		items.teams_editable,
+		items.entry_frozen_teams,
 		items.contest_max_team_size,
 		items.allows_multiple_attempts,
 		items.entry_participant_type,
@@ -388,7 +388,7 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		DisplayDetailsInParent:   rawData.DisplayDetailsInParent,
 		ValidationType:           rawData.ValidationType,
 		ContestEnteringCondition: rawData.ContestEnteringCondition,
-		TeamsEditable:            rawData.TeamsEditable,
+		EntryFrozenTeams:         rawData.EntryFrozenTeams,
 		ContestMaxTeamSize:       rawData.ContestMaxTeamSize,
 		AllowsMultipleAttempts:   rawData.AllowsMultipleAttempts,
 		EntryParticipantType:     rawData.EntryParticipantType,

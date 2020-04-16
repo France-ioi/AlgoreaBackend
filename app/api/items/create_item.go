@@ -20,7 +20,7 @@ type item struct {
 	// Nullable
 	URL *string `json:"url"`
 	// default: false
-	TeamsEditable bool `json:"teams_editable"`
+	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// default: false
 	NoScore bool `json:"no_score"`
 	// Nullable
