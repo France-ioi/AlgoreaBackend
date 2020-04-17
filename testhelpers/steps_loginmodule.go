@@ -37,6 +37,36 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, s
 	return nil
 }
 
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns(code, codeVerifier string, statusCode int, body *gherkin.DocString) error { // nolint
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	preprocessedCode, err := ctx.preprocessString(code)
+	if err != nil {
+		return err
+	}
+	preprocessedCodeVerifier, err := ctx.preprocessString(codeVerifier)
+	if err != nil {
+		return err
+	}
+	preprocessedBody, err := ctx.preprocessString(body.Content)
+	if err != nil {
+		return err
+	}
+	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
+	params := url.Values{
+		"client_id":     {ctx.application.Config.Auth.ClientID},
+		"client_secret": {ctx.application.Config.Auth.ClientSecret},
+		"grant_type":    {"authorization_code"},
+		"code":          {preprocessedCode},
+		"code_verifier": {preprocessedCodeVerifier},
+		"redirect_uri":  {ctx.application.Config.Auth.CallbackURL},
+	}
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
+		httpmock.WithBody(
+			bytes.NewBufferString(params.Encode()))))
+	return nil
+}
+
 func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refreshToken string, statusCode int, body *gherkin.DocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)

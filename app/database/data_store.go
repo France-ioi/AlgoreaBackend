@@ -126,11 +126,6 @@ func (s *DataStore) Languages() *LanguageStore {
 	return &LanguageStore{NewDataStoreWithTable(s.DB, "languages")}
 }
 
-// LoginStates returns a LoginStateStore
-func (s *DataStore) LoginStates() *LoginStateStore {
-	return &LoginStateStore{NewDataStoreWithTable(s.DB, "login_states")}
-}
-
 // Platforms returns a PlatformStore
 func (s *DataStore) Platforms() *PlatformStore {
 	return &PlatformStore{NewDataStoreWithTable(s.DB, "platforms")}
