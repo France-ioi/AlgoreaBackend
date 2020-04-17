@@ -20,10 +20,8 @@ type Service struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Post("/auth/temp-user", service.AppHandler(srv.createTempUser).ServeHTTP)
-	router.Get("/auth/login-callback", service.AppHandler(srv.loginCallback).ServeHTTP)
 
-	router.With(auth.UserMiddleware(srv.Store.Sessions())).
-		Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
+	router.Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
 	router.With(auth.UserMiddleware(srv.Store.Sessions())).
 		Post("/auth/logout", service.AppHandler(srv.logout).ServeHTTP)
 }

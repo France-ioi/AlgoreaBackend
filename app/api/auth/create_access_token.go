@@ -1,119 +1,169 @@
 package auth
 
 import (
-	"context"
+	"errors"
 	"net/http"
-	"sync"
+	"strings"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
+	"golang.org/x/oauth2"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type userIDsInProgressMap sync.Map
-
-func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() error) error {
-	userMutex := make(chan bool)
-	defer close(userMutex)
-	userMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(userID, userMutex)
-	// retry storing our mutex into the map
-	for ; loaded; userMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(userID, userMutex) {
-		select { // like mutex.Lock(), but with cancel/deadline
-		case <-userMutexInterface.(chan bool): // it is much better than <-time.After(...)
-		case <-r.Context().Done():
-			logging.GetLogEntry(r).Warnf("The request is canceled: %s", r.Context().Err())
-			return r.Context().Err()
-		}
-	}
-	defer (*sync.Map)(m).Delete(userID)
-
-	return f()
-}
-
-var userIDsInProgress userIDsInProgressMap
-
 // swagger:operation POST /auth/token auth accessTokenCreate
 // ---
-// summary: Create a new access token
-// description: Creates a new access token (locally for temporary users or via the login module for normal users) and
-//              saves it in the DB keeping only the input token (from authorization headers) and the new token.
-//              Since the login module responds with both access and refresh tokens, the service updates the user's
-//              refresh token in this case as well.
+// summary: Create or refresh an access token
+// description:
+//     If the "Authorization" header is not given, the service converts the given code into tokens,
+//     creates or updates the authenticated user in the DB with the data returned by the login module,
+//     and saves new access & refresh tokens into the DB as well.
+//
+//
+//     If the "Authorization" header is given, the service refreshes the access token
+//     (locally for temporary users or via the login module for normal users) and
+//     saves it into the DB keeping only the input token (from authorization headers) and the new token.
+//     Since the login module responds with both access and refresh tokens, the service updates the user's
+//     refresh token in this case as well.
+//
+//
+//   * One of the “Authorization” header and the '{code}' parameter should be present (not both at once).
+// security: []
+// parameters:
+// - name: code
+//   in: query
+//   description: OAuth2 code
+//   type: string
+// - name: code_verifier
+//   in: query
+//   description: OAuth2 PKCE code verifier
+//   type: string
 // responses:
 //   "201":
 //     description: "Created. Success response with the new access token"
 //     in: body
 //     schema:
 //       "$ref": "#/definitions/userCreateTmpResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	oldAccessToken := auth.BearerTokenFromContext(r.Context())
-
-	var newToken string
-	var expiresIn int32
-
-	if user.IsTempUser {
-		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-			sessionStore := store.Sessions()
-			// delete all the user's access tokens keeping the input token only
-			service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
-				user.GroupID, oldAccessToken).Error())
-			var err error
-			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.GroupID)
-			return err
-		}))
-	} else {
-		// We should not allow concurrency in this part because the login module generates not only
-		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
-		// usage of the old refresh token for that reason.
-		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn = srv.refreshTokens(r.Context(), user, oldAccessToken)
-			return nil
-		}))
+	if len(r.Header["Authorization"]) != 0 {
+		if len(r.URL.Query()["code"]) != 0 {
+			return service.ErrInvalidRequest(
+				errors.New("only one of the 'code' query parameter and the 'Authorization' header can be given"))
+		}
+		auth.UserMiddleware(srv.Store.Sessions())(service.AppHandler(srv.refreshAccessToken)).ServeHTTP(w, r)
+		return service.NoError
 	}
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"access_token": newToken,
-		"expires_in":   expiresIn,
-	})))
+	code, err := service.ResolveURLQueryGetStringField(r, "code")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
 
+	oauthConfig := getOAuthConfig(&srv.Config.Auth)
+	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
+	if len(r.URL.Query()["code_verifier"]) != 0 {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", r.URL.Query().Get("code_verifier")))
+	}
+
+	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)
+	service.MustNotBeError(err)
+
+	userProfile, err := loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).GetUserProfile(r.Context(), token.AccessToken)
+	service.MustNotBeError(err)
+	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
+
+	domainConfig := domain.ConfigFromContext(r.Context())
+
+	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
+		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token))
+
+		service.MustNotBeError(store.Exec(
+			"INSERT INTO refresh_tokens (user_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
+			userID, token.RefreshToken, token.RefreshToken).Error())
+
+		return nil
+	}))
+
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
+		"access_token": token.AccessToken,
+		"expires_in":   time.Until(token.Expiry).Round(time.Second) / time.Second,
+	})))
 	return service.NoError
 }
 
-func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (newToken string, expiresIn int32) {
-	var refreshToken string
-	service.MustNotBeError(
-		srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
-			PluckFirst("refresh_token", &refreshToken).Error())
-	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
-	oldToken := &oauth2.Token{RefreshToken: refreshToken}
-	oauthConfig := getOAuthConfig(&srv.Config.Auth)
-	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
+func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
+	var groupID int64
+	err := s.WithWriteLock().
+		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
+
+	userData["latest_login_at"] = database.Now()
+	userData["latest_activity_at"] = database.Now()
+
+	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
+		userData["default_language"] = database.Default()
+	}
+
+	if gorm.IsRecordNotFoundError(err) {
+		selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
+		userData["temp_user"] = 0
+		userData["registered_at"] = database.Now()
+		userData["group_id"] = selfGroupID
+
+		service.MustNotBeError(s.Users().InsertMap(userData))
+		service.MustNotBeError(s.Attempts().InsertMap(map[string]interface{}{
+			"participant_id": selfGroupID,
+			"id":             0,
+			"creator_id":     selfGroupID,
+			"created_at":     database.Now(),
+		}))
+
+		return selfGroupID
+	}
+
+	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
+		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		sessionStore := store.Sessions()
-		// delete all the user's access tokens keeping the input token only
-		service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
-			user.GroupID, oldAccessToken).Error())
-		// insert the new access token
-		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token))
-		if refreshToken != token.RefreshToken {
-			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
-				UpdateColumn("refresh_token", token.RefreshToken).Error())
-		}
-		newToken = token.AccessToken
-		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
-		return nil
+	groupsToCreate := make([]map[string]interface{}, 0, 2)
+	if !found {
+		groupsToCreate = append(groupsToCreate,
+			map[string]interface{}{"parent_group_id": domainConfig.RootSelfGroupID, "child_group_id": groupID})
+	}
+
+	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
+
+	service.MustNotBeError(err)
+	service.MustNotBeError(s.ByID(groupID).UpdateColumn(userData).Error())
+	return groupID
+}
+
+func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.Configuration) (selfGroupID int64) {
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
+		selfGroupID = retryIDStore.NewID()
+		return retryIDStore.Groups().InsertMap(map[string]interface{}{
+			"id":          selfGroupID,
+			"name":        login,
+			"type":        "User",
+			"description": login,
+			"created_at":  database.Now(),
+			"is_open":     false,
+			"send_emails": false,
+		})
 	}))
-	return newToken, expiresIn
+
+	service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking([]map[string]interface{}{
+		{"parent_group_id": domainConfig.RootSelfGroupID, "child_group_id": selfGroupID},
+	}))
+
+	return selfGroupID
 }

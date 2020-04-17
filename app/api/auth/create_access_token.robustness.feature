@@ -1,9 +1,9 @@
 Feature: Login callback - robustness
-  Scenario: Authorization header is present
+  Scenario: Both code and Authorization header are present
     Given the "Authorization" request header is "Bearer 1234567890"
-    When I send a GET request to "/auth/login-callback?code=somecode"
+    When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 400
-    And the response error message should contain "'Authorization' header should not be present"
+    And the response error message should contain "Only one of the 'code' query parameter and the 'Authorization' header can be given"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -12,7 +12,7 @@ Feature: Login callback - robustness
     And the table "refresh_tokens" should stay unchanged
 
   Scenario: The code is missing
-    When I send a GET request to "/auth/login-callback"
+    When I send a POST request to "/auth/token"
     Then the response code should be 400
     And the response error message should contain "Missing code"
     And the table "users" should stay unchanged
@@ -28,7 +28,7 @@ Feature: Login callback - robustness
       """
       Unknown error
       """
-    When I send a GET request to "/auth/login-callback?code=somecode"
+    When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
     And the response error message should contain "Oauth2: cannot fetch token: 500"
     And the response error message should contain "Response: Unknown error"
@@ -54,7 +54,7 @@ Feature: Login callback - robustness
       """
       Unknown error
       """
-    When I send a GET request to "/auth/login-callback?code=somecode"
+    When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
     And the response error message should contain "Can't retrieve user's profile (status code = 500)"
     And logs should contain:
@@ -83,7 +83,7 @@ Feature: Login callback - robustness
       """
       Not a JSON
       """
-    When I send a GET request to "/auth/login-callback?code=somecode"
+    When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
     And the response error message should contain "Can't parse user's profile"
     And logs should contain:
@@ -112,7 +112,7 @@ Feature: Login callback - robustness
       """
       <profile_body>
       """
-    When I send a GET request to "/auth/login-callback?code=somecode"
+    When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
     And the response error message should contain "User's profile is invalid"
     And logs should contain:
