@@ -83,9 +83,9 @@ Feature: Update a group (groupEdit)
       | 13       | 41        | leave_request |
       | 14       | 31        | join_request  |
     And the table "group_membership_changes" should be:
-      | group_id | member_id | action               | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
-      | 13       | 24        | join_request_refused | 1                                         |
-      | 13       | 31        | join_request_refused | 1                                         |
+      | group_id | member_id | action               | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 13       | 24        | join_request_refused | 21           | 1                                         |
+      | 13       | 31        | join_request_refused | 21           | 1                                         |
 
   Scenario: User is a manager of the group, nullable fields are nulls
     Given I am the user with id "21"
@@ -246,8 +246,8 @@ Feature: Update a group (groupEdit)
       | group_id | member_id | type          |
       | 14       | 31        | join_request  |
     And the table "group_membership_changes" should be:
-      | group_id | member_id | action                | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
-      | 13       | 21        | invitation_withdrawn  | 1                                         |
-      | 13       | 24        | join_request_refused  | 1                                         |
-      | 13       | 31        | join_request_refused  | 1                                         |
-      | 13       | 41        | leave_request_refused | 1                                         |
+      | group_id | member_id | action                | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 13       | 21        | invitation_withdrawn  | 21           | 1                                         |
+      | 13       | 24        | join_request_refused  | 21           | 1                                         |
+      | 13       | 31        | join_request_refused  | 21           | 1                                         |
+      | 13       | 41        | leave_request_refused | 21           | 1                                         |
