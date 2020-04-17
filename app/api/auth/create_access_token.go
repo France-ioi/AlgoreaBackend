@@ -21,9 +21,11 @@ import (
 // ---
 // summary: Create or refresh an access token
 // description:
-//     If the "Authorization" header is not given, the service converts the given code into tokens,
+//     If the "Authorization" header is not given, the service converts the given OAuth2 authorization code into tokens,
 //     creates or updates the authenticated user in the DB with the data returned by the login module,
 //     and saves new access & refresh tokens into the DB as well.
+//     If OAuth2 authentication has used the PKCE extension, the '{code_verifier}' should be provided
+//     so it can be sent together with the '{code}' to the authentication server.
 //
 //
 //     If the "Authorization" header is given, the service refreshes the access token
@@ -55,6 +57,7 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
+	// "Authorization" header is given, requesting a new token from the given token
 	if len(r.Header["Authorization"]) != 0 {
 		if len(r.URL.Query()["code"]) != 0 {
 			return service.ErrInvalidRequest(
@@ -64,6 +67,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		return service.NoError
 	}
 
+	// the code is given, requesting a token from code and optionally code_verifier, and create/update user.
 	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
