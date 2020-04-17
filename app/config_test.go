@@ -44,6 +44,7 @@ func TestLoadConfigFrom(t *testing.T) {
 	}()
 
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "999")
+	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
 	conf := loadConfigFrom(configName, tmpDir)
 
 	// test config override
@@ -57,6 +58,7 @@ func TestLoadConfigFrom(t *testing.T) {
 
 	// test live env changes
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "777")
+	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
 	assert.EqualValues(777, conf.GetInt("server.WriteTimeout"))
 }
 
@@ -154,6 +156,7 @@ func TestAuthConfig(t *testing.T) {
 	config := AuthConfig(globalConfig)
 	assert.Equal(42, config.GetInt("anykey"))
 	_ = os.Setenv("ALGOREA_AUTH__ANYKEY", "999")
+	defer func() { _ = os.Unsetenv("ALGOREA_AUTH__ANYKEY") }()
 	assert.Equal(999, config.GetInt("anykey"))
 }
 
@@ -164,6 +167,7 @@ func TestLoggingConfig(t *testing.T) {
 	config := LoggingConfig(globalConfig)
 	assert.Equal(42, config.GetInt("anykey"))
 	_ = os.Setenv("ALGOREA_LOGGING__ANYKEY", "999")
+	defer func() { _ = os.Unsetenv("ALGOREA_LOGGING__ANYKEY") }()
 	assert.Equal(999, config.GetInt("anykey"))
 }
 
@@ -174,6 +178,7 @@ func TestServerConfig(t *testing.T) {
 	config := ServerConfig(globalConfig)
 	assert.Equal(42, config.GetInt("anykey"))
 	_ = os.Setenv("ALGOREA_SERVER__ANYKEY", "999")
+	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__ANYKEY") }()
 	assert.Equal(999, config.GetInt("anykey"))
 	// test default values:
 	assert.Equal("/", config.GetString("rootpath"))

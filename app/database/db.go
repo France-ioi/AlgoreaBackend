@@ -16,7 +16,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/luna-duclos/instrumentedsql"
-	"github.com/spf13/viper"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -60,19 +59,6 @@ func Open(source interface{}) (*DB, error) {
 	dbConn.SetLogger(logger)
 
 	return newDB(dbConn), err
-}
-
-func OpenFromConfig(config *viper.Viper) (*DB, error) {
-	var dbConfig *mysql.Config
-
-	if err := config.Sub("connection").Unmarshal(&dbConfig); err != nil {
-		return nil, errors.New("unable to load the 'database' configuration")
-	}
-	dbConfig.ParseTime = false // should be false!
-	if dbConfig.Net == "" {
-		return nil, errors.New("database.connection.net should be set")
-	}
-	return Open(dbConfig.FormatDSN())
 }
 
 // OpenRawDBConnection creates a new DB connection

@@ -12,13 +12,13 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/sirupsen/logrus" //nolint:depguard
+	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 func TestNew_Success(t *testing.T) {
@@ -50,33 +50,6 @@ func TestNew_DBErr(t *testing.T) {
 	assert.Equal(logrus.ErrorLevel, logMsg.Level)
 	assert.Equal("db opening error", logMsg.Message)
 	assert.Equal("database", logMsg.Data["module"])
-}
-
-func TestNew_TokenErr(t *testing.T) {
-	assert := assertlib.New(t)
-	patch := monkey.Patch(token.Initialize, func(*config.Token) (*token.Config, error) {
-		return nil, errors.New("keys loading error")
-	})
-	defer patch.Unpatch()
-	app, err := New()
-	assert.Nil(app)
-	assert.EqualError(err, "keys loading error")
-}
-
-func TestNew_NoDatabaseConnectionNet(t *testing.T) {
-	assert := assertlib.New(t)
-	var patch *monkey.PatchGuard
-	patch = monkey.Patch(config.Load, func() *config.Root {
-		patch.Unpatch()
-		result := config.Load()
-		patch.Restore()
-		result.Database.Connection.Net = ""
-		return result
-	})
-	defer patch.Unpatch()
-	app, err := New()
-	assert.Nil(app)
-	assert.EqualError(err, "database.connection.net should be set")
 }
 
 // The goal of the following `TestMiddlewares*` tests are not to test the middleware themselves
@@ -223,14 +196,14 @@ func TestApplication_CheckConfig(t *testing.T) {
 
 	tests := []struct {
 		name                     string
-		config                   *config.Root
+		config                   []domain.AppConfigItem
 		expectedGroupsToCheck    []groupSpec
 		expectedRelationsToCheck []relationSpec
 		expectedError            error
 	}{
 		{
 			name: "everything is okay",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"127.0.0.1", "192.168.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -239,7 +212,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 					Domains:   []string{"www.france-ioi.org"},
 					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
 				{id: 4, exists: true},
@@ -255,12 +228,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "Root is missing",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"192.168.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1},
 			},
@@ -268,12 +241,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "RootSelf is missing",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"192.168.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2},
 			},
@@ -281,12 +254,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "RootTemp is missing",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
 				{id: 4},
@@ -295,12 +268,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "Root -> RootSelf relation is missing",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
 				{id: 4, exists: true},
@@ -312,12 +285,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "RootSelf -> RootTemp relation is missing",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
 				{id: 4, exists: true},
@@ -330,12 +303,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "error on group checking",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, error: true},
 			},
@@ -343,12 +316,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "error on relation checking",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
-			}},
+			},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
 				{id: 4, exists: true},
@@ -402,9 +375,11 @@ func TestApplication_CheckConfig(t *testing.T) {
 					}
 				}
 			}
+			config := viper.New()
+			config.Set(domainsConfigKey, tt.config)
 
 			app := &Application{
-				Config:   tt.config,
+				Config:   config,
 				Database: db,
 			}
 			err := app.CheckConfig()
@@ -424,7 +399,7 @@ type groupSpec struct {
 
 type createMissingDataTestCase struct {
 	name                      string
-	config                    *config.Root
+	config                    []domain.AppConfigItem
 	expectedGroupsToInsert    []groupSpec
 	expectedRelationsToCheck  []relationSpec
 	expectedRelationsToInsert []map[string]interface{}
@@ -436,9 +411,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 	tests := []createMissingDataTestCase{
 		{
 			name: "create all",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootTemp", id: 4},
 			},
@@ -453,9 +428,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "create some",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6, exists: true},
 				{name: "RootTemp", id: 8},
@@ -470,27 +445,27 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "error on group checking",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, error: true},
 			},
 		},
 		{
 			name: "error on group insertion",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, errorOnInsert: true},
 			},
 		},
 		{
 			name: "error on relation checking",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6},
 				{name: "RootTemp", id: 8},
@@ -501,9 +476,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "error while creating relations",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootTemp", id: 4},
 			},
@@ -519,9 +494,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "no relations to insert",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
 				{name: "RootTemp", id: 4, exists: true},
@@ -534,9 +509,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "only one relation to insert",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
 				{name: "RootTemp", id: 4, exists: true},
@@ -551,9 +526,9 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "only one group to insert",
-			config: &config.Root{Domains: []config.Domain{
+			config: []domain.AppConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
-			}},
+			},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
 				{name: "RootTemp", id: 4},
@@ -587,8 +562,11 @@ func TestApplication_CreateMissingData(t *testing.T) {
 
 			expectedError = setDBExpectationsForCreateMissingData(mock, &tt, expectedError)
 
+			config := viper.New()
+			config.Set(domainsConfigKey, tt.config)
+
 			app := &Application{
-				Config:   tt.config,
+				Config:   config,
 				Database: db,
 			}
 			err := app.CreateMissingData()

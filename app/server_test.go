@@ -50,7 +50,7 @@ func TestServer_Start(t *testing.T) {
 func TestServer_StartHandlesListenerError(t *testing.T) {
 	app, err := New()
 	assert.NoError(t, err)
-	app.Config.Server.Port = -1
+	app.Config.Set("server.port", -1)
 	srv, err := NewServer(app)
 	assert.NoError(t, err)
 

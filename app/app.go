@@ -15,7 +15,6 @@ import (
 	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // Application is the core state of the app
@@ -25,50 +24,32 @@ type Application struct {
 	Database    *database.DB
 }
 
-type ServerConfig struct {
-	Port         int32
-	ReadTimeout  int32
-	WriteTimeout int32
-	Domain       string
-	RootPath     string
-}
-
 // New configures application resources and routes.
 func New() (*Application, error) {
-	var err error
 
+	// Getting all configs, they will be used to init components and to be passed
 	config := LoadConfig()
+	dbConfig := DBConfig(config)
+	authConfig := AuthConfig(config)
+	tokenConfig := TokenConfig(config)
+	serverConfig := ServerConfig(config)
+	loggingConfig := LoggingConfig(config)
+	domainsConfig := DomainsConfig(config)
 
 	// Apply the config to the global logger
-	logging.SharedLogger.Configure(config.Sub(loggingConfigKey))
+	logging.SharedLogger.Configure(loggingConfig)
 
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Init DB
-	var db *database.DB
-	if db, err = database.OpenFromConfig(config.Sub(databaseConfigKey)); err != nil {
+	db, err := database.Open(dbConfig.FormatDSN())
+	if err != nil {
 		logging.WithField("module", "database").Error(err)
 		return nil, err
 	}
 
-	// Load token config
-	tokenConfig, err := token.Initialize(config.Sub(tokenConfigKey))
-	if err != nil {
-		logging.Error(err)
-		return nil, err
-	}
-
-	// "Server" config
-	serverConfig := config.Sub(serverConfigKey)
-	serverConfig.SetDefault("rootpath", "/")
-	serverConfig.SetDefault("port", 8080)
-	serverConfig.SetDefault("readTimeout", 60)
-	serverConfig.SetDefault("writeTimeout", 60)
-
-	domainsConfig := DomainsConfig(config)
-
-	apiCtx := api.NewCtx(db, serverConfig, config.Sub(authConfigKey), domainsConfig, tokenConfig)
+	apiCtx := api.NewCtx(db, serverConfig, authConfig, domainsConfig, tokenConfig)
 
 	// Set up middlewares
 	router := chi.NewRouter()
