@@ -20,7 +20,6 @@ type Service struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Post("/auth/temp-user", service.AppHandler(srv.createTempUser).ServeHTTP)
-	router.Post("/auth/login", service.AppHandler(srv.login).ServeHTTP)
 	router.Get("/auth/login-callback", service.AppHandler(srv.loginCallback).ServeHTTP)
 
 	router.With(auth.UserMiddleware(srv.Store.Sessions())).

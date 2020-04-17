@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
@@ -26,18 +25,11 @@ import (
 //              saves the access & refresh tokens in DB as well.
 //
 //   * No “Authorization” header should be present
-//
-//   * `login_csrf` cookie set by `/auth/login` should be present
 // security: []
 // parameters:
 // - name: code
 //   in: query
 //   description: OAuth2 code
-//   type: string
-//   required: true
-// - name: state
-//   in: query
-//   description: OAuth2 state
 //   type: string
 //   required: true
 // responses:
@@ -60,17 +52,6 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 		return service.ErrInvalidRequest(err)
 	}
 
-	state, err := service.ResolveURLQueryGetStringField(r, "state")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
-
-	loginState, err := auth.LoadLoginState(srv.Store.LoginStates(), r, state)
-	service.MustNotBeError(err)
-	if !loginState.IsOK() {
-		return service.ErrInvalidRequest(errors.New("wrong state"))
-	}
-
 	oauthConfig := getOAuthConfig(&srv.Config.Auth)
 	token, err := oauthConfig.Exchange(r.Context(), code)
 	service.MustNotBeError(err)
@@ -88,13 +69,6 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 		service.MustNotBeError(store.Exec(
 			"INSERT INTO refresh_tokens (user_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
 			userID, token.RefreshToken, token.RefreshToken).Error())
-
-		expiredCookie, err := loginState.Delete(store.LoginStates(), &srv.Config.Server)
-		service.MustNotBeError(err)
-		if strings.HasPrefix(srv.Config.Auth.CallbackURL, "https") {
-			expiredCookie.Secure = true
-		}
-		http.SetCookie(w, expiredCookie)
 
 		return nil
 	}))
