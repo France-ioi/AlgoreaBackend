@@ -36,7 +36,7 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := http.NewRequest("PUT", "/", strings.NewReader(tt.json))
-			_, err := validateUpdateGroupInput(r)
+			_, err := validateUpdateGroupInput(r, &currentGroupDataType{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("validateUpdateGroupInput() error = %#v, wantErr %v", err, tt.wantErr)
 			}
@@ -47,14 +47,15 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
-			"FROM `groups` "+
-			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
-			"JOIN groups_ancestors_active AS user_ancestors "+
-			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
-			"user_ancestors.child_group_id = ? "+
-			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+		mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+				"FROM `groups` "+
+				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
+				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+				"JOIN groups_ancestors_active AS user_ancestors "+
+				"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
+				"user_ancestors.child_group_id = ? "+
+				"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(2, 1).WillReturnError(errors.New("error"))
 		mock.ExpectRollback()
 	})
@@ -63,17 +64,18 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
-			"FROM `groups` "+
-			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
-			"JOIN groups_ancestors_active AS user_ancestors "+
-			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
-			"user_ancestors.child_group_id = ? "+
-			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+		mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+				"FROM `groups` "+
+				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
+				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+				"JOIN groups_ancestors_active AS user_ancestors "+
+				"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
+				"user_ancestors.child_group_id = ? "+
+				"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"is_public"}).AddRow(true))
 		mock.ExpectExec("INSERT INTO group_membership_changes .+").
-			WithArgs(2, 1).WillReturnError(errors.New("some error"))
+			WithArgs(2, 1, "join_request").WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
 	})
 }
@@ -81,18 +83,19 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.
 func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
-			"FROM `groups` "+
-			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
-			"JOIN groups_ancestors_active AS user_ancestors "+
-			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
-			"user_ancestors.child_group_id = ? "+
-			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+		mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+				"FROM `groups` "+
+				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
+				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+				"JOIN groups_ancestors_active AS user_ancestors "+
+				"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
+				"user_ancestors.child_group_id = ? "+
+				"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"is_public"}).AddRow(true))
-		mock.ExpectExec("INSERT INTO group_membership_changes .+").WithArgs(2, 1).
+		mock.ExpectExec("INSERT INTO group_membership_changes .+").WithArgs(2, 1, "join_request").
 			WillReturnResult(sqlmock.NewResult(-1, 1))
-		mock.ExpectExec("DELETE FROM `group_pending_requests` .+").WithArgs(1).
+		mock.ExpectExec("DELETE FROM `group_pending_requests` .+").WithArgs("join_request", 1).
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
 	})
@@ -101,14 +104,15 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.
 func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.is_public, groups.activity_id, groups.is_official_session "+
-			"FROM `groups` "+
-			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
-			"JOIN groups_ancestors_active AS user_ancestors "+
-			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
-			"user_ancestors.child_group_id = ? "+
-			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+		mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+				"FROM `groups` "+
+				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
+				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+				"JOIN groups_ancestors_active AS user_ancestors "+
+				"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
+				"user_ancestors.child_group_id = ? "+
+				"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"is_public"}).AddRow(false))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))

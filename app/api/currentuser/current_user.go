@@ -71,41 +71,45 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 
 	user := srv.GetUser(r)
 
-	if action == leaveGroupAction {
-		var found bool
-		found, err = srv.Store.Groups().ByID(groupID).
-			Joins(`
-				JOIN groups_groups_active
-					ON groups_groups_active.parent_group_id = groups.id AND
-						 groups_groups_active.lock_membership_approved AND
-						 groups_groups_active.child_group_id = ?`, user.GroupID).
-			Where("NOW() < groups.require_lock_membership_approval_until").HasRows()
-		service.MustNotBeError(err)
-		if found {
-			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
-		}
-	}
-
-	if action == createGroupLeaveRequestAction {
-		var found bool
-		found, err = srv.Store.Groups().ByID(groupID).
-			Joins(`
-				JOIN groups_groups_active
-					ON groups_groups_active.parent_group_id = groups.id AND
-					   groups_groups_active.lock_membership_approved AND
-					   groups_groups_active.child_group_id = ?`, user.GroupID).
-			Where("NOW() < require_lock_membership_approval_until").HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.ErrForbidden(
-				errors.New("user is not a member of the group or the group doesn't require approval for leaving"))
-		}
-	}
-
 	apiError := service.NoError
 	var result database.GroupGroupTransitionResult
 	var approvalsToRequest database.GroupApprovals
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+		if action == leaveGroupAction {
+			var found bool
+			found, err = srv.Store.Groups().ByID(groupID).
+				Joins(`
+				JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = groups.id AND
+						 groups_groups_active.child_group_id = ?`, user.GroupID).
+				Where(`
+					(groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until) OR
+					groups.frozen_membership`).HasRows()
+			service.MustNotBeError(err)
+			if found {
+				apiError = service.ErrForbidden(errors.New("user deletion is locked for this group"))
+				return apiError.Error // rollback
+			}
+		}
+
+		if action == createGroupLeaveRequestAction {
+			var found bool
+			found, err = srv.Store.Groups().ByID(groupID).
+				Joins(`
+				JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = groups.id AND
+					   groups_groups_active.lock_membership_approved AND
+					   groups_groups_active.child_group_id = ?`, user.GroupID).
+				Where("NOW() < require_lock_membership_approval_until AND NOT groups.frozen_membership").HasRows()
+			service.MustNotBeError(err)
+			if !found {
+				apiError = service.ErrForbidden(
+					errors.New(
+						"user is not a member of the group or the group doesn't require approval for leaving or its membership is frozen"))
+				return apiError.Error // rollback
+			}
+		}
+
 		var approvals database.GroupApprovals
 		if action == createGroupJoinRequestAction || action == acceptInvitationAction {
 			approvals.FromString(r.URL.Query().Get("approvals"))
@@ -164,35 +168,32 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	return apiError, results[user.GroupID], approvalsToRequest[user.GroupID]
 }
 
-type parentGroupInfo struct {
-	Type                              string
-	RequirePersonalInfoAccessApproval string
-	RequireLockMembershipApproval     bool
-	RequireWatchApproval              bool
-}
-
 func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
 	groupID int64, action userGroupRelationAction) service.APIError {
-	var parentGroup parentGroupInfo
 
 	// The group should exist (and optionally should have `is_public` = 1)
 	query := store.Groups().ByID(groupID).
-		Where("type != 'User'").WithWriteLock().Select(`
-		type, require_personal_info_access_approval,
-		IFNULL(NOW() < require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
-		require_watch_approval`)
+		Where("type != 'User'").Select("type, frozen_membership").WithWriteLock()
 	if action == createGroupJoinRequestAction {
 		query = query.Where("is_public")
 	}
-	err := query.Take(&parentGroup).Error()
+	var groupInfo struct {
+		Type             string
+		FrozenMembership bool
+	}
+	err := query.Take(&groupInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
+	if groupInfo.FrozenMembership {
+		return service.ErrUnprocessableEntity(errors.New("group membership is frozen"))
+	}
+
 	// If the group is a team, ensure that the current user is not a member of
 	// another team having attempts for the same contests.
-	if parentGroup.Type == "Team" {
+	if groupInfo.Type == "Team" {
 		return checkIfCurrentParticipationsConflictWithExistingMemberships(store, groupID, user)
 	}
 

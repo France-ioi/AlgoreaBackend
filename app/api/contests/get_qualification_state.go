@@ -48,6 +48,12 @@ type contestGetQualificationStateResponse struct {
 	CurrentUserCanEnter bool `json:"current_user_can_enter"`
 	// required: true
 	OtherMembers []contestGetQualificationStateOtherMember `json:"other_members"`
+	// whether a team should have frozen membership for entering the contest (`items.entry_frozen_teams` = 1)
+	// required: true
+	FrozenTeamsRequired bool `json:"frozen_teams_required"`
+	// whether the current team has frozen membership (`groups.frozen_membership` = 0)
+	// required: true
+	CurrentTeamIsFrozen bool `json:"current_team_is_frozen"`
 
 	groupID int64
 	itemID  int64
@@ -87,6 +93,9 @@ type contestGetQualificationStateResponse struct {
 //                  * 'not_ready' if at least one of the team's members as a member of another team
 //                    has an `attempts` row for the contest (with `attempts.root_item_id` = `{item_id}`)
 //                    while the item's `allows_multiple_attempts` is false or an active (not expired) attempt;
+//
+//                  * 'not_ready' if the team contest's `items.entry_frozen_teams` = 1,
+//                    but the team membership is not frozen (`groups.frozen_membership` = 0);
 //
 //                  * 'ready' otherwise.
 //
@@ -151,12 +160,13 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		AllowsMultipleAttempts   bool
 		ContestMaxTeamSize       int32
 		ContestEnteringCondition string
+		EntryFrozenTeams         bool
 	}
 
 	err = store.Items().VisibleByID(groupID, itemID).Where("items.requires_explicit_entry").
 		Select(`
 			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_contest,
-			items.contest_max_team_size, items.contest_entering_condition`).
+			items.contest_max_team_size, items.contest_entering_condition, items.entry_frozen_teams`).
 		Take(&contestInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, service.InsufficientAccessRightsError
@@ -167,8 +177,16 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		return nil, service.InsufficientAccessRightsError
 	}
 
-	if apiError := srv.checkTeamID(groupID, user, store); apiError != service.NoError {
-		return nil, apiError
+	var currentTeamHasFrozenMembership bool
+	if groupID != user.GroupID {
+		err = store.Groups().TeamGroupForUser(groupID, user).
+			PluckFirst("frozen_membership", &currentTeamHasFrozenMembership).Error()
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, service.InsufficientAccessRightsError
+		}
+		service.MustNotBeError(err)
+	} else {
+		contestInfo.EntryFrozenTeams = false // can be true only for team contests
 	}
 
 	contestParticipationQuery := store.Attempts().
@@ -192,13 +210,16 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		srv.getQualificatonInfo(groupID, itemID, user, store, lock)
 	state := computeQualificationState(
 		participationInfo.IsStarted, participationInfo.IsActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest,
-		contestInfo.ContestMaxTeamSize, contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount, attemptsViolationsFound)
+		contestInfo.ContestMaxTeamSize, contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount, attemptsViolationsFound,
+		currentTeamHasFrozenMembership, contestInfo.EntryFrozenTeams)
 
 	result := &contestGetQualificationStateResponse{
 		State:               string(state),
 		EnteringCondition:   contestInfo.ContestEnteringCondition,
 		CurrentUserCanEnter: currentUserCanEnter,
 		OtherMembers:        otherMembers,
+		CurrentTeamIsFrozen: currentTeamHasFrozenMembership,
+		FrozenTeamsRequired: contestInfo.EntryFrozenTeams,
 		groupID:             groupID,
 		itemID:              itemID,
 	}
@@ -208,34 +229,20 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	return result, service.NoError
 }
 
-func (srv *Service) checkTeamID(groupID int64, user *database.User, store *database.DataStore) service.APIError {
-	if groupID != user.GroupID {
-		found, err := store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.InsufficientAccessRightsError
-		}
-	}
-	return service.NoError
-}
-
 func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
 	maxTeamSize int32, contestEnteringCondition string, membersCount, qualifiedMembersCount int32,
-	attemptsViolationsFound bool) qualificationState {
-	var state qualificationState
+	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) qualificationState {
 	if hasAlreadyStarted && isActive {
-		state = alreadyStarted
-	} else {
-		state = ready
-		if isTeamContest && maxTeamSize < membersCount ||
-			!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
-			state = notReady
-		}
+		return alreadyStarted
 	}
-	if attemptsViolationsFound || hasAlreadyStarted && !isActive && !allowsMultipleAttempts {
-		state = notReady
+
+	if isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest,
+		maxTeamSize, contestEnteringCondition, membersCount, qualifiedMembersCount,
+		attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired) {
+		return ready
 	}
-	return state
+
+	return notReady
 }
 
 func isContestEnteringConditionSatisfied(contestEnteringCondition string, membersCount, qualifiedMembersCount int32) bool {
@@ -243,6 +250,22 @@ func isContestEnteringConditionSatisfied(contestEnteringCondition string, member
 		contestEnteringCondition == "All" && qualifiedMembersCount == membersCount ||
 		contestEnteringCondition == "Half" && membersCount <= qualifiedMembersCount*2 ||
 		contestEnteringCondition == "One" && qualifiedMembersCount >= 1
+}
+
+func isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
+	maxTeamSize int32, contestEnteringCondition string, membersCount, qualifiedMembersCount int32,
+	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) bool {
+	if isTeamContest &&
+		(maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
+		!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
+		return false
+	}
+
+	if attemptsViolationsFound || hasAlreadyStarted && !isActive && !allowsMultipleAttempts {
+		return false
+	}
+
+	return true
 }
 
 func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (

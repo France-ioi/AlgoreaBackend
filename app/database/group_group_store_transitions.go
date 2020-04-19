@@ -329,7 +329,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			Select(`
 				require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
 				NOW() < IFNULL(require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
-				require_watch_approval`).Scan(&groupRequiredApprovals).Error())
+				require_watch_approval`).WithWriteLock().Scan(&groupRequiredApprovals).Error())
 
 		// Here we get current states for each childGroupID:
 		// the current state can be one of

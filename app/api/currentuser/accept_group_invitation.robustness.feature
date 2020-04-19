@@ -1,13 +1,14 @@
 Feature: User accepts an invitation to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type    | require_personal_info_access_approval |
-      | 11 | Class   | none                                  |
-      | 13 | Friends | none                                  |
-      | 14 | Team    | none                                  |
-      | 15 | Team    | none                                  |
-      | 16 | Team    | view                                  |
-      | 21 | User    | none                                  |
+      | id | type    | require_personal_info_access_approval | frozen_membership |
+      | 11 | Class   | none                                  | false             |
+      | 13 | Friends | none                                  | false             |
+      | 14 | Team    | none                                  | false             |
+      | 15 | Team    | none                                  | false             |
+      | 16 | Team    | view                                  | false             |
+      | 17 | Team    | none                                  | true              |
+      | 21 | User    | none                                  | false             |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -25,6 +26,7 @@ Feature: User accepts an invitation to join a group - robustness
       | 13       | 21        | invitation   |
       | 15       | 21        | invitation   |
       | 16       | 21        | invitation   |
+      | 17       | 21        | invitation   |
     And the database has the following table 'attempts':
       | participant_id | id | root_item_id |
       | 14             | 1  | 1234         |
@@ -108,6 +110,21 @@ Feature: User accepts an invitation to join a group - robustness
       "data": {
         "missing_approvals": ["personal_info_view"]
       }
+    }
+    """
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: User tries to accept an invitation to join a group with frozen membership
+    Given I am the user with id "21"
+    When I send a POST request to "/current-user/group-invitations/17/accept"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Group membership is frozen"
     }
     """
     And the table "groups_groups" should stay unchanged

@@ -24,7 +24,7 @@ import (
 //
 //     The user should be a member of the `{group_id}` and
 //     the group's `require_lock_membership_approval_until` should be greater than NOW(),
-//     and `groups_groups.lock_membership_approved` should be set.
+//     and `groups_groups.lock_membership_approved` should be set, and the group membership should not be frozen.
 //     Otherwise the "forbidden" error is returned.
 // parameters:
 // - name: group_id

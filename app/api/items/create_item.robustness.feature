@@ -7,15 +7,15 @@ Feature: Create item - robustness
       | id | name    | type    |
       | 30 | Friends | Friends |
     And the database has the following table 'items':
-      | id | teams_editable | no_score | default_language_tag | type    |
-      | 4  | false          | false    | fr                   | Chapter |
-      | 5  | false          | false    | fr                   | Skill   |
-      | 21 | false          | false    | fr                   | Chapter |
-      | 22 | false          | false    | fr                   | Chapter |
-      | 23 | false          | false    | fr                   | Chapter |
-      | 24 | false          | false    | fr                   | Chapter |
-      | 25 | false          | false    | fr                   | Chapter |
-      | 26 | false          | false    | fr                   | Skill   |
+      | id | no_score | default_language_tag | type    |
+      | 4  | false    | fr                   | Chapter |
+      | 5  | false    | fr                   | Skill   |
+      | 21 | false    | fr                   | Chapter |
+      | 22 | false    | fr                   | Chapter |
+      | 23 | false    | fr                   | Chapter |
+      | 24 | false    | fr                   | Chapter |
+      | 25 | false    | fr                   | Chapter |
+      | 26 | false    | fr                   | Skill   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |

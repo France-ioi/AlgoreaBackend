@@ -1,11 +1,12 @@
 Feature: User sends a request to leave a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | require_lock_membership_approval_until |
-      | 11 | 2019-05-30 11:00:00                    |
-      | 14 | null                                   |
-      | 21 | null                                   |
-      | 22 | null                                   |
+      | id | require_lock_membership_approval_until | frozen_membership |
+      | 11 | 2019-05-30 11:00:00                    | false             |
+      | 14 | null                                   | false             |
+      | 15 | null                                   | true              |
+      | 21 | null                                   | false             |
+      | 22 | null                                   | false             |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -14,6 +15,7 @@ Feature: User sends a request to leave a group - robustness
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 11              | 21             | null                        |
       | 14              | 22             | 2019-05-30 11:00:00         |
+      | 15              | 21             | null                        |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type          | at                  |
@@ -53,6 +55,16 @@ Feature: User sends a request to leave a group - robustness
     When I send a POST request to "/current-user/group-leave-requests/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the group membership is frozen
+    Given I am the user with id "21"
+    When I send a POST request to "/current-user/group-leave-requests/15"
+    Then the response code should be 403
+    And the response error message should contain "User is not a member of the group or the group doesn't require approval for leaving or its membership is frozen"
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be empty

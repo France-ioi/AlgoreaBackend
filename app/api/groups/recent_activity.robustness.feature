@@ -29,8 +29,8 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 1         | 2017-05-29 06:38:38 | 100   |
       | 2         | 2017-05-29 06:38:38 | 100   |
     And the database has the following table 'items':
-      | id  | type    | teams_editable | no_score | default_language_tag |
-      | 200 | Chapter | false          | false    | fr                   |
+      | id  | type    | no_score | default_language_tag |
+      | 200 | Chapter | false    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 21       | 200     | content_with_descendants |

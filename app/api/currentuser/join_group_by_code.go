@@ -1,6 +1,7 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/jinzhu/gorm"
@@ -27,6 +28,7 @@ import (
 //
 //   * If the group is a team and the user is already on a team that has attempts for same contest
 //     while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
+//     or if the group membership is frozen,
 //     the unprocessable entity error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
@@ -76,12 +78,13 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			ID                 int64
 			CodeEndIsNull      bool
 			CodeLifetimeIsNull bool
+			FrozenMembership   bool
 		}
 		errInTransaction := store.Groups().WithWriteLock().
 			Where("type = 'Team'").Where("is_public").
 			Where("code LIKE ?", code).
 			Where("code_expires_at IS NULL OR NOW() < code_expires_at").
-			Select("id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null").
+			Select("id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null, frozen_membership").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
 			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
@@ -89,6 +92,11 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			return apiError.Error // rollback
 		}
 		service.MustNotBeError(errInTransaction)
+
+		if groupInfo.FrozenMembership {
+			apiError = service.ErrUnprocessableEntity(errors.New("group membership is frozen"))
+			return apiError.Error // rollback
+		}
 
 		apiError = checkIfCurrentParticipationsConflictWithExistingMemberships(store, groupInfo.ID, user)
 		if apiError != service.NoError {

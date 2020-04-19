@@ -8,9 +8,9 @@ Background:
     | jdoe  | 0         | 1        |
   And the groups ancestors are computed
   And the database has the following table 'items':
-    | id  | type    | teams_editable | no_score | default_language_tag |
-    | 190 | Chapter | false          | false    | fr                   |
-    | 200 | Chapter | false          | false    | fr                   |
+    | id  | type    | no_score | default_language_tag |
+    | 190 | Chapter | false    | fr                   |
+    | 200 | Chapter | false    | fr                   |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 1        | 190     | content_with_descendants |

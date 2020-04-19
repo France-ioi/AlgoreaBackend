@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -161,6 +162,15 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 	user := srv.GetUser(r)
 	if apiErr := checkThatUserCanManageTheGroupMemberships(srv.Store, user, parentGroupID); apiErr != service.NoError {
 		return apiErr
+	}
+
+	if action == acceptJoinRequestsAction || action == acceptLeaveRequestsAction {
+		var isMembershipFrozen bool
+		service.MustNotBeError(
+			srv.Store.Groups().ByID(parentGroupID).PluckFirst("frozen_membership", &isMembershipFrozen).Error())
+		if isMembershipFrozen {
+			return service.ErrForbidden(errors.New("group membership is frozen"))
+		}
 	}
 
 	var results database.GroupGroupTransitionResults

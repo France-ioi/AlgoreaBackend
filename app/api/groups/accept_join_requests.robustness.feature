@@ -1,19 +1,19 @@
 Feature: Accept group requests - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  | type  |
-      | 11  | User  |
-      | 12  | User  |
-      | 13  | Club  |
-      | 14  | Class |
-      | 21  | User  |
-      | 31  | Class |
-      | 111 | User  |
-      | 121 | User  |
-      | 122 | User  |
-      | 123 | User  |
-      | 131 | User  |
-      | 141 | User  |
+      | id  | type  | frozen_membership |
+      | 11  | User  | false             |
+      | 12  | User  | false             |
+      | 13  | Club  | false             |
+      | 14  | Class | false             |
+      | 21  | User  | false             |
+      | 31  | Class | true              |
+      | 111 | User  | false             |
+      | 121 | User  | false             |
+      | 122 | User  | false             |
+      | 123 | User  | false             |
+      | 131 | User  | false             |
+      | 141 | User  | false             |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
@@ -24,6 +24,7 @@ Feature: Accept group requests - robustness
       | 12       | 12         | memberships |
       | 13       | 21         | memberships |
       | 13       | 12         | none        |
+      | 31       | 21         | memberships |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 111            |
@@ -37,6 +38,7 @@ Feature: Accept group requests - robustness
       | 13       | 141       | join_request |
       | 14       | 11        | invitation   |
       | 14       | 21        | join_request |
+      | 31       | 141       | join_request |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
@@ -93,6 +95,16 @@ Feature: Accept group requests - robustness
     When I send a POST request to "/groups/13/join-requests/accept?group_ids=31,abc,11,13"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'group_ids')"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the group membership is frozen
+    Given I am the user with id "21"
+    When I send a POST request to "/groups/31/join-requests/accept?group_ids=141"
+    Then the response code should be 403
+    And the response error message should contain "Group membership is frozen"
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be empty

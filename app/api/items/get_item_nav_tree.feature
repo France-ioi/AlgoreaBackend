@@ -25,15 +25,15 @@ Feature: Get item for tree navigation
       | 19              | 11             |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id  | type    | default_language_tag | teams_editable | no_score |
-      | 200 | Course  | en                   | false          | false    |
-      | 210 | Chapter | en                   | false          | false    |
-      | 220 | Chapter | en                   | false          | false    |
-      | 230 | Chapter | en                   | false          | false    |
-      | 211 | Task    | en                   | false          | false    |
-      | 231 | Task    | en                   | false          | false    |
-      | 232 | Task    | en                   | false          | false    |
-      | 250 | Task    | en                   | false          | false    |
+      | id  | type    | default_language_tag | no_score |
+      | 200 | Course  | en                   | false    |
+      | 210 | Chapter | en                   | false    |
+      | 220 | Chapter | en                   | false    |
+      | 230 | Chapter | en                   | false    |
+      | 211 | Task    | en                   | false    |
+      | 231 | Task    | en                   | false    |
+      | 232 | Task    | en                   | false    |
+      | 250 | Task    | en                   | false    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 200     | solution                 |
