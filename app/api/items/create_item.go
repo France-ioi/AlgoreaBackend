@@ -156,6 +156,8 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     * `can_view` != 'none' on the `children` items (if any),
 //
 //   otherwise the "bad request" response is returned.
+//
+//   The current user should not be temporary, otherwise the "forbidden" error response is returned.
 // parameters:
 // - in: body
 //   name: data
@@ -177,6 +179,10 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
+
+	if user.IsTempUser {
+		return service.InsufficientAccessRightsError
+	}
 
 	input := NewItemRequest{}
 	formData := formdata.NewFormData(&input)

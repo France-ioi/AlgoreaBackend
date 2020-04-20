@@ -30,7 +30,7 @@ import (
 //   * If some of approvals required by the group are missing in `approvals`,
 //     the unprocessable entity error is returned with a list of missing approvals.
 //
-//   * If the group doesn't exist or is a user, the "forbidden" response is returned.
+//   * If the group doesn't exist or is a user, or if the current user is temporary, the "forbidden" response is returned.
 // parameters:
 // - name: group_id
 //   in: path

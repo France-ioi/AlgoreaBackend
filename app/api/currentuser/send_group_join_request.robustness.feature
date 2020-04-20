@@ -10,11 +10,13 @@ Feature: User sends a request to join a group - robustness
       | 17 | 1         | Team    | none                                  | null                                   | 0                      | false             |
       | 18 | 1         | Team    | none                                  | null                                   | 0                      | true              |
       | 21 | 0         | User    | none                                  | null                                   | 0                      | false             |
+      | 22 | 0         | User    | none                                  | null                                   | 0                      | false             |
       | 23 | 1         | User    | none                                  | null                                   | 0                      | false             |
     And the database has the following table 'users':
-      | group_id | login |
-      | 21       | john  |
-      | 23       | jane  |
+      | group_id | login | temp_user |
+      | 21       | john  | false     |
+      | 22       | tmp   | true      |
+      | 23       | jane  | false     |
     And the database has the following table 'items':
       | id   | default_language_tag |
       | 1234 | fr                   |
@@ -228,3 +230,9 @@ Feature: User sends a request to join a group - robustness
       "error_text": "Group membership is frozen"
     }
     """
+
+  Scenario: A temporary user cannot send a request to a group
+    Given I am the user with id "22"
+    When I send a POST request to "/current-user/group-requests/17"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"

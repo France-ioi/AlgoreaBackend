@@ -9,9 +9,11 @@ Feature: User accepts an invitation to join a group - robustness
       | 16 | Team    | view                                  | false             |
       | 17 | Team    | none                                  | true              |
       | 21 | User    | none                                  | false             |
+      | 22 | User    | none                                  | false             |
     And the database has the following table 'users':
-      | group_id | login |
-      | 21       | john  |
+      | group_id | login | temp_user |
+      | 21       | john  | false     |
+      | 22       | tmp   | true      |
     And the database has the following table 'items':
       | id   | default_language_tag |
       | 1234 | fr                   |
@@ -25,6 +27,7 @@ Feature: User accepts an invitation to join a group - robustness
       | 11       | 21        | join_request |
       | 13       | 21        | invitation   |
       | 15       | 21        | invitation   |
+      | 14       | 22        | invitation   |
       | 16       | 21        | invitation   |
       | 17       | 21        | invitation   |
     And the database has the following table 'attempts':
@@ -90,6 +93,12 @@ Feature: User accepts an invitation to join a group - robustness
     When I send a POST request to "/current-user/group-invitations/14/accept"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
+
+  Scenario: Fails if the user is temporary
+    Given I am the user with id "22"
+    When I send a POST request to "/current-user/group-invitations/14/accept"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
 
   Scenario: Fails if the group is a user
     Given I am the user with id "21"

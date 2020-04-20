@@ -3,6 +3,7 @@ Feature: Create item - robustness
     Given the database has the following users:
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
+      | tmp   | 1         | 12       |
     And the database has the following table 'groups':
       | id | name    | type    |
       | 30 | Friends | Friends |
@@ -325,6 +326,26 @@ Feature: Create item - robustness
       """
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: The user is temporary
+    And I am the user with id "12"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Course",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent_item_id": "21"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
     And the table "items" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
