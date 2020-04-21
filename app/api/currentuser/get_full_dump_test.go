@@ -8,7 +8,6 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
-	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -23,7 +22,7 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 		func(sqlmock sqlmock.Sqlmock) {
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT CONCAT('`', TABLE_NAME, '`.`', COLUMN_NAME, '`') FROM `INFORMATION_SCHEMA`.`COLUMNS`  "+
-					"WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = ?)",
+					"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?)",
 			) + "$").WillReturnRows(sqlmock.NewRows([]string{"names"}).AddRow("users.group_id").AddRow("users.name"))
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT users.group_id, users.name FROM `users`  WHERE (users.group_id = ?)") + "$").
@@ -31,9 +30,6 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 		},
 		func(router *chi.Mux, baseService *service.Base) {
 			srv := &Service{Base: baseService}
-			dbConfig := &mysql.Config{DBName: "test_db"}
-			db, _ := database.Open(dbConfig.FormatDSN())
-			srv.Store = database.NewDataStore(db)
 			router.Get("/current-user/full-dump", service.AppHandler(srv.getFullDump).ServeHTTP)
 		})
 	assert.NoError(t, err)
