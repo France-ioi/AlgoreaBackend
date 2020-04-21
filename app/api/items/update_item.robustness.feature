@@ -4,15 +4,15 @@ Feature: Update item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id | default_language_tag | type    |
-      | 4  | fr                   | Chapter |
-      | 21 | fr                   | Chapter |
-      | 22 | fr                   | Chapter |
-      | 23 | fr                   | Skill   |
-      | 24 | fr                   | Task    |
-      | 25 | fr                   | Course  |
-      | 50 | fr                   | Chapter |
-      | 60 | fr                   | Chapter |
+      | id | default_language_tag | type    | requires_explicit_entry | duration |
+      | 4  | fr                   | Chapter | 0                       | null     |
+      | 21 | fr                   | Chapter | 0                       | null     |
+      | 22 | fr                   | Chapter | 0                       | null     |
+      | 23 | fr                   | Skill   | 0                       | null     |
+      | 24 | fr                   | Task    | 0                       | null     |
+      | 25 | fr                   | Course  | 1                       | 00:00:01 |
+      | 50 | fr                   | Chapter | 0                       | null     |
+      | 60 | fr                   | Chapter | 0                       | null     |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -26,7 +26,7 @@ Feature: Update item - robustness
       | 11       | 4       | solution           | none               | false              |
       | 11       | 21      | solution           | none               | false              |
       | 11       | 22      | none               | children           | false              |
-      | 11       | 23      | info               | none               | false              |
+      | 11       | 23      | info               | all                | false              |
       | 11       | 24      | solution           | children           | false              |
       | 11       | 25      | solution           | all                | false              |
       | 11       | 50      | solution           | all                | false              |
@@ -34,7 +34,7 @@ Feature: Update item - robustness
       | group_id | item_id | can_view | can_edit | is_owner | source_group_id |
       | 11       | 4       | solution | none     | false    | 11              |
       | 11       | 21      | solution | none     | false    | 11              |
-      | 11       | 23      | info     | none     | false    | 11              |
+      | 11       | 23      | info     | all      | false    | 11              |
       | 11       | 24      | solution | children | false    | 11              |
       | 11       | 25      | solution | all      | false    | 11              |
       | 11       | 50      | solution | all      | false    | 11              |
@@ -85,6 +85,7 @@ Feature: Update item - robustness
     | duration                   | "99:60:56"    | invalid duration                                                                   |
     | duration                   | "99:59:-1"    | invalid duration                                                                   |
     | duration                   | "99:59:60"    | invalid duration                                                                   |
+    | duration                   | "00:00:01"    | requires_explicit_entry should be true when the duration is not null               |
 
   Scenario: Invalid item_id
     And I am the user with id "11"
@@ -365,3 +366,59 @@ Feature: Update item - robustness
       | item_id |
       | 24      |
       | 25      |
+
+  Scenario: Should not be possible to set requires_explicit_entry to false when the duration is set
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/25" with the following body:
+      """
+      {
+        "requires_explicit_entry": false
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "requires_explicit_entry": ["requires_explicit_entry should be true when the duration is not null"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: A skill cannot have a duration or require an explicit entry
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/23" with the following body:
+      """
+      {
+        "duration": "00:00:01",
+        "requires_explicit_entry": true
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "duration": ["cannot be set for skill items"],
+          "requires_explicit_entry": ["cannot be set for skill items"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged

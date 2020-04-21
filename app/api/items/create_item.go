@@ -48,17 +48,19 @@ type item struct {
 	EntryParticipantType string `json:"entry_participant_type" validate:"oneof=User Team"`
 	// Nullable
 	//
-	// MySQL time (max value is 838:59:59)
+	// MySQL time (max value is 838:59:59), cannot be set for skills
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	Duration                *string `json:"duration" validate:"omitempty,duration"`
-	ShowUserInfos           bool    `json:"show_user_infos"`
-	UsesAPI                 bool    `json:"uses_api"`
-	PromptToJoinGroupByCode bool    `json:"prompt_to_join_group_by_code"`
+	Duration *string `json:"duration" validate:"omitempty,duration,cannot_be_set_for_skills,duration_requires_explicit_entry"`
+	// should be true when the duration is not null, cannot be set for skill items
+	RequiresExplicitEntry   bool `json:"requires_explicit_entry" validate:"cannot_be_set_for_skills,duration_requires_explicit_entry"`
+	ShowUserInfos           bool `json:"show_user_infos"`
+	UsesAPI                 bool `json:"uses_api"`
+	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 }
 
 type itemWithRequiredType struct {
-	item `json:"item,squash"`
+	Item item `json:"item,squash"`
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
 	// enum: Chapter,Task,Course,Skill
@@ -89,7 +91,7 @@ type NewItemRequest struct {
 	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id,parent_item_type"`
 
 	// Nullable fields are of pointer types
-	itemWithRequiredType `json:"item,squash"`
+	Item itemWithRequiredType `json:"item,squash"`
 
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// default: Undefined
@@ -147,7 +149,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //       (The only allowed parent-child relations are skills-*, chapter-task, chapter-course, chapter-chapter.
 //       Otherwise the "bad request" error is returned.)
 //
-//     * (if `duration` is set) creates a participants group, links `contest_participants_group_id` to it,
+//     * (if `requires_explicit_entry` is true) creates a participants group, links `contest_participants_group_id` to it,
 //       and gives this group 'can_view:content' permission on the new item.
 //
 //   The user should have
@@ -267,6 +269,23 @@ func constructTypeSkillValidator(parentInfo *parentItemInfo) validator.Func {
 	})
 }
 
+// constructDurationRequiresExplicitEntryValidator constructs a validator for the RequiresExplicitEntry field.
+// The validator checks that when the duration is given and is not null, the field is true.
+func constructDurationRequiresExplicitEntryValidator() validator.Func {
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		data := fl.Parent().Addr().Interface().(*item)
+		return data.RequiresExplicitEntry || !fl.Field().IsValid()
+	})
+}
+
+// constructCannotBeSetForSkillsValidator constructs a validator checking that the field is not set for skill items.
+func constructCannotBeSetForSkillsValidator() validator.Func {
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		return fl.Field().IsZero() ||
+			fl.Top().Elem().FieldByName("Item").FieldByName("Type").String() != "Skill"
+	})
+}
+
 // constructChildrenValidator constructs a validator for the Children field.
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
@@ -314,8 +333,9 @@ func constructChildrenAllowedValidator(
 			return true
 		}
 		var itemType string
-		if fl.Top().Elem().FieldByName("Type").IsValid() {
-			itemType = fl.Top().Elem().FieldByName("Type").String()
+		itemTypeField := fl.Top().Elem().FieldByName("Item").FieldByName("Type")
+		if itemTypeField.IsValid() {
+			itemType = itemTypeField.String()
 		} else {
 			itemType = defaultItemType
 		}
@@ -329,7 +349,7 @@ func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAn
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 
-		itemType := fl.Top().Elem().FieldByName("Type").String()
+		itemType := fl.Top().Elem().FieldByName("Item").FieldByName("Type").String()
 		if itemType == skill {
 			return true
 		}
@@ -353,6 +373,10 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	registerLanguageTagValidator(formData, store)
 	formData.RegisterValidation("type_skill", constructTypeSkillValidator(parentInfo))
 	formData.RegisterTranslation("type_skill", "type can be equal to 'Skill' only if the parent item is a skill")
+	formData.RegisterValidation("duration_requires_explicit_entry", constructDurationRequiresExplicitEntryValidator())
+	formData.RegisterTranslation("duration_requires_explicit_entry", "requires_explicit_entry should be true when the duration is not null")
+	formData.RegisterValidation("cannot_be_set_for_skills", constructCannotBeSetForSkillsValidator())
+	formData.RegisterTranslation("cannot_be_set_for_skills", "cannot be set for skill items")
 	registerChildrenValidator(formData, store, user, "", childrenInfoMap)
 	formData.RegisterValidation("child_type_non_skill", constructChildTypeNonSkillValidator(childrenInfoMap))
 	formData.RegisterTranslation("child_type_non_skill", "a skill cannot be a child of a non-skill item")
@@ -375,7 +399,7 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
 	newItemRequest *NewItemRequest) (itemID int64) {
-	itemMap := formData.ConstructPartialMapForDB("itemWithRequiredType")
+	itemMap := formData.ConstructPartialMapForDB("Item")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
 	service.MustNotBeError(store.WithForeignKeyChecksDisabled(func(fkStore *database.DataStore) error {
@@ -388,7 +412,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		})
 	}))
 
-	if itemMap["duration"] != nil {
+	if itemMap["requires_explicit_entry"] == true {
 		participantsGroupID := createContestParticipantsGroup(store, itemID)
 		service.MustNotBeError(store.Items().ByID(itemID).
 			UpdateColumn("contest_participants_group_id", participantsGroupID).Error())

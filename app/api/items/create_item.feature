@@ -52,8 +52,8 @@ Feature: Create item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
-      | 5577006791947779410 | Course | null | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0                     | 0                        | null     | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                          |
+      | id                  | type   | url  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
+      | 5577006791947779410 | Course | null | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0                     | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                          |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -115,6 +115,7 @@ Feature: Create item
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
         "duration": "01:02:03",
+        "requires_explicit_entry": true,
         "show_user_infos": true,
         "no_score": true,
         "prompt_to_join_group_by_code": true,
@@ -144,8 +145,8 @@ Feature: Create item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type    | url               | default_language_tag | entry_frozen_teams | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | entry_participant_type | duration | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
-      | 5577006791947779410 | Chapter | http://myurl.com/ | sl                   | 0                  | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 2345                  | 1                        | Team                   | 01:02:03 | 1               | 1        | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 8674665223082153551           |
+      | id                  | type    | url               | default_language_tag | entry_frozen_teams | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | entry_participant_type | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
+      | 5577006791947779410 | Chapter | http://myurl.com/ | sl                   | 0                  | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 2345                  | 1                        | Team                   | 01:02:03 | 1                       | 1               | 1        | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 8674665223082153551           |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -191,9 +192,8 @@ Feature: Create item
       | attempt_id | participant_id | item_id             | result_propagation_state |
       | 0          | 11             | 12                  | done                     |
       | 0          | 11             | 21                  | done                     |
-      | 0          | 11             | 5577006791947779410 | done                     |
 
-  Scenario: Valid with empty full_screen
+  Scenario: Valid with empty full_screen and requires_explicit_entry
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
     """
@@ -202,7 +202,8 @@ Feature: Create item
       "full_screen": "",
       "language_tag": "sl",
       "title": "my title",
-      "parent_item_id": "21"
+      "parent_item_id": "21",
+      "requires_explicit_entry": true
     }
     """
     Then the response code should be 201
@@ -215,8 +216,8 @@ Feature: Create item
     }
     """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 5577006791947779410 | Course | null | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | None                       | 0                     | 0                        | null     | 0               | 0        | 0                            | null                          |
+      | id                  | type   | url  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
+      | 5577006791947779410 | Course | null | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | None                       | 0                     | 0                        | null     | 1                       | 0               | 0        | 0                            | 8674665223082153551           |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url | subtitle | description |
       | 5577006791947779410 | sl           | my title | null      | null     | null        |
@@ -226,15 +227,21 @@ Feature: Create item
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
-    And the table "permissions_granted" at group_id "11" should be:
-      | group_id | item_id             | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
-      | 11       | 21                  | 11              | group_membership | solution | none           | none      | children | 0        | 0                                                       |
-      | 11       | 5577006791947779410 | 11              | self             | none     | none           | none      | none     | 1        | 1                                                       |
+    And the table "permissions_granted" should be:
+      | group_id            | item_id             | source_group_id     | origin           | can_view | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11                  | 21                  | 11                  | group_membership | solution | none           | none      | children | 0        | 0                                                       |
+      | 11                  | 5577006791947779410 | 11                  | self             | none     | none           | none      | none     | 1        | 1                                                       |
+      | 8674665223082153551 | 5577006791947779410 | 8674665223082153551 | group_membership | content  | none           | none      | none     | 0        | 1                                                       |
     And the table "permissions_generated" should be:
-      | group_id | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 11       | 21                  | solution           | none                     | none                | children           | 0                  |
-      | 11       | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
-    And the table "groups" should stay unchanged
+      | group_id            | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11                  | 21                  | solution           | none                     | none                | children           | 0                  |
+      | 11                  | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
+      | 8674665223082153551 | 5577006791947779410 | content            | none                     | none                | none               | 0                  |
+    And the table "groups" should be:
+      | id                  | type                | name                             |
+      | 10                  | Friends             | Friends                          |
+      | 11                  | User                | jdoe                             |
+      | 8674665223082153551 | ContestParticipants | 5577006791947779410-participants |
     And the table "attempts" should stay unchanged
 
 
@@ -263,7 +270,6 @@ Feature: Create item
       "language_tag": "sl",
       "title": "my skill",
       "parent_item_id": "50",
-      "duration": "01:02:03",
       "children": [
         {"item_id": "12", "order": 0, "category": "Application", "score_weight": 2},
         {"item_id": "34", "order": 1, "category": "Application", "score_weight": 2}
@@ -280,8 +286,8 @@ Feature: Create item
     }
     """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type  | url  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 5577006791947779410 | Skill | null | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0                     | 0                        | 01:02:03 | 0               | 0        | 0                            | 8674665223082153551           |
+      | id                  | type  | url  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | contest_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | contest_participants_group_id |
+      | 5577006791947779410 | Skill | null | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0                     | 0                        | null     | 0                       | 0               | 0        | 0                            | null                          |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url | subtitle | description |
       | 5577006791947779410 | sl           | my skill | null      | null     | null        |
@@ -301,7 +307,6 @@ Feature: Create item
       | id                  | type                | name                             |
       | 10                  | Friends             | Friends                          |
       | 11                  | User                | jdoe                             |
-      | 8674665223082153551 | ContestParticipants | 5577006791947779410-participants |
     And the table "permissions_granted" should be:
       | group_id            | item_id             | source_group_id     | origin           | can_view                 | can_grant_view      | can_watch         | can_edit       | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
       | 11                  | 12                  | 11                  | group_membership | content_with_descendants | solution            | answer            | all            | 0        | 0                                                       |
@@ -309,7 +314,6 @@ Feature: Create item
       | 11                  | 34                  | 11                  | group_membership | solution                 | solution_with_grant | answer_with_grant | all_with_grant | 0        | 0                                                       |
       | 11                  | 50                  | 11                  | group_membership | solution                 | solution_with_grant | answer_with_grant | all_with_grant | 0        | 0                                                       |
       | 11                  | 5577006791947779410 | 11                  | self             | none                     | none                | none              | none           | 1        | 1                                                       |
-      | 8674665223082153551 | 5577006791947779410 | 8674665223082153551 | group_membership | content                  | none                | none              | none           | 0        | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id            | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 10                  | 21                  | none               | content                  | none                | none               | 0                  |
@@ -318,6 +322,3 @@ Feature: Create item
       | 11                  | 34                  | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
       | 11                  | 50                  | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
       | 11                  | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
-      | 8674665223082153551 | 12                  | info               | none                     | none                | none               | 0                  |
-      | 8674665223082153551 | 34                  | info               | none                     | none                | none               | 0                  |
-      | 8674665223082153551 | 5577006791947779410 | content            | none                     | none                | none               | 0                  |
