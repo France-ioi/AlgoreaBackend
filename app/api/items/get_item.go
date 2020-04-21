@@ -61,11 +61,11 @@ type itemCommonFields struct {
 	ValidationType string `json:"validation_type"`
 	// required: true
 	// enum: All,Half,One,None
-	ContestEnteringCondition string `json:"contest_entering_condition"`
+	EntryMinAllowedMembers string `json:"entry_min_allowed_members"`
 	// required: true
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// required: true
-	ContestMaxTeamSize int32 `json:"contest_max_team_size"`
+	EntryMaxTeamSize int32 `json:"entry_max_team_size"`
 	// required: true
 	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
 	// required: true
@@ -217,20 +217,20 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 // rawItem represents one row of the getItem service data returned from the DB
 type rawItem struct {
 	// items
-	ID                       int64
-	Type                     string
-	DisplayDetailsInParent   bool
-	ValidationType           string
-	ContestEnteringCondition string
-	EntryFrozenTeams         bool
-	ContestMaxTeamSize       int32
-	AllowsMultipleAttempts   bool
-	EntryParticipantType     string
-	Duration                 *string
-	NoScore                  bool
-	DefaultLanguageTag       string
-	PromptToJoinGroupByCode  bool
-	HasAttempts              bool
+	ID                      int64
+	Type                    string
+	DisplayDetailsInParent  bool
+	ValidationType          string
+	EntryMinAllowedMembers  string
+	EntryFrozenTeams        bool
+	EntryMaxTeamSize        int32
+	AllowsMultipleAttempts  bool
+	EntryParticipantType    string
+	Duration                *string
+	NoScore                 bool
+	DefaultLanguageTag      string
+	PromptToJoinGroupByCode bool
+	HasAttempts             bool
 
 	// root node only
 	TitleBarVisible bool
@@ -267,9 +267,9 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database
 		items.type,
 		items.display_details_in_parent,
 		items.validation_type,
-		items.contest_entering_condition,
+		items.entry_min_allowed_members,
 		items.entry_frozen_teams,
-		items.contest_max_team_size,
+		items.entry_max_team_size,
 		items.allows_multiple_attempts,
 		items.entry_participant_type,
 		items.duration,
@@ -383,20 +383,20 @@ func constructStringNotInfo(rawData *rawItem, permissionGrantedStore *database.P
 
 func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 	result := &itemCommonFields{
-		ID:                       rawData.ID,
-		Type:                     rawData.Type,
-		DisplayDetailsInParent:   rawData.DisplayDetailsInParent,
-		ValidationType:           rawData.ValidationType,
-		ContestEnteringCondition: rawData.ContestEnteringCondition,
-		EntryFrozenTeams:         rawData.EntryFrozenTeams,
-		ContestMaxTeamSize:       rawData.ContestMaxTeamSize,
-		AllowsMultipleAttempts:   rawData.AllowsMultipleAttempts,
-		EntryParticipantType:     rawData.EntryParticipantType,
-		Duration:                 rawData.Duration,
-		NoScore:                  rawData.NoScore,
-		DefaultLanguageTag:       rawData.DefaultLanguageTag,
-		PromptToJoinGroupByCode:  rawData.PromptToJoinGroupByCode,
-		HasAttempts:              rawData.HasAttempts,
+		ID:                      rawData.ID,
+		Type:                    rawData.Type,
+		DisplayDetailsInParent:  rawData.DisplayDetailsInParent,
+		ValidationType:          rawData.ValidationType,
+		EntryMinAllowedMembers:  rawData.EntryMinAllowedMembers,
+		EntryFrozenTeams:        rawData.EntryFrozenTeams,
+		EntryMaxTeamSize:        rawData.EntryMaxTeamSize,
+		AllowsMultipleAttempts:  rawData.AllowsMultipleAttempts,
+		EntryParticipantType:    rawData.EntryParticipantType,
+		Duration:                rawData.Duration,
+		NoScore:                 rawData.NoScore,
+		DefaultLanguageTag:      rawData.DefaultLanguageTag,
+		PromptToJoinGroupByCode: rawData.PromptToJoinGroupByCode,
+		HasAttempts:             rawData.HasAttempts,
 	}
 	return result
 }

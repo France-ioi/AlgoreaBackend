@@ -1,13 +1,13 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type  | activity_id         | is_official_session | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest | frozen_membership |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | false               | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         | 0                 |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | false               | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         | 1                 |
-      | 14 | Group C | -2    | Group C is here | 2019-03-06 09:26:40 | Class | null                | false               | true    | true      | null       | null          | 2017-10-14 05:39:48 | true         | 0                 |
-      | 15 | Group D | -2    | Group D is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true         | 0                 |
-      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false        | 0                 |
-      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false        | 0                 |
+      | id | name    | grade | description     | created_at          | type  | activity_id         | is_official_session | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | false               | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true                       | 0                 |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | false               | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       | 1                 |
+      | 14 | Group C | -2    | Group C is here | 2019-03-06 09:26:40 | Class | null                | false               | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 |
+      | 15 | Group D | -2    | Group D is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 |
+      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 |
+      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name |
       | owner | 0         | 21       | Jean-Michel | Blanquer  |
@@ -64,7 +64,7 @@ Feature: Update a group (groupEdit) - robustness
       "is_open": "true",
       "code_lifetime": 1234,
       "code_expires_at": "the end",
-      "open_contest": 12,
+      "open_activity_when_joining": 12,
 
       "activity_id": "abc",
       "is_official_session": "abc",
@@ -88,7 +88,7 @@ Feature: Update a group (groupEdit) - robustness
         "is_public": ["expected type 'bool', got unconvertible type 'float64'"],
         "grade": ["expected type 'int32', got unconvertible type 'string'"],
         "name": ["expected type 'string', got unconvertible type 'float64'"],
-        "open_contest": ["expected type 'bool', got unconvertible type 'float64'"],
+        "open_activity_when_joining": ["expected type 'bool', got unconvertible type 'float64'"],
         "is_open": ["expected type 'bool', got unconvertible type 'string'"],
         "code_expires_at": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
         "code_lifetime": ["expected type 'string', got unconvertible type 'float64'"],

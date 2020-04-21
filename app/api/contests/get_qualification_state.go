@@ -36,11 +36,11 @@ type contestGetQualificationStateResponse struct {
 	// required: true
 	// enum: ready,already_started,not_ready
 	State string `json:"state"`
-	// `items.contest_max_team_size` (for team-only contests)
+	// `items.entry_max_team_size` (for team-only items)
 	MaxTeamSize *int32 `json:"max_team_size,omitempty"`
 	// required: true
 	// enum: All,Half,One,None
-	EnteringCondition string `json:"entering_condition"`
+	EntryMinAllowedMembers string `json:"entry_min_allowed_members"`
 	// whether at least one user's ancestor group has NOW() between
 	// `permissions_granted.can_enter_from` and `permissions_granted.can_enter_until`
 	// and between `items.entering_time_min` and `items.entering_time_max` for this item
@@ -70,9 +70,9 @@ type contestGetQualificationStateResponse struct {
 //                  * 'already_started' if the participant has an `attempts` row for the contest
 //                    (with `attempts.root_item_id` = `{item_id}`) allowing submissions;
 //
-//                  * 'not_ready' if there are more members than `contest_max_team_size` or
+//                  * 'not_ready' if there are more members than `entry_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
-//                    in accordance with `items.contest_entering_condition` as follows:
+//                    in accordance with `items.entry_min_allowed_members` as follows:
 //
 //                      * "None": no additional conditions (the team/user can enter the contest);
 //
@@ -156,17 +156,17 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	}
 
 	var contestInfo struct {
-		IsTeamContest            bool
-		AllowsMultipleAttempts   bool
-		ContestMaxTeamSize       int32
-		ContestEnteringCondition string
-		EntryFrozenTeams         bool
+		IsTeamContest          bool
+		AllowsMultipleAttempts bool
+		EntryMaxTeamSize       int32
+		EntryMinAllowedMembers string
+		EntryFrozenTeams       bool
 	}
 
 	err = store.Items().VisibleByID(groupID, itemID).Where("items.requires_explicit_entry").
 		Select(`
 			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_contest,
-			items.contest_max_team_size, items.contest_entering_condition, items.entry_frozen_teams`).
+			items.entry_max_team_size, items.entry_min_allowed_members, items.entry_frozen_teams`).
 		Take(&contestInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, service.InsufficientAccessRightsError
@@ -210,34 +210,34 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		srv.getQualificatonInfo(groupID, itemID, user, store, lock)
 	state := computeQualificationState(
 		participationInfo.IsStarted, participationInfo.IsActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest,
-		contestInfo.ContestMaxTeamSize, contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount, attemptsViolationsFound,
+		contestInfo.EntryMaxTeamSize, contestInfo.EntryMinAllowedMembers, membersCount, qualifiedMembersCount, attemptsViolationsFound,
 		currentTeamHasFrozenMembership, contestInfo.EntryFrozenTeams)
 
 	result := &contestGetQualificationStateResponse{
-		State:               string(state),
-		EnteringCondition:   contestInfo.ContestEnteringCondition,
-		CurrentUserCanEnter: currentUserCanEnter,
-		OtherMembers:        otherMembers,
-		CurrentTeamIsFrozen: currentTeamHasFrozenMembership,
-		FrozenTeamsRequired: contestInfo.EntryFrozenTeams,
-		groupID:             groupID,
-		itemID:              itemID,
+		State:                  string(state),
+		EntryMinAllowedMembers: contestInfo.EntryMinAllowedMembers,
+		CurrentUserCanEnter:    currentUserCanEnter,
+		OtherMembers:           otherMembers,
+		CurrentTeamIsFrozen:    currentTeamHasFrozenMembership,
+		FrozenTeamsRequired:    contestInfo.EntryFrozenTeams,
+		groupID:                groupID,
+		itemID:                 itemID,
 	}
 	if contestInfo.IsTeamContest {
-		result.MaxTeamSize = &contestInfo.ContestMaxTeamSize
+		result.MaxTeamSize = &contestInfo.EntryMaxTeamSize
 	}
 	return result, service.NoError
 }
 
 func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
-	maxTeamSize int32, contestEnteringCondition string, membersCount, qualifiedMembersCount int32,
+	maxTeamSize int32, entryMinAllowedMembers string, membersCount, qualifiedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) qualificationState {
 	if hasAlreadyStarted && isActive {
 		return alreadyStarted
 	}
 
 	if isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest,
-		maxTeamSize, contestEnteringCondition, membersCount, qualifiedMembersCount,
+		maxTeamSize, entryMinAllowedMembers, membersCount, qualifiedMembersCount,
 		attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired) {
 		return ready
 	}
@@ -245,19 +245,19 @@ func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttemp
 	return notReady
 }
 
-func isContestEnteringConditionSatisfied(contestEnteringCondition string, membersCount, qualifiedMembersCount int32) bool {
-	return contestEnteringCondition == "None" ||
-		contestEnteringCondition == "All" && qualifiedMembersCount == membersCount ||
-		contestEnteringCondition == "Half" && membersCount <= qualifiedMembersCount*2 ||
-		contestEnteringCondition == "One" && qualifiedMembersCount >= 1
+func isEntryMinAllowedMembersSatisfied(entryMinAllowedMembers string, membersCount, qualifiedMembersCount int32) bool {
+	return entryMinAllowedMembers == "None" ||
+		entryMinAllowedMembers == "All" && qualifiedMembersCount == membersCount ||
+		entryMinAllowedMembers == "Half" && membersCount <= qualifiedMembersCount*2 ||
+		entryMinAllowedMembers == "One" && qualifiedMembersCount >= 1
 }
 
 func isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
-	maxTeamSize int32, contestEnteringCondition string, membersCount, qualifiedMembersCount int32,
+	maxTeamSize int32, entryMinAllowedMembers string, membersCount, qualifiedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) bool {
 	if isTeamContest &&
 		(maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
-		!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
+		!isEntryMinAllowedMembersSatisfied(entryMinAllowedMembers, membersCount, qualifiedMembersCount) {
 		return false
 	}
 

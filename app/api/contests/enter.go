@@ -50,9 +50,9 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 	apiError := service.NoError
 	var qualificationState *contestGetQualificationStateResponse
 	var itemInfo struct {
-		Now                        *database.Time
-		Duration                   *string
-		ContestParticipantsGroupID *int64
+		Now                 *database.Time
+		Duration            *string
+		ParticipantsGroupID *int64
 	}
 	err := srv.Store.InTransaction(func(store *database.DataStore) error {
 		qualificationState, apiError = srv.getContestInfoAndQualificationStateFromRequest(r, store, true)
@@ -66,7 +66,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		}
 
 		service.MustNotBeError(store.Items().ByID(qualificationState.itemID).
-			Select("NOW() AS now, items.duration, items.contest_participants_group_id").
+			Select("NOW() AS now, items.duration, items.participants_group_id").
 			WithWriteLock().Take(&itemInfo).Error())
 
 		var totalAdditionalTime int64
@@ -100,19 +100,19 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			"item_id": qualificationState.itemID, "started_at": itemInfo.Now,
 		}))
 
-		if itemInfo.ContestParticipantsGroupID != nil {
+		if itemInfo.ParticipantsGroupID != nil {
 			service.MustNotBeError(store.Exec(`
 				INSERT INTO groups_groups (parent_group_id, child_group_id, expires_at)
 				VALUES(?, ?, IFNULL(DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND), '9999-12-31 23:59:59'))
 				ON DUPLICATE KEY UPDATE expires_at = VALUES(expires_at)`,
-				itemInfo.ContestParticipantsGroupID, qualificationState.groupID,
+				itemInfo.ParticipantsGroupID, qualificationState.groupID,
 				itemInfo.Now, itemInfo.Duration, totalAdditionalTime).Error())
 			service.MustNotBeError(store.GroupGroups().After())
 			// Upserting into groups_groups may mark some attempts as 'to_be_propagated',
 			// so we need to recompute them
 			service.MustNotBeError(store.Results().Propagate())
 		} else {
-			logging.GetLogEntry(r).Warnf("items.contest_participants_group_id is not set for the item with id = %d", qualificationState.itemID)
+			logging.GetLogEntry(r).Warnf("items.participants_group_id is not set for the item with id = %d", qualificationState.itemID)
 		}
 
 		return nil

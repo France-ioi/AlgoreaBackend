@@ -64,8 +64,8 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //   Otherwise the "bad request" error is returned.)
 //
 //
-//   If `requires_explicit_entry` is being set to true and `contest_participants_group_id` is NULL,
-//   the service creates a participants group, links `contest_participants_group_id` to it,
+//   If `requires_explicit_entry` is being set to true and `participants_group_id` is NULL,
+//   the service creates a participants group, links `participants_group_id` to it,
 //   and gives this group 'can_view:content' permission on the new item.
 //
 //
@@ -113,18 +113,18 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var itemInfo struct {
-			ContestParticipantsGroupID *int64
-			Type                       string
-			CanEditGenerated           string
-			Duration                   *string
-			RequiresExplicitEntry      bool
+			ParticipantsGroupID   *int64
+			Type                  string
+			CanEditGenerated      string
+			Duration              *string
+			RequiresExplicitEntry bool
 		}
 		err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
 			Joins("JOIN items ON items.id = item_id").
 			Where("item_id = ?", itemID).
 			HavingMaxPermissionAtLeast("edit", "children").
 			Select(`
-				items.contest_participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated,
+				items.participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated,
 				items.duration, items.requires_explicit_entry`).
 			Group("item_id").
 			Scan(&itemInfo).Error()
@@ -163,7 +163,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return apiError.Error // rollback
 		}
 
-		apiError = updateItemInDB(itemData, itemInfo.ContestParticipantsGroupID, store, itemID)
+		apiError = updateItemInDB(itemData, itemInfo.ParticipantsGroupID, store, itemID)
 		if apiError != service.NoError {
 			return apiError.Error // rollback
 		}
@@ -185,7 +185,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64, store *database.DataStore, itemID int64) service.APIError {
 	if itemData["requires_explicit_entry"] == true && participantsGroupID == nil {
 		createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
-		itemData["contest_participants_group_id"] = createdParticipantsGroupID
+		itemData["participants_group_id"] = createdParticipantsGroupID
 	}
 
 	err := store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()

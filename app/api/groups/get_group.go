@@ -47,7 +47,7 @@ type groupViewResponse struct {
 	// required:true
 	IsPublic bool `json:"is_public"`
 	// required:true
-	OpenContest bool `json:"open_contest"`
+	OpenActivityWhenJoining bool `json:"open_activity_when_joining"`
 	// required:true
 	CurrentUserIsManager bool `json:"current_user_is_manager"`
 	// `True` when there is an active group->user relation in `groups_groups`
@@ -117,7 +117,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			IF(manager_access.found, groups.code, NULL) AS code,
 			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
 			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
-			groups.open_contest,
+			groups.open_activity_when_joining,
 			manager_access.found AS current_user_is_manager,
 			groups_groups_active.parent_group_id IS NOT NULL AS current_user_is_member`).
 		Limit(1)

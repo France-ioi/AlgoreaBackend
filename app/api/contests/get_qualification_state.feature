@@ -26,8 +26,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
-      | 50 | 00:00:00 | 1                       | User                   | <entering_condition>       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | <entry_min_allowed_members> | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
@@ -38,7 +38,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "other_members": [],
       "current_team_is_frozen": false,
       "frozen_teams_required": false,
@@ -46,16 +46,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
   Examples:
-    | entering_condition | expected_state |
-    | None               | ready          |
-    | All                | not_ready      |
-    | Half               | not_ready      |
-    | One                | not_ready      |
+    | entry_min_allowed_members | expected_state |
+    | None                      | ready          |
+    | All                       | not_ready      |
+    | Half                      | not_ready      |
+    | One                       | not_ready      |
 
   Scenario Outline: State is ready for an individual contest
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
-      | 50 | 00:00:00 | 1                       | User                   | <entering_condition>       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | <entry_min_allowed_members> | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 31              | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
@@ -69,7 +69,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": true,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "other_members": [],
       "current_team_is_frozen": false,
       "frozen_teams_required": false,
@@ -77,16 +77,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition |
-      | None               |
-      | All                |
-      | Half               |
-      | One                |
+      | entry_min_allowed_members |
+      | None                      |
+      | All                       |
+      | Half                      |
+      | One                       |
 
   Scenario Outline: Team-only contest when no one can enter
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
-      | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 3                     | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | entry_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1                       | Team                   | <entry_min_allowed_members> | 3                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -98,7 +98,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "max_team_size": 3,
       "other_members": [
         {
@@ -124,16 +124,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition | expected_state |
-      | None               | ready          |
-      | All                | not_ready      |
-      | Half               | not_ready      |
-      | One                | not_ready      |
+      | entry_min_allowed_members | expected_state |
+      | None                      | ready          |
+      | All                       | not_ready      |
+      | Half                      | not_ready      |
+      | One                       | not_ready      |
 
   Scenario Outline: Team-only contest when one member can enter
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
-      | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 3                     | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | entry_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1                       | Team                   | <entry_min_allowed_members> | 3                   | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 9999-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -150,7 +150,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "max_team_size": 3,
       "other_members": [
         {
@@ -176,16 +176,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition | expected_state |
-      | None               | ready          |
-      | All                | not_ready      |
-      | Half               | not_ready      |
-      | One                | ready          |
+      | entry_min_allowed_members | expected_state |
+      | None                      | ready          |
+      | All                       | not_ready      |
+      | Half                      | not_ready      |
+      | One                       | ready          |
 
   Scenario Outline: Team-only contest when half of members can enter
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
-      | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 3                     | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | entry_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1                       | Team                   | <entry_min_allowed_members> | 3                   | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -201,7 +201,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": true,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "max_team_size": 3,
       "other_members": [
         {
@@ -227,16 +227,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition | expected_state |
-      | None               | ready          |
-      | All                | not_ready      |
-      | Half               | ready          |
-      | One                | ready          |
+      | entry_min_allowed_members | expected_state |
+      | None                      | ready          |
+      | All                       | not_ready      |
+      | Half                      | ready          |
+      | One                       | ready          |
 
   Scenario Outline: Team-only contest when all members can enter
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
-      | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 3                     | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | entry_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1                       | Team                   | <entry_min_allowed_members> | 3                   | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -253,7 +253,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": true,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "max_team_size": 3,
       "other_members": [
         {
@@ -279,16 +279,16 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition |
-      | None               |
-      | All                |
-      | Half               |
-      | One                |
+      | entry_min_allowed_members |
+      | None                      |
+      | All                       |
+      | Half                      |
+      | One                       |
 
   Scenario Outline: Team-only contest when all members can enter, but the team is too large
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
-      | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 2                     | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | entry_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1                       | Team                   | <entry_min_allowed_members> | 2                   | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -305,7 +305,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": true,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "max_team_size": 2,
       "other_members": [
         {
@@ -331,19 +331,19 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition |
-      | None               |
-      | All                |
-      | Half               |
-      | One                |
+      | entry_min_allowed_members |
+      | None                      |
+      | All                       |
+      | Half                      |
+      | One                       |
 
   Scenario Outline: State is already_started for an individual contest
     Given the database table 'groups' has also the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 50 | 00:00:00 | 1                       | User                   | <entering_condition>       | 0                     | 100                           | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | entry_max_team_size | participants_group_id | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | <entry_min_allowed_members> | 0                   | 100                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -363,7 +363,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "other_members": [],
       "current_team_is_frozen": false,
       "frozen_teams_required": false,
@@ -371,19 +371,19 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition |
-      | None               |
-      | All                |
-      | Half               |
-      | One                |
+      | entry_min_allowed_members |
+      | None                      |
+      | All                       |
+      | Half                      |
+      | One                       |
 
   Scenario Outline: State is already_started for a team-only contest
     Given the database table 'groups' has also the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 00:00:00 | 1                       | Team                   | <entering_condition>       | 0                     | 100                           | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members   | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1                       | Team                   | <entry_min_allowed_members> | 0                   | 100                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -401,7 +401,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "entry_min_allowed_members": {{"<entry_min_allowed_members>" != "null" ? "\"<entry_min_allowed_members>\"" : "null"}},
       "max_team_size": 0,
       "other_members": [
         {
@@ -427,19 +427,19 @@ Feature: Get qualification state (contestGetQualificationState)
     }
     """
     Examples:
-      | entering_condition |
-      | None               |
-      | All                |
-      | Half               |
-      | One                |
+      | entry_min_allowed_members |
+      | None                      |
+      | All                       |
+      | Half                      |
+      | One                       |
 
   Scenario: State is not_ready for an individual contest because the participation has expired
     Given the database table 'groups' has also the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 50 | 00:00:00 | 1                       | User                   | None                       | 0                     | 100                           | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members | entry_max_team_size | participants_group_id | default_language_tag |
+      | 50 | 00:00:00 | 1                       | User                   | None                      | 0                   | 100                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -459,7 +459,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": "None",
+      "entry_min_allowed_members": "None",
       "other_members": [],
       "current_team_is_frozen": false,
       "frozen_teams_required": false,
@@ -472,8 +472,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                       | 3                     | 100                           | fr                   |
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | entry_min_allowed_members | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                      | 3                   | 100                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -491,7 +491,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": "None",
+      "entry_min_allowed_members": "None",
       "max_team_size": 3,
       "other_members": [
         {
@@ -522,8 +522,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                       | 3                     | 100                           | fr                   |
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | entry_min_allowed_members | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                      | 3                   | 100                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -543,7 +543,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": "None",
+      "entry_min_allowed_members": "None",
       "max_team_size": 3,
       "other_members": [
         {
@@ -574,8 +574,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table 'items':
-      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                       | 3                     | 100                           | fr                   |
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | entry_min_allowed_members | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                      | 3                   | 100                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -598,7 +598,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": "None",
+      "entry_min_allowed_members": "None",
       "max_team_size": 3,
       "other_members": [
         {
@@ -626,8 +626,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: The user cannot enter because of entering_time_min/entering_time_max
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag | entering_time_min   | entering_time_max   |
-      | 50 | 00:00:00 | 1                       | User                   | None                       | fr                   | <entering_time_min> | <entering_time_max> |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members | default_language_tag | entering_time_min   | entering_time_max   |
+      | 50 | 00:00:00 | 1                       | User                   | None                      | fr                   | <entering_time_min> | <entering_time_max> |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -641,7 +641,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": "None",
+      "entry_min_allowed_members": "None",
       "other_members": [],
       "current_team_is_frozen": false,
       "frozen_teams_required": false,
@@ -655,8 +655,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario: entry_frozen_teams is ignored for non-team contests
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag | entry_frozen_teams |
-      | 50 | 00:00:00 | 1                       | User                   | None                       | fr                   | 1                  |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members | default_language_tag | entry_frozen_teams |
+      | 50 | 00:00:00 | 1                       | User                   | None                      | fr                   | 1                  |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
@@ -667,7 +667,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": "None",
+      "entry_min_allowed_members": "None",
       "other_members": [],
       "current_team_is_frozen": false,
       "frozen_teams_required": false,
@@ -677,8 +677,8 @@ Feature: Get qualification state (contestGetQualificationState)
 
   Scenario Outline: State depends on frozen_membership when items.entry_frozen_teams = 1
     And the database has the following table 'items':
-      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag | entry_frozen_teams |
-      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                       | 3                     | fr                   | 1                  |
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | entry_min_allowed_members | entry_max_team_size | default_language_tag | entry_frozen_teams |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                      | 3                   | fr                   | 1                  |
     And the database has the following table 'permissions_generated':
       | group_id  | item_id | can_view_generated       |
       | <team_id> | 60      | info                     |
@@ -690,7 +690,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     {
       "current_user_can_enter": false,
-      "entering_condition": "None",
+      "entry_min_allowed_members": "None",
       "max_team_size": 3,
       "other_members": [
         {

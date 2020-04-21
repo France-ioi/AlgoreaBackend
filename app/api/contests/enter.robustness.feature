@@ -157,8 +157,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The contest is not ready
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | default_language_tag |
-      | 60 | 1                       | Team                   | All                        | 3                     | fr                   |
+      | id | requires_explicit_entry | entry_participant_type | entry_min_allowed_members | entry_max_team_size | default_language_tag |
+      | 60 | 1                       | Team                   | All                       | 3                   | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
@@ -183,8 +183,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario Outline: Reenter a non-team contest
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag |
-      | 50 | 01:01:01 | 1                       | User                   | None                       | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members | participants_group_id | default_language_tag |
+      | 50 | 01:01:01 | 1                       | User                   | None                      | 99                    | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at   |
       | 99              | 31             | <expires_at> |
@@ -219,8 +219,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: Reenter an already entered (not expired) contest as a team
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 01:01:01 | 1                       | Team                   | None                       | 10                    | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_allowed_members | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | 1                       | Team                   | None                      | 10                  | 99                    | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 99              | 11             |

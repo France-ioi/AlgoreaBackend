@@ -36,8 +36,8 @@ type groupUpdateInput struct {
 	ActivityID *int64 `json:"activity_id"`
 	// Can be set only if activity_id is set and
 	// the current user has the 'can_make_session_official' permission on the activity item
-	IsOfficialSession bool `json:"is_official_session"`
-	OpenContest       bool `json:"open_contest"`
+	IsOfficialSession       bool `json:"is_official_session"`
+	OpenActivityWhenJoining bool `json:"open_activity_when_joining"`
 
 	RequireMembersToJoinParent bool `json:"require_members_to_join_parent"`
 

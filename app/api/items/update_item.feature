@@ -8,11 +8,11 @@ Background:
     | login | temp_user | group_id |
     | jdoe  | 0         | 11       |
   And the database has the following table 'items':
-    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | entry_frozen_teams | contest_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
-    | 21 | Chapter | http://someurl1.com/ | en                   | 1        | Task 1  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 0                  | 10                    | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
-    | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 0                  | 10                    | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
-    | 60 | Chapter | http://someurl2.com/ | en                   | 1        | Task 3  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 0                  | 10                    | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                          |
-    | 70 | Skill   | http://someurl3.com/ | en                   | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 0                  | 10                    | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                          |
+    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_allowed_members | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
+    | 21 | Chapter | http://someurl1.com/ | en                   | 1        | Task 1  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                      | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
+    | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                      | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
+    | 60 | Chapter | http://someurl2.com/ | en                   | 1        | Task 3  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                      | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
+    | 70 | Skill   | http://someurl3.com/ | en                   | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                      | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
   And the database has the following table 'items_items':
     | parent_item_id | child_item_id | child_order |
     | 21             | 60            | 0           |
@@ -59,8 +59,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | entry_frozen_teams | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | contest_participants_group_id |
-    | 50 | Chapter | http://someurl3.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 0                  | 10                    | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                          |
+    | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_allowed_members | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
+    | 50 | Chapter | http://someurl3.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                      | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -108,9 +108,9 @@ Background:
         "hints_allowed": false,
         "fixed_ranks": false,
         "validation_type": "AllButOne",
-        "contest_entering_condition": "All",
+        "entry_min_allowed_members": "All",
         "entry_frozen_teams": true,
-        "contest_max_team_size": 2345,
+        "entry_max_team_size": 2345,
         "allows_multiple_attempts": false,
         "duration": "01:02:03",
         "requires_explicit_entry": true,
@@ -127,8 +127,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type    | url               | default_language_tag | entry_frozen_teams | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | entry_frozen_teams | contest_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 50 | Chapter | http://myurl.com/ | sl                   | 1                  | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | All                        | 1                  | 2345                  | 0                        | 01:02:03 | 1                       | 0               | 0                            | 5577006791947779410           |
+      | id | type    | url               | default_language_tag | entry_frozen_teams | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_allowed_members | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
+      | 50 | Chapter | http://myurl.com/ | sl                   | 1                  | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | All                       | 1                  | 2345                | 0                        | 01:02:03 | 1                       | 0               | 0                            | 5577006791947779410   |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
@@ -203,8 +203,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "70"
     And the table "items" at id "70" should be:
-      | id | type  | url                  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | entry_frozen_teams | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 70 | Skill | http://someurl3.com/ | en                   | 0                  | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                       | 0                  | 10                    | 1                        | 01:20:30 | 1               | 1                            | 1234                          |
+      | id | type  | url                  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_allowed_members | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
+      | 70 | Skill | http://someurl3.com/ | en                   | 0                  | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | Half                      | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | 1234                  |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
@@ -255,8 +255,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | entering_time_min   | entering_time_max   | entry_frozen_teams | contest_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | contest_participants_group_id |
-      | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         |             | 1             | 1           | One             | Half                       | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 0                  | 10                    | 1                        | 01:20:30 | 1               | 1                            | null                          |
+      | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_allowed_members | entering_time_min   | entering_time_max   | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
+      | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         |             | 1             | 1           | One             | Half                      | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | null                  |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -369,8 +369,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "60"
     And the table "items" at id "60" should be:
-      | id | duration | requires_explicit_entry | contest_participants_group_id |
-      | 60 | null     | false                   | 1234                          |
+      | id | duration | requires_explicit_entry | participants_group_id |
+      | 60 | null     | false                   | 1234                  |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -385,8 +385,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should stay unchanged but the row with id "60"
     And the table "items" at id "60" should be:
-      | id | duration | requires_explicit_entry | contest_participants_group_id |
-      | 60 | null     | true                    | 1234                          |
+      | id | duration | requires_explicit_entry | participants_group_id |
+      | 60 | null     | true                    | 1234                  |
     And the table "groups" should stay unchanged
 
   Scenario: Recomputes results if no_score is given

@@ -38,12 +38,12 @@ type item struct {
 
 	// enum: All,Half,One,None
 	// default: None
-	ContestEnteringCondition string    `json:"contest_entering_condition" validate:"oneof=All Half One None"`
-	EnteringTimeMin          time.Time `json:"entering_time_min"`
-	EnteringTimeMax          time.Time `json:"entering_time_max"`
-	ContestMaxTeamSize       int32     `json:"contest_max_team_size"`
-	TitleBarVisible          bool      `json:"title_bar_visible"`
-	AllowsMultipleAttempts   bool      `json:"allows_multiple_attempts"`
+	EntryMinAllowedMembers string    `json:"entry_min_allowed_members" validate:"oneof=All Half One None"`
+	EnteringTimeMin        time.Time `json:"entering_time_min"`
+	EnteringTimeMax        time.Time `json:"entering_time_max"`
+	EntryMaxTeamSize       int32     `json:"entry_max_team_size"`
+	TitleBarVisible        bool      `json:"title_bar_visible"`
+	AllowsMultipleAttempts bool      `json:"allows_multiple_attempts"`
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type" validate:"oneof=User Team"`
 	// Nullable
@@ -149,7 +149,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //       (The only allowed parent-child relations are skills-*, chapter-task, chapter-course, chapter-chapter.
 //       Otherwise the "bad request" error is returned.)
 //
-//     * (if `requires_explicit_entry` is true) creates a participants group, links `contest_participants_group_id` to it,
+//     * (if `requires_explicit_entry` is true) creates a participants group, links `participants_group_id` to it,
 //       and gives this group 'can_view:content' permission on the new item.
 //
 //   The user should have
@@ -415,7 +415,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	if itemMap["requires_explicit_entry"] == true {
 		participantsGroupID := createContestParticipantsGroup(store, itemID)
 		service.MustNotBeError(store.Items().ByID(itemID).
-			UpdateColumn("contest_participants_group_id", participantsGroupID).Error())
+			UpdateColumn("participants_group_id", participantsGroupID).Error())
 	}
 
 	service.MustNotBeError(store.PermissionsGranted().InsertMap(
