@@ -22,6 +22,7 @@ type Application struct {
 	HTTPHandler *chi.Mux
 	Config      *viper.Viper
 	Database    *database.DB
+	apiCtx      *api.Ctx
 }
 
 // New configures application resources and routes.
@@ -73,6 +74,7 @@ func New() (*Application, error) {
 		HTTPHandler: router,
 		Config:      config,
 		Database:    db,
+		apiCtx:      apiCtx,
 	}, nil
 }
 

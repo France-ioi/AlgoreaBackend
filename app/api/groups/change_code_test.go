@@ -68,7 +68,7 @@ func assertMockedChangeCodeRequest(t *testing.T,
 		"POST", "/groups/1/code", ``, &database.User{GroupID: 2},
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
-			srv := &Service{Base: *baseService}
+			srv := &Service{Base: baseService}
 			router.Post("/groups/{group_id}/code", service.AppHandler(srv.changeCode).ServeHTTP)
 		})
 	assert.NoError(t, err)

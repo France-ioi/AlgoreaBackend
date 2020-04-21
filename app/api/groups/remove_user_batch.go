@@ -105,7 +105,12 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	service.MustNotBeError(loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).
-		DeleteUsers(r.Context(), srv.AuthConfig.GetString("ClientID"), srv.AuthConfig.GetString("ClientSecret"), groupPrefix+"_"+customPrefix+"_"))
+		DeleteUsers(
+			r.Context(),
+			srv.AuthConfig.GetString("ClientID"),
+			srv.AuthConfig.GetString("ClientSecret"),
+			groupPrefix+"_"+customPrefix+"_",
+		))
 
 	service.MustNotBeError(srv.Store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
 		return store.Users().Where("login LIKE CONCAT(?, '\\_', ?, '\\_%')", groupPrefix, customPrefix)

@@ -7,14 +7,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 func TestMiddleware(t *testing.T) {
 	tests := []struct {
 		name               string
-		domains            []config.Domain
+		domains            []AppConfigItem
 		expectedConfig     *Configuration
 		expectedStatusCode int
 		expectedBody       string
@@ -22,7 +20,7 @@ func TestMiddleware(t *testing.T) {
 	}{
 		{
 			name: "ok",
-			domains: []config.Domain{
+			domains: []AppConfigItem{
 				{
 					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
 					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 7,
@@ -38,7 +36,7 @@ func TestMiddleware(t *testing.T) {
 		},
 		{
 			name: "wrong domain",
-			domains: []config.Domain{
+			domains: []AppConfigItem{
 				{
 					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
 					RootGroup: 4, RootSelfGroup: 5, RootTempGroup: 7,
@@ -61,7 +59,7 @@ func TestMiddleware(t *testing.T) {
 	}
 }
 
-func assertMiddleware(t *testing.T, domains []config.Domain, shouldEnterService bool,
+func assertMiddleware(t *testing.T, domains []AppConfigItem, shouldEnterService bool,
 	expectedStatusCode int, expectedBody string, expectedConfig *Configuration) {
 	// dummy server using the middleware
 	middleware := Middleware(domains)

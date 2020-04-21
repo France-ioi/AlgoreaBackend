@@ -18,35 +18,42 @@ import (
 
 // Ctx is the context of the root of the API
 type Ctx struct {
+	service      *service.Base
 	db           *database.DB
-	serverConfig *viper.Viper
-	authConfig   *viper.Viper
-	domainConfig []domain.AppConfigItem
-	tokenConfig  *token.Config
+	ServerConfig *viper.Viper
+	AuthConfig   *viper.Viper
+	DomainConfig []domain.AppConfigItem
+	TokenConfig  *token.Config
 }
 
 // NewCtx creates a API context
 func NewCtx(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.AppConfigItem, tokenConfig *token.Config) *Ctx {
-	return &Ctx{db, serverConfig, authConfig, domainConfig, tokenConfig}
+	return &Ctx{nil, db, serverConfig, authConfig, domainConfig, tokenConfig}
+}
+
+// SetAuthConfig update the auth config used by the API
+func (ctx *Ctx) SetAuthConfig(authConfig *viper.Viper) {
+	ctx.AuthConfig = authConfig
+	ctx.service.AuthConfig = authConfig
 }
 
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
 
 	r := chi.NewRouter()
-	base := service.Base{
+	ctx.service = &service.Base{
 		Store:        database.NewDataStore(ctx.db),
-		ServerConfig: ctx.serverConfig,
-		AuthConfig:   ctx.authConfig,
-		DomainConfig: ctx.domainConfig,
-		TokenConfig:  ctx.tokenConfig,
+		ServerConfig: ctx.ServerConfig,
+		AuthConfig:   ctx.AuthConfig,
+		DomainConfig: ctx.DomainConfig,
+		TokenConfig:  ctx.TokenConfig,
 	}
-	r.Group((&auth.Service{Base: base}).SetRoutes)
-	r.Group((&contests.Service{Base: base}).SetRoutes)
-	r.Group((&items.Service{Base: base}).SetRoutes)
-	r.Group((&groups.Service{Base: base}).SetRoutes)
-	r.Group((&answers.Service{Base: base}).SetRoutes)
-	r.Group((&currentuser.Service{Base: base}).SetRoutes)
+	r.Group((&auth.Service{Base: ctx.service}).SetRoutes)
+	r.Group((&contests.Service{Base: ctx.service}).SetRoutes)
+	r.Group((&items.Service{Base: ctx.service}).SetRoutes)
+	r.Group((&groups.Service{Base: ctx.service}).SetRoutes)
+	r.Group((&answers.Service{Base: ctx.service}).SetRoutes)
+	r.Group((&currentuser.Service{Base: ctx.service}).SetRoutes)
 	r.Get("/status", ctx.status)
 	r.NotFound(service.NotFound)
 	return r

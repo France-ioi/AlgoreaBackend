@@ -73,7 +73,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(err)
 	}
 
-	oauthConfig := getOAuthConfig(&srv.Config.Auth)
+	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
 	if len(r.URL.Query()["code_verifier"]) != 0 {
 		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", r.URL.Query().Get("code_verifier")))
@@ -82,7 +82,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)
 	service.MustNotBeError(err)
 
-	userProfile, err := loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).GetUserProfile(r.Context(), token.AccessToken)
+	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
 	service.MustNotBeError(err)
 	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
 

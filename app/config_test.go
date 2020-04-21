@@ -202,7 +202,7 @@ func TestDomainsConfig_Success(t *testing.T) {
 	assert.Equal(sampleDomain, config[0])
 }
 
-func TestDDomainsConfig_Empty(t *testing.T) {
+func TestDomainsConfig_Empty(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []string{})
@@ -217,6 +217,32 @@ func TestDomainsConfig_Panic(t *testing.T) {
 	assert.Panics(func() {
 		_ = DomainsConfig(globalConfig)
 	})
+}
+
+func TestReplaceAuthConfig(t *testing.T) {
+	assert := assertlib.New(t)
+	globalConfig := viper.New()
+	globalConfig.Set("auth.ClientID", "42")
+	application, _ := New()
+	application.ReplaceAuthConfig(globalConfig)
+	assert.Equal("42", application.Config.Get("auth.ClientID"))
+	assert.Equal("42", application.apiCtx.AuthConfig.Get("ClientID"))
+}
+
+func TestReplaceDomainsConfig(t *testing.T) {
+	assert := assertlib.New(t)
+	globalConfig := viper.New()
+	globalConfig.Set("domains", []map[string]interface{}{{"domains": []string{"localhost", "other"}}})
+	application, _ := New()
+	application.ReplaceDomainsConfig(globalConfig)
+	expected := []domain.AppConfigItem{{
+		Domains:       []string{"localhost", "other"},
+		RootGroup:     0,
+		RootSelfGroup: 0,
+		RootTempGroup: 0,
+	}}
+	assert.Equal(expected, DomainsConfig(application.Config))
+	assert.Equal(expected, application.apiCtx.DomainConfig)
 }
 
 func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.File, deferFunc func()) {

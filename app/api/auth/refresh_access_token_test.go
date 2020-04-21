@@ -11,9 +11,9 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
@@ -57,11 +57,11 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 				}
 			},
 			func(router *chi.Mux, baseService *service.Base) {
-				srv := &Service{Base: *baseService}
-				srv.Config = &config.Root{}
-				srv.AuthConfig.LoginModuleURL = loginModuleStubServer.URL
-				srv.AuthConfig.ClientID = expectedClientID
-				srv.AuthConfig.ClientSecret = expectedClientSecret
+				srv := &Service{Base: baseService}
+				srv.AuthConfig = viper.New()
+				srv.AuthConfig.Set("LoginModuleURL", loginModuleStubServer.URL)
+				srv.AuthConfig.Set("ClientID", expectedClientID)
+				srv.AuthConfig.Set("ClientSecret", expectedClientSecret)
 				if timeout {
 					router.With(middleware.Timeout(0)).
 						Post("/auth/token", service.AppHandler(srv.refreshAccessToken).ServeHTTP)

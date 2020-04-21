@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+
 	"github.com/cucumber/godog/gherkin"
 	"github.com/spf13/viper"
 	"github.com/thingful/httpmock"
@@ -58,16 +59,17 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 		return err
 	}
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
+	authConfig := app.AuthConfig(ctx.application.Config)
 	params := url.Values{
-		"client_id":     {ctx.application.Config.Auth.ClientID},
-		"client_secret": {ctx.application.Config.Auth.ClientSecret},
+		"client_id":     {authConfig.GetString("ClientID")},
+		"client_secret": {authConfig.GetString("ClientSecret")},
 		"grant_type":    {"authorization_code"},
 		"code":          {preprocessedCode},
 		"code_verifier": {preprocessedCodeVerifier},
-		"redirect_uri":  {ctx.application.Config.Auth.CallbackURL},
+		"redirect_uri":  {authConfig.GetString("CallbackURL")},
 	}
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
+		authConfig.GetString("LoginModuleURL")+"/oauth/token", responder,
 		httpmock.WithBody(
 			bytes.NewBufferString(params.Encode()))))
 	return nil

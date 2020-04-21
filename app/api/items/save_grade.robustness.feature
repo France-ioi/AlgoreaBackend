@@ -59,7 +59,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -94,7 +94,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -129,7 +129,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -164,7 +164,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -199,7 +199,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -234,7 +234,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -318,7 +318,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -342,7 +342,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -366,7 +366,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -391,7 +391,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -402,7 +402,7 @@ Feature: Save grading result - robustness
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -427,7 +427,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -438,7 +438,7 @@ Feature: Save grading result - robustness
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -463,7 +463,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -474,7 +474,7 @@ Feature: Save grading result - robustness
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183",
         "idUserAnswer": "123",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -499,7 +499,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idAttempt": "101/0",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -509,7 +509,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -534,7 +534,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idAttempt": "101/0",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -545,7 +545,7 @@ Feature: Save grading result - robustness
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idAttempt": "110/0",
         "idUserAnswer": "123",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -570,7 +570,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -581,7 +581,7 @@ Feature: Save grading result - robustness
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -605,7 +605,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "70",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -616,7 +616,7 @@ Feature: Save grading result - robustness
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "abc",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -654,7 +654,7 @@ Feature: Save grading result - robustness
         "idAttempt": "101/1",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "bAccessSolutions": false,
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -694,7 +694,7 @@ Feature: Save grading result - robustness
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "bAccessSolutions": false,
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:

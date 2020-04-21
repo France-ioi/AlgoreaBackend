@@ -6,13 +6,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
 
 func TestNewRawDBLogger_TextLog(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &config.Logging{
+	logger := &Logger{nulllogger, &configuration{
 		Format:           "text",
 		LogRawSQLQueries: true,
 	}}
@@ -25,7 +24,7 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 
 func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &config.Logging{
+	logger := &Logger{nulllogger, &configuration{
 		Format:           "text",
 		LogRawSQLQueries: false,
 	}}
@@ -37,7 +36,7 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 
 func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &config.Logging{
+	logger := &Logger{nulllogger, &configuration{
 		Format:           "json",
 		LogRawSQLQueries: true,
 	}}
@@ -50,7 +49,7 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 
 func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &config.Logging{
+	logger := &Logger{nulllogger, &configuration{
 		Format:           "json",
 		LogRawSQLQueries: true,
 	}}

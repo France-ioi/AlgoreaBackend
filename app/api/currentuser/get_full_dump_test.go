@@ -11,7 +11,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
@@ -31,8 +30,10 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 				WillReturnError(errors.New("some error"))
 		},
 		func(router *chi.Mux, baseService *service.Base) {
-			srv := &Service{Base: *baseService}
-			srv.Config = &config.Root{Database: config.Database{Connection: mysql.Config{DBName: "test_db"}}}
+			srv := &Service{Base: baseService}
+			dbConfig := &mysql.Config{DBName: "test_db"}
+			db, _ := database.Open(dbConfig.FormatDSN())
+			srv.Store = database.NewDataStore(db)
 			router.Get("/current-user/full-dump", service.AppHandler(srv.getFullDump).ServeHTTP)
 		})
 	assert.NoError(t, err)

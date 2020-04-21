@@ -14,7 +14,7 @@ import (
 
 // Service is the mount point for services related to `groups`
 type Service struct {
-	service.Base
+	*service.Base
 }
 
 // SetRoutes defines the routes for this package in a route group

@@ -11,7 +11,7 @@ import (
 
 // Service is the mount point for services related to `answers`
 type Service struct {
-	service.Base
+	*service.Base
 }
 
 // swagger:model

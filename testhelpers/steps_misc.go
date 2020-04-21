@@ -132,15 +132,24 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 }
 
 func (ctx *TestContext) TheApplicationConfigIs(body *gherkin.DocString) error { // nolint
-	viperConfig := viper.New()
-	viperConfig.SetConfigType("yaml")
+	config := viper.New()
+	config.SetConfigType("yaml")
 	preprocessedConfig, err := ctx.preprocessString(body.Content)
 	if err != nil {
 		return err
 	}
-	err = viperConfig.MergeConfig(strings.NewReader(preprocessedConfig))
+	err = config.MergeConfig(strings.NewReader(preprocessedConfig))
 	if err != nil {
 		return err
 	}
-	return viperConfig.UnmarshalExact(ctx.application.Config)
+
+	// Only 'domain' and 'auth' changes are currently supported
+	if config.IsSet("auth") {
+		ctx.application.ReplaceAuthConfig(config)
+	}
+	if config.IsSet("domains") {
+		ctx.application.ReplaceDomainsConfig(config)
+	}
+
+	return nil
 }

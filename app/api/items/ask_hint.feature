@@ -41,7 +41,7 @@ Feature: Ask for a hint
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -73,7 +73,7 @@ Feature: Ask for a hint
             "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
-            "platformName": "{{app().TokenConfig.PlatformName}}",
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}",
             "sHintsRequested": "[0,1,\"hint\",null,{\"rotorIndex\":1}]",
             "nbHintsGiven": "5"
           }
@@ -104,7 +104,7 @@ Feature: Ask for a hint
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -136,7 +136,7 @@ Feature: Ask for a hint
             "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
-            "platformName": "{{app().TokenConfig.PlatformName}}",
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}",
             "sHintsRequested": "[0,1,\"hint\",null,{\"rotorIndex\":1}]",
             "nbHintsGiven": "5"
           }
@@ -167,7 +167,7 @@ Feature: Ask for a hint
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -199,7 +199,7 @@ Feature: Ask for a hint
             "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
-            "platformName": "{{app().TokenConfig.PlatformName}}",
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}",
             "sHintsRequested": "[0,1,\"hint\",null]",
             "nbHintsGiven": "4"
           }
@@ -230,7 +230,7 @@ Feature: Ask for a hint
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -262,7 +262,7 @@ Feature: Ask for a hint
             "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
-            "platformName": "{{app().TokenConfig.PlatformName}}",
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}",
             "sHintsRequested": "[{\"rotorIndex\":1}]",
             "nbHintsGiven": "1"
           }

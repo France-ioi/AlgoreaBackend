@@ -40,16 +40,7 @@ const outputFile = "file"
 // Configure applies the given logging configuration to the logger
 // (may panic if the configuration is invalid)
 func (l *Logger) Configure(config *viper.Viper) {
-
-	// set default values (if not configured)
-	config.SetDefault("format", "json")
-	config.SetDefault("output", "file")
-	config.SetDefault("level", "info")
-	config.SetDefault("logSqlQueries", true)
-
-	if err := config.Unmarshal(&l.config); err != nil {
-		panic("Enable to load the 'logging' configuration")
-	}
+	unmarshalConfig(config, &l.config)
 
 	// Format
 	switch l.config.Format {
@@ -89,6 +80,18 @@ func (l *Logger) Configure(config *viper.Viper) {
 	}
 
 	log.SetOutput(l.Logger.Writer())
+}
+
+func unmarshalConfig(config *viper.Viper, dest **configuration) {
+	// set default values (if not configured)
+	config.SetDefault("format", "json")
+	config.SetDefault("output", "file")
+	config.SetDefault("level", "info")
+	config.SetDefault("logSqlQueries", true)
+
+	if err := config.Unmarshal(dest); err != nil {
+		panic("Enable to load the 'logging' configuration")
+	}
 }
 
 // ResetShared reset the global logger to its default settings before its configuration

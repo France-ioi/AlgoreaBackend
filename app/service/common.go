@@ -7,10 +7,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
+
 	"github.com/spf13/viper"
 )
 
-// Auth is the part of the config related to the user authentication
+// AuthConfig is the part of the config related to the user authentication
 type AuthConfig struct {
 	ClientID       string
 	ClientSecret   string

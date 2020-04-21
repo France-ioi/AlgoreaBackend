@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
+	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -18,11 +18,11 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
 	defer func() { logging.ResetShared() }()
-	logging.SharedLogger.Configure(config.Logging{
-		Format:        "json",
-		Output:        "stdout",
-		LogSQLQueries: true,
-	})
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	conf.Set("LogSQLQueries", true)
+	logging.SharedLogger.Configure(conf)
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -48,11 +48,11 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
 	defer func() { logging.ResetShared() }()
-	logging.SharedLogger.Configure(config.Logging{
-		Format:        "json",
-		Output:        "stdout",
-		LogSQLQueries: true,
-	})
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	conf.Set("LogSQLQueries", true)
+	logging.SharedLogger.Configure(conf)
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -69,12 +69,12 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
 	defer func() { logging.ResetShared() }()
-	logging.SharedLogger.Configure(config.Logging{
-		Format:        "json",
-		Output:        "stdout",
-		Level:         "debug",
-		LogSQLQueries: true,
-	})
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	conf.Set("LogSQLQueries", true)
+	conf.Set("Level", "debug")
+	logging.SharedLogger.Configure(conf)
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
