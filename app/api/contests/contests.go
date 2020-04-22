@@ -31,7 +31,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
 	router.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
-	router.Post("/contests/{item_id}/enter", service.AppHandler(srv.enter).ServeHTTP)
+	router.Post("/attempts/{attempt_id}/items/{item_id}/enter", service.AppHandler(srv.enter).ServeHTTP)
 }
 
 // swagger:model contestInfo

@@ -12,23 +12,30 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /contests/{item_id}/enter contests contestEnter
+// swagger:operation POST /attempts/{attempt_id}/items/{item_id}/enter items itemEnter
 // ---
-// summary: Enter the contest
+// summary: Enter the item
 // description: >
-//                Allows to enter a contest as a user or as a team (if `as_team_id` is given).
+//                Allows to enter an item requiring explicit entry as a user or as a team (if `as_team_id` is given).
 //
 //
 //                Restrictions:
-//                  * `item_id` should be a contest;
+//                  * `item_id` should require explicit entry;
 //                  * `as_team_id` (if given) should be the current user's team;
+//                  * an attempt with `participant_id` = `as_team_id` (or the current user) and `id` = `attempt_id` should exist;
 //                  * the authenticated user (or his team) should have at least 'info' access to the item;
 //                  * the group (the user or his team) must be qualified for the item (itemGetEntryState returns "ready").
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
+// - name: attempt_id
+//   description: "`id` of an attempt which will be used as a parent attempt for the participation"
+//   in: path
+//   type: integer
+//   format: int64
+//   required: true
 // - name: item_id
-//   description: "`id` of a contest"
+//   description: "`id` of an item"
 //   in: path
 //   type: integer
 //   format: int64
@@ -39,7 +46,7 @@ import (
 //   format: int64
 // responses:
 //   "201":
-//     "$ref": "#/responses/contestEnterResponse"
+//     "$ref": "#/responses/itemEnterResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
@@ -47,6 +54,11 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIError {
+	parentAttemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
 	apiError := service.NoError
 	var entryState *itemGetEntryStateResponse
 	var itemInfo struct {
@@ -54,7 +66,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		Duration            *string
 		ParticipantsGroupID *int64
 	}
-	err := srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		entryState, apiError = srv.getItemInfoAndEntryStateFromRequest(r, store, true)
 		if apiError != service.NoError {
 			return apiError.Error
@@ -86,13 +98,14 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
 				Where("participant_id = ?", entryState.groupID).WithWriteLock().SubQuery()),
 			"participant_id": entryState.groupID, "created_at": itemInfo.Now,
-			"creator_id": user.GroupID, "parent_attempt_id": 0, "root_item_id": entryState.itemID,
+			"creator_id": user.GroupID, "parent_attempt_id": parentAttemptID, "root_item_id": entryState.itemID,
 			"allows_submissions_until": gorm.Expr("IFNULL(DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND), '9999-12-31 23:59:59')",
 				(*time.Time)(itemInfo.Now), itemInfo.Duration, totalAdditionalTime),
 		}))
 		var attemptID int64
 		service.MustNotBeError(store.Attempts().
 			Where("participant_id = ?", entryState.groupID).
+			Where("parent_attempt_id = ?", parentAttemptID).
 			PluckFirst("MAX(id)", &attemptID).Error())
 
 		service.MustNotBeError(store.Results().InsertMap(map[string]interface{}{

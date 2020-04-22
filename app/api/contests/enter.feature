@@ -72,7 +72,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/50/enter"
+    When I send a POST request to "/attempts/0/items/50/enter"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -137,7 +137,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 31       | 60      | 02:02:02        |
       | 41       | 60      | 03:03:03        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/60/enter?as_team_id=11"
+    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -203,7 +203,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 11             | 60      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
-    When I send a POST request to "/contests/60/enter?as_team_id=11"
+    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -262,7 +262,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/50/enter"
+    When I send a POST request to "/attempts/0/items/50/enter"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -314,7 +314,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/50/enter"
+    When I send a POST request to "/attempts/0/items/50/enter"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
