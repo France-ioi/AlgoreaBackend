@@ -69,23 +69,23 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "permissions_granted" should stay unchanged
   Examples:
-    | field                     | value         | error                                                                              |
-    | default_language_tag      | 1234          | expected type 'string', got unconvertible type 'float64'                           |
-    | default_language_tag      | "unknown"     | default_language_tag must be a maximum of 6 characters in length                   |
-    | default_language_tag      | ""            | default_language_tag must be at least 1 character in length                        |
-    | default_language_tag      | "unknow"      | default language should exist and there should be item's strings in this language  |
-    | default_language_tag      | "sl"          | default language should exist and there should be item's strings in this language  | # no strings for the tag
-    | full_screen               | "wrong value" | full_screen must be one of [forceYes forceNo default]                              |
-    | validation_type           | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]          |
-    | entry_min_allowed_members | "Wrong"       | entry_min_allowed_members must be one of [All Half One None]                       |
-    | duration                  | "12:34"       | invalid duration                                                                   |
-    | duration                  | "-1:34:56"    | invalid duration                                                                   |
-    | duration                  | "839:34:56"   | invalid duration                                                                   |
-    | duration                  | "99:-1:56"    | invalid duration                                                                   |
-    | duration                  | "99:60:56"    | invalid duration                                                                   |
-    | duration                  | "99:59:-1"    | invalid duration                                                                   |
-    | duration                  | "99:59:60"    | invalid duration                                                                   |
-    | duration                  | "00:00:01"    | requires_explicit_entry should be true when the duration is not null               |
+    | field                            | value         | error                                                                              |
+    | default_language_tag             | 1234          | expected type 'string', got unconvertible type 'float64'                           |
+    | default_language_tag             | "unknown"     | default_language_tag must be a maximum of 6 characters in length                   |
+    | default_language_tag             | ""            | default_language_tag must be at least 1 character in length                        |
+    | default_language_tag             | "unknow"      | default language should exist and there should be item's strings in this language  |
+    | default_language_tag             | "sl"          | default language should exist and there should be item's strings in this language  | # no strings for the tag
+    | full_screen                      | "wrong value" | full_screen must be one of [forceYes forceNo default]                              |
+    | validation_type                  | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]          |
+    | entry_min_admitted_members_ratio | "Wrong"       | entry_min_admitted_members_ratio must be one of [All Half One None]                |
+    | duration                         | "12:34"       | invalid duration                                                                   |
+    | duration                         | "-1:34:56"    | invalid duration                                                                   |
+    | duration                         | "839:34:56"   | invalid duration                                                                   |
+    | duration                         | "99:-1:56"    | invalid duration                                                                   |
+    | duration                         | "99:60:56"    | invalid duration                                                                   |
+    | duration                         | "99:59:-1"    | invalid duration                                                                   |
+    | duration                         | "99:59:60"    | invalid duration                                                                   |
+    | duration                         | "00:00:01"    | requires_explicit_entry should be true when the duration is not null               |
 
   Scenario: Invalid item_id
     And I am the user with id "11"

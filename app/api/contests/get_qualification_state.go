@@ -40,7 +40,7 @@ type contestGetQualificationStateResponse struct {
 	MaxTeamSize *int32 `json:"max_team_size,omitempty"`
 	// required: true
 	// enum: All,Half,One,None
-	EntryMinAllowedMembers string `json:"entry_min_allowed_members"`
+	EntryMinAdmittedMembersRatio string `json:"entry_min_admitted_members_ratio"`
 	// whether at least one user's ancestor group has NOW() between
 	// `permissions_granted.can_enter_from` and `permissions_granted.can_enter_until`
 	// and between `items.entering_time_min` and `items.entering_time_max` for this item
@@ -72,7 +72,7 @@ type contestGetQualificationStateResponse struct {
 //
 //                  * 'not_ready' if there are more members than `entry_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
-//                    in accordance with `items.entry_min_allowed_members` as follows:
+//                    in accordance with `items.entry_min_admitted_members_ratio` as follows:
 //
 //                      * "None": no additional conditions (the team/user can enter the contest);
 //
@@ -156,17 +156,17 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	}
 
 	var contestInfo struct {
-		IsTeamContest          bool
-		AllowsMultipleAttempts bool
-		EntryMaxTeamSize       int32
-		EntryMinAllowedMembers string
-		EntryFrozenTeams       bool
+		IsTeamContest                bool
+		AllowsMultipleAttempts       bool
+		EntryMaxTeamSize             int32
+		EntryMinAdmittedMembersRatio string
+		EntryFrozenTeams             bool
 	}
 
 	err = store.Items().VisibleByID(groupID, itemID).Where("items.requires_explicit_entry").
 		Select(`
 			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_contest,
-			items.entry_max_team_size, items.entry_min_allowed_members, items.entry_frozen_teams`).
+			items.entry_max_team_size, items.entry_min_admitted_members_ratio, items.entry_frozen_teams`).
 		Take(&contestInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, service.InsufficientAccessRightsError
@@ -210,18 +210,18 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		srv.getQualificatonInfo(groupID, itemID, user, store, lock)
 	state := computeQualificationState(
 		participationInfo.IsStarted, participationInfo.IsActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest,
-		contestInfo.EntryMaxTeamSize, contestInfo.EntryMinAllowedMembers, membersCount, qualifiedMembersCount, attemptsViolationsFound,
+		contestInfo.EntryMaxTeamSize, contestInfo.EntryMinAdmittedMembersRatio, membersCount, qualifiedMembersCount, attemptsViolationsFound,
 		currentTeamHasFrozenMembership, contestInfo.EntryFrozenTeams)
 
 	result := &contestGetQualificationStateResponse{
-		State:                  string(state),
-		EntryMinAllowedMembers: contestInfo.EntryMinAllowedMembers,
-		CurrentUserCanEnter:    currentUserCanEnter,
-		OtherMembers:           otherMembers,
-		CurrentTeamIsFrozen:    currentTeamHasFrozenMembership,
-		FrozenTeamsRequired:    contestInfo.EntryFrozenTeams,
-		groupID:                groupID,
-		itemID:                 itemID,
+		State:                        string(state),
+		EntryMinAdmittedMembersRatio: contestInfo.EntryMinAdmittedMembersRatio,
+		CurrentUserCanEnter:          currentUserCanEnter,
+		OtherMembers:                 otherMembers,
+		CurrentTeamIsFrozen:          currentTeamHasFrozenMembership,
+		FrozenTeamsRequired:          contestInfo.EntryFrozenTeams,
+		groupID:                      groupID,
+		itemID:                       itemID,
 	}
 	if contestInfo.IsTeamContest {
 		result.MaxTeamSize = &contestInfo.EntryMaxTeamSize
@@ -230,14 +230,14 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 }
 
 func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
-	maxTeamSize int32, entryMinAllowedMembers string, membersCount, qualifiedMembersCount int32,
+	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, qualifiedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) qualificationState {
 	if hasAlreadyStarted && isActive {
 		return alreadyStarted
 	}
 
 	if isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest,
-		maxTeamSize, entryMinAllowedMembers, membersCount, qualifiedMembersCount,
+		maxTeamSize, entryMinAdmittedMembersRatio, membersCount, qualifiedMembersCount,
 		attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired) {
 		return ready
 	}
@@ -245,19 +245,19 @@ func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttemp
 	return notReady
 }
 
-func isEntryMinAllowedMembersSatisfied(entryMinAllowedMembers string, membersCount, qualifiedMembersCount int32) bool {
-	return entryMinAllowedMembers == "None" ||
-		entryMinAllowedMembers == "All" && qualifiedMembersCount == membersCount ||
-		entryMinAllowedMembers == "Half" && membersCount <= qualifiedMembersCount*2 ||
-		entryMinAllowedMembers == "One" && qualifiedMembersCount >= 1
+func isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio string, membersCount, qualifiedMembersCount int32) bool {
+	return entryMinAdmittedMembersRatio == "None" ||
+		entryMinAdmittedMembersRatio == "All" && qualifiedMembersCount == membersCount ||
+		entryMinAdmittedMembersRatio == "Half" && membersCount <= qualifiedMembersCount*2 ||
+		entryMinAdmittedMembersRatio == "One" && qualifiedMembersCount >= 1
 }
 
 func isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
-	maxTeamSize int32, entryMinAllowedMembers string, membersCount, qualifiedMembersCount int32,
+	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, qualifiedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) bool {
 	if isTeamContest &&
 		(maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
-		!isEntryMinAllowedMembersSatisfied(entryMinAllowedMembers, membersCount, qualifiedMembersCount) {
+		!isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio, membersCount, qualifiedMembersCount) {
 		return false
 	}
 

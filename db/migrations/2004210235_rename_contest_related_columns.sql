@@ -4,7 +4,7 @@ ALTER TABLE `items`
         COMMENT 'Group to which all the entered participants (users or teams) belong. Must not be null for an explicit-entry item.',
     CHANGE COLUMN `contest_max_team_size` `entry_max_team_size` INT(11) NOT NULL DEFAULT '0'
         COMMENT 'The maximum number of members a team can have to enter',
-    RENAME COLUMN `contest_entering_condition` TO `entry_min_allowed_members`;
+    RENAME COLUMN `contest_entering_condition` TO `entry_min_admitted_members_ratio`;
 
 ALTER TABLE `groups`
     CHANGE COLUMN `open_contest` `open_activity_when_joining` TINYINT(1) NOT NULL DEFAULT '0'
@@ -16,7 +16,7 @@ ALTER TABLE `items`
         COMMENT 'Group to which all the contest participants (users or teams) belong. Must not be null for a contest.',
     CHANGE COLUMN `entry_max_team_size` `contest_max_team_size` INT(11) NOT NULL DEFAULT '0'
         COMMENT 'The maximum number of members a team can have to enter the contest',
-    RENAME COLUMN `entry_min_allowed_members` TO `contest_entering_condition`;
+    RENAME COLUMN `entry_min_admitted_members_ratio` TO `contest_entering_condition`;
 
 
 ALTER TABLE `groups`

@@ -38,12 +38,12 @@ type item struct {
 
 	// enum: All,Half,One,None
 	// default: None
-	EntryMinAllowedMembers string    `json:"entry_min_allowed_members" validate:"oneof=All Half One None"`
-	EnteringTimeMin        time.Time `json:"entering_time_min"`
-	EnteringTimeMax        time.Time `json:"entering_time_max"`
-	EntryMaxTeamSize       int32     `json:"entry_max_team_size"`
-	TitleBarVisible        bool      `json:"title_bar_visible"`
-	AllowsMultipleAttempts bool      `json:"allows_multiple_attempts"`
+	EntryMinAdmittedMembersRatio string    `json:"entry_min_admitted_members_ratio" validate:"oneof=All Half One None"`
+	EnteringTimeMin              time.Time `json:"entering_time_min"`
+	EnteringTimeMax              time.Time `json:"entering_time_max"`
+	EntryMaxTeamSize             int32     `json:"entry_max_team_size"`
+	TitleBarVisible              bool      `json:"title_bar_visible"`
+	AllowsMultipleAttempts       bool      `json:"allows_multiple_attempts"`
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type" validate:"oneof=User Team"`
 	// Nullable
