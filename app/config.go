@@ -102,8 +102,7 @@ func (app *Application) ReplaceDomainsConfig(newGlobalConfig *viper.Viper) {
 func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
 	globalConfig.SetDefault(subconfigKey, map[string]interface{}{})
 	subConfig := globalConfig.Sub(subconfigKey)
-	keyForEnv := strings.ReplaceAll(subconfigKey, ".", "__")
-	subConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, keyForEnv))
+	subConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, subconfigKey))
 	subConfig.AutomaticEnv()
 	return subConfig
 }
@@ -111,7 +110,7 @@ func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
 // DBConfig returns the db connection fixed config from the global config.
 // Panic in case of unmarshaling error
 func DBConfig(globalConfig *viper.Viper) (config *mysql.Config) {
-	sub := subconfig(globalConfig, databaseConfigKey+".connection")
+	sub := subconfig(globalConfig, databaseConfigKey)
 	if err := sub.Unmarshal(&config); err != nil {
 		panic("Unable to load the 'database' configuration")
 	}

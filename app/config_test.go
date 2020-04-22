@@ -109,12 +109,12 @@ func TestDBConfig_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	_ = os.Setenv("", "myself")
-	globalConfig.Set("database.connection.collation", "stuff")
-	globalConfig.Set("database.connection.TLSConfig", "v88")
+	globalConfig.Set("database.collation", "stuff")
+	globalConfig.Set("database.TLSConfig", "v88")
 	// Still buggy, for unmarshaled config, the config needs to be set first (by config file
 	// or manually) to allow setting it through env
-	_ = os.Setenv("ALGOREA_DATABASE__CONNECTION__TLSCONFIG", "v99")
-	defer func() { _ = os.Unsetenv("ALGOREA_DATABASE__CONNECTION__TLSCONFIG") }()
+	_ = os.Setenv("ALGOREA_DATABASE__TLSCONFIG", "v99")
+	defer func() { _ = os.Unsetenv("ALGOREA_DATABASE__TLSCONFIG") }()
 	dbConfig := DBConfig(globalConfig)
 	assert.Equal("stuff", dbConfig.Collation)
 	assert.Equal("v99", dbConfig.TLSConfig)
@@ -123,7 +123,7 @@ func TestDBConfig_Success(t *testing.T) {
 func TestDBConfig_Panic(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
-	globalConfig.Set("database.connection.Timeout", "invalid")
+	globalConfig.Set("database.Timeout", "invalid")
 	assert.Panics(func() {
 		_ = DBConfig(globalConfig)
 	})

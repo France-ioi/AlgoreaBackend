@@ -32,10 +32,10 @@ jobs:
           MYSQL_ROOT_HOST: "%"
     environment:
       ALGOREA_ENV: test
-      ALGOREA_DATABASE__CONNECTION__ADDR: 127.0.0.1
-      ALGOREA_DATABASE__CONNECTION__USER: algorea
-      ALGOREA_DATABASE__CONNECTION__PASSWD: dummy_password
-      ALGOREA_DATABASE__CONNECTION__DBNAME: ci_db
+      ALGOREA_DATABASE__ADDR: 127.0.0.1
+      ALGOREA_DATABASE__USER: algorea
+      ALGOREA_DATABASE__PASSWD: dummy_password
+      ALGOREA_DATABASE__DBNAME: ci_db
       ALGOREA_LOGGING__FORMAT: json
       ALGOREA_LOGGING__OUTPUT: file
       ALGOREA_LOGGING__LOGSQLQUERIES: 1
@@ -55,8 +55,8 @@ jobs:
       - run:
           name: Seed database
           environment:
-            ALGOREA_DATABASE__CONNECTION__USER: root
-            ALGOREA_DATABASE__CONNECTION__PASSWD: root
+            ALGOREA_DATABASE__USER: root
+            ALGOREA_DATABASE__PASSWD: root
           command: |
             make db-restore
             make db-migrate
@@ -93,10 +93,10 @@ jobs:
           MYSQL_ROOT_HOST: "%"
     environment:
       ALGOREA_ENV: test
-      ALGOREA_DATABASE__CONNECTION__ADDR: 127.0.0.1
-      ALGOREA_DATABASE__CONNECTION__USER: root
-      ALGOREA_DATABASE__CONNECTION__PASSWD: root
-      ALGOREA_DATABASE__CONNECTION__DBNAME: algorea_example
+      ALGOREA_DATABASE__ADDR: 127.0.0.1
+      ALGOREA_DATABASE__USER: root
+      ALGOREA_DATABASE__PASSWD: root
+      ALGOREA_DATABASE__DBNAME: algorea_example
     steps:
       - attach_workspace:
           at: ./
@@ -171,10 +171,10 @@ jobs:
           MYSQL_ROOT_HOST: "%"
     environment:
       ALGOREA_ENV: test
-      ALGOREA_DATABASE__CONNECTION__ADDR: 127.0.0.1
-      ALGOREA_DATABASE__CONNECTION__USER: algorea
-      ALGOREA_DATABASE__CONNECTION__PASSWD: dummy_password
-      ALGOREA_DATABASE__CONNECTION__DBNAME: ci_db
+      ALGOREA_DATABASE__ADDR: 127.0.0.1
+      ALGOREA_DATABASE__USER: algorea
+      ALGOREA_DATABASE__PASSWD: dummy_password
+      ALGOREA_DATABASE__DBNAME: ci_db
       DBUSER: algorea
       DBPASS: dummy_password
       DBNAME: ci_db
@@ -194,8 +194,8 @@ jobs:
       - run:
           name: Seed database
           environment:
-            ALGOREA_DATABASE__CONNECTION__USER: root
-            ALGOREA_DATABASE__CONNECTION__PASSWD: root
+            ALGOREA_DATABASE__USER: root
+            ALGOREA_DATABASE__PASSWD: root
           command: |
             make db-restore
             make db-migrate

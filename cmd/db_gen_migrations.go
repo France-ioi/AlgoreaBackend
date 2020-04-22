@@ -46,7 +46,7 @@ in the future.`,
 			}
 
 			if dbConf.Net == "" {
-				fmt.Println("database.connection.net should be set")
+				fmt.Println("database.net should be set")
 				os.Exit(1)
 			}
 
