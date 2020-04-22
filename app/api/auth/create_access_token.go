@@ -106,7 +106,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
+func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
 	var groupID int64
 	err := s.WithWriteLock().
 		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
@@ -151,7 +151,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	return groupID
 }
 
-func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.Configuration) (selfGroupID int64) {
+func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.CtxConfig) (selfGroupID int64) {
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{

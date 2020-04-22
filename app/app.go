@@ -165,7 +165,7 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 	return nil
 }
 
-func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.AppConfigItem) (bool, error) {
+func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.ConfigItem) (bool, error) {
 	var inserted bool
 	for _, spec := range []struct {
 		name string

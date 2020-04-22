@@ -24,7 +24,7 @@ type Base struct {
 	Store        *database.DataStore
 	ServerConfig *viper.Viper
 	AuthConfig   *viper.Viper
-	DomainConfig []domain.AppConfigItem
+	DomainConfig []domain.ConfigItem
 	TokenConfig  *token.Config
 }
 

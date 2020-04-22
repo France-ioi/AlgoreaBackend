@@ -196,14 +196,14 @@ func TestApplication_CheckConfig(t *testing.T) {
 
 	tests := []struct {
 		name                     string
-		config                   []domain.AppConfigItem
+		config                   []domain.ConfigItem
 		expectedGroupsToCheck    []groupSpec
 		expectedRelationsToCheck []relationSpec
 		expectedError            error
 	}{
 		{
 			name: "everything is okay",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"127.0.0.1", "192.168.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -228,7 +228,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "Root is missing",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"192.168.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -241,7 +241,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "RootSelf is missing",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"192.168.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -254,7 +254,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "RootTemp is missing",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -268,7 +268,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "Root -> RootSelf relation is missing",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -285,7 +285,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "RootSelf -> RootTemp relation is missing",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -303,7 +303,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "error on group checking",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -316,7 +316,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 		},
 		{
 			name: "error on relation checking",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{
 					Domains:   []string{"127.0.0.1"},
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
@@ -399,7 +399,7 @@ type groupSpec struct {
 
 type createMissingDataTestCase struct {
 	name                      string
-	config                    []domain.AppConfigItem
+	config                    []domain.ConfigItem
 	expectedGroupsToInsert    []groupSpec
 	expectedRelationsToCheck  []relationSpec
 	expectedRelationsToInsert []map[string]interface{}
@@ -411,7 +411,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 	tests := []createMissingDataTestCase{
 		{
 			name: "create all",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -428,7 +428,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "create some",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -445,7 +445,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "error on group checking",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -454,7 +454,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "error on group insertion",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -463,7 +463,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "error on relation checking",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -476,7 +476,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "error while creating relations",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -494,7 +494,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "no relations to insert",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -509,7 +509,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "only one relation to insert",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			},
 			expectedGroupsToInsert: []groupSpec{
@@ -526,7 +526,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		},
 		{
 			name: "only one group to insert",
-			config: []domain.AppConfigItem{
+			config: []domain.ConfigItem{
 				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			},
 			expectedGroupsToInsert: []groupSpec{

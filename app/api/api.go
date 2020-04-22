@@ -22,12 +22,12 @@ type Ctx struct {
 	db           *database.DB
 	ServerConfig *viper.Viper
 	AuthConfig   *viper.Viper
-	DomainConfig []domain.AppConfigItem
+	DomainConfig []domain.ConfigItem
 	TokenConfig  *token.Config
 }
 
 // NewCtx creates a API context
-func NewCtx(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.AppConfigItem, tokenConfig *token.Config) *Ctx {
+func NewCtx(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.ConfigItem, tokenConfig *token.Config) *Ctx {
 	return &Ctx{nil, db, serverConfig, authConfig, domainConfig, tokenConfig}
 }
 

@@ -9,12 +9,12 @@ import (
 )
 
 // Middleware is a middleware setting domain-specific configuration into the request context
-func Middleware(domains []AppConfigItem) func(next http.Handler) http.Handler {
+func Middleware(domains []ConfigItem) func(next http.Handler) http.Handler {
 
-	domainsMap := map[string]*Configuration{}
+	domainsMap := map[string]*CtxConfig{}
 	for _, domain := range domains {
 		for _, host := range domain.Domains {
-			domainsMap[host] = &Configuration{
+			domainsMap[host] = &CtxConfig{
 				RootGroupID:     domain.RootGroup,
 				RootSelfGroupID: domain.RootSelfGroup,
 				RootTempGroupID: domain.RootTempGroup,

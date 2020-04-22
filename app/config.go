@@ -154,7 +154,7 @@ func ServerConfig(globalConfig *viper.Viper) *viper.Viper {
 
 // DomainsConfig returns the domains fixed config from the global config
 // Panic in case of marshaling error.
-func DomainsConfig(globalConfig *viper.Viper) (config []domain.AppConfigItem) {
+func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem) {
 	globalConfig.SetDefault(domainsConfigKey, []interface{}{})
 	// note that `.Sub` cannot be used to get a slice
 	if err := globalConfig.UnmarshalKey(domainsConfigKey, &config); err != nil {

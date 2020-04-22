@@ -190,13 +190,13 @@ func TestServerConfig(t *testing.T) {
 func TestDomainsConfig_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
-	sampleDomain := domain.AppConfigItem{
+	sampleDomain := domain.ConfigItem{
 		Domains:       []string{"localhost", "other"},
 		RootGroup:     1,
 		RootSelfGroup: 2,
 		RootTempGroup: 3,
 	}
-	globalConfig.Set("domains", []domain.AppConfigItem{sampleDomain})
+	globalConfig.Set("domains", []domain.ConfigItem{sampleDomain})
 	config := DomainsConfig(globalConfig)
 	assert.Len(config, 1)
 	assert.Equal(sampleDomain, config[0])
@@ -235,7 +235,7 @@ func TestReplaceDomainsConfig(t *testing.T) {
 	globalConfig.Set("domains", []map[string]interface{}{{"domains": []string{"localhost", "other"}}})
 	application, _ := New()
 	application.ReplaceDomainsConfig(globalConfig)
-	expected := []domain.AppConfigItem{{
+	expected := []domain.ConfigItem{{
 		Domains:       []string{"localhost", "other"},
 		RootGroup:     0,
 		RootSelfGroup: 0,
