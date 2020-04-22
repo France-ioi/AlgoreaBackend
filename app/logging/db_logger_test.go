@@ -46,7 +46,8 @@ func TestLoggerFromConfig_WrongFormat(t *testing.T) {
 	config := viper.New()
 	config.Set("Format", "yml")
 	config.Set("Output", "file")
-	assert.Panics(func() { logger.Configure(config) })
+	logger.config = config
+	assert.Panics(func() { logger.NewDBLogger() })
 }
 
 func TestNewDBLogger_LogMode(t *testing.T) {

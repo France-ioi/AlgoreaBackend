@@ -32,6 +32,7 @@ func NewCtx(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig
 }
 
 // SetAuthConfig update the auth config used by the API
+// (require service to be set (by calling "Router()"))
 func (ctx *Ctx) SetAuthConfig(authConfig *viper.Viper) {
 	ctx.AuthConfig = authConfig
 	ctx.service.AuthConfig = authConfig
