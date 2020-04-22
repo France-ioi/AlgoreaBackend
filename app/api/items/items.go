@@ -42,6 +42,9 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
 	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
 	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
+	router.Get("/items/{item_id}/entry-state",
+		service.AppHandler(srv.getEntryState).ServeHTTP)
+	router.Post("/attempts/{attempt_id}/items/{item_id}/enter", service.AppHandler(srv.enter).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.Task, otherTokenFieldName string,
@@ -390,3 +393,11 @@ func (srv *Service) getParticipantIDFromRequest(httpReq *http.Request, user *dat
 	}
 	return groupID, service.NoError
 }
+
+type entryState string
+
+const (
+	alreadyStarted entryState = "already_started"
+	notReady       entryState = "not_ready"
+	ready          entryState = "ready"
+)
