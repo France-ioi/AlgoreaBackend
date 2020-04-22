@@ -7,14 +7,16 @@ Feature: Invite users
       | 101 | User  | none                                  |
       | 102 | User  | none                                  |
       | 103 | User  | none                                  |
+      | 104 | User  | none                                  |
       | 444 | Team  | none                                  |
       | 555 | Class | view                                  |
     And the database has the following table 'users':
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | john  | 101      | John        | Doe       |
-      | jane  | 102      | Jane        | Doe       |
-      | Jane  | 103      | Jane        | Smith     |
+      | login | group_id | first_name  | last_name | temp_user |
+      | owner | 21       | Jean-Michel | Blanquer  | false     |
+      | john  | 101      | John        | Doe       | false     |
+      | jane  | 102      | Jane        | Doe       | false     |
+      | Jane  | 103      | Jane        | Smith     | false     |
+      | tmp   | 104      | Temp        | User      | true      |
     And the groups ancestors are computed
     And the database has the following table 'items':
       | id   | default_language_tag |
@@ -46,7 +48,7 @@ Feature: Invite users
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
-        "logins": ["john", "jane", "owner", "barack"]
+        "logins": ["john", "jane", "owner", "barack", "tmp"]
       }
       """
     Then the response code should be 201
@@ -57,7 +59,8 @@ Feature: Invite users
           "john": "success",
           "jane": "success",
           "owner": "success",
-          "barack": "not_found"
+          "barack": "not_found",
+          "tmp": "not_found"
         },
         "message": "created",
         "success": true
@@ -96,7 +99,7 @@ Feature: Invite users
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
-        "logins": ["john", "jane", "owner", "barack"]
+        "logins": ["john", "jane", "owner", "barack", "tmp"]
       }
       """
     Then the response code should be 201
@@ -107,7 +110,8 @@ Feature: Invite users
           "john": "in_another_team",
           "jane": "in_another_team",
           "owner": "in_another_team",
-          "barack": "not_found"
+          "barack": "not_found",
+          "tmp": "not_found"
         },
         "message": "created",
         "success": true
@@ -164,6 +168,7 @@ Feature: Invite users
       | 101               | 101            | 1       |
       | 102               | 102            | 1       |
       | 103               | 103            | 1       |
+      | 104               | 104            | 1       |
       | 444               | 444            | 1       |
       | 555               | 101            | 0       |
       | 555               | 555            | 1       |
