@@ -143,12 +143,7 @@ func LoggingConfig(globalConfig *viper.Viper) *viper.Viper {
 // ServerConfig returns a logging dynamic config from the global config
 // (env var changes impacts values)
 func ServerConfig(globalConfig *viper.Viper) *viper.Viper {
-	sub := subconfig(globalConfig, serverConfigKey)
-	sub.SetDefault("rootpath", "/")
-	sub.SetDefault("port", 8080)
-	sub.SetDefault("readTimeout", 60)
-	sub.SetDefault("writeTimeout", 60)
-	return sub
+	return subconfig(globalConfig, serverConfigKey)
 }
 
 // DomainsConfig returns the domains fixed config from the global config

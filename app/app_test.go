@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"regexp"
 	"testing"
@@ -21,6 +22,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
+/* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
+
 func TestNew_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest()
@@ -30,8 +33,20 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(app.Config)
 	assert.NotNil(app.Database)
 	assert.NotNil(app.HTTPHandler)
+	assert.NotNil(app.apiCtx)
 	assert.Len(app.HTTPHandler.Middlewares(), 7)
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
+	assert.Equal("/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
+}
+
+func TestNew_NotDefaultRootPath(t *testing.T) {
+	assert := assertlib.New(t)
+	appenv.SetDefaultEnvToTest()
+	_ = os.Setenv("ALGOREA_SERVER__ROOTPATH", "/api")
+	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__ROOTPATH") }()
+	app, err := New()
+	assert.NoError(err)
+	assert.Equal("/api/*", app.HTTPHandler.Routes()[0].Pattern)
 }
 
 func TestNew_DBErr(t *testing.T) {

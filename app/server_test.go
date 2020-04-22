@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -20,6 +21,11 @@ func TestServer_Start(t *testing.T) {
 	assert.NoError(t, err)
 	srv, err := NewServer(app)
 	assert.NoError(t, err)
+
+	// check defaults are applied correctly
+	assert.True(t, strings.HasSuffix(srv.Addr, ":8080"))
+	assert.Equal(t, time.Duration(60000000000), srv.ReadTimeout)
+	assert.Equal(t, time.Duration(60000000000), srv.WriteTimeout)
 
 	lock := sync.Mutex{}
 	exitCalled := false

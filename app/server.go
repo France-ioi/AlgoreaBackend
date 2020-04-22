@@ -19,6 +19,9 @@ type Server struct {
 func NewServer(app *Application) (*Server, error) {
 	log.Println("Configuring server...")
 	serverConfig := ServerConfig(app.Config)
+	serverConfig.SetDefault("port", 8080)
+	serverConfig.SetDefault("readTimeout", 60)
+	serverConfig.SetDefault("writeTimeout", 60)
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", serverConfig.GetInt("Port")),

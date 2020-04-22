@@ -68,6 +68,7 @@ func New() (*Application, error) {
 		router.Mount("/debug", middleware.Profiler())
 	}
 
+	serverConfig.SetDefault("rootpath", "/")
 	router.Mount(serverConfig.GetString("RootPath"), apiCtx.Router())
 
 	return &Application{

@@ -180,11 +180,6 @@ func TestServerConfig(t *testing.T) {
 	_ = os.Setenv("ALGOREA_SERVER__ANYKEY", "999")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__ANYKEY") }()
 	assert.Equal(999, config.GetInt("anykey"))
-	// test default values:
-	assert.Equal("/", config.GetString("rootpath"))
-	assert.Equal(8080, config.GetInt("port"))
-	assert.Equal(60, config.GetInt("readTimeout"))
-	assert.Equal(60, config.GetInt("writeTimeout"))
 }
 
 func TestDomainsConfig_Success(t *testing.T) {
