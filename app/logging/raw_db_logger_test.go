@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
@@ -11,10 +12,10 @@ import (
 
 func TestNewRawDBLogger_TextLog(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &configuration{
-		Format:           "text",
-		LogRawSQLQueries: true,
-	}}
+	config := viper.New()
+	config.Set("Format", "text")
+	config.Set("LogRawSQLQueries", true)
+	logger := &Logger{nulllogger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
@@ -24,10 +25,10 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 
 func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &configuration{
-		Format:           "text",
-		LogRawSQLQueries: false,
-	}}
+	config := viper.New()
+	config.Set("Format", "text")
+	config.Set("LogRawSQLQueries", false)
+	logger := &Logger{nulllogger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
@@ -36,10 +37,10 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 
 func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &configuration{
-		Format:           "json",
-		LogRawSQLQueries: true,
-	}}
+	config := viper.New()
+	config.Set("Format", "json")
+	config.Set("LogRawSQLQueries", true)
+	logger := &Logger{nulllogger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
@@ -49,10 +50,10 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 
 func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, &configuration{
-		Format:           "json",
-		LogRawSQLQueries: true,
-	}}
+	config := viper.New()
+	config.Set("Format", "json")
+	config.Set("LogRawSQLQueries", true)
+	logger := &Logger{nulllogger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(nil, "sql-stmt-exec", "err", driver.ErrSkip) //lint:ignore SA1012 we check the nil context here
