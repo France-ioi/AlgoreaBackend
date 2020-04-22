@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type contestGetQualificationStateOtherMember struct {
+type itemGetEntryStateOtherMember struct {
 	// Nullable
 	// required: true
 	FirstName *string `json:"first_name"`
@@ -26,13 +26,14 @@ type contestGetQualificationStateOtherMember struct {
 	// `items.entering_time_max` (or `permissions_granted.can_enter_until`) range for this item
 	// required: true
 	CanEnter bool `json:"can_enter"`
-	// true if the user has an active attempt as a member of another team for this contest or
-	// when the user has an expired attempt as a member of another team while the contest doesn't allow multiple attempts
+	// true if the user has an active attempt as a member of another team for this item or
+	// when the user has an expired attempt for this item as a member of another team
+	// while the item doesn't allow multiple attempts
 	AttemptsRestrictionViolated bool `json:"attempts_restriction_violated"`
 }
 
-// swagger:model contestGetQualificationStateResponse
-type contestGetQualificationStateResponse struct {
+// swagger:model itemGetEntryStateResponse
+type itemGetEntryStateResponse struct {
 	// required: true
 	// enum: ready,already_started,not_ready
 	State string `json:"state"`
@@ -47,8 +48,8 @@ type contestGetQualificationStateResponse struct {
 	// required: true
 	CurrentUserCanEnter bool `json:"current_user_can_enter"`
 	// required: true
-	OtherMembers []contestGetQualificationStateOtherMember `json:"other_members"`
-	// whether a team should have frozen membership for entering the contest (`items.entry_frozen_teams` = 1)
+	OtherMembers []itemGetEntryStateOtherMember `json:"other_members"`
+	// whether a team should have frozen membership for entering the item (`items.entry_frozen_teams` = 1)
 	// required: true
 	FrozenTeamsRequired bool `json:"frozen_teams_required"`
 	// whether the current team has frozen membership (`groups.frozen_membership` = 0)
@@ -59,22 +60,23 @@ type contestGetQualificationStateResponse struct {
 	itemID  int64
 }
 
-// swagger:operation GET /contests/{item_id}/qualification-state contests contestGetQualificationState
+// swagger:operation GET /items/{item_id}/entry-state items itemGetEntryState
 // ---
-// summary: Get qualification state
+// summary: Get entry state
 // description: >
-//                For the given contest and the given participant (the current user or his team if `as_team_id` is set),
-//                returns the qualification state, i.e. whether the participant can enter the contest, and info on each team member.
+//                For the given item requiring explicit entry and the given participant
+//                (the current user or his team if `as_team_id` is set),
+//                returns the entry state, i.e. whether the participant can enter the item, and info on each team member.
 //
-//                The qualification state is one of:
-//                  * 'already_started' if the participant has an `attempts` row for the contest
+//                The entry state is one of:
+//                  * 'already_started' if the participant has an `attempts` row for the item
 //                    (with `attempts.root_item_id` = `{item_id}`) allowing submissions;
 //
 //                  * 'not_ready' if there are more members than `entry_max_team_size` or
-//                    if the team/user doesn't satisfy the contest entering condition which is computed
+//                    if the team/user doesn't satisfy the item's entering condition which is computed
 //                    in accordance with `items.entry_min_admitted_members_ratio` as follows:
 //
-//                      * "None": no additional conditions (the team/user can enter the contest);
+//                      * "None": no additional conditions (the team/user can enter the item);
 //
 //                      * "One": the current time needs to be between
 //                        `permissions_granted.can_enter_from` and `permissions_granted.can_enter_until`
@@ -86,29 +88,29 @@ type contestGetQualificationStateResponse struct {
 //
 //                      * "Half": same but half of the members (ceil-rounded) of the team;
 //
-//                  * 'not_ready' if the participant has an `attempts` row for the contest (with `attempts.root_item_id` = `{item_id}`)
+//                  * 'not_ready' if the participant has an `attempts` row for the item (with `attempts.root_item_id` = `{item_id}`)
 //                    while the item's `allows_multiple_attempts` is false or
-//                    if the participant has an active attempt for the contest;
+//                    if the participant has an active attempt for the item;
 //
 //                  * 'not_ready' if at least one of the team's members as a member of another team
-//                    has an `attempts` row for the contest (with `attempts.root_item_id` = `{item_id}`)
+//                    has an `attempts` row for the item (with `attempts.root_item_id` = `{item_id}`)
 //                    while the item's `allows_multiple_attempts` is false or an active (not expired) attempt;
 //
-//                  * 'not_ready' if the team contest's `items.entry_frozen_teams` = 1,
+//                  * 'not_ready' if the item's `items.entry_frozen_teams` = 1,
 //                    but the team membership is not frozen (`groups.frozen_membership` = 0);
 //
 //                  * 'ready' otherwise.
 //
 //                Restrictions:
-//                  * `item_id` should be a contest;
+//                  * `item_id` should require explicit entry;
 //                  * `as_team_id` (if given) should be one of the current user's teams;
-//                  * `as_team_id` should be given if the contest is team-only and should not be given if the contest is user-only;
+//                  * `as_team_id` should be given if the item is team-only and should not be given if the item is user-only;
 //                  * the authenticated user (or his team) should have at least 'info' access to the item.
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
 // - name: item_id
-//   description: "`id` of a contest"
+//   description: "`id` of an item to enter"
 //   in: path
 //   type: integer
 //   format: int64
@@ -119,17 +121,17 @@ type contestGetQualificationStateResponse struct {
 //   format: int64
 // responses:
 //   "200":
-//     description: OK. Success response with the qualification state info
+//     description: OK. Success response with the entry state info
 //     schema:
-//       "$ref": "#/definitions/contestGetQualificationStateResponse"
+//       "$ref": "#/definitions/itemGetEntryStateResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request) service.APIError {
-	result, apiError := srv.getContestInfoAndQualificationStateFromRequest(r, srv.Store, false)
+func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) service.APIError {
+	result, apiError := srv.getItemInfoAndEntryStateFromRequest(r, srv.Store, false)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -138,8 +140,8 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	return service.NoError
 }
 
-func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Request, store *database.DataStore, lock bool) (
-	*contestGetQualificationStateResponse, service.APIError) {
+func (srv *Service) getItemInfoAndEntryStateFromRequest(r *http.Request, store *database.DataStore, lock bool) (
+	*itemGetEntryStateResponse, service.APIError) {
 	user := srv.GetUser(r)
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -155,8 +157,8 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		}
 	}
 
-	var contestInfo struct {
-		IsTeamContest                bool
+	var itemInfo struct {
+		IsTeamItem                   bool
 		AllowsMultipleAttempts       bool
 		EntryMaxTeamSize             int32
 		EntryMinAdmittedMembersRatio string
@@ -165,15 +167,15 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 
 	err = store.Items().VisibleByID(groupID, itemID).Where("items.requires_explicit_entry").
 		Select(`
-			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_contest,
+			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_item,
 			items.entry_max_team_size, items.entry_min_admitted_members_ratio, items.entry_frozen_teams`).
-		Take(&contestInfo).Error()
+		Take(&itemInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	if (groupID != user.GroupID) != contestInfo.IsTeamContest {
+	if (groupID != user.GroupID) != itemInfo.IsTeamItem {
 		return nil, service.InsufficientAccessRightsError
 	}
 
@@ -186,58 +188,58 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		}
 		service.MustNotBeError(err)
 	} else {
-		contestInfo.EntryFrozenTeams = false // can be true only for team contests
+		itemInfo.EntryFrozenTeams = false // can be true only for team items
 	}
 
-	contestParticipationQuery := store.Attempts().
+	itemParticipationQuery := store.Attempts().
 		Joins("JOIN items ON items.id = attempts.root_item_id").
 		Where("attempts.root_item_id = ?", itemID).
 		Where("attempts.participant_id = ?", groupID)
 	if lock {
-		contestParticipationQuery = contestParticipationQuery.WithWriteLock()
+		itemParticipationQuery = itemParticipationQuery.WithWriteLock()
 	}
 	var participationInfo struct {
 		IsStarted bool
 		IsActive  bool
 	}
-	err = contestParticipationQuery.Select(`
+	err = itemParticipationQuery.Select(`
 		IFNULL(MAX(1), 0) AS is_started,
 		IFNULL(MAX(NOW() < attempts.allows_submissions_until), 0) AS is_active`).
 		Scan(&participationInfo).Error()
 	service.MustNotBeError(err)
 
-	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount, attemptsViolationsFound :=
-		srv.getQualificatonInfo(groupID, itemID, user, store, lock)
-	state := computeQualificationState(
-		participationInfo.IsStarted, participationInfo.IsActive, contestInfo.AllowsMultipleAttempts, contestInfo.IsTeamContest,
-		contestInfo.EntryMaxTeamSize, contestInfo.EntryMinAdmittedMembersRatio, membersCount, qualifiedMembersCount, attemptsViolationsFound,
-		currentTeamHasFrozenMembership, contestInfo.EntryFrozenTeams)
+	membersCount, otherMembers, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound :=
+		srv.getEntryStateInfo(groupID, itemID, user, store, lock)
+	state := computeEntryState(
+		participationInfo.IsStarted, participationInfo.IsActive, itemInfo.AllowsMultipleAttempts, itemInfo.IsTeamItem,
+		itemInfo.EntryMaxTeamSize, itemInfo.EntryMinAdmittedMembersRatio, membersCount, admittedMembersCount, attemptsViolationsFound,
+		currentTeamHasFrozenMembership, itemInfo.EntryFrozenTeams)
 
-	result := &contestGetQualificationStateResponse{
+	result := &itemGetEntryStateResponse{
 		State:                        string(state),
-		EntryMinAdmittedMembersRatio: contestInfo.EntryMinAdmittedMembersRatio,
+		EntryMinAdmittedMembersRatio: itemInfo.EntryMinAdmittedMembersRatio,
 		CurrentUserCanEnter:          currentUserCanEnter,
 		OtherMembers:                 otherMembers,
 		CurrentTeamIsFrozen:          currentTeamHasFrozenMembership,
-		FrozenTeamsRequired:          contestInfo.EntryFrozenTeams,
+		FrozenTeamsRequired:          itemInfo.EntryFrozenTeams,
 		groupID:                      groupID,
 		itemID:                       itemID,
 	}
-	if contestInfo.IsTeamContest {
-		result.MaxTeamSize = &contestInfo.EntryMaxTeamSize
+	if itemInfo.IsTeamItem {
+		result.MaxTeamSize = &itemInfo.EntryMaxTeamSize
 	}
 	return result, service.NoError
 }
 
-func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
-	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, qualifiedMembersCount int32,
-	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) qualificationState {
+func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
+	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, admittedMembersCount int32,
+	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) entryState {
 	if hasAlreadyStarted && isActive {
 		return alreadyStarted
 	}
 
 	if isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest,
-		maxTeamSize, entryMinAdmittedMembersRatio, membersCount, qualifiedMembersCount,
+		maxTeamSize, entryMinAdmittedMembersRatio, membersCount, admittedMembersCount,
 		attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired) {
 		return ready
 	}
@@ -245,19 +247,19 @@ func computeQualificationState(hasAlreadyStarted, isActive, allowsMultipleAttemp
 	return notReady
 }
 
-func isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio string, membersCount, qualifiedMembersCount int32) bool {
+func isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio string, membersCount, admittedMembersCount int32) bool {
 	return entryMinAdmittedMembersRatio == "None" ||
-		entryMinAdmittedMembersRatio == "All" && qualifiedMembersCount == membersCount ||
-		entryMinAdmittedMembersRatio == "Half" && membersCount <= qualifiedMembersCount*2 ||
-		entryMinAdmittedMembersRatio == "One" && qualifiedMembersCount >= 1
+		entryMinAdmittedMembersRatio == "All" && admittedMembersCount == membersCount ||
+		entryMinAdmittedMembersRatio == "Half" && membersCount <= admittedMembersCount*2 ||
+		entryMinAdmittedMembersRatio == "One" && admittedMembersCount >= 1
 }
 
 func isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
-	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, qualifiedMembersCount int32,
+	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, admittedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired bool) bool {
 	if isTeamContest &&
 		(maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
-		!isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio, membersCount, qualifiedMembersCount) {
+		!isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio, membersCount, admittedMembersCount) {
 		return false
 	}
 
@@ -268,8 +270,8 @@ func isReadyToEnter(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamC
 	return true
 }
 
-func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (
-	membersCount int32, otherMembers []contestGetQualificationStateOtherMember, currentUserCanEnter bool, qualifiedMembersCount int32,
+func (srv *Service) getEntryStateInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (
+	membersCount int32, otherMembers []itemGetEntryStateOtherMember, currentUserCanEnter bool, admittedMembersCount int32,
 	attemptsViolationsFound bool) {
 	if groupID != user.GroupID {
 		teamCanEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
@@ -329,7 +331,7 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 				currentUserIndex = index
 			}
 			if otherMembers[index].CanEnter {
-				qualifiedMembersCount++
+				admittedMembersCount++
 			}
 		}
 
@@ -337,7 +339,7 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 		otherMembers = append(otherMembers[:currentUserIndex], otherMembers[currentUserIndex+1:]...)
 	} else {
 		membersCount = 1
-		otherMembers = []contestGetQualificationStateOtherMember{}
+		otherMembers = []itemGetEntryStateOtherMember{}
 		canEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Joins("JOIN items ON items.id = ?", itemID).
 			Joins(`
@@ -356,9 +358,9 @@ func (srv *Service) getQualificatonInfo(groupID, itemID int64, user *database.Us
 				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
 			Error())
 		if currentUserCanEnter {
-			qualifiedMembersCount = 1
+			admittedMembersCount = 1
 		}
 	}
 
-	return membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount, attemptsViolationsFound
+	return membersCount, otherMembers, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound
 }

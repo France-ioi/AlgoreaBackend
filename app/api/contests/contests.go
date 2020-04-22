@@ -29,8 +29,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.setAdditionalTime).ServeHTTP)
 	router.Get("/contests/{item_id}/groups/{group_id}/members/additional-times",
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
-	router.Get("/contests/{item_id}/qualification-state",
-		service.AppHandler(srv.getQualificationState).ServeHTTP)
+	router.Get("/items/{item_id}/entry-state",
+		service.AppHandler(srv.getEntryState).ServeHTTP)
 	router.Post("/contests/{item_id}/enter", service.AppHandler(srv.enter).ServeHTTP)
 }
 
@@ -57,10 +57,10 @@ func (srv *Service) getParticipantTypeForContestManagedByUser(itemID int64, user
 	return participantType, err
 }
 
-type qualificationState string
+type entryState string
 
 const (
-	alreadyStarted qualificationState = "already_started"
-	notReady       qualificationState = "not_ready"
-	ready          qualificationState = "ready"
+	alreadyStarted entryState = "already_started"
+	notReady       entryState = "not_ready"
+	ready          entryState = "ready"
 )

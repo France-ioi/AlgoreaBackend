@@ -1,4 +1,4 @@
-Feature: Get qualification state (contestGetQualificationState)
+Feature: Get entry state (itemGetEntryState)
   Background:
     Given the database has the following table 'groups':
       | id | name   | type | frozen_membership |
@@ -32,7 +32,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -63,7 +63,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -92,7 +92,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -144,7 +144,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -195,7 +195,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -247,7 +247,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -299,7 +299,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -357,7 +357,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | parent_group_id | child_group_id |
       | 100             | 31             |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -395,7 +395,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | parent_group_id | child_group_id |
       | 100             | 11             |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -453,7 +453,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 31             | 2019-05-30 20:00:00 |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -485,7 +485,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 11             | 2019-05-30 20:00:00 |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -537,7 +537,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | parent_group_id | child_group_id |
       | 100             | 11             |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -592,7 +592,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | participant_id | id | root_item_id |
       | 10             | 1  | 60           |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -635,7 +635,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -661,7 +661,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -684,7 +684,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | <team_id> | 60      | info                     |
       | 21        | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=<team_id>"
+    When I send a GET request to "/items/60/entry-state?as_team_id=<team_id>"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
