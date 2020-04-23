@@ -50,8 +50,6 @@ func New() (*Application, error) {
 		return nil, err
 	}
 
-	apiCtx := api.NewCtx(db, serverConfig, authConfig, domainsConfig, tokenConfig)
-
 	// Set up middlewares
 	router := chi.NewRouter()
 
@@ -69,7 +67,8 @@ func New() (*Application, error) {
 	}
 
 	serverConfig.SetDefault("rootpath", "/")
-	router.Mount(serverConfig.GetString("RootPath"), apiCtx.Router())
+	apiCtx, apiRouter := api.Router(db, serverConfig, authConfig, domainsConfig, tokenConfig)
+	router.Mount(serverConfig.GetString("RootPath"), apiRouter)
 
 	return &Application{
 		HTTPHandler: router,

@@ -221,7 +221,7 @@ func TestReplaceAuthConfig(t *testing.T) {
 	application, _ := New()
 	application.ReplaceAuthConfig(globalConfig)
 	assert.Equal("42", application.Config.Get("auth.ClientID"))
-	assert.Equal("42", application.apiCtx.AuthConfig.Get("ClientID"))
+	// not tested: that it is been pushed to the API
 }
 
 func TestReplaceDomainsConfig(t *testing.T) {
@@ -237,7 +237,7 @@ func TestReplaceDomainsConfig(t *testing.T) {
 		RootTempGroup: 0,
 	}}
 	assert.Equal(expected, DomainsConfig(application.Config))
-	assert.Equal(expected, application.apiCtx.DomainConfig)
+	// not tested: that it is been pushed to the API
 }
 
 func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.File, deferFunc func()) {

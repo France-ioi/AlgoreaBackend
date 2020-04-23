@@ -85,7 +85,7 @@ func (app *Application) ReplaceAuthConfig(newGlobalConfig *viper.Viper) {
 
 // ReplaceDomainsConfig replaces the domains part of the config by the given one.
 func (app *Application) ReplaceDomainsConfig(newGlobalConfig *viper.Viper) {
-	app.apiCtx.DomainConfig = DomainsConfig(newGlobalConfig)
+	app.apiCtx.SetDomainsConfig(DomainsConfig(newGlobalConfig))
 	app.Config.Set(domainsConfigKey, newGlobalConfig.Get(domainsConfigKey))
 }
 

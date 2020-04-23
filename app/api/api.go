@@ -18,44 +18,41 @@ import (
 
 // Ctx is the context of the root of the API
 type Ctx struct {
-	service      *service.Base
-	db           *database.DB
-	ServerConfig *viper.Viper
-	AuthConfig   *viper.Viper
-	DomainConfig []domain.ConfigItem
-	TokenConfig  *token.Config
-}
-
-// NewCtx creates a API context
-func NewCtx(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.ConfigItem, tokenConfig *token.Config) *Ctx {
-	return &Ctx{nil, db, serverConfig, authConfig, domainConfig, tokenConfig}
+	service *service.Base
 }
 
 // SetAuthConfig update the auth config used by the API
-// (require service to be set (by calling "Router()"))
 func (ctx *Ctx) SetAuthConfig(authConfig *viper.Viper) {
-	ctx.AuthConfig = authConfig
 	ctx.service.AuthConfig = authConfig
 }
 
+// SetDomainsConfig update the domains config used by the API
+func (ctx *Ctx) SetDomainsConfig(domainsConfig []domain.ConfigItem) {
+	ctx.service.DomainConfig = domainsConfig
+}
+
 // Router provides routes for the whole API
-func (ctx *Ctx) Router() *chi.Mux {
+func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.ConfigItem,
+	tokenConfig *token.Config) (*Ctx, *chi.Mux) {
 
 	r := chi.NewRouter()
-	ctx.service = &service.Base{
-		Store:        database.NewDataStore(ctx.db),
-		ServerConfig: ctx.ServerConfig,
-		AuthConfig:   ctx.AuthConfig,
-		DomainConfig: ctx.DomainConfig,
-		TokenConfig:  ctx.TokenConfig,
+
+	srv := &service.Base{
+		Store:        database.NewDataStore(db),
+		ServerConfig: serverConfig,
+		AuthConfig:   authConfig,
+		DomainConfig: domainConfig,
+		TokenConfig:  tokenConfig,
 	}
-	r.Group((&auth.Service{Base: ctx.service}).SetRoutes)
-	r.Group((&contests.Service{Base: ctx.service}).SetRoutes)
-	r.Group((&items.Service{Base: ctx.service}).SetRoutes)
-	r.Group((&groups.Service{Base: ctx.service}).SetRoutes)
-	r.Group((&answers.Service{Base: ctx.service}).SetRoutes)
-	r.Group((&currentuser.Service{Base: ctx.service}).SetRoutes)
+	ctx := &Ctx{srv}
+	r.Group((&auth.Service{Base: srv}).SetRoutes)
+	r.Group((&contests.Service{Base: srv}).SetRoutes)
+	r.Group((&items.Service{Base: srv}).SetRoutes)
+	r.Group((&groups.Service{Base: srv}).SetRoutes)
+	r.Group((&answers.Service{Base: srv}).SetRoutes)
+	r.Group((&currentuser.Service{Base: srv}).SetRoutes)
 	r.Get("/status", ctx.status)
 	r.NotFound(service.NotFound)
-	return r
+
+	return ctx, r
 }
