@@ -22,7 +22,7 @@ import (
 //
 //
 //                `groups_groups.expires_at` & `attempts.allows_submissions_until` (for the latest attempt) of affected
-//                `items.contest_participants_group_id` members is set to
+//                `items.participants_group_id` members is set to
 //                `results.started_at` + `items.duration` + total additional time.
 //
 //
@@ -76,9 +76,9 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	service.MustNotBeError(err)
 
 	var contestInfo struct {
-		DurationInSeconds          int64
-		IsTeamOnlyContest          bool
-		ContestParticipantsGroupID int64
+		DurationInSeconds   int64
+		IsTeamOnlyContest   bool
+		ParticipantsGroupID int64
 	}
 
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -86,7 +86,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 			Select(`
 			TIME_TO_SEC(items.duration) AS duration_in_seconds,
 			items.entry_participant_type = 'Team' AS is_team_only_contest,
-			items.contest_participants_group_id`).
+			items.participants_group_id`).
 			Take(&contestInfo).Error()
 		if gorm.IsRecordNotFoundError(err) || (contestInfo.IsTeamOnlyContest && groupType == "User") {
 			apiError = service.InsufficientAccessRightsError
@@ -94,7 +94,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		}
 		service.MustNotBeError(err)
 
-		setAdditionalTimeForGroupInContest(store, groupID, itemID, contestInfo.ContestParticipantsGroupID,
+		setAdditionalTimeForGroupInContest(store, groupID, itemID, contestInfo.ParticipantsGroupID,
 			contestInfo.DurationInSeconds, seconds)
 		return nil
 	})

@@ -1,4 +1,4 @@
-Feature: Get qualification state (contestGetQualificationState) - robustness
+Feature: Get entry state (itemGetEntryState) - robustness
   Background:
     Given the database has the following table 'groups':
       | id | name   | type |
@@ -26,13 +26,13 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: Wrong item_id
     Given I am the user with id "31"
-    When I send a GET request to "/contests/abc/qualification-state"
+    When I send a GET request to "/items/abc/entry-state"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: Wrong as_team_id
     Given I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state?as_team_id=abc"
+    When I send a GET request to "/items/50/entry-state?as_team_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for as_team_id (should be int64)"
 
@@ -44,7 +44,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 50      | none               |
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -53,7 +53,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     And the database has the following table 'items':
       | id | requires_explicit_entry | default_language_tag |
       | 50 | 1                       | fr                   |
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -65,7 +65,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | group_id | item_id | can_view_generated |
       | 21       | 50      | info               |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -79,7 +79,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state?as_team_id=10"
+    When I send a GET request to "/items/50/entry-state?as_team_id=10"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -94,7 +94,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a GET request to "/contests/50/qualification-state"
+    When I send a GET request to "/items/50/entry-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -107,6 +107,6 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "21"
-    When I send a GET request to "/contests/60/qualification-state?as_team_id=11"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

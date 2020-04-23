@@ -39,11 +39,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36              | 31             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id | duration | contest_participants_group_id | default_language_tag |
-      | 10 | 00:00:02 | 33                            | fr                   |
-      | 50 | 00:00:00 | 34                            | fr                   |
-      | 60 | 00:00:01 | 35                            | fr                   |
-      | 70 | 00:00:03 | 36                            | fr                   |
+      | id | duration | participants_group_id | default_language_tag |
+      | 10 | 00:00:02 | 33                    | fr                   |
+      | 50 | 00:00:00 | 34                    | fr                   |
+      | 60 | 00:00:01 | 35                    | fr                   |
+      | 70 | 00:00:03 | 36                    | fr                   |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 10               | 50            |

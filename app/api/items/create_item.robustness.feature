@@ -362,7 +362,7 @@ Feature: Create item - robustness
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21",
-        "<field>": <value>
+        "<field>": "<value>"
       }
       """
     Then the response code should be 400
@@ -384,22 +384,22 @@ Feature: Create item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
     Examples:
-      | field                      | value         | error                                                                          |
-      | full_screen                | "wrong value" | full_screen must be one of [forceYes forceNo default]                          |
-      | type                       | "Wrong"       | type must be one of [Chapter Task Course Skill]                                |
-      | type                       | "Skill"       | type can be equal to 'Skill' only if the parent item is a skill                |
-      | validation_type            | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]      |
-      | contest_entering_condition | "Wrong"       | contest_entering_condition must be one of [All Half One None]                  |
-      | duration                   | "12:34"       | invalid duration                                                               |
-      | duration                   | "-1:34:56"    | invalid duration                                                               |
-      | duration                   | "839:34:56"   | invalid duration                                                               |
-      | duration                   | "99:-1:56"    | invalid duration                                                               |
-      | duration                   | "99:60:56"    | invalid duration                                                               |
-      | duration                   | "99:59:-1"    | invalid duration                                                               |
-      | duration                   | "99:59:60"    | invalid duration                                                               |
-      | category                   | "wrong"       | category must be one of [Undefined Discovery Application Validation Challenge] |
-      | score_weight               | "wrong"       | expected type 'int8', got unconvertible type 'string'                          |
-      | entry_participant_type     | "Class"       | entry_participant_type must be one of [User Team]                              |
+      | field                            | value       | error                                                                          |
+      | full_screen                      | wrong value | full_screen must be one of [forceYes forceNo default]                          |
+      | type                             | Wrong       | type must be one of [Chapter Task Course Skill]                                |
+      | type                             | Skill       | type can be equal to 'Skill' only if the parent item is a skill                |
+      | validation_type                  | Wrong       | validation_type must be one of [None All AllButOne Categories One Manual]      |
+      | entry_min_admitted_members_ratio | Wrong       | entry_min_admitted_members_ratio must be one of [All Half One None]            |
+      | duration                         | 12:34       | invalid duration                                                               |
+      | duration                         | -1:34:56    | invalid duration                                                               |
+      | duration                         | 839:34:56   | invalid duration                                                               |
+      | duration                         | 99:-1:56    | invalid duration                                                               |
+      | duration                         | 99:60:56    | invalid duration                                                               |
+      | duration                         | 99:59:-1    | invalid duration                                                               |
+      | duration                         | 99:59:60    | invalid duration                                                               |
+      | category                         | wrong       | category must be one of [Undefined Discovery Application Validation Challenge] |
+      | score_weight                     | wrong       | expected type 'int8', got unconvertible type 'string'                          |
+      | entry_participant_type           | Class       | entry_participant_type must be one of [User Team]                              |
 
   Scenario: Type is Skill while the parent items's type is not Skill
     Given I am the user with id "11"
@@ -739,3 +739,38 @@ Feature: Create item - robustness
     And the table "items_strings" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
+
+  Scenario Outline: A skill cannot have a duration or require an explicit entry
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Skill",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent_item_id": "5",
+        "<field>": <value>
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "<field>": ["cannot be set for skill items"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+  Examples:
+    | field                   | value      |
+    | duration                | "00:00:01" |
+    | requires_explicit_entry | true       |

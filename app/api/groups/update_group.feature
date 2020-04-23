@@ -1,16 +1,16 @@
 Feature: Update a group (groupEdit)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type    | activity_id         | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest | is_official_session | require_members_to_join_parent | organizer | address_line1 | address_line2 | address_postcode | address_city | address_country | expected_start |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class   | 1672978871462145361 | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class   | 1672978871462145461 | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 14 | Group C | -4    | Group C         | 2019-04-06 09:26:40 | Club    | null                | true    | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 15 | Group D | -4    | Group D         | 2019-04-06 09:26:40 | Session | null                | true    | false     | null       | null          | null                | false        | true                | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 24 | other   | -4    | other           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 41 | john    | -4    | john            | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
-      | 50 | Admins  | -4    | Admins          | 2019-04-06 09:26:40 | Club    | null                | false   | false     | null       | null          | null                | false        | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | id | name    | grade | description     | created_at          | type    | activity_id         | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | is_official_session | require_members_to_join_parent | organizer | address_line1 | address_line2 | address_postcode | address_city | address_country | expected_start |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class   | 1672978871462145361 | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class   | 1672978871462145461 | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 14 | Group C | -4    | Group C         | 2019-04-06 09:26:40 | Club    | null                | true    | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 15 | Group D | -4    | Group D         | 2019-04-06 09:26:40 | Session | null                | true    | false     | null       | null          | null                | false                      | true                | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 24 | other   | -4    | other           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 41 | john    | -4    | john            | 2019-04-06 09:26:40 | User    | null                | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
+      | 50 | Admins  | -4    | Admins          | 2019-04-06 09:26:40 | Club    | null                | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null           |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | default_language |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
@@ -56,7 +56,7 @@ Feature: Update a group (groupEdit)
       "is_open": false,
       "code_lifetime": "99:59:59",
       "code_expires_at": "2019-12-31T23:59:59Z",
-      "open_contest": false,
+      "open_activity_when_joining": false,
       "activity_id": "5678",
 
       "require_members_to_join_parent": true,
@@ -74,8 +74,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description    | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_contest | require_members_to_join_parent | organizer              | address_line1               | address_line2        | address_postcode | address_city | address_country | expected_start      |
-      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | 5678        | false   | false     | ybabbxnlyo | 99:59:59      | 2019-12-31 23:59:59 | false        | true                           | Association France-ioi | Chez Jacques-Henri Jourdan, | 42, rue de Cronstadt | 75015            | Paris        | France          | 2019-05-03 11:00:00 |
+      | id | name   | grade | description    | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_members_to_join_parent | organizer              | address_line1               | address_line2        | address_postcode | address_city | address_country | expected_start      |
+      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | 5678        | false   | false     | ybabbxnlyo | 99:59:59      | 2019-12-31 23:59:59 | false                      | true                           | Association France-ioi | Chez Jacques-Henri Jourdan, | 42, rue de Cronstadt | 75015            | Paris        | France          | 2019-05-03 11:00:00 |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should be:
       | group_id | member_id | type          |
@@ -96,7 +96,7 @@ Feature: Update a group (groupEdit)
       "name": "Club B",
       "description": null,
       "is_open": false,
-      "open_contest": false,
+      "open_activity_when_joining": false,
       "activity_id": null,
       "grade": 0,
       "code_expires_at": null,
@@ -106,8 +106,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_contest |
-      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null        | false   | false     | ybabbxnlyo | null          | null            | false        |
+      | id | name   | grade | description | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_activity_when_joining |
+      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null        | false   | false     | ybabbxnlyo | null          | null            | false                      |
 
   Scenario: User is a manager of the group, does not update group_pending_requests (is_public is still true)
     Given I am the user with id "21"
@@ -118,7 +118,7 @@ Feature: Update a group (groupEdit)
       "name": "Club B",
       "description": null,
       "is_open": false,
-      "open_contest": false,
+      "open_activity_when_joining": false,
       "activity_id": null,
       "grade": 0,
       "code_expires_at": null,
@@ -128,8 +128,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_contest |
-      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null        | false   | true      | ybabbxnlyo | null          | null            | false        |
+      | id | name   | grade | description | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_activity_when_joining |
+      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null        | false   | true      | ybabbxnlyo | null          | null            | false                      |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
@@ -142,7 +142,7 @@ Feature: Update a group (groupEdit)
       "name": "Club B",
       "description": null,
       "is_open": false,
-      "open_contest": false,
+      "open_activity_when_joining": false,
       "activity_id": null,
       "grade": 0,
       "code_expires_at": null,
@@ -152,8 +152,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_contest |
-      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null        | false   | true      | ybabbxnlyo | null          | null            | false        |
+      | id | name   | grade | description | created_at          | type  | activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_activity_when_joining |
+      | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null        | false   | true      | ybabbxnlyo | null          | null            | false                      |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
@@ -169,8 +169,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "14"
     And the table "groups" at id "14" should be:
-      | id | name    | grade | description | created_at          | type | activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_contest |
-      | 14 | Group C | -4    | Group C     | 2019-04-06 09:26:40 | Club | null        | false               | true    | true      | null | null          | null            | false        |
+      | id | name    | grade | description | created_at          | type | activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_activity_when_joining |
+      | 14 | Group C | -4    | Group C     | 2019-04-06 09:26:40 | Club | null        | false               | true    | true      | null | null          | null            | false                      |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
@@ -198,8 +198,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "14"
     And the table "groups" at id "14" should be:
-      | id | name    | grade | description | created_at          | type | activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_contest |
-      | 14 | Group C | -4    | Group C     | 2019-04-06 09:26:40 | Club | 123         | true                | true    | false     | null | null          | null            | false        |
+      | id | name    | grade | description | created_at          | type | activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_activity_when_joining |
+      | 14 | Group C | -4    | Group C     | 2019-04-06 09:26:40 | Club | 123         | true                | true    | false     | null | null          | null            | false                      |
     And the table "groups_groups" should stay unchanged
 
   Scenario: User replaces the activity of the official session
@@ -213,8 +213,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should stay unchanged but the row with id "15"
     And the table "groups" at id "15" should be:
-      | id | name    | grade | description | created_at          | type    | activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_contest |
-      | 15 | Group D | -4    | Group D     | 2019-04-06 09:26:40 | Session | 123         | true                | true    | false     | null | null          | null            | false        |
+      | id | name    | grade | description | created_at          | type    | activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_activity_when_joining |
+      | 15 | Group D | -4    | Group D     | 2019-04-06 09:26:40 | Session | 123         | true                | true    | false     | null | null          | null            | false                      |
     And the table "groups_groups" should stay unchanged
 
   Scenario: Pending requests stay unchanged when 'frozen_membership' is not changed

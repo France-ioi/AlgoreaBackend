@@ -29,9 +29,6 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.setAdditionalTime).ServeHTTP)
 	router.Get("/contests/{item_id}/groups/{group_id}/members/additional-times",
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
-	router.Get("/contests/{item_id}/qualification-state",
-		service.AppHandler(srv.getQualificationState).ServeHTTP)
-	router.Post("/contests/{item_id}/enter", service.AppHandler(srv.enter).ServeHTTP)
 }
 
 // swagger:model contestInfo
@@ -56,11 +53,3 @@ func (srv *Service) getParticipantTypeForContestManagedByUser(itemID int64, user
 		PluckFirst("items.entry_participant_type", &participantType).Error()
 	return participantType, err
 }
-
-type qualificationState string
-
-const (
-	alreadyStarted qualificationState = "already_started"
-	notReady       qualificationState = "not_ready"
-	ready          qualificationState = "ready"
-)

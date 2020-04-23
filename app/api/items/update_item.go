@@ -16,8 +16,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type itemWithDefaultLanguageTagAndOptionalType struct {
-	item `json:"item,squash"`
+type itemWithDefaultLanguageTag struct {
+	Item item `json:"item,squash"`
 	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
 	// minLength: 1
@@ -28,8 +28,8 @@ type itemWithDefaultLanguageTagAndOptionalType struct {
 // updateItemRequest is the expected input for item updating
 // swagger:model itemEditRequest
 type updateItemRequest struct {
-	itemWithDefaultLanguageTagAndOptionalType `json:"item,squash"`
-	Children                                  []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
+	itemWithDefaultLanguageTag `json:"item,squash"`
+	Children                   []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
 
 func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore, itemID int64) bool {
@@ -64,8 +64,9 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //   Otherwise the "bad request" error is returned.)
 //
 //
-//   If a `duration` is added and `contest_participants_group_id` is NULL, the service creates a participants group,
-//   links `contest_participants_group_id` to it, and gives this group 'can_view:content' permission on the new item.
+//   If `requires_explicit_entry` is being set to true and `participants_group_id` is NULL,
+//   the service creates a participants group, links `participants_group_id` to it,
+//   and gives this group 'can_view:content' permission on the new item.
 //
 //
 //   The user should have
@@ -112,15 +113,19 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var itemInfo struct {
-			ContestParticipantsGroupID *int64
-			Type                       string
-			CanEditGenerated           string
+			ParticipantsGroupID   *int64
+			Type                  string
+			CanEditGenerated      string
+			Duration              *string
+			RequiresExplicitEntry bool
 		}
 		err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
 			Joins("JOIN items ON items.id = item_id").
 			Where("item_id = ?", itemID).
 			HavingMaxPermissionAtLeast("edit", "children").
-			Select("items.contest_participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated").
+			Select(`
+				items.participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated,
+				items.duration, items.requires_explicit_entry`).
 			Group("item_id").
 			Scan(&itemInfo).Error()
 
@@ -134,6 +139,11 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		registerChildrenValidator(formData, store, user, itemInfo.Type, &childrenInfoMap)
 		formData.RegisterValidation("child_type_non_skill", constructUpdateItemChildTypeNonSkillValidator(itemInfo.Type, &childrenInfoMap))
 		formData.RegisterTranslation("child_type_non_skill", "a skill cannot be a child of a non-skill item")
+		formData.RegisterValidation("cannot_be_set_for_skills", constructUpdateItemCannotBeSetForSkillsValidator(itemInfo.Type))
+		formData.RegisterTranslation("cannot_be_set_for_skills", "cannot be set for skill items")
+		formData.RegisterValidation("duration_requires_explicit_entry",
+			constructUpdateItemDurationRequiresExplicitEntryValidator(formData, itemInfo.Duration, itemInfo.RequiresExplicitEntry))
+		formData.RegisterTranslation("duration_requires_explicit_entry", "requires_explicit_entry should be true when the duration is not null")
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -141,7 +151,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return err // rollback
 		}
 
-		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageTagAndOptionalType")
+		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageTag")
 		if len(itemData) == 0 && !formData.IsSet("children") {
 			return nil // Nothing to do
 		}
@@ -153,7 +163,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return apiError.Error // rollback
 		}
 
-		apiError = updateItemInDB(itemData, itemInfo.ContestParticipantsGroupID, store, itemID)
+		apiError = updateItemInDB(itemData, itemInfo.ParticipantsGroupID, store, itemID)
 		if apiError != service.NoError {
 			return apiError.Error // rollback
 		}
@@ -173,9 +183,9 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 }
 
 func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64, store *database.DataStore, itemID int64) service.APIError {
-	if itemData["duration"] != nil && participantsGroupID == nil {
+	if itemData["requires_explicit_entry"] == true && participantsGroupID == nil {
 		createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
-		itemData["contest_participants_group_id"] = createdParticipantsGroupID
+		itemData["participants_group_id"] = createdParticipantsGroupID
 	}
 
 	err := store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
@@ -229,5 +239,36 @@ func constructUpdateItemChildTypeNonSkillValidator(itemType string,
 			return true
 		}
 		return (*childrenInfoMap)[child.ItemID].Type != skill
+	})
+}
+
+// constructUpdateItemCannotBeSetForSkillsValidator constructs a validator checking that the fields is not set for skill items.
+func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator.Func { // nolint:gocritic
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		return fl.Field().IsZero() || itemType != skill
+	})
+}
+
+// constructUpdateItemDurationRequiresExplicitEntryValidator constructs a validator for the RequiresExplicitEntry field.
+// The validator checks that when the duration is given and is not null or is not given while its previous value is not null,
+// the field is true.
+func constructUpdateItemDurationRequiresExplicitEntryValidator(
+	formData *formdata.FormData, duration *string, requiresExplicitEntry bool) validator.Func { // nolint:gocritic
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		data := fl.Parent().Addr().Interface().(*item)
+		var changed bool
+		if formData.IsSet("duration") {
+			if (duration == nil) != (data.Duration == nil) {
+				changed = true
+			}
+			duration = data.Duration
+		}
+		if formData.IsSet("requires_explicit_entry") {
+			if requiresExplicitEntry != data.RequiresExplicitEntry {
+				changed = true
+			}
+			requiresExplicitEntry = data.RequiresExplicitEntry
+		}
+		return !changed || requiresExplicitEntry || duration == nil
 	})
 }

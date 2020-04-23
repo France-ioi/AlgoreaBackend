@@ -206,8 +206,8 @@ type itemAnswerGetResponse struct {
 }
 
 // Created. The group has successfully entered the contest.
-// swagger:response contestEnterResponse
-type contestEnterResponse struct {
+// swagger:response itemEnterResponse
+type itemEnterResponse struct {
 	// in:body
 	Body struct {
 		// enum: created
