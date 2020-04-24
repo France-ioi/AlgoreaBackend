@@ -24,10 +24,10 @@ services:
       - db
     environment:
       ALGOREA_ENV: dev
-      ALGOREA_DATABASE__CONNECTION__ADDR: db
-      ALGOREA_DATABASE__CONNECTION__USER: algorea
-      ALGOREA_DATABASE__CONNECTION__PASSWD: a_db_password
-      ALGOREA_DATABASE__CONNECTION__DBNAME: algorea_db
+      ALGOREA_DATABASE__ADDR: db
+      ALGOREA_DATABASE__USER: algorea
+      ALGOREA_DATABASE__PASSWD: a_db_password
+      ALGOREA_DATABASE__DBNAME: algorea_db
       ALGOREA_LOGGING__FORMAT: text
       ALGOREA_LOGGING__OUTPUT: stdout
       ALGOREA_LOGGING__LOGSQLQUERIES: 0

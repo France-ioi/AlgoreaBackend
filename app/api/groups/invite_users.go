@@ -44,7 +44,7 @@ const maxAllowedLoginsToInvite = 100
 //   It also refreshes the access rights when needed.
 //
 //
-//   * Logins not corresponding to valid users are ignored (result = "not_found").
+//   * Logins not corresponding to valid users or corresponding to temporary users are ignored (result = "not_found").
 //
 //   * If the `parent_group_id` corresponds to a team, the service skips users
 //     who are members of other teams participating in same contests as `parent_group_id`
@@ -130,7 +130,9 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 		Login   string
 		GroupID int64
 	}
-	service.MustNotBeError(srv.Store.Users().Select("login, group_id").Where("login IN (?)", requestData.Logins).
+	service.MustNotBeError(srv.Store.Users().Select("login, group_id").
+		Where("login IN (?)", requestData.Logins).
+		Where("NOT temp_user").
 		Scan(&groupsToInviteRows).Error())
 
 	groupsToInvite := make([]int64, 0, len(groupsToInviteRows))

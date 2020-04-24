@@ -9,8 +9,8 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 func init() { // nolint:gochecknoinits
@@ -29,13 +29,10 @@ func init() { // nolint:gochecknoinits
 
 			appenv.SetDefaultEnvToTest()
 
-			// load config
-			conf := config.Load()
-
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
 			var db *sql.DB
-			databaseConfig := conf.Database.Connection
+			databaseConfig := app.DBConfig(app.LoadConfig())
 			databaseConfig.ParseTime = true
 			db, err = sql.Open("mysql", databaseConfig.FormatDSN())
 			if err != nil {

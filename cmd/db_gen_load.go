@@ -13,8 +13,8 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
@@ -34,14 +34,14 @@ func init() { // nolint:gochecknoinits,gocyclo
 			appenv.SetDefaultEnv("dev")
 
 			// load config
-			conf := config.Load()
+			conf := app.LoadConfig()
 			if appenv.IsEnvProd() {
 				fmt.Println("'db-gen-load' must not be run in 'prod' env!")
 				os.Exit(1)
 			}
 
 			// open DB
-			rawdb, err := sql.Open("mysql", conf.Database.Connection.FormatDSN())
+			rawdb, err := sql.Open("mysql", app.DBConfig(conf).FormatDSN())
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)

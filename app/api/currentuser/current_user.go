@@ -15,7 +15,7 @@ import (
 
 // Service is the mount point for services related to `currentuser`
 type Service struct {
-	service.Base
+	*service.Base
 }
 
 // SetRoutes defines the routes for this package in a route group
@@ -111,7 +111,12 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		}
 
 		var approvals database.GroupApprovals
-		if action == createGroupJoinRequestAction || action == acceptInvitationAction {
+		if map[userGroupRelationAction]bool{createGroupJoinRequestAction: true, acceptInvitationAction: true}[action] {
+			if user.IsTempUser {
+				apiError = service.InsufficientAccessRightsError
+				return apiError.Error // rollback
+			}
+
 			approvals.FromString(r.URL.Query().Get("approvals"))
 		}
 

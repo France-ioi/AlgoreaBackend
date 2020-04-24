@@ -80,7 +80,7 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 			PluckFirst("refresh_token", &refreshToken).Error())
 	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
 	oldToken := &oauth2.Token{RefreshToken: refreshToken}
-	oauthConfig := getOAuthConfig(&srv.Config.Auth)
+	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
 	service.MustNotBeError(err)
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {

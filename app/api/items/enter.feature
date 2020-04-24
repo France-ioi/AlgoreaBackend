@@ -52,8 +52,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter an individual contest
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag | entering_time_min   | entering_time_max   |
-      | 50 | 01:01:01 | 1                       | User                   | None                       | 99                            | fr                   | 2007-01-01 00:00:00 | 5000-01-01 00:00:00 |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag | entering_time_min   | entering_time_max   |
+      | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   | 2007-01-01 00:00:00 | 5000-01-01 00:00:00 |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
@@ -72,7 +72,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/50/enter"
+    When I send a POST request to "/attempts/0/items/50/enter"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -116,8 +116,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a team-only contest
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 05:05:05 | 1                       | Team                   | Half                       | 3                     | 98                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 05:05:05 | 1                       | Team                   | Half                             | 3                   | 98                    | fr                   |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
@@ -137,7 +137,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 31       | 60      | 02:02:02        |
       | 41       | 60      | 03:03:03        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/60/enter?as_team_id=11"
+    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -181,8 +181,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Reenter a contest as a team
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
-      | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                       | 10                    | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                             | 10                  | 99                    | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 99              | 11             | 2019-05-30 11:00:00 |
@@ -203,7 +203,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 11             | 60      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
-    When I send a POST request to "/contests/60/enter?as_team_id=11"
+    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -246,10 +246,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 99                | 11             | 0       | 3019-10-10 13:13:13 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
-  Scenario: Enter a contest that doesn't have items.contest_participants_group_id set
+  Scenario: Enter a contest that doesn't have items.participants_group_id set
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | default_language_tag |
-      | 50 | 01:01:01 | 1                       | User                   | None                       | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | default_language_tag |
+      | 50 | 01:01:01 | 1                       | User                   | None                             | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -262,7 +262,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/50/enter"
+    When I send a POST request to "/attempts/0/items/50/enter"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -289,13 +289,13 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the table "groups_ancestors" should stay unchanged
     And logs should contain:
       """
-      items.contest_participants_group_id is not set for the item with id = 50
+      items.participants_group_id is not set for the item with id = 50
       """
 
   Scenario: Enter a contest with empty duration
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | contest_entering_condition | contest_participants_group_id | default_language_tag |
-      | 50 | null     | 1                       | User                   | None                       | 99                            | fr                   |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
+      | 50 | null     | 1                       | User                   | None                             | 99                    | fr                   |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
@@ -314,7 +314,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
-    When I send a POST request to "/contests/50/enter"
+    When I send a POST request to "/attempts/0/items/50/enter"
     Then the response code should be 201
     And the response body should be, in JSON:
     """

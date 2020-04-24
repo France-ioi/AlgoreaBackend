@@ -125,7 +125,7 @@ func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectati
 		"PUT", "/groups/1", `{"is_public":false}`, &database.User{GroupID: 2},
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
-			srv := &Service{Base: *baseService}
+			srv := &Service{Base: baseService}
 			router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
 		})
 

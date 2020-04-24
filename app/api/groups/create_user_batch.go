@@ -154,8 +154,8 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}
 	service.MustNotBeError(err)
 
-	createdUsers, err := loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).
-		CreateUsers(r.Context(), srv.Config.Auth.ClientID, srv.Config.Auth.ClientSecret, &loginmodule.CreateUsersParams{
+	createdUsers, err := loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).
+		CreateUsers(r.Context(), srv.AuthConfig.GetString("ClientID"), srv.AuthConfig.GetString("ClientSecret"), &loginmodule.CreateUsersParams{
 			Prefix:         fmt.Sprintf("%s_%s_", input.GroupPrefix, input.CustomPrefix),
 			Amount:         numberOfUsersToBeCreated,
 			PostfixLength:  input.PostfixLength,

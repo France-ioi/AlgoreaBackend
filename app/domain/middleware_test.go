@@ -7,22 +7,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 func TestMiddleware(t *testing.T) {
 	tests := []struct {
 		name               string
-		domains            []config.Domain
-		expectedConfig     *Configuration
+		domains            []ConfigItem
+		expectedConfig     *CtxConfig
 		expectedStatusCode int
 		expectedBody       string
 		shouldEnterService bool
 	}{
 		{
 			name: "ok",
-			domains: []config.Domain{
+			domains: []ConfigItem{
 				{
 					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
 					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 7,
@@ -32,13 +30,13 @@ func TestMiddleware(t *testing.T) {
 					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			},
-			expectedConfig:     &Configuration{RootGroupID: 1, RootSelfGroupID: 2, RootTempGroupID: 4},
+			expectedConfig:     &CtxConfig{RootGroupID: 1, RootSelfGroupID: 2, RootTempGroupID: 4},
 			expectedStatusCode: http.StatusOK,
 			shouldEnterService: true,
 		},
 		{
 			name: "wrong domain",
-			domains: []config.Domain{
+			domains: []ConfigItem{
 				{
 					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
 					RootGroup: 4, RootSelfGroup: 5, RootTempGroup: 7,
@@ -61,14 +59,14 @@ func TestMiddleware(t *testing.T) {
 	}
 }
 
-func assertMiddleware(t *testing.T, domains []config.Domain, shouldEnterService bool,
-	expectedStatusCode int, expectedBody string, expectedConfig *Configuration) {
+func assertMiddleware(t *testing.T, domains []ConfigItem, shouldEnterService bool,
+	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig) {
 	// dummy server using the middleware
 	middleware := Middleware(domains)
 	enteredService := false // used to log if the service has been reached
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
-		configuration := r.Context().Value(ctxDomainConfig).(*Configuration)
+		configuration := r.Context().Value(ctxDomainConfig).(*CtxConfig)
 		assert.Equal(t, expectedConfig, configuration)
 		w.WriteHeader(http.StatusOK)
 	})

@@ -13,8 +13,8 @@ import (
 	"github.com/lithammer/dedent"
 	"gopkg.in/yaml.v2"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -76,8 +76,8 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 // OpenRawDBConnection creates a new connection to the DB specified in the config
 func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
-	conf := config.Load()
-	rawDb, err := database.OpenRawDBConnection(conf.Database.Connection.FormatDSN())
+	dbConfig := app.DBConfig(app.LoadConfig())
+	rawDb, err := database.OpenRawDBConnection(dbConfig.FormatDSN())
 	if err != nil {
 		panic(err)
 	}
@@ -252,9 +252,8 @@ func emptyDB(db *sql.DB, dbName string) error {
 // EmptyDB empties all tables of the database specified in the config
 func EmptyDB(db *sql.DB) {
 	mustNotBeInProdEnv()
-	conf := config.Load()
-	err := emptyDB(db, conf.Database.Connection.DBName)
-	if err != nil {
+	dbConfig := app.DBConfig(app.LoadConfig())
+	if err := emptyDB(db, dbConfig.DBName); err != nil {
 		panic(err)
 	}
 }

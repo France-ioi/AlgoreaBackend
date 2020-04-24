@@ -70,8 +70,8 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 	}
 	service.MustNotBeError(srv.Store.Users().DeleteWithTraps(user))
 	if !user.IsTempUser {
-		service.MustNotBeError(loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).
-			UnlinkClient(r.Context(), srv.Config.Auth.ClientID, srv.Config.Auth.ClientSecret, loginID))
+		service.MustNotBeError(loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).
+			UnlinkClient(r.Context(), srv.AuthConfig.GetString("ClientID"), srv.AuthConfig.GetString("ClientSecret"), loginID))
 	}
 
 	render.Respond(w, r, service.DeletionSuccess(nil))

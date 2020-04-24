@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	authlib "github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -81,7 +81,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 			[]map[string]interface{}{{"parent_group_id": domainConfig.RootTempGroupID, "child_group_id": userID}}))
 
 		var err error
-		token, expiresIn, err = authlib.CreateNewTempSession(store.Sessions(), userID)
+		token, expiresIn, err = auth.CreateNewTempSession(store.Sessions(), userID)
 		return err
 	}))
 

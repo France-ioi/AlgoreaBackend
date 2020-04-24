@@ -16,14 +16,14 @@ func (l *Logger) NewDBLogger() (DBLogger, bool, bool) {
 		return gorm.Logger{LogWriter: l}, false, false
 	}
 
-	logMode := l.config.LogSQLQueries
-	rawLogMode := l.config.LogRawSQLQueries
-	switch l.config.Format {
+	logMode := l.config.GetBool("LogSQLQueries")
+	rawLogMode := l.config.GetBool("LogRawSQLQueries")
+	switch l.config.GetString("format") {
 	case formatText:
 		return gorm.Logger{LogWriter: l}, logMode, rawLogMode
 	case formatJSON:
 		return NewStructuredDBLogger(l.Logger), logMode, rawLogMode
 	default:
-		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.Format)
+		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.GetString("format"))
 	}
 }

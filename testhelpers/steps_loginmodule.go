@@ -10,9 +10,16 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
+
 	"github.com/cucumber/godog/gherkin"
+	"github.com/spf13/viper"
 	"github.com/thingful/httpmock"
 )
+
+func (ctx *TestContext) appAuthConfig() *viper.Viper {
+	return app.AuthConfig(ctx.application.Config)
+}
 
 func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, statusCode int, body *gherkin.DocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
@@ -26,14 +33,14 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, s
 	}
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	params := url.Values{
-		"client_id":     {ctx.application.Config.Auth.ClientID},
-		"client_secret": {ctx.application.Config.Auth.ClientSecret},
+		"client_id":     {ctx.appAuthConfig().GetString("ClientID")},
+		"client_secret": {ctx.appAuthConfig().GetString("ClientSecret")},
 		"grant_type":    {"authorization_code"},
 		"code":          {preprocessedCode},
-		"redirect_uri":  {ctx.application.Config.Auth.CallbackURL},
+		"redirect_uri":  {ctx.appAuthConfig().GetString("CallbackURL")},
 	}
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
+		ctx.appAuthConfig().GetString("LoginModuleURL")+"/oauth/token", responder,
 		httpmock.WithBody(
 			bytes.NewBufferString(params.Encode()))))
 	return nil
@@ -54,16 +61,17 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 		return err
 	}
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
+	authConfig := app.AuthConfig(ctx.application.Config)
 	params := url.Values{
-		"client_id":     {ctx.application.Config.Auth.ClientID},
-		"client_secret": {ctx.application.Config.Auth.ClientSecret},
+		"client_id":     {authConfig.GetString("ClientID")},
+		"client_secret": {authConfig.GetString("ClientSecret")},
 		"grant_type":    {"authorization_code"},
 		"code":          {preprocessedCode},
 		"code_verifier": {preprocessedCodeVerifier},
-		"redirect_uri":  {ctx.application.Config.Auth.CallbackURL},
+		"redirect_uri":  {authConfig.GetString("CallbackURL")},
 	}
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
+		authConfig.GetString("LoginModuleURL")+"/oauth/token", responder,
 		httpmock.WithBody(
 			bytes.NewBufferString(params.Encode()))))
 	return nil
@@ -81,13 +89,13 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refres
 	}
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	params := url.Values{
-		"client_id":     {ctx.application.Config.Auth.ClientID},
-		"client_secret": {ctx.application.Config.Auth.ClientSecret},
+		"client_id":     {ctx.appAuthConfig().GetString("ClientID")},
+		"client_secret": {ctx.appAuthConfig().GetString("ClientSecret")},
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {preprocessedRefreshToken},
 	}
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
+		ctx.appAuthConfig().GetString("LoginModuleURL")+"/oauth/token", responder,
 		httpmock.WithBody(
 			bytes.NewBufferString(params.Encode()))))
 	return nil
@@ -105,7 +113,7 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token strin
 	}
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("GET",
-		ctx.application.Config.Auth.LoginModuleURL+"/user_api/account", responder,
+		ctx.appAuthConfig().GetString("LoginModuleURL")+"/user_api/account", responder,
 		httpmock.WithHeader(&http.Header{"Authorization": {"Bearer " + preprocessedToken}})))
 	return nil
 }
@@ -128,8 +136,8 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 
 	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/unlink_client?client_id="+
-			url.QueryEscape(ctx.application.Config.Auth.ClientID)+"&user_id="+url.QueryEscape(preprocessedUserID), responder))
+		ctx.appAuthConfig().GetString("LoginModuleURL")+"/platform_api/accounts_manager/unlink_client?client_id="+
+			url.QueryEscape(ctx.appAuthConfig().GetString("ClientID"))+"&user_id="+url.QueryEscape(preprocessedUserID), responder))
 	return nil
 }
 
@@ -142,7 +150,7 @@ func (ctx *TestContext) encodeLoginModuleResponse(preprocessedBody string) (stri
 	}
 
 	data := []byte(preprocessedBody)
-	cipher, err := aes.NewCipher([]byte(ctx.application.Config.Auth.ClientSecret)[0:16])
+	cipher, err := aes.NewCipher([]byte(ctx.appAuthConfig().GetString("ClientSecret"))[0:16])
 	if err != nil {
 		return "", err
 	}
@@ -181,12 +189,12 @@ func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns( 
 		return err
 	}
 
-	urlValues, err := url.ParseQuery("client_id=" + url.QueryEscape(ctx.application.Config.Auth.ClientID) + "&" + preprocessedParams)
+	urlValues, err := url.ParseQuery("client_id=" + url.QueryEscape(ctx.appAuthConfig().GetString("ClientID")) + "&" + preprocessedParams)
 	if err != nil {
 		return err
 	}
 	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/"+endpoint+"?"+urlValues.Encode(), responder))
+		ctx.appAuthConfig().GetString("LoginModuleURL")+"/platform_api/accounts_manager/"+endpoint+"?"+urlValues.Encode(), responder))
 	return nil
 }

@@ -10,9 +10,11 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 17 | Team  | 5987654abc | null                | null          | true      | 0                      | false             |
       | 18 | Team  | 87654abcde | null                | null          | true      | 0                      | true              |
       | 21 | User  | null       | null                | null          | false     | 0                      | false             |
+      | 22 | User  | null       | null                | null          | false     | 0                      | false             |
     And the database has the following table 'users':
-      | login | group_id |
-      | john  | 21       |
+      | login | group_id | temp_user |
+      | john  | 21       | false     |
+      | tmp   | 22       | true      |
     And the database has the following table 'items':
       | id   | default_language_tag |
       | 1234 | fr                   |
@@ -72,6 +74,15 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       """
       A user with group_id = 21 tried to join a group using a wrong/expired code
       """
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: The user is temporary
+    Given I am the user with id "22"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=cba9876543"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
