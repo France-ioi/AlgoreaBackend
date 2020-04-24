@@ -14,6 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -111,7 +112,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 	signerName = strings.TrimSpace(signerName)
 	switch signerName {
 	case "the app":
-		privateKey = ctx.application.TokenConfig.PrivateKey
+		privateKey = app.TokenConfig(ctx.application.Config).PrivateKey
 	case "the task platform":
 		privateKey = tokentest.TaskPlatformPrivateKeyParsed
 	default:
@@ -131,15 +132,24 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 }
 
 func (ctx *TestContext) TheApplicationConfigIs(body *gherkin.DocString) error { // nolint
-	viperConfig := viper.New()
-	viperConfig.SetConfigType("yaml")
+	config := viper.New()
+	config.SetConfigType("yaml")
 	preprocessedConfig, err := ctx.preprocessString(body.Content)
 	if err != nil {
 		return err
 	}
-	err = viperConfig.MergeConfig(strings.NewReader(preprocessedConfig))
+	err = config.MergeConfig(strings.NewReader(preprocessedConfig))
 	if err != nil {
 		return err
 	}
-	return viperConfig.UnmarshalExact(ctx.application.Config)
+
+	// Only 'domain' and 'auth' changes are currently supported
+	if config.IsSet("auth") {
+		ctx.application.ReplaceAuthConfig(config)
+	}
+	if config.IsSet("domains") {
+		ctx.application.ReplaceDomainsConfig(config)
+	}
+
+	return nil
 }

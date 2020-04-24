@@ -11,8 +11,8 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
@@ -39,19 +39,19 @@ in the future.`,
 			appenv.SetDefaultEnv("dev")
 
 			// load config
-			conf := config.Load()
+			dbConf := app.DBConfig(app.LoadConfig())
 			if appenv.IsEnvProd() {
 				fmt.Println("'db-gen-migrations' must not be run in 'prod' env!")
 				os.Exit(1)
 			}
 
-			if conf.Database.Connection.Net == "" {
-				fmt.Println("database.connection.net should be set")
+			if dbConf.Net == "" {
+				fmt.Println("database.net should be set")
 				os.Exit(1)
 			}
 
 			// open DB
-			rawdb, err := sql.Open("mysql", conf.Database.Connection.FormatDSN())
+			rawdb, err := sql.Open("mysql", dbConf.FormatDSN())
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
@@ -63,7 +63,7 @@ in the future.`,
 			var renameMigrationUp, renameMigrationDown string
 
 			var rows *sql.Rows
-			tables := getTables(rawdb, conf.Database.Connection.DBName)
+			tables := getTables(rawdb, dbConf.DBName)
 			for _, table := range tables {
 				var renameStatements, renameBackStatements []string
 				rows, err = rawdb.Query("SHOW CREATE TABLE " + table)

@@ -58,7 +58,7 @@ Feature: Save grading result
         "idAttempt": "101/0",
         "randomSeed": "456",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -91,7 +91,7 @@ Feature: Save grading result
             "idAttempt": "101/0",
             "randomSeed": "456",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}"
           },
           "validated": true
         },
@@ -132,7 +132,7 @@ Feature: Save grading result
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -165,7 +165,7 @@ Feature: Save grading result
             "idAttempt": "101/0",
             "randomSeed": "",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}"
           },
           "validated": false
         },
@@ -213,7 +213,7 @@ Feature: Save grading result
         "idItemLocal": "60",
         "idAttempt": "101/1",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -246,7 +246,7 @@ Feature: Save grading result
             "idAttempt": "101/1",
             "randomSeed": "",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}"
           },
           "validated": false
         },
@@ -290,7 +290,7 @@ Feature: Save grading result
         "idItemLocal": "60",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -323,7 +323,7 @@ Feature: Save grading result
             "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "randomSeed": "",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}"
           },
           "validated": false
         },
@@ -368,7 +368,7 @@ Feature: Save grading result
         "idItemLocal": "60",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -401,7 +401,7 @@ Feature: Save grading result
             "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "randomSeed": "",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}"
           },
           "validated": true
         },
@@ -435,7 +435,7 @@ Feature: Save grading result
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "bAccessSolutions": false,
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "scoreToken" signed by the task platform is distributed:
@@ -469,7 +469,7 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "bAccessSolutions": true,
-            "platformName": "{{app().TokenConfig.PlatformName}}"
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}"
           },
           "validated": true
         },
@@ -496,7 +496,7 @@ Feature: Save grading result
         "idItemLocal": "70",
         "idAttempt": "101/1",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     And the following token "answerToken" signed by the app is distributed:
@@ -507,7 +507,7 @@ Feature: Save grading result
         "idAttempt": "101/1",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "125",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
@@ -530,7 +530,7 @@ Feature: Save grading result
             "idAttempt": "101/1",
             "itemUrl": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
             "randomSeed": "",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
+            "platformName": "{{app().Config.GetString("token.PlatformName")}}"
           },
           "validated": true
         },

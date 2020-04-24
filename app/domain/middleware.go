@@ -6,29 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
-
-type ctxKey int
-
-const (
-	ctxDomainConfig ctxKey = iota
-)
-
-// Configuration contains domain-specific settings
-type Configuration struct {
-	RootGroupID     int64
-	RootSelfGroupID int64
-	RootTempGroupID int64
-}
 
 // Middleware is a middleware setting domain-specific configuration into the request context
-func Middleware(domains []config.Domain) func(next http.Handler) http.Handler {
-	domainsMap := map[string]*Configuration{}
+func Middleware(domains []ConfigItem) func(next http.Handler) http.Handler {
+
+	domainsMap := map[string]*CtxConfig{}
 	for _, domain := range domains {
 		for _, host := range domain.Domains {
-			domainsMap[host] = &Configuration{
+			domainsMap[host] = &CtxConfig{
 				RootGroupID:     domain.RootGroup,
 				RootSelfGroupID: domain.RootSelfGroup,
 				RootTempGroupID: domain.RootTempGroup,

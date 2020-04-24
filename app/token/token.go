@@ -14,8 +14,8 @@ import (
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/SermoDigital/jose/jws"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -28,10 +28,11 @@ type Config struct {
 }
 
 // Initialize loads keys from the config and resolves the platform name
-func Initialize(conf *config.Token) (tokenConfig *Config, err error) {
-	tokenConfig = &Config{PlatformName: conf.PlatformName}
+func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 
-	bytes, err := ioutil.ReadFile(prepareFileName(conf.PublicKeyFile))
+	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
+
+	bytes, err := ioutil.ReadFile(prepareFileName(config.GetString("PublicKeyFile")))
 	if err != nil {
 		return
 	}
@@ -39,7 +40,7 @@ func Initialize(conf *config.Token) (tokenConfig *Config, err error) {
 	if err != nil {
 		return
 	}
-	bytes, err = ioutil.ReadFile(prepareFileName(conf.PrivateKeyFile))
+	bytes, err = ioutil.ReadFile(prepareFileName(config.GetString("PrivateKeyFile")))
 	if err != nil {
 		return
 	}

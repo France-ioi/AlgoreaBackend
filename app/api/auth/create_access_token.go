@@ -73,7 +73,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(err)
 	}
 
-	oauthConfig := getOAuthConfig(&srv.Config.Auth)
+	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
 	if len(r.URL.Query()["code_verifier"]) != 0 {
 		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", r.URL.Query().Get("code_verifier")))
@@ -82,7 +82,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)
 	service.MustNotBeError(err)
 
-	userProfile, err := loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).GetUserProfile(r.Context(), token.AccessToken)
+	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
 	service.MustNotBeError(err)
 	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
 
@@ -106,7 +106,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
+func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
 	var groupID int64
 	err := s.WithWriteLock().
 		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
@@ -151,7 +151,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	return groupID
 }
 
-func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.Configuration) (selfGroupID int64) {
+func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.CtxConfig) (selfGroupID int64) {
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{

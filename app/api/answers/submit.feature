@@ -37,7 +37,7 @@ Feature: Submit a new answer
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/1",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -92,7 +92,7 @@ Feature: Submit a new answer
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "idItemLocal": "50",
         "randomSeed": "100",
-        "platformName": "{{app().TokenConfig.PlatformName}}"
+        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:

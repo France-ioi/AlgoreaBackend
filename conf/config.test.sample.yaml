@@ -1,3 +1,2 @@
 database:
-  connection:
-    dbname: algorea_db
+  dbname: algorea_db

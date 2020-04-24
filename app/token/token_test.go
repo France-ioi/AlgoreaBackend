@@ -12,9 +12,9 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/SermoDigital/jose/crypto"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
@@ -189,11 +189,11 @@ func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
 	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 	assert.NoError(t, err)
 
-	tokenConfig, err := Initialize(&config.Token{
-		PrivateKeyFile: tmpFilePrivate.Name(),
-		PublicKeyFile:  tmpFilePublic.Name(),
-		PlatformName:   "my platform",
-	})
+	config := viper.New()
+	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
+	config.Set("PublicKeyFile", tmpFilePublic.Name())
+	config.Set("PlatformName", "my platform")
+	tokenConfig, err := Initialize(config)
 	assert.NoError(t, err)
 	assert.Equal(t, &Config{
 		PrivateKey:   expectedPrivateKey,
@@ -209,11 +209,11 @@ func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, err = Initialize(&config.Token{
-		PrivateKeyFile: tmpFilePrivate.Name(),
-		PublicKeyFile:  "nosuchfile.pem",
-		PlatformName:   "my platform",
-	})
+	config := viper.New()
+	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
+	config.Set("PublicKeyFile", "nosuchfile.pem")
+	config.Set("PlatformName", "my platform")
+	_, err = Initialize(config)
 	assert.IsType(t, &os.PathError{}, err)
 }
 
@@ -224,11 +224,12 @@ func Test_Initialize_CannotLoadPrivateKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, err = Initialize(&config.Token{
-		PrivateKeyFile: "nosuchfile.pem",
-		PublicKeyFile:  tmpFilePublic.Name(),
-		PlatformName:   "my platform",
-	})
+	config := viper.New()
+	config.Set("PrivateKeyFile", "nosuchfile.pem")
+	config.Set("PublicKeyFile", tmpFilePublic.Name())
+	config.Set("PlatformName", "my platform")
+	_, err = Initialize(config)
+
 	assert.IsType(t, &os.PathError{}, err)
 }
 
@@ -245,11 +246,12 @@ func Test_Initialize_CannotParsePublicKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, err = Initialize(&config.Token{
-		PrivateKeyFile: tmpFilePrivate.Name(),
-		PublicKeyFile:  tmpFilePublic.Name(),
-		PlatformName:   "my platform",
-	})
+	config := viper.New()
+	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
+	config.Set("PublicKeyFile", tmpFilePublic.Name())
+	config.Set("PlatformName", "my platform")
+	_, err = Initialize(config)
+
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
 
@@ -266,11 +268,12 @@ func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, err = Initialize(&config.Token{
-		PrivateKeyFile: tmpFilePrivate.Name(),
-		PublicKeyFile:  tmpFilePublic.Name(),
-		PlatformName:   "my platform",
-	})
+	config := viper.New()
+	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
+	config.Set("PublicKeyFile", tmpFilePublic.Name())
+	config.Set("PlatformName", "my platform")
+	_, err = Initialize(config)
+
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
 

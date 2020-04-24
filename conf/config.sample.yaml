@@ -12,13 +12,12 @@ token:
   publicKeyFile: public_key.pem
   privateKeyFile: private_key.pem
 database:
-  connection:
-    user: algorea
-    passwd: a_db_password
-    addr: localhost
-    net: tcp
-    #dbname: algorea_db
-    allownativepasswords: true
+  user: algorea
+  passwd: a_db_password
+  addr: localhost
+  net: tcp
+  #dbname: algorea_db
+  allownativepasswords: true
 logging:
   format: text # text, json
   output: stdout # stdout, stderr, file

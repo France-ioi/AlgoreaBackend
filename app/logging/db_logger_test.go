@@ -6,7 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/spf13/viper"
 )
 
 func TestNewDBLogger_ErrorFallback(t *testing.T) {
@@ -21,10 +21,10 @@ func TestNewDBLogger_ErrorFallback(t *testing.T) {
 func TestLoggerFromConfig_TextLog(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := new()
-	logger.Configure(config.Logging{
-		Format: "text",
-		Output: "file",
-	})
+	config := viper.New()
+	config.Set("Format", "text")
+	config.Set("Output", "file")
+	logger.Configure(config)
 	dbLogger, _, _ := logger.NewDBLogger()
 	assert.IsType(gorm.Logger{}, dbLogger)
 }
@@ -32,10 +32,10 @@ func TestLoggerFromConfig_TextLog(t *testing.T) {
 func TestLoggerFromConfig_JSONLog(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := new()
-	logger.Configure(config.Logging{
-		Format: "json",
-		Output: "file",
-	})
+	config := viper.New()
+	config.Set("Format", "json")
+	config.Set("Output", "file")
+	logger.Configure(config)
 	dbLogger, _, _ := logger.NewDBLogger()
 	assert.IsType(&StructuredDBLogger{}, dbLogger)
 }
@@ -43,10 +43,10 @@ func TestLoggerFromConfig_JSONLog(t *testing.T) {
 func TestLoggerFromConfig_WrongFormat(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := new()
-	logger.config = &config.Logging{
-		Format: "yml",
-		Output: "file",
-	}
+	config := viper.New()
+	config.Set("Format", "yml")
+	config.Set("Output", "file")
+	logger.config = config
 	assert.Panics(func() { logger.NewDBLogger() })
 }
 
@@ -71,12 +71,12 @@ func TestNewDBLogger_LogMode(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assertlib.New(t)
 			logger := new()
-			logger.Configure(config.Logging{
-				LogSQLQueries:    test.logSQLQueries,
-				LogRawSQLQueries: test.logRawSQLQueries,
-				Format:           test.format,
-				Output:           "file",
-			})
+			config := viper.New()
+			config.Set("LogSQLQueries", test.logSQLQueries)
+			config.Set("LogRawSQLQueries", test.logRawSQLQueries)
+			config.Set("Format", test.format)
+			config.Set("Output", "file")
+			logger.Configure(config)
 			_, logMode, rawLogMode := logger.NewDBLogger()
 			assert.Equal(test.logSQLQueries, logMode)
 			assert.Equal(test.logRawSQLQueries, rawLogMode)
