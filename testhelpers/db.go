@@ -19,13 +19,6 @@ import (
 
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
-func init() { // nolint:gochecknoinits
-	appenv.SetDefaultEnvToTest()
-	conf := config.Load()
-	// Apply the config to the global logger
-	logging.SharedLogger.Configure(conf.Logging)
-}
-
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	mustNotBeInProdEnv()
