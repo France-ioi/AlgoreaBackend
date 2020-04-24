@@ -1,3 +1,5 @@
+// +build !prod
+
 package testhelpers
 
 // RunConcurrently runs a given function concurrently

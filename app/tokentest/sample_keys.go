@@ -1,3 +1,5 @@
+// +build !prod
+
 package tokentest
 
 import "github.com/SermoDigital/jose/crypto"

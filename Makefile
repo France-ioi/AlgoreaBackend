@@ -50,7 +50,7 @@ __check_defined = \
 all: build
 build: $(BIN_PATH)
 $(BIN_PATH): .FORCE # let go decide what need to be rebuilt
-	$(GOBUILD) -o $(BIN_PATH) -v -race
+	$(GOBUILD) -o $(BIN_PATH) -v -tags=prod
 gen-keys:
 	openssl genpkey -algorithm RSA -out private_key.pem 2>/dev/null | openssl genrsa -out private_key.pem 1024
 	openssl rsa -pubout -in private_key.pem -out public_key.pem
