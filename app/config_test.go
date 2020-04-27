@@ -115,18 +115,18 @@ func TestDBConfig_Success(t *testing.T) {
 	// or manually) to allow setting it through env
 	_ = os.Setenv("ALGOREA_DATABASE__TLSCONFIG", "v99")
 	defer func() { _ = os.Unsetenv("ALGOREA_DATABASE__TLSCONFIG") }()
-	dbConfig := DBConfig(globalConfig)
+	dbConfig, err := DBConfig(globalConfig)
+	assert.NoError(err)
 	assert.Equal("stuff", dbConfig.Collation)
 	assert.Equal("v99", dbConfig.TLSConfig)
 }
 
-func TestDBConfig_Panic(t *testing.T) {
+func TestDBConfig_Error(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	globalConfig.Set("database.Timeout", "invalid")
-	assert.Panics(func() {
-		_ = DBConfig(globalConfig)
-	})
+	_, err := DBConfig(globalConfig)
+	assert.EqualError(err, "1 error(s) decoding:\n\n* error decoding 'Timeout': time: invalid duration invalid")
 }
 
 func TestTokenConfig_Success(t *testing.T) {
@@ -136,17 +136,17 @@ func TestTokenConfig_Success(t *testing.T) {
 		return &token.Config{PlatformName: "test"}, nil
 	})
 	defer monkey.UnpatchAll()
-	config := TokenConfig(globalConfig)
+	config, err := TokenConfig(globalConfig)
+	assert.NoError(err)
 	assert.Equal("test", config.PlatformName)
 }
 
-func TestTokenConfig_Panic(t *testing.T) {
+func TestTokenConfig_Error(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	globalConfig.Set("token.PublicKeyFile", "notafile")
-	assert.Panics(func() {
-		_ = TokenConfig(globalConfig)
-	})
+	_, err := TokenConfig(globalConfig)
+	assert.Contains(err.Error(), "no such file or directory")
 }
 
 func TestAuthConfig(t *testing.T) {
@@ -192,7 +192,8 @@ func TestDomainsConfig_Success(t *testing.T) {
 		RootTempGroup: 3,
 	}
 	globalConfig.Set("domains", []domain.ConfigItem{sampleDomain})
-	config := DomainsConfig(globalConfig)
+	config, err := DomainsConfig(globalConfig)
+	assert.NoError(err)
 	assert.Len(config, 1)
 	assert.Equal(sampleDomain, config[0])
 }
@@ -201,17 +202,17 @@ func TestDomainsConfig_Empty(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []string{})
-	config := DomainsConfig(globalConfig)
+	config, err := DomainsConfig(globalConfig)
+	assert.NoError(err)
 	assert.Len(config, 0)
 }
 
-func TestDomainsConfig_Panic(t *testing.T) {
+func TestDomainsConfig_Error(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []int{1, 2})
-	assert.Panics(func() {
-		_ = DomainsConfig(globalConfig)
-	})
+	_, err := DomainsConfig(globalConfig)
+	assert.EqualError(err, "2 error(s) decoding:\n\n* '[0]' expected a map, got 'int'\n* '[1]' expected a map, got 'int'")
 }
 
 func TestReplaceAuthConfig(t *testing.T) {
@@ -236,8 +237,19 @@ func TestReplaceDomainsConfig(t *testing.T) {
 		RootSelfGroup: 0,
 		RootTempGroup: 0,
 	}}
-	assert.Equal(expected, DomainsConfig(application.Config))
+	config, _ := DomainsConfig(application.Config)
+	assert.Equal(expected, config)
 	// not tested: that it is been pushed to the API
+}
+
+func TestReplaceDomainsConfig_Panic(t *testing.T) {
+	assert := assertlib.New(t)
+	globalConfig := viper.New()
+	globalConfig.Set("domains", []int{1, 2})
+	application := &Application{Config: viper.New()}
+	assert.Panics(func() {
+		application.ReplaceDomainsConfig(globalConfig)
+	})
 }
 
 func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.File, deferFunc func()) {

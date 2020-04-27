@@ -72,7 +72,8 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		if err != nil {
 			return err
 		}
-		reflect.ValueOf(act).Elem().FieldByName("PublicKey").Set(reflect.ValueOf(app.TokenConfig(ctx.application.Config).PublicKey))
+		config, _ := app.TokenConfig(ctx.application.Config)
+		reflect.ValueOf(act).Elem().FieldByName("PublicKey").Set(reflect.ValueOf(config.PublicKey))
 	}
 
 	// re-encode actual response too

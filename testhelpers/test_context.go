@@ -146,7 +146,8 @@ func testRequest(ts *httptest.Server, method, path string, headers map[string][]
 func (ctx *TestContext) db() *sql.DB {
 	if db == nil {
 		var err error
-		db, err = sql.Open("mysql", app.DBConfig(ctx.application.Config).FormatDSN())
+		config, _ := app.DBConfig(ctx.application.Config)
+		db, err = sql.Open("mysql", config.FormatDSN())
 		if err != nil {
 			fmt.Println("Unable to connect to the database: ", err)
 			os.Exit(1)
@@ -159,7 +160,8 @@ func (ctx *TestContext) db() *sql.DB {
 func (ctx *TestContext) emptyDB() error {
 
 	db := ctx.db()
-	return emptyDB(db, app.DBConfig(ctx.application.Config).DBName)
+	config, _ := app.DBConfig(ctx.application.Config)
+	return emptyDB(db, config.DBName)
 }
 
 func (ctx *TestContext) initDB() error {

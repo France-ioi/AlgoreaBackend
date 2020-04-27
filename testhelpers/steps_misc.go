@@ -114,7 +114,8 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 	signerName = strings.TrimSpace(signerName)
 	switch signerName {
 	case "the app":
-		privateKey = app.TokenConfig(ctx.application.Config).PrivateKey
+		config, _ := app.TokenConfig(ctx.application.Config)
+		privateKey = config.PrivateKey
 	case "the task platform":
 		privateKey = tokentest.TaskPlatformPrivateKeyParsed
 	default:

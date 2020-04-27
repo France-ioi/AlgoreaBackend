@@ -32,7 +32,7 @@ func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 
 	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
 
-	bytes, err := ioutil.ReadFile(prepareFileName(config.GetString("PublicKeyFile")))
+	bytes, err := getKey(config, "Public")
 	if err != nil {
 		return
 	}
@@ -40,7 +40,7 @@ func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 	if err != nil {
 		return
 	}
-	bytes, err = ioutil.ReadFile(prepareFileName(config.GetString("PrivateKeyFile")))
+	bytes, err = getKey(config, "Private")
 	if err != nil {
 		return
 	}
@@ -49,6 +49,16 @@ func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 		return
 	}
 	return
+}
+
+// getKey returns either "<keyType>Key" if not empty or the content of "<keyType>KeyFile" otherwise
+// keyType is either "Public" or "Private"
+func getKey(config *viper.Viper, keyType string) ([]byte, error) {
+	key := config.GetString(keyType + "Key")
+	if key == "" {
+		return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
+	}
+	return []byte(key), nil
 }
 
 func prepareFileName(fileName string) string {

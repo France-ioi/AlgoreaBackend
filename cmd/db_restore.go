@@ -36,7 +36,11 @@ func init() { // nolint:gochecknoinits
 			}
 
 			// load config
-			dbConf := app.DBConfig(app.LoadConfig())
+			dbConf, err := app.DBConfig(app.LoadConfig())
+			if err != nil {
+				fmt.Println("Unable to load the database config: ", err)
+				os.Exit(1)
+			}
 
 			// open DB
 			var db *sql.DB

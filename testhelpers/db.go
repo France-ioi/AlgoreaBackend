@@ -84,7 +84,7 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 // OpenRawDBConnection creates a new connection to the DB specified in the config
 func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
-	dbConfig := app.DBConfig(app.LoadConfig())
+	dbConfig, _ := app.DBConfig(app.LoadConfig())
 	rawDb, err := database.OpenRawDBConnection(dbConfig.FormatDSN())
 	if err != nil {
 		panic(err)
@@ -260,7 +260,7 @@ func emptyDB(db *sql.DB, dbName string) error {
 // EmptyDB empties all tables of the database specified in the config
 func EmptyDB(db *sql.DB) {
 	mustNotBeInProdEnv()
-	dbConfig := app.DBConfig(app.LoadConfig())
+	dbConfig, _ := app.DBConfig(app.LoadConfig())
 	if err := emptyDB(db, dbConfig.DBName); err != nil {
 		panic(err)
 	}

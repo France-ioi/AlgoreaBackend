@@ -67,6 +67,42 @@ func TestNew_DBErr(t *testing.T) {
 	assert.Equal("database", logMsg.Data["module"])
 }
 
+func TestNew_DBConfigError(t *testing.T) {
+	assert := assertlib.New(t)
+	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
+		globalConfig := viper.New()
+		globalConfig.Set("database.Timeout", "invalid")
+		return globalConfig
+	})
+	defer patch.Unpatch()
+	_, err := New()
+	assert.Contains(err.Error(), "unable to load the 'database' configuration: 1 error(s) decoding")
+}
+
+func TestNew_TokenConfigError(t *testing.T) {
+	assert := assertlib.New(t)
+	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
+		globalConfig := viper.New()
+		globalConfig.Set("token.PublicKeyFile", "notafile")
+		return globalConfig
+	})
+	defer patch.Unpatch()
+	_, err := New()
+	assert.Contains(err.Error(), "no such file or directory")
+}
+
+func TestNew_DomainsConfigError(t *testing.T) {
+	assert := assertlib.New(t)
+	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
+		globalConfig := viper.New()
+		globalConfig.Set("domains", []int{1, 2})
+		return globalConfig
+	})
+	defer patch.Unpatch()
+	_, err := New()
+	assert.Contains(err.Error(), "unable to load the 'domain' configuration: 2 error(s) decoding")
+}
+
 // The goal of the following `TestMiddlewares*` tests are not to test the middleware themselves
 // but their interaction (impacted by the order of definition)
 
@@ -200,6 +236,15 @@ type relationSpec struct {
 	database.ParentChild
 	exists bool
 	error  bool
+}
+
+func TestApplication_CheckConfig_UnmarshalError(t *testing.T) {
+	assert := assertlib.New(t)
+	db, _ := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	app := &Application{Config: viper.New(), Database: db}
+	app.Config.Set("domains", []int{1, 2})
+	assert.Contains(app.CheckConfig().Error(), "unable to unmarshal domains config: 2 error(s) decoding")
 }
 
 func TestApplication_CheckConfig(t *testing.T) {
@@ -650,4 +695,13 @@ func setDBExpectationsForGroupInCreateMissingData(mock sqlmock.Sqlmock, expected
 		}
 	}
 	return expectedError
+}
+
+func TestApplication_insertRootGroupsAndRelations_UnmarshalError(t *testing.T) {
+	assert := assertlib.New(t)
+	db, _ := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	app := &Application{Config: viper.New(), Database: db}
+	app.Config.Set("domains", []int{1, 2})
+	assert.Contains(app.insertRootGroupsAndRelations(&database.DataStore{DB: db}).Error(), "unable to unmarshal domains config: 2")
 }

@@ -30,12 +30,21 @@ func New() (*Application, error) {
 
 	// Getting all configs, they will be used to init components and to be passed
 	config := LoadConfig()
-	dbConfig := DBConfig(config)
+	dbConfig, err := DBConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load the 'database' configuration: %w", err)
+	}
 	authConfig := AuthConfig(config)
-	tokenConfig := TokenConfig(config)
-	serverConfig := ServerConfig(config)
 	loggingConfig := LoggingConfig(config)
-	domainsConfig := DomainsConfig(config)
+	domainsConfig, err := DomainsConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load the 'domain' configuration: %w", err)
+	}
+	tokenConfig, err := TokenConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load the 'token' configuration: %w", err)
+	}
+	serverConfig := ServerConfig(config)
 
 	// Apply the config to the global logger
 	logging.SharedLogger.Configure(loggingConfig)
@@ -82,7 +91,11 @@ func New() (*Application, error) {
 func (app *Application) CheckConfig() error {
 	groupStore := database.NewDataStore(app.Database).Groups()
 	groupGroupStore := groupStore.ActiveGroupGroups()
-	for _, domainConfig := range DomainsConfig(app.Config) {
+	domainsConfig, err := DomainsConfig(app.Config)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal domains config: %w", err)
+	}
+	for _, domainConfig := range domainsConfig {
 		for _, spec := range []struct {
 			name string
 			id   int64
@@ -136,7 +149,11 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 	groupGroupStore := store.GroupGroups()
 	var relationsToCreate []map[string]interface{}
 	var inserted bool
-	for _, domainConfig := range DomainsConfig(app.Config) {
+	domainsConfig, err := DomainsConfig(app.Config)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal domains config: %w", err)
+	}
+	for _, domainConfig := range domainsConfig {
 		domainConfig := domainConfig
 		insertedForDomain, err := insertRootGroups(groupStore, &domainConfig)
 		if err != nil {

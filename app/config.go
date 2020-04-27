@@ -85,7 +85,11 @@ func (app *Application) ReplaceAuthConfig(newGlobalConfig *viper.Viper) {
 
 // ReplaceDomainsConfig replaces the domains part of the config by the given one.
 func (app *Application) ReplaceDomainsConfig(newGlobalConfig *viper.Viper) {
-	app.apiCtx.SetDomainsConfig(DomainsConfig(newGlobalConfig))
+	domainsConfig, err := DomainsConfig(newGlobalConfig)
+	if err != nil {
+		panic("Unable to load the new domain config for replacement")
+	}
+	app.apiCtx.SetDomainsConfig(domainsConfig)
 	app.Config.Set(domainsConfigKey, newGlobalConfig.Get(domainsConfigKey))
 }
 
@@ -109,23 +113,17 @@ func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
 
 // DBConfig returns the db connection fixed config from the global config.
 // Panic in case of unmarshaling error
-func DBConfig(globalConfig *viper.Viper) (config *mysql.Config) {
+func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 	sub := subconfig(globalConfig, databaseConfigKey)
-	if err := sub.Unmarshal(&config); err != nil {
-		panic("Unable to load the 'database' configuration")
-	}
+	err = sub.Unmarshal(&config)
 	return
 }
 
 // TokenConfig returns the token fixed config from the global config
-// Panic in case of unmarshallign error
-func TokenConfig(globalConfig *viper.Viper) *token.Config {
+// Panic in case of unmarshalling error
+func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)
-	config, err := token.Initialize(sub)
-	if err != nil {
-		panic("Unable to load the 'token' configuration")
-	}
-	return config
+	return token.Initialize(sub)
 }
 
 // AuthConfig returns an auth dynamic config from the global config
@@ -148,11 +146,9 @@ func ServerConfig(globalConfig *viper.Viper) *viper.Viper {
 
 // DomainsConfig returns the domains fixed config from the global config
 // Panic in case of marshaling error.
-func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem) {
+func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem, err error) {
 	globalConfig.SetDefault(domainsConfigKey, []interface{}{})
 	// note that `.Sub` cannot be used to get a slice
-	if err := globalConfig.UnmarshalKey(domainsConfigKey, &config); err != nil {
-		panic("Unable to load 'Domains' config")
-	}
+	err = globalConfig.UnmarshalKey(domainsConfigKey, &config)
 	return
 }
