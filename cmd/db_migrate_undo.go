@@ -32,7 +32,11 @@ func init() { // nolint:gochecknoinits
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
 			var db *sql.DB
-			databaseConfig := app.DBConfig(app.LoadConfig())
+			databaseConfig, err := app.DBConfig(app.LoadConfig())
+			if err != nil {
+				fmt.Println("Unable to load the database config: ", err)
+				os.Exit(1)
+			}
 			databaseConfig.ParseTime = true
 			db, err = sql.Open("mysql", databaseConfig.FormatDSN())
 			if err != nil {

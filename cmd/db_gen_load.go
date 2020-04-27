@@ -41,7 +41,12 @@ func init() { // nolint:gochecknoinits,gocyclo
 			}
 
 			// open DB
-			rawdb, err := sql.Open("mysql", app.DBConfig(conf).FormatDSN())
+			dbConf, err := app.DBConfig(conf)
+			if err != nil {
+				fmt.Println("Unable to load the database config: ", err)
+				os.Exit(1)
+			}
+			rawdb, err := sql.Open("mysql", dbConf.FormatDSN())
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)

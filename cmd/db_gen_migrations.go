@@ -39,7 +39,12 @@ in the future.`,
 			appenv.SetDefaultEnv("dev")
 
 			// load config
-			dbConf := app.DBConfig(app.LoadConfig())
+			dbConf, err := app.DBConfig(app.LoadConfig())
+			if err != nil {
+				fmt.Println("Unable to load the database config: ", err)
+				os.Exit(1)
+			}
+
 			if appenv.IsEnvProd() {
 				fmt.Println("'db-gen-migrations' must not be run in 'prod' env!")
 				os.Exit(1)
