@@ -202,6 +202,25 @@ func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
 	}, tokenConfig)
 }
 
+func Test_Initialize_LoadsKeysFromString(t *testing.T) {
+	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+	assert.NoError(t, err)
+	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+	assert.NoError(t, err)
+
+	config := viper.New()
+	config.Set("PrivateKey", tokentest.AlgoreaPlatformPrivateKey)
+	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
+	config.Set("PlatformName", "my platform")
+	tokenConfig, err := Initialize(config)
+	assert.NoError(t, err)
+	assert.Equal(t, &Config{
+		PrivateKey:   expectedPrivateKey,
+		PublicKey:    expectedPublicKey,
+		PlatformName: "my platform",
+	}, tokenConfig)
+}
+
 func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
 	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
 	if tmpFilePrivate != nil {
