@@ -84,9 +84,9 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		err = store.Items().ContestManagedByUser(itemID, user).WithWriteLock().
 			Select(`
-			TIME_TO_SEC(items.duration) AS duration_in_seconds,
-			items.entry_participant_type = 'Team' AS is_team_only_contest,
-			items.participants_group_id`).
+				TIME_TO_SEC(items.duration) AS duration_in_seconds,
+				items.entry_participant_type = 'Team' AS is_team_only_contest,
+				items.participants_group_id`).
 			Take(&contestInfo).Error()
 		if gorm.IsRecordNotFoundError(err) || (contestInfo.IsTeamOnlyContest && groupType == "User") {
 			apiError = service.InsufficientAccessRightsError
@@ -157,12 +157,18 @@ func setAdditionalTimeForGroupInContest(
 				JOIN groups_ancestors_active AS changed_group_descendants
 					ON changed_group_descendants.child_group_id = groups_groups.child_group_id AND
 						changed_group_descendants.ancestor_group_id = ?`, groupID).
-			// ... and have entered the contest, ...
+			// ... and have entered the contest ...
 			Joins(`
 				JOIN results AS contest_participations
 					ON contest_participations.participant_id = groups_groups.child_group_id AND
 						contest_participations.started_at IS NOT NULL AND
 						contest_participations.item_id = ?`, itemID).
+			// ... and the attempt is not ended, ...
+			Joins(`
+				JOIN attempts
+					ON attempts.participant_id = contest_participations.participant_id AND
+					   attempts.id = contest_participations.attempt_id AND
+					   attempts.ended_at IS NULL`).
 			// ... we get all the ancestors to calculate the total additional time
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
 			Joins(`
