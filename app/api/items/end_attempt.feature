@@ -43,19 +43,19 @@ Feature: End an attempt (itemAttemptEnd)
       | 111      | 50      | content_with_descendants |
     And the database has the following table 'attempts':
       | id | participant_id | root_item_id | parent_attempt_id | allows_submissions_until | ended_at            |
-      | 0  | 101            | 10           | null              | 9999-12-31 23:59:59      | null                |
-      | 0  | 102            | 10           | null              | 9999-12-31 23:59:59      | null                |
-      | 0  | 111            | 10           | null              | 9999-12-31 23:59:59      | null                |
-      | 1  | 101            | 50           | null              | 9999-12-31 23:59:59      | null                |
-      | 1  | 102            | 50           | null              | 9999-12-31 23:59:59      | null                |
-      | 1  | 111            | 50           | null              | 9999-12-31 23:59:59      | null                |
-      | 2  | 101            | 60           | 0                 | 9999-12-31 23:59:59      | null                |
-      | 2  | 102            | 60           | 0                 | 2019-12-31 23:59:59      | 2019-12-31 23:59:59 |
-      | 2  | 111            | 60           | 0                 | 9999-12-31 23:59:59      | null                |
+      | 1  | 101            | 10           | null              | 9999-12-31 23:59:59      | null                |
+      | 1  | 102            | 10           | null              | 9999-12-31 23:59:59      | null                |
+      | 1  | 111            | 10           | null              | 9999-12-31 23:59:59      | null                |
+      | 2  | 101            | 50           | null              | 9999-12-31 23:59:59      | null                |
+      | 2  | 102            | 50           | null              | 9999-12-31 23:59:59      | null                |
+      | 2  | 111            | 50           | null              | 9999-12-31 23:59:59      | null                |
+      | 3  | 101            | 60           | 1                 | 9999-12-31 23:59:59      | null                |
+      | 3  | 102            | 60           | 1                 | 2019-12-31 23:59:59      | 2019-12-31 23:59:59 |
+      | 3  | 111            | 60           | 1                 | 9999-12-31 23:59:59      | null                |
 
   Scenario: User is able to end an attempt for his self group
     Given I am the user with id "111"
-    When I send a POST request to "/attempts/0/end"
+    When I send a POST request to "/attempts/1/end"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -66,15 +66,15 @@ Feature: End an attempt (itemAttemptEnd)
       """
     And the table "attempts" should be:
       | id | participant_id | root_item_id | parent_attempt_id | ABS(TIMESTAMPDIFF(SECOND, allows_submissions_until, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, ended_at, NOW())) < 3 |
-      | 0  | 101            | 10           | null              | 0                                                               | null                                            |
-      | 0  | 102            | 10           | null              | 0                                                               | null                                            |
-      | 0  | 111            | 10           | null              | 1                                                               | 1                                               |
-      | 1  | 101            | 50           | null              | 0                                                               | null                                            |
-      | 1  | 102            | 50           | null              | 0                                                               | null                                            |
-      | 1  | 111            | 50           | null              | 0                                                               | null                                            |
-      | 2  | 101            | 60           | 0                 | 0                                                               | null                                            |
-      | 2  | 102            | 60           | 0                 | 0                                                               | 0                                               |
-      | 2  | 111            | 60           | 0                 | 1                                                               | 1                                               |
+      | 1  | 101            | 10           | null              | 0                                                               | null                                            |
+      | 1  | 102            | 10           | null              | 0                                                               | null                                            |
+      | 1  | 111            | 10           | null              | 1                                                               | 1                                               |
+      | 2  | 101            | 50           | null              | 0                                                               | null                                            |
+      | 2  | 102            | 50           | null              | 0                                                               | null                                            |
+      | 2  | 111            | 50           | null              | 0                                                               | null                                            |
+      | 3  | 101            | 60           | 1                 | 0                                                               | null                                            |
+      | 3  | 102            | 60           | 1                 | 0                                                               | 0                                               |
+      | 3  | 111            | 60           | 1                 | 1                                                               | 1                                               |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | ABS(TIMESTAMPDIFF(SECOND, expires_at, NOW())) < 3 |
       | 102             | 101            | 0                                                 |
@@ -102,7 +102,7 @@ Feature: End an attempt (itemAttemptEnd)
 
   Scenario: User is able to end an attempt as a team
     Given I am the user with id "101"
-    When I send a POST request to "/attempts/0/end?as_team_id=102"
+    When I send a POST request to "/attempts/1/end?as_team_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -113,15 +113,15 @@ Feature: End an attempt (itemAttemptEnd)
       """
     And the table "attempts" should be:
       | id | participant_id | root_item_id | parent_attempt_id | ABS(TIMESTAMPDIFF(SECOND, allows_submissions_until, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, ended_at, NOW())) < 3 |
-      | 0  | 101            | 10           | null              | 0                                                               | null                                            |
-      | 0  | 102            | 10           | null              | 1                                                               | 1                                               |
-      | 0  | 111            | 10           | null              | 0                                                               | null                                            |
-      | 1  | 101            | 50           | null              | 0                                                               | null                                            |
-      | 1  | 102            | 50           | null              | 0                                                               | null                                            |
-      | 1  | 111            | 50           | null              | 0                                                               | null                                            |
-      | 2  | 101            | 60           | 0                 | 0                                                               | null                                            |
-      | 2  | 102            | 60           | 0                 | 0                                                               | 0                                               |
-      | 2  | 111            | 60           | 0                 | 0                                                               | null                                            |
+      | 1  | 101            | 10           | null              | 0                                                               | null                                            |
+      | 1  | 102            | 10           | null              | 1                                                               | 1                                               |
+      | 1  | 111            | 10           | null              | 0                                                               | null                                            |
+      | 2  | 101            | 50           | null              | 0                                                               | null                                            |
+      | 2  | 102            | 50           | null              | 0                                                               | null                                            |
+      | 2  | 111            | 50           | null              | 0                                                               | null                                            |
+      | 3  | 101            | 60           | 1                 | 0                                                               | null                                            |
+      | 3  | 102            | 60           | 1                 | 0                                                               | 0                                               |
+      | 3  | 111            | 60           | 1                 | 0                                                               | null                                            |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | ABS(TIMESTAMPDIFF(SECOND, expires_at, NOW())) < 3 |
       | 102             | 101            | 0                                                 |

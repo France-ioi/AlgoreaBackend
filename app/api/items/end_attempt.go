@@ -19,6 +19,7 @@ import (
 //
 //                Restrictions:
 //                  * `as_team_id` (if given) should be the current user's team;
+//                  * the `{attempt_id}` should not be zero (since implicit attempts cannot be ended);
 //                  * an attempt with `participant_id` = `as_team_id` (or the current user) and `id` = `attempt_id`
 //                    should exist and not be ended or expired;
 //
@@ -47,6 +48,10 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
+	}
+
+	if attemptID == 0 {
+		return service.ErrForbidden(errors.New("implicit attempts cannot be ended"))
 	}
 
 	user := srv.GetUser(r)

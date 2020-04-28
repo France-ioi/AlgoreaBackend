@@ -62,9 +62,18 @@ Feature: End an attempt (itemAttemptEnd) - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: Zero attempt_id
+    Given I am the user with id "111"
+    When I send a POST request to "/attempts/0/end"
+    Then the response code should be 403
+    And the response error message should contain "Implicit attempts cannot be ended"
+    And the table "attempts" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: Wrong as_team_id
     Given I am the user with id "101"
-    When I send a POST request to "/attempts/0/end?as_team_id=abc"
+    When I send a POST request to "/attempts/1/end?as_team_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for as_team_id (should be int64)"
     And the table "attempts" should stay unchanged
@@ -73,7 +82,7 @@ Feature: End an attempt (itemAttemptEnd) - robustness
 
   Scenario: The user is not a member of the team
     Given I am the user with id "111"
-    When I send a POST request to "/attempts/0/end?as_team_id=102"
+    When I send a POST request to "/attempts/1/end?as_team_id=102"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
