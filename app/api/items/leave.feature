@@ -55,13 +55,13 @@ Feature: End an attempt (itemAttemptEnd)
 
   Scenario: User is able to end an attempt for his self group
     Given I am the user with id "111"
-    When I send a DELETE request to "/attempts/0"
+    When I send a POST request to "/attempts/0/end"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       {
         "success": true,
-        "message": "deleted"
+        "message": "updated"
       }
       """
     And the table "attempts" should be:
@@ -102,13 +102,13 @@ Feature: End an attempt (itemAttemptEnd)
 
   Scenario: User is able to end an attempt as a team
     Given I am the user with id "101"
-    When I send a DELETE request to "/attempts/0?as_team_id=102"
+    When I send a POST request to "/attempts/0/end?as_team_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       {
         "success": true,
-        "message": "deleted"
+        "message": "updated"
       }
       """
     And the table "attempts" should be:

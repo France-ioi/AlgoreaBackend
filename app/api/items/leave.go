@@ -12,9 +12,9 @@ import (
 
 // swagger:operation DELETE /attempts/{attempt_id} items itemAttemptEnd
 // ---
-// summary: Leave the item
+// summary: End an attempt
 // description: >
-//                Allows to leave an item (end an attempt) as a user or as a team (if `as_team_id` is given).
+//                Allows to end an attempt as a user or as a team (if `as_team_id` is given).
 //
 //
 //                Restrictions:
@@ -35,8 +35,8 @@ import (
 //   type: integer
 //   format: int64
 // responses:
-//   "201":
-//     "$ref": "#/responses/deletedResponse"
+//   "200":
+//     "$ref": "#/responses/updatedResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
@@ -108,6 +108,6 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
 	return service.NoError
 }

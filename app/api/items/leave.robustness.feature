@@ -55,7 +55,7 @@ Feature: End an attempt (itemAttemptEnd) - robustness
 
   Scenario: Wrong attempt_id
     Given I am the user with id "111"
-    When I send a DELETE request to "/attempts/abc"
+    When I send a POST request to "/attempts/abc/end"
     Then the response code should be 400
     And the response error message should contain "Wrong value for attempt_id (should be int64)"
     And the table "attempts" should stay unchanged
@@ -64,7 +64,7 @@ Feature: End an attempt (itemAttemptEnd) - robustness
 
   Scenario: Wrong as_team_id
     Given I am the user with id "101"
-    When I send a DELETE request to "/attempts/0?as_team_id=abc"
+    When I send a POST request to "/attempts/0/end?as_team_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for as_team_id (should be int64)"
     And the table "attempts" should stay unchanged
@@ -73,7 +73,7 @@ Feature: End an attempt (itemAttemptEnd) - robustness
 
   Scenario: The user is not a member of the team
     Given I am the user with id "111"
-    When I send a DELETE request to "/attempts/0?as_team_id=102"
+    When I send a POST request to "/attempts/0/end?as_team_id=102"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
@@ -82,7 +82,7 @@ Feature: End an attempt (itemAttemptEnd) - robustness
 
   Scenario: The attempt is expired
     Given I am the user with id "101"
-    When I send a DELETE request to "/attempts/1?as_team_id=102"
+    When I send a POST request to "/attempts/1/end?as_team_id=102"
     Then the response code should be 403
     And the response error message should contain "Active attempt not found"
     And the table "attempts" should stay unchanged
@@ -91,7 +91,7 @@ Feature: End an attempt (itemAttemptEnd) - robustness
 
   Scenario: The attempt is ended
     Given I am the user with id "101"
-    When I send a DELETE request to "/attempts/2?as_team_id=102"
+    When I send a POST request to "/attempts/2/end?as_team_id=102"
     Then the response code should be 403
     And the response error message should contain "Active attempt not found"
     And the table "attempts" should stay unchanged
@@ -100,7 +100,7 @@ Feature: End an attempt (itemAttemptEnd) - robustness
 
   Scenario: No attempt
     Given I am the user with id "111"
-    When I send a DELETE request to "/attempts/3"
+    When I send a POST request to "/attempts/3/end"
     Then the response code should be 403
     And the response error message should contain "Active attempt not found"
     And the table "attempts" should stay unchanged
