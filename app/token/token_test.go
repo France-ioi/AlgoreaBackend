@@ -296,6 +296,21 @@ func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
 
+func Test_Initialize_MissingPublicKey(t *testing.T) {
+	config := viper.New()
+	config.Set("PlatformName", "my platform")
+	_, err := Initialize(config)
+	assert.EqualError(t, err, "missing Public key in the token config (PublicKey or PublicKeyFile)")
+}
+
+func Test_Initialize_MissingPrivateKey(t *testing.T) {
+	config := viper.New()
+	config.Set("PlatformName", "my platform")
+	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
+	_, err := Initialize(config)
+	assert.EqualError(t, err, "missing Private key in the token config (PrivateKey or PrivateKeyFile)")
+}
+
 func Test_prepareFileName(t *testing.T) {
 	assert.Equal(t, "/", prepareFileName("/"))
 
