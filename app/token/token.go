@@ -55,10 +55,13 @@ func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 // keyType is either "Public" or "Private"
 func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	key := config.GetString(keyType + "Key")
-	if key == "" {
-		return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
+	if key != "" {
+		return []byte(key), nil
 	}
-	return []byte(key), nil
+	if config.GetString(keyType+"KeyFile") == "" {
+		return nil, fmt.Errorf("missing %s key in the token config (%sKey or %sKeyFile)", keyType, keyType, keyType)
+	}
+	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
 }
 
 func prepareFileName(fileName string) string {
