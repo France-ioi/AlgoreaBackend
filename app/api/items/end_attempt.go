@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /attempts/{attempt_id} items itemAttemptEnd
+// swagger:operation POST /attempts/{attempt_id}/end items itemAttemptEnd
 // ---
 // summary: End an attempt
 // description: >
