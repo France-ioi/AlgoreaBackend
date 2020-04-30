@@ -1,7 +1,6 @@
 server:
   port: 8080
   rootpath: "/" # the path at which the router is mounted
-  domain: "127.0.0.1"
 auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"
