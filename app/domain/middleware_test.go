@@ -35,6 +35,22 @@ func TestMiddleware(t *testing.T) {
 			shouldEnterService: true,
 		},
 		{
+			name: "use default",
+			domains: []ConfigItem{
+				{
+					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
+					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 7,
+				},
+				{
+					Domains:   []string{"default"},
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
+				},
+			},
+			expectedConfig:     &CtxConfig{RootGroupID: 1, RootSelfGroupID: 2, RootTempGroupID: 4},
+			expectedStatusCode: http.StatusOK,
+			shouldEnterService: true,
+		},
+		{
 			name: "wrong domain",
 			domains: []ConfigItem{
 				{
