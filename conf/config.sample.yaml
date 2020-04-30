@@ -30,7 +30,7 @@ logging:
   logRawSQLQueries: false
 domains:
   -
-    domains: [127.0.0.1]
+    domains: [default] # of a list of domains
     rootGroup: 1
     rootSelfGroup: 2
     rootTempGroup: 4
