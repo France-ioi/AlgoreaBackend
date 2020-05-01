@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
@@ -20,6 +21,7 @@ import (
 )
 
 func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
+	app.RootDirectory = "../../"
 	expectedParsedPayload := payloads.HintToken{}
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedParsedPayload)
 	expectedToken := (*token.Hint)(&expectedParsedPayload)

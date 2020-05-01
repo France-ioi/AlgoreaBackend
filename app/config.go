@@ -3,8 +3,6 @@ package app
 import (
 	"fmt"
 	"log"
-	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -30,6 +28,10 @@ const (
 	domainsConfigKey  string = "domains"
 )
 
+// RootDirectory is the path to the root of the project (to find config files)
+// may be changed, for tests launched from subdirectories
+var RootDirectory = "./"
+
 // LoadConfig loads and return the global configuration from files, flags, env, ...
 // The precedence of config values in viper is the following:
 // 1) explicit call to Set
@@ -39,7 +41,7 @@ const (
 // 5) key/value store
 // 6) default
 func LoadConfig() *viper.Viper {
-	return loadConfigFrom(defaultConfigName, configDirectory())
+	return loadConfigFrom(defaultConfigName, RootDirectory+"conf/")
 }
 
 func loadConfigFrom(filename, directory string) *viper.Viper {
@@ -69,12 +71,6 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 	}
 
 	return config
-}
-
-func configDirectory() string {
-	_, codeFilePath, _, _ := runtime.Caller(0)
-	codeDir := filepath.Dir(codeFilePath)
-	return filepath.Dir(codeDir + "/../conf/")
 }
 
 // ReplaceAuthConfig replaces the auth part of the config by the given one.
@@ -123,7 +119,7 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 // Panic in case of unmarshalling error
 func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)
-	return token.Initialize(sub)
+	return token.Initialize(sub, RootDirectory)
 }
 
 // AuthConfig returns an auth dynamic config from the global config
