@@ -45,6 +45,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
 	router.Post("/attempts/{attempt_id}/items/{item_id}/enter", service.AppHandler(srv.enter).ServeHTTP)
+	router.Post("/attempts/{attempt_id}/end", service.AppHandler(srv.endAttempt).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.Task, otherTokenFieldName string,

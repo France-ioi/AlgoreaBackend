@@ -94,12 +94,12 @@ Feature: Export the current user's data
         {
           "id": "0", "participant_id": "2", "creator_id": null,
           "created_at": "2019-05-28T11:00:00Z", "parent_attempt_id": null, "root_item_id": null,
-          "allows_submissions_until": "9999-12-31T23:59:59Z"
+          "allows_submissions_until": "9999-12-31T23:59:59Z", "ended_at": null
         },
         {
           "id": "0", "participant_id": "11", "creator_id": null,
           "created_at": "2019-05-28T11:00:00Z", "parent_attempt_id": null, "root_item_id": null,
-          "allows_submissions_until": "9999-12-31T23:59:59Z"
+          "allows_submissions_until": "9999-12-31T23:59:59Z", "ended_at": null
         }
       ],
       "results": [

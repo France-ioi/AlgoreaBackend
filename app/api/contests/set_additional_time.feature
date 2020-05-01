@@ -74,13 +74,13 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 60      | 00:01:00        |
       | 21       | 70      | 00:01:00        |
     And the database has the following table 'attempts':
-      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
-      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 2018-12-31 23:59:59      |
-      | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
-      | 1  | 15             | 2018-05-29 06:38:38 | 21         | 0                 | 70           | 2018-12-31 23:59:59      |
-      | 1  | 16             | 3019-05-29 06:38:38 | 21         | 0                 | 70           | 2018-12-31 23:59:59      |
-      | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      |
-      | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until | ended_at            |
+      | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 2018-12-31 23:59:59      | null                |
+      | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      | 2019-05-30 11:00:00 |
+      | 1  | 15             | 2018-05-29 06:38:38 | 21         | 0                 | 70           | 2018-12-31 23:59:59      | null                |
+      | 1  | 16             | 3019-05-29 06:38:38 | 21         | 0                 | 70           | 2018-12-31 23:59:59      | null                |
+      | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      | null                |
+      | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      | null                |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
       | 1          | 13             | 50      | 3018-05-29 06:38:38 | done                     |
@@ -111,7 +111,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 3018-07-03 06:39:37 |
-      | 34              | 14             | 3019-07-03 06:39:37 |
+      | 34              | 14             | 9999-12-31 23:59:59 |
       | 36              | 13             | 9999-12-31 23:59:59 |
       | 36              | 14             | 2018-12-31 23:59:59 |
       | 36              | 15             | 2018-12-31 23:59:59 |
@@ -135,7 +135,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
       | 33                | 33             | 1       | 9999-12-31 23:59:59 |
       | 34                | 13             | 0       | 3018-07-03 06:39:37 |
-      | 34                | 14             | 0       | 3019-07-03 06:39:37 |
+      | 34                | 14             | 0       | 9999-12-31 23:59:59 |
       | 34                | 34             | 1       | 9999-12-31 23:59:59 |
       | 35                | 35             | 1       | 9999-12-31 23:59:59 |
       | 36                | 13             | 0       | 9999-12-31 23:59:59 |
@@ -149,7 +149,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 1  | 15             | 2018-05-29 06:38:38 | 21         | 0                 | 70           | 2018-12-31 23:59:59      |
       | 1  | 16             | 3019-05-29 06:38:38 | 21         | 0                 | 70           | 2018-12-31 23:59:59      |
       | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      |
-      | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 3019-07-03 06:39:37      |
+      | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      |
     And the table "results" should stay unchanged
 
   Scenario: Creates a new row
@@ -214,6 +214,26 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     Then the response code should be 200
     And the response should be "updated"
     And the table "groups_contest_items" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
+
+  Scenario: Doesn't update time columns of groups_groups/attempts for ended attempts
+    Given I am the user with id "21"
+    When I send a PUT request to "/contests/50/groups/14/additional-times?seconds=10000"
+    Then the response code should be 200
+    And the response should be "updated"
+    And the table "groups_contest_items" should be:
+      | group_id | item_id | additional_time |
+      | 10       | 50      | 01:00:00        |
+      | 11       | 50      | 00:01:00        |
+      | 13       | 50      | 00:00:01        |
+      | 13       | 60      | 00:00:30        |
+      | 14       | 50      | 02:46:40        |
+      | 21       | 50      | 00:01:00        |
+      | 21       | 60      | 00:01:00        |
+      | 21       | 70      | 00:01:00        |
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
