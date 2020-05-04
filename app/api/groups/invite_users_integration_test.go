@@ -8,12 +8,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
 func Test_filterOtherTeamsMembersOut(t *testing.T) {
+	app.RootDirectory = "../../../" // nolint:goconst
 	tests := []struct {
 		name           string
 		fixture        string

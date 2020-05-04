@@ -6,9 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"reflect"
-	"runtime"
 	"time"
 
 	"github.com/SermoDigital/jose/crypto"
@@ -28,11 +26,11 @@ type Config struct {
 }
 
 // Initialize loads keys from the config and resolves the platform name
-func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
+func Initialize(config *viper.Viper, searchDirectory string) (tokenConfig *Config, err error) {
 
 	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
 
-	bytes, err := getKey(config, "Public")
+	bytes, err := getKey(config, "Public", searchDirectory)
 	if err != nil {
 		return
 	}
@@ -40,7 +38,7 @@ func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 	if err != nil {
 		return
 	}
-	bytes, err = getKey(config, "Private")
+	bytes, err = getKey(config, "Private", searchDirectory)
 	if err != nil {
 		return
 	}
@@ -53,7 +51,7 @@ func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 
 // getKey returns either "<keyType>Key" if not empty or the content of "<keyType>KeyFile" otherwise
 // keyType is either "Public" or "Private"
-func getKey(config *viper.Viper, keyType string) ([]byte, error) {
+func getKey(config *viper.Viper, keyType, searchDirectory string) ([]byte, error) {
 	key := config.GetString(keyType + "Key")
 	if key != "" {
 		return []byte(key), nil
@@ -61,17 +59,14 @@ func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	if config.GetString(keyType+"KeyFile") == "" {
 		return nil, fmt.Errorf("missing %s key in the token config (%sKey or %sKeyFile)", keyType, keyType, keyType)
 	}
-	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
+	return ioutil.ReadFile(prepareFileName(config.GetString(keyType+"KeyFile"), searchDirectory))
 }
 
-func prepareFileName(fileName string) string {
-	if len(fileName) > 0 && fileName[0] == '/' {
+func prepareFileName(fileName, directory string) string {
+	if len(fileName) > 0 && fileName[0] == '/' { // absolute path
 		return fileName
 	}
-
-	_, codeFilePath, _, _ := runtime.Caller(0)
-	codeDir := filepath.Dir(codeFilePath)
-	return codeDir + "/../../" + fileName
+	return directory + fileName // relative path
 }
 
 // ParseAndValidate parses a token and validates its signature and date

@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/currentuser"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -15,6 +16,7 @@ import (
 )
 
 func Test_checkPreconditionsForGroupRequests(t *testing.T) {
+	app.RootDirectory = "../../../" // nolint:goconst
 	tests := []struct {
 		name         string
 		fixture      string
