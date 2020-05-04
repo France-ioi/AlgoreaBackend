@@ -1,12 +1,15 @@
 package app
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"bou.ke/monkey"
+	"github.com/France-ioi/mapstructure"
 	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
 
@@ -110,10 +113,7 @@ func TestDBConfig_Success(t *testing.T) {
 	globalConfig := viper.New()
 	_ = os.Setenv("", "myself")
 	globalConfig.Set("database.collation", "stuff")
-	globalConfig.Set("database.TLSConfig", "v88")
-	// Still buggy, for unmarshaled config, the config needs to be set first (by config file
-	// or manually) to allow setting it through env
-	_ = os.Setenv("ALGOREA_DATABASE__TLSCONFIG", "v99")
+	_ = os.Setenv("ALGOREA_DATABASE__TLSCONFIG", "v99") // env var which was not defined before
 	defer func() { _ = os.Unsetenv("ALGOREA_DATABASE__TLSCONFIG") }()
 	dbConfig, err := DBConfig(globalConfig)
 	assert.NoError(err)
@@ -121,12 +121,30 @@ func TestDBConfig_Success(t *testing.T) {
 	assert.Equal("v99", dbConfig.TLSConfig)
 }
 
-func TestDBConfig_Error(t *testing.T) {
+func TestDBConfig_UnmarshallingError(t *testing.T) {
+	// don't know if it is really possible to get this error
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
-	globalConfig.Set("database.Timeout", "invalid")
+	monkey.PatchInstanceMethod(reflect.TypeOf(globalConfig), "Unmarshal",
+		func(_ *viper.Viper, _ interface{}, _ ...viper.DecoderConfigOption) error {
+			return fmt.Errorf("unmarshalling error")
+		},
+	)
+	defer monkey.UnpatchAll()
 	_, err := DBConfig(globalConfig)
-	assert.EqualError(err, "1 error(s) decoding:\n\n* error decoding 'Timeout': time: invalid duration invalid")
+	assert.EqualError(err, "unmarshalling error")
+}
+
+func TestDBConfig_StructToMapError(t *testing.T) {
+	// unexpected error, must monkey patch it
+	assert := assertlib.New(t)
+	globalConfig := viper.New()
+	monkey.Patch(mapstructure.Decode, func(_ interface{}, _ interface{}) error {
+		return fmt.Errorf("struct2map error")
+	})
+	defer monkey.UnpatchAll()
+	_, err := DBConfig(globalConfig)
+	assert.EqualError(err, "struct2map error")
 }
 
 func TestTokenConfig_Success(t *testing.T) {

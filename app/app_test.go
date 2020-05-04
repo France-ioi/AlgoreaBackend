@@ -12,6 +12,7 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus" //nolint:depguard
 	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
@@ -70,14 +71,12 @@ func TestNew_DBErr(t *testing.T) {
 
 func TestNew_DBConfigError(t *testing.T) {
 	assert := assertlib.New(t)
-	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
-		globalConfig := viper.New()
-		globalConfig.Set("database.Timeout", "invalid")
-		return globalConfig
+	patch := monkey.Patch(DBConfig, func(_ *viper.Viper) (config *mysql.Config, err error) {
+		return nil, errors.New("dberror")
 	})
 	defer patch.Unpatch()
 	_, err := New()
-	assert.Contains(err.Error(), "unable to load the 'database' configuration: 1 error(s) decoding")
+	assert.EqualError(err, "unable to load the 'database' configuration: dberror")
 }
 
 func TestNew_TokenConfigError(t *testing.T) {

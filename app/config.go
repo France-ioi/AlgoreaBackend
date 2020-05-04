@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/France-ioi/mapstructure"
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 
@@ -108,10 +109,22 @@ func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
 }
 
 // DBConfig returns the db connection fixed config from the global config.
-// Panic in case of unmarshaling error
 func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
-	sub := subconfig(globalConfig, databaseConfigKey)
-	err = sub.Unmarshal(&config)
+	// Env variables are not loaded if the key do not exist in the config file
+	// To fix this issue, all expected attributes are loaded in the config and
+	// are overridden by what is defined in the config (file or env)
+	emptyConfig := &map[string]interface{}{}
+	if err = mapstructure.Decode(mysql.NewConfig(), &emptyConfig); err != nil {
+		return // unexpected
+	}
+	vConfig := viper.New()
+	_ = vConfig.MergeConfigMap(*emptyConfig) // the function always return nil
+	if conf := globalConfig.GetStringMap(databaseConfigKey); conf != nil {
+		_ = vConfig.MergeConfigMap(conf)
+	}
+	vConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, databaseConfigKey))
+	vConfig.AutomaticEnv()
+	err = vConfig.Unmarshal(&config)
 	return
 }
 
