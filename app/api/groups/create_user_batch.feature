@@ -27,7 +27,6 @@ Feature: Create a user batch
         loginModuleURL: "https://login.algorea.org"
         clientID: "1"
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
-        callbackURL: "https://backend.algorea.org/auth/login-callback"
       domains:
         -
           domains: [127.0.0.1]

@@ -37,7 +37,6 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, s
 		"client_secret": {ctx.appAuthConfig().GetString("ClientSecret")},
 		"grant_type":    {"authorization_code"},
 		"code":          {preprocessedCode},
-		"redirect_uri":  {ctx.appAuthConfig().GetString("CallbackURL")},
 	}
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
 		ctx.appAuthConfig().GetString("LoginModuleURL")+"/oauth/token", responder,
@@ -68,7 +67,6 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 		"grant_type":    {"authorization_code"},
 		"code":          {preprocessedCode},
 		"code_verifier": {preprocessedCodeVerifier},
-		"redirect_uri":  {authConfig.GetString("CallbackURL")},
 	}
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
 		authConfig.GetString("LoginModuleURL")+"/oauth/token", responder,

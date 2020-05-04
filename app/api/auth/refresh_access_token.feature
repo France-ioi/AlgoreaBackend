@@ -27,7 +27,6 @@ Feature: Create a new access token
         loginModuleURL: "https://login.algorea.org"
         clientID: "1"
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
-        callbackURL: "https://backend.algorea.org/auth/login-callback"
       """
 
   Scenario: Request a new access token for a temporary user

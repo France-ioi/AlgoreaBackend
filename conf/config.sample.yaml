@@ -5,7 +5,6 @@ auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"
   clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
-  callbackURL: "http://127.0.0.1:8080/auth/login-callback"
 token:
   platformName: algrorea_backend
   publicKeyFile: public_key.pem # one of (publicKeyFile, publicKey) is required
