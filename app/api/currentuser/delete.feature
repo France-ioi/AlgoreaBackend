@@ -33,7 +33,6 @@ Feature: Delete the current user
         loginModuleURL: "https://login.algorea.org"
         clientID: "1"
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
-        callbackURL: "https://backend.algorea.org/auth/login-callback"
       """
 
   Scenario: Regular user

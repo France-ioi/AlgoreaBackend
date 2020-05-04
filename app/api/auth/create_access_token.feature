@@ -9,7 +9,6 @@ Feature: Create an access token
         loginModuleURL: "https://login.algorea.org"
         clientID: "1"
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
-        callbackURL: "https://backend.algorea.org/auth/login-callback"
       domains:
         -
           domains: [127.0.0.1]
@@ -212,7 +211,6 @@ Feature: Create an access token
         loginModuleURL: "https://login.algorea.org"
         clientID: "2"
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
-        callbackURL: "http://backend.algorea.org/auth/login-callback"
       """
     And the template constant "code_from_oauth" is "somecode"
     And the database table 'groups' has also the following rows:

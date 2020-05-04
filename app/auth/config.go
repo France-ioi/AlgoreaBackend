@@ -20,8 +20,7 @@ func GetOAuthConfig(config *viper.Viper) *oauth2.Config {
 			// auto-detect.
 			AuthStyle: oauth2.AuthStyleInParams,
 		},
-		RedirectURL: config.GetString("CallbackURL"),
-		Scopes:      []string{"account"},
+		Scopes: []string{"account"},
 	}
 	return &oauthConfig
 }
