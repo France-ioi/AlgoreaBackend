@@ -116,7 +116,6 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 }
 
 // TokenConfig returns the token fixed config from the global config
-// Panic in case of unmarshalling error
 func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)
 	return token.Initialize(sub, RootDirectory)
