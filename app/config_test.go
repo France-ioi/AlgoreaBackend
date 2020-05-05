@@ -132,7 +132,7 @@ func TestDBConfig_Error(t *testing.T) {
 func TestTokenConfig_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
-	monkey.Patch(token.Initialize, func(config *viper.Viper, _ string) (*token.Config, error) {
+	monkey.Patch(token.Initialize, func(config *viper.Viper) (*token.Config, error) {
 		return &token.Config{PlatformName: "test"}, nil
 	})
 	defer monkey.UnpatchAll()

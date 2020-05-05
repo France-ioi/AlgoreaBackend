@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -192,7 +193,7 @@ func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	tokenConfig, err := Initialize(config, "../../")
+	tokenConfig, err := Initialize(config)
 	assert.NoError(t, err)
 	assert.Equal(t, &Config{
 		PrivateKey:   expectedPrivateKey,
@@ -211,7 +212,7 @@ func Test_Initialize_LoadsKeysFromString(t *testing.T) {
 	config.Set("PrivateKey", tokentest.AlgoreaPlatformPrivateKey)
 	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
 	config.Set("PlatformName", "my platform")
-	tokenConfig, err := Initialize(config, "../../")
+	tokenConfig, err := Initialize(config)
 	assert.NoError(t, err)
 	assert.Equal(t, &Config{
 		PrivateKey:   expectedPrivateKey,
@@ -231,7 +232,7 @@ func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", "nosuchfile.pem")
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config, "../../")
+	_, err = Initialize(config)
 	assert.IsType(t, &os.PathError{}, err)
 }
 
@@ -246,7 +247,7 @@ func Test_Initialize_CannotLoadPrivateKey(t *testing.T) {
 	config.Set("PrivateKeyFile", "nosuchfile.pem")
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config, "../../")
+	_, err = Initialize(config)
 
 	assert.IsType(t, &os.PathError{}, err)
 }
@@ -268,7 +269,7 @@ func Test_Initialize_CannotParsePublicKey(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config, "../../")
+	_, err = Initialize(config)
 
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
@@ -290,7 +291,7 @@ func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config, "../../")
+	_, err = Initialize(config)
 
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
@@ -298,7 +299,7 @@ func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
 func Test_Initialize_MissingPublicKey(t *testing.T) {
 	config := viper.New()
 	config.Set("PlatformName", "my platform")
-	_, err := Initialize(config, "../../")
+	_, err := Initialize(config)
 	assert.EqualError(t, err, "missing Public key in the token config (PublicKey or PublicKeyFile)")
 }
 
@@ -306,16 +307,21 @@ func Test_Initialize_MissingPrivateKey(t *testing.T) {
 	config := viper.New()
 	config.Set("PlatformName", "my platform")
 	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
-	_, err := Initialize(config, "../../")
+	_, err := Initialize(config)
 	assert.EqualError(t, err, "missing Private key in the token config (PrivateKey or PrivateKeyFile)")
 }
 
 func Test_prepareFileName(t *testing.T) {
-	// absolute path
-	assert.Equal(t, "/afile.key", prepareFileName("/afile.key", "./adir/"))
+	assert.Equal(t, "/", prepareFileName("/"))
 
-	// rel path
-	assert.Equal(t, "adir/some.file", prepareFileName("some.file", "adir/"))
+	preparedFileName := prepareFileName("")
+	assert.True(t, strings.HasPrefix(preparedFileName, "/"))
+	assert.Equal(t, "/app/token/../../", preparedFileName[len(preparedFileName)-len("/app/token/../../"):])
+
+	preparedFileName = prepareFileName("some.file")
+	assert.True(t, strings.HasPrefix(preparedFileName, "/"))
+	assert.Equal(t, "/app/token/../../some.file",
+		preparedFileName[len(preparedFileName)-len("/app/token/../../some.file"):])
 }
 
 func createTmpPublicKeyFile(key []byte) (*os.File, error) {
