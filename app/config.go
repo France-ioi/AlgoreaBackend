@@ -110,9 +110,10 @@ func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
 
 // DBConfig returns the db connection fixed config from the global config.
 func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
-	// Env variables are not loaded if the key do not exist in the config file
-	// To fix this issue, all expected attributes are loaded in the config and
-	// are overridden by what is defined in the config (file or env)
+	// Env variables are not loaded if the keys do not exist in the config file
+	// To fix this issue, instead of loading config files and overriding with env vars,
+	// we load all possible keys (with their default value), override with config files,
+	// and then environmenent variables.
 	emptyConfig := &map[string]interface{}{}
 	if err = mapstructure.Decode(mysql.NewConfig(), &emptyConfig); err != nil {
 		return // unexpected
