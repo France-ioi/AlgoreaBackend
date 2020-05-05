@@ -324,6 +324,7 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(mainFixture, tt.fixture)
+			defer func() { _ = db.Close() }()
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				store.GroupGroups().CreateNewAncestors()
 				got, err :=
