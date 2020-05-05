@@ -72,12 +72,15 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 	return config
 }
 
-var configPathTestRegexp = regexp.MustCompile("/app(/[a-z]+)*$")
+var configPathTestRegexp = regexp.MustCompile(".*(/app(?:/[a-z]+)*?)$")
 
 func configDirectory() string {
 	cwd, _ := os.Getwd()
 	if strings.HasSuffix(os.Args[0], ".test") {
-		cwd = configPathTestRegexp.ReplaceAllString(cwd, "")
+		match := configPathTestRegexp.FindStringSubmatchIndex(cwd)
+		if match != nil {
+			cwd = cwd[:match[2]]
+		}
 	}
 	return filepath.Dir(cwd + "/conf/")
 }

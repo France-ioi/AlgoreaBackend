@@ -310,6 +310,8 @@ func Test_Initialize_MissingPrivateKey(t *testing.T) {
 	assert.EqualError(t, err, "missing Private key in the token config (PrivateKey or PrivateKeyFile)")
 }
 
+const relFileName = "app/token/token_test.go"
+
 func Test_prepareFileName(t *testing.T) {
 	assert.Equal(t, "/", prepareFileName("/"))
 
@@ -317,10 +319,17 @@ func Test_prepareFileName(t *testing.T) {
 	assert.Equal(t, "/afile.key", prepareFileName("/afile.key"))
 
 	// rel path
-	relFileName := "app/token/token_test.go"
 	preparedFileName := prepareFileName(relFileName)
 	assert.Equal(t, relFileName, preparedFileName[len(preparedFileName)-len(relFileName):])
 	assert.FileExists(t, preparedFileName)
+}
+
+func Test_prepareFileName_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
+	monkey.Patch(os.Getwd, func() (string, error) { return "/app/something/app/ab/app/token", nil })
+	defer monkey.UnpatchAll()
+	relFileName := "app/token/token_test.go"
+	preparedFileName := prepareFileName(relFileName)
+	assert.Equal(t, "/app/something/app/ab/"+relFileName, preparedFileName)
 }
 
 func createTmpPublicKeyFile(key []byte) (*os.File, error) {

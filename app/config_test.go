@@ -252,6 +252,13 @@ func TestReplaceDomainsConfig_Panic(t *testing.T) {
 	})
 }
 
+func Test_configDirectory_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
+	monkey.Patch(os.Getwd, func() (string, error) { return "/app/something/app/ab/app/token", nil })
+	defer monkey.UnpatchAll()
+	dir := configDirectory()
+	assertlib.Equal(t, "/app/something/app/ab/conf", dir)
+}
+
 func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.File, deferFunc func()) {
 	// create a temp config file
 	tmpFile, err := ioutil.TempFile(os.TempDir(), pattern)
