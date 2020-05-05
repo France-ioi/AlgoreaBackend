@@ -29,6 +29,15 @@ import (
 //   `invalid` as the result.
 //
 //
+//   If the `{parent_group_id}` corresponds to a team, `{group_ids}` can contain no more than one id,
+//   otherwise the 'bad request' response is returned.
+//
+//
+//   If the `{parent_group_id}` corresponds to a team, the service skips a user with result = "in_another_team"
+//   if removal breaks entry conditions of at least one of the team's participations
+//   (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied).
+//
+//
 //   The response status code on success (200) doesn't depend on per-group results.
 // parameters:
 // - name: parent_group_id

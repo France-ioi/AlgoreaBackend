@@ -76,3 +76,66 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 	s.GroupGroups().createNewAncestors()
 	return groupID, nil
 }
+
+// CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations checks whether adding/removal of a user
+// specified by userID would keep entry conditions satisfied for all active participations of teamGroupID.
+// If at least one entry condition becomes broken for at least one active participation, the method returns false.
+// An active participation is one that is started (`results.started_at` is not null for the `root_item_id`),
+// still allows submissions and is not ended.
+// Entry conditions are defined by items.entry_min_admitted_members_ratio & items.entry_max_team_size
+// (for more info see description of the itemGetEntryState service).
+// The isAddition parameter specifies if we are going to add or remove a user.
+func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
+	teamGroupID, userID int64, isAddition bool) (bool, error) {
+	teamParticipationsQuery := s.Attempts().
+		Joins(`
+			JOIN results ON results.participant_id = attempts.participant_id AND results.attempt_id = attempts.id AND
+				results.item_id = attempts.root_item_id`).
+		Where("attempts.participant_id = ?", teamGroupID).
+		Where("root_item_id IS NOT NULL").
+		Where("started_at IS NOT NULL").
+		Group("attempts.root_item_id").
+		WithWriteLock()
+
+	activeTeamParticipationsQuery := teamParticipationsQuery.
+		Where("NOW() < allows_submissions_until").
+		Where("ended_at IS NULL").
+		Select("item_id, MIN(started_at) AS started_at")
+
+	updatedMemberIDsQuery := s.ActiveGroupGroups().Where("parent_group_id = ?", teamGroupID).
+		Select("child_group_id").WithWriteLock()
+	if isAddition {
+		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID).QueryExpr())
+	} else {
+		updatedMemberIDsQuery = updatedMemberIDsQuery.Where("child_group_id != ?", userID)
+	}
+
+	membersPreconditionsQuery := s.ActiveGroupAncestors().
+		Where("groups_ancestors_active.child_group_id IN (?)", updatedMemberIDsQuery.QueryExpr()).
+		Joins("JOIN ? AS active_participations", activeTeamParticipationsQuery.SubQuery()).
+		Joins("JOIN items ON items.id = active_participations.item_id").
+		Joins(`
+			LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+				permissions_granted.item_id = items.id`).
+		Group("items.id, groups_ancestors_active.child_group_id").
+		WithWriteLock().
+		Select(`
+			items.id AS item_id,
+			items.entry_max_team_size,
+			items.entry_min_admitted_members_ratio,
+			IFNULL(
+				MAX(permissions_granted.can_enter_from <= active_participations.started_at AND
+				    active_participations.started_at < permissions_granted.can_enter_until),
+				0) AS can_enter`)
+
+	found, err := s.Raw(`
+		SELECT 1 FROM (?) members_preconditions
+		GROUP BY item_id
+		HAVING NOT (
+			MIN(entry_min_admitted_members_ratio) = 'None' OR
+			MIN(entry_min_admitted_members_ratio) = 'All' AND SUM(can_enter) = COUNT(*) OR
+			MIN(entry_min_admitted_members_ratio) = 'Half' AND COUNT(*) <= SUM(can_enter) * 2 OR
+			MIN(entry_min_admitted_members_ratio) = 'One' AND SUM(can_enter) >= 1
+		) OR MIN(entry_max_team_size) < COUNT(*)`, membersPreconditionsQuery.QueryExpr()).HasRows()
+	return !found, err
+}

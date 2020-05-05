@@ -22,6 +22,10 @@ import (
 //
 //   * The user cannot leave the group if `NOW()` < `groups.require_lock_membership_approval_until` and
 //     `groups_groups.lock_membership_approved` is set or if the group membership is frozen.
+//
+//   * If the group is a team and leaving breaks entry conditions of at least one of the team's participations
+//     (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
+//     the unprocessable entity error is returned.
 // parameters:
 // - name: group_id
 //   in: path

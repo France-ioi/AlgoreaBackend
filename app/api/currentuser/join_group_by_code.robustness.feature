@@ -163,3 +163,28 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Cannot join if joining breaks entry conditions for the team
+    Given I am the user with id "21"
+    And the database has the following table 'items':
+      | id | default_language_tag | entry_min_admitted_members_ratio |
+      | 2  | fr                   | All                              |
+    And the database table 'attempts' has also the following row:
+      | participant_id | id | root_item_id |
+      | 12             | 1  | 2            |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | 12             | 1          | 2       | 2019-05-30 11:00:00 |
+    When I send a POST request to "/current-user/group-memberships/by-code?code=abc3456789&approvals=watch"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Entry conditions would not be satisfied"
+    }
+    """
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged

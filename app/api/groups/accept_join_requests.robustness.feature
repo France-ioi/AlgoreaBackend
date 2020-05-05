@@ -6,6 +6,7 @@ Feature: Accept group requests - robustness
       | 12  | User  | false             |
       | 13  | Club  | false             |
       | 14  | Class | false             |
+      | 15  | Team  | false             |
       | 21  | User  | false             |
       | 31  | Class | true              |
       | 111 | User  | false             |
@@ -24,6 +25,7 @@ Feature: Accept group requests - robustness
       | 12       | 12         | memberships |
       | 13       | 21         | memberships |
       | 13       | 12         | none        |
+      | 15       | 21         | memberships |
       | 31       | 21         | memberships |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
@@ -105,6 +107,16 @@ Feature: Accept group requests - robustness
     When I send a POST request to "/groups/31/join-requests/accept?group_ids=141"
     Then the response code should be 403
     And the response error message should contain "Group membership is frozen"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when several group_ids are given for a team
+    Given I am the user with id "21"
+    When I send a POST request to "/groups/15/join-requests/accept?group_ids=31,11,13"
+    Then the response code should be 400
+    And the response error message should contain "There should be no more than one id in group_ids when the parent group is a team"
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be empty

@@ -34,6 +34,10 @@ import (
 //   * If there is already a row in `groups_groups` with the found team as a parent
 //     and the authenticated user’s selfGroup’s id as a child, the unprocessable entity error is returned.
 //
+//   * If the group is a team and joining breaks entry conditions of at least one of the team's participations
+//     (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
+//     the unprocessable entity error is returned.
+//
 //   * If the group requires some approvals from the user and those are not given in `approval`,
 //     the unprocessable entity error is returned with a list of missing approvals.
 // parameters:
@@ -106,10 +110,19 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			return apiError.Error // rollback
 		}
 
+		var ok bool
+		ok, errInTransaction = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupInfo.ID, user.GroupID, true)
+		service.MustNotBeError(errInTransaction)
+		if !ok {
+			apiError = service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))
+			return apiError.Error // rollback
+		}
+
 		if groupInfo.CodeEndIsNull && !groupInfo.CodeLifetimeIsNull {
 			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).
 				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
 		}
+
 		var approvals database.GroupApprovals
 		approvals.FromString(r.URL.Query().Get("approvals"))
 		results, approvalsToRequest, errInTransaction = store.GroupGroups().Transition(

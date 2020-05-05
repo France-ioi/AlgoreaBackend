@@ -41,6 +41,7 @@ Feature: Accept requests to leave a group - robustness
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 14       | 21         | memberships |
+      | 444      | 21         | memberships |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "21"
@@ -103,6 +104,16 @@ Feature: Accept requests to leave a group - robustness
     When I send a POST request to "/groups/14/leave-requests/accept?group_ids=151"
     Then the response code should be 403
     And the response error message should contain "Group membership is frozen"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when several group_ids are given for a team
+    Given I am the user with id "21"
+    When I send a POST request to "/groups/444/leave-requests/accept?group_ids=11,151"
+    Then the response code should be 400
+    And the response error message should contain "There should be no more than one id in group_ids when the parent group is a team"
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be empty

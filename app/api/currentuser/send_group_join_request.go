@@ -22,10 +22,6 @@ import (
 //
 //     * `groups.is_public` should be 1, otherwise the 'forbidden' response is returned.
 //
-//     * If the group is a team and the user is already on a team that has attempts for same contest
-//       while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
-//       the unprocessable entity error is returned.
-//
 //     * If there is already a row in `group_pending_requests` with
 //       `type` != 'join_request' or a row in `groups_groups` for the same group-user pair,
 //       the unprocessable entity error is returned.
@@ -52,6 +48,16 @@ import (
 //
 //   If the group doesn't exist, or it is a user, or its membership is frozen, or the current user is a temporary user,
 //   the "forbidden" response is returned.
+//
+//
+//   If the group is a team and the user is already on a team that has attempts for same contest
+//   while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
+//   the unprocessable entity error is returned.
+//
+//
+//   If the group is a team and joining breaks entry conditions of at least one of the team's participations
+//   (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
+//   the unprocessable entity error is returned.
 // parameters:
 // - name: group_id
 //   in: path
