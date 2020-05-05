@@ -3,8 +3,9 @@ package app
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
-	"runtime"
+	"regexp"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -71,10 +72,14 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 	return config
 }
 
+var configPathTestRegexp = regexp.MustCompile("/app(/[a-z]+)*$")
+
 func configDirectory() string {
-	_, codeFilePath, _, _ := runtime.Caller(0)
-	codeDir := filepath.Dir(codeFilePath)
-	return filepath.Dir(codeDir + "/../conf/")
+	cwd, _ := os.Getwd()
+	if strings.HasSuffix(os.Args[0], ".test") {
+		cwd = configPathTestRegexp.ReplaceAllString(cwd, "")
+	}
+	return filepath.Dir(cwd + "/conf/")
 }
 
 // ReplaceAuthConfig replaces the auth part of the config by the given one.
