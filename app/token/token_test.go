@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -314,14 +313,14 @@ func Test_Initialize_MissingPrivateKey(t *testing.T) {
 func Test_prepareFileName(t *testing.T) {
 	assert.Equal(t, "/", prepareFileName("/"))
 
-	preparedFileName := prepareFileName("")
-	assert.True(t, strings.HasPrefix(preparedFileName, "/"))
-	assert.Equal(t, "/app/token/../../", preparedFileName[len(preparedFileName)-len("/app/token/../../"):])
+	// absolute path
+	assert.Equal(t, "/afile.key", prepareFileName("/afile.key"))
 
-	preparedFileName = prepareFileName("some.file")
-	assert.True(t, strings.HasPrefix(preparedFileName, "/"))
-	assert.Equal(t, "/app/token/../../some.file",
-		preparedFileName[len(preparedFileName)-len("/app/token/../../some.file"):])
+	// rel path
+	relFileName := "app/token/token_test.go"
+	preparedFileName := prepareFileName(relFileName)
+	assert.Equal(t, relFileName, preparedFileName[len(preparedFileName)-len(relFileName):])
+	assert.FileExists(t, preparedFileName)
 }
 
 func createTmpPublicKeyFile(key []byte) (*os.File, error) {

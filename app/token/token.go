@@ -6,9 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
+	"os"
 	"reflect"
-	"runtime"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/SermoDigital/jose/crypto"
@@ -64,14 +65,18 @@ func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
 }
 
+var tokenPathTestRegexp = regexp.MustCompile("/app(/[a-z]+)*$")
+
 func prepareFileName(fileName string) string {
 	if len(fileName) > 0 && fileName[0] == '/' {
 		return fileName
 	}
 
-	_, codeFilePath, _, _ := runtime.Caller(0)
-	codeDir := filepath.Dir(codeFilePath)
-	return codeDir + "/../../" + fileName
+	cwd, _ := os.Getwd()
+	if strings.HasSuffix(os.Args[0], ".test") {
+		cwd = tokenPathTestRegexp.ReplaceAllString(cwd, "")
+	}
+	return cwd + "/" + fileName
 }
 
 // ParseAndValidate parses a token and validates its signature and date
