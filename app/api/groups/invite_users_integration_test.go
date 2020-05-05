@@ -166,7 +166,32 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			wantWrongIDs:   []int64{},
 		},
 		{
-			name: "parent group is a team with attempts and children groups are in teams with expired attempts for the same contest",
+			name: "parent group is a team with ended attempts and children groups are in teams with attempts for the same contest",
+			fixture: `
+				groups:
+					- {id: 1, type: Team}
+					- {id: 2, type: Team}
+					- {id: 3, type: Team}
+					- {id: 10, type: User}
+					- {id: 11, type: User}
+					- {id: 12, type: User}
+					- {id: 13, type: User}
+				groups_groups:
+					- {parent_group_id: 2, child_group_id: 10}
+					- {parent_group_id: 3, child_group_id: 11}
+					- {parent_group_id: 2, child_group_id: 12}
+					- {parent_group_id: 3, child_group_id: 13}
+				items: [{id: 1234, default_language_tag: fr, allows_multiple_attempts: 1}]
+				attempts:
+					- {participant_id: 1, id: 1, root_item_id: 1234, ended_at: 2019-05-30 11:00:00}
+					- {participant_id: 2, id: 1, root_item_id: 1234}
+					- {participant_id: 3, id: 1, root_item_id: 1234}`,
+			groupsToInvite: []int64{10, 11, 12, 13},
+			want:           []int64{10, 11, 12, 13},
+			wantWrongIDs:   []int64{},
+		},
+		{
+			name: "parent group is a team with attempts and children groups are in teams with expired/ended attempts for the same contest",
 			fixture: `
 				groups:
 					- {id: 1, type: Team}
@@ -185,13 +210,13 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234}
 					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}
-					- {participant_id: 3, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
+					- {participant_id: 3, id: 1, root_item_id: 1234, ended_at: 2019-05-30 11:00:00}`,
 			groupsToInvite: []int64{10, 11, 12, 13},
 			want:           []int64{10, 11, 12, 13},
 			wantWrongIDs:   []int64{},
 		},
 		{
-			name: "parent group is a team with expired attempts and children groups are in teams with expired attempts " +
+			name: "parent group is a team with expired attempts and children groups are in teams with expired/ended attempts " +
 				"for the same contest, but the contest doesn't allow multiple attempts",
 			fixture: `
 				groups:
@@ -210,7 +235,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 				items: [{id: 1234, default_language_tag: fr, allows_multiple_attempts: 0}]
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234}
-					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}
+					- {participant_id: 2, id: 1, root_item_id: 1234, ended_at: 2019-05-30 11:00:00}
 					- {participant_id: 3, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
 			groupsToInvite: []int64{10, 11, 12, 13},
 			want:           []int64{},
