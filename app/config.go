@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/France-ioi/mapstructure"
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 
@@ -120,15 +121,27 @@ func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
 }
 
 // DBConfig returns the db connection fixed config from the global config.
-// Panic in case of unmarshaling error
 func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
-	sub := subconfig(globalConfig, databaseConfigKey)
-	err = sub.Unmarshal(&config)
+	// Env variables are not loaded if the keys do not exist in the config file
+	// To fix this issue, instead of loading config files and overriding with env vars,
+	// we load all possible keys (with their default value), override with config files,
+	// and then environmenent variables.
+	emptyConfig := &map[string]interface{}{}
+	if err = mapstructure.Decode(mysql.NewConfig(), &emptyConfig); err != nil {
+		return // unexpected
+	}
+	vConfig := viper.New()
+	_ = vConfig.MergeConfigMap(*emptyConfig) // the function always return nil
+	if conf := globalConfig.GetStringMap(databaseConfigKey); conf != nil {
+		_ = vConfig.MergeConfigMap(conf)
+	}
+	vConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, databaseConfigKey))
+	vConfig.AutomaticEnv()
+	err = vConfig.Unmarshal(&config)
 	return
 }
 
 // TokenConfig returns the token fixed config from the global config
-// Panic in case of unmarshalling error
 func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)
 	return token.Initialize(sub)
