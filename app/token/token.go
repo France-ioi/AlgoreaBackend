@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/SermoDigital/jose/crypto"
@@ -26,11 +29,11 @@ type Config struct {
 }
 
 // Initialize loads keys from the config and resolves the platform name
-func Initialize(config *viper.Viper, searchDirectory string) (tokenConfig *Config, err error) {
+func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 
 	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
 
-	bytes, err := getKey(config, "Public", searchDirectory)
+	bytes, err := getKey(config, "Public")
 	if err != nil {
 		return
 	}
@@ -38,7 +41,7 @@ func Initialize(config *viper.Viper, searchDirectory string) (tokenConfig *Confi
 	if err != nil {
 		return
 	}
-	bytes, err = getKey(config, "Private", searchDirectory)
+	bytes, err = getKey(config, "Private")
 	if err != nil {
 		return
 	}
@@ -51,7 +54,7 @@ func Initialize(config *viper.Viper, searchDirectory string) (tokenConfig *Confi
 
 // getKey returns either "<keyType>Key" if not empty or the content of "<keyType>KeyFile" otherwise
 // keyType is either "Public" or "Private"
-func getKey(config *viper.Viper, keyType, searchDirectory string) ([]byte, error) {
+func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	key := config.GetString(keyType + "Key")
 	if key != "" {
 		return []byte(key), nil
@@ -59,14 +62,24 @@ func getKey(config *viper.Viper, keyType, searchDirectory string) ([]byte, error
 	if config.GetString(keyType+"KeyFile") == "" {
 		return nil, fmt.Errorf("missing %s key in the token config (%sKey or %sKeyFile)", keyType, keyType, keyType)
 	}
-	return ioutil.ReadFile(prepareFileName(config.GetString(keyType+"KeyFile"), searchDirectory))
+	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
 }
 
-func prepareFileName(fileName, directory string) string {
-	if len(fileName) > 0 && fileName[0] == '/' { // absolute path
+var tokenPathTestRegexp = regexp.MustCompile(".*(/app(?:/[a-z]+)*?)$")
+
+func prepareFileName(fileName string) string {
+	if len(fileName) > 0 && fileName[0] == '/' {
 		return fileName
 	}
-	return directory + fileName // relative path
+
+	cwd, _ := os.Getwd()
+	if strings.HasSuffix(os.Args[0], ".test") {
+		match := tokenPathTestRegexp.FindStringSubmatchIndex(cwd)
+		if match != nil {
+			cwd = cwd[:match[2]]
+		}
+	}
+	return cwd + "/" + fileName
 }
 
 // ParseAndValidate parses a token and validates its signature and date

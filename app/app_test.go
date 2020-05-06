@@ -25,7 +25,6 @@ import (
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
 
 func TestNew_Success(t *testing.T) {
-	RootDirectory = "../"
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest()
 	app, err := New()

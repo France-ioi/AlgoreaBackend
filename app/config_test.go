@@ -132,7 +132,7 @@ func TestDBConfig_Error(t *testing.T) {
 func TestTokenConfig_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
-	monkey.Patch(token.Initialize, func(config *viper.Viper, _ string) (*token.Config, error) {
+	monkey.Patch(token.Initialize, func(config *viper.Viper) (*token.Config, error) {
 		return &token.Config{PlatformName: "test"}, nil
 	})
 	defer monkey.UnpatchAll()
@@ -250,6 +250,13 @@ func TestReplaceDomainsConfig_Panic(t *testing.T) {
 	assert.Panics(func() {
 		application.ReplaceDomainsConfig(globalConfig)
 	})
+}
+
+func Test_configDirectory_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
+	monkey.Patch(os.Getwd, func() (string, error) { return "/app/something/app/ab/app/token", nil })
+	defer monkey.UnpatchAll()
+	dir := configDirectory()
+	assertlib.Equal(t, "/app/something/app/ab/conf", dir)
 }
 
 func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.File, deferFunc func()) {
