@@ -146,6 +146,7 @@ const (
 
 const inAnotherTeam = "in_another_team"
 const notFound = "not_found"
+const team = "Team"
 
 func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.Request,
 	action bulkMembershipAction) service.APIError {
@@ -160,46 +161,81 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 	}
 
 	user := srv.GetUser(r)
-	if apiErr := checkThatUserCanManageTheGroupMemberships(srv.Store, user, parentGroupID); apiErr != service.NoError {
-		return apiErr
-	}
-
-	if action == acceptJoinRequestsAction || action == acceptLeaveRequestsAction {
-		var isMembershipFrozen bool
-		service.MustNotBeError(
-			srv.Store.Groups().ByID(parentGroupID).PluckFirst("frozen_membership", &isMembershipFrozen).Error())
-		if isMembershipFrozen {
-			return service.ErrForbidden(errors.New("group membership is frozen"))
-		}
-	}
-
+	apiError := service.NoError
 	var results database.GroupGroupTransitionResults
-	var filteredIDs []int64
 	if len(groupIDs) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
-			if action == acceptJoinRequestsAction {
-				groupIDs, filteredIDs = filterOtherTeamsMembersOut(store, parentGroupID, groupIDs)
+			var groupType string
+			groupType, apiError = checkPreconditionsForBulkMembershipAction(action, user, store, parentGroupID, groupIDs)
+			if apiError != service.NoError {
+				return apiError.Error // rollback
 			}
 
-			results, _, err = store.GroupGroups().Transition(
-				map[bulkMembershipAction]database.GroupGroupTransitionAction{
-					acceptJoinRequestsAction:  database.AdminAcceptsJoinRequest,
-					rejectJoinRequestsAction:  database.AdminRefusesJoinRequest,
-					withdrawInvitationsAction: database.AdminWithdrawsInvitation,
-					acceptLeaveRequestsAction: database.AdminAcceptsLeaveRequest,
-					rejectLeaveRequestsAction: database.AdminRefusesLeaveRequest,
-				}[action], parentGroupID, groupIDs, nil, user.GroupID)
+			results, err = performBulkMembershipActionTransition(store, action, parentGroupID, groupIDs, groupType, user)
 			return err
 		})
 	}
 
+	if apiError != service.NoError {
+		return apiError
+	}
 	service.MustNotBeError(err)
 
-	for _, id := range filteredIDs {
-		results[id] = inAnotherTeam
-	}
 	renderGroupGroupTransitionResults(w, r, results)
 	return service.NoError
+}
+
+func performBulkMembershipActionTransition(store *database.DataStore, action bulkMembershipAction, parentGroupID int64,
+	groupIDs []int64, groupType string, user *database.User) (database.GroupGroupTransitionResults, error) {
+	groupID := groupIDs[0]
+	if groupType == team {
+		if action == acceptJoinRequestsAction && isOtherTeamMember(store, parentGroupID, groupID) {
+			return database.GroupGroupTransitionResults{groupID: inAnotherTeam}, nil
+		}
+
+		if map[bulkMembershipAction]bool{acceptJoinRequestsAction: true, acceptLeaveRequestsAction: true}[action] {
+			ok, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
+				parentGroupID, groupID, action == acceptJoinRequestsAction)
+			service.MustNotBeError(err)
+			if !ok {
+				return database.GroupGroupTransitionResults{groupID: "entry_condition_failed"}, nil
+			}
+		}
+	}
+
+	results, _, err := store.GroupGroups().Transition(
+		map[bulkMembershipAction]database.GroupGroupTransitionAction{
+			acceptJoinRequestsAction:  database.AdminAcceptsJoinRequest,
+			rejectJoinRequestsAction:  database.AdminRefusesJoinRequest,
+			withdrawInvitationsAction: database.AdminWithdrawsInvitation,
+			acceptLeaveRequestsAction: database.AdminAcceptsLeaveRequest,
+			rejectLeaveRequestsAction: database.AdminRefusesLeaveRequest,
+		}[action], parentGroupID, groupIDs, nil, user.GroupID)
+	return results, err
+}
+
+func checkPreconditionsForBulkMembershipAction(action bulkMembershipAction, user *database.User, store *database.DataStore,
+	parentGroupID int64, groupIDs []int64) (groupType string, apiError service.APIError) {
+	if apiError = checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiError != service.NoError {
+		return "", apiError
+	}
+
+	var groupInfo struct {
+		Type             string
+		FrozenMembership bool
+	}
+	if action == acceptJoinRequestsAction || action == acceptLeaveRequestsAction {
+		service.MustNotBeError(
+			store.Groups().ByID(parentGroupID).Select("frozen_membership, type").Scan(&groupInfo).Error())
+		if groupInfo.FrozenMembership {
+			return groupInfo.Type, service.ErrForbidden(errors.New("group membership is frozen"))
+		}
+		if groupInfo.Type == team && len(groupIDs) > 1 {
+			return groupInfo.Type, service.ErrInvalidRequest(
+				errors.New("there should be no more than one id in group_ids when the parent group is a team"))
+		}
+	}
+	return groupInfo.Type, service.NoError
 }
 
 type descendantParent struct {
@@ -211,22 +247,6 @@ type descendantParent struct {
 	LinkedGroupID int64 `json:"-"`
 }
 
-func filterOtherTeamsMembersOut(
-	store *database.DataStore, parentGroupID int64, groups []int64) (filteredGroupsList, excludedGroups []int64) {
-	groupsToInviteMap := make(map[int64]bool, len(groups))
-	for _, id := range groups {
-		groupsToInviteMap[id] = true
-	}
-
-	otherTeamsMembers := getOtherTeamsMembers(store, parentGroupID, groups)
-	for _, id := range otherTeamsMembers {
-		delete(groupsToInviteMap, id)
-	}
-	newGroupsToInvite := make([]int64, 0, len(groupsToInviteMap))
-	for _, id := range groups {
-		if groupsToInviteMap[id] {
-			newGroupsToInvite = append(newGroupsToInvite, id)
-		}
-	}
-	return newGroupsToInvite, otherTeamsMembers
+func isOtherTeamMember(store *database.DataStore, parentGroupID, userID int64) bool {
+	return len(getOtherTeamsMembers(store, parentGroupID, []int64{userID})) > 0
 }

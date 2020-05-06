@@ -9,6 +9,7 @@ Feature: User sends a request to join a group - robustness
       | 16 | 1         | Team    | edit                                  | 9999-12-31 23:59:59                    | 1                      | false             |
       | 17 | 1         | Team    | none                                  | null                                   | 0                      | false             |
       | 18 | 1         | Team    | none                                  | null                                   | 0                      | true              |
+      | 19 | 1         | Team    | none                                  | null                                   | 0                      | false             |
       | 21 | 0         | User    | none                                  | null                                   | 0                      | false             |
       | 22 | 0         | User    | none                                  | null                                   | 0                      | false             |
       | 23 | 1         | User    | none                                  | null                                   | 0                      | false             |
@@ -23,6 +24,7 @@ Feature: User sends a request to join a group - robustness
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 17       | 21         | memberships |
+      | 19       | 21         | memberships |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 16              | 21             |
@@ -71,6 +73,36 @@ Feature: User sends a request to join a group - robustness
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
+
+  Scenario Outline: User tries to send a request while while entry conditions would not be met if he joins
+    Given I am the user with id "21"
+    And the database has the following table 'items':
+      | id | default_language_tag | entry_max_team_size |
+      | 2  | fr                   | 0                   |
+    And the database table 'attempts' has also the following row:
+      | participant_id | id | root_item_id |
+      | <team_id>      | 1  | 2            |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | <team_id>      | 1          | 2       | 2019-05-30 11:00:00 |
+    When I send a POST request to "/current-user/group-requests/<team_id>"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Entry conditions would not be satisfied"
+    }
+    """
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+  Examples:
+    | team_id |
+    | 16      |
+    | 19      |
 
   Scenario: User tries to send a request to join a team while being a member of another team participating in same contests
     Given I am the user with id "21"

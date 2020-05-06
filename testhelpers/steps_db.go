@@ -176,6 +176,21 @@ func (ctx *TestContext) TableShouldBeEmpty(tableName string) error { // nolint
 	return nil
 }
 
+func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(tableName string, columnName, columnValues string) error { // nolint
+	db := ctx.db()
+	_, values, where := constructWhereForColumnValues(columnName, parseMultipleValuesString(columnValues), false)
+	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), values...) //nolint:gosec
+	if err != nil {
+		return err
+	}
+	defer func() { _ = sqlRows.Close() }()
+	if sqlRows.Next() {
+		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
+	}
+
+	return nil
+}
+
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(tableName, "", nil, false, data)
 }
@@ -280,24 +295,7 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(tableName, columnName string,
 		selects = append(selects, dataTableColumnName)
 	}
 
-	columnValuesMap := make(map[string]bool, len(columnValues))
-	for _, value := range columnValues {
-		columnValuesMap[value] = true
-	}
-	values := make([]interface{}, 0, len(columnValues))
-	for value := range columnValuesMap {
-		values = append(values, value)
-	}
-	// define 'where' condition if needed
-	where := ""
-	if len(columnValues) > 0 {
-		questionMarks := "?" + strings.Repeat(", ?", len(columnValues)-1)
-		if excludeValues {
-			where = fmt.Sprintf(" WHERE %s NOT IN (%s) ", columnName, questionMarks) // #nosec
-		} else {
-			where = fmt.Sprintf(" WHERE %s IN (%s) ", columnName, questionMarks) // #nosec
-		}
-	}
+	columnValuesMap, values, where := constructWhereForColumnValues(columnName, columnValues, excludeValues)
 
 	selectsJoined := strings.Join(selects, ", ")
 
@@ -377,6 +375,29 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(tableName, columnName string,
 		return fmt.Errorf("there are less rows in the SQL results than expected")
 	}
 	return nil
+}
+
+func constructWhereForColumnValues(columnName string, columnValues []string, excludeValues bool) (
+	columnValuesMap map[string]bool, values []interface{}, where string) {
+	columnValuesMap = make(map[string]bool, len(columnValues))
+	for _, value := range columnValues {
+		columnValuesMap[value] = true
+	}
+	values = make([]interface{}, 0, len(columnValues))
+	for value := range columnValuesMap {
+		values = append(values, value)
+	}
+	// define 'where' condition if needed
+	where = ""
+	if len(columnValues) > 0 {
+		questionMarks := "?" + strings.Repeat(", ?", len(columnValues)-1)
+		if excludeValues {
+			where = fmt.Sprintf(" WHERE %s NOT IN (%s) ", columnName, questionMarks) // #nosec
+		} else {
+			where = fmt.Sprintf(" WHERE %s IN (%s) ", columnName, questionMarks) // #nosec
+		}
+	}
+	return columnValuesMap, values, where
 }
 
 func (ctx *TestContext) DbTimeNow(timeStrRaw string) error { // nolint

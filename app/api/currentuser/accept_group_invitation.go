@@ -23,6 +23,10 @@ import (
 //     or if the group membership is frozen,
 //     the unprocessable entity error is returned.
 //
+//   * If the group is a team and joining breaks entry conditions of at least one of the team's participations
+//     (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
+//     the unprocessable entity error is returned.
+//
 //   * There should be a row in `group_pending_requests` with the `{group_id}` as a parent as `group_id`
 //     and the authenticated user’s `group_id` as `member_id` with `type`='invitation'.
 //     Otherwise the "not found" error is returned.

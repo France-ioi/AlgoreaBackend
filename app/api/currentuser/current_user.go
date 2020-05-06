@@ -63,6 +63,8 @@ const (
 	joinGroupByCodeAction                userGroupRelationAction = "joinGroupByCode"
 )
 
+const team = "Team"
+
 func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
@@ -156,6 +158,19 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 			return apiError, "", database.GroupApprovals{}
 		}
 	}
+	if action == leaveGroupAction {
+		var groupType string
+		groupStore := store.Groups()
+		service.MustNotBeError(groupStore.ByID(groupID).WithWriteLock().PluckFirst("type", &groupType).Error())
+		if groupType == team {
+			var ok bool
+			ok, err = groupStore.CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true)
+			service.MustNotBeError(err)
+			if !ok {
+				return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied")), "", database.GroupApprovals{}
+			}
+		}
+	}
 	var results database.GroupGroupTransitionResults
 	var approvalsToRequest map[int64]database.GroupApprovals
 	results, approvalsToRequest, err = store.GroupGroups().Transition(
@@ -198,8 +213,16 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 
 	// If the group is a team, ensure that the current user is not a member of
 	// another team having attempts for the same contests.
-	if groupInfo.Type == "Team" {
-		return checkIfCurrentParticipationsConflictWithExistingMemberships(store, groupID, user)
+	if groupInfo.Type == team {
+		if apiErr := checkIfCurrentParticipationsConflictWithExistingMemberships(store, groupID, user); apiErr != service.NoError {
+			return apiErr
+		}
+		var ok bool
+		ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true)
+		service.MustNotBeError(err)
+		if !ok {
+			return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))
+		}
 	}
 
 	return service.NoError

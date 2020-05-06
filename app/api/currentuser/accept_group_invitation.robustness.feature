@@ -80,6 +80,30 @@ Feature: User accepts an invitation to join a group - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: User tries to accept an invitation to join a team while entry conditions would not be met if he joins
+    Given I am the user with id "21"
+    And the database has the following table 'items':
+      | id | default_language_tag | entry_max_team_size |
+      | 2  | fr                   | 0                   |
+    And the database table 'attempts' has also the following row:
+      | participant_id | id | root_item_id |
+      | 16             | 1  | 2            |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | 16             | 1          | 2       | 2019-05-30 11:00:00 |
+    When I send a POST request to "/current-user/group-invitations/16/accept?approvals=personal_info_view"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Entry conditions would not be satisfied"
+    }
+    """
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: Fails when the group id is wrong
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/abc/accept"

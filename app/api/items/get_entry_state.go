@@ -73,7 +73,7 @@ type itemGetEntryStateResponse struct {
 //                    (with `attempts.root_item_id` = `{item_id}`) allowing submissions;
 //
 //                  * 'not_ready' if there are more members than `entry_max_team_size` or
-//                    if the team/user doesn't satisfy the item's entering condition which is computed
+//                    if the team/user doesn't satisfy the item's entry condition which is computed
 //                    in accordance with `items.entry_min_admitted_members_ratio` as follows:
 //
 //                      * "None": no additional conditions (the team/user can enter the item);

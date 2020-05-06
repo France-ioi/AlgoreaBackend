@@ -25,9 +25,18 @@ import (
 //   the 'forbidden' error is returned as well.
 //
 //
-//   If the `{parent_group_id}` corresponds to a team, the service skips users
-//   who are members of other teams having attempts for the same contests as `{parent_group_id}`
+//   If the `{parent_group_id}` corresponds to a team, `{group_ids}` can contain no more than one id,
+//   otherwise the 'bad request' response is returned.
+//
+//
+//   If the `{parent_group_id}` corresponds to a team, the service skips a user
+//   being a member of another team having attempts for the same contest as `{parent_group_id}`
 //   (expired attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
+//
+//
+//   If the `{parent_group_id}` corresponds to a team, the service skips a user with result = "in_another_team"
+//   if joining breaks entry conditions of at least one of the team's participations
+//   (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied).
 //
 //
 //   There should be a row with `type` = 'join_request' and `group_id` = `{parent_group_id}`
