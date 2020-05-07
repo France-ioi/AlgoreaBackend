@@ -1,4 +1,4 @@
-Feature: Change the code of the given group - robustness
+Feature: Create a new code for the given group - robustness
 
   Background:
     Given the database has the following table 'groups':
