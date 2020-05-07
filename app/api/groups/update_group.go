@@ -68,10 +68,11 @@ type currentGroupDataType struct {
 	FrozenMembership  bool
 }
 
-// swagger:operation PUT /groups/{group_id} groups groupEdit
+// swagger:operation PUT /groups/{group_id} groups groupUpdate
 // ---
-// summary: Update group information
-// description: Edit group information.
+// summary: Update a group
+// description: Updates group information.
+//
 //   Requires the user to be a manager of the group, otherwise the 'forbidden' error is returned.
 //
 //
