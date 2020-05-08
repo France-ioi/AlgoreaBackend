@@ -28,6 +28,8 @@ import (
 func TestNew_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest()
+	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "1")
+	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
 	app, err := New()
 	assert.NotNil(app)
 	assert.NoError(err)
@@ -38,6 +40,15 @@ func TestNew_Success(t *testing.T) {
 	assert.Len(app.HTTPHandler.Middlewares(), 7)
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
 	assert.Equal("/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
+}
+
+func TestNew_SuccessNoCompress(t *testing.T) {
+	assert := assertlib.New(t)
+	appenv.SetDefaultEnvToTest()
+	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "false")
+	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
+	app, _ := New()
+	assert.Len(app.HTTPHandler.Middlewares(), 6)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
@@ -146,6 +157,8 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 
 func TestMiddlewares_OnSuccess(t *testing.T) {
 	assert := assertlib.New(t)
+	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "1")
+	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
 	hook, restoreFct := logging.MockSharedLoggerHook()
 	defer restoreFct()
 	app, _ := New()
