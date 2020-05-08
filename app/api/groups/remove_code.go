@@ -8,12 +8,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /groups/{group_id}/code groups groupDiscardCode
+// swagger:operation DELETE /groups/{group_id}/code groups groupCodeRemove
 // ---
-// summary: Discard the group’s code
+// summary: Remove a group code
 // description: >
 //
-//   Sets `groups.code` = NULL for a given group.
+//   Removes the code of the given group (which prevents joining by code)
 //
 //
 //   The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
@@ -34,7 +34,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) discardCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
 

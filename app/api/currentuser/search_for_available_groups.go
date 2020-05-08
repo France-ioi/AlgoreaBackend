@@ -14,9 +14,9 @@ import (
 
 const minSearchStringLength = 3
 
-// swagger:operation GET /current-user/available-groups groups groupsAvailableSearch
+// swagger:operation GET /current-user/available-groups groups groupsSearch
 // ---
-// summary: Search for available groups
+// summary: Search for groups
 // description: >
 //   Searches for groups that can be joined freely, based on a substring of their name.
 //   Returns groups with `is_public` = 1 and `type` != 'User', whose `name` has `search` as a substring,

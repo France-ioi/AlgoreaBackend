@@ -10,9 +10,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// GroupViewResponseCodePart in order to make groupViewResponse work
+// GroupGetResponseCodePart in order to make groupGetResponse work
 // swagger:ignore
-type GroupViewResponseCodePart struct {
+type GroupGetResponseCodePart struct {
 	// Nullable
 	Code *string `json:"code"`
 	// Nullable
@@ -21,8 +21,8 @@ type GroupViewResponseCodePart struct {
 	CodeExpiresAt *database.Time `json:"code_expires_at"`
 }
 
-// swagger:model groupViewResponse
-type groupViewResponse struct {
+// swagger:model groupGetResponse
+type groupGetResponse struct {
 	// group's `id`
 	// required:true
 	ID int64 `json:"id,string"`
@@ -54,15 +54,15 @@ type groupViewResponse struct {
 	// required:true
 	CurrentUserIsMember bool `json:"current_user_is_member"`
 
-	*GroupViewResponseCodePart
+	*GroupGetResponseCodePart
 }
 
-// swagger:operation GET /groups/{group_id} groups groupView
+// swagger:operation GET /groups/{group_id} groups groupGet
 // ---
-// summary: Get group info
+// summary: Get a group
 // description: >
 //
-//   Returns general information about the group from the `groups` table.
+//   Returns the group identified by the given `group_id`.
 //
 //
 //   The authenticated user should be a manager of `group_id` OR a descendant of the group OR  the group's `is_public`=1,
@@ -79,7 +79,7 @@ type groupViewResponse struct {
 //   "200":
 //     description: OK. The group info
 //     schema:
-//       "$ref": "#/definitions/groupViewResponse"
+//       "$ref": "#/definitions/groupGetResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -122,7 +122,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			groups_groups_active.parent_group_id IS NOT NULL AS current_user_is_member`).
 		Limit(1)
 
-	var result groupViewResponse
+	var result groupGetResponse
 	err = query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
@@ -130,7 +130,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	service.MustNotBeError(err)
 
 	if !result.CurrentUserIsManager {
-		result.GroupViewResponseCodePart = nil
+		result.GroupGetResponseCodePart = nil
 	}
 
 	render.Respond(w, r, result)

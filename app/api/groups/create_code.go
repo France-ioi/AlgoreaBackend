@@ -14,13 +14,13 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{group_id}/code groups groupChangeCode
+// swagger:operation POST /groups/{group_id}/code groups groupCodeCreate
 // ---
-// summary: Generate a new group code
+// summary: Create a new group code
 // description: >
 //
-//   Generates a new code using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
-//   Makes sure it doesn’t correspond to any existing group code. Saves and returns it.
+//   Creates a new code using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
+//   Makes sure it doesn’t correspond to any existing group code. Saves it for the given group and returns it.
 //
 //
 //   The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
@@ -48,7 +48,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) changeCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
 

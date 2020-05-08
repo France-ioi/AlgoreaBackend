@@ -1,4 +1,4 @@
-Feature: Discard the code of the given group
+Feature: Remove the code of the given group
 
   Background:
     Given the database has the following table 'groups':
