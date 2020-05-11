@@ -31,7 +31,7 @@ import (
 //     * the participant should have a started, allowing submission, not ended result for each item but the last,
 //       with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //     * if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero,
-//     * the item should be either 'Task', 'Course', or 'Chapter',
+//     * the last item in `{ids}` should be either 'Task', 'Course', or 'Chapter',
 //
 //   otherwise the 'forbidden' error is returned.
 //
