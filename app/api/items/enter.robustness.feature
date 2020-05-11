@@ -25,27 +25,26 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 11              | 51             |
     And the groups ancestors are computed
 
-  Scenario: Wrong item_id
+  Scenario: Wrong ids
     Given I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/abc/enter"
-    Then the response code should be 400
-    And the response error message should contain "Wrong value for item_id (should be int64)"
+    When I send a POST request to "/items/abc/enter?parent_attempt_id=0"
+    Then the response code should be 404
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: Wrong attempt_id
+  Scenario: Wrong parent_attempt_id
     Given I am the user with id "31"
-    When I send a POST request to "/attempts/abc/items/50/enter"
+    When I send a POST request to "/items/50/enter?parent_attempt_id=abc"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for attempt_id (should be int64)"
+    And the response error message should contain "Wrong value for parent_attempt_id (should be int64)"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
   Scenario: Wrong as_team_id
     Given I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/50/enter?as_team_id=abc"
+    When I send a POST request to "/items/50/enter?parent_attempt_id=0&as_team_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for as_team_id (should be int64)"
     And the table "groups_groups" should stay unchanged
@@ -54,7 +53,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The item is not visible to the team
     Given I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/50/enter?as_team_id=21"
+    When I send a POST request to "/items/50/enter?as_team_id=21&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -63,7 +62,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The item is visible, but it doesn't exist
     Given I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/50/enter"
+    When I send a POST request to "/items/50/enter?parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -78,7 +77,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated |
       | 31       | 50      | none               |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/50/enter"
+    When I send a POST request to "/items/50/enter?parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -94,7 +93,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/50/enter"
+    When I send a POST request to "/items/50/enter?parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -110,7 +109,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/50/enter?as_team_id=21"
+    When I send a POST request to "/items/50/enter?as_team_id=21&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -126,7 +125,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=10"
+    When I send a POST request to "/items/60/enter?as_team_id=10&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -141,7 +140,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/60/enter"
+    When I send a POST request to "/items/60/enter?parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -157,7 +156,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
     And I am the user with id "21"
-    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=11"
+    When I send a POST request to "/items/60/enter?as_team_id=11&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -183,7 +182,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 41       | 60      |
       | 51       | 60      |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=11"
+    When I send a POST request to "/items/60/enter?as_team_id=11&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -215,7 +214,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 31             | 50      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/50/enter"
+    When I send a POST request to "/items/50/enter?parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -250,7 +249,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 11             | 60      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
-    When I send a POST request to "/attempts/0/items/60/enter?as_team_id=11"
+    When I send a POST request to "/items/60/enter?as_team_id=11&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

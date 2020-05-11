@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /attempts/{attempt_id}/items/{item_id}/enter items itemEnter
+// swagger:operation POST /items/{ids}/enter items itemEnter
 // ---
 // summary: Enter the item
 // description: >
@@ -20,25 +20,29 @@ import (
 //
 //
 //                Restrictions:
-//                  * `item_id` should require explicit entry;
+//                  * the last item in `{ids}` should require explicit entry;
 //                  * `as_team_id` (if given) should be the current user's team;
-//                  * an attempt with `participant_id` = `as_team_id` (or the current user) and `id` = `attempt_id` should exist;
-//                  * the authenticated user (or his team) should have at least 'info' access to the item;
-//                  * the group (the user or his team) must be qualified for the item (itemGetEntryState returns "ready").
+//                  * the first item in `{ids}` should be a root item (items.is_root) or the item of a group (groups.activity_id)
+//                    the participant is a descendant of;
+//                  * `{ids}` should be an ordered list of parent-child items;
+//                  * the group (the user or his team) should have at least 'content' access
+//                    on each of the items in `{ids}` except the last one and at least 'info' access for the last one;
+//                  * the group should have a started, allowing submission, not ended result for each item but the last,
+//                    with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt;
+//                  * if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero;
+//                  * the group (the user or his team) must be qualified for the last item in `{ids}` (itemGetEntryState returns "ready").
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
-// - name: attempt_id
-//   description: "`id` of an attempt which will be used as a parent attempt for the participation"
+// - name: ids
 //   in: path
-//   type: integer
-//   format: int64
+//   type: string
+//   description: slash-separated list of item IDs
 //   required: true
-// - name: item_id
-//   description: "`id` of an item"
-//   in: path
+// - name: parent_attempt_id
+//   description: "`id` of an attempt which will be used as a parent attempt for the participation"
+//   in: query
 //   type: integer
-//   format: int64
 //   required: true
 // - name: as_team_id
 //   in: query
@@ -54,9 +58,23 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIError {
-	parentAttemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+	ids, err := idsFromRequest(r)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
+	}
+
+	parentAttemptID, err := service.ResolveURLQueryGetInt64Field(r, "parent_attempt_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
+	user := srv.GetUser(r)
+	groupID := user.GroupID
+	if len(r.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
 	}
 
 	apiError := service.NoError
@@ -67,7 +85,15 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		ParticipantsGroupID *int64
 	}
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		entryState, apiError = srv.getItemInfoAndEntryStateFromRequest(r, store, true)
+		var ok bool
+		ok, err = store.Items().IsValidParticipationHierarchy(ids, groupID, parentAttemptID, false)
+		service.MustNotBeError(err)
+		if !ok {
+			apiError = service.InsufficientAccessRightsError
+			return apiError.Error // rollback
+		}
+
+		entryState, apiError = srv.getItemInfoAndEntryState(ids[len(ids)-1], groupID, user, store, true)
 		if apiError != service.NoError {
 			return apiError.Error
 		}

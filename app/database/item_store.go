@@ -105,6 +105,67 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 	return true, nil
 }
 
+// IsValidParticipationHierarchy checks if the given list of item ids is a valid participation hierarchy which means
+// all the following statements are true:
+//  * the first item in `ids` is a root items (items.is_root) or the item of a group (groups.activity_id)
+//    the `groupID` is a descendant of,
+//  * `ids` is an ordered list of parent-child items,
+//  * the `groupID` group has at least 'content' access on each of the items in `ids`,
+//  * the `groupID` group has a started, allowing submission, not ended result for each item but the last,
+//    with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//  * if `ids` consists of only one item, the `attemptID` is zero.
+func (s *ItemStore) IsValidParticipationHierarchy(
+	ids []int64, groupID, attemptID int64, requireContentAccessToTheLastItem bool) (bool, error) {
+	if len(ids) == 0 || len(ids) == 1 && attemptID != 0 {
+		return false, nil
+	}
+
+	participantActivities := s.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
+		WithWriteLock().Select("groups.activity_id")
+
+	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).
+		Where("items0.is_root OR items0.id IN ?", participantActivities.SubQuery())
+
+	for i := 1; i < len(ids); i++ {
+		subQuery = subQuery.Joins(fmt.Sprintf(`
+				JOIN results AS results%d ON results%d.participant_id = ? AND
+					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`, i-1, i-1, i-1, i-1, i-1), groupID).
+			Joins(fmt.Sprintf(`
+				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
+					attempts%d.id = results%d.attempt_id AND attempts%d.ended_at IS NULL AND
+					NOW() < attempts%d.allows_submissions_until`, i-1, i-1, i-1, i-1, i-1, i-1, i-1)).
+			Joins(
+				fmt.Sprintf(
+					"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
+					i, i, i-1, i), ids[i]).
+			Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", i, i, i)).
+			Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", i-1),
+				s.PermissionsGranted().ViewIndexByName("content"))
+
+		if i != len(ids)-1 {
+			subQuery = subQuery.Where(fmt.Sprintf(
+				"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
+				i, i, i, i, i-1))
+		}
+	}
+
+	if requireContentAccessToTheLastItem {
+		subQuery = subQuery.Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", len(ids)-1),
+			s.PermissionsGranted().ViewIndexByName("content"))
+	}
+
+	if len(ids) > 1 {
+		subQuery = subQuery.
+			Where(fmt.Sprintf("attempts%d.id = ?", len(ids)-2), attemptID)
+	}
+
+	subQuery = subQuery.Select("1").WithWriteLock()
+	visibleItems := s.Visible(groupID).Select("items.id, items.is_root, visible.can_view_generated_value").WithWriteLock()
+
+	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.QueryExpr()).HasRows()
+}
+
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
 func (s *ItemStore) ValidateUserAccess(user *User, itemIDs []int64) (bool, error) {
 	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)

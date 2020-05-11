@@ -1,9 +1,6 @@
 package database
 
 import (
-	"strings"
-
-	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 )
 
@@ -12,32 +9,23 @@ type AttemptStore struct {
 	*DataStore
 }
 
-// CreateNew inserts a new result with attempt_id = 0 if there are no results yet,
-// or creates a new attempt (with id > 0) with a new result otherwise.
+// CreateNew creates a new attempt (with id > 0) with parent_attempt_id = parentAttemptID and a new result.
 // It also sets attempts.created_at, results.started_at, results.latest_activity_at.
-func (s *AttemptStore) CreateNew(participantID, itemID, creatorID int64) (attemptID int64, err error) {
+func (s *AttemptStore) CreateNew(participantID, parentAttemptID, itemID, creatorID int64) (attemptID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
 
-	err = s.Results().InsertMap(map[string]interface{}{
-		"participant_id": participantID, "attempt_id": 0, "item_id": itemID, "started_at": Now(), "latest_activity_at": Now(),
-	})
+	mustNotBeError(s.InsertMap(map[string]interface{}{
+		"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", s.Attempts().Select("IFNULL(MAX(id)+1, 0)").
+			Where("participant_id = ?", participantID).WithWriteLock().SubQuery()),
+		"participant_id": participantID, "creator_id": creatorID,
+		"parent_attempt_id": parentAttemptID, "root_item_id": itemID, "created_at": Now(),
+	}))
+	mustNotBeError(s.Where("participant_id = ?", participantID).PluckFirst("MAX(id)", &attemptID).Error())
 
-	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, "PRIMARY") {
-		mustNotBeError(s.InsertMap(map[string]interface{}{
-			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", s.Attempts().Select("IFNULL(MAX(id)+1, 0)").
-				Where("participant_id = ?", participantID).WithWriteLock().SubQuery()),
-			"participant_id": participantID, "creator_id": creatorID,
-			"parent_attempt_id": 0, "root_item_id": itemID, "created_at": Now(),
-		}))
-		mustNotBeError(s.Where("participant_id = ?", participantID).PluckFirst("MAX(id)", &attemptID).Error())
-
-		mustNotBeError(s.Results().InsertMap(map[string]interface{}{
-			"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID, "started_at": Now(), "latest_activity_at": Now(),
-		}))
-	} else {
-		mustNotBeError(err)
-	}
+	mustNotBeError(s.Results().InsertMap(map[string]interface{}{
+		"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID, "started_at": Now(), "latest_activity_at": Now(),
+	}))
 	return attemptID, nil
 }
 
