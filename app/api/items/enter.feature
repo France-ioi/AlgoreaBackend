@@ -23,7 +23,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the groups ancestors are computed
     And the database has the following table 'items':
       | id | default_language_tag | is_root |
-      | 10 | fr                   | false   |
+      | 10 | fr                   | true    |
       | 20 | fr                   | false   |
       | 30 | fr                   | false   |
     And the database has the following table 'items_ancestors':
@@ -45,15 +45,16 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 0  | 11             | 2019-05-30 11:00:00 |
       | 0  | 31             | 2019-05-30 11:00:00 |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id |
-      | 0          | 11             | 30      |
-      | 0          | 31             | 30      |
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | 11             | 30      | null                |
+      | 0          | 31             | 10      | 2019-05-30 11:00:00 |
+      | 0          | 31             | 30      | null                |
     And the DB time now is "3019-10-10 10:10:10"
 
   Scenario: Enter an individual contest
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag | entering_time_min   | entering_time_max   | is_root |
-      | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   | 2007-01-01 00:00:00 | 5000-01-01 00:00:00 | true    |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag | entering_time_min   | entering_time_max   |
+      | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   | 2007-01-01 00:00:00 | 5000-01-01 00:00:00 |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
@@ -67,12 +68,13 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
+      | 31       | 10      | content                  |
       | 31       | 50      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
-    When I send a POST request to "/items/50/enter?parent_attempt_id=0"
+    When I send a POST request to "/items/10/50/enter?parent_attempt_id=0"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -93,7 +95,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the table "results" should be:
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 11             | 30      | null                |
-      | 0          | 31             | 10      | null                |
+      | 0          | 31             | 10      | 2019-05-30 11:00:00 |
       | 0          | 31             | 20      | null                |
       | 0          | 31             | 30      | null                |
       | 1          | 31             | 50      | 3019-10-10 10:10:10 |
@@ -160,6 +162,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 0          | 11             | 10      | null                | done                     |
       | 0          | 11             | 20      | null                | done                     |
       | 0          | 11             | 30      | null                | done                     |
+      | 0          | 31             | 10      | 2019-05-30 11:00:00 | done                     |
       | 0          | 31             | 30      | null                | done                     |
       | 1          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should be:
@@ -226,6 +229,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
       | 0          | 11             | 20      | null                | done                     |
       | 0          | 11             | 30      | null                | done                     |
+      | 0          | 31             | 10      | 2019-05-30 11:00:00 | done                     |
       | 0          | 31             | 30      | null                | done                     |
       | 1          | 11             | 60      | 2019-05-29 11:00:00 | done                     |
       | 2          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
@@ -283,6 +287,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the table "results" should be:
       | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
       | 0          | 11             | 30      | null                | done                     |
+      | 0          | 31             | 10      | 2019-05-30 11:00:00 | done                     |
       | 0          | 31             | 30      | null                | done                     |
       | 1          | 31             | 50      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should stay unchanged
@@ -335,7 +340,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the table "results" should be:
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 11             | 30      | null                |
-      | 0          | 31             | 10      | null                |
+      | 0          | 31             | 10      | 2019-05-30 11:00:00 |
       | 0          | 31             | 20      | null                |
       | 0          | 31             | 30      | null                |
       | 1          | 31             | 50      | 3019-10-10 10:10:10 |

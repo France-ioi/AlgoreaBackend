@@ -18,17 +18,18 @@ Feature: Create an attempt for an item - robustness
       | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag | is_root |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   | true    |
       | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   | false   |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   | false   |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   | true    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |
       | 101      | 60      | content            |
       | 101      | 90      | content            |
 
-  Scenario: Invalid item id
+  Scenario: Invalid item ids
     Given I am the user with id "101"
-    When I send a POST request to "/items/abc/attempts?parent_attempt_id=0"
-    Then the response code should be 405
+    When I send a POST request to "/items/11111111111111111111111111111/attempts?parent_attempt_id=0"
+    Then the response code should be 400
+    And the response error message should contain "Unable to parse one of the integers given as query args (value: '11111111111111111111111111111', param: 'ids')"
     And the table "attempts" should stay unchanged
 
   Scenario: Invalid parent_attempt_id
@@ -72,7 +73,7 @@ Feature: Create an attempt for an item - robustness
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged
 
-  Scenario: No access to the item (type='Chapter')
+  Scenario: No access to the item (type='Skill')
     Given I am the user with id "101"
     When I send a POST request to "/items/90/attempts?parent_attempt_id=0"
     Then the response code should be 403
