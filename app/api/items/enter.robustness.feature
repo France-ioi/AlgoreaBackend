@@ -27,7 +27,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: Wrong ids
     Given I am the user with id "31"
-    When I send a POST request to "/items/11111111111111111111111111111/enter?parent_attempt_id=0"
+    When I send a POST request to "/items/11111111111111111111111111111/22222222222222222/enter?parent_attempt_id=0"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: '11111111111111111111111111111', param: 'ids')"
     And the table "groups_groups" should stay unchanged

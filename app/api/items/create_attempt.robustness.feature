@@ -27,7 +27,7 @@ Feature: Create an attempt for an item - robustness
 
   Scenario: Invalid item ids
     Given I am the user with id "101"
-    When I send a POST request to "/items/11111111111111111111111111111/attempts?parent_attempt_id=0"
+    When I send a POST request to "/items/11111111111111111111111111111/222222222222/attempts?parent_attempt_id=0"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: '11111111111111111111111111111', param: 'ids')"
     And the table "attempts" should stay unchanged
