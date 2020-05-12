@@ -114,7 +114,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		attemptID, err = store.Attempts().CreateNew(groupID, parentAttemptID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
-		return nil
+		return store.Results().Propagate()
 	})
 	if apiError != service.NoError {
 		return apiError

@@ -10,7 +10,7 @@ type AttemptStore struct {
 }
 
 // CreateNew creates a new attempt (with id > 0) with parent_attempt_id = parentAttemptID and a new result.
-// It also sets attempts.created_at, results.started_at, results.latest_activity_at.
+// It also sets attempts.created_at, results.started_at, results.latest_activity_at, so the result should be propagated.
 func (s *AttemptStore) CreateNew(participantID, parentAttemptID, itemID, creatorID int64) (attemptID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
@@ -24,7 +24,8 @@ func (s *AttemptStore) CreateNew(participantID, parentAttemptID, itemID, creator
 	mustNotBeError(s.Where("participant_id = ?", participantID).PluckFirst("MAX(id)", &attemptID).Error())
 
 	mustNotBeError(s.Results().InsertMap(map[string]interface{}{
-		"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID, "started_at": Now(), "latest_activity_at": Now(),
+		"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID,
+		"started_at": Now(), "latest_activity_at": Now(), "result_propagation_state": "to_be_propagated",
 	}))
 	return attemptID, nil
 }

@@ -274,30 +274,30 @@ const groupGroupMarksResultsAsChangedFixture = `
 		- {id: 1, participant_id: 107}
 		- {id: 1, participant_id: 108}
 	results:
-		- {attempt_id: 1, participant_id: 101, item_id: 1}
-		- {attempt_id: 1, participant_id: 102, item_id: 1}
-		- {attempt_id: 1, participant_id: 103, item_id: 1}
-		- {attempt_id: 1, participant_id: 104, item_id: 1}
-		- {attempt_id: 1, participant_id: 105, item_id: 1}
-		- {attempt_id: 1, participant_id: 106, item_id: 1}
-		- {attempt_id: 1, participant_id: 107, item_id: 1}
-		- {attempt_id: 1, participant_id: 108, item_id: 1}
-		- {attempt_id: 1, participant_id: 101, item_id: 2}
-		- {attempt_id: 1, participant_id: 102, item_id: 2}
-		- {attempt_id: 1, participant_id: 103, item_id: 2}
-		- {attempt_id: 1, participant_id: 104, item_id: 2}
-		- {attempt_id: 1, participant_id: 105, item_id: 2}
-		- {attempt_id: 1, participant_id: 106, item_id: 2}
-		- {attempt_id: 1, participant_id: 107, item_id: 2}
-		- {attempt_id: 1, participant_id: 108, item_id: 2}
-		- {attempt_id: 1, participant_id: 101, item_id: 3}
-		- {attempt_id: 1, participant_id: 102, item_id: 3}
-		- {attempt_id: 1, participant_id: 103, item_id: 3}
-		- {attempt_id: 1, participant_id: 104, item_id: 3}
-		- {attempt_id: 1, participant_id: 105, item_id: 3}
-		- {attempt_id: 1, participant_id: 106, item_id: 3}
-		- {attempt_id: 1, participant_id: 107, item_id: 3}
-		- {attempt_id: 1, participant_id: 108, item_id: 3}`
+		- {attempt_id: 1, participant_id: 101, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 102, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 103, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 104, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 105, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 106, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 107, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 108, item_id: 1, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 101, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 102, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 103, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 104, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 105, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 106, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 107, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 108, item_id: 2, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 101, item_id: 3, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 102, item_id: 3, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 103, item_id: 3, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 104, item_id: 3, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 105, item_id: 3, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 106, item_id: 3, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 107, item_id: 3, result_propagation_state: done}
+		- {attempt_id: 1, participant_id: 108, item_id: 3, result_propagation_state: done}`
 
 func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {

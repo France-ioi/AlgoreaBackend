@@ -37,11 +37,11 @@ Feature: Get a task token with a refreshed attempt for an item
       | 0  | 102            |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
-      | 0          | 101            | 50      | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 0          | 101            | 51      | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 0          | 102            | 50      | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 1          | 101            | 50      | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
+      | attempt_id | participant_id | item_id | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached | result_propagation_state |
+      | 0          | 101            | 50      | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            | done                     |
+      | 0          | 101            | 51      | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            | done                     |
+      | 0          | 102            | 50      | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            | done                     |
+      | 1          | 101            | 50      | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            | done                     |
     When I send a GET request to "/items/50/attempts/1/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -80,11 +80,11 @@ Feature: Get a task token with a refreshed attempt for an item
       | 0  | 102            |
       | 1  | 102            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
-      | 0          | 101            | 60      | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 0          | 102            | 60      | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 0          | 102            | 61      | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
-      | 1          | 102            | 60      | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
+      | attempt_id | participant_id | item_id | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached | result_propagation_state |
+      | 0          | 101            | 60      | 2019-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            | done                     |
+      | 0          | 102            | 60      | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            | done                     |
+      | 0          | 102            | 61      | 2019-04-29 06:38:38 | null       | 0              | null              | null         | null            | 0            | done                     |
+      | 1          | 102            | 60      | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            | done                     |
     When I send a GET request to "/items/60/attempts/1/task-token?as_team_id=102"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -121,8 +121,8 @@ Feature: Get a task token with a refreshed attempt for an item
       | id | participant_id | created_at          |
       | 0  | 101            | 2017-05-29 05:38:38 |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
-      | 0          | 101            | 50      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | attempt_id | participant_id | item_id | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at | result_propagation_state |
+      | 0          | 101            | 50      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         | done                     |
     When I send a GET request to "/items/50/attempts/0/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:

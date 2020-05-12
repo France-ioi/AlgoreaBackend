@@ -45,10 +45,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 0  | 11             | 2019-05-30 11:00:00 |
       | 0  | 31             | 2019-05-30 11:00:00 |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 0          | 11             | 30      | null                |
-      | 0          | 31             | 10      | 2019-05-30 11:00:00 |
-      | 0          | 31             | 30      | null                |
+      | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
+      | 0          | 11             | 30      | null                | done                     |
+      | 0          | 31             | 10      | 2019-05-30 11:00:00 | done                     |
+      | 0          | 31             | 30      | null                | done                     |
     And the DB time now is "3019-10-10 10:10:10"
 
   Scenario: Enter an individual contest
