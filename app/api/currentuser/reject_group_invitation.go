@@ -10,7 +10,7 @@ import (
 // ---
 // summary: Reject a group invitation
 // description:
-//   Let a user reject an invitation to join a group.
+//   Lets the current user reject an invitation to join a group (identified by {group_id}).
 //   On success the service removes a `groups_pending_request` row
 //   with `group_id` = `{group_id}` and `member_id` = `user.group_id`,
 //   and adds a new `group_membership_changes` row with `action` = 'invitation_refused'
