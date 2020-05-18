@@ -8,9 +8,9 @@ import (
 
 // swagger:operation POST /groups/{parent_group_id}/join-requests/accept group-memberships groupJoinRequestsAccept
 // ---
-// summary: Accept requests to join a group
+// summary: Accept group join requests
 // description:
-//   Lets an admin approve requests to join a group.
+//   Lets an admin approve user requests (identified by `{group_ids}`) to join a group (identified by {parent_group_id}).
 //   On success the service creates new `groups_groups` rows
 //   with `parent_group_id` = `{parent_group_id}` and new `group_membership_changes` with
 //   `group_id` = `{parent_group_id}`, `action` = 'join_request_accepted`, `at` = current UTC time
