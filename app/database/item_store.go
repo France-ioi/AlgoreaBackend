@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm"
-
-	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // ItemStore implements database operations on items
@@ -43,67 +41,6 @@ func (s *ItemStore) VisibleGrandChildrenOfID(groupID, itemID int64) *DB {
 		// get their grand parents' IDs (ii2)
 		Joins("JOIN ? ii2 ON ii2.child_item_id = ii1.parent_item_id", s.ItemItems().SubQuery()).
 		Where("ii2.parent_item_id = ?", itemID)
-}
-
-// CanGrantViewContentOnAll returns whether the user can grant 'content' view right on all the listed items (can_grant_view >= content)
-func (s *ItemStore) CanGrantViewContentOnAll(user *User, itemIDs ...int64) (hasAccess bool, err error) {
-	var count int64
-	if len(itemIDs) == 0 {
-		return true, nil
-	}
-
-	idsMap := make(map[int64]bool, len(itemIDs))
-	for _, itemID := range itemIDs {
-		idsMap[itemID] = true
-	}
-	err = s.Permissions().MatchingUserAncestors(user).
-		WithWriteLock().
-		Where("item_id IN (?)", itemIDs).
-		WherePermissionIsAtLeast("grant_view", "content").
-		Select("COUNT(DISTINCT item_id)").Count(&count).Error()
-	if err != nil {
-		return false, err
-	}
-	return count == int64(len(idsMap)), nil
-}
-
-// AreAllVisible returns whether all the items are visible to the user
-func (s *ItemStore) AreAllVisible(user *User, itemIDs ...int64) (hasAccess bool, err error) {
-	var count int64
-	if len(itemIDs) == 0 {
-		return true, nil
-	}
-
-	idsMap := make(map[int64]bool, len(itemIDs))
-	for _, itemID := range itemIDs {
-		idsMap[itemID] = true
-	}
-	err = s.Permissions().MatchingUserAncestors(user).
-		WithWriteLock().
-		Where("item_id IN (?)", itemIDs).
-		Where("can_view_generated != 'none'").
-		Select("COUNT(DISTINCT item_id)").Count(&count).Error()
-	if err != nil {
-		return false, err
-	}
-	return count == int64(len(idsMap)), nil
-}
-
-// IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
-func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
-	if len(ids) == 0 {
-		return false, nil
-	}
-
-	if valid, err := s.isRootItem(ids[0]); !valid || err != nil {
-		return valid, err
-	}
-
-	if valid, err := s.isHierarchicalChain(ids); !valid || err != nil {
-		return valid, err
-	}
-
-	return true, nil
 }
 
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
@@ -326,113 +263,6 @@ func (s *ItemStore) participationHierarchyForAttempt(
 		visibleItems = visibleItems.WithWriteLock()
 	}
 	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.QueryExpr())
-}
-
-// ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
-func (s *ItemStore) ValidateUserAccess(user *User, itemIDs []int64) (bool, error) {
-	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
-	if err != nil {
-		log.Infof("User access rights loading failed: %v", err)
-		return false, err
-	}
-
-	if err := s.checkAccess(itemIDs, accessDetails); err != nil {
-		log.Infof("checkAccess %v %v", itemIDs, accessDetails)
-		log.Infof("User access validation failed: %v", err)
-		return false, nil
-	}
-	return true, nil
-}
-
-// GetAccessDetailsForIDs returns access details for given item IDs and the given user
-func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemAccessDetailsWithID, error) {
-	var valuesWithIDs []struct {
-		ItemID                int64
-		CanViewGeneratedValue int
-	}
-	db := s.Permissions().WithViewPermissionForUser(user, "info").
-		Where("item_id IN (?)", itemIDs).
-		Scan(&valuesWithIDs)
-	if err := db.Error(); err != nil {
-		return nil, err
-	}
-	accessDetails := make([]ItemAccessDetailsWithID, len(valuesWithIDs))
-	for i := range valuesWithIDs {
-		accessDetails[i].ItemID = valuesWithIDs[i].ItemID
-		accessDetails[i].CanView = s.PermissionsGranted().ViewNameByIndex(valuesWithIDs[i].CanViewGeneratedValue)
-	}
-	return accessDetails, nil
-}
-
-// checkAccess checks if the user has access to all items:
-// - user has to have full access to all items
-// OR
-// - user has to have full access to all but last, and info access to that last item.
-func (s *ItemStore) checkAccess(itemIDs []int64, accDets []ItemAccessDetailsWithID) error {
-	for i, id := range itemIDs {
-		last := i == len(itemIDs)-1
-		if err := s.checkAccessForID(id, last, accDets); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *ItemStore) checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) error {
-	for _, res := range accDets {
-		if res.ItemID != id {
-			continue
-		}
-		if res.CanView != "" && s.PermissionsGranted().ViewIndexByName(res.CanView) >= s.PermissionsGranted().ViewIndexByName("content") {
-			// OK, user has full access.
-			return nil
-		}
-		if res.CanView == canViewInfo && last {
-			// OK, user has info access on the last item.
-			return nil
-		}
-		return fmt.Errorf("not enough perm on item_id %d", id)
-	}
-
-	// no row matching this item_id
-	return fmt.Errorf("not visible item_id %d", id)
-}
-
-func (s *ItemStore) isRootItem(id int64) (bool, error) {
-	return s.ByID(id).Where("is_root").HasRows()
-}
-
-func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
-	if len(ids) == 0 {
-		return false, nil
-	}
-
-	if len(ids) == 1 {
-		return true, nil
-	}
-
-	db := s.ItemItems().DB
-	previousID := ids[0]
-	for index, id := range ids {
-		if index == 0 {
-			continue
-		}
-
-		db = db.Or("parent_item_id=? AND child_item_id=?", previousID, id)
-		previousID = id
-	}
-
-	count := 0
-	// There is a unique key for the pair ('parent_item_id' and 'child_item_id') so count() will work correctly
-	if err := db.Count(&count).Error(); err != nil {
-		return false, err
-	}
-
-	if count != len(ids)-1 {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 // CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),
