@@ -6,11 +6,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /current-user/group-leave-requests/{group_id} group-memberships groupLeaveRequestWithdraw
+// swagger:operation POST /current-user/group-leave-requests/{group_id}/withdraw group-memberships groupLeaveRequestWithdraw
 // ---
-// summary: Withdraw a leave request
+// summary: Withdraw a group leave request
 // description: >
-//     Lets a user withdraw a request to leave a group.
+//     Lets the current user withdraw a request to leave a group (idenfified by {group_id}).
 //
 //
 //     On success the service removes a row  with `group_id` = `{group_id}`,
@@ -30,7 +30,7 @@ import (
 //   required: true
 // responses:
 //   "200":
-//     "$ref": "#/responses/deletedResponse"
+//     "$ref": "#/responses/updatedResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":

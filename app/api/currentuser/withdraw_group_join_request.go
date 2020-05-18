@@ -6,11 +6,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /current-user/group-requests/{group_id} group-memberships groupJoinRequestWithdraw
+// swagger:operation POST /current-user/group-requests/{group_id}/withdraw group-memberships groupJoinRequestWithdraw
 // ---
-// summary: Withdraw a request to join a group
+// summary: Withdraw a group join request
 // description: >
-//   Lets a user withdraw a request to join a group.
+//     Lets the current user withdraw a request to join a group (idenfified by {group_id}).
 //
 //
 //     On success the service removes a row  with
@@ -27,8 +27,8 @@ import (
 //   type: integer
 //   required: true
 // responses:
-//   "201":
-//     "$ref": "#/responses/createdOrUnchangedResponse"
+//   "200":
+//     "$ref": "#/responses/updatedResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
