@@ -21,11 +21,11 @@ import (
 
 const maxAllowedLoginsToInvite = 100
 
-// swagger:operation POST /groups/{parent_group_id}/invitations group-memberships groupInviteUsers
+// swagger:operation POST /groups/{parent_group_id}/invitations group-memberships groupInvitationsCreate
 // ---
-// summary: Invite users to a group
+// summary: Create group invitations
 // description:
-//   Lets an admin invite users, based on list of their logins, to join a group.
+//   Lets an admin invite users, based on list of their logins, to join a group (identified by {parent_group_id}).
 //   On success the service creates new rows in `group_pending_requests` with
 //
 //     * `type` = "invitation"
@@ -96,7 +96,7 @@ const maxAllowedLoginsToInvite = 100
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

@@ -51,7 +51,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/groups/{parent_group_id}/leave-requests/accept", service.AppHandler(srv.acceptLeaveRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/leave-requests/reject", service.AppHandler(srv.rejectLeaveRequests).ServeHTTP)
 
-	router.Post("/groups/{parent_group_id}/invitations", service.AppHandler(srv.inviteUsers).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/invitations", service.AppHandler(srv.createGroupInvitations).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/invitations/withdraw", service.AppHandler(srv.withdrawInvitations).ServeHTTP)
 
 	router.Post("/groups/{parent_group_id}/relations/{child_group_id}", service.AppHandler(srv.addChild).ServeHTTP)
