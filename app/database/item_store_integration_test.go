@@ -236,6 +236,274 @@ func TestItemStore_AreAllVisible(t *testing.T) {
 	}
 }
 
+func TestItemStore_IsValidParticipationHierarchy(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items:
+			- {id: 1, default_language_tag: fr}
+			- {id: 2, default_language_tag: fr, is_root: 1}
+			- {id: 3, default_language_tag: fr}
+			- {id: 4, default_language_tag: fr}
+			- {id: 5, default_language_tag: fr}
+			- {id: 6, default_language_tag: fr}
+			- {id: 7, default_language_tag: fr}
+			- {id: 8, default_language_tag: fr}
+		items_items:
+			- {parent_item_id: 2, child_item_id: 4, child_order: 1}
+			- {parent_item_id: 4, child_item_id: 6, child_order: 1}
+			- {parent_item_id: 6, child_item_id: 8, child_order: 1}
+		groups:
+			- {id: 50, activity_id: 4}
+			- {id: 100}
+			- {id: 101, activity_id: 4}
+			- {id: 102}
+			- {id: 103}
+			- {id: 104}
+			- {id: 105}
+			- {id: 106}
+			- {id: 107}
+			- {id: 108}
+			- {id: 109}
+			- {id: 110}
+			- {id: 111}
+			- {id: 112}
+			- {id: 113}
+			- {id: 114}
+			- {id: 115}
+			- {id: 116}
+			- {id: 117}
+			- {id: 118}
+		groups_groups:
+			- {parent_group_id: 50, child_group_id: 102}
+		permissions_generated:
+			- {group_id: 50, item_id: 4, can_view_generated: content}
+			- {group_id: 100, item_id: 2, can_view_generated: content}
+			- {group_id: 100, item_id: 4, can_view_generated: content}
+			- {group_id: 101, item_id: 4, can_view_generated: content}
+			- {group_id: 101, item_id: 6, can_view_generated: content}
+			- {group_id: 101, item_id: 8, can_view_generated: content}
+			- {group_id: 102, item_id: 6, can_view_generated: content}
+			- {group_id: 103, item_id: 2, can_view_generated: content}
+			- {group_id: 103, item_id: 4, can_view_generated: info}
+			- {group_id: 104, item_id: 2, can_view_generated: content}
+			- {group_id: 104, item_id: 4, can_view_generated: none}
+			- {group_id: 105, item_id: 2, can_view_generated: content}
+			- {group_id: 105, item_id: 4, can_view_generated: info}
+			- {group_id: 105, item_id: 6, can_view_generated: content}
+			- {group_id: 106, item_id: 2, can_view_generated: info}
+			- {group_id: 106, item_id: 4, can_view_generated: content}
+			- {group_id: 106, item_id: 6, can_view_generated: content}
+			- {group_id: 107, item_id: 2, can_view_generated: content}
+			- {group_id: 107, item_id: 4, can_view_generated: content}
+			- {group_id: 107, item_id: 6, can_view_generated: content}
+			- {group_id: 108, item_id: 2, can_view_generated: content}
+			- {group_id: 108, item_id: 4, can_view_generated: content}
+			- {group_id: 108, item_id: 6, can_view_generated: content}
+			- {group_id: 109, item_id: 2, can_view_generated: content}
+			- {group_id: 109, item_id: 4, can_view_generated: content}
+			- {group_id: 109, item_id: 6, can_view_generated: content}
+			- {group_id: 110, item_id: 2, can_view_generated: content}
+			- {group_id: 110, item_id: 4, can_view_generated: content}
+			- {group_id: 110, item_id: 6, can_view_generated: content}
+			- {group_id: 111, item_id: 2, can_view_generated: content}
+			- {group_id: 111, item_id: 4, can_view_generated: content}
+			- {group_id: 111, item_id: 6, can_view_generated: content}
+			- {group_id: 112, item_id: 2, can_view_generated: content}
+			- {group_id: 112, item_id: 4, can_view_generated: content}
+			- {group_id: 112, item_id: 6, can_view_generated: content}
+			- {group_id: 113, item_id: 2, can_view_generated: content}
+			- {group_id: 113, item_id: 4, can_view_generated: content}
+			- {group_id: 113, item_id: 6, can_view_generated: content}
+			- {group_id: 114, item_id: 2, can_view_generated: content}
+			- {group_id: 114, item_id: 4, can_view_generated: content}
+			- {group_id: 114, item_id: 6, can_view_generated: content}
+			- {group_id: 114, item_id: 8, can_view_generated: content}
+			- {group_id: 115, item_id: 2, can_view_generated: content}
+			- {group_id: 115, item_id: 4, can_view_generated: content}
+			- {group_id: 115, item_id: 6, can_view_generated: content}
+			- {group_id: 115, item_id: 8, can_view_generated: content}
+			- {group_id: 116, item_id: 2, can_view_generated: content}
+			- {group_id: 116, item_id: 4, can_view_generated: content}
+			- {group_id: 116, item_id: 6, can_view_generated: content}
+			- {group_id: 116, item_id: 8, can_view_generated: content}
+			- {group_id: 117, item_id: 2, can_view_generated: content}
+			- {group_id: 117, item_id: 4, can_view_generated: content}
+			- {group_id: 117, item_id: 6, can_view_generated: content}
+			- {group_id: 117, item_id: 8, can_view_generated: content}
+			- {group_id: 118, item_id: 2, can_view_generated: content}
+			- {group_id: 118, item_id: 4, can_view_generated: content}
+			- {group_id: 118, item_id: 6, can_view_generated: content}
+			- {group_id: 118, item_id: 8, can_view_generated: content}
+		attempts:
+			- {participant_id: 100, id: 0}
+			- {participant_id: 100, id: 200, root_item_id: 2, parent_attempt_id: 0}
+			- {participant_id: 101, id: 200, root_item_id: 4, allows_submissions_until: 3019-06-30 11:00:00}
+			- {participant_id: 101, id: 201, root_item_id: 6, parent_attempt_id: 200, allows_submissions_until: 3019-06-30 11:00:00}
+			- {participant_id: 102, id: 200, root_item_id: 4}
+			- {participant_id: 103, id: 200, root_item_id: 2}
+			- {participant_id: 104, id: 200, root_item_id: 2}
+			- {participant_id: 105, id: 200, root_item_id: 2}
+			- {participant_id: 105, id: 201, root_item_id: 4, parent_attempt_id: 200}
+			- {participant_id: 106, id: 200, root_item_id: 2}
+			- {participant_id: 106, id: 201, root_item_id: 4, parent_attempt_id: 200}
+			- {participant_id: 107, id: 200, root_item_id: 2}
+			- {participant_id: 107, id: 201, root_item_id: 4, parent_attempt_id: 200}
+			- {participant_id: 108, id: 200, root_item_id: 2}
+			- {participant_id: 108, id: 201, root_item_id: 4, parent_attempt_id: 200}
+			- {participant_id: 109, id: 200, root_item_id: 2, allows_submissions_until: 2019-06-30 11:00:00}
+			- {participant_id: 109, id: 201, root_item_id: 4, parent_attempt_id: 200}
+			- {participant_id: 110, id: 200, root_item_id: 2}
+			- {participant_id: 110, id: 201, root_item_id: 4, parent_attempt_id: 200, allows_submissions_until: 2019-06-30 11:00:00}
+			- {participant_id: 111, id: 200, root_item_id: 2, ended_at: 2019-06-30 11:00:00}
+			- {participant_id: 111, id: 201, root_item_id: 4, parent_attempt_id: 200}
+			- {participant_id: 112, id: 200, root_item_id: 2}
+			- {participant_id: 112, id: 201, root_item_id: 4, parent_attempt_id: 200, ended_at: 2019-06-30 11:00:00}
+			- {participant_id: 113, id: 200}
+			- {participant_id: 114, id: 0}
+			- {participant_id: 114, id: 200, root_item_id: 2}
+			- {participant_id: 114, id: 201, root_item_id: 4, parent_attempt_id: 0}
+			- {participant_id: 115, id: 0}
+			- {participant_id: 115, id: 200, parent_attempt_id: 0}
+			- {participant_id: 116, id: 0}
+			- {participant_id: 116, id: 200}
+			- {participant_id: 116, id: 201, root_item_id: 6, parent_attempt_id: 0}
+			- {participant_id: 117, id: 0}
+			- {participant_id: 117, id: 200, parent_attempt_id: 0}
+			- {participant_id: 118, id: 0}
+			- {participant_id: 118, id: 200, root_item_id: 6, parent_attempt_id: 0}
+		results:
+			- {participant_id: 100, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 101, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 101, attempt_id: 201, item_id: 6, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 102, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 103, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 104, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 105, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 105, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 106, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 106, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 107, attempt_id: 200, item_id: 2, started_at: null}
+			- {participant_id: 107, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 108, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 108, attempt_id: 201, item_id: 4, started_at: null}
+			- {participant_id: 109, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 109, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 110, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 110, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 111, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 111, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 112, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 112, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 113, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 113, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 114, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 114, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 114, attempt_id: 201, item_id: 6, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 115, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 115, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 115, attempt_id: 200, item_id: 6, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 116, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 116, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 116, attempt_id: 201, item_id: 6, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 117, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 117, attempt_id: 0, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 117, attempt_id: 200, item_id: 6, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 118, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 118, attempt_id: 0, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 118, attempt_id: 200, item_id: 6, started_at: 2019-05-30 11:00:00}
+	`)
+	defer func() { _ = db.Close() }()
+
+	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+		store.GroupGroups().CreateNewAncestors()
+		return nil
+	}))
+
+	type args struct {
+		ids                               []int64
+		groupID                           int64
+		attemptID                         int64
+		requireContentAccessToTheLastItem bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{name: "empty list of ids", args: args{ids: []int64{}, groupID: 100, attemptID: 0}},
+		{name: "one item, but attemptID != 0", args: args{ids: []int64{2}, groupID: 100, attemptID: 200}},
+		{name: "wrong attempt_id", args: args{ids: []int64{2, 4}, groupID: 100, attemptID: 0}},
+		{name: "first item is the group's activity", args: args{ids: []int64{4, 6}, groupID: 101, attemptID: 200}, want: true},
+		{name: "first item is an activity of the group's ancestor", args: args{ids: []int64{4, 6}, groupID: 102, attemptID: 200}, want: true},
+		{name: "first item is a root item", args: args{ids: []int64{2, 4}, groupID: 100, attemptID: 200}, want: true},
+		{name: "first item is neither a root item nor the group's activity", args: args{ids: []int64{6, 8}, groupID: 101, attemptID: 201}},
+		{
+			name: "no content access to the last item when requireContentAccessToTheLastItem = true",
+			args: args{ids: []int64{2, 4}, groupID: 103, attemptID: 200, requireContentAccessToTheLastItem: true},
+		},
+		{
+			name: "no access to the last item when requireContentAccessToTheLastItem = false",
+			args: args{ids: []int64{2, 4}, groupID: 104, attemptID: 200, requireContentAccessToTheLastItem: false},
+		},
+		{
+			name: "content access to the last item when requireContentAccessToTheLastItem = true",
+			args: args{ids: []int64{4, 6}, groupID: 101, attemptID: 200, requireContentAccessToTheLastItem: true},
+			want: true,
+		},
+		{
+			name: "info access to the last item when requireContentAccessToTheLastItem = false",
+			args: args{ids: []int64{2, 4}, groupID: 103, attemptID: 200, requireContentAccessToTheLastItem: false},
+			want: true,
+		},
+		{
+			name: "no access to the last item when requireContentAccessToTheLastItem = true",
+			args: args{ids: []int64{2, 4}, groupID: 104, attemptID: 200, requireContentAccessToTheLastItem: true},
+		},
+		{name: "no content access to the second to the last item", args: args{ids: []int64{2, 4, 6}, groupID: 105, attemptID: 201}},
+		{name: "no content access to the first item", args: args{ids: []int64{2, 4, 6}, groupID: 106, attemptID: 201}},
+		{name: "result of the first item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 107, attemptID: 201}},
+		{name: "result of the second to the last item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, attemptID: 201}},
+		{name: "attempt of the first item is expired", args: args{ids: []int64{2, 4, 6}, groupID: 109, attemptID: 201}},
+		{name: "attempt of the second to the last item is expired", args: args{ids: []int64{2, 4, 6}, groupID: 110, attemptID: 201}},
+		{name: "attempt of the first item is ended", args: args{ids: []int64{2, 4, 6}, groupID: 111, attemptID: 201}},
+		{name: "attempt of the second to the last item is ended", args: args{ids: []int64{2, 4, 6}, groupID: 112, attemptID: 201}},
+		{name: "the first item is not a parent of the second item", args: args{ids: []int64{4, 4, 6}, groupID: 113, attemptID: 200}},
+		{name: "the second to the last item is not a parent of the last item", args: args{ids: []int64{2, 4, 4}, groupID: 113, attemptID: 200}},
+		{
+			name: "the first item's attempt is not a parent for the second items's attempt while the second item's attempt root_item_id is set",
+			args: args{ids: []int64{2, 4, 6, 8}, groupID: 114, attemptID: 201},
+		},
+		{
+			name: "the first item's attempt is not the same as the the second items's attempt " +
+				"while the second item's attempt root_item_id is not set",
+			args: args{ids: []int64{2, 4, 6, 8}, groupID: 115, attemptID: 200},
+		},
+		{
+			name: "the third from the end item's attempt is not a parent for the second to the last items's attempt " +
+				"while the second to the last item's attempt root_item_id is set",
+			args: args{ids: []int64{2, 4, 6, 8}, groupID: 116, attemptID: 201},
+		},
+		{
+			name: "the third from the end item's attempt is not the same as the second to the last items's attempt " +
+				"while the second to the last item's attempt root_item_id is not set",
+			args: args{ids: []int64{2, 4, 6, 8}, groupID: 117, attemptID: 200},
+		},
+		{name: "everything is okay (1 item)", args: args{ids: []int64{4}, groupID: 101, attemptID: 0}, want: true},
+		{name: "everything is okay (4 items)", args: args{ids: []int64{2, 4, 6, 8}, groupID: 118, attemptID: 200}, want: true},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				got, err := store.Items().IsValidParticipationHierarchy(
+					tt.args.ids, tt.args.groupID, tt.args.attemptID, tt.args.requireContentAccessToTheLastItem)
+				assert.Equal(t, tt.want, got)
+				assert.NoError(t, err)
+				return nil
+			}))
+		})
+	}
+}
+
 func TestItemStore_GetAccessDetailsForIDs(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 11, default_language_tag: fr}, {id: 12, default_language_tag: fr}, {id: 13, default_language_tag: fr}]

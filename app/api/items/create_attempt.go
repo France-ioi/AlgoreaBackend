@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /items/{item_id}/attempts items attemptCreate
+// swagger:operation POST /items/{ids}/attempts items attemptCreate
 // ---
 // summary: Create an attempt
 // description: >
@@ -24,8 +24,14 @@ import (
 //   Restrictions:
 //
 //     * if `as_team_id` is given, it should be a user's parent team group,
-//     * the group creating the attempt should have at least 'content' access to the item,
-//     * the item should be either 'Task', 'Course', or 'Chapter',
+//     * the first item in `{ids}` should be a root item (items.is_root) or the item of a group (groups.activity_id)
+//       the participant is a descendant of,
+//     * `{ids}` should be an ordered list of parent-child items,
+//     * the group creating the attempt should have at least 'content' access on each of the items in `{ids}`,
+//     * the participant should have a started, allowing submission, not ended result for each item but the last,
+//       with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//     * if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero,
+//     * the last item in `{ids}` should be either 'Task', 'Course', or 'Chapter',
 //
 //   otherwise the 'forbidden' error is returned.
 //
@@ -33,8 +39,13 @@ import (
 //   If there is already an attempt for the (item, group) pair, `items.allows_multiple_attempts` should be true, otherwise
 //   the "unprocessable entity" error is returned.
 // parameters:
-// - name: item_id
+// - name: ids
 //   in: path
+//   type: string
+//   description: slash-separated list of item IDs
+//   required: true
+// - name: parent_attempt_id
+//   in: query
 //   type: integer
 //   required: true
 // - name: as_team_id
@@ -56,7 +67,12 @@ import (
 func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	ids, err := idsFromRequest(r)
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
+	parentAttemptID, err := service.ResolveURLQueryGetInt64Field(r, "parent_attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -78,33 +94,27 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		}
 	}
 
-	var allowsMultipleAttempts bool
-	err = srv.Store.Items().ByID(itemID).WhereGroupHasViewPermissionOnItems(groupID, "content").
-		Where("items.type IN('Task','Course','Chapter')").
-		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).Error()
-	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
-
 	var attemptID int64
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		if !allowsMultipleAttempts {
-			var found bool
-			found, err = store.Results().
-				Where("participant_id = ?", groupID).Where("item_id = ?", itemID).WithWriteLock().HasRows()
-			service.MustNotBeError(err)
-			if found {
-				apiError = service.ErrUnprocessableEntity(errors.New("the item doesn't allow multiple attempts"))
-				return apiError.Error // rollback
-			}
+		var ok bool
+		ok, err = store.Items().IsValidParticipationHierarchy(ids, groupID, parentAttemptID, true)
+		service.MustNotBeError(err)
+		if !ok {
+			apiError = service.InsufficientAccessRightsError
+			return apiError.Error // rollback
 		}
 
-		attemptID, err = store.Attempts().CreateNew(groupID, itemID, user.GroupID)
+		itemID := ids[len(ids)-1]
+		apiError = checkIfAttemptCreationIsPossible(store, itemID, groupID)
+		if apiError != service.NoError {
+			return apiError.Error // rollback
+		}
+
+		attemptID, err = store.Attempts().CreateNew(groupID, parentAttemptID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
-		return nil
+		return store.Results().Propagate()
 	})
 	if apiError != service.NoError {
 		return apiError
@@ -114,5 +124,27 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	render.Respond(w, r, map[string]interface{}{
 		"id": strconv.FormatInt(attemptID, 10),
 	})
+	return service.NoError
+}
+
+func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID int64) service.APIError {
+	var allowsMultipleAttempts bool
+	err := store.Items().ByID(itemID).
+		Where("items.type IN('Task','Course','Chapter')").
+		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).WithWriteLock().Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return service.InsufficientAccessRightsError
+	}
+	service.MustNotBeError(err)
+
+	if !allowsMultipleAttempts {
+		var found bool
+		found, err = store.Results().
+			Where("participant_id = ?", groupID).Where("item_id = ?", itemID).WithWriteLock().HasRows()
+		service.MustNotBeError(err)
+		if found {
+			return service.ErrUnprocessableEntity(errors.New("the item doesn't allow multiple attempts"))
+		}
+	}
 	return service.NoError
 }

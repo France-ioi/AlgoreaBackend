@@ -161,11 +161,12 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 
 		// update results
 		service.MustNotBeError(resultScope.UpdateColumn(map[string]interface{}{
-			"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
-			"latest_activity_at": database.Now(),
+			"started_at":               gorm.Expr("IFNULL(started_at, ?)", database.Now()),
+			"latest_activity_at":       database.Now(),
+			"result_propagation_state": "to_be_propagated",
 		}).Error())
 
-		return nil
+		return store.Results().Propagate()
 	})
 	if apiError != service.NoError {
 		return apiError

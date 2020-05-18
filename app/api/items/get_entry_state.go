@@ -131,7 +131,21 @@ type itemGetEntryStateResponse struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) service.APIError {
-	result, apiError := srv.getItemInfoAndEntryStateFromRequest(r, srv.Store, false)
+	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
+	user := srv.GetUser(r)
+	groupID := user.GroupID
+	if len(r.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
+	}
+
+	result, apiError := srv.getItemInfoAndEntryState(itemID, groupID, user, srv.Store, false)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -140,22 +154,8 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) servic
 	return service.NoError
 }
 
-func (srv *Service) getItemInfoAndEntryStateFromRequest(r *http.Request, store *database.DataStore, lock bool) (
+func (srv *Service) getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store *database.DataStore, lock bool) (
 	*itemGetEntryStateResponse, service.APIError) {
-	user := srv.GetUser(r)
-
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
-	if err != nil {
-		return nil, service.ErrInvalidRequest(err)
-	}
-
-	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return nil, service.ErrInvalidRequest(err)
-		}
-	}
 
 	var itemInfo struct {
 		IsTeamItem                   bool
@@ -165,7 +165,7 @@ func (srv *Service) getItemInfoAndEntryStateFromRequest(r *http.Request, store *
 		EntryFrozenTeams             bool
 	}
 
-	err = store.Items().VisibleByID(groupID, itemID).Where("items.requires_explicit_entry").
+	err := store.Items().VisibleByID(groupID, itemID).Where("items.requires_explicit_entry").
 		Select(`
 			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_item,
 			items.entry_max_team_size, items.entry_min_admitted_members_ratio, items.entry_frozen_teams`).

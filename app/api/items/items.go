@@ -38,13 +38,13 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/items/{item_id}/nav-tree", service.AppHandler(srv.getItemNavigationTree).ServeHTTP)
 	router.Get("/items/{item_id}/attempts/{attempt_id}/task-token", service.AppHandler(srv.getTaskToken).ServeHTTP)
 	router.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
-	router.Post("/items/{item_id}/attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
+	router.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
 	router.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
 	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
 	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 	router.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
-	router.Post("/attempts/{attempt_id}/items/{item_id}/enter", service.AppHandler(srv.enter).ServeHTTP)
+	router.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)
 	router.Post("/attempts/{attempt_id}/end", service.AppHandler(srv.endAttempt).ServeHTTP)
 }
 

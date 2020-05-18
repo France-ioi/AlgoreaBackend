@@ -42,10 +42,10 @@ Feature: Save grading result
       | 0  | 101            |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | latest_activity_at  | hints_requested        |
-      | 0          | 101            | 10      | 2019-05-30 11:00:00 | null                   |
-      | 0          | 101            | 50      | 2019-05-30 11:00:00 | [0,  1, "hint" , null] |
-      | 1          | 101            | 60      | 2019-05-29 11:00:00 | [0,  1, "hint" , null] |
+      | attempt_id | participant_id | item_id | latest_activity_at  | hints_requested        | result_propagation_state |
+      | 0          | 101            | 10      | 2019-05-30 11:00:00 | null                   | done                     |
+      | 0          | 101            | 50      | 2019-05-30 11:00:00 | [0,  1, "hint" , null] | done                     |
+      | 1          | 101            | 60      | 2019-05-29 11:00:00 | [0,  1, "hint" , null] | done                     |
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
@@ -117,10 +117,10 @@ Feature: Save grading result
       | 0  | 101            |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested        | latest_activity_at  | score_edit_rule   | score_edit_value   |
-      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 | null              | null               |
-      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 | <score_edit_rule> | <score_edit_value> |
-      | 1          | 101            | 60      | [0,  1, "hint" , null] | 2019-05-29 11:00:00 | null              | null               |
+      | attempt_id | participant_id | item_id | hints_requested        | latest_activity_at  | score_edit_rule   | score_edit_value   | result_propagation_state |
+      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 | null              | null               | done                     |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 | <score_edit_rule> | <score_edit_value> | done                     |
+      | 1          | 101            | 60      | [0,  1, "hint" , null] | 2019-05-29 11:00:00 | null              | null               | done                     |
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
@@ -199,9 +199,9 @@ Feature: Save grading result
       | 0  | 101            |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | score_obtained_at   | latest_activity_at  |
-      | 0          | 101            | 50      | 2017-04-29 06:38:38 | 2019-05-30 11:00:00 |
-      | 1          | 101            | 60      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 |
+      | attempt_id | participant_id | item_id | score_obtained_at   | latest_activity_at  | result_propagation_state |
+      | 0          | 101            | 50      | 2017-04-29 06:38:38 | 2019-05-30 11:00:00 | done                     |
+      | 1          | 101            | 60      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 | done                     |
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
@@ -279,10 +279,10 @@ Feature: Save grading result
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | participant_id | attempt_id | item_id | score_computed | score_obtained_at   | score_edit_rule   | score_edit_value   |
-      | 101            | 0          | 10      | 20             | 2018-05-29 06:38:38 | null              | null               |
-      | 101            | 0          | 50      | 20             | 2018-05-29 06:38:38 | <score_edit_rule> | <score_edit_value> |
-      | 101            | 0          | 60      | 20             | 2018-05-29 06:38:38 | null              | null               |
+      | participant_id | attempt_id | item_id | score_computed | score_obtained_at   | score_edit_rule   | score_edit_value   | result_propagation_state |
+      | 101            | 0          | 10      | 20             | 2018-05-29 06:38:38 | null              | null               | done                     |
+      | 101            | 0          | 50      | 20             | 2018-05-29 06:38:38 | <score_edit_rule> | <score_edit_value> | done                     |
+      | 101            | 0          | 60      | 20             | 2018-05-29 06:38:38 | null              | null               | done                     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -353,10 +353,10 @@ Feature: Save grading result
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | validated_at        |
-      | 0          | 101            | 10      | 2016-05-29 06:38:37 |
-      | 0          | 101            | 50      | 2016-05-29 06:38:37 |
-      | 0          | 101            | 60      | 2015-05-29 06:38:37 |
+      | attempt_id | participant_id | item_id | validated_at        | result_propagation_state |
+      | 0          | 101            | 10      | 2016-05-29 06:38:37 | done                     |
+      | 0          | 101            | 50      | 2016-05-29 06:38:37 | done                     |
+      | 0          | 101            | 60      | 2015-05-29 06:38:37 | done                     |
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
@@ -422,8 +422,8 @@ Feature: Save grading result
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | validated_at        |
-      | 0          | 101            | 50      | 2018-05-29 06:38:38 |
+      | attempt_id | participant_id | item_id | validated_at        | result_propagation_state |
+      | 0          | 101            | 50      | 2018-05-29 06:38:38 | done                     |
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
@@ -484,8 +484,8 @@ Feature: Save grading result
       | id | participant_id |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | validated_at        |
-      | 1          | 101            | 70      | 2018-05-29 06:38:38 |
+      | attempt_id | participant_id | item_id | validated_at        | result_propagation_state |
+      | 1          | 101            | 70      | 2018-05-29 06:38:38 | done                     |
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
