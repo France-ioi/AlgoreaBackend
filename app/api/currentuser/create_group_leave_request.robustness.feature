@@ -1,4 +1,4 @@
-Feature: User sends a request to leave a group - robustness
+Feature: User creates a request to leave a group - robustness
   Background:
     Given the database has the following table 'groups':
       | id | require_lock_membership_approval_until | frozen_membership |

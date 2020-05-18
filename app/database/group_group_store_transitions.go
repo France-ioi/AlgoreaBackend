@@ -86,7 +86,7 @@ type GroupGroupTransitionAction int
 const (
 	// AdminCreatesInvitation means a group admin invites new users to the group
 	AdminCreatesInvitation GroupGroupTransitionAction = iota
-	// UserCreatesJoinRequest means a user sends a request to become a group member
+	// UserCreatesJoinRequest means a user creates a request to become a group member
 	UserCreatesJoinRequest
 	// UserCreatesAcceptedJoinRequest means a user adds himself into a group that he owns
 	// It doesn't check if the user owns the group / all needed approvals are given (a calling service should check that)
@@ -112,7 +112,7 @@ const (
 	AdminWithdrawsInvitation
 	// UserLeavesGroup means a user leaves a group
 	UserLeavesGroup
-	// UserCreatesLeaveRequest means a user sends a request to leave a group
+	// UserCreatesLeaveRequest means a user creates a request to leave a group
 	// We don't check that groups.require_lock_membership_approval_until & groups_groups.lock_membership_approved_at
 	// are not null (a calling service should check that by itself)
 	UserCreatesLeaveRequest

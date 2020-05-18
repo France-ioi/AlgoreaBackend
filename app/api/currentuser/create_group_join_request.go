@@ -8,9 +8,10 @@ import (
 
 // swagger:operation POST /current-user/group-requests/{group_id} group-memberships groupJoinRequestCreate
 // ---
-// summary: Create a request to join a group
+// summary: Create a group join request
 // description: >
-//   Lets a user create a request to join a group. There are two possible cases:
+//   Lets the current user create a request to join a group (idenfified by {group_id}).
+//   There are two possible cases:
 //
 //   #### The user is not a manager of the group
 //
@@ -82,6 +83,6 @@ import (
 //     "$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) sendGroupJoinRequest(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroupJoinRequest(w http.ResponseWriter, r *http.Request) service.APIError {
 	return srv.performGroupRelationAction(w, r, createGroupJoinRequestAction)
 }
