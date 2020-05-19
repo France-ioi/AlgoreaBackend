@@ -2,10 +2,10 @@ Feature: Get item breadcrumbs
 
 Background:
   Given the database has the following table 'groups':
-    | id | name    | text_id | grade | type  | activity_id |
-    | 11 | jdoe    |         | -2    | User  | null        |
-    | 13 | Group B |         | -2    | Class | null        |
-    | 14 | Team B  |         | -2    | Team  | 23          |
+    | id | name    | text_id | grade | type  | root_activity_id |
+    | 11 | jdoe    |         | -2    | User  | null             |
+    | 13 | Group B |         | -2    | Class | null             |
+    | 14 | Team B  |         | -2    | Team  | 23               |
   And the database has the following table 'languages':
     | tag |
     | en  |
@@ -129,7 +129,7 @@ Scenario: Content access to all items except for last for which we have info acc
     ]
     """
 
-  Scenario: Allows the first item to be activity_id of some participant's ancestor
+  Scenario: Allows the first item to be root_activity_id of some participant's ancestor
     Given the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 14       | 23      | info               |

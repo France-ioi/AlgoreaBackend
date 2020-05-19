@@ -21,7 +21,7 @@ import (
 //   Restrictions:
 //
 //     * if `as_team_id` is given, it should be a user's parent team group,
-//     * the first item in `{ids}` should be a root item (items.is_root) or the item of a group (groups.activity_id)
+//     * the first item in `{ids}` should be a root item (items.is_root) or a root activity (groups.root_activity_id) of a group
 //       the participant is a descendant of,
 //     * the last item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
 //     * `{ids}` should be an ordered list of parent-child items,

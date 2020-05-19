@@ -45,7 +45,7 @@ func (s *ItemStore) VisibleGrandChildrenOfID(groupID, itemID int64) *DB {
 
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root items (items.is_root) or the item of a group (groups.activity_id)
+//  * the first item in `ids` is a root items (items.is_root) or a root activity (groups.root_activity_id) of a group
 //    the `groupID` is a descendant of,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids`,
@@ -84,7 +84,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 	requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock bool) *DB {
 	participantActivities := s.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
-		Select("groups.activity_id")
+		Select("groups.root_activity_id")
 
 	if withWriteLock {
 		participantActivities = participantActivities.WithWriteLock()
@@ -130,7 +130,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids (but the last item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root items (items.is_root) or the item of a group (groups.activity_id)
+//  * the first item in `ids` is a root items (items.is_root) or a root activity (groups.root_activity_id) of a group
 //    the `groupID` is a descendant of,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and

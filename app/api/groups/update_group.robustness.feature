@@ -1,7 +1,7 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type  | activity_id         | is_official_session | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership |
+      | id | name    | grade | description     | created_at          | type  | root_activity_id    | is_official_session | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership |
       | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | false               | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true                       | 0                 |
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | false               | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       | 1                 |
       | 14 | Group C | -2    | Group C is here | 2019-03-06 09:26:40 | Class | null                | false               | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 |
@@ -66,7 +66,7 @@ Feature: Update a group (groupEdit) - robustness
       "code_expires_at": "the end",
       "open_activity_when_joining": 12,
 
-      "activity_id": "abc",
+      "root_activity_id": "abc",
       "is_official_session": "abc",
       "require_members_to_join_parent": "abc",
       "organizer": 123,
@@ -92,7 +92,7 @@ Feature: Update a group (groupEdit) - robustness
         "is_open": ["expected type 'bool', got unconvertible type 'string'"],
         "code_expires_at": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
         "code_lifetime": ["expected type 'string', got unconvertible type 'float64'"],
-        "activity_id": ["decoding error: strconv.ParseInt: parsing \"abc\": invalid syntax"],
+        "root_activity_id": ["decoding error: strconv.ParseInt: parsing \"abc\": invalid syntax"],
         "is_official_session": ["expected type 'bool', got unconvertible type 'string'"],
         "require_members_to_join_parent": ["expected type 'bool', got unconvertible type 'string'"],
         "organizer": ["expected type 'string', got unconvertible type 'float64'"],
@@ -127,7 +127,7 @@ Feature: Update a group (groupEdit) - robustness
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "activity_id": "404"
+      "root_activity_id": "404"
     }
     """
     Then the response code should be 403
@@ -140,7 +140,7 @@ Feature: Update a group (groupEdit) - robustness
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "activity_id": "5678"
+      "root_activity_id": "5678"
     }
     """
     Then the response code should be 403
@@ -153,7 +153,7 @@ Feature: Update a group (groupEdit) - robustness
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "activity_id": "5678"
+      "root_activity_id": "5678"
     }
     """
     Then the response code should be 403
@@ -161,12 +161,12 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: is_official_session becomes true & activity_id becomes not null while the user doesn't have the permission
+  Scenario: is_official_session becomes true & root_activity_id becomes not null while the user doesn't have the permission
     Given I am the user with id "21"
     When I send a PUT request to "/groups/14" with the following body:
     """
     {
-      "activity_id": "123",
+      "root_activity_id": "123",
       "is_official_session": true
     }
     """
@@ -175,7 +175,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: is_official_session becomes true & activity_id is set in the db while the user doesn't have the permission
+  Scenario: is_official_session becomes true & root_activity_id is set in the db while the user doesn't have the permission
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -188,12 +188,12 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: is_official_session is true in the db & activity_id becomes not null while the user doesn't have the permission
+  Scenario: is_official_session is true in the db & root_activity_id becomes not null while the user doesn't have the permission
     Given I am the user with id "21"
     When I send a PUT request to "/groups/15" with the following body:
     """
     {
-      "activity_id": "123"
+      "root_activity_id": "123"
     }
     """
     Then the response code should be 403
@@ -201,7 +201,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: is_official_session becomes true, but activity_id is null in the db
+  Scenario: is_official_session becomes true, but root_activity_id is null in the db
     Given I am the user with id "21"
     When I send a PUT request to "/groups/14" with the following body:
     """
@@ -210,21 +210,21 @@ Feature: Update a group (groupEdit) - robustness
     }
     """
     Then the response code should be 400
-    And the response error message should contain "The activity_id should be set for official sessions"
+    And the response error message should contain "The root_activity_id should be set for official sessions"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: is_official_session becomes true, but the new activity_id is null
+  Scenario: is_official_session becomes true, but the new root_activity_id is null
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "activity_id": null,
+      "root_activity_id": null,
       "is_official_session": true
     }
     """
     Then the response code should be 400
-    And the response error message should contain "The activity_id should be set for official sessions"
+    And the response error message should contain "The root_activity_id should be set for official sessions"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 

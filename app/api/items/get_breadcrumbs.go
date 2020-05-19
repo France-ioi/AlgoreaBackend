@@ -23,7 +23,7 @@ import (
 //
 //   Restrictions:
 //     * the list of item IDs should be a valid path from a root item
-//      (`items.is_root`=1 or `items.id`=`groups.activity_id` for one of the participant's ancestor groups),
+//      (`items.is_root`=1 or `items.id`=`groups.root_activity_id` for one of the participant's ancestor groups),
 //     * `as_team_id` (if given) should be the current user's team,
 //     * the participant should have at least 'content' access on each listed item except the last one through that path,
 //       and at least 'info' access on the last item,

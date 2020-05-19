@@ -110,9 +110,9 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {parent_item_id: 4, child_item_id: 6, child_order: 1}
 			- {parent_item_id: 6, child_item_id: 8, child_order: 1}
 		groups:
-			- {id: 50, activity_id: 4}
+			- {id: 50, root_activity_id: 4}
 			- {id: 100}
-			- {id: 101, activity_id: 4}
+			- {id: 101, root_activity_id: 4}
 			- {id: 102}
 			- {id: 103}
 			- {id: 104}
@@ -485,9 +485,9 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {parent_item_id: 4, child_item_id: 6, child_order: 1}
 			- {parent_item_id: 6, child_item_id: 8, child_order: 1}
 		groups:
-			- {id: 50, activity_id: 4}
+			- {id: 50, root_activity_id: 4}
 			- {id: 100}
-			- {id: 101, activity_id: 4}
+			- {id: 101, root_activity_id: 4}
 			- {id: 102}
 			- {id: 103}
 			- {id: 104}

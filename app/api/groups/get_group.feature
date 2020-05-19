@@ -1,7 +1,7 @@
 Feature: Get group by groupID (groupView)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type  | activity_id         | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining |
+      | id | name    | grade | description     | created_at          | type  | root_activity_id    | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining |
       | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | true    | false     | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true                       |
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | true    | false     | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       |
       | 15 | Group D | -4    | Other Group     | 2019-04-06 09:26:40 | Other | null                | false   | true      | abcdefghij | null          | null                | false                      |
@@ -47,7 +47,7 @@ Feature: Get group by groupID (groupView)
       "description": "Group B is here",
       "created_at": "2019-03-06T09:26:40Z",
       "type": "Class",
-      "activity_id": "1672978871462145461",
+      "root_activity_id": "1672978871462145461",
       "is_open": true,
       "is_public": false,
       "code": "ybabbxnlyo",
@@ -72,7 +72,7 @@ Feature: Get group by groupID (groupView)
       "description": "Group A is here",
       "created_at": "2019-02-06T09:26:40Z",
       "type": "Class",
-      "activity_id": "1672978871462145361",
+      "root_activity_id": "1672978871462145361",
       "is_open": true,
       "is_public": false,
       "code": "ybqybxnlyo",
@@ -97,7 +97,7 @@ Feature: Get group by groupID (groupView)
       "description": "Group B is here",
       "created_at": "2019-03-06T09:26:40Z",
       "type": "Class",
-      "activity_id": "1672978871462145461",
+      "root_activity_id": "1672978871462145461",
       "is_open": true,
       "is_public": false,
       "open_activity_when_joining": true,
@@ -119,7 +119,7 @@ Feature: Get group by groupID (groupView)
       "description": "Group B is here",
       "created_at": "2019-03-06T09:26:40Z",
       "type": "Class",
-      "activity_id": "1672978871462145461",
+      "root_activity_id": "1672978871462145461",
       "is_open": true,
       "is_public": false,
       "open_activity_when_joining": true,
@@ -147,7 +147,7 @@ Feature: Get group by groupID (groupView)
       "description": "Other Group",
       "created_at": "2019-04-06T09:26:40Z",
       "type": "Other",
-      "activity_id": null,
+      "root_activity_id": null,
       "is_open": false,
       "is_public": true,
       "open_activity_when_joining": false,

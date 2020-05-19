@@ -48,7 +48,7 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta(
-			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+			"SELECT groups.is_public, groups.root_activity_id, groups.is_official_session, groups.frozen_membership "+
 				"FROM `groups` "+
 				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
@@ -65,7 +65,7 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta(
-			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+			"SELECT groups.is_public, groups.root_activity_id, groups.is_official_session, groups.frozen_membership "+
 				"FROM `groups` "+
 				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
@@ -84,7 +84,7 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta(
-			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+			"SELECT groups.is_public, groups.root_activity_id, groups.is_official_session, groups.frozen_membership "+
 				"FROM `groups` "+
 				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
@@ -105,7 +105,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta(
-			"SELECT groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership "+
+			"SELECT groups.is_public, groups.root_activity_id, groups.is_official_session, groups.frozen_membership "+
 				"FROM `groups` "+
 				"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
 				"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
@@ -179,17 +179,17 @@ func Test_isTryingToChangeOfficialSessionActivity(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "becomes an unofficial session and the activity_id is changed",
+			name: "becomes an unofficial session and the root_activity_id is changed",
 			args: args{dbMap: map[string]interface{}{"is_official_session": false}, oldIsOfficialSession: true, activityIDChanged: true},
 			want: false,
 		},
 		{
-			name: "is an unofficial session and the activity_id is changed",
+			name: "is an unofficial session and the root_activity_id is changed",
 			args: args{dbMap: map[string]interface{}{"is_official_session": false}, oldIsOfficialSession: false, activityIDChanged: true},
 			want: false,
 		},
 		{
-			name: "is an official session and the activity_id is changed",
+			name: "is an official session and the root_activity_id is changed",
 			args: args{dbMap: map[string]interface{}{}, oldIsOfficialSession: true, activityIDChanged: true},
 			want: true,
 		},

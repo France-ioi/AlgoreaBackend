@@ -24,7 +24,7 @@ import (
 //   Restrictions:
 //
 //     * if `as_team_id` is given, it should be a user's parent team group,
-//     * the first item in `{ids}` should be a root item (items.is_root) or the item of a group (groups.activity_id)
+//     * the first item in `{ids}` should be a root item (items.is_root) or a root activity (groups.root_activity_id) of a group
 //       the participant is a descendant of,
 //     * `{ids}` should be an ordered list of parent-child items,
 //     * the group creating the attempt should have at least 'content' access on each of the items in `{ids}`,
