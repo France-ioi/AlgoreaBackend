@@ -33,10 +33,22 @@ Feature: Get item breadcrumbs - robustness
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 22             | 23            | 1           |
+    And the database has the following table 'attempts':
+      | participant_id | id | parent_attempt_id | root_item_id |
+      | 11             | 0  | null              | null         |
+      | 11             | 1  | 0                 | 22           |
+      | 11             | 2  | 0                 | 22           |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | 11             | 0          | 21      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 22      | 2019-05-30 11:00:00 |
+      | 11             | 2          | 22      | 2019-05-29 11:00:00 |
+      | 11             | 1          | 23      | 2019-05-29 11:00:00 |
+      | 11             | 2          | 23      | 2019-05-30 11:00:00 |
     And I am the user with id "11"
-    When I send a GET request to "/items/21/22/23/breadcrumbs"
-    Then the response code should be 400
-    And the response error message should contain "The IDs chain is corrupt"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=1"
+    Then the response code should be 403
+    And the response error message should contain "Item ids hierarchy is invalid or insufficient access rights"
 
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing at the end), but user has full access to all
     Given the database has the following table 'permissions_generated':
@@ -49,10 +61,22 @@ Feature: Get item breadcrumbs - robustness
       | parent_item_id | child_item_id | child_order |
       | 21             | 22            | 1           |
       | 22             | 23            | 1           |
+    And the database has the following table 'attempts':
+      | participant_id | id | parent_attempt_id | root_item_id |
+      | 11             | 0  | null              | null         |
+      | 11             | 1  | 0                 | 22           |
+      | 11             | 2  | 0                 | 22           |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | 11             | 0          | 21      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 22      | 2019-05-30 11:00:00 |
+      | 11             | 2          | 22      | 2019-05-29 11:00:00 |
+      | 11             | 1          | 23      | 2019-05-29 11:00:00 |
+      | 11             | 2          | 23      | 2019-05-30 11:00:00 |
     And I am the user with id "11"
-    When I send a GET request to "/items/21/22/23/24/breadcrumbs"
-    Then the response code should be 400
-    And the response error message should contain "The IDs chain is corrupt"
+    When I send a GET request to "/items/21/22/23/24/breadcrumbs?parent_attempt_id=1"
+    Then the response code should be 403
+    And the response error message should contain "Item ids hierarchy is invalid or insufficient access rights"
 
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), and user has full access to all
     Given the database has the following table 'permissions_generated':
@@ -65,10 +89,19 @@ Feature: Get item breadcrumbs - robustness
       | 21             | 22            | 1           |
       | 22             | 23            | 1           |
       | 23             | 24            | 1           |
+    And the database has the following table 'attempts':
+      | participant_id | id | parent_attempt_id | root_item_id |
+      | 11             | 0  | null              | null         |
+      | 11             | 1  | 0                 | 22           |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | 11             | 0          | 21      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 22      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 23      | 2019-05-29 11:00:00 |
     And I am the user with id "11"
-    When I send a GET request to "/items/21/22/24/23/breadcrumbs"
+    When I send a GET request to "/items/21/22/24/23/breadcrumbs?parent_attempt_id=1"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights on given item ids"
+    And the response error message should contain "Item ids hierarchy is invalid or insufficient access rights"
 
   Scenario: Should fail when the first item of hierarchy is not a root item, and user has full access to all
     Given the database has the following table 'permissions_generated':
@@ -79,10 +112,19 @@ Feature: Get item breadcrumbs - robustness
       | parent_item_id | child_item_id | child_order |
       | 22             | 23            | 1           |
       | 23             | 24            | 1           |
+    And the database has the following table 'attempts':
+      | participant_id | id | parent_attempt_id | root_item_id |
+      | 11             | 0  | null              | null         |
+      | 11             | 1  | 0                 | 22           |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | 11             | 0          | 21      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 22      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 23      | 2019-05-29 11:00:00 |
     And I am the user with id "11"
-    When I send a GET request to "/items/22/23/breadcrumbs"
-    Then the response code should be 400
-    And the response error message should contain "The IDs chain is corrupt"
+    When I send a GET request to "/items/22/23/breadcrumbs?attempt_id=1"
+    Then the response code should be 403
+    And the response error message should contain "Item ids hierarchy is invalid or insufficient access rights"
 
   Scenario: Should fail when the user has 'info' access to middle element, 'content' access to the rest
     Given the database has the following table 'permissions_generated':
@@ -93,10 +135,19 @@ Feature: Get item breadcrumbs - robustness
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 22             | 23            | 1           |
+    And the database has the following table 'attempts':
+      | participant_id | id | parent_attempt_id | root_item_id |
+      | 11             | 0  | null              | null         |
+      | 11             | 1  | 0                 | 22           |
+    And the database has the following table 'results':
+      | participant_id | attempt_id | item_id | started_at          |
+      | 11             | 0          | 21      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 22      | 2019-05-30 11:00:00 |
+      | 11             | 1          | 23      | 2019-05-29 11:00:00 |
     And I am the user with id "11"
-    When I send a GET request to "/items/21/22/23/breadcrumbs"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=1"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights on given item ids"
+    And the response error message should contain "Item ids hierarchy is invalid or insufficient access rights"
 
   Scenario: Should fail when the user doesn't exist
     And I am the user with id "404"
@@ -115,3 +166,39 @@ Feature: Get item breadcrumbs - robustness
     When I send a GET request to "/items/1/2/3/4/5/6/7/8/9/10/11/breadcrumbs"
     Then the response code should be 400
     And the response error message should contain "No more than 10 ids expected"
+
+  Scenario: Invalid attempt_id
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for attempt_id (should be int64)"
+
+  Scenario: Invalid parent_attempt_id
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?parent_attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for parent_attempt_id (should be int64)"
+
+  Scenario: Both attempt_id and parent_attempt_id are given
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=2&parent_attempt_id=1"
+    Then the response code should be 400
+    And the response error message should contain "Only one of attempt_id and parent_attempt_id can be given"
+
+  Scenario: No attempt given
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs"
+    Then the response code should be 400
+    And the response error message should contain "One of attempt_id and parent_attempt_id should be given"
+
+  Scenario: Invalid as_team_id
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=1&as_team_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+
+  Scenario: as_team_id is not the user's team
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=1&as_team_id=13"
+    Then the response code should be 403
+    And the response error message should contain "Can't use given as_team_id as a user's team"

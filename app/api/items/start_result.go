@@ -89,7 +89,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var ok bool
-		ok, err = store.Items().IsValidParticipationHierarchy(ids, groupID, attemptID, true)
+		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, groupID, attemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
 			apiError = service.InsufficientAccessRightsError
