@@ -166,3 +166,39 @@ Feature: Get item breadcrumbs - robustness
     When I send a GET request to "/items/1/2/3/4/5/6/7/8/9/10/11/breadcrumbs"
     Then the response code should be 400
     And the response error message should contain "No more than 10 ids expected"
+
+  Scenario: Invalid attempt_id
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for attempt_id (should be int64)"
+
+  Scenario: Invalid parent_attempt_id
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?parent_attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for parent_attempt_id (should be int64)"
+
+  Scenario: Both attempt_id and parent_attempt_id are given
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=2&parent_attempt_id=1"
+    Then the response code should be 400
+    And the response error message should contain "Only one of attempt_id and parent_attempt_id can be given"
+
+  Scenario: No attempt given
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs"
+    Then the response code should be 400
+    And the response error message should contain "One of attempt_id and parent_attempt_id should be given"
+
+  Scenario: Invalid as_team_id
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=1&as_team_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+
+  Scenario: as_team_id is not the user's team
+    And I am the user with id "11"
+    When I send a GET request to "/items/21/22/23/breadcrumbs?attempt_id=1&as_team_id=13"
+    Then the response code should be 403
+    And the response error message should contain "Can't use given as_team_id as a user's team"

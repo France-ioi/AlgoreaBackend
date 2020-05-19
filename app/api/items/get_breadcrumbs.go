@@ -24,12 +24,13 @@ import (
 //   Restrictions:
 //     * the list of item IDs should be a valid path from a root item
 //      (`items.is_root`=1 or `items.id`=`groups.activity_id` for one of the participant's ancestor groups),
-//       otherwise the 'forbidden' error is returned,
-//     * the user should have at least 'content' access on each listed item except the last one through that path,
-//       and at least 'info' access on the last item, otherwise the 'forbidden' error is returned,
-//     * if one of results within the ancestry of `attempt_id`/`parent_attempt_id` on the items path
-//       (except for the last item if `parent_attempt_id` is given) is not started (`started_at` is null),
-//       the 'forbidden' error is returned.
+//     * `as_team_id` (if given) should be the current user's team,
+//     * the participant should have at least 'content' access on each listed item except the last one through that path,
+//       and at least 'info' access on the last item,
+//     * all the results within the ancestry of `attempt_id`/`parent_attempt_id` on the items path
+//       (except for the last item if `parent_attempt_id` is given) should be started (`started_at` is not null),
+//
+//     otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: ids
 //   in: path
@@ -97,9 +98,9 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	var attemptNumberMap map[int64]int
 	var err error
 	if attemptIDSet {
-		attemptIDMap, attemptNumberMap, err = srv.Store.Items().BreadcrumbsHierarchyForAttempt(ids, groupID, attemptID)
+		attemptIDMap, attemptNumberMap, err = srv.Store.Items().BreadcrumbsHierarchyForAttempt(ids, groupID, attemptID, false)
 	} else {
-		attemptIDMap, attemptNumberMap, err = srv.Store.Items().BreadcrumbsHierarchyForParentAttempt(ids, groupID, parentAttemptID)
+		attemptIDMap, attemptNumberMap, err = srv.Store.Items().BreadcrumbsHierarchyForParentAttempt(ids, groupID, parentAttemptID, false)
 	}
 	service.MustNotBeError(err)
 	if attemptIDMap == nil {

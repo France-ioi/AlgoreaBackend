@@ -433,26 +433,36 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 	}
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name+": is valid", func(t *testing.T) {
-			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-				got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
-					tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheLastItem)
-				assert.Equal(t, tt.want, got)
-				assert.NoError(t, err)
-				return nil
-			}))
+		testEachWriteLockMode(t, tt.name+": is valid", func(writeLock bool) func(*testing.T) {
+			return func(t *testing.T) {
+				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+					got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
+						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheLastItem, writeLock)
+					assert.Equal(t, tt.want, got)
+					assert.NoError(t, err)
+					return nil
+				}))
+			}
 		})
-		t.Run(tt.name+": breadcrumbs hierarchy", func(t *testing.T) {
-			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-				gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(
-					tt.args.ids, tt.args.groupID, tt.args.parentAttemptID)
-				assert.Equal(t, tt.wantAttemptIDMap, gotIDs)
-				assert.Equal(t, tt.wantAttemptNumberMap, gotNumbers)
-				assert.NoError(t, err)
-				return nil
-			}))
+		testEachWriteLockMode(t, tt.name+": breadcrumbs hierarchy", func(writeLock bool) func(*testing.T) {
+			return func(t *testing.T) {
+				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(
+						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, writeLock)
+					assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
+					return nil
+				}))
+			}
 		})
 	}
+}
+
+func assertBreadcrumbsHierarchy(t *testing.T,
+	wantAttemptIDMap, gotIDs map[int64]int64,
+	wantAttemptNumberMap, gotNumbers map[int64]int, err error) {
+	assert.Equal(t, wantAttemptIDMap, gotIDs)
+	assert.Equal(t, wantAttemptNumberMap, gotNumbers)
+	assert.NoError(t, err)
 }
 
 func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
@@ -851,14 +861,29 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt := tt
-		assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-			gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
-				tt.args.ids, tt.args.groupID, tt.args.attemptID)
-			assert.Equal(t, tt.wantAttemptIDMap, gotIDs)
-			assert.Equal(t, tt.wantAttemptNumberMap, gotNumbers)
-			assert.NoError(t, err)
-			return nil
-		}))
+		testEachWriteLockMode(t, tt.name, func(writeLock bool) func(*testing.T) {
+			return func(t *testing.T) {
+				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
+						tt.args.ids, tt.args.groupID, tt.args.attemptID, writeLock)
+					assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
+					return nil
+				}))
+			}
+		})
+	}
+}
+
+func testEachWriteLockMode(t *testing.T, testName string, testGenFunc func(writeLock bool) func(*testing.T)) {
+	for _, writeLock := range []bool{false, true} {
+		writeLock := writeLock
+		var lockName string
+		if writeLock {
+			lockName = "(with write lock)"
+		} else {
+			lockName = "(without write lock)"
+		}
+		t.Run(testName+" "+lockName, testGenFunc(writeLock))
 	}
 }
 

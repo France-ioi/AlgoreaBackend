@@ -53,18 +53,20 @@ func (s *ItemStore) VisibleGrandChildrenOfID(groupID, itemID int64) *DB {
 //    with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //  * if `ids` consists of only one item, the `parentAttemptID` is zero.
 func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
-	ids []int64, groupID, parentAttemptID int64, requireContentAccessToTheLastItem bool) (bool, error) {
+	ids []int64, groupID, parentAttemptID int64, requireContentAccessToTheLastItem, withWriteLock bool) (bool, error) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
 		return false, nil
 	}
 
-	return s.participationHierarchyForParentAttempt(ids, groupID, parentAttemptID, true, requireContentAccessToTheLastItem, "1").HasRows()
+	return s.participationHierarchyForParentAttempt(
+		ids, groupID, parentAttemptID, true, requireContentAccessToTheLastItem, "1", withWriteLock).HasRows()
 }
 
 func (s *ItemStore) participationHierarchyForParentAttempt(
 	ids []int64, groupID, parentAttemptID int64, requireAttemptsToBeActive, requireContentAccessToTheLastItem bool,
-	columnsList string) *DB {
-	subQuery := s.itemAttemptChainWithoutAttemptForTail(ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheLastItem, false)
+	columnsList string, withWriteLock bool) *DB {
+	subQuery := s.itemAttemptChainWithoutAttemptForTail(
+		ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock)
 
 	if len(ids) > 1 {
 		subQuery = subQuery.
@@ -136,7 +138,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 //  * the `groupID` group has a started result for each item but the last,
 //    with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //  * if `ids` consists of only one item, the `parentAttemptID` is zero.
-func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, parentAttemptID int64) (
+func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, parentAttemptID int64, withWriteLock bool) (
 	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
 		return nil, nil, nil
@@ -146,7 +148,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 
 	columnsList := columnsListForBreadcrumbsHierarchy(ids[:len(ids)-1])
 	query := s.participationHierarchyForParentAttempt(
-		ids, groupID, parentAttemptID, false, false, columnsList)
+		ids, groupID, parentAttemptID, false, false, columnsList, withWriteLock)
 	var data []map[string]interface{}
 	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
 	if len(data) == 0 {
@@ -167,7 +169,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 //    at least 'info' access on the last one,
 //  * the `groupID` group has a started result for each item,
 //    with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
-func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64) (
+func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (
 	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error) {
 	if len(ids) == 0 {
 		return nil, nil, nil
@@ -176,8 +178,8 @@ func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attempt
 	defer recoverPanics(&err)
 
 	columnsList := columnsListForBreadcrumbsHierarchy(ids)
-	query := s.participationHierarchyForAttempt(
-		ids, groupID, attemptID, false, false, columnsList, false)
+	query := s.breadcrumbsHierarchyForAttempt(
+		ids, groupID, attemptID, false, columnsList, withWriteLock)
 	var data []map[string]interface{}
 	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
 	if len(data) == 0 {
@@ -228,12 +230,12 @@ func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
 	return attemptIDMap, attemptNumberMap
 }
 
-func (s *ItemStore) participationHierarchyForAttempt(
-	ids []int64, groupID, attemptID int64, requireAttemptsToBeActive, requireContentAccessToTheLastItem bool,
+func (s *ItemStore) breadcrumbsHierarchyForAttempt(
+	ids []int64, groupID, attemptID int64, requireContentAccessToTheLastItem bool,
 	columnsList string, withWriteLock bool) *DB {
 	lastItemIndex := len(ids) - 1
 	subQuery := s.
-		itemAttemptChainWithoutAttemptForTail(ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock).
+		itemAttemptChainWithoutAttemptForTail(ids, groupID, false, requireContentAccessToTheLastItem, withWriteLock).
 		Where(fmt.Sprintf("attempts%d.id = ?", lastItemIndex), attemptID)
 	subQuery = subQuery.
 		Joins(fmt.Sprintf(`
@@ -247,11 +249,6 @@ func (s *ItemStore) participationHierarchyForAttempt(
 		subQuery = subQuery.Where(fmt.Sprintf(
 			"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
 			lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex-1))
-	}
-	if requireAttemptsToBeActive {
-		subQuery = subQuery.
-			Where(fmt.Sprintf("attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until",
-				lastItemIndex, lastItemIndex))
 	}
 
 	subQuery = subQuery.Select(columnsList)

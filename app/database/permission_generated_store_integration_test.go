@@ -12,6 +12,41 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
+func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
+		users: [{group_id: 5}]
+		groups_ancestors:
+			- {ancestor_group_id: 1, child_group_id: 1}
+			- {ancestor_group_id: 1, child_group_id: 5}
+			- {ancestor_group_id: 2, child_group_id: 2}
+			- {ancestor_group_id: 2, child_group_id: 5, expires_at: 2019-05-30 11:00:00}
+			- {ancestor_group_id: 3, child_group_id: 3}
+			- {ancestor_group_id: 3, child_group_id: 5}
+			- {ancestor_group_id: 4, child_group_id: 4}
+			- {ancestor_group_id: 5, child_group_id: 5}
+		items: [{id: 2, default_language_tag: 2}, {id: 3, default_language_tag: 2}]
+		permissions_generated:
+			- {group_id: 1, item_id: 2, can_view_generated: none}
+			- {group_id: 2, item_id: 2, can_view_generated: info}
+			- {group_id: 3, item_id: 3, can_view_generated: content}
+			- {group_id: 4, item_id: 3, can_view_generated: content_with_descendants}
+			- {group_id: 5, item_id: 2, can_view_generated: solution}
+	`)
+	defer func() { _ = db.Close() }()
+
+	permissionsStore := database.NewDataStore(db).Permissions()
+	var result []map[string]interface{}
+	assert.NoError(t, permissionsStore.MatchingUserAncestors(&database.User{GroupID: 5}).
+		Select("item_id, can_view_generated").
+		ScanIntoSliceOfMaps(&result).Error())
+	assert.Equal(t, []map[string]interface{}{
+		{"item_id": int64(2), "can_view_generated": "none"},
+		{"item_id": int64(3), "can_view_generated": "content"},
+		{"item_id": int64(2), "can_view_generated": "solution"},
+	}, result)
+}
+
 func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {
 		name            string
