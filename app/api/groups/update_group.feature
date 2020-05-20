@@ -14,11 +14,12 @@ Feature: Update a group (groupEdit)
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | default_language |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
+      | other | 0         | 24       | John        | Doe       | en               |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
-      | 14       | 21         |
-      | 15       | 50         |
+      | 14       | 50         |
+      | 15       | 24         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 41             |
@@ -38,11 +39,12 @@ Feature: Update a group (groupEdit)
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 5678    | info               |
+      | 24       | 123     | info               |
       | 50       | 123     | info               |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id             | can_make_session_official | source_group_id |
-      | 21       | 1672978871462145461 | true                      | 13              |
-      | 50       | 123                 | true                      | 13              |
+      | group_id | item_id | can_make_session_official | is_owner | source_group_id |
+      | 24       | 123     | true                      | false    | 13              |
+      | 50       | 123     | false                     | true     | 13              |
 
   Scenario: User is a manager of the group, all fields are not nulls, updates group_pending_requests
     Given I am the user with id "21"
@@ -203,7 +205,7 @@ Feature: Update a group (groupEdit)
     And the table "groups_groups" should stay unchanged
 
   Scenario: User replaces the activity of the official session
-    Given I am the user with id "21"
+    Given I am the user with id "24"
     When I send a PUT request to "/groups/15" with the following body:
     """
     {
