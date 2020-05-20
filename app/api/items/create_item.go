@@ -79,19 +79,8 @@ type newItemString struct {
 	Description *string `json:"description"`
 }
 
-// NewItemRequest is the expected input for new created item
-// swagger:model itemCreateRequest
-type NewItemRequest struct {
-	// `default_language_tag` of the item
-	// required: true
-	LanguageTag   string `json:"language_tag" validate:"set,language_tag"`
-	newItemString `json:"string,squash"`
-
-	// required: true
-	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id,parent_item_type"`
-
-	// Nullable fields are of pointer types
-	Item itemWithRequiredType `json:"item,squash"`
+type itemParent struct {
+	ItemID int64 `json:"item_id,string" validate:"parent_item_id,parent_item_type"`
 
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// default: Undefined
@@ -109,8 +98,24 @@ type NewItemRequest struct {
 	// default: true
 	WatchPropagation bool `json:"watch_propagation"`
 	// default: true
-	EditPropagation bool        `json:"edit_propagation"`
-	Children        []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
+	EditPropagation bool `json:"edit_propagation"`
+}
+
+// NewItemRequest is the expected input for new created item
+// swagger:model itemCreateRequest
+type NewItemRequest struct {
+	// `default_language_tag` of the item
+	// required: true
+	LanguageTag   string `json:"language_tag" validate:"set,language_tag"`
+	newItemString `json:"string,squash"`
+
+	Parent          itemParent `json:"parent"`
+	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
+
+	// Nullable fields are of pointer types
+	Item itemWithRequiredType `json:"item,squash"`
+
+	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
 
 func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.DataStore) bool {
@@ -119,14 +124,14 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 	}
 	ids := make([]int64, len(in.Children))
 	for index := range in.Children {
-		if in.Children[index].ItemID == in.ParentItemID {
+		if in.Children[index].ItemID == in.Parent.ItemID {
 			return false
 		}
 		ids[index] = in.Children[index].ItemID
 	}
 	var count int64
 	service.MustNotBeError(store.ItemAncestors().WithWriteLock().
-		Where("child_item_id = ?", in.ParentItemID).
+		Where("child_item_id = ?", in.Parent.ItemID).
 		Where("ancestor_item_id IN (?)", ids).Count(&count).Error())
 	return count == 0
 }
@@ -154,7 +159,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //   The user should have
 //
-//     * `can_edit` >= 'children' on the `parent_item_id`,
+//     * `can_edit` >= 'children' on the `parent.item_id`,
 //     * `can_view` != 'none' on the `children` items (if any),
 //
 //   otherwise the "bad request" response is returned.
@@ -202,21 +207,34 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 			return err // rollback
 		}
 
-		return store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
-			if !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
+		if !formData.IsSet("parent") && !formData.IsSet("as_root_of_group_id") {
+			apiError = service.ErrInvalidRequest(errors.New("at least one of parent and as_root_of_group_id should be given"))
+			return err // rollback
+		}
+
+		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
+			if formData.IsSet("parent") && !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
-				return apiError.Error // rollback
+				return apiError.Error
 			}
 
 			apiError = validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, lockedStore)
 			if apiError != service.NoError {
-				return apiError.Error // rollback
+				return apiError.Error
 			}
 
 			// insertion
 			itemID = srv.insertItem(lockedStore, user, formData, &input)
 			return nil
 		})
+
+		if apiError != service.NoError {
+			return apiError.Error // rollback
+		}
+		service.MustNotBeError(err)
+
+		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
+		return nil
 	})
 
 	if apiError != service.NoError {
@@ -232,9 +250,21 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 	return service.NoError
 }
 
-// constructParentItemIDValidator constructs a validator for the ParentItemID field.
+func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formdata.FormData, input *NewItemRequest, itemID int64) {
+	if formData.IsSet("as_root_of_group_id") {
+		columnName := "root_activity_id"
+		if input.Item.Type == skill {
+			columnName = "root_skill_id"
+		}
+		service.MustNotBeError(
+			store.Groups().ByID(input.AsRootOfGroupID).UpdateColumn(columnName, itemID).Error())
+	}
+}
+
+// constructParentItemIDValidator constructs a validator for the Parent.ItemID field.
 // The validator checks that the user has rights to manage the parent item's children (can_edit >= children).
-func constructParentItemIDValidator(store *database.DataStore, user *database.User, parentInfo *parentItemInfo) validator.Func {
+func constructParentItemIDValidator(
+	store *database.DataStore, user *database.User, parentInfo *parentItemInfo) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		err := store.Items().WhereUserHasPermissionOnItems(user, "edit", "children").
 			Where("items.id = ?", fl.Field().Interface().(int64)).Select("items.type").
@@ -244,6 +274,21 @@ func constructParentItemIDValidator(store *database.DataStore, user *database.Us
 		}
 		service.MustNotBeError(err)
 		return true
+	})
+}
+
+// constructAsRootOfGroupIDValidator constructs a validator for the AsRootOfGroupID field.
+// The validator checks that the user has rights to manage the group (can_manage = memberships_and_group).
+func constructAsRootOfGroupIDValidator(
+	store *database.DataStore, user *database.User, formData *formdata.FormData) validator.Func {
+	return validator.Func(func(fl validator.FieldLevel) bool {
+		if !formData.IsSet("as_root_of_group_id") {
+			return true
+		}
+		found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", fl.Field().Interface().(int64)).
+			Where("can_manage = 'memberships_and_group'").WithWriteLock().HasRows()
+		service.MustNotBeError(err)
+		return found
 	})
 }
 
@@ -288,7 +333,7 @@ func constructDurationRequiresExplicitEntryValidator() validator.Func {
 func constructCannotBeSetForSkillsValidator() validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		return fl.Field().IsZero() ||
-			fl.Top().Elem().FieldByName("Item").FieldByName("Type").String() != "Skill"
+			fl.Top().Elem().FieldByName("Item").FieldByName("Type").String() != skill
 	})
 }
 
@@ -376,6 +421,9 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	formData.RegisterTranslation("parent_item_type",
 		"parent item cannot be Task or Course")
 
+	formData.RegisterValidation("as_root_of_group_id", constructAsRootOfGroupIDValidator(store, user, formData))
+	formData.RegisterTranslation("as_root_of_group_id", "should exist and the user should be able to manage the group")
+
 	registerLanguageTagValidator(formData, store)
 	formData.RegisterValidation("type_skill", constructTypeSkillValidator(parentInfo))
 	formData.RegisterTranslation("type_skill", "type can be equal to 'Skill' only if the parent item is a skill")
@@ -437,11 +485,11 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	stringMap["language_tag"] = newItemRequest.LanguageTag
 	service.MustNotBeError(store.ItemStrings().InsertMap(stringMap))
 
-	if !formData.IsSet("category") {
-		newItemRequest.Category = undefined
+	if !formData.IsSet("parent.category") {
+		newItemRequest.Parent.Category = undefined
 	}
-	if !formData.IsSet("score_weight") {
-		newItemRequest.ScoreWeight = 1
+	if !formData.IsSet("parent.score_weight") {
+		newItemRequest.Parent.ScoreWeight = 1
 	}
 
 	for index := range newItemRequest.Children {
@@ -453,23 +501,31 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		}
 	}
 
-	var order int32
-	service.MustNotBeError(store.ItemItems().WithWriteLock().
-		Where("parent_item_id = ?", newItemRequest.ParentItemID).
-		PluckFirst("IFNULL(MAX(`child_order`), 0)+1", &order).Error())
+	parentChildSpecLength := len(newItemRequest.Children)
+	if formData.IsSet("parent") {
+		parentChildSpecLength++
+	}
+	if parentChildSpecLength > 0 {
+		parentChildSpec := make([]*insertItemItemsSpec, 0, parentChildSpecLength)
+		if formData.IsSet("parent.item_id") {
+			var order int32
+			service.MustNotBeError(store.ItemItems().WithWriteLock().
+				Where("parent_item_id = ?", newItemRequest.Parent.ItemID).
+				PluckFirst("IFNULL(MAX(`child_order`), 0)+1", &order).Error())
 
-	parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
-	parentChildSpec = append(parentChildSpec,
-		&insertItemItemsSpec{
-			ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID,
-			Order:    order,
-			Category: newItemRequest.Category, ScoreWeight: newItemRequest.ScoreWeight,
-			ContentViewPropagation: asInfo, UpperViewLevelsPropagation: asIs,
-			GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
-		})
-	parentChildSpec = append(parentChildSpec,
-		constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
-	insertItemItems(store, parentChildSpec)
+			parentChildSpec = append(parentChildSpec,
+				&insertItemItemsSpec{
+					ParentItemID: newItemRequest.Parent.ItemID, ChildItemID: itemID,
+					Order:    order,
+					Category: newItemRequest.Parent.Category, ScoreWeight: newItemRequest.Parent.ScoreWeight,
+					ContentViewPropagation: asInfo, UpperViewLevelsPropagation: asIs,
+					GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
+				})
+		}
+		parentChildSpec = append(parentChildSpec,
+			constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
+		insertItemItems(store, parentChildSpec)
+	}
 	service.MustNotBeError(store.ItemItems().After())
 
 	return itemID

@@ -95,7 +95,6 @@ type itemChild struct {
 	Order int32 `json:"order" sql:"column:child_order"`
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// default: Undefined
-	// required: true
 	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
 	// default: 1
 	ScoreWeight int8 `json:"score_weight"`
