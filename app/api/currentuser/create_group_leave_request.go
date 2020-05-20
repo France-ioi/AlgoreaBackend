@@ -8,9 +8,9 @@ import (
 
 // swagger:operation POST /current-user/group-leave-requests/{group_id} group-memberships groupLeaveRequestCreate
 // ---
-// summary: Create a leave request
+// summary: Create a group leave request
 // description: >
-//     Lets a user create a request to leave a group.
+//     Lets the current user create a request to leave a group (idenfified by {group_id}).
 //
 //
 //     On success the service creates a new row in `group_pending_requests` with `group_id` = `{group_id}`
@@ -44,6 +44,6 @@ import (
 //     "$ref": "#/responses/unprocessableEntityResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) sendGroupLeaveRequest(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroupLeaveRequest(w http.ResponseWriter, r *http.Request) service.APIError {
 	return srv.performGroupRelationAction(w, r, createGroupLeaveRequestAction)
 }

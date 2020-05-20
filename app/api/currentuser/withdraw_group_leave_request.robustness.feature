@@ -21,7 +21,7 @@ Feature: User withdraws a request to leave a group - robustness
 
   Scenario: User tries to withdraw a non-existing leave request
     Given I am the user with id "21"
-    When I send a DELETE request to "/current-user/group-leave-requests/11"
+    When I send a POST request to "/current-user/group-leave-requests/11/withdraw"
     Then the response code should be 404
     And the response error message should contain "No such relation"
     And the table "groups_groups" should stay unchanged
@@ -31,7 +31,7 @@ Feature: User withdraws a request to leave a group - robustness
 
   Scenario: Fails when the group id is wrong
     Given I am the user with id "21"
-    When I send a DELETE request to "/current-user/group-leave-requests/abc"
+    When I send a POST request to "/current-user/group-leave-requests/abc/withdraw"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "groups_groups" should stay unchanged

@@ -8,9 +8,9 @@ import (
 
 // swagger:operation POST /groups/{parent_group_id}/join-requests/reject group-memberships groupJoinRequestsReject
 // ---
-// summary: Reject requests to join a group
+// summary: Reject group join requests
 // description:
-//   Lets an admin reject requests to join a group.
+//   Lets an admin reject requests (of users with ids in {group_ids}) to join a group (identified by {parent_group_id}).
 //   On success the service removes rows with `type` = 'join_request' from `group_pending_requests` and
 //   creates new rows with `action` = 'join_request_refused' and `at` = current UTC time in `group_membership_changes`
 //   for each of `group_ids`.

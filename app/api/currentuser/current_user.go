@@ -32,10 +32,10 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-invitations/{group_id}/accept", service.AppHandler(srv.acceptGroupInvitation).ServeHTTP)
 	router.Post("/current-user/group-invitations/{group_id}/reject", service.AppHandler(srv.rejectGroupInvitation).ServeHTTP)
 
-	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupJoinRequest).ServeHTTP)
-	router.Delete("/current-user/group-requests/{group_id}", service.AppHandler(srv.withdrawGroupJoinRequest).ServeHTTP)
-	router.Post("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.sendGroupLeaveRequest).ServeHTTP)
-	router.Delete("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.withdrawGroupLeaveRequest).ServeHTTP)
+	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.createGroupJoinRequest).ServeHTTP)
+	router.Post("/current-user/group-requests/{group_id}/withdraw", service.AppHandler(srv.withdrawGroupJoinRequest).ServeHTTP)
+	router.Post("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.createGroupLeaveRequest).ServeHTTP)
+	router.Post("/current-user/group-leave-requests/{group_id}/withdraw", service.AppHandler(srv.withdrawGroupLeaveRequest).ServeHTTP)
 
 	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
 	router.Post("/current-user/group-memberships/by-code", service.AppHandler(srv.joinGroupByCode).ServeHTTP)

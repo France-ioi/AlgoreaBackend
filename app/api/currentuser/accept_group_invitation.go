@@ -10,7 +10,7 @@ import (
 // ---
 // summary: Accept a group invitation
 // description:
-//   Let a user approve an invitation to join a group.
+//   Lets the current user approve an invitation to join a group (idenfified by {group_id}).
 //   On success the service creates a new `groups_groups` row
 //   with `parent_group_id` = `group_id` and `child_group_id` = `user.group_id`,
 //   and a new `group_membership_changes` row with `action` = 'invitation_accepted'

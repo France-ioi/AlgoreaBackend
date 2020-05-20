@@ -10,7 +10,7 @@ import (
 // ---
 // summary: Withdraw group invitations
 // description:
-//   Lets a manager withdraw invitations to join a group.
+//   Lets a manager withdraw invitations (of users with ids in {group_ids}) to join a group (idenfified by {parent_group_id}).
 //   On success the service removes rows with `type` = 'invitation' from `group_pending_requests` and
 //   creates new rows with `action` = 'invitation_withdrawn' and `at` = current UTC time in `group_membership_changes`
 //   for each of `group_ids`.

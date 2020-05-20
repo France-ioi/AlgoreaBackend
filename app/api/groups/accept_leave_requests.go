@@ -8,9 +8,9 @@ import (
 
 // swagger:operation POST /groups/{parent_group_id}/leave-requests/accept group-memberships groupLeaveRequestsAccept
 // ---
-// summary: Accept leave request
+// summary: Accept group leave request
 // description:
-//   Lets an admin approve requests to leave a group.
+//   Lets an admin approve user requests (identified by `{group_ids}`) to leave a group (identified by {parent_group_id}).
 //   On success the service removes `groups_groups` rows
 //   with `parent_group_id` = `{parent_group_id}` and creates new `group_membership_changes` with
 //   `group_id` = `{parent_group_id}`, `action` = 'leave_request_accepted`, `at` = current UTC time

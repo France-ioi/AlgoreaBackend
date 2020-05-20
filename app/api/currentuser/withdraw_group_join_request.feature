@@ -16,13 +16,13 @@ Feature: User withdraws a request to join a group
 
   Scenario: Successfully withdraw a request
     Given I am the user with id "21"
-    When I send a DELETE request to "/current-user/group-requests/11"
+    When I send a POST request to "/current-user/group-requests/11/withdraw"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
       "success": true,
-      "message": "deleted",
+      "message": "updated",
       "data": {"changed": true}
     }
     """
