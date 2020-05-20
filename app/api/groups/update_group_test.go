@@ -36,7 +36,7 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := http.NewRequest("PUT", "/", strings.NewReader(tt.json))
-			_, err := validateUpdateGroupInput(r, &currentGroupDataType{})
+			_, _, err := validateUpdateGroupInput(r, &currentGroupDataType{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("validateUpdateGroupInput() error = %#v, wantErr %v", err, tt.wantErr)
 			}

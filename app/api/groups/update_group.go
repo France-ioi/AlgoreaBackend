@@ -34,6 +34,8 @@ type groupUpdateInput struct {
 	CodeExpiresAt *time.Time `json:"code_expires_at"`
 	// Nullable
 	RootActivityID *int64 `json:"root_activity_id"`
+	// Nullable
+	RootSkillID *int64 `json:"root_skill_id"`
 	// Can be set only if root_activity_id is set and
 	// the current user has the 'can_make_session_official' permission on the activity item
 	IsOfficialSession       bool `json:"is_official_session"`
@@ -76,7 +78,11 @@ type currentGroupDataType struct {
 //   Requires the user to be a manager of the group, otherwise the 'forbidden' error is returned.
 //
 //
-//   If the `root_activity_id` item is provided and is not null, the user should have at least
+//   If the `root_activity_id` item is provided and is not null, the item should not be a skill and
+//   the user should have at least 'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
+//
+//
+//   If the `root_skill_id` item is provided and is not null, the item should be a skill and the user should have at least
 //  'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 //
 //
@@ -132,7 +138,8 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(err)
 
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(r, &currentGroupData)
+		var input *groupUpdateInput
+		formData, input, err = validateUpdateGroupInput(r, &currentGroupData)
 		if err != nil {
 			apiErr = service.ErrInvalidRequest(err)
 			return apiErr.Error // rollback
@@ -141,6 +148,10 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		dbMap := formData.ConstructMapForDB()
 
 		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
+		if apiErr != service.NoError {
+			return apiErr.Error // rollback
+		}
+		apiErr = validateRootSkillID(s, user, input.RootSkillID)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
@@ -202,11 +213,23 @@ func validateRootActivityIDAndIsOfficial(
 
 func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) service.APIError {
 	if rootActivityIDToCheck != nil {
-		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).WithWriteLock().
+		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithWriteLock().
 			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
 		service.MustNotBeError(errorInTransaction)
 		if !found {
-			return service.ErrForbidden(errors.New("no access to the activity"))
+			return service.ErrForbidden(errors.New("no access to the root activity or it is a skill"))
+		}
+	}
+	return service.NoError
+}
+
+func validateRootSkillID(store *database.DataStore, user *database.User, rootSkillIDToCheck *int64) service.APIError {
+	if rootSkillIDToCheck != nil {
+		found, errorInTransaction := store.Items().ByID(*rootSkillIDToCheck).Where("type = 'Skill'").WithWriteLock().
+			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
+		service.MustNotBeError(errorInTransaction)
+		if !found {
+			return service.ErrForbidden(errors.New("no access to the root skill or it is not a skill"))
 		}
 	}
 	return service.NoError
@@ -254,8 +277,10 @@ func refuseSentGroupRequestsIfNeeded(
 	return nil
 }
 
-func validateUpdateGroupInput(r *http.Request, currentGroupData *currentGroupDataType) (*formdata.FormData, error) {
-	formData := formdata.NewFormData(&groupUpdateInput{})
+func validateUpdateGroupInput(
+	r *http.Request, currentGroupData *currentGroupDataType) (*formdata.FormData, *groupUpdateInput, error) {
+	input := &groupUpdateInput{}
+	formData := formdata.NewFormData(input)
 	formData.RegisterValidation("frozen_membership", func(fl validator.FieldLevel) bool {
 		if !formData.IsSet("frozen_membership") || fl.Field().Bool() == currentGroupData.FrozenMembership ||
 			!currentGroupData.FrozenMembership {
@@ -266,7 +291,7 @@ func validateUpdateGroupInput(r *http.Request, currentGroupData *currentGroupDat
 	})
 	formData.RegisterTranslation("frozen_membership", "can only be changed from false to true")
 	err := formData.ParseJSONRequestData(r)
-	return formData, err
+	return formData, input, err
 }
 
 func int64PtrEqualValues(a, b *int64) bool {

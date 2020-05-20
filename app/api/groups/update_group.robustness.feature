@@ -19,13 +19,16 @@ Feature: Update a group (groupEdit) - robustness
       | 15       | 21         |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id   | default_language_tag |
-      | 123  | fr                   |
-      | 5678 | fr                   |
+      | id   | default_language_tag | type   |
+      | 123  | fr                   | Task   |
+      | 5678 | fr                   | Course |
+      | 6789 | fr                   | Skill  |
+      | 7890 | fr                   | Skill  |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 123     | info               |
       | 21       | 5678    | none               |
+      | 21       | 6789    | info               |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_make_session_official | source_group_id |
       | 21       | 123     | false                     | 13              |
@@ -122,7 +125,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: The activity does not exist
+  Scenario: The root activity does not exist
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -131,11 +134,11 @@ Feature: Update a group (groupEdit) - robustness
     }
     """
     Then the response code should be 403
-    And the response error message should contain "No access to the activity"
+    And the response error message should contain "No access to the root activity or it is a skill"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: The user cannot view the activity
+  Scenario: The user cannot view the root activity
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -144,20 +147,59 @@ Feature: Update a group (groupEdit) - robustness
     }
     """
     Then the response code should be 403
-    And the response error message should contain "No access to the activity"
+    And the response error message should contain "No access to the root activity or it is a skill"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: The user cannot view the activity
+  Scenario: The root activity is visible, but it is a skill
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "root_activity_id": "5678"
+      "root_activity_id": "6789"
     }
     """
     Then the response code should be 403
-    And the response error message should contain "No access to the activity"
+    And the response error message should contain "No access to the root activity or it is a skill"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+
+  Scenario: The root skill does not exist
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "root_skill_id": "404"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "No access to the root skill or it is not a skill"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+
+  Scenario: The user cannot view the root skill
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "root_skill_id": "7890"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "No access to the root skill or it is not a skill"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+
+  Scenario: The root skill is visible, but it is not a skill
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "root_skill_id": "123"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "No access to the root skill or it is not a skill"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
