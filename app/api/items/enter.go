@@ -22,7 +22,8 @@ import (
 //                Restrictions:
 //                  * the last item in `{ids}` should require explicit entry;
 //                  * `as_team_id` (if given) should be the current user's team;
-//                  * the first item in `{ids}` should be a root item (items.is_root) or a root activity (groups.root_activity_id)
+//                  * the first item in `{ids}` should be a root item (items.is_root) or
+//                    a root activity/skill (groups.root_activity_id/root_skill_id)
 //                    of a group the participant is a descendant of;
 //                  * `{ids}` should be an ordered list of parent-child items;
 //                  * the group (the user or his team) should have at least 'content' access

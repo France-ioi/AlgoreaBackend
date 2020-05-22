@@ -131,8 +131,11 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {id: 117}
 			- {id: 118}
 			- {id: 119}
+			- {id: 120, root_skill_id: 4}
+			- {id: 121}
 		groups_groups:
 			- {parent_group_id: 50, child_group_id: 102}
+			- {parent_group_id: 120, child_group_id: 121}
 		permissions_generated:
 			- {group_id: 50, item_id: 4, can_view_generated: content}
 			- {group_id: 100, item_id: 2, can_view_generated: content}
@@ -196,6 +199,10 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {group_id: 119, item_id: 3, can_view_generated: content}
 			- {group_id: 119, item_id: 5, can_view_generated: content}
 			- {group_id: 119, item_id: 7, can_view_generated: content}
+			- {group_id: 120, item_id: 4, can_view_generated: content}
+			- {group_id: 120, item_id: 6, can_view_generated: content}
+			- {group_id: 121, item_id: 4, can_view_generated: content}
+			- {group_id: 121, item_id: 6, can_view_generated: content}
 		attempts:
 			- {participant_id: 100, id: 0}
 			- {participant_id: 100, id: 200, root_item_id: 2, parent_attempt_id: 0}
@@ -237,6 +244,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {participant_id: 119, id: 150, parent_attempt_id: 0}
 			- {participant_id: 119, id: 200, root_item_id: 5, parent_attempt_id: 0}
 			- {participant_id: 119, id: 250, parent_attempt_id: 0}
+			- {participant_id: 120, id: 200, root_item_id: 4}
+			- {participant_id: 121, id: 200, root_item_id: 4}
 		results:
 			- {participant_id: 100, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 101, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
@@ -283,6 +292,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {participant_id: 119, attempt_id: 150, item_id: 3, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 200, item_id: 5, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 250, item_id: 5, started_at: 2019-05-29 11:00:00}
+			- {participant_id: 120, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 121, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
 	`)
 	defer func() { _ = db.Close() }()
 
@@ -322,13 +333,30 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
+			name:                 "first item is the group's skill",
+			args:                 args{ids: []int64{4, 6}, groupID: 120, parentAttemptID: 200},
+			want:                 true,
+			wantAttemptIDMap:     map[int64]int64{4: 200},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
+			name:                 "first item is a skill of the group's ancestor",
+			args:                 args{ids: []int64{4, 6}, groupID: 121, parentAttemptID: 200},
+			want:                 true,
+			wantAttemptIDMap:     map[int64]int64{4: 200},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
 			name:                 "first item is a root item",
 			args:                 args{ids: []int64{2, 4}, groupID: 100, parentAttemptID: 200},
 			want:                 true,
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
-		{name: "first item is neither a root item nor the group's activity", args: args{ids: []int64{6, 8}, groupID: 101, parentAttemptID: 201}},
+		{
+			name: "first item is neither a root item nor the group's activity/skill",
+			args: args{ids: []int64{6, 8}, groupID: 101, parentAttemptID: 201},
+		},
 		{
 			name:                 "no content access to the last item when requireContentAccessToTheLastItem = true",
 			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
@@ -506,8 +534,11 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {id: 117}
 			- {id: 118}
 			- {id: 119}
+			- {id: 120, root_skill_id: 4}
+			- {id: 121}
 		groups_groups:
 			- {parent_group_id: 50, child_group_id: 102}
+			- {parent_group_id: 120, child_group_id: 121}
 		permissions_generated:
 			- {group_id: 50, item_id: 4, can_view_generated: content}
 			- {group_id: 100, item_id: 2, can_view_generated: content}
@@ -571,6 +602,10 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {group_id: 119, item_id: 3, can_view_generated: content}
 			- {group_id: 119, item_id: 5, can_view_generated: content}
 			- {group_id: 119, item_id: 7, can_view_generated: content}
+			- {group_id: 120, item_id: 4, can_view_generated: content}
+			- {group_id: 120, item_id: 6, can_view_generated: content}
+			- {group_id: 121, item_id: 4, can_view_generated: content}
+			- {group_id: 121, item_id: 6, can_view_generated: content}
 		attempts:
 			- {participant_id: 100, id: 0}
 			- {participant_id: 100, id: 200, root_item_id: 2, parent_attempt_id: 0}
@@ -629,6 +664,10 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {participant_id: 119, id: 250, root_item_id: 5, parent_attempt_id: 0}
 			- {participant_id: 119, id: 201, root_item_id: 7, parent_attempt_id: 200}
 			- {participant_id: 119, id: 251, root_item_id: 7, parent_attempt_id: 200}
+			- {participant_id: 120, id: 200, root_item_id: 4}
+			- {participant_id: 120, id: 201, root_item_id: 6, parent_attempt_id: 200}
+			- {participant_id: 121, id: 200, root_item_id: 4}
+			- {participant_id: 121, id: 201, root_item_id: 6, parent_attempt_id: 200}
 		results:
 			- {participant_id: 100, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 100, attempt_id: 201, item_id: 4, started_at: 2019-05-30 11:00:00}
@@ -696,6 +735,10 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {participant_id: 119, attempt_id: 250, item_id: 5, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 201, item_id: 7, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 251, item_id: 7, started_at: 2019-05-29 11:00:00}
+			- {participant_id: 120, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 120, attempt_id: 201, item_id: 6, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 121, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 121, attempt_id: 201, item_id: 6, started_at: 2019-05-30 11:00:00}
 	`)
 	defer func() { _ = db.Close() }()
 
@@ -736,12 +779,27 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
+			name:                 "first item is the group's skill",
+			args:                 args{ids: []int64{4, 6}, groupID: 120, attemptID: 201},
+			wantAttemptIDMap:     map[int64]int64{4: 200, 6: 201},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
+			name:                 "first item is a skill of the group's ancestor",
+			args:                 args{ids: []int64{4, 6}, groupID: 121, attemptID: 201},
+			wantAttemptIDMap:     map[int64]int64{4: 200, 6: 201},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
 			name:                 "first item is a root item",
 			args:                 args{ids: []int64{2, 4}, groupID: 100, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
-		{name: "first item is neither a root item nor the group's activity", args: args{ids: []int64{6, 8}, groupID: 101, attemptID: 202}},
+		{
+			name: "first item is neither a root item nor the group's activity/skill",
+			args: args{ids: []int64{6, 8}, groupID: 101, attemptID: 202},
+		},
 		{
 			name:                 "no content access to the last item when requireContentAccessToTheLastItem = true",
 			args:                 args{ids: []int64{2, 4}, groupID: 103, attemptID: 201, requireContentAccessToTheLastItem: true},
