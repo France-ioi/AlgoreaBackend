@@ -56,17 +56,27 @@ func init() { // nolint:gochecknoinits
 			case n == 0:
 				fmt.Println("No migrations to apply!")
 			default:
+				fmt.Printf("%d migration(s) applied successfully!\n", n)
+
 				var gormDB *database.DB
 				gormDB, err = database.Open(db)
 				assertNoError(err, "Cannot open GORM db connection: ")
+				fmt.Print("Running ANALYZE TABLE attempts\n")
 				_, err = db.Exec("ANALYZE TABLE `attempts`")
 				assertNoError(err, "Cannot execute ANALYZE TABLE")
+				fmt.Print("Running ANALYZE TABLE `groups`\n")
+				_, err = db.Exec("ANALYZE TABLE `groups`")
+				assertNoError(err, "Cannot execute ANALYZE TABLE")
+				fmt.Print("Running ANALYZE TABLE `items`\n")
+				_, err = db.Exec("ANALYZE TABLE `items`")
+				assertNoError(err, "Cannot execute ANALYZE TABLE")
 				err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+					fmt.Print("Running GroupGroupStore.After()\n")
 					assertNoError(store.GroupGroups().After(), "Cannot compute groups_groups") // calls createNewAncestors()
-					assertNoError(store.ItemItems().After(), "Cannot compute items_items")     // calls createNewAncestors() & computeAllAccess()
+					fmt.Print("Running ItemItemStore.After()\n")
+					assertNoError(store.ItemItems().After(), "Cannot compute items_items") // calls createNewAncestors() & computeAllAccess()
 					return nil
 				})
-				fmt.Printf("%d migration(s) applied successfully!\n", n)
 			}
 
 			if db.Close() != nil {
