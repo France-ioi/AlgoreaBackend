@@ -18,7 +18,8 @@ require (
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
 	github.com/akrylysov/algnhsa v0.0.0-20190203201208-70f315bb89bd
 	github.com/aws/aws-lambda-go v1.8.2
-	github.com/cucumber/godog v0.8.1
+	github.com/cucumber/godog v0.9.0
+	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3 // indirect
 	github.com/go-chi/chi v3.3.3+incompatible
 	github.com/go-chi/cors v1.0.0
@@ -32,7 +33,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.0.1 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/lithammer/dedent v1.1.0
@@ -43,7 +43,7 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.1
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.5.1
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4 // indirect
@@ -51,7 +51,6 @@ require (
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	golang.org/x/sys v0.0.0-20190515120540-06a5c4944438 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.8
 )

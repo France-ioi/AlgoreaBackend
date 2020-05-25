@@ -7,12 +7,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cucumber/godog/gherkin"
+	"github.com/cucumber/messages-go/v10"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
+func (ctx *TestContext) DBHasTable(tableName string, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	db := ctx.db()
 
 	if len(data.Rows) > 1 {
@@ -73,20 +73,22 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 	if ctx.dbTableData[tableName] == nil {
 		ctx.dbTableData[tableName] = data
 	} else if len(data.Rows) > 1 {
-		ctx.dbTableData[tableName] = combineGherkinTables(ctx.dbTableData[tableName], data)
+		ctx.dbTableData[tableName] = combinePickleTables(ctx.dbTableData[tableName], data)
 	}
 
 	return nil
 }
 
-func (ctx *TestContext) DBHasUsers(data *gherkin.DataTable) error { // nolint
+func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable) error { // nolint
 	if len(data.Rows) > 1 {
-		groupsToCreate := &gherkin.DataTable{
-			Rows: make([]*gherkin.TableRow, 1, (len(data.Rows)-1)*2+1),
+		groupsToCreate := &messages.PickleStepArgument_PickleTable{
+			Rows: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow, 1, (len(data.Rows)-1)*2+1),
 		}
-		groupsToCreate.Rows[0] = &gherkin.TableRow{Cells: []*gherkin.TableCell{
-			{Value: "id"}, {Value: "name"}, {Value: "description"}, {Value: "type"},
-		}}
+		groupsToCreate.Rows[0] = &messages.PickleStepArgument_PickleTable_PickleTableRow{
+			Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+				{Value: "id"}, {Value: "name"}, {Value: "description"}, {Value: "type"},
+			},
+		}
 		head := data.Rows[0].Cells
 		groupIDColumnNumber := -1
 		loginColumnNumber := -1
@@ -108,8 +110,8 @@ func (ctx *TestContext) DBHasUsers(data *gherkin.DataTable) error { // nolint
 			}
 
 			if groupIDColumnNumber != -1 {
-				groupsToCreate.Rows = append(groupsToCreate.Rows, &gherkin.TableRow{
-					Cells: []*gherkin.TableCell{
+				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleStepArgument_PickleTable_PickleTableRow{
+					Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
 						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "User"},
 					},
 				})
@@ -137,9 +139,11 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { // nolint
 		return err
 	}
 
-	ctx.dbTableData["groups_ancestors"] = &gherkin.DataTable{
-		Rows: []*gherkin.TableRow{
-			{Cells: []*gherkin.TableCell{{Value: "ancestor_group_id"}, {Value: "child_group_id"}, {Value: "expires_at"}}},
+	ctx.dbTableData["groups_ancestors"] = &messages.PickleStepArgument_PickleTable{
+		Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
+			{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+				{Value: "ancestor_group_id"}, {Value: "child_group_id"}, {Value: "expires_at"},
+			}},
 		},
 	}
 
@@ -153,8 +157,8 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { // nolint
 
 	for _, row := range groupsAncestors {
 		ctx.dbTableData["groups_ancestors"].Rows = append(ctx.dbTableData["groups_ancestors"].Rows,
-			&gherkin.TableRow{
-				Cells: []*gherkin.TableCell{
+			&messages.PickleStepArgument_PickleTable_PickleTableRow{
+				Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
 					{Value: row["ancestor_group_id"].(string)}, {Value: row["child_group_id"].(string)}, {Value: row["expires_at"].(string)},
 				},
 			})
@@ -191,15 +195,15 @@ func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(tableName string, column
 	return nil
 }
 
-func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
+func (ctx *TestContext) TableShouldBe(tableName string, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(tableName, "", nil, false, data)
 }
 
 func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
-		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{
-			{Cells: []*gherkin.TableCell{{Value: "1"}}}},
+		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
+			{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: "1"}}}},
 		}
 	}
 	return ctx.tableAtColumnValueShouldBe(tableName, "", nil, false, data)
@@ -208,21 +212,25 @@ func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // no
 func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(tableName, columnName, columnValues string) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
-		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
+		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
 	}
 	return ctx.tableAtColumnValueShouldBe(tableName, columnName, parseMultipleValuesString(columnValues), true, data)
 }
 
-func (ctx *TestContext) TableAtColumnValueShouldBe(tableName, columnName, columnValues string, data *gherkin.DataTable) error { // nolint
+func (ctx *TestContext) TableAtColumnValueShouldBe(tableName, columnName, columnValues string, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(tableName, columnName, parseMultipleValuesString(columnValues), false, data)
 }
 
 func (ctx *TestContext) TableShouldNotContainColumnValue(tableName, columnName, columnValues string) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(tableName, columnName, parseMultipleValuesString(columnValues), false,
-		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: columnName}}}}})
+		&messages.PickleStepArgument_PickleTable{
+
+			Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
+				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: columnName}}}},
+		})
 }
 
-func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable {
+func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable) *messages.PickleStepArgument_PickleTable {
 	table1FieldMap := map[string]int{}
 	combinedFieldMap := map[string]bool{}
 	columnNumber := len(table1.Rows[0].Cells)
@@ -243,12 +251,14 @@ func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable 
 		}
 	}
 
-	combinedTable := &gherkin.DataTable{}
-	combinedTable.Rows = make([]*gherkin.TableRow, 0, len(table1.Rows)+len(table2.Rows)-1)
+	combinedTable := &messages.PickleStepArgument_PickleTable{}
+	combinedTable.Rows = make([]*messages.PickleStepArgument_PickleTable_PickleTableRow, 0, len(table1.Rows)+len(table2.Rows)-1)
 
-	header := &gherkin.TableRow{Cells: make([]*gherkin.TableCell, 0, columnNumber)}
+	header := &messages.PickleStepArgument_PickleTable_PickleTableRow{
+		Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, columnNumber),
+	}
 	for _, columnName := range combinedColumnNames {
-		header.Cells = append(header.Cells, &gherkin.TableCell{Value: columnName})
+		header.Cells = append(header.Cells, &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{Value: columnName})
 	}
 	combinedTable.Rows = append(combinedTable.Rows, header)
 
@@ -257,12 +267,14 @@ func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable 
 	return combinedTable
 }
 
-func copyCellsIntoCombinedTable(sourceTable *gherkin.DataTable, combinedColumnNames []string,
-	sourceTableFieldMap map[string]int, combinedTable *gherkin.DataTable) {
+func copyCellsIntoCombinedTable(sourceTable *messages.PickleStepArgument_PickleTable, combinedColumnNames []string,
+	sourceTableFieldMap map[string]int, combinedTable *messages.PickleStepArgument_PickleTable) {
 	for rowNum := 1; rowNum < len(sourceTable.Rows); rowNum++ {
-		newRow := &gherkin.TableRow{Cells: make([]*gherkin.TableCell, 0, len(combinedColumnNames))}
+		newRow := &messages.PickleStepArgument_PickleTable_PickleTableRow{
+			Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, len(combinedColumnNames)),
+		}
 		for _, column := range combinedColumnNames {
-			var newCell *gherkin.TableCell
+			var newCell *messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell
 			if sourceColumnNumber, ok := sourceTableFieldMap[column]; ok {
 				newCell = sourceTable.Rows[rowNum].Cells[sourceColumnNumber]
 			}
@@ -278,7 +290,7 @@ func parseMultipleValuesString(valuesString string) []string {
 
 var columnNameRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
 
-func (ctx *TestContext) tableAtColumnValueShouldBe(tableName, columnName string, columnValues []string, excludeValues bool, data *gherkin.DataTable) error { // nolint
+func (ctx *TestContext) tableAtColumnValueShouldBe(tableName, columnName string, columnValues []string, excludeValues bool, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	// For that, we build a SQL request with only the attributes we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness

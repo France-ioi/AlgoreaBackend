@@ -14,7 +14,7 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
-	"github.com/cucumber/godog/gherkin"
+	"github.com/cucumber/messages-go/v10"
 	_ "github.com/go-sql-driver/mysql"      // use to force database/sql to use mysql
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 	"github.com/thingful/httpmock"
@@ -40,7 +40,7 @@ type TestContext struct {
 	logsHook         *loggingtest.Hook
 	logsRestoreFunc  func()
 	inScenario       bool
-	dbTableData      map[string]*gherkin.DataTable
+	dbTableData      map[string]*messages.PickleStepArgument_PickleTable
 	templateSet      *jet.Set
 	requestHeaders   map[string][]string
 }
@@ -49,13 +49,8 @@ var db *sql.DB
 
 const testAccessToken = "testsessiontestsessiontestsessio"
 
-func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
-	switch scenario := data.(type) {
-	case *gherkin.Scenario:
-		log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
-	case *gherkin.ScenarioOutline:
-		log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
-	}
+func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) { // nolint
+	log.WithField("type", "test").Infof("Starting test scenario: %s", pickle.Name)
 
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
@@ -67,7 +62,7 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
 	ctx.requestHeaders = map[string][]string{}
-	ctx.dbTableData = make(map[string]*gherkin.DataTable)
+	ctx.dbTableData = make(map[string]*messages.PickleStepArgument_PickleTable)
 	ctx.templateSet = ctx.constructTemplateSet()
 
 	// reset the seed to get predictable results on PRNG for tests
@@ -97,7 +92,7 @@ func (ctx *TestContext) tearDownApp() {
 	ctx.application = nil
 }
 
-func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
+func (ctx *TestContext) ScenarioTeardown(*messages.Pickle, error) { // nolint
 	RestoreDBTime()
 	monkey.UnpatchAll()
 	ctx.logsRestoreFunc()
