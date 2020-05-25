@@ -29,10 +29,12 @@ Feature: Get group by groupID (groupView)
       | 13              | 61             |
       | 13              | 71             |
       | 13              | 81             |
+      | 15              | 11             |
     And the groups ancestors are computed
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
+      | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
+      | 13       | 21         | none                  | false                  | false             |
+      | 15       | 21         | memberships_and_group | true                   | true              |
 
   Scenario: The user is a manager of the group
     Given I am the user with id "21"
@@ -56,6 +58,9 @@ Feature: Get group by groupID (groupView)
       "code_expires_at": "2017-10-14T05:39:48Z",
       "open_activity_when_joining": true,
       "current_user_is_manager": true,
+      "can_manage": "none",
+      "can_grant_group_access": false,
+      "can_watch_members": false,
       "current_user_is_member": false
     }
     """
@@ -82,6 +87,9 @@ Feature: Get group by groupID (groupView)
       "code_expires_at": "2017-10-13T05:39:48Z",
       "open_activity_when_joining": true,
       "current_user_is_manager": true,
+      "can_manage": "memberships_and_group",
+      "can_grant_group_access": true,
+      "can_watch_members": true,
       "current_user_is_member": false
     }
     """
