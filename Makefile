@@ -94,7 +94,7 @@ lambda-upload: lambda-archive
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
 $(GODOG):
-	$(GOGET) -u github.com/cucumber/godog/cmd/godog
+	$(GOGET) -u github.com/cucumber/godog/cmd/godog@v0.9.0
 $(GOLANGCILINT):
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.18.0
 $(MYSQL_CONNECTOR_JAVA):
