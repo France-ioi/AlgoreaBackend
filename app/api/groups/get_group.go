@@ -41,7 +41,10 @@ type groupGetResponse struct {
 	Type string `json:"type"`
 	// Nullable
 	// required:true
-	ActivityID *int64 `json:"activity_id,string"`
+	RootActivityID *int64 `json:"root_activity_id,string"`
+	// Nullable
+	// required:true
+	RootSkillID *int64 `json:"root_skill_id,string"`
 	// required:true
 	IsOpen bool `json:"is_open"`
 	// required:true
@@ -113,7 +116,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Where("groups.type != 'User'").
 		Select(
 			`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
-			groups.type, groups.activity_id, groups.is_open, groups.is_public,
+			groups.type, groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
 			IF(manager_access.found, groups.code, NULL) AS code,
 			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
 			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,

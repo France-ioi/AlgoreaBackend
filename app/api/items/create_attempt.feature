@@ -1,10 +1,10 @@
 Feature: Create an attempt for an item
   Background:
     Given the database has the following table 'groups':
-      | id  | type | activity_id |
-      | 101 | User | null        |
-      | 102 | Team | 60          |
-      | 111 | User | null        |
+      | id  | type | root_activity_id |
+      | 101 | User | null             |
+      | 102 | Team | 60               |
+      | 111 | User | null             |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |

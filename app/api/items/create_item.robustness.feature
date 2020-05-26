@@ -49,7 +49,7 @@ Feature: Create item - robustness
       {
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21"
+        "parent": {"item_id": "21"}
       }
       """
     Then the response code should be 400
@@ -78,7 +78,7 @@ Feature: Create item - robustness
       {
         "type": "Chapter",
         "title": "my title",
-        "parent_item_id": "21"
+        "parent": {"item_id": "21"}
       }
       """
     Then the response code should be 400
@@ -107,7 +107,7 @@ Feature: Create item - robustness
       {
         "type": "Chapter",
         "language_tag": "sl",
-        "parent_item_id": "21"
+        "parent": {"item_id": "21"}
       }
       """
     Then the response code should be 400
@@ -129,7 +129,7 @@ Feature: Create item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: Missing parent_item_id
+  Scenario: Both parent_item_id & as_root_of_group_id are missing
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
@@ -140,17 +140,7 @@ Feature: Create item - robustness
       }
       """
     Then the response code should be 400
-    And the response body should be, in JSON:
-      """
-      {
-        "success": false,
-        "message": "Bad Request",
-        "error_text": "Invalid input data",
-        "errors":{
-          "parent_item_id": ["missing field"]
-        }
-      }
-      """
+    And the response error message should contain "At least one of parent and as_root_of_group_id should be given"
     And the table "items" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
@@ -166,7 +156,7 @@ Feature: Create item - robustness
         "type": "Course",
         "language_tag": 123,
         "title": "my title",
-        "parent_item_id": "21"
+        "parent": {"item_id": "21"}
       }
       """
     Then the response code should be 400
@@ -196,7 +186,7 @@ Feature: Create item - robustness
         "type": "Course",
         "language_tag": "unknown",
         "title": "my title",
-        "parent_item_id": "21"
+        "parent": {"item_id": "21"}
       }
       """
     Then the response code should be 400
@@ -218,7 +208,7 @@ Feature: Create item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: parent_item_id is not a number
+  Scenario: parent.item_id is not a number
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
@@ -227,7 +217,7 @@ Feature: Create item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "sfaewr20"
+        "parent": {"item_id": "sfaewr20"}
       }
       """
     Then the response code should be 400
@@ -238,7 +228,7 @@ Feature: Create item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "parent_item_id": ["decoding error: strconv.ParseInt: parsing \"sfaewr20\": invalid syntax"]
+          "parent.item_id": ["decoding error: strconv.ParseInt: parsing \"sfaewr20\": invalid syntax"]
         }
       }
       """
@@ -257,7 +247,7 @@ Feature: Create item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "404"
+        "parent": {"item_id": "404"}
       }
       """
     Then the response code should be 400
@@ -268,7 +258,7 @@ Feature: Create item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "parent_item_id": ["should exist and the user should be able to manage its children"]
+          "parent.item_id": ["should exist and the user should be able to manage its children"]
         }
       }
       """
@@ -287,7 +277,7 @@ Feature: Create item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "<parent_item>"
+        "parent": {"item_id": "<parent_item>"}
       }
       """
     Then the response code should be 400
@@ -298,7 +288,7 @@ Feature: Create item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "parent_item_id": ["should exist and the user should be able to manage its children"]
+          "parent.item_id": ["should exist and the user should be able to manage its children"]
         }
       }
       """
@@ -361,7 +351,7 @@ Feature: Create item - robustness
         "type": "Course",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
+        "parent": {"item_id": "21"},
         "<field>": "<value>"
       }
       """
@@ -384,22 +374,57 @@ Feature: Create item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
     Examples:
-      | field                            | value       | error                                                                          |
-      | full_screen                      | wrong value | full_screen must be one of [forceYes forceNo default]                          |
-      | type                             | Wrong       | type must be one of [Chapter Task Course Skill]                                |
-      | type                             | Skill       | type can be equal to 'Skill' only if the parent item is a skill                |
-      | validation_type                  | Wrong       | validation_type must be one of [None All AllButOne Categories One Manual]      |
-      | entry_min_admitted_members_ratio | Wrong       | entry_min_admitted_members_ratio must be one of [All Half One None]            |
-      | duration                         | 12:34       | invalid duration                                                               |
-      | duration                         | -1:34:56    | invalid duration                                                               |
-      | duration                         | 839:34:56   | invalid duration                                                               |
-      | duration                         | 99:-1:56    | invalid duration                                                               |
-      | duration                         | 99:60:56    | invalid duration                                                               |
-      | duration                         | 99:59:-1    | invalid duration                                                               |
-      | duration                         | 99:59:60    | invalid duration                                                               |
-      | category                         | wrong       | category must be one of [Undefined Discovery Application Validation Challenge] |
-      | score_weight                     | wrong       | expected type 'int8', got unconvertible type 'string'                          |
-      | entry_participant_type           | Class       | entry_participant_type must be one of [User Team]                              |
+      | field                            | value       | error                                                                     |
+      | full_screen                      | wrong value | full_screen must be one of [forceYes forceNo default]                     |
+      | type                             | Wrong       | type must be one of [Chapter Task Course Skill]                           |
+      | type                             | Skill       | type can be equal to 'Skill' only if the parent item is a skill           |
+      | validation_type                  | Wrong       | validation_type must be one of [None All AllButOne Categories One Manual] |
+      | entry_min_admitted_members_ratio | Wrong       | entry_min_admitted_members_ratio must be one of [All Half One None]       |
+      | duration                         | 12:34       | invalid duration                                                          |
+      | duration                         | -1:34:56    | invalid duration                                                          |
+      | duration                         | 839:34:56   | invalid duration                                                          |
+      | duration                         | 99:-1:56    | invalid duration                                                          |
+      | duration                         | 99:60:56    | invalid duration                                                          |
+      | duration                         | 99:59:-1    | invalid duration                                                          |
+      | duration                         | 99:59:60    | invalid duration                                                          |
+      | entry_participant_type           | Class       | entry_participant_type must be one of [User Team]                         |
+
+  Scenario Outline: Wrong optional parent field value
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Course",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent": {
+          "item_id": "21",
+          "<field>": "<value>"
+        }
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "parent.<field>": ["<error>"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+    Examples:
+      | field                  | value | error                                                                          |
+      | category               | wrong | category must be one of [Undefined Discovery Application Validation Challenge] |
+      | score_weight           | wrong | expected type 'int8', got unconvertible type 'string'                          |
 
   Scenario: Type is Skill while the parent items's type is not Skill
     Given I am the user with id "11"
@@ -409,7 +434,7 @@ Feature: Create item - robustness
         "type": "Skill",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21"
+        "parent": {"item_id": "21"}
       }
       """
     Then the response code should be 400
@@ -439,7 +464,7 @@ Feature: Create item - robustness
         "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "4",
+        "parent": {"item_id": "4"},
         "children": [
           {"item_id": "26", "order": 1}
         ]
@@ -478,7 +503,7 @@ Feature: Create item - robustness
         "type": "Task",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "90"
+        "parent": {"item_id": "90"}
       }
       """
     Then the response code should be 400
@@ -489,7 +514,7 @@ Feature: Create item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "parent_item_id": ["parent item cannot be Task or Course"]
+          "parent.item_id": ["parent item cannot be Task or Course"]
         }
       }
       """
@@ -512,7 +537,7 @@ Feature: Create item - robustness
         "type": "<type>",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
+        "parent": {"item_id": "21"},
         "children": [
           {"item_id": "24", "order": 1}
         ]
@@ -549,7 +574,7 @@ Feature: Create item - robustness
         "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
+        "parent": {"item_id": "21"},
         "children": [{
           "item_id": 24,
           "<field>": <value>
@@ -593,7 +618,7 @@ Feature: Create item - robustness
         "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
+        "parent": {"item_id": "21"},
         "children": [{
           "item_id": 90,
           "order": 1,
@@ -634,7 +659,7 @@ Feature: Create item - robustness
         "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "4",
+        "parent": {"item_id": "4"},
         "children": [
           {"item_id": "21", "order": 1},
           {"item_id": "21", "order": 2}
@@ -668,7 +693,7 @@ Feature: Create item - robustness
         "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
+        "parent": {"item_id": "21"},
         "children": [
           {"item_id": "4", "order": 1},
           {"item_id": "22", "order": 2}
@@ -702,7 +727,7 @@ Feature: Create item - robustness
         "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
+        "parent": {"item_id": "21"},
         "children": [
           {"item_id": "21", "order": 1}
         ]
@@ -725,7 +750,7 @@ Feature: Create item - robustness
         "type": "Chapter",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "21",
+        "parent": {"item_id": "21"},
         "children": [
           {"item_id": "4", "order": 1}
         ]
@@ -748,7 +773,7 @@ Feature: Create item - robustness
         "type": "Skill",
         "language_tag": "sl",
         "title": "my title",
-        "parent_item_id": "5",
+        "parent": {"item_id": "5"},
         "<field>": <value>
       }
       """

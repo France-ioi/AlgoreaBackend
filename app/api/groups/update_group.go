@@ -33,8 +33,10 @@ type groupUpdateInput struct {
 	// Nullable
 	CodeExpiresAt *time.Time `json:"code_expires_at"`
 	// Nullable
-	ActivityID *int64 `json:"activity_id"`
-	// Can be set only if activity_id is set and
+	RootActivityID *int64 `json:"root_activity_id"`
+	// Nullable
+	RootSkillID *int64 `json:"root_skill_id"`
+	// Can be set only if root_activity_id is set and
 	// the current user has the 'can_make_session_official' permission on the activity item
 	IsOfficialSession       bool `json:"is_official_session"`
 	OpenActivityWhenJoining bool `json:"open_activity_when_joining"`
@@ -63,7 +65,7 @@ type groupUpdateInput struct {
 
 type currentGroupDataType struct {
 	IsPublic          bool
-	ActivityID        *int64
+	RootActivityID    *int64
 	IsOfficialSession bool
 	FrozenMembership  bool
 }
@@ -76,7 +78,11 @@ type currentGroupDataType struct {
 //   Requires the user to be a manager of the group, otherwise the 'forbidden' error is returned.
 //
 //
-//   If the `activity_id` item is provided and is not null, the user should have at least
+//   If the `root_activity_id` item is provided and is not null, the item should not be a skill and
+//   the user should have at least 'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
+//
+//
+//   If the `root_skill_id` item is provided and is not null, the item should be a skill and the user should have at least
 //  'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 //
 //
@@ -84,7 +90,7 @@ type currentGroupDataType struct {
 //  'can_make_session_official' permission on the activity item, otherwise the 'forbidden' error is returned.
 //
 //
-//   Setting `is_official_session` to true while keeping `activity_id` not set or setting `activity_id` to null for
+//   Setting `is_official_session` to true while keeping `root_activity_id` not set or setting `root_activity_id` to null for
 //   an official session, will cause the "bad request" error.
 // parameters:
 // - name: group_id
@@ -123,7 +129,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		var currentGroupData currentGroupDataType
 
 		err = groupStore.ManagedBy(user).
-			Select("groups.is_public, groups.activity_id, groups.is_official_session, groups.frozen_membership").WithWriteLock().
+			Select("groups.is_public, groups.root_activity_id, groups.is_official_session, groups.frozen_membership").WithWriteLock().
 			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			apiErr = service.InsufficientAccessRightsError
@@ -132,7 +138,8 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(err)
 
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(r, &currentGroupData)
+		var input *groupUpdateInput
+		formData, input, err = validateUpdateGroupInput(r, &currentGroupData)
 		if err != nil {
 			apiErr = service.ErrInvalidRequest(err)
 			return apiErr.Error // rollback
@@ -140,7 +147,11 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		dbMap := formData.ConstructMapForDB()
 
-		apiErr = validateActivityIDAndIsOfficial(s, user, currentGroupData.ActivityID, currentGroupData.IsOfficialSession, dbMap)
+		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
+		if apiErr != service.NoError {
+			return apiErr.Error // rollback
+		}
+		apiErr = validateRootSkillID(s, user, input.RootSkillID)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
@@ -165,32 +176,32 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	return service.NoError
 }
 
-func validateActivityIDAndIsOfficial(
-	store *database.DataStore, user *database.User, oldActivityID *int64, oldIsOfficialSession bool,
+func validateRootActivityIDAndIsOfficial(
+	store *database.DataStore, user *database.User, oldRootActivityID *int64, oldIsOfficialSession bool,
 	dbMap map[string]interface{}) service.APIError {
-	activityIDToCheck := oldActivityID
-	activityID, activityIDSet := dbMap["activity_id"]
-	activityIDChanged := activityIDSet && !int64PtrEqualValues(oldActivityID, activityID.(*int64))
-	if activityIDChanged {
-		activityIDToCheck = activityID.(*int64)
-		if activityIDToCheck != nil {
-			apiError := validateActivityID(store, user, activityIDToCheck)
+	rootActivityIDToCheck := oldRootActivityID
+	rootActivityID, rootActivityIDSet := dbMap["root_activity_id"]
+	rootActivityIDChanged := rootActivityIDSet && !int64PtrEqualValues(oldRootActivityID, rootActivityID.(*int64))
+	if rootActivityIDChanged {
+		rootActivityIDToCheck = rootActivityID.(*int64)
+		if rootActivityIDToCheck != nil {
+			apiError := validateRootActivityID(store, user, rootActivityIDToCheck)
 			if apiError != service.NoError {
 				return apiError
 			}
 		}
 	}
 
-	if isTryingToChangeOfficialSessionActivity(dbMap, oldIsOfficialSession, activityIDChanged) {
-		if activityIDToCheck == nil {
-			return service.ErrInvalidRequest(errors.New("the activity_id should be set for official sessions"))
+	if isTryingToChangeOfficialSessionActivity(dbMap, oldIsOfficialSession, rootActivityIDChanged) {
+		if rootActivityIDToCheck == nil {
+			return service.ErrInvalidRequest(errors.New("the root_activity_id should be set for official sessions"))
 		}
 		found, err := store.PermissionsGranted().WithWriteLock().
 			Joins(`
 				JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = permissions_granted.group_id AND
 				     groups_ancestors.child_group_id = ?`, user.GroupID).
-			Where("permissions_granted.can_make_session_official").
-			Where("permissions_granted.item_id = ?", activityIDToCheck).
+			Where("permissions_granted.can_make_session_official OR permissions_granted.is_owner").
+			Where("permissions_granted.item_id = ?", rootActivityIDToCheck).
 			HasRows()
 		service.MustNotBeError(err)
 		if !found {
@@ -200,13 +211,25 @@ func validateActivityIDAndIsOfficial(
 	return service.NoError
 }
 
-func validateActivityID(store *database.DataStore, user *database.User, activityIDToCheck *int64) service.APIError {
-	if activityIDToCheck != nil {
-		found, errorInTransaction := store.Items().ByID(*activityIDToCheck).WithWriteLock().
+func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) service.APIError {
+	if rootActivityIDToCheck != nil {
+		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithWriteLock().
 			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
 		service.MustNotBeError(errorInTransaction)
 		if !found {
-			return service.ErrForbidden(errors.New("no access to the activity"))
+			return service.ErrForbidden(errors.New("no access to the root activity or it is a skill"))
+		}
+	}
+	return service.NoError
+}
+
+func validateRootSkillID(store *database.DataStore, user *database.User, rootSkillIDToCheck *int64) service.APIError {
+	if rootSkillIDToCheck != nil {
+		found, errorInTransaction := store.Items().ByID(*rootSkillIDToCheck).Where("type = 'Skill'").WithWriteLock().
+			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
+		service.MustNotBeError(errorInTransaction)
+		if !found {
+			return service.ErrForbidden(errors.New("no access to the root skill or it is not a skill"))
 		}
 	}
 	return service.NoError
@@ -254,8 +277,10 @@ func refuseSentGroupRequestsIfNeeded(
 	return nil
 }
 
-func validateUpdateGroupInput(r *http.Request, currentGroupData *currentGroupDataType) (*formdata.FormData, error) {
-	formData := formdata.NewFormData(&groupUpdateInput{})
+func validateUpdateGroupInput(
+	r *http.Request, currentGroupData *currentGroupDataType) (*formdata.FormData, *groupUpdateInput, error) {
+	input := &groupUpdateInput{}
+	formData := formdata.NewFormData(input)
 	formData.RegisterValidation("frozen_membership", func(fl validator.FieldLevel) bool {
 		if !formData.IsSet("frozen_membership") || fl.Field().Bool() == currentGroupData.FrozenMembership ||
 			!currentGroupData.FrozenMembership {
@@ -266,16 +291,16 @@ func validateUpdateGroupInput(r *http.Request, currentGroupData *currentGroupDat
 	})
 	formData.RegisterTranslation("frozen_membership", "can only be changed from false to true")
 	err := formData.ParseJSONRequestData(r)
-	return formData, err
+	return formData, input, err
 }
 
 func int64PtrEqualValues(a, b *int64) bool {
 	return a == nil && b == nil || a != nil && b != nil && *a == *b
 }
 
-func isTryingToChangeOfficialSessionActivity(dbMap map[string]interface{}, oldIsOfficialSession, activityIDChanged bool) bool {
+func isTryingToChangeOfficialSessionActivity(dbMap map[string]interface{}, oldIsOfficialSession, rootActivityIDChanged bool) bool {
 	isOfficialSession, isOfficialSessionSet := dbMap["is_official_session"]
 	isOfficialSessionChanged := isOfficialSessionSet && oldIsOfficialSession != isOfficialSession.(bool)
 	return isOfficialSessionChanged && isOfficialSession.(bool) ||
-		!isOfficialSessionChanged && oldIsOfficialSession && activityIDChanged
+		!isOfficialSessionChanged && oldIsOfficialSession && rootActivityIDChanged
 }

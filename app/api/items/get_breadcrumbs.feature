@@ -2,10 +2,10 @@ Feature: Get item breadcrumbs
 
 Background:
   Given the database has the following table 'groups':
-    | id | name    | text_id | grade | type  | activity_id |
-    | 11 | jdoe    |         | -2    | User  | null        |
-    | 13 | Group B |         | -2    | Class | null        |
-    | 14 | Team B  |         | -2    | Team  | 23          |
+    | id | name    | text_id | grade | type  | root_activity_id | root_skill_id |
+    | 11 | jdoe    |         | -2    | User  | null             | null          |
+    | 13 | Group B |         | -2    | Class | null             | null          |
+    | 14 | Team B  |         | -2    | Team  | 23               | 25            |
   And the database has the following table 'languages':
     | tag |
     | en  |
@@ -19,11 +19,13 @@ Background:
     | 22 | Chapter | en                   | 1       | 1                        |
     | 23 | Chapter | en                   | 0       | 1                        |
     | 24 | Task    | fr                   | 0       | 0                        |
+    | 25 | Chapter | en                   | 0       | 1                        |
   And the database has the following table 'items_strings':
     | item_id | language_tag | title            |
     | 21      | en           | Graph: Methods   |
     | 22      | en           | DFS              |
     | 23      | en           | Reduce Graph     |
+    | 25      | en           | BFS              |
     | 21      | fr           | Graphe: Methodes |
   And the database has the following table 'groups_groups':
     | parent_group_id | child_group_id |
@@ -129,7 +131,7 @@ Scenario: Content access to all items except for last for which we have info acc
     ]
     """
 
-  Scenario: Allows the first item to be activity_id of some participant's ancestor
+  Scenario: Allows the first item to be root_activity_id of some participant's ancestor
     Given the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 14       | 23      | info               |
@@ -140,6 +142,20 @@ Scenario: Content access to all items except for last for which we have info acc
     """
     [
       { "item_id": "23", "language_tag": "en", "title": "Reduce Graph" }
+    ]
+    """
+
+  Scenario: Allows the first item to be root_skill_id of some participant's ancestor
+    Given the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 14       | 25      | info               |
+    And I am the user with id "11"
+    When I send a GET request to "/items/25/breadcrumbs?parent_attempt_id=0&as_team_id=14"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      { "item_id": "25", "language_tag": "en", "title": "BFS" }
     ]
     """
 
