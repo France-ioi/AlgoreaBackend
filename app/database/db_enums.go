@@ -20,7 +20,7 @@ var (
 	enumValueIndex2Name []map[int]string
 )
 
-func loadDBEnum(db *DB, fullColumnName string) {
+func (db *DB) loadDBEnum(fullColumnName string) {
 	enumName2Number = make(map[string]int, len(enumColumns))
 	for index := range enumColumns {
 		enumName2Number[enumColumns[index]] = index
@@ -51,7 +51,7 @@ func loadDBEnum(db *DB, fullColumnName string) {
 	enumValueIndex2Name[enumNumber] = indexesMap
 }
 
-func getFromDBEnumUnderLock(db *DB, getterFunc func() interface{}) interface{} {
+func (db *DB) getFromEnumUnderLock(getterFunc func() interface{}) interface{} {
 	// Lock for reading to check if the enums have been already loaded
 	enumsMutex.RLock()
 	if len(enumValueName2Index) != 0 { // the enums have been loaded, so return the value
@@ -75,17 +75,17 @@ func getFromDBEnumUnderLock(db *DB, getterFunc func() interface{}) interface{} {
 			enumValueName2Index = nil
 		}
 	}()
-	loadAllEnums(db)
+	db.loadAllEnums()
 	success = true
 
 	return getterFunc()
 }
 
-func loadAllEnums(db *DB) {
+func (db *DB) loadAllEnums() {
 	enumValueName2Index = make([]map[string]int, len(enumColumns))
 	enumValueIndex2Name = make([]map[int]string, len(enumColumns))
 	for _, fullColumnName := range enumColumns {
-		loadDBEnum(db, fullColumnName)
+		db.loadDBEnum(fullColumnName)
 	}
 }
 

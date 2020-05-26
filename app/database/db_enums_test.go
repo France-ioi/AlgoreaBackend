@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_getFromDBEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
+func TestDB_getFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -30,7 +30,7 @@ func Test_getFromDBEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 		WillReturnError(expectedError)
 
 	assert.PanicsWithValue(t, expectedError, func() {
-		getFromDBEnumUnderLock(db, func() interface{} { return nil })
+		db.getFromEnumUnderLock(func() interface{} { return nil })
 	})
 	assert.Nil(t, enumValueIndex2Name)
 	assert.Nil(t, enumValueName2Index)
