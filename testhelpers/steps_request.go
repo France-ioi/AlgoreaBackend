@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/cucumber/godog/gherkin"
+	"github.com/cucumber/messages-go/v10"
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
@@ -21,7 +21,7 @@ func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
 	return nil
 }
 
-func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *gherkin.DocString) error { // nolint
+func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *messages.PickleStepArgument_PickleDocString) error { // nolint
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 

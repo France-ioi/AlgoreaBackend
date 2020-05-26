@@ -30,9 +30,9 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	clearAllPermissionEnums()
-	mockPermissionEnumQueries(mock)
-	defer clearAllPermissionEnums()
+	clearAllDBEnums()
+	mockDBEnumQueries(mock)
+	defer clearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` JOIN (SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
@@ -61,9 +61,9 @@ func TestDB_WhereGroupHasViewPermissionOnItems(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	clearAllPermissionEnums()
-	mockPermissionEnumQueries(mock)
-	defer clearAllPermissionEnums()
+	clearAllDBEnums()
+	mockDBEnumQueries(mock)
+	defer clearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` "+

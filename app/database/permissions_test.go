@@ -11,7 +11,7 @@ func TestDB_HavingMaxPermissionGreaterThan(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockPermissionEnumQueries(mock)
+	mockDBEnumQueries(mock)
 	mock.ExpectQuery("^" +
 		regexp.QuoteMeta("SELECT item_id FROM `permissions_generated` HAVING (MAX(can_edit_generated_value) > ?)") + "$").
 		WithArgs(3).WillReturnRows(mock.NewRows([]string{"item_id"}).AddRow(1))

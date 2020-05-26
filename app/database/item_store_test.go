@@ -11,8 +11,8 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	clearAllPermissionEnums()
-	mockPermissionEnumQueries(dbMock)
+	clearAllDBEnums()
+	mockDBEnumQueries(dbMock)
 
 	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT items.id FROM `items` " +
 		"JOIN permissions_generated ON permissions_generated.item_id = items.id " +

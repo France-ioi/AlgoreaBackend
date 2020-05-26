@@ -167,6 +167,7 @@ Feature: Export the current user's data
         {
           "can_grant_group_access": 1,
           "can_manage": "memberships",
+          "can_manage_value": 2,
           "can_watch_members": 0,
           "can_edit_personal_info": 0,
           "group_id": "1",
@@ -176,6 +177,7 @@ Feature: Export the current user's data
         {
           "can_grant_group_access": 0,
           "can_manage": "memberships_and_group",
+          "can_manage_value": 3,
           "can_watch_members": 1,
           "can_edit_personal_info": 0,
           "group_id": "2",

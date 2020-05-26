@@ -13,9 +13,9 @@ func TestPermissionGeneratedStore_AccessRightsForItemsVisibleToUser(t *testing.T
 
 	mockUser := &User{GroupID: 2, DefaultLanguage: "sl"}
 
-	clearAllPermissionEnums()
-	mockPermissionEnumQueries(mock)
-	defer clearAllPermissionEnums()
+	clearAllDBEnums()
+	mockDBEnumQueries(mock)
+	defer clearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
@@ -43,8 +43,8 @@ func TestPermissionGeneratedStore_WithViewPermissionForUser(t *testing.T) {
 
 	mockUser := &User{GroupID: 2, DefaultLanguage: "sl"}
 
-	mockPermissionEnumQueries(mock)
-	defer clearAllPermissionEnums()
+	mockDBEnumQueries(mock)
+	defer clearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+

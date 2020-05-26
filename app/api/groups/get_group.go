@@ -10,7 +10,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// GroupGetResponseCodePart in order to make groupGetResponse work
+// GroupGetResponseCodePart contains fields related to the group's code.
+// These fields are only displayed if the current user is a manager of the group.
 // swagger:ignore
 type GroupGetResponseCodePart struct {
 	// Nullable
@@ -19,6 +20,17 @@ type GroupGetResponseCodePart struct {
 	CodeLifetime *string `json:"code_lifetime"`
 	// Nullable
 	CodeExpiresAt *database.Time `json:"code_expires_at"`
+}
+
+// GroupGetResponseManagerPermissionsPart contains fields related to permissions for managing the group.
+// These fields are only displayed if the current user is a manager of the group.
+// swagger:ignore
+type GroupGetResponseManagerPermissionsPart struct {
+	CurrentUserCanManageValue int `json:"-"`
+	// enum: none,memberships,memberships_and_group
+	CurrentUserCanManage           string `json:"current_user_can_manage"`
+	CurrentUserCanGrantGroupAccess bool   `json:"current_user_can_grant_group_access"`
+	CurrentUserCanWatchMembers     bool   `json:"current_user_can_watch_members"`
 }
 
 // swagger:model groupGetResponse
@@ -58,6 +70,7 @@ type groupGetResponse struct {
 	CurrentUserIsMember bool `json:"current_user_is_member"`
 
 	*GroupGetResponseCodePart
+	*GroupGetResponseManagerPermissionsPart
 }
 
 // swagger:operation GET /groups/{group_id} groups groupGet
@@ -103,7 +116,14 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Joins(`
 			LEFT JOIN ? AS manager_access ON child_group_id = groups.id`,
 			srv.Store.GroupAncestors().ManagedByUser(user).
-				Select("1 AS found, groups_ancestors.child_group_id").SubQuery()).
+				Select(`
+					1 AS found,
+					MAX(can_manage_value) AS can_manage_value,
+					MAX(can_grant_group_access) AS can_grant_group_access,
+					MAX(can_watch_members) AS can_watch_members,
+					groups_ancestors.child_group_id`).
+				Where("groups_ancestors.child_group_id = ?", groupID).
+				Group("groups_ancestors.child_group_id").SubQuery()).
 		Joins(`
 			LEFT JOIN groups_ancestors_active AS groups_descendants
 				ON groups_descendants.ancestor_group_id = groups.id AND
@@ -122,6 +142,9 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
 			groups.open_activity_when_joining,
 			manager_access.found AS current_user_is_manager,
+			IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
+			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
+			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
 			groups_groups_active.parent_group_id IS NOT NULL AS current_user_is_member`).
 		Limit(1)
 
@@ -134,6 +157,10 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	if !result.CurrentUserIsManager {
 		result.GroupGetResponseCodePart = nil
+		result.GroupGetResponseManagerPermissionsPart = nil
+	} else {
+		result.GroupGetResponseManagerPermissionsPart.CurrentUserCanManage =
+			srv.Store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
 	}
 
 	render.Respond(w, r, result)
