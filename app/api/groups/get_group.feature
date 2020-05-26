@@ -58,9 +58,9 @@ Feature: Get group by groupID (groupView)
       "code_expires_at": "2017-10-14T05:39:48Z",
       "open_activity_when_joining": true,
       "current_user_is_manager": true,
-      "can_manage": "none",
-      "can_grant_group_access": false,
-      "can_watch_members": false,
+      "current_user_can_manage": "none",
+      "current_user_can_grant_group_access": false,
+      "current_user_can_watch_members": false,
       "current_user_is_member": false
     }
     """
@@ -87,9 +87,9 @@ Feature: Get group by groupID (groupView)
       "code_expires_at": "2017-10-13T05:39:48Z",
       "open_activity_when_joining": true,
       "current_user_is_manager": true,
-      "can_manage": "memberships_and_group",
-      "can_grant_group_access": true,
-      "can_watch_members": true,
+      "current_user_can_manage": "memberships_and_group",
+      "current_user_can_grant_group_access": true,
+      "current_user_can_watch_members": true,
       "current_user_is_member": false
     }
     """

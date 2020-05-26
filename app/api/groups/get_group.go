@@ -26,11 +26,11 @@ type GroupGetResponseCodePart struct {
 // These fields are only displayed if the current user is a manager of the group.
 // swagger:ignore
 type GroupGetResponseManagerPermissionsPart struct {
-	CanManageValue int `json:"-"`
+	CurrentUserCanManageValue int `json:"-"`
 	// enum: none,memberships,memberships_and_group
-	CanManage           string `json:"can_manage"`
-	CanGrantGroupAccess bool   `json:"can_grant_group_access"`
-	CanWatchMembers     bool   `json:"can_watch_members"`
+	CurrentUserCanManage           string `json:"current_user_can_manage"`
+	CurrentUserCanGrantGroupAccess bool   `json:"current_user_can_grant_group_access"`
+	CurrentUserCanWatchMembers     bool   `json:"current_user_can_watch_members"`
 }
 
 // swagger:model groupGetResponse
@@ -142,9 +142,9 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
 			groups.open_activity_when_joining,
 			manager_access.found AS current_user_is_manager,
-			IF(manager_access.found, manager_access.can_manage_value, 0) AS can_manage_value,
-			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS can_grant_group_access,
-			IF(manager_access.found, manager_access.can_watch_members, 0) AS can_watch_members,
+			IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
+			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
+			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
 			groups_groups_active.parent_group_id IS NOT NULL AS current_user_is_member`).
 		Limit(1)
 
@@ -159,8 +159,8 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		result.GroupGetResponseCodePart = nil
 		result.GroupGetResponseManagerPermissionsPart = nil
 	} else {
-		result.GroupGetResponseManagerPermissionsPart.CanManage =
-			srv.Store.GroupManagers().CanManageNameByIndex(result.CanManageValue)
+		result.GroupGetResponseManagerPermissionsPart.CurrentUserCanManage =
+			srv.Store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
 	}
 
 	render.Respond(w, r, result)
