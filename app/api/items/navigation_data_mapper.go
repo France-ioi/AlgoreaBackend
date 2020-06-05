@@ -107,7 +107,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 	childrenWithoutResultsQuery := dataStore.Raw("WITH watched_group_participants AS ? ?",
 		watchedGroupParticipantsQuery,
 		items.VisibleChildrenOfID(groupID, rootID).Select(
-			commonAttributes+`,	items.requires_explicit_entry, parent_item_id, child_order,
+			commonAttributes+`, items.requires_explicit_entry, parent_item_id, child_order,
 					items.entry_participant_type, items.no_score,
 					IFNULL(?, 0) AS has_visible_children, ? AS watched_group_can_view,
 					can_watch_generated_value >= ? AS can_watch_for_group_results,
