@@ -1,0 +1,329 @@
+package items
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
+)
+
+type navigationItemPermissions struct {
+	// required: true
+	// enum: none,info,content,content_with_descendants,solution
+	CanView string `json:"can_view"`
+	// required: true
+	// enum: none,enter,content,content_with_descendants,solution,solution_with_grant
+	CanGrantView string `json:"can_grant_view"`
+	// required: true
+	// enum: none,result,answer,answer_with_grant
+	CanWatch string `json:"can_watch"`
+	// required: true
+	// enum: none,children,all,all_with_grant
+	CanEdit string `json:"can_edit"`
+	// required: true
+	IsOwner bool `json:"is_owner"`
+}
+
+type navigationItemString struct {
+	// [Nullable] title (from `items_strings`) in the user’s default language or (if not available) default language of the item
+	// required: true
+	Title *string `json:"title"`
+	// [Nullable] language_tag (from `items_strings`) to which the title is related
+	LanguageTag *string `json:"language_tag"`
+}
+
+type navigationItemCommonFields struct {
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	// enum: Chapter,Task,Course,Skill
+	Type string `json:"type"`
+
+	// required: true
+	String navigationItemString `json:"string"`
+
+	// required: true
+	Permissions navigationItemPermissions `json:"permissions"`
+}
+
+// swagger:model itemNavigationResponse
+type itemNavigationResponse struct {
+	*navigationItemCommonFields
+
+	// required: true
+	AttemptID int64 `json:"attempt_id,string"`
+	// Nullable
+	// required: true
+	Children []navigationItemChild `json:"children"`
+}
+
+type navigationItemChildResult struct {
+	// required:true
+	AttemptID int64 `json:"attempt_id,string"`
+
+	// required:true
+	ScoreComputed float32 `json:"score_computed"`
+	// required:true
+	Validated bool `json:"validated"`
+	// Nullable
+	// required:true
+	StartedAt *database.Time `json:"started_at"`
+	// Nullable
+	// required:true
+	LatestActivityAt *database.Time `json:"latest_activity_at"`
+	// Nullable
+	// required:true
+	EndedAt *database.Time `json:"ended_at"`
+	// required:true
+	// attempts.allows_submissions_until
+	AttemptAllowsSubmissionsUntil database.Time `json:"attempt_allows_submissions_until"`
+}
+
+type navigationItemChild struct {
+	*navigationItemCommonFields
+
+	// required: true
+	RequiresExplicitEntry bool `json:"requires_explicit_entry"`
+	// required: true
+	// enum: User,Team
+	EntryParticipantType string `json:"entry_participant_type"`
+	// required: true
+	NoScore bool `json:"no_score"`
+	// required: true
+	HasVisibleChildren bool `json:"has_visible_children"`
+	// max among all attempts of the user (or of the team given in `{as_team_id}`)
+	// required: true
+	BestScore float32 `json:"best_score"`
+	// required:true
+	Results []navigationItemChildResult `json:"results"`
+
+	WatchedGroup *navigationItemChildWatchedGroup `json:"watched_group,omitempty"`
+}
+
+type navigationItemChildWatchedGroup struct {
+	// group's view permission on this item
+	// required: true
+	// enum: none,info,content,content_with_descendants,solution
+	CanView string `json:"can_view"`
+	// [only if the current user can watch for this item]
+	// average of the max scores of every descendant participants of the input group
+	// (= 0 if a participant has no result yet on the item)
+	AvgScore *float32 `json:"avg_score,omitempty"`
+	// [only if the current user can watch for this item]
+	// whether all descendant participants have accomplished the item (validated = true)
+	AllValidated *bool `json:"all_validated,omitempty"`
+}
+
+// swagger:operation GET /items/{item_id}/navigation items itemNavigationGet
+// ---
+// summary: Get navigation data
+// description: >
+//
+//   Returns data needed to display the navigation menu (for `item_id` and its children)
+//   within the context of the given `{attempt_id}`/`{child_attempt_id}` (one of those should be given).
+//   Only items visible to the current user (or to the `{as_team_id}` team) are shown.
+//   If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
+//
+//
+//   If `{child_attempt_id}` is given, the context-defining attempt id of the input item
+//   is either the same `{child_attempt_id}` or the `parent_attempt_id` of the given `{child_attempt_id}`
+//   (depending on the `root_item_id` of the `{child_attempt_id}`).
+//
+//
+//   * If the specified `{item_id}` doesn't exist or is not visible to the current user (or to the `{as_team_id}` team),
+//     of if there is no started result of the user/`{as_team_id}` for the context attempt id and the item,
+//     the 'forbidden' response is returned.
+//
+//
+//   * If `{as_team_id}` is given, it should be a user's parent team group,
+//     otherwise the "forbidden" error is returned.
+//
+//
+//   * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//     otherwise the "forbidden" error is returned.
+// parameters:
+// - name: item_id
+//   in: path
+//   type: integer
+//   format: int64
+//   required: true
+// - name: attempt_id
+//   description: "`id` of an attempt for the item. This parameter is incompatible with `{child_attempt_id}`."
+//   in: query
+//   type: integer
+// - name: child_attempt_id
+//   description: "`id` of an attempt for one of the item's children. This parameter is incompatible with `{attempt_id}`."
+//   in: query
+//   type: integer
+// - name: as_team_id
+//   in: query
+//   type: integer
+// - name: watched_group_id
+//   in: query
+//   type: integer
+// responses:
+//   "200":
+//     description: OK. Navigation data
+//     schema:
+//       "$ref": "#/definitions/itemNavigationResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
+func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
+	user := srv.GetUser(httpReq)
+	groupID, apiError := srv.getParticipantIDFromRequest(httpReq, user)
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	attemptID, apiError := srv.resolveAttemptIDForNavigationData(httpReq, groupID, itemID)
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	watchedGroupID, watchedGroupIDSet, apiError := srv.resolveWatchedGroupID(httpReq)
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	rawData := getRawNavigationData(srv.Store, itemID, groupID, attemptID, user, watchedGroupID, watchedGroupIDSet)
+
+	if len(rawData) == 0 || rawData[0].ID != itemID {
+		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
+	}
+
+	response := itemNavigationResponse{
+		navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[0]),
+		AttemptID:                  *rawData[0].AttemptID,
+	}
+	idMap := map[int64]*rawNavigationItem{}
+	for index := range rawData {
+		idMap[rawData[index].ID] = &rawData[index]
+	}
+	srv.fillNavigationWithChildren(rawData, watchedGroupIDSet, &response)
+
+	render.Respond(rw, httpReq, response)
+	return service.NoError
+}
+
+func (srv *Service) resolveAttemptIDForNavigationData(httpReq *http.Request, groupID, itemID int64) (int64, service.APIError) {
+	attemptIDSet := len(httpReq.URL.Query()["attempt_id"]) != 0
+	childAttemptIDSet := len(httpReq.URL.Query()["child_attempt_id"]) != 0
+	var attemptID, childAttemptID int64
+	var err error
+	if attemptIDSet {
+		if childAttemptIDSet {
+			return 0, service.ErrInvalidRequest(errors.New("only one of attempt_id and child_attempt_id can be given"))
+		}
+		attemptID, err = service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
+		if err != nil {
+			return 0, service.ErrInvalidRequest(err)
+		}
+	}
+	if childAttemptIDSet {
+		childAttemptID, err = service.ResolveURLQueryGetInt64Field(httpReq, "child_attempt_id")
+		if err != nil {
+			return 0, service.ErrInvalidRequest(err)
+		}
+	}
+	if !attemptIDSet && !childAttemptIDSet {
+		return 0, service.ErrInvalidRequest(errors.New("one of attempt_id and child_attempt_id should be given"))
+	}
+
+	if !attemptIDSet {
+		err := srv.Store.Table("results AS child_result").
+			Where("child_result.participant_id = ? AND child_result.attempt_id = ? AND child_result.started_at IS NOT NULL",
+				groupID, childAttemptID).
+			Joins(`
+				JOIN attempts AS child_attempt ON child_attempt.participant_id = child_result.participant_id AND
+					child_attempt.id = child_result.attempt_id`).
+			Joins(`
+				JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = child_result.item_id`, itemID).
+			PluckFirst("IF(child_attempt.root_item_id = child_result.item_id, child_attempt.parent_attempt_id, child_attempt.id)", &attemptID).
+			Error()
+		if gorm.IsRecordNotFoundError(err) {
+			return 0, service.InsufficientAccessRightsError
+		}
+		service.MustNotBeError(err)
+	}
+	return attemptID, service.NoError
+}
+
+func (srv *Service) fillNavigationWithChildren(
+	rawData []rawNavigationItem, watchedGroupIDSet bool, response *itemNavigationResponse) {
+	response.Children = make([]navigationItemChild, 0, len(rawData)-1)
+	var currentChild *navigationItemChild
+	if len(rawData) > 0 && rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
+		return // Only 'info' access to the parent item
+	}
+	for index := range rawData {
+		if index == 0 {
+			continue
+		}
+
+		if rawData[index].ID != rawData[index-1].ID {
+			child := navigationItemChild{
+				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[index]),
+				RequiresExplicitEntry:      rawData[index].RequiresExplicitEntry,
+				EntryParticipantType:       rawData[index].EntryParticipantType,
+				NoScore:                    rawData[index].NoScore,
+				HasVisibleChildren:         rawData[index].HasVisibleChildren,
+				BestScore:                  rawData[index].BestScore,
+				Results:                    make([]navigationItemChildResult, 0, 1),
+			}
+			if watchedGroupIDSet {
+				child.WatchedGroup = &navigationItemChildWatchedGroup{
+					CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData[index].WatchedGroupCanView),
+				}
+				if rawData[index].CanWatchForGroupResults {
+					child.WatchedGroup.AvgScore = &rawData[index].WatchedGroupAvgScore
+					child.WatchedGroup.AllValidated = &rawData[index].WatchedGroupAllValidated
+				}
+			}
+			response.Children = append(response.Children, child)
+			currentChild = &response.Children[len(response.Children)-1]
+		}
+
+		if rawData[index].AttemptID != nil {
+			currentChild.Results = append(currentChild.Results, navigationItemChildResult{
+				AttemptID:                     *rawData[index].AttemptID,
+				ScoreComputed:                 rawData[index].ScoreComputed,
+				Validated:                     rawData[index].Validated,
+				StartedAt:                     rawData[index].StartedAt,
+				LatestActivityAt:              rawData[index].LatestActivityAt,
+				EndedAt:                       rawData[index].EndedAt,
+				AttemptAllowsSubmissionsUntil: rawData[index].AttemptAllowsSubmissionsUntil,
+			})
+		}
+	}
+}
+
+func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
+	result := &navigationItemCommonFields{
+		ID:     rawData.ID,
+		Type:   rawData.Type,
+		String: navigationItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
+		Permissions: navigationItemPermissions{
+			CanView:      srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
+			CanGrantView: srv.Store.PermissionsGranted().GrantViewNameByIndex(rawData.CanGrantViewGeneratedValue),
+			CanWatch:     srv.Store.PermissionsGranted().WatchNameByIndex(rawData.CanWatchGeneratedValue),
+			CanEdit:      srv.Store.PermissionsGranted().EditNameByIndex(rawData.CanEditGeneratedValue),
+			IsOwner:      rawData.IsOwnerGenerated,
+		},
+	}
+	return result
+}

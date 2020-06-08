@@ -35,7 +35,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)
 	router.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
 	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
-	router.Get("/items/{item_id}/nav-tree", service.AppHandler(srv.getItemNavigationTree).ServeHTTP)
+	router.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
 	router.Get("/items/{item_id}/attempts/{attempt_id}/task-token", service.AppHandler(srv.getTaskToken).ServeHTTP)
 	router.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
 	router.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
@@ -393,6 +393,28 @@ func (srv *Service) getParticipantIDFromRequest(httpReq *http.Request, user *dat
 		}
 	}
 	return groupID, service.NoError
+}
+
+func (srv *Service) resolveWatchedGroupID(httpReq *http.Request) (watchedGroupID int64, watchedGroupIDSet bool, apiError service.APIError) {
+	if len(httpReq.URL.Query()["watched_group_id"]) == 0 {
+		return 0, false, service.NoError
+	}
+
+	var err error
+	watchedGroupID, err = service.ResolveURLQueryGetInt64Field(httpReq, "watched_group_id")
+	if err != nil {
+		return 0, false, service.ErrInvalidRequest(err)
+	}
+	var found bool
+	found, err = srv.Store.ActiveGroupAncestors().ManagedByUser(srv.GetUser(httpReq)).
+		Where("groups_ancestors_active.child_group_id = ?", watchedGroupID).
+		Where("can_watch_members").HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return 0, false, service.ErrForbidden(errors.New("no rights to watch for watched_group_id"))
+	}
+	watchedGroupIDSet = true
+	return watchedGroupID, watchedGroupIDSet, service.NoError
 }
 
 type entryState string
