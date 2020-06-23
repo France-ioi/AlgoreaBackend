@@ -22,9 +22,8 @@ type groupRequestsViewResponseRow struct {
 	// required: true
 	Action string `json:"action"`
 
-	// Nullable
 	// required: true
-	JoiningUser *struct {
+	JoiningUser struct {
 		// `users.group_id`
 		// required: true
 		GroupID *int64 `json:"group_id,string"`
@@ -170,7 +169,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		Joins(`
 			LEFT JOIN users AS inviting_user
 				ON inviting_user.group_id = initiator_id AND action = 'invitation_created'`).
-		Joins(`LEFT JOIN users AS joining_user ON joining_user.group_id = member_id`).
+		Joins(`JOIN users AS joining_user ON joining_user.group_id = member_id`).
 		Joins(`
 			LEFT JOIN group_pending_requests
 				ON group_pending_requests.group_id = group_membership_changes.group_id AND
@@ -198,8 +197,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"action":             {ColumnName: "group_membership_changes.action"},
-			"joining_user.login": {ColumnName: "joining_user.login"},
+			"action":             {ColumnName: "group_membership_changes.action", FieldType: "string"},
+			"joining_user.login": {ColumnName: "joining_user.login", FieldType: "string"},
 			"at":                 {ColumnName: "group_membership_changes.at", FieldType: "time"},
 			"member_id":          {ColumnName: "group_membership_changes.member_id", FieldType: "int64"}},
 		"-at,member_id", []string{"member_id"}, false)
@@ -213,9 +212,6 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	for index := range result {
 		if result[index].InvitingUser.GroupID == nil {
 			result[index].InvitingUser = nil
-		}
-		if result[index].JoiningUser.GroupID == nil {
-			result[index].JoiningUser = nil
 		}
 	}
 
