@@ -50,8 +50,9 @@ import (
 //   required: true
 // - name: delete_orphans
 //   in: query
-//   type: boolean
-//   default: false
+//   type: integer
+//   enum: [0,1]
+//   default: 0
 // responses:
 //   "201":
 //     "$ref": "#/responses/deletedResponse"

@@ -43,6 +43,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Delete("/groups/{group_id}/managers/{manager_id}", service.AppHandler(srv.removeGroupManager).ServeHTTP)
 
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
+	router.Get("/groups/user-requests", service.AppHandler(srv.getUserRequests).ServeHTTP)
 	router.Get("/groups/{group_id}/group-progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/team-progress", service.AppHandler(srv.getTeamProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/user-progress", service.AppHandler(srv.getUserProgress).ServeHTTP)

@@ -77,8 +77,9 @@ type groupRecentActivityResponseRow struct {
 //   required: true
 // - name: validated
 //   in: query
-//   type: boolean
-//   default: false
+//   type: integer
+//   enum: [0,1]
+//   default: 0
 // - name: sort
 //   in: query
 //   default: [-created_at,id]
