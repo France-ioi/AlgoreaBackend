@@ -3,56 +3,18 @@ package items
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
-
-type navigationItemPermissions struct {
-	// required: true
-	// enum: none,info,content,content_with_descendants,solution
-	CanView string `json:"can_view"`
-	// required: true
-	// enum: none,enter,content,content_with_descendants,solution,solution_with_grant
-	CanGrantView string `json:"can_grant_view"`
-	// required: true
-	// enum: none,result,answer,answer_with_grant
-	CanWatch string `json:"can_watch"`
-	// required: true
-	// enum: none,children,all,all_with_grant
-	CanEdit string `json:"can_edit"`
-	// required: true
-	IsOwner bool `json:"is_owner"`
-}
-
-type navigationItemString struct {
-	// [Nullable] title (from `items_strings`) in the user’s default language or (if not available) default language of the item
-	// required: true
-	Title *string `json:"title"`
-	// [Nullable] language_tag (from `items_strings`) to which the title is related
-	LanguageTag *string `json:"language_tag"`
-}
-
-type navigationItemCommonFields struct {
-	// required: true
-	ID int64 `json:"id,string"`
-	// required: true
-	// enum: Chapter,Task,Course,Skill
-	Type string `json:"type"`
-
-	// required: true
-	String navigationItemString `json:"string"`
-
-	// required: true
-	Permissions navigationItemPermissions `json:"permissions"`
-}
 
 // swagger:model itemNavigationResponse
 type itemNavigationResponse struct {
-	*navigationItemCommonFields
+	*structures.ItemCommonFields
 
 	// required: true
 	AttemptID int64 `json:"attempt_id,string"`
@@ -61,30 +23,8 @@ type itemNavigationResponse struct {
 	Children []navigationItemChild `json:"children"`
 }
 
-type navigationItemChildResult struct {
-	// required:true
-	AttemptID int64 `json:"attempt_id,string"`
-
-	// required:true
-	ScoreComputed float32 `json:"score_computed"`
-	// required:true
-	Validated bool `json:"validated"`
-	// Nullable
-	// required:true
-	StartedAt *database.Time `json:"started_at"`
-	// Nullable
-	// required:true
-	LatestActivityAt *database.Time `json:"latest_activity_at"`
-	// Nullable
-	// required:true
-	EndedAt *database.Time `json:"ended_at"`
-	// required:true
-	// attempts.allows_submissions_until
-	AttemptAllowsSubmissionsUntil database.Time `json:"attempt_allows_submissions_until"`
-}
-
 type navigationItemChild struct {
-	*navigationItemCommonFields
+	*structures.ItemCommonFields
 
 	// required: true
 	RequiresExplicitEntry bool `json:"requires_explicit_entry"`
@@ -99,7 +39,7 @@ type navigationItemChild struct {
 	// required: true
 	BestScore float32 `json:"best_score"`
 	// required:true
-	Results []navigationItemChildResult `json:"results"`
+	Results []structures.ItemResult `json:"results"`
 
 	WatchedGroup *navigationItemChildWatchedGroup `json:"watched_group,omitempty"`
 }
@@ -185,7 +125,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID, apiError := srv.getParticipantIDFromRequest(httpReq, user)
+	groupID, apiError := service.GetParticipantIDFromRequest(httpReq, user, srv.Store)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -207,8 +147,8 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	response := itemNavigationResponse{
-		navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[0]),
-		AttemptID:                  *rawData[0].AttemptID,
+		ItemCommonFields: srv.fillItemCommonFieldsWithDBData(&rawData[0]),
+		AttemptID:        *rawData[0].AttemptID,
 	}
 	idMap := map[int64]*rawNavigationItem{}
 	for index := range rawData {
@@ -277,13 +217,13 @@ func (srv *Service) fillNavigationWithChildren(
 
 		if rawData[index].ID != rawData[index-1].ID {
 			child := navigationItemChild{
-				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[index]),
-				RequiresExplicitEntry:      rawData[index].RequiresExplicitEntry,
-				EntryParticipantType:       rawData[index].EntryParticipantType,
-				NoScore:                    rawData[index].NoScore,
-				HasVisibleChildren:         rawData[index].HasVisibleChildren,
-				BestScore:                  rawData[index].BestScore,
-				Results:                    make([]navigationItemChildResult, 0, 1),
+				ItemCommonFields:      srv.fillItemCommonFieldsWithDBData(&rawData[index]),
+				RequiresExplicitEntry: rawData[index].RequiresExplicitEntry,
+				EntryParticipantType:  rawData[index].EntryParticipantType,
+				NoScore:               rawData[index].NoScore,
+				HasVisibleChildren:    rawData[index].HasVisibleChildren,
+				BestScore:             rawData[index].BestScore,
+				Results:               make([]structures.ItemResult, 0, 1),
 			}
 			if watchedGroupIDSet {
 				child.WatchedGroup = &navigationItemChildWatchedGroup{
@@ -299,25 +239,25 @@ func (srv *Service) fillNavigationWithChildren(
 		}
 
 		if rawData[index].AttemptID != nil {
-			currentChild.Results = append(currentChild.Results, navigationItemChildResult{
+			currentChild.Results = append(currentChild.Results, structures.ItemResult{
 				AttemptID:                     *rawData[index].AttemptID,
 				ScoreComputed:                 rawData[index].ScoreComputed,
 				Validated:                     rawData[index].Validated,
-				StartedAt:                     rawData[index].StartedAt,
-				LatestActivityAt:              rawData[index].LatestActivityAt,
-				EndedAt:                       rawData[index].EndedAt,
-				AttemptAllowsSubmissionsUntil: rawData[index].AttemptAllowsSubmissionsUntil,
+				StartedAt:                     (*time.Time)(rawData[index].StartedAt),
+				LatestActivityAt:              (*time.Time)(rawData[index].LatestActivityAt),
+				EndedAt:                       (*time.Time)(rawData[index].EndedAt),
+				AttemptAllowsSubmissionsUntil: time.Time(rawData[index].AttemptAllowsSubmissionsUntil),
 			})
 		}
 	}
 }
 
-func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
-	result := &navigationItemCommonFields{
+func (srv *Service) fillItemCommonFieldsWithDBData(rawData *rawNavigationItem) *structures.ItemCommonFields {
+	result := &structures.ItemCommonFields{
 		ID:     rawData.ID,
 		Type:   rawData.Type,
-		String: navigationItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-		Permissions: navigationItemPermissions{
+		String: structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
+		Permissions: structures.ItemPermissions{
 			CanView:      srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
 			CanGrantView: srv.Store.PermissionsGranted().GrantViewNameByIndex(rawData.CanGrantViewGeneratedValue),
 			CanWatch:     srv.Store.PermissionsGranted().WatchNameByIndex(rawData.CanWatchGeneratedValue),

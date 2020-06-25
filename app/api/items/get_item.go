@@ -189,7 +189,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID, apiError := srv.getParticipantIDFromRequest(httpReq, user)
+	groupID, apiError := service.GetParticipantIDFromRequest(httpReq, user, srv.Store)
 	if apiError != service.NoError {
 		return apiError
 	}
