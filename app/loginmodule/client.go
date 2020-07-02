@@ -81,7 +81,7 @@ type CreateUsersResponseDataRow struct {
 
 // CreateUsers creates a batch of users in the login module
 func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey string,
-	params *CreateUsersParams) ([]CreateUsersResponseDataRow, error) {
+	params *CreateUsersParams) (bool, []CreateUsersResponseDataRow, error) {
 	urlParams := map[string]string{
 		"prefix":          params.Prefix,
 		"amount":          strconv.Itoa(params.Amount),
@@ -101,36 +101,52 @@ func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey strin
 	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/create",
 		urlParams, clientID, clientKey)
 	if err != nil {
-		return nil, errors.New("can't create users")
+		return false, nil, fmt.Errorf("can't create users: %s", err.Error())
 	}
 
 	var resultRows []CreateUsersResponseDataRow
-	mustNotBeError(json.Unmarshal(response.Data, &resultRows))
-	return resultRows, nil
+	if response.Success {
+		mustNotBeError(json.Unmarshal(response.Data, &resultRows))
+	}
+	return response.Success, resultRows, nil
 }
 
 // DeleteUsers deletes users specified by the given login prefix from the login module
-func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, loginPrefix string) error {
-	urlParams := map[string]string{
+func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, loginPrefix string) (bool, error) {
+	params := map[string]string{
 		"prefix": loginPrefix,
 	}
-	_, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/delete",
-		urlParams, clientID, clientKey)
+	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/delete",
+		params, clientID, clientKey)
 	if err != nil {
-		return errors.New("can't delete users")
+		return false, fmt.Errorf("can't delete users: %s", err.Error())
 	}
-
-	return nil
+	return response.Success, nil
 }
 
 // UnlinkClient discards our client authorization for the login module user
-func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey string, userLoginID int64) error {
-	_, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/unlink_client",
+func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey string, userLoginID int64) (bool, error) {
+	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/unlink_client",
 		map[string]string{"user_id": strconv.FormatInt(userLoginID, 10)}, clientID, clientKey)
 	if err != nil {
-		return errors.New("can't unlink the user")
+		return false, fmt.Errorf("can't unlink the user: %s", err.Error())
 	}
-	return nil
+	return response.Success, nil
+}
+
+// SendLTIResult sends item score to LTI
+func (client *Client) SendLTIResult(
+	ctx context.Context, clientID, clientKey string, userLoginID, itemID int64, score float32) (bool, error) {
+	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/lti_result/send",
+		map[string]string{
+			"user_id":    strconv.FormatInt(userLoginID, 10),
+			"content_id": strconv.FormatInt(itemID, 10),
+			"score":      strconv.FormatFloat(float64(score), 'f', -1, 32),
+		}, clientID, clientKey)
+	if err != nil {
+		return false, fmt.Errorf("can't publish score: %s", err.Error())
+	}
+	return response.Success, nil
 }
 
 type accountManagerResponse struct {
@@ -139,23 +155,21 @@ type accountManagerResponse struct {
 	Data    json.RawMessage `json:"data"`
 }
 
-func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPath string, urlParams map[string]string,
+func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPath string, requestParams map[string]string,
 	clientID, clientKey string) (decodedResponse *accountManagerResponse, err error) {
 	defer recoverPanics(&err)
 
 	apiURL, err := url.Parse(client.url + urlPath)
 	mustNotBeError(err)
 	values := apiURL.Query()
-	for key, param := range urlParams {
-		values.Add(key, param)
-	}
-
-	values.Add("client_id", clientID)
 	apiURL.RawQuery = values.Encode()
 
-	request, err := http.NewRequest("POST", apiURL.String(), nil)
+	params, err := EncodeBody(requestParams, clientID, clientKey)
+
+	request, err := http.NewRequest("POST", apiURL.String(), bytes.NewBuffer(params))
 	mustNotBeError(err)
 	request = request.WithContext(ctx)
+	request.Header.Add("Content-Type", "application/json")
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
 	responseBody, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
@@ -184,12 +198,27 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 			urlPath, decryptedBody, decodedBody, err)
 		panic(err)
 	}
-
 	if !decodedResponse.Success {
 		logging.Warnf("The login module returned an error for %s: %s", urlPath, decodedResponse.Error)
-		panic(errors.New("bad response status"))
 	}
 	return decodedResponse, nil
+}
+
+// EncodeBody forms a request body with the given parameters for the login module: `{"client_id": ..., "data": _encoded_}`
+func EncodeBody(requestParams map[string]string, clientID, clientKey string) (result []byte, err error) {
+	defer recoverPanics(&err)
+	paramsJSON, err := json.Marshal(requestParams)
+	mustNotBeError(err)
+	encodedParams := Encode(paramsJSON, clientKey)
+	params, err := json.Marshal(map[string]string{"client_id": clientID, "data": encodedParams})
+	mustNotBeError(err)
+	return params, err
+}
+
+// Encode encodes the given bytes array using the given key for the login module (AES128ECB + BASE64)
+func Encode(data []byte, clientKey string) string {
+	encrypted := encryptAes128Ecb(data, []byte(clientKey)[:16])
+	return base64.StdEncoding.EncodeToString(encrypted)
 }
 
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {

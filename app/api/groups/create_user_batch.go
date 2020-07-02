@@ -154,7 +154,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}
 	service.MustNotBeError(err)
 
-	createdUsers, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
+	result, createdUsers, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
 		CreateUsers(r.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"), &loginmodule.CreateUsersParams{
 			Prefix:         fmt.Sprintf("%s_%s_", input.GroupPrefix, input.CustomPrefix),
 			Amount:         numberOfUsersToBeCreated,
@@ -171,10 +171,13 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 		}
 	}()
 	service.MustNotBeError(err)
+	if !result {
+		panic(errors.New("login module failed"))
+	}
 
-	result := srv.createBatchUsersInDB(input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
+	users := srv.createBatchUsersInDB(input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&result)))
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(users)))
 	return service.NoError
 }
 

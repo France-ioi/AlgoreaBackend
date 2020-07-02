@@ -44,13 +44,13 @@ Feature: Delete the current user - robustness
   Scenario: Login module fails
     Given I am the user with id "21"
     And the DB time now is "2019-08-10 00:00:00"
-    And the login module "unlink_client" endpoint for user id "1234567" returns 500 with encoded body:
+    And the login module "unlink_client" endpoint for user id "1234567" returns 200 with encoded body:
       """
-      {"success":false}
+      {"success": false, "error": "some error"}
       """
     When I send a DELETE request to "/current-user"
     Then the response code should be 500
-    And the response error message should contain "Can't unlink the user"
+    And the response error message should contain "Login module failed"
     And the table "users" should be empty
     And the table "groups" should be:
       | id | type  | name      | require_lock_membership_approval_until |
@@ -73,3 +73,7 @@ Feature: Delete the current user - robustness
       | 2                 | 4              | false   |
       | 4                 | 4              | true    |
       | 50                | 50             | true    |
+    And logs should contain:
+      """
+      The login module returned an error for /platform_api/accounts_manager/unlink_client: some error
+      """

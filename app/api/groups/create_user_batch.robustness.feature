@@ -299,7 +299,7 @@ Feature: Create a user batch - robustness
     Given I am the user with id "21"
     And the login module "create" endpoint with params "amount=1&language=fr&login_fixed=1&password_length=7&postfix_length=3&prefix=test_12345_" returns 200 with encoded body:
       """
-      {"success": false}
+      {"success": false, "error": "some error"}
       """
     When I send a POST request to "/user-batches" with the following body:
     """
@@ -312,9 +312,13 @@ Feature: Create a user batch - robustness
     }
     """
     Then the response code should be 500
-    And the response error message should contain "Can't create users"
+    And the response error message should contain "Login module failed"
     And the table "user_batches" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
+    And logs should contain:
+      """
+      The login module returned an error for /platform_api/accounts_manager/create: some error
+      """

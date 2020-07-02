@@ -84,3 +84,20 @@ Feature: Remove user batch (userBatchRemove) - robustness
       """
       User with group_id = 21 failed to delete a user batch because of locked membership (group_prefix = 'test', custom_prefix = 'custom')
       """
+
+  Scenario: Login moudule fails
+    Given I am the user with id "21"
+    And the login module "delete" endpoint with params "prefix=test1_custom_" returns 200 with encoded body:
+      """
+      {"success": false, "error": "some error"}
+      """
+    When I send a DELETE request to "/user-batches/test1/custom"
+    Then the response code should be 500
+    And the response error message should contain "Login module failed"
+    And the table "user_batches" should stay unchanged
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And logs should contain:
+      """
+      The login module returned an error for /platform_api/accounts_manager/delete: some error
+      """

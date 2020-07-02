@@ -104,14 +104,18 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrUnprocessableEntity(errors.New("there are users with locked membership"))
 	}
 
-	service.MustNotBeError(loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
+	result, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
 		DeleteUsers(
 			r.Context(),
 			srv.AuthConfig.GetString("clientID"),
 			srv.AuthConfig.GetString("clientSecret"),
 			groupPrefix+"_"+customPrefix+"_",
-		))
+		)
+	service.MustNotBeError(err)
 
+	if !result {
+		return service.ErrUnexpected(errors.New("login module failed"))
+	}
 	service.MustNotBeError(srv.Store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
 		return store.Users().Where("login LIKE CONCAT(?, '\\_', ?, '\\_%')", groupPrefix, customPrefix)
 	}))
