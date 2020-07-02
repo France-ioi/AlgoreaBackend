@@ -30,6 +30,6 @@ logging:
 domains:
   -
     domains: [default] # of a list of domains
-    rootGroup: 1
-    rootSelfGroup: 2
-    rootTempGroup: 4
+    rootGroup: 10
+    rootSelfGroup: 3
+    rootTempGroup: 2

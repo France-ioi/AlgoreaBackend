@@ -27,36 +27,45 @@ type Application struct {
 
 // New configures application resources and routes.
 func New() (*Application, error) {
-
 	// Getting all configs, they will be used to init components and to be passed
 	config := LoadConfig()
+	application := &Application{}
+
+	// Init the PRNG with current time
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	if err := application.Reset(config); err != nil {
+		return nil, err
+	}
+	return application, nil
+}
+
+// Reset reinitializes the application with the given config
+func (app *Application) Reset(config *viper.Viper) error {
 	dbConfig, err := DBConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load the 'database' configuration: %w", err)
+		return fmt.Errorf("unable to load the 'database' configuration: %w", err)
 	}
 	authConfig := AuthConfig(config)
 	loggingConfig := LoggingConfig(config)
 	domainsConfig, err := DomainsConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load the 'domain' configuration: %w", err)
+		return fmt.Errorf("unable to load the 'domain' configuration: %w", err)
 	}
 	tokenConfig, err := TokenConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load the 'token' configuration: %w", err)
+		return fmt.Errorf("unable to load the 'token' configuration: %w", err)
 	}
 	serverConfig := ServerConfig(config)
 
 	// Apply the config to the global logger
 	logging.SharedLogger.Configure(loggingConfig)
 
-	// Init the PRNG with current time
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	// Init DB
 	db, err := database.Open(dbConfig.FormatDSN())
 	if err != nil {
 		logging.WithField("module", "database").Error(err)
-		return nil, err
+		return err
 	}
 
 	// Set up middlewares
@@ -81,12 +90,14 @@ func New() (*Application, error) {
 	apiCtx, apiRouter := api.Router(db, serverConfig, authConfig, domainsConfig, tokenConfig)
 	router.Mount(serverConfig.GetString("RootPath"), apiRouter)
 
-	return &Application{
-		HTTPHandler: router,
-		Config:      config,
-		Database:    db,
-		apiCtx:      apiCtx,
-	}, nil
+	app.HTTPHandler = router
+	app.Config = config
+	if app.Database != nil {
+		_ = app.Database.Close()
+	}
+	app.Database = db
+	app.apiCtx = apiCtx
+	return nil
 }
 
 // CheckConfig checks that the database contains all the data needed by the config

@@ -88,18 +88,16 @@ func configDirectory() string {
 
 // ReplaceAuthConfig replaces the auth part of the config by the given one.
 func (app *Application) ReplaceAuthConfig(newGlobalConfig *viper.Viper) {
-	app.apiCtx.SetAuthConfig(AuthConfig(newGlobalConfig))
 	app.Config.Set(authConfigKey, newGlobalConfig.Get(authConfigKey))
+	_ = app.Reset(app.Config) // cannot return an error in this case
 }
 
 // ReplaceDomainsConfig replaces the domains part of the config by the given one.
 func (app *Application) ReplaceDomainsConfig(newGlobalConfig *viper.Viper) {
-	domainsConfig, err := DomainsConfig(newGlobalConfig)
-	if err != nil {
-		panic("Unable to load the new domain config for replacement")
-	}
-	app.apiCtx.SetDomainsConfig(domainsConfig)
 	app.Config.Set(domainsConfigKey, newGlobalConfig.Get(domainsConfigKey))
+	if err := app.Reset(app.Config); err != nil {
+		panic(err)
+	}
 }
 
 //

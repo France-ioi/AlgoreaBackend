@@ -18,6 +18,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
+func init() { // nolint:gochecknoinits
+	appenv.SetDefaultEnvToTest()
+}
+
 func TestLoadConfigFrom(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
@@ -237,7 +241,8 @@ func TestReplaceAuthConfig(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	globalConfig.Set("auth.ClientID", "42")
-	application, _ := New()
+	application, err := New()
+	assert.NoError(err)
 	application.ReplaceAuthConfig(globalConfig)
 	assert.Equal("42", application.Config.Get("auth.ClientID"))
 	// not tested: that it is been pushed to the API
