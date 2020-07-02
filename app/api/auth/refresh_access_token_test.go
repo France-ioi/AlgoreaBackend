@@ -59,9 +59,9 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 			func(router *chi.Mux, baseService *service.Base) {
 				srv := &Service{Base: baseService}
 				srv.AuthConfig = viper.New()
-				srv.AuthConfig.Set("LoginModuleURL", loginModuleStubServer.URL)
-				srv.AuthConfig.Set("ClientID", expectedClientID)
-				srv.AuthConfig.Set("ClientSecret", expectedClientSecret)
+				srv.AuthConfig.Set("loginModuleURL", loginModuleStubServer.URL)
+				srv.AuthConfig.Set("clientID", expectedClientID)
+				srv.AuthConfig.Set("clientSecret", expectedClientSecret)
 				if timeout {
 					router.With(middleware.Timeout(0)).
 						Post("/auth/token", service.AppHandler(srv.refreshAccessToken).ServeHTTP)

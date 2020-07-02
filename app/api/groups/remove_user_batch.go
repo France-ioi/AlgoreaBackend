@@ -104,11 +104,11 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrUnprocessableEntity(errors.New("there are users with locked membership"))
 	}
 
-	service.MustNotBeError(loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).
+	service.MustNotBeError(loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
 		DeleteUsers(
 			r.Context(),
-			srv.AuthConfig.GetString("ClientID"),
-			srv.AuthConfig.GetString("ClientSecret"),
+			srv.AuthConfig.GetString("clientID"),
+			srv.AuthConfig.GetString("clientSecret"),
 			groupPrefix+"_"+customPrefix+"_",
 		))
 

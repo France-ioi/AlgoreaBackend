@@ -61,7 +61,7 @@ func TestLoadConfigFrom(t *testing.T) {
 	assert.EqualValues(999, conf.GetInt("server.WriteTimeout")) // does not work with Sub!
 
 	// test 'test' section
-	assert.EqualValues("/test/", conf.Sub(serverConfigKey).GetString("RootPath"))
+	assert.EqualValues("/test/", conf.Sub(serverConfigKey).GetString("rootPath"))
 
 	// test live env changes
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "777")

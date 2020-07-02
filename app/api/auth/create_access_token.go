@@ -82,7 +82,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)
 	service.MustNotBeError(err)
 
-	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
+	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
 	service.MustNotBeError(err)
 	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
 

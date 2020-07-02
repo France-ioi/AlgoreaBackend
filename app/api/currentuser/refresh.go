@@ -26,7 +26,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 	user := srv.GetUser(r)
 	accessToken := auth.BearerTokenFromContext(r.Context())
 
-	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).GetUserProfile(r.Context(), accessToken)
+	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), accessToken)
 	service.MustNotBeError(err)
 
 	userProfile["latest_activity_at"] = database.Now()

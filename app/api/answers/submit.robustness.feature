@@ -65,7 +65,7 @@ Feature: Submit a new answer - robustness
         "idUser": "101",
         "idAttempt": "100/2",
         "idItemLocal": "50",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -86,7 +86,7 @@ Feature: Submit a new answer - robustness
         "idUser": "",
         "idAttempt": "100",
         "idItemLocal": "50",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -107,7 +107,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "101",
         "idAttempt": "100",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -129,7 +129,7 @@ Feature: Submit a new answer - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "abc",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -151,7 +151,7 @@ Feature: Submit a new answer - robustness
         "idUser": "20",
         "idItemLocal": "50",
         "idAttempt": "100/1",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -173,7 +173,7 @@ Feature: Submit a new answer - robustness
         "idUser": "404",
         "idItemLocal": "50",
         "idAttempt": "100/1",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -195,7 +195,7 @@ Feature: Submit a new answer - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/1",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:
@@ -217,7 +217,7 @@ Feature: Submit a new answer - robustness
         "idUser": "101",
         "idItemLocal": "60",
         "idAttempt": "101/1",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     When I send a POST request to "/answers" with the following body:

@@ -86,9 +86,9 @@ func (app *Application) Reset(config *viper.Viper) error {
 		router.Mount("/debug", middleware.Profiler())
 	}
 
-	serverConfig.SetDefault("rootpath", "/")
+	serverConfig.SetDefault("rootPath", "/")
 	apiCtx, apiRouter := api.Router(db, serverConfig, authConfig, domainsConfig, tokenConfig)
-	router.Mount(serverConfig.GetString("RootPath"), apiRouter)
+	router.Mount(serverConfig.GetString("rootPath"), apiRouter)
 
 	app.HTTPHandler = router
 	app.Config = config
