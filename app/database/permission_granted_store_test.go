@@ -134,7 +134,7 @@ func TestPermissionGrantedStore_GrantViewIndexByName_Load(t *testing.T) {
 	clearAllDBEnums()
 	defer clearAllDBEnums()
 
-	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByName("solution_with_grant"))
+	assert.Equal(t, 6, permissionGrantedStore.GrantViewIndexByName("solution_with_grant"))
 }
 
 func TestPermissionGrantedStore_EditEnum(t *testing.T) {
