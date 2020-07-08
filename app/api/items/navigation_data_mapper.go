@@ -39,11 +39,7 @@ type rawNavigationItem struct {
 	HasVisibleChildren bool
 
 	*database.RawGeneratedPermissionFields
-
-	CanWatchForGroupResults  bool
-	WatchedGroupCanView      int
-	WatchedGroupAvgScore     float32
-	WatchedGroupAllValidated bool
+	*RawWatchedGroupStatFields
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's

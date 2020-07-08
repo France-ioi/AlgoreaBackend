@@ -41,10 +41,10 @@ type navigationItemChild struct {
 	// required:true
 	Results []structures.ItemResult `json:"results"`
 
-	WatchedGroup *navigationItemChildWatchedGroup `json:"watched_group,omitempty"`
+	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 }
 
-type navigationItemChildWatchedGroup struct {
+type itemWatchedGroupStat struct {
 	// group's view permission on this item
 	// required: true
 	// enum: none,info,content,content_with_descendants,solution
@@ -225,15 +225,7 @@ func (srv *Service) fillNavigationWithChildren(
 				BestScore:             rawData[index].BestScore,
 				Results:               make([]structures.ItemResult, 0, 1),
 			}
-			if watchedGroupIDSet {
-				child.WatchedGroup = &navigationItemChildWatchedGroup{
-					CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData[index].WatchedGroupCanView),
-				}
-				if rawData[index].CanWatchForGroupResults {
-					child.WatchedGroup.AvgScore = &rawData[index].WatchedGroupAvgScore
-					child.WatchedGroup.AllValidated = &rawData[index].WatchedGroupAllValidated
-				}
-			}
+			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
 			response.Children = append(response.Children, child)
 			currentChild = &response.Children[len(response.Children)-1]
 		}
