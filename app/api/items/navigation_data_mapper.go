@@ -20,16 +20,7 @@ type rawNavigationItem struct {
 	Title       *string
 	LanguageTag *string
 
-	// results
-	AttemptID        *int64
-	ScoreComputed    float32
-	Validated        bool
-	StartedAt        *database.Time
-	LatestActivityAt *database.Time
-	EndedAt          *database.Time
-
-	// attempts
-	AttemptAllowsSubmissionsUntil database.Time
+	*RawItemResultFields
 
 	// max from results of the current participant
 	BestScore float32

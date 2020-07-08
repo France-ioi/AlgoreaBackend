@@ -230,16 +230,9 @@ func (srv *Service) fillNavigationWithChildren(
 			currentChild = &response.Children[len(response.Children)-1]
 		}
 
-		if rawData[index].AttemptID != nil {
-			currentChild.Results = append(currentChild.Results, structures.ItemResult{
-				AttemptID:                     *rawData[index].AttemptID,
-				ScoreComputed:                 rawData[index].ScoreComputed,
-				Validated:                     rawData[index].Validated,
-				StartedAt:                     (*time.Time)(rawData[index].StartedAt),
-				LatestActivityAt:              (*time.Time)(rawData[index].LatestActivityAt),
-				EndedAt:                       (*time.Time)(rawData[index].EndedAt),
-				AttemptAllowsSubmissionsUntil: time.Time(rawData[index].AttemptAllowsSubmissionsUntil),
-			})
+		result := rawData[index].asItemResult()
+		if result != nil {
+			currentChild.Results = append(currentChild.Results, *result)
 		}
 	}
 }
