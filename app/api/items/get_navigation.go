@@ -3,7 +3,6 @@ package items
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -154,7 +153,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	for index := range rawData {
 		idMap[rawData[index].ID] = &rawData[index]
 	}
-	srv.fillNavigationWithChildren(rawData, watchedGroupIDSet, &response)
+	srv.fillNavigationWithChildren(rawData, watchedGroupIDSet, &response.Children)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -204,8 +203,8 @@ func (srv *Service) resolveAttemptIDForNavigationData(httpReq *http.Request, gro
 }
 
 func (srv *Service) fillNavigationWithChildren(
-	rawData []rawNavigationItem, watchedGroupIDSet bool, response *itemNavigationResponse) {
-	response.Children = make([]navigationItemChild, 0, len(rawData)-1)
+	rawData []rawNavigationItem, watchedGroupIDSet bool, target *[]navigationItemChild) {
+	*target = make([]navigationItemChild, 0, len(rawData)-1)
 	var currentChild *navigationItemChild
 	if len(rawData) > 0 && rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
 		return // Only 'info' access to the parent item
@@ -226,8 +225,8 @@ func (srv *Service) fillNavigationWithChildren(
 				Results:               make([]structures.ItemResult, 0, 1),
 			}
 			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
-			response.Children = append(response.Children, child)
-			currentChild = &response.Children[len(response.Children)-1]
+			*target = append(*target, child)
+			currentChild = &(*target)[len(*target)-1]
 		}
 
 		result := rawData[index].asItemResult()
