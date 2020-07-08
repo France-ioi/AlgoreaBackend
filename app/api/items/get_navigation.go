@@ -58,7 +58,7 @@ type navigationItemChildWatchedGroup struct {
 	AllValidated *bool `json:"all_validated,omitempty"`
 }
 
-// swagger:operation GET /items/{item_id}/navigation items itemNavigationGet
+// swagger:operation GET /items/{item_id}/navigation items itemNavigationView
 // ---
 // summary: Get navigation data
 // description: >

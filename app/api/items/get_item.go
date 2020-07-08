@@ -142,7 +142,7 @@ type itemResponse struct {
 	Children []itemChildNode `json:"children"`
 }
 
-// swagger:operation GET /items/{item_id} items itemGet
+// swagger:operation GET /items/{item_id} items itemView
 // ---
 // summary: Get an item
 // description: Returns data related to the specified item, its children,
