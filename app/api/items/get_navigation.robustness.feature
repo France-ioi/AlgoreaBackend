@@ -27,7 +27,7 @@ Background:
     | 13       | 190     | none                     |
     | 13       | 200     | content_with_descendants |
     | 13       | 210     | content_with_descendants |
-    | 15       | 200     | content_with_descendants |
+    | 15       | 200     | none                     |
     | 15       | 210     | content_with_descendants |
   And the database has the following table 'items_strings':
     | item_id | language_tag | title      |
@@ -92,7 +92,7 @@ Background:
 
   Scenario: Should fail when the team doesn't have access to the root item
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/navigation?as_team_id=15&attempt_id=0"
+    When I send a GET request to "/items/200/navigation?as_team_id=15&attempt_id=1"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights on given item id"
 
@@ -122,31 +122,31 @@ Background:
 
   Scenario: Should fail when there is no started result for a child item and child_attempt_id
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/navigation?as_team_id=15&child_attempt_id=1"
+    When I send a GET request to "/items/210/navigation?as_team_id=15&child_attempt_id=1"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when there is a started result for a child item, but there is no related started result for the parent item
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/navigation?as_team_id=15&child_attempt_id=2"
+    When I send a GET request to "/items/210/navigation?as_team_id=15&child_attempt_id=2"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when there is a started result for a child item, but there is no related started result for the parent item (because of root_item_id)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/navigation?as_team_id=15&child_attempt_id=3"
+    When I send a GET request to "/items/210/navigation?as_team_id=15&child_attempt_id=3"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when there is no started result for the item and attempt_id
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/navigation?as_team_id=15&attempt_id=0"
+    When I send a GET request to "/items/210/navigation?as_team_id=15&attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when watched_group_id is invalid
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/navigation?as_team_id=15&attempt_id=0&watched_group_id=abc"
+    When I send a GET request to "/items/210/navigation?as_team_id=15&attempt_id=1&watched_group_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for watched_group_id (should be int64)"
 
@@ -155,6 +155,6 @@ Background:
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_watch_members |
       | 13       | 11         | false             |
-    When I send a GET request to "/items/200/navigation?as_team_id=15&attempt_id=0&watched_group_id=13"
+    When I send a GET request to "/items/210/navigation?as_team_id=15&attempt_id=0&watched_group_id=13"
     Then the response code should be 403
     And the response error message should contain "No rights to watch for watched_group_id"
