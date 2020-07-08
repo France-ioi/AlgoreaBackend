@@ -56,12 +56,6 @@ Background:
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Should fail when the user has only info access rights to the root item
-    Given I am the user with id "14"
-    When I send a GET request to "/items/190"
-    Then the response code should be 403
-    And the response error message should contain "Only 'info' access to the item"
-
   Scenario: Should fail when as_team_id is invalid
     Given I am the user with id "14"
     When I send a GET request to "/items/200?as_team_id=abc"
@@ -79,9 +73,3 @@ Background:
     When I send a GET request to "/items/200?as_team_id=11"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
-
-  Scenario: Should fail when the team has only info access rights to the root item
-    Given I am the user with id "14"
-    When I send a GET request to "/items/190?as_team_id=17"
-    Then the response code should be 403
-    And the response error message should contain "Only 'info' access to the item"

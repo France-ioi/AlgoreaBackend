@@ -3,11 +3,14 @@ package items
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 type itemStringCommon struct {
@@ -34,19 +37,13 @@ type itemStringRootNodeWithSolutionAccess struct {
 }
 
 // Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language
-type itemString struct {
-	*itemStringCommon
-	*itemStringNotInfo
-}
-
-// Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language
 type itemStringRoot struct {
 	*itemStringCommon
 	*itemStringNotInfo
 	*itemStringRootNodeWithSolutionAccess
 }
 
-type itemCommonFields struct {
+type commonItemFields struct {
 	// items
 
 	// required: true
@@ -60,12 +57,7 @@ type itemCommonFields struct {
 	// enum: None,All,AllButOne,Categories,One,Manual
 	ValidationType string `json:"validation_type"`
 	// required: true
-	// enum: All,Half,One,None
-	EntryMinAdmittedMembersRatio string `json:"entry_min_admitted_members_ratio"`
-	// required: true
-	EntryFrozenTeams bool `json:"entry_frozen_teams"`
-	// required: true
-	EntryMaxTeamSize int32 `json:"entry_max_team_size"`
+	RequiresExplicitEntry bool `json:"requires_explicit_entry"`
 	// required: true
 	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
 	// required: true
@@ -80,11 +72,9 @@ type itemCommonFields struct {
 	NoScore bool `json:"no_score"`
 	// required: true
 	DefaultLanguageTag string `json:"default_language_tag"`
+
 	// required: true
-	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
-	// Whether the current user (or the `as_team_id` team) made at least one attempt to solve the item
-	// required: true
-	HasAttempts bool `json:"has_attempts"`
+	Permissions structures.ItemPermissions `json:"permissions"`
 }
 
 type itemRootNodeNotChapterFields struct {
@@ -96,33 +86,19 @@ type itemRootNodeNotChapterFields struct {
 	HintsAllowed bool `json:"hints_allowed"`
 }
 
-type itemChildNode struct {
-	*itemCommonFields
-
-	// required: true
-	String itemString `json:"string"`
-
-	// items_items (child nodes only)
-
-	// `items_items.order`
-	// required: true
-	Order int32 `json:"order"`
-	// `items_items.category`
-	// required: true
-	// enum: Undefined,Discovery,Application,Validation,Challenge
-	Category string `json:"category"`
-	// The rule used to propagate can_view='content' between the parent item and this child
-	// enum: none,as_info,as_content
-	// required: true
-	ContentViewPropagation string `json:"content_view_propagation"`
-}
-
 // swagger:model itemResponse
 type itemResponse struct {
-	*itemCommonFields
+	*commonItemFields
 
-	// root node only
-
+	// required: true
+	// enum: All,Half,One,None
+	EntryMinAdmittedMembersRatio string `json:"entry_min_admitted_members_ratio"`
+	// required: true
+	EntryFrozenTeams bool `json:"entry_frozen_teams"`
+	// required: true
+	EntryMaxTeamSize int32 `json:"entry_max_team_size"`
+	// required: true
+	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 	// required: true
 	TitleBarVisible bool `json:"title_bar_visible"`
 	// required: true
@@ -132,29 +108,27 @@ type itemResponse struct {
 	FullScreen string `json:"full_screen"`
 	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`
+	// required: true
+	EnteringTimeMin time.Time `json:"entering_time_min"`
+	// required: true
+	EnteringTimeMax time.Time `json:"entering_time_max"`
 
 	// required: true
 	String itemStringRoot `json:"string"`
 
 	*itemRootNodeNotChapterFields
-
-	// required: true
-	Children []itemChildNode `json:"children"`
 }
 
 // swagger:operation GET /items/{item_id} items itemView
 // ---
 // summary: Get an item
-// description: Returns data related to the specified item, its children,
-//              and the current user's (or the team's given in `as_team_id`) interactions with them
-//              (from tables `items`, `items_items`, `items_string`, `results`).
+// description: Returns data related to the specified item,
+//              and the current user's (or the team's given in `as_team_id`) permissions on it
+//              (from tables `items`, `items_string`, `permissions_generated`).
 //
 //
 //              * If the specified item is not visible by the current user (or the team given in `as_team_id`),
 //                the 'not found' response is returned.
-//
-//              * If the current user (or the team given in `as_team_id`) has only 'info' access on the specified item,
-//                the 'forbidden' error is returned.
 //
 //              * If `as_team_id` is given, it should be a user's parent team group,
 //                otherwise the "forbidden" error is returned.
@@ -196,50 +170,33 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 
 	rawData := getRawItemData(srv.Store.Items(), itemID, groupID, user)
 
-	if len(rawData) == 0 || rawData[0].ID != itemID {
+	if rawData == nil {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
-	if rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
-		return service.ErrForbidden(errors.New("only 'info' access to the item"))
-	}
-
 	permissionGrantedStore := srv.Store.PermissionsGranted()
-	response := constructItemResponseFromDBData(&rawData[0], permissionGrantedStore)
-
-	setItemResponseRootNodeFields(response, &rawData, permissionGrantedStore)
-	srv.fillItemResponseWithChildren(response, &rawData, permissionGrantedStore)
+	response := constructItemResponseFromDBData(rawData, permissionGrantedStore)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
 }
 
-// rawItem represents one row of the getItem service data returned from the DB
+// rawItem represents the getItem service data returned from the DB
 type rawItem struct {
+	*RawCommonItemFields
+
 	// items
-	ID                           int64
-	Type                         string
-	DisplayDetailsInParent       bool
-	ValidationType               string
+	TitleBarVisible              bool
+	ReadOnly                     bool
+	FullScreen                   string
+	ShowUserInfos                bool
 	EntryMinAdmittedMembersRatio string
 	EntryFrozenTeams             bool
 	EntryMaxTeamSize             int32
-	AllowsMultipleAttempts       bool
-	EntryParticipantType         string
-	Duration                     *string
-	NoScore                      bool
-	DefaultLanguageTag           string
 	PromptToJoinGroupByCode      bool
-	HasAttempts                  bool
-
-	// root node only
-	TitleBarVisible bool
-	ReadOnly        bool
-	FullScreen      string
-	ShowUserInfos   bool
-	URL             *string // only if not a chapter
-	UsesAPI         bool    // only if not a chapter
-	HintsAllowed    bool    // only if not a chapter
+	URL                          *string // only if not a chapter
+	UsesAPI                      bool    // only if not a chapter
+	HintsAllowed                 bool    // only if not a chapter
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `sql:"column:language_tag"`
@@ -248,118 +205,86 @@ type rawItem struct {
 	StringSubtitle    *string `sql:"column:subtitle"`
 	StringDescription *string `sql:"column:description"`
 	StringEduComment  *string `sql:"column:edu_comment"`
-
-	// items_items
-	Order                  int32 `sql:"column:child_order"`
-	Category               string
-	ContentViewPropagation string
-
-	CanViewGeneratedValue int
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
-func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database.User) []rawItem {
-	var result []rawItem
+func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database.User) *rawItem {
+	var result rawItem
 
-	accessRights := s.Permissions().WithViewPermissionForGroup(groupID, "info")
-
-	commonColumns := `items.id AS id,
-		items.type,
-		items.display_details_in_parent,
-		items.validation_type,
-		items.entry_min_admitted_members_ratio,
-		items.entry_frozen_teams,
-		items.entry_max_team_size,
-		items.allows_multiple_attempts,
-		items.entry_participant_type,
-		items.duration,
-		items.no_score,
-		items.default_language_tag,
-		items.prompt_to_join_group_by_code,
-		EXISTS(SELECT 1 FROM results WHERE participant_id = ? AND item_id = items.id AND started_at IS NOT NULL) AS has_attempts, `
-
-	rootItemQuery := s.ByID(rootID).Select(
-		commonColumns+`items.title_bar_visible,
-		items.read_only,
-		items.full_screen,
-		items.show_user_infos,
-		items.url,
-		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
-		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
-		NULL AS child_order, NULL AS category, NULL AS content_view_propagation`, groupID)
-
-	childrenQuery := s.Select(
-		commonColumns+`NULL AS title_bar_visible,
-		NULL AS read_only,
-		NULL AS full_screen,
-		NULL AS show_user_infos,
-		NULL AS url,
-		NULL AS uses_api,
-		NULL AS hints_allowed,
-		child_order, category, content_view_propagation`, groupID).
-		Joins("JOIN items_items ON items.id=child_item_id AND parent_item_id=?", rootID)
-
-	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
-	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
-	query := s.Raw(`
-		SELECT
-			`+commonColumns+`
-
+	query := s.VisibleByID(groupID, rootID).
+		JoinsUserAndDefaultItemStrings(user).
+		Select(`
+			items.id AS id,
+			items.type,
+			items.display_details_in_parent,
+			items.validation_type,
+			items.entry_min_admitted_members_ratio,
+			items.entry_frozen_teams,
+			items.entry_max_team_size,
+			items.entering_time_min,
+			items.entering_time_max,
+			items.allows_multiple_attempts,
+			items.entry_participant_type,
+			items.duration,
+			items.no_score,
+			items.default_language_tag,
+			items.prompt_to_join_group_by_code,
+			items.title_bar_visible,
+			items.read_only,
+			items.full_screen,
+			items.show_user_infos,
+			items.url,
+			items.requires_explicit_entry,
+			IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
+			IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			IF(user_strings.language_tag IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 			IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
 			IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description,
 			IF(user_strings.language_tag IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
+			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated`)
 
-			items.child_order AS child_order,
-			items.category AS category,
-			items.content_view_propagation, `+
-		// inputItem only
-		`	items.title_bar_visible,
-			items.read_only,
-			items.full_screen,
-			items.show_user_infos,
-			items.url,
-			items.uses_api,
-			items.hints_allowed,
-			access_rights.can_view_generated_value
-		FROM ? items `, groupID, unionQuery.SubQuery()).
-		JoinsUserAndDefaultItemStrings(user).
-		Joins("JOIN ? access_rights on access_rights.item_id=items.id", accessRights.SubQuery()).
-		Order("child_order")
-
-	service.MustNotBeError(query.Scan(&result).Error())
-	return result
-}
-
-func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem, permissionGrantedStore *database.PermissionGrantedStore) {
-	if (*rawData)[0].CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
-		response.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
-			EduComment: (*rawData)[0].StringEduComment,
-		}
+	err := query.Scan(&result).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return nil
 	}
-	if (*rawData)[0].Type != "Chapter" {
-		response.itemRootNodeNotChapterFields = &itemRootNodeNotChapterFields{
-			URL:          (*rawData)[0].URL,
-			UsesAPI:      (*rawData)[0].UsesAPI,
-			HintsAllowed: (*rawData)[0].HintsAllowed,
-		}
-	}
-	response.TitleBarVisible = (*rawData)[0].TitleBarVisible
-	response.ReadOnly = (*rawData)[0].ReadOnly
-	response.FullScreen = (*rawData)[0].FullScreen
-	response.ShowUserInfos = (*rawData)[0].ShowUserInfos
+	service.MustNotBeError(err)
+	return &result
 }
 
 func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemResponse {
 	result := &itemResponse{
-		itemCommonFields: fillItemCommonFieldsWithDBData(rawData),
+		commonItemFields: rawData.asItemCommonFields(permissionGrantedStore),
 		String: itemStringRoot{
 			itemStringCommon: constructItemStringCommon(rawData),
 		},
+		EntryMinAdmittedMembersRatio: rawData.EntryMinAdmittedMembersRatio,
+		EntryFrozenTeams:             rawData.EntryFrozenTeams,
+		EntryMaxTeamSize:             rawData.EntryMaxTeamSize,
+		PromptToJoinGroupByCode:      rawData.PromptToJoinGroupByCode,
+		TitleBarVisible:              rawData.TitleBarVisible,
+		ReadOnly:                     rawData.ReadOnly,
+		FullScreen:                   rawData.FullScreen,
+		ShowUserInfos:                rawData.ShowUserInfos,
+		EnteringTimeMin:              time.Time(rawData.EnteringTimeMin),
+		EnteringTimeMax:              time.Time(rawData.EnteringTimeMax),
 	}
 	result.String.itemStringNotInfo = constructStringNotInfo(rawData, permissionGrantedStore)
+
+	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
+		result.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
+			EduComment: rawData.StringEduComment,
+		}
+	}
+	if rawData.Type != "Chapter" {
+		result.itemRootNodeNotChapterFields = &itemRootNodeNotChapterFields{
+			URL:          rawData.URL,
+			UsesAPI:      rawData.UsesAPI,
+			HintsAllowed: rawData.HintsAllowed,
+		}
+	}
+
 	return result
 }
 
@@ -378,43 +303,5 @@ func constructStringNotInfo(rawData *rawItem, permissionGrantedStore *database.P
 	return &itemStringNotInfo{
 		Subtitle:    rawData.StringSubtitle,
 		Description: rawData.StringDescription,
-	}
-}
-
-func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
-	result := &itemCommonFields{
-		ID:                           rawData.ID,
-		Type:                         rawData.Type,
-		DisplayDetailsInParent:       rawData.DisplayDetailsInParent,
-		ValidationType:               rawData.ValidationType,
-		EntryMinAdmittedMembersRatio: rawData.EntryMinAdmittedMembersRatio,
-		EntryFrozenTeams:             rawData.EntryFrozenTeams,
-		EntryMaxTeamSize:             rawData.EntryMaxTeamSize,
-		AllowsMultipleAttempts:       rawData.AllowsMultipleAttempts,
-		EntryParticipantType:         rawData.EntryParticipantType,
-		Duration:                     rawData.Duration,
-		NoScore:                      rawData.NoScore,
-		DefaultLanguageTag:           rawData.DefaultLanguageTag,
-		PromptToJoinGroupByCode:      rawData.PromptToJoinGroupByCode,
-		HasAttempts:                  rawData.HasAttempts,
-	}
-	return result
-}
-
-func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData *[]rawItem,
-	permissionGrantedStore *database.PermissionGrantedStore) {
-	response.Children = make([]itemChildNode, 0, len(*rawData))
-	for index := range *rawData {
-		if index == 0 {
-			continue
-		}
-
-		child := &itemChildNode{itemCommonFields: fillItemCommonFieldsWithDBData(&(*rawData)[index])}
-		child.String.itemStringCommon = constructItemStringCommon(&(*rawData)[index])
-		child.String.itemStringNotInfo = constructStringNotInfo(&(*rawData)[index], permissionGrantedStore)
-		child.Order = (*rawData)[index].Order
-		child.Category = (*rawData)[index].Category
-		child.ContentViewPropagation = (*rawData)[index].ContentViewPropagation
-		response.Children = append(response.Children, *child)
 	}
 }
