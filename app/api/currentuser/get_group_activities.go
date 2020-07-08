@@ -45,11 +45,7 @@ type rawRootItem struct {
 
 	HasVisibleChildren bool
 
-	CanViewGeneratedValue      int
-	CanGrantViewGeneratedValue int
-	CanWatchGeneratedValue     int
-	CanEditGeneratedValue      int
-	IsOwnerGenerated           bool
+	*database.RawGeneratedPermissionFields
 }
 
 type groupInfoForRootItem struct {
@@ -192,16 +188,10 @@ func generateGroupInfoForRootItemFromRawData(rawData []rawRootItem, index int) *
 func (srv *Service) generateRootItemInfoFromRawData(rawData *rawRootItem) *rootItem {
 	return &rootItem{
 		ItemCommonFields: &structures.ItemCommonFields{
-			ID:     rawData.ItemID,
-			Type:   rawData.ItemType,
-			String: structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-			Permissions: structures.ItemPermissions{
-				CanView:      srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
-				CanGrantView: srv.Store.PermissionsGranted().GrantViewNameByIndex(rawData.CanGrantViewGeneratedValue),
-				CanWatch:     srv.Store.PermissionsGranted().WatchNameByIndex(rawData.CanWatchGeneratedValue),
-				CanEdit:      srv.Store.PermissionsGranted().EditNameByIndex(rawData.CanEditGeneratedValue),
-				IsOwner:      rawData.IsOwnerGenerated,
-			},
+			ID:          rawData.ItemID,
+			Type:        rawData.ItemType,
+			String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
+			Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(srv.Store.PermissionsGranted()),
 		},
 		RequiresExplicitEntry: rawData.RequiresExplicitEntry,
 		EntryParticipantType:  rawData.EntryParticipantType,

@@ -254,16 +254,10 @@ func (srv *Service) fillNavigationWithChildren(
 
 func (srv *Service) fillItemCommonFieldsWithDBData(rawData *rawNavigationItem) *structures.ItemCommonFields {
 	result := &structures.ItemCommonFields{
-		ID:     rawData.ID,
-		Type:   rawData.Type,
-		String: structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-		Permissions: structures.ItemPermissions{
-			CanView:      srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
-			CanGrantView: srv.Store.PermissionsGranted().GrantViewNameByIndex(rawData.CanGrantViewGeneratedValue),
-			CanWatch:     srv.Store.PermissionsGranted().WatchNameByIndex(rawData.CanWatchGeneratedValue),
-			CanEdit:      srv.Store.PermissionsGranted().EditNameByIndex(rawData.CanEditGeneratedValue),
-			IsOwner:      rawData.IsOwnerGenerated,
-		},
+		ID:          rawData.ID,
+		Type:        rawData.Type,
+		String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
+		Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(srv.Store.PermissionsGranted()),
 	}
 	return result
 }

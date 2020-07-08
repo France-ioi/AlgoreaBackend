@@ -38,11 +38,7 @@ type rawNavigationItem struct {
 	ParentItemID       int64
 	HasVisibleChildren bool
 
-	CanViewGeneratedValue      int
-	CanGrantViewGeneratedValue int
-	CanWatchGeneratedValue     int
-	CanEditGeneratedValue      int
-	IsOwnerGenerated           bool
+	*database.RawGeneratedPermissionFields
 
 	CanWatchForGroupResults  bool
 	WatchedGroupCanView      int
