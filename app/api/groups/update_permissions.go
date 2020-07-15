@@ -128,16 +128,15 @@ func checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *datab
 	}
 
 	// at least one of the item's parents should be visible to the group
-	itemsVisibleToGroupSubQuery := s.Permissions().VisibleToGroup(groupID).SubQuery()
-
-	found, err = s.ItemItems().
-		Joins("JOIN ? AS visible ON visible.item_id = items_items.parent_item_id", itemsVisibleToGroupSubQuery).
+	found, err = s.Permissions().MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "info").
+		Joins("JOIN items_items ON items_items.parent_item_id = permissions.item_id").
 		Where("items_items.child_item_id = ?", itemID).
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		found, err = s.Items().ByID(itemID).
-			Joins("JOIN ? AS visible ON visible.item_id = items.id", itemsVisibleToGroupSubQuery).HasRows()
+		found, err = s.Permissions().MatchingGroupAncestors(groupID).WherePermissionIsAtLeast("view", "info").
+			Where("item_id = ?", itemID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			return service.InsufficientAccessRightsError

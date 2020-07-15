@@ -29,29 +29,3 @@ func (s *AttemptStore) CreateNew(participantID, parentAttemptID, itemID, creator
 	}))
 	return attemptID, nil
 }
-
-// GetAttemptParticipantIDIfUserHasAccess returns results.participant_id if:
-//  1) the user has at least 'content' access to the item
-//  2) the user is a member of results.participant_id or the user's group_id = results.participant_id
-func (s *AttemptStore) GetAttemptParticipantIDIfUserHasAccess(
-	attemptID, itemID int64, user *User) (found bool, participantID int64, err error) {
-	recoverPanics(&err)
-	mustNotBeError(err)
-	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
-
-	s.Results().Where("results.item_id = ? AND results.attempt_id = ?", itemID, attemptID).
-		Joins("JOIN ? AS permissions ON results.item_id = permissions.item_id",
-			s.Permissions().WithViewPermissionForUser(user, "content").
-				Where("item_id = ?", itemID).SubQuery())
-	err = s.Items().WhereUserHasViewPermissionOnItems(user, "content").
-		Joins("JOIN results ON results.item_id = items.id AND results.attempt_id = ?", attemptID).
-		Where("results.participant_id = ? OR results.participant_id IN ?",
-			user.GroupID, usersGroupsQuery.SubQuery()).
-		Where("items.id = ?", itemID).
-		PluckFirst("results.participant_id", &participantID).Error()
-	if gorm.IsRecordNotFoundError(err) {
-		return false, 0, nil
-	}
-	mustNotBeError(err)
-	return true, participantID, nil
-}

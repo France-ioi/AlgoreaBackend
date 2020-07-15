@@ -23,26 +23,6 @@ func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 	return s.Visible(groupID).Where("items.id = ?", itemID)
 }
 
-// VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given participant
-func (s *ItemStore) VisibleChildrenOfID(groupID, itemID int64) *DB {
-	return s.
-		Visible(groupID).
-		Joins("JOIN ? ii ON items.id=child_item_id", s.ItemItems().SubQuery()).
-		Where("ii.parent_item_id = ?", itemID)
-}
-
-// VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given participant
-func (s *ItemStore) VisibleGrandChildrenOfID(groupID, itemID int64) *DB {
-	return s.
-		// visible items are the leaves (potential grandChildren)
-		Visible(groupID).
-		// get their parents' IDs (ii1)
-		Joins("JOIN ? ii1 ON items.id = ii1.child_item_id", s.ItemItems().SubQuery()).
-		// get their grand parents' IDs (ii2)
-		Joins("JOIN ? ii2 ON ii2.child_item_id = ii1.parent_item_id", s.ItemItems().SubQuery()).
-		Where("ii2.parent_item_id = ?", itemID)
-}
-
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
 //  * the first item in `ids` is a root items (items.is_root) or
@@ -74,8 +54,14 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 	}
 
 	subQuery = subQuery.Select(columnsList)
-	visibleItems := s.Visible(groupID).
-		Select("items.id, items.is_root, items.allows_multiple_attempts, visible.can_view_generated_value")
+	visibleItems := s.Permissions().MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "info").
+		Where("item_id IN (?)", ids).
+		Joins("JOIN items ON items.id = permissions.item_id").
+		Select(`
+			items.id, items.is_root, items.allows_multiple_attempts,
+			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
+		Group("items.id")
 
 	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.QueryExpr())
 }
@@ -255,8 +241,14 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 	}
 
 	subQuery = subQuery.Select(columnsList)
-	visibleItems := s.Visible(groupID).
-		Select("items.id, items.is_root, items.allows_multiple_attempts, visible.can_view_generated_value")
+	visibleItems := s.Permissions().MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "info").
+		Where("item_id IN(?)", ids).
+		Joins("JOIN items ON items.id = permissions.item_id").
+		Select(`
+			items.id, items.is_root, items.allows_multiple_attempts,
+			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
+		Group("items.id")
 
 	if withWriteLock {
 		subQuery = subQuery.WithWriteLock()
@@ -272,7 +264,7 @@ func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAcces
 	recoverPanics(&err)
 
 	var readOnly bool
-	err = s.Visible(participantID).WherePermissionIsAtLeast("view", "content").
+	err = s.WhereGroupHasPermissionOnItems(participantID, "view", "content").
 		Where("id = ?", itemID).
 		WithWriteLock().
 		PluckFirst("read_only", &readOnly).Error()
@@ -292,10 +284,5 @@ func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAcces
 // for getting a contest with the given item id managed by the given user
 func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 	return s.ByID(contestItemID).Where("items.duration IS NOT NULL").
-		Joins("JOIN permissions_generated ON permissions_generated.item_id = items.id").
-		Joins(`
-			JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id AND
-				groups_ancestors_active.child_group_id = ?`, user.GroupID).
-		Group("items.id").
-		HavingMaxPermissionAtLeast("view", "content_with_descendants")
+		WhereUserHasViewPermissionOnItems(user, "content_with_descendants")
 }

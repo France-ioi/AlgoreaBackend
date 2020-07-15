@@ -120,8 +120,6 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	itemsVisibleToUserSubQuery := srv.Store.Permissions().VisibleToUser(user).SubQuery()
-
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
 	var userIDs []interface{}
@@ -149,10 +147,13 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 
 	// Preselect item IDs (there should not be many of them)
 	var itemIDs []interface{}
-	service.MustNotBeError(srv.Store.ItemItems().Where("parent_item_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS visible ON visible.item_id = items_items.child_item_id", itemsVisibleToUserSubQuery).
+	service.MustNotBeError(srv.Store.Permissions().
+		MatchingUserAncestors(user).
+		WherePermissionIsAtLeast("view", "info").
+		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
+		Where("parent_item_id IN (?)", itemParentIDs).
 		Order("items_items.child_item_id").
-		Pluck("items_items.child_item_id", &itemIDs).Error())
+		Pluck("DISTINCT items_items.child_item_id", &itemIDs).Error())
 	if len(itemIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
 		return service.NoError

@@ -141,7 +141,7 @@ func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
 		return nil, 0, 0, 0, false, nil, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, apiError = srv.attemptIDsForGetBreadcrumbs(r)
+	attemptID, parentAttemptID, attemptIDSet, apiError = srv.attemptIDOrParentAttemptID(r)
 	if apiError != service.NoError {
 		return nil, 0, 0, 0, false, nil, apiError
 	}
@@ -164,7 +164,7 @@ func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
 	return ids, groupID, attemptID, parentAttemptID, attemptIDSet, user, service.NoError
 }
 
-func (srv *Service) attemptIDsForGetBreadcrumbs(r *http.Request) (
+func (srv *Service) attemptIDOrParentAttemptID(r *http.Request) (
 	attemptID, parentAttemptID int64, attemptIDSet bool, apiError service.APIError) {
 	var err error
 	attemptIDSet = len(r.URL.Query()["attempt_id"]) != 0

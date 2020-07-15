@@ -115,8 +115,6 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	itemsVisibleToUserSubQuery := srv.Store.Permissions().VisibleToUser(user).SubQuery()
-
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
 	var teamIDs []interface{}
@@ -141,10 +139,11 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.NoError
 	}
 
-	itemsQuery := srv.Store.ItemItems().
-		Select("items_items.child_item_id").
-		Where("parent_item_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS visible ON visible.item_id = items_items.child_item_id", itemsVisibleToUserSubQuery)
+	itemsQuery := srv.Store.Permissions().MatchingUserAncestors(user).
+		WherePermissionIsAtLeast("view", "info").
+		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
+		Where("items_items.parent_item_id IN (?)", itemParentIDs).
+		Select("DISTINCT items_items.child_item_id")
 
 	var result []groupTeamProgressResponseRow
 	service.MustNotBeError(srv.Store.Groups().

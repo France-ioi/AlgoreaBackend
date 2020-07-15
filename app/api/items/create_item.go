@@ -266,7 +266,8 @@ func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formda
 func constructParentItemIDValidator(
 	store *database.DataStore, user *database.User, parentInfo *parentItemInfo) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		err := store.Items().WhereUserHasPermissionOnItems(user, "edit", "children").
+		err := store.Items().
+			WhereUserHasPermissionOnItems(user, "edit", "children").
 			Where("items.id = ?", fl.Field().Interface().(int64)).Select("items.type").
 			Limit(1).Scan(&parentInfo).Error()
 		if gorm.IsRecordNotFoundError(err) {
@@ -361,8 +362,8 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 
 		var childrenInfo []permissionAndType
 		service.MustNotBeError(store.Items().
-			Where("item_id IN (?)", ids).
-			WhereUserHasViewPermissionOnItems(user, "info").
+			JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
+			Where("items.id IN (?)", ids).
 			WithWriteLock().
 			Select("permissions.*, items.type").
 			Scan(&childrenInfo).Error())

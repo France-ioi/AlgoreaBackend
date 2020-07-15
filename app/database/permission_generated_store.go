@@ -5,24 +5,30 @@ type PermissionGeneratedStore struct {
 	*DataStore
 }
 
-// MatchingUserAncestors returns a composable query of generated permissions matching groups of which the user is member
+// MatchingUserAncestors returns a composable query of generated permissions matching groups of which the user is descendant
 func (s *PermissionGeneratedStore) MatchingUserAncestors(user *User) *DB {
-	db := s.GroupAncestors().UserAncestors(user)
-	userAncestors := db.SubQuery()
-	return s.Joins("JOIN ? AS ancestors ON permissions.group_id = ancestors.ancestor_group_id", userAncestors)
+	return s.MatchingGroupAncestors(user.GroupID)
 }
 
-// WithViewPermissionForGroup returns a composable query for getting access rights
+// MatchingGroupAncestors returns a composable query of generated permissions matching groups of which the given group is descendant
+func (s *PermissionGeneratedStore) MatchingGroupAncestors(groupID int64) *DB {
+	return s.Joins(`
+		JOIN groups_ancestors_active AS ancestors
+			ON ancestors.child_group_id = ? AND ancestors.ancestor_group_id = permissions.group_id`, groupID)
+}
+
+// AggregatedPermissionsForItemsOnWhichGroupHasViewPermission returns a composable query for getting access rights
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items on that the given group has `can_view_generated` >= `viewPermission`.
-func (s *PermissionGeneratedStore) WithViewPermissionForGroup(groupID int64, viewPermission string) *DB {
-	return s.WithPermissionForGroup(groupID, "view", viewPermission)
+func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasViewPermission(groupID int64, viewPermission string) *DB {
+	return s.AggregatedPermissionsForItemsOnWhichGroupHasPermission(groupID, "view", viewPermission)
 }
 
-// WithPermissionForGroup returns a composable query for getting access rights
+// AggregatedPermissionsForItemsOnWhichGroupHasPermission returns a composable query for getting access rights
 // (as *_generated_value) and item ids (as item_id)
 // for all the items on that the given group has 'permissionKind' >= `neededPermission`.
-func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permissionKind, neededPermission string) *DB {
+func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasPermission(
+	groupID int64, permissionKind, neededPermission string) *DB {
 	return s.
 		Select(`
 			item_id,
@@ -31,40 +37,15 @@ func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permiss
 			MAX(can_watch_generated_value) AS can_watch_generated_value,
 			MAX(can_edit_generated_value) AS can_edit_generated_value,
 			MAX(is_owner_generated) AS is_owner_generated`).
-		Joins(`
-			JOIN (
-				SELECT * FROM groups_ancestors_active
-				WHERE groups_ancestors_active.child_group_id = ?
-			) AS ancestors
-			ON ancestors.ancestor_group_id = permissions.group_id`, groupID).
+		Joins("JOIN groups_ancestors_active AS ancestors ON ancestors.ancestor_group_id = permissions.group_id").
+		Where("ancestors.child_group_id = ?", groupID).
 		HavingMaxPermissionAtLeast(permissionKind, neededPermission).
 		Group("permissions.item_id")
 }
 
-// VisibleToGroup returns a composable query for getting access rights
+// AggregatedPermissionsForItemsVisibleToGroup returns a composable query for getting access rights
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items that are visible to the given group.
-func (s *PermissionGeneratedStore) VisibleToGroup(groupID int64) *DB {
-	return s.WithViewPermissionForGroup(groupID, "info")
-}
-
-// VisibleToUser returns a composable query for getting access rights
-// (as can_view_generated_value) and item ids (as item_id)
-// for all the items that are visible to the given user.
-func (s *PermissionGeneratedStore) VisibleToUser(user *User) *DB {
-	return s.VisibleToGroup(user.GroupID)
-}
-
-// WithViewPermissionForUser returns a composable query for getting access rights
-// (as can_view_generated_value) and item ids (as item_id)
-// for all the items on that the given user has `can_view_generated` >= `viewPermission`.
-func (s *PermissionGeneratedStore) WithViewPermissionForUser(user *User, viewPermission string) *DB {
-	return s.WithViewPermissionForGroup(user.GroupID, viewPermission)
-}
-
-// WithPermissionForUser returns a composable query for getting access rights
-// (as *_generated_value) and item ids (as item_id)
-// for all the items on that the given user has 'permissionKind' >= `neededPermission`.
-func (s *PermissionGeneratedStore) WithPermissionForUser(user *User, permissionKind, neededPermission string) *DB {
-	return s.WithPermissionForGroup(user.GroupID, permissionKind, neededPermission)
+func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsVisibleToGroup(groupID int64) *DB {
+	return s.AggregatedPermissionsForItemsOnWhichGroupHasViewPermission(groupID, "info")
 }

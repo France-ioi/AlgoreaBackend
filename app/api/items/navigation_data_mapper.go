@@ -44,19 +44,21 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 	commonAttributes := `
 		items.id, items.type, items.default_language_tag,
 		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated`
-	itemsQuery := items.VisibleByID(groupID, rootID).Select(
-		commonAttributes+`, 0 AS requires_explicit_entry, NULL AS parent_item_id, NULL AS entry_participant_type,
-			0 AS no_score, 0 AS has_visible_children, NULL AS child_order,
-			NULL AS watched_group_can_view, 0 AS can_watch_for_group_results, 0 AS watched_group_avg_score, 0 AS watched_group_all_validated,
-			results.attempt_id,
-			NULL AS score_computed, NULL AS validated, NULL AS started_at, NULL AS latest_activity_at,
-			NULL AS allows_submissions_until, NULL AS ended_at`).
+	itemsQuery := items.ByID(rootID).JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info").
+		Select(
+			commonAttributes+`, 0 AS requires_explicit_entry, NULL AS parent_item_id, NULL AS entry_participant_type,
+				0 AS no_score, 0 AS has_visible_children, NULL AS child_order,
+				NULL AS watched_group_can_view, 0 AS can_watch_for_group_results, 0 AS watched_group_avg_score, 0 AS watched_group_all_validated,
+				results.attempt_id,
+				NULL AS score_computed, NULL AS validated, NULL AS started_at, NULL AS latest_activity_at,
+				NULL AS allows_submissions_until, NULL AS ended_at`).
 		Joins(`
 			JOIN results ON results.participant_id = ? AND results.attempt_id = ? AND
 				results.item_id = items.id AND results.started_at IS NOT NULL`, groupID, attemptID)
 	service.MustNotBeError(itemsQuery.Error())
 
-	hasVisibleChildrenQuery := dataStore.Permissions().VisibleToGroup(groupID).
+	hasVisibleChildrenQuery := dataStore.Permissions().MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "info").
 		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
 		Where("items_items.parent_item_id = items.id").
 		Select("1").Limit(1).SubQuery()
@@ -136,13 +138,19 @@ func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, gro
 	values = append(values, watchedGroupCanViewQuery, canWatchResultEnumIndex, canWatchResultEnumIndex, canWatchResultEnumIndex)
 	childrenWithoutResultsQuery := dataStore.Raw("WITH watched_group_participants AS ? ?",
 		watchedGroupParticipantsQuery,
-		dataStore.Items().VisibleChildrenOfID(groupID, parentItemID).Select(
-			columnList+`,
+		dataStore.Items().
+			Joins("JOIN ? AS permissions ON items.id = permissions.item_id",
+				dataStore.Permissions().AggregatedPermissionsForItemsVisibleToGroup(groupID).
+					Joins("JOIN items_items ON items_items.child_item_id = item_id").
+					Where("items_items.parent_item_id = ?", parentItemID).SubQuery()).
+			Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", parentItemID).
+			Select(
+				columnList+`,
 				child_order, ? AS watched_group_can_view,
 				can_watch_generated_value >= ? AS can_watch_for_group_results,
 				IF(can_watch_generated_value >= ?, watched_group_stats.avg_score, 0) AS watched_group_avg_score,
 				IF(can_watch_generated_value >= ?, watched_group_stats.all_validated, 0) AS watched_group_all_validated`,
-			values...).
+				values...).
 			Joins("JOIN LATERAL ? AS watched_group_stats", watchedGroupAvgScoreQuery).
 			SubQuery()).SubQuery()
 

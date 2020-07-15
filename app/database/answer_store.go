@@ -59,7 +59,8 @@ func (s *AnswerStore) Visible(user *User) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	// the user should have at least 'content' access to the answers.item_id
-	perms := s.Permissions().WithViewPermissionForUser(user, "content")
+	perms := s.Permissions().MatchingUserAncestors(user).WherePermissionIsAtLeast("view", "content").
+		Select("DISTINCT item_id")
 
 	return s.
 		// the user should have at least 'content' access to the answers.item_id

@@ -93,17 +93,16 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			items.id AS item_id,
 			items.allows_multiple_attempts,
 			items.entry_participant_type,
-			COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS title_translation,
-			COALESCE(MAX(user_strings.language_tag), MAX(default_strings.language_tag)) AS title_language_tag`).
+			COALESCE(user_strings.title, default_strings.title) AS title_translation,
+			COALESCE(user_strings.language_tag, default_strings.language_tag) AS title_language_tag`).
 		WhereUserHasViewPermissionOnItems(user, "content_with_descendants").
 		JoinsUserAndDefaultItemStrings(user).
-		Where("items.duration IS NOT NULL").
-		Group("items.id")
+		Where("items.duration IS NOT NULL")
 
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
 		"title": {
 			ColumnName:            "IFNULL(COALESCE(user_strings.title, default_strings.title), '')",
-			ColumnNameForOrdering: "IFNULL(COALESCE(MAX(user_strings.title), MAX(default_strings.title)), '')",
+			ColumnNameForOrdering: "IFNULL(COALESCE(user_strings.title, default_strings.title), '')",
 			FieldType:             "string",
 		},
 		"id": {ColumnName: "items.id", FieldType: "int64"},
@@ -129,12 +128,11 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			Joins("JOIN items_items ON items_items.parent_item_id = items.id AND items_items.child_item_id IN (?)", itemIDs).
 			WhereItemsAreVisible(user.GroupID).
 			JoinsUserAndDefaultItemStrings(user).
-			Group("items_items.parent_item_id, items_items.child_item_id").
-			Order("COALESCE(MAX(user_strings.title), MAX(default_strings.title))").
+			Order("COALESCE(user_strings.title, default_strings.title)").
 			Select(`
 				items_items.child_item_id as child_id,
-				COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS parent_title,
-				COALESCE(MAX(user_strings.language_tag), MAX(default_strings.language_tag)) AS parent_language_tag`).
+				COALESCE(user_strings.title, default_strings.title) AS parent_title,
+				COALESCE(user_strings.language_tag, default_strings.language_tag) AS parent_language_tag`).
 			Scan(&parents).Error())
 
 		parentTitlesMap := make(map[int64][]parentTitle, len(rows))

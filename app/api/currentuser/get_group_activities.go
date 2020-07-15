@@ -203,7 +203,9 @@ func (srv *Service) generateRootItemInfoFromRawData(rawData *rawRootItem) *rootI
 }
 
 func (srv *Service) getRootItemsFromDB(participantID int64, user *database.User, selectActivities bool) []rawRootItem {
-	hasVisibleChildrenQuery := srv.Store.Permissions().VisibleToGroup(participantID).
+	hasVisibleChildrenQuery := srv.Store.Permissions().
+		MatchingGroupAncestors(participantID).
+		WherePermissionIsAtLeast("view", "info").
 		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
 		Where("items_items.parent_item_id = items.id").
 		Select("1").Limit(1).SubQuery()
@@ -216,7 +218,8 @@ func (srv *Service) getRootItemsFromDB(participantID int64, user *database.User,
 	} else {
 		itemsWithResultsQuery = itemsWithResultsQuery.Joins("JOIN items ON items.id = groups.root_skill_id")
 	}
-	itemsWithResultsSubquery := itemsWithResultsQuery.WhereItemsAreVisible(participantID).
+	itemsWithResultsSubquery := itemsWithResultsQuery.
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(participantID, "view", "info").
 		Joins("LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id", participantID).
 		Joins("LEFT JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Select(`

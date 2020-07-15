@@ -211,7 +211,8 @@ type rawItem struct {
 func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database.User) *rawItem {
 	var result rawItem
 
-	query := s.VisibleByID(groupID, rootID).
+	query := s.ByID(rootID).
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info").
 		JoinsUserAndDefaultItemStrings(user).
 		Select(`
 			items.id AS id,
