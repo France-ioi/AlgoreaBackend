@@ -48,19 +48,18 @@ type attemptsListResponseRow struct {
 // swagger:operation GET /items/{item_id}/attempts items attemptsList
 // ---
 // summary: List attempts/results for an item
-// description: Returns attempts with their results of the current participant (the current user or `as_team_id` team)
-//              for the given item within the parent attempt.
+// description: >
+//    Returns attempts of the current participant (the current user or `{as_team_id}` team) with their results
+//    for the given item within the parent attempt.
 //
 //
-//              Restrictions:
-//                * the list of item IDs should be a valid path from a root item
-//                  (`items.is_root`=1 or `items.id`=`groups.root_activity_id|root_skill_id` for one of the participant's ancestor groups),
-//                * `as_team_id` (if given) should be the current user's team,
-//                * the participant should have at least 'content' access on each listed item through that path,
-//                * all the results within the ancestry of `attempt_id`/`parent_attempt_id` on the items path
-//                  except for the last item should be started (`started_at` is not null),
+//    Restrictions:
+//      * `{as_team_id}` (if given) should be the current user's team,
+//      * the participant should have at least 'content' access on the item,
+//      * if `{attempt_id}` is given, it should exist for the participant in order to determine `{parent_attempt_id}`
+//        (we assume that the 'zero attempt' always exists and it is its own parent attempt),
 //
-//              otherwise the 'forbidden' error is returned.
+//    otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: item_id
 //   in: path
@@ -68,12 +67,11 @@ type attemptsListResponseRow struct {
 //   format: int64
 //   required: true
 // - name: parent_attempt_id
-//   description: "`id` of an attempt for the second to the last item in the path.
-//                 This parameter is incompatible with `attempt_id`."
+//   description: "`id` of a parent attempt. This parameter is incompatible with `attempt_id`."
 //   in: query
 //   type: integer
 // - name: attempt_id
-//   description: "`id` of an attempt for the last item in the path.
+//   description: "`id` of an attempt for the `{item_id}`.
 //                 This parameter is incompatible with `parent_attempt_id`."
 //   in: query
 //   type: integer
@@ -114,61 +112,9 @@ type attemptsListResponseRow struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
-
-	attemptID, parentAttemptID, attemptIDSet, apiError := srv.attemptIDOrParentAttemptID(r)
+	itemID, groupID, parentAttemptID, apiError := srv.resolveParametersForListAttempts(r)
 	if apiError != service.NoError {
 		return apiError
-	}
-
-	user := srv.GetUser(r)
-	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
-	}
-
-	if attemptIDSet {
-		err := srv.Store.Attempts().
-			Where("attempts.participant_id = ? AND attempts.id = ?", groupID, attemptID).
-			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
-			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = attempts.participant_id").
-			Joins("LEFT JOIN items_items ON items_items.child_item_id = results.item_id").
-			Joins(`
-				LEFT JOIN results AS parent_result
-					ON parent_result.participant_id = attempts.participant_id AND
-						 parent_result.attempt_id = IF(attempts.attempt.root_item_id = results.item_id, attempts.parent_attempt_id, attempts.id) AND
-						 parent_result.item_id = items_items.parent_item_id`).
-			Joins(`
-				LEFT JOIN permissions_generated
-					ON permissions_generated.group_id = groups_ancestors_active.ancestor_group_id AND
-						 permissions_generated.item_id = items_items.parent_item_id AND
-						 permissions_generated.can_view_generated_value >= ?`, srv.Store.PermissionsGranted().ViewIndexByName("content")).
-			Where("NOT attempts.attempt.root_item_id = results.item_id OR permissions_generated.item_id").
-			PluckFirst("parent_attempt.id", &parentAttemptID).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			return service.InsufficientAccessRightsError
-		}
-		service.MustNotBeError(err)
-	}
-
-	found, err := srv.Store.Permissions().WithViewPermissionForGroup(groupID, "content").
-		Where("item_id = ?", itemID).HasRows()
-	service.MustNotBeError(err)
-	if !found {
-		return service.InsufficientAccessRightsError
 	}
 
 	query := srv.Store.Results().Where("results.participant_id = ?", groupID).
@@ -200,4 +146,57 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 
 	render.Respond(w, r, result)
 	return service.NoError
+}
+
+func (srv *Service) resolveParametersForListAttempts(r *http.Request) (itemID, groupID, parentAttemptID int64, apiError service.APIError) {
+	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	if err != nil {
+		return 0, 0, 0, service.ErrInvalidRequest(err)
+	}
+
+	attemptID, parentAttemptID, attemptIDSet, apiError := srv.attemptIDOrParentAttemptID(r)
+	if apiError != service.NoError {
+		return 0, 0, 0, apiError
+	}
+
+	user := srv.GetUser(r)
+	groupID = user.GroupID
+	if len(r.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
+		if err != nil {
+			return 0, 0, 0, service.ErrInvalidRequest(err)
+		}
+
+		var found bool
+		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return 0, 0, 0, service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
+		}
+	}
+
+	if attemptIDSet {
+		if attemptID != 0 {
+			var result struct{ ParentAttemptID int64 }
+			err = srv.Store.Attempts().
+				Where("attempts.participant_id = ? AND attempts.id = ?", groupID, attemptID).
+				Select("IF(attempts.root_item_id = ?, attempts.parent_attempt_id, attempts.id) AS parent_attempt_id", itemID).
+				Take(&result).Error()
+			if gorm.IsRecordNotFoundError(err) {
+				return 0, 0, 0, service.InsufficientAccessRightsError
+			}
+			service.MustNotBeError(err)
+			parentAttemptID = result.ParentAttemptID
+		}
+	}
+
+	found, err := srv.Store.Permissions().MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "content").
+		Where("item_id = ?", itemID).HasRows()
+
+	service.MustNotBeError(err)
+	if !found {
+		return 0, 0, 0, service.InsufficientAccessRightsError
+	}
+	return itemID, groupID, parentAttemptID, service.NoError
 }

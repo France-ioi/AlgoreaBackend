@@ -22,6 +22,11 @@ Feature: List attempts for current user and item_id - robustness
       | group_id | item_id | can_view_generated |
       | 11       | 210     | content            |
       | 13       | 210     | info               |
+      | 15       | 210     | solution           |
+    And the database has the following table 'attempts':
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | ended_at |
+      | 0  | 11             | 2018-05-29 05:38:38 | null       | null              | null     |
+      | 1  | 13             | 2018-05-29 05:38:38 | null       | null              | null     |
 
   Scenario: User doesn't exist
     Given I am the user with id "404"
@@ -37,37 +42,73 @@ Feature: List attempts for current user and item_id - robustness
 
   Scenario: Wrong sorting
     Given I am the user with id "11"
-    When I send a GET request to "/items/210/attempts?sort=login"
+    When I send a GET request to "/items/210/attempts?parent_attempt_id=0&sort=login"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "login""
 
   Scenario: User doesn't have access to the item
     Given I am the user with id "12"
-    When I send a GET request to "/items/210/attempts?limit=1"
+    When I send a GET request to "/items/210/attempts?attempt_id=0&limit=1"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Wrong as_team_id
     Given I am the user with id "12"
-    When I send a GET request to "/items/210/attempts?as_team_id=abc"
+    When I send a GET request to "/items/210/attempts?attempt_id=0&as_team_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for as_team_id (should be int64)"
 
   Scenario: Team doesn't have access to the item
     Given I am the user with id "12"
-    When I send a GET request to "/items/210/attempts?as_team_id=13"
+    When I send a GET request to "/items/210/attempts?attempt_id=0&as_team_id=13"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: User is not a member of the team
     Given I am the user with id "11"
-    When I send a GET request to "/items/210/attempts?as_team_id=13"
+    When I send a GET request to "/items/210/attempts?attempt_id=0&as_team_id=13"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
 
   Scenario: as_team_id is not a team
     Given I am the user with id "12"
-    When I send a GET request to "/items/210/attempts?as_team_id=14"
+    When I send a GET request to "/items/210/attempts?attempt_id=0&as_team_id=14"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
+
+  Scenario: Wrong attempt_id
+    Given I am the user with id "11"
+    When I send a GET request to "/items/210/attempts?attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for attempt_id (should be int64)"
+
+  Scenario: Wrong parent_attempt_id
+    Given I am the user with id "11"
+    When I send a GET request to "/items/210/attempts?parent_attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for parent_attempt_id (should be int64)"
+
+  Scenario: Both attempt_id & parent_attempt_id are given
+    Given I am the user with id "11"
+    When I send a GET request to "/items/210/attempts?attempt_id=0&parent_attempt_id=0"
+    Then the response code should be 400
+    And the response error message should contain "Only one of attempt_id and parent_attempt_id can be given"
+
+  Scenario: Neither attempt_id nor parent_attempt_id is given
+    Given I am the user with id "11"
+    When I send a GET request to "/items/210/attempts"
+    Then the response code should be 400
+    And the response error message should contain "One of attempt_id and parent_attempt_id should be given"
+
+  Scenario: attempt_id doesn't exist
+    Given I am the user with id "11"
+    When I send a GET request to "/items/210/attempts?attempt_id=1"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: attempt_id doesn't exist for the team
+    Given I am the user with id "12"
+    When I send a GET request to "/items/210/attempts?attempt_id=1&as_team_id=15"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
