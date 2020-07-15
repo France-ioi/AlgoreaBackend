@@ -19,10 +19,10 @@ type CtxConfig struct {
 
 // ConfigItem is one item of the configuration list
 type ConfigItem struct {
-	Domains       []string `mapstructure:"domains"`
-	RootGroup     int64    `mapstructure:"rootGroup"`
-	RootSelfGroup int64    `mapstructure:"rootSelfGroup"`
-	RootTempGroup int64    `mapstructure:"rootTempGroup"`
+	Domains       []string
+	RootGroup     int64
+	RootSelfGroup int64
+	RootTempGroup int64
 }
 
 // ConfigFromContext retrieves the current domain configuration from a context set by the middleware
