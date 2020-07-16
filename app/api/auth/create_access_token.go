@@ -74,6 +74,8 @@ import (
 //       "$ref": "#/definitions/userCreateTmpResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
