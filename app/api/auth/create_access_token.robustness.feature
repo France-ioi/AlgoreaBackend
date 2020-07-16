@@ -3,7 +3,7 @@ Feature: Login callback - robustness
     Given the "Authorization" request header is "Bearer 1234567890"
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 400
-    And the response error message should contain "Only one of the 'code' query parameter and the 'Authorization' header can be given"
+    And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header can be given"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -15,6 +15,50 @@ Feature: Login callback - robustness
     When I send a POST request to "/auth/token"
     Then the response code should be 400
     And the response error message should contain "Missing code"
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "sessions" should stay unchanged
+    And the table "refresh_tokens" should stay unchanged
+
+  Scenario: Invalid JSON data
+    Given the "Content-Type" request header is "application/json"
+    When I send a POST request to "/auth/token" with the following body:
+    """
+    code=1234
+    """
+    Then the response code should be 400
+    And the response error message should contain "Invalid character 'c' looking for beginning of value"
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "sessions" should stay unchanged
+    And the table "refresh_tokens" should stay unchanged
+
+  Scenario: Invalid form data
+    Given the "Content-Type" request header is "application/x-www-form-urlencoded"
+    When I send a POST request to "/auth/token" with the following body:
+    """
+    %%%%
+    """
+    Then the response code should be 400
+    And the response error message should contain "Invalid URL escape "%%%""
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "sessions" should stay unchanged
+    And the table "refresh_tokens" should stay unchanged
+
+  Scenario: Invalid request content type
+    Given the "Content-Type" request header is "application/xml"
+    When I send a POST request to "/auth/token" with the following body:
+    """
+    <code>1234</code>
+    """
+    Then the response code should be 415
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged

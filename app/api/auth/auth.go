@@ -3,6 +3,7 @@ package auth
 
 import (
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -19,7 +20,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Post("/auth/temp-user", service.AppHandler(srv.createTempUser).ServeHTTP)
 
-	router.Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
+	router.With(middleware.AllowContentType("", "application/json", "application/x-www-form-urlencoded")).
+		Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
 	router.With(auth.UserMiddleware(srv.Store.Sessions())).
 		Post("/auth/logout", service.AppHandler(srv.logout).ServeHTTP)
 }
