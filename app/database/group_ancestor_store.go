@@ -7,15 +7,6 @@ type GroupAncestorStore struct {
 
 const groupsAncestorsActive = "groups_ancestors_active"
 
-// UserAncestors returns a composable query of ancestors of user's self group, i.e. groups of which he is a member
-func (s *GroupAncestorStore) UserAncestors(user *User) *DB {
-	result := s.Where(QuoteName(s.tableName)+".child_group_id = ?", user.GroupID)
-	if s.tableName != groupsAncestorsActive {
-		result = result.Where("NOW() < " + QuoteName(s.tableName) + ".expires_at")
-	}
-	return result
-}
-
 // ManagedByUser returns a composable query for getting all the groups_ancestors rows
 // linking manager groups (as ancestor_group_id) to managed groups (as child_group_id)
 // where the manager groups are ancestors of the given user.

@@ -139,10 +139,10 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 	}
 
 	found, err := srv.Store.Permissions().
-		Joins("JOIN results ON results.participant_id = permissions.group_id AND results.item_id = permissions.item_id").
-		Where("permissions.group_id = ?", groupID).
+		MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "content").
+		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", groupID).
 		Where("permissions.item_id = ?", itemID).
-		Where("can_view_generated_value >= ?", srv.Store.PermissionsGranted().ViewIndexByName("content")).
 		Where("results.attempt_id = ?", attemptID).
 		Where("results.started_at IS NOT NULL").
 		HasRows()

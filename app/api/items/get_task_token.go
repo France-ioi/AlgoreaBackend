@@ -128,7 +128,12 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 
 		// the group should have can_view >= 'content' permission on the item
 		err = store.Items().ByID(itemID).
-			WhereGroupHasViewPermissionOnItems(groupID, "content").
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", groupID).
+			Joins(`
+				JOIN permissions_generated
+					ON permissions_generated.item_id = items.id AND
+						 permissions_generated.group_id = groups_ancestors_active.ancestor_group_id`).
+			WherePermissionIsAtLeast("view", "content").
 			Where("items.type IN('Task','Course')").
 			Select(`
 					can_view_generated_value = ? AS access_solutions,

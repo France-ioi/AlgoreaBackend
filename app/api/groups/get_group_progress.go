@@ -124,15 +124,15 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
-	itemsVisibleToUserSubQuery := srv.Store.Permissions().VisibleToUser(user).SubQuery()
-
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
 	// There should not be many of them
 	var itemIDs []interface{}
-	service.MustNotBeError(srv.Store.ItemItems().Where("parent_item_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS visible ON visible.item_id = items_items.child_item_id", itemsVisibleToUserSubQuery).
+	service.MustNotBeError(srv.Store.Permissions().MatchingUserAncestors(user).
+		Joins("JOIN items_items ON items_items.child_item_id = item_id").
+		Where("items_items.parent_item_id IN (?)", itemParentIDs).
+		WherePermissionIsAtLeast("view", "info").
 		Order("items_items.child_item_id").
-		Pluck("items_items.child_item_id", &itemIDs).Error())
+		Pluck("DISTINCT items_items.child_item_id", &itemIDs).Error())
 	if len(itemIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
 		return service.NoError
@@ -204,7 +204,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				SELECT score_computed AS score, validated, hints_cached, submissions, participant_id
 				FROM results
 				WHERE participant_id = end_members.id AND item_id = items.id
-				ORDER BY participant_id, item_id, score DESC, score_obtained_at
+				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
 			) AS result_with_best_score ON 1`)
 

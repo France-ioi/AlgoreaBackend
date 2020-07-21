@@ -26,8 +26,6 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 	}{
 		{methodToCall: "Visible", column: "id", expected: []int64{190, 191, 192, 1900, 1901, 1902, 19000, 19001, 19002}},
 		{methodToCall: "VisibleByID", args: []interface{}{int64(191)}, column: "id", expected: []int64{191}},
-		{methodToCall: "VisibleChildrenOfID", args: []interface{}{int64(190)}, column: "items.id", expected: []int64{1900, 1901, 1902}},
-		{methodToCall: "VisibleGrandChildrenOfID", args: []interface{}{int64(190)}, column: "items.id", expected: []int64{19000, 19001, 19002}},
 	}
 	for _, testCase := range tests {
 		testCase := testCase
@@ -748,10 +746,9 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	}))
 
 	type args struct {
-		ids                               []int64
-		groupID                           int64
-		attemptID                         int64
-		requireContentAccessToTheLastItem bool
+		ids       []int64
+		groupID   int64
+		attemptID int64
 	}
 	tests := []struct {
 		name                 string
@@ -801,30 +798,20 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			args: args{ids: []int64{6, 8}, groupID: 101, attemptID: 202},
 		},
 		{
-			name:                 "no content access to the last item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, attemptID: 201, requireContentAccessToTheLastItem: true},
-			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
-			wantAttemptNumberMap: map[int64]int{},
+			name: "no access to the last item",
+			args: args{ids: []int64{2, 4}, groupID: 104, attemptID: 201},
 		},
 		{
-			name: "no access to the last item when requireContentAccessToTheLastItem = false",
-			args: args{ids: []int64{2, 4}, groupID: 104, attemptID: 201, requireContentAccessToTheLastItem: false},
-		},
-		{
-			name:                 "content access to the last item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{4, 6}, groupID: 101, attemptID: 201, requireContentAccessToTheLastItem: true},
+			name:                 "content access to the last item",
+			args:                 args{ids: []int64{4, 6}, groupID: 101, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{4: 200, 6: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "info access to the last item when requireContentAccessToTheLastItem = false",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, attemptID: 201, requireContentAccessToTheLastItem: false},
+			name:                 "info access to the last item",
+			args:                 args{ids: []int64{2, 4}, groupID: 103, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
-		},
-		{
-			name: "no access to the last item when requireContentAccessToTheLastItem = true",
-			args: args{ids: []int64{2, 4}, groupID: 104, attemptID: 201, requireContentAccessToTheLastItem: true},
 		},
 		{name: "no content access to the second to the last item", args: args{ids: []int64{2, 4, 6}, groupID: 105, attemptID: 202}},
 		{name: "no content access to the first item", args: args{ids: []int64{2, 4, 6}, groupID: 106, attemptID: 202}},

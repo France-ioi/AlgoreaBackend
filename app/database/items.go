@@ -1,5 +1,7 @@
 package database
 
+import "fmt"
+
 // WhereUserHasViewPermissionOnItems returns a subview of the items
 // on that the given user has `can_view_generated` >= `viewPermission`
 // basing on the given view.
@@ -7,20 +9,16 @@ func (conn *DB) WhereUserHasViewPermissionOnItems(user *User, viewPermission str
 	return conn.WhereUserHasPermissionOnItems(user, "view", viewPermission)
 }
 
-// WhereGroupHasViewPermissionOnItems returns a subview of the items
-// on that the given group has `can_view_generated` >= `viewPermission`
-// basing on the given view.
-func (conn *DB) WhereGroupHasViewPermissionOnItems(groupID int64, viewPermission string) *DB {
-	return conn.WhereGroupHasPermissionOnItems(groupID, "view", viewPermission)
-}
-
 // WhereUserHasPermissionOnItems returns a subview of the items
 // on that the given user has `can_view_generated` >= `viewPermission`
 // basing on the given view.
 func (conn *DB) WhereUserHasPermissionOnItems(user *User, permissionKind, neededPermission string) *DB {
-	itemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().
-		WithPermissionForUser(user, permissionKind, neededPermission)
-	return conn.Joins("JOIN ? AS permissions ON permissions.item_id = items.id", itemsPerms.SubQuery())
+	return conn.WhereGroupHasPermissionOnItems(user.GroupID, permissionKind, neededPermission)
+}
+
+// WhereItemsAreVisible returns a subview of the visible items for the given group basing on the given view
+func (conn *DB) WhereItemsAreVisible(groupID int64) *DB {
+	return conn.WhereGroupHasPermissionOnItems(groupID, "view", "info")
 }
 
 // WhereGroupHasPermissionOnItems returns a subview of the items
@@ -28,14 +26,12 @@ func (conn *DB) WhereUserHasPermissionOnItems(user *User, permissionKind, needed
 // basing on the given view.
 func (conn *DB) WhereGroupHasPermissionOnItems(groupID int64, permissionKind, neededPermission string) *DB {
 	itemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().
-		WithPermissionForGroup(groupID, permissionKind, neededPermission)
-	return conn.Joins("JOIN ? AS permissions ON permissions.item_id = items.id", itemsPerms.SubQuery())
-}
-
-// WhereItemsAreVisible returns a subview of the visible items for the given group basing on the given view
-func (conn *DB) WhereItemsAreVisible(groupID int64) *DB {
-	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().VisibleToGroup(groupID)
-	return conn.Joins("JOIN ? as visible ON visible.item_id = items.id", visibleItemsPerms.SubQuery())
+		MatchingGroupAncestors(groupID).
+		Where("permissions.item_id = items.id").
+		Where(fmt.Sprintf("%s >= ?", permissionColumnByKind(permissionKind)),
+			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, neededPermission)).
+		Select("1").Limit(1)
+	return conn.Where("EXISTS(?)", itemsPerms.QueryExpr())
 }
 
 // JoinsUserAndDefaultItemStrings joins items_strings with the given view twice

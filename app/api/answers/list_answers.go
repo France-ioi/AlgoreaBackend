@@ -88,7 +88,8 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 		return service.ErrInvalidRequest(itemIDError)
 	}
 
-	found, err := srv.Store.Permissions().WithViewPermissionForUser(user, "content").
+	found, err := srv.Store.Permissions().MatchingUserAncestors(user).
+		WherePermissionIsAtLeast("view", "content").
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
