@@ -37,6 +37,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
 	router.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
 	router.Get("/items/{item_id}/attempts/{attempt_id}/task-token", service.AppHandler(srv.getTaskToken).ServeHTTP)
+	router.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
 	router.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
 	router.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
 	router.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)

@@ -21,16 +21,6 @@ type Ctx struct {
 	service *service.Base
 }
 
-// SetAuthConfig update the auth config used by the API
-func (ctx *Ctx) SetAuthConfig(authConfig *viper.Viper) {
-	ctx.service.AuthConfig = authConfig
-}
-
-// SetDomainsConfig update the domains config used by the API
-func (ctx *Ctx) SetDomainsConfig(domainsConfig []domain.ConfigItem) {
-	ctx.service.DomainConfig = domainsConfig
-}
-
 // Router provides routes for the whole API
 func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.ConfigItem,
 	tokenConfig *token.Config) (*Ctx, *chi.Mux) {

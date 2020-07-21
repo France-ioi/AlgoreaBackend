@@ -4,6 +4,7 @@ package database
 type User struct {
 	GroupID             int64
 	Login               string
+	LoginID             *int64
 	DefaultLanguage     string
 	IsAdmin             bool
 	IsTempUser          bool `sql:"column:temp_user"`
@@ -18,6 +19,10 @@ func (u *User) Clone() *User {
 	if result.NotificationsReadAt != nil {
 		notificationReadDateCopy := *result.NotificationsReadAt
 		result.NotificationsReadAt = &notificationReadDateCopy
+	}
+	if result.LoginID != nil {
+		loginIDCopy := *result.LoginID
+		result.LoginID = &loginIDCopy
 	}
 	if result.AccessGroupID != nil {
 		accessGroupIDCopy := *result.AccessGroupID

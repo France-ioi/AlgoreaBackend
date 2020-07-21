@@ -54,7 +54,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -87,7 +87,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -120,7 +120,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -153,7 +153,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -186,7 +186,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -219,7 +219,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -252,7 +252,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -285,7 +285,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "10",
         "idAttempt": "101/2",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -318,7 +318,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:
@@ -350,7 +350,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "10",
         "idAttempt": "101/1",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
     And the following token "hintRequestToken" signed by the task platform is distributed:

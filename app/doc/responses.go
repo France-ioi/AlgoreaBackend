@@ -57,6 +57,19 @@ type successResponse struct {
 	}
 }
 
+// Success or failure
+// swagger:response publishedOrFailedResponse
+type publishedOrFailedResponse struct {
+	// in: body
+	Body struct {
+		// enum: published,failed
+		// required: true
+		Message string `json:"message"`
+		// required: true
+		Success bool `json:"success"`
+	}
+}
+
 // The request has successfully deleted the object
 // swagger:response deletedResponse
 type deletedResponse struct {

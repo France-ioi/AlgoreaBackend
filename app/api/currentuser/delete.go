@@ -69,9 +69,15 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 			PluckFirst("login_id", &loginID).Error())
 	}
 	service.MustNotBeError(srv.Store.Users().DeleteWithTraps(user))
+
 	if !user.IsTempUser {
-		service.MustNotBeError(loginmodule.NewClient(srv.AuthConfig.GetString("LoginModuleURL")).
-			UnlinkClient(r.Context(), srv.AuthConfig.GetString("ClientID"), srv.AuthConfig.GetString("ClientSecret"), loginID))
+		var result bool
+		result, err = loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
+			UnlinkClient(r.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"), loginID)
+		service.MustNotBeError(err)
+		if !result {
+			return service.ErrUnexpected(errors.New("login module failed"))
+		}
 	}
 
 	render.Respond(w, r, service.DeletionSuccess(nil))

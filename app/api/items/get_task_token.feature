@@ -62,7 +62,7 @@ Feature: Get a task token with a refreshed attempt for an item
           "nbHintsGiven": "4",
           "sHintsRequested": "[1,2,3,4]",
           "randomSeed": "12601247502642542026",
-          "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+          "platformName": "{{app().Config.GetString("token.platformName")}}"
         }
       }
       """
@@ -105,7 +105,7 @@ Feature: Get a task token with a refreshed attempt for an item
           "sHintsRequested": "[1,2,3,4]",
           "sSupportedLangProg": "c,python",
           "randomSeed": "17292903417420170135",
-          "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+          "platformName": "{{app().Config.GetString("token.platformName")}}"
         }
       }
       """
@@ -142,7 +142,7 @@ Feature: Get a task token with a refreshed attempt for an item
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "0",
           "randomSeed": "2147886519731235493",
-          "platformName": "{{app().Config.GetString("token.PlatformName")}}"
+          "platformName": "{{app().Config.GetString("token.platformName")}}"
         }
       }
       """

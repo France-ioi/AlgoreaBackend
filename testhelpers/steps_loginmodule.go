@@ -4,17 +4,15 @@ package testhelpers
 
 import (
 	"bytes"
-	"crypto/aes"
-	"encoding/base64"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/cucumber/messages-go/v10"
 	"github.com/spf13/viper"
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
 )
 
 func (ctx *TestContext) appAuthConfig() *viper.Viper {
@@ -127,38 +125,62 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 	if err != nil {
 		return err
 	}
-	bodyBase64, err := ctx.encodeLoginModuleResponse(preprocessedBody)
+
+	clientSecret := ctx.appAuthConfig().GetString("clientSecret")
+	encodedResponseBody := loginmodule.Encode([]byte(preprocessedBody), clientSecret)
+
+	responder := httpmock.NewStringResponder(statusCode, encodedResponseBody)
+	requestBody, err := loginmodule.EncodeBody(map[string]string{"user_id": preprocessedUserID},
+		ctx.appAuthConfig().GetString("clientID"), clientSecret)
+	if err != nil {
+		return err
+	}
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+		ctx.appAuthConfig().GetString("loginModuleURL")+"/platform_api/accounts_manager/unlink_client",
+		responder, httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
+		httpmock.WithBody(bytes.NewReader(requestBody))))
+	return nil
+}
+
+func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns( // nolint
+	userID, contentID, score string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	preprocessedUserID, err := ctx.preprocessString(userID)
+	if err != nil {
+		return err
+	}
+	preprocessedConentID, err := ctx.preprocessString(contentID)
+	if err != nil {
+		return err
+	}
+	preprocessedScore, err := ctx.preprocessString(score)
+	if err != nil {
+		return err
+	}
+	preprocessedBody, err := ctx.preprocessString(body.Content)
 	if err != nil {
 		return err
 	}
 
-	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
-	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.appAuthConfig().GetString("LoginModuleURL")+"/platform_api/accounts_manager/unlink_client?client_id="+
-			url.QueryEscape(ctx.appAuthConfig().GetString("ClientID"))+"&user_id="+url.QueryEscape(preprocessedUserID), responder))
-	return nil
-}
+	clientSecret := ctx.appAuthConfig().GetString("clientSecret")
+	encodedResponseBody := loginmodule.Encode([]byte(preprocessedBody), clientSecret)
 
-func (ctx *TestContext) encodeLoginModuleResponse(preprocessedBody string) (string, error) {
-	const size = 16
-	mod := len(preprocessedBody) % size
-	if mod != 0 {
-		padding := byte(size - mod)
-		preprocessedBody += strings.Repeat(string(padding), int(padding))
-	}
-
-	data := []byte(preprocessedBody)
-	cipher, err := aes.NewCipher([]byte(ctx.appAuthConfig().GetString("ClientSecret"))[0:16])
+	responder := httpmock.NewStringResponder(statusCode, encodedResponseBody)
+	requestBody, err := loginmodule.EncodeBody(
+		map[string]string{
+			"user_id":    preprocessedUserID,
+			"content_id": preprocessedConentID,
+			"score":      preprocessedScore,
+		},
+		ctx.appAuthConfig().GetString("clientID"), clientSecret)
 	if err != nil {
-		return "", err
+		return err
 	}
-	encrypted := make([]byte, len(data))
-	for bs, be := 0, size; bs < len(data); bs, be = bs+size, be+size {
-		cipher.Encrypt(encrypted[bs:be], data[bs:be])
-	}
-
-	bodyBase64 := base64.StdEncoding.EncodeToString(encrypted)
-	return bodyBase64, nil
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+		ctx.appAuthConfig().GetString("loginModuleURL")+"/platform_api/lti_result/send",
+		responder, httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
+		httpmock.WithBody(bytes.NewReader(requestBody))))
+	return nil
 }
 
 func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( // nolint
@@ -182,17 +204,26 @@ func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns( 
 	if err != nil {
 		return err
 	}
-	bodyBase64, err := ctx.encodeLoginModuleResponse(preprocessedBody)
+	clientSecret := ctx.appAuthConfig().GetString("clientSecret")
+	encodedResponseBody := loginmodule.Encode([]byte(preprocessedBody), clientSecret)
+
+	parsedParams, err := url.ParseQuery(preprocessedParams)
+	if err != nil {
+		return err
+	}
+	paramsMap := make(map[string]string, len(parsedParams))
+	for key := range parsedParams {
+		paramsMap[key] = parsedParams.Get(key)
+	}
+	requestBody, err := loginmodule.EncodeBody(paramsMap, ctx.appAuthConfig().GetString("clientID"), clientSecret)
 	if err != nil {
 		return err
 	}
 
-	urlValues, err := url.ParseQuery("client_id=" + url.QueryEscape(ctx.appAuthConfig().GetString("ClientID")) + "&" + preprocessedParams)
-	if err != nil {
-		return err
-	}
-	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
+	responder := httpmock.NewStringResponder(statusCode, encodedResponseBody)
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.appAuthConfig().GetString("LoginModuleURL")+"/platform_api/accounts_manager/"+endpoint+"?"+urlValues.Encode(), responder))
+		ctx.appAuthConfig().GetString("LoginModuleURL")+"/platform_api/accounts_manager/"+endpoint,
+		responder, httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
+		httpmock.WithBody(bytes.NewReader(requestBody))))
 	return nil
 }

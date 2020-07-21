@@ -45,7 +45,7 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 			if len(accessToken) <= 2000 {
 				err := sessionStore.
 					Select(`
-						users.login, users.is_admin, users.group_id, users.access_group_id,
+						users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notifications_read_at,
 						users.default_language`).
 					Joins("JOIN users ON users.group_id = sessions.user_id").

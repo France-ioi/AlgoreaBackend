@@ -1,6 +1,6 @@
 server:
   port: 8080
-  rootpath: "/" # the path at which the router is mounted
+  rootPath: "/" # the path at which the router is mounted
   compress: false # whether compression is enabled by default
 auth:
   loginModuleURL: "http://127.0.0.1:8000"
@@ -30,6 +30,6 @@ logging:
 domains:
   -
     domains: [default] # of a list of domains
-    rootGroup: 1
-    rootSelfGroup: 2
-    rootTempGroup: 4
+    rootGroup: 10
+    rootSelfGroup: 3
+    rootTempGroup: 2
