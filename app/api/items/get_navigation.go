@@ -3,7 +3,6 @@ package items
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -41,10 +40,10 @@ type navigationItemChild struct {
 	// required:true
 	Results []structures.ItemResult `json:"results"`
 
-	WatchedGroup *navigationItemChildWatchedGroup `json:"watched_group,omitempty"`
+	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 }
 
-type navigationItemChildWatchedGroup struct {
+type itemWatchedGroupStat struct {
 	// group's view permission on this item
 	// required: true
 	// enum: none,info,content,content_with_descendants,solution
@@ -58,7 +57,7 @@ type navigationItemChildWatchedGroup struct {
 	AllValidated *bool `json:"all_validated,omitempty"`
 }
 
-// swagger:operation GET /items/{item_id}/navigation items itemNavigationGet
+// swagger:operation GET /items/{item_id}/navigation items itemNavigationView
 // ---
 // summary: Get navigation data
 // description: >
@@ -154,7 +153,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	for index := range rawData {
 		idMap[rawData[index].ID] = &rawData[index]
 	}
-	srv.fillNavigationWithChildren(rawData, watchedGroupIDSet, &response)
+	srv.fillNavigationWithChildren(rawData, watchedGroupIDSet, &response.Children)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -204,8 +203,8 @@ func (srv *Service) resolveAttemptIDForNavigationData(httpReq *http.Request, gro
 }
 
 func (srv *Service) fillNavigationWithChildren(
-	rawData []rawNavigationItem, watchedGroupIDSet bool, response *itemNavigationResponse) {
-	response.Children = make([]navigationItemChild, 0, len(rawData)-1)
+	rawData []rawNavigationItem, watchedGroupIDSet bool, target *[]navigationItemChild) {
+	*target = make([]navigationItemChild, 0, len(rawData)-1)
 	var currentChild *navigationItemChild
 	if len(rawData) > 0 && rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
 		return // Only 'info' access to the parent item
@@ -225,45 +224,24 @@ func (srv *Service) fillNavigationWithChildren(
 				BestScore:             rawData[index].BestScore,
 				Results:               make([]structures.ItemResult, 0, 1),
 			}
-			if watchedGroupIDSet {
-				child.WatchedGroup = &navigationItemChildWatchedGroup{
-					CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData[index].WatchedGroupCanView),
-				}
-				if rawData[index].CanWatchForGroupResults {
-					child.WatchedGroup.AvgScore = &rawData[index].WatchedGroupAvgScore
-					child.WatchedGroup.AllValidated = &rawData[index].WatchedGroupAllValidated
-				}
-			}
-			response.Children = append(response.Children, child)
-			currentChild = &response.Children[len(response.Children)-1]
+			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
+			*target = append(*target, child)
+			currentChild = &(*target)[len(*target)-1]
 		}
 
-		if rawData[index].AttemptID != nil {
-			currentChild.Results = append(currentChild.Results, structures.ItemResult{
-				AttemptID:                     *rawData[index].AttemptID,
-				ScoreComputed:                 rawData[index].ScoreComputed,
-				Validated:                     rawData[index].Validated,
-				StartedAt:                     (*time.Time)(rawData[index].StartedAt),
-				LatestActivityAt:              (*time.Time)(rawData[index].LatestActivityAt),
-				EndedAt:                       (*time.Time)(rawData[index].EndedAt),
-				AttemptAllowsSubmissionsUntil: time.Time(rawData[index].AttemptAllowsSubmissionsUntil),
-			})
+		result := rawData[index].asItemResult()
+		if result != nil {
+			currentChild.Results = append(currentChild.Results, *result)
 		}
 	}
 }
 
 func (srv *Service) fillItemCommonFieldsWithDBData(rawData *rawNavigationItem) *structures.ItemCommonFields {
 	result := &structures.ItemCommonFields{
-		ID:     rawData.ID,
-		Type:   rawData.Type,
-		String: structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-		Permissions: structures.ItemPermissions{
-			CanView:      srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
-			CanGrantView: srv.Store.PermissionsGranted().GrantViewNameByIndex(rawData.CanGrantViewGeneratedValue),
-			CanWatch:     srv.Store.PermissionsGranted().WatchNameByIndex(rawData.CanWatchGeneratedValue),
-			CanEdit:      srv.Store.PermissionsGranted().EditNameByIndex(rawData.CanEditGeneratedValue),
-			IsOwner:      rawData.IsOwnerGenerated,
-		},
+		ID:          rawData.ID,
+		Type:        rawData.Type,
+		String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
+		Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(srv.Store.PermissionsGranted()),
 	}
 	return result
 }

@@ -17,10 +17,10 @@ Feature: Get item view information
       | fr         | 0         | 17       | fr               |
       | info       | 0         | 22       |                  |
     And the database has the following table 'items':
-      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | prompt_to_join_group_by_code | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
-      | 200 | Course  | en                   | true     | true                      | All             | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | true            | http://someurl | true     | true          |
-      | 210 | Chapter | en                   | true     | true                      | All             | All                              | false              | 10                  | true                     | User                   | 10:20:31 | true                         | true              | true      | forceYes    | true            | null           | true     | true          |
-      | 220 | Chapter | en                   | true     | true                      | All             | All                              | false              | 10                  | true                     | Team                   | 10:20:32 | true                         | true              | true      | forceYes    | true            | null           | true     | true          |
+      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | requires_explicit_entry | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | prompt_to_join_group_by_code | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
+      | 200 | Course  | en                   | true     | true                      | All             | true                    | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | true            | http://someurl | true     | true          |
+      | 210 | Chapter | en                   | true     | true                      | All             | false                   | All                              | false              | 10                  | true                     | User                   | 10:20:31 | true                         | true              | true      | forceYes    | true            | null           | true     | true          |
+      | 220 | Chapter | en                   | true     | true                      | All             | false                   | All                              | false              | 10                  | true                     | Team                   | 10:20:32 | true                         | true              | true      | forceYes    | true            | null           | true     | true          |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
       | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
@@ -42,23 +42,23 @@ Feature: Get item view information
       | 200            | 210           | 2           | Discovery | as_info                  |
       | 200            | 220           | 1           | Discovery | as_info                  |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 11       | 200     | solution                 |
-      | 11       | 210     | solution                 |
-      | 11       | 220     | solution                 |
-      | 13       | 200     | solution                 |
-      | 13       | 210     | solution                 |
-      | 13       | 220     | solution                 |
-      | 15       | 210     | content_with_descendants |
-      | 17       | 200     | solution                 |
-      | 17       | 210     | solution                 |
-      | 17       | 220     | solution                 |
-      | 22       | 200     | solution                 |
-      | 22       | 210     | info                     |
-      | 22       | 220     | info                     |
-      | 26       | 200     | solution                 |
-      | 26       | 210     | info                     |
-      | 26       | 220     | info                     |
+      | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
+      | 11       | 200     | solution                 | enter                    | children           | result              | true               |
+      | 11       | 210     | solution                 | none                     | none               | none                | false              |
+      | 11       | 220     | solution                 | none                     | none               | none                | false              |
+      | 13       | 200     | solution                 | none                     | none               | none                | false              |
+      | 13       | 210     | solution                 | none                     | none               | none                | false              |
+      | 13       | 220     | solution                 | none                     | none               | none                | false              |
+      | 15       | 210     | content_with_descendants | none                     | none               | none                | false              |
+      | 17       | 200     | solution                 | none                     | none               | none                | false              |
+      | 17       | 210     | solution                 | none                     | none               | none                | false              |
+      | 17       | 220     | solution                 | none                     | none               | none                | false              |
+      | 22       | 200     | solution                 | none                     | none               | none                | false              |
+      | 22       | 210     | info                     | none                     | none               | none                | false              |
+      | 22       | 220     | info                     | none                     | none               | none                | false              |
+      | 26       | 200     | solution                 | none                     | none               | none                | false              |
+      | 26       | 210     | info                     | none                     | none               | none                | false              |
+      | 26       | 220     | info                     | none                     | none               | none                | false              |
     And the database has the following table 'languages':
       | tag |
       | fr  |
@@ -74,7 +74,7 @@ Feature: Get item view information
       | 0          | 13             | 210     | 2019-05-30 11:00:00 |
       | 0          | 13             | 220     | null                |
 
-  Scenario: Full access on all items (as user)
+  Scenario: Full access on the item (as user)
     Given I am the user with id "11"
     When I send a GET request to "/items/200"
     Then the response code should be 200
@@ -85,16 +85,18 @@ Feature: Get item view information
       "type": "Course",
       "display_details_in_parent": true,
       "validation_type": "All",
+      "requires_explicit_entry": true,
       "entry_min_admitted_members_ratio": "All",
       "entry_frozen_teams": false,
       "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
       "allows_multiple_attempts": true,
       "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
       "prompt_to_join_group_by_code": true,
-      "has_attempts": true,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -113,69 +115,17 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "children": [
-        {
-          "id": "220",
-          "order": 1,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "Team",
-          "duration": "10:20:32",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": true,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter B",
-            "image_url": "http://example.com/my2.jpg",
-            "subtitle": "Subtitle 2",
-            "description": "Description 2"
-          }
-        },
-        {
-          "id": "210",
-
-          "order": 2,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "User",
-          "duration": "10:20:31",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter A",
-            "image_url": "http://example.com/my1.jpg",
-            "subtitle": "Subtitle 1",
-            "description": "Description 1"
-          }
-        }
-      ]
+      "permissions": {
+        "can_edit": "children",
+        "can_grant_view": "enter",
+        "can_view": "solution",
+        "can_watch": "result",
+        "is_owner": true
+      }
     }
     """
 
-  Scenario: Chapter as a root node (full access, as user)
+  Scenario: Chapter (full access, as user)
     Given I am the user with id "11"
     When I send a GET request to "/items/210"
     Then the response code should be 200
@@ -186,16 +136,18 @@ Feature: Get item view information
       "type": "Chapter",
       "display_details_in_parent": true,
       "validation_type": "All",
+      "requires_explicit_entry": false,
       "entry_min_admitted_members_ratio": "All",
       "entry_frozen_teams": false,
       "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
       "allows_multiple_attempts": true,
       "entry_participant_type": "User",
       "duration": "10:20:31",
       "no_score": true,
       "default_language_tag": "en",
       "prompt_to_join_group_by_code": true,
-      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -211,11 +163,17 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "children": []
+      "permissions": {
+        "can_edit": "none",
+        "can_grant_view": "none",
+        "can_view": "solution",
+        "can_watch": "none",
+        "is_owner": false
+      }
     }
     """
 
-  Scenario: Chapter as a root node (without solution access, as user)
+  Scenario: Chapter (without solution access, as user)
     Given I am the user with id "14"
     When I send a GET request to "/items/210"
     Then the response code should be 200
@@ -227,15 +185,17 @@ Feature: Get item view information
       "display_details_in_parent": true,
       "validation_type": "All",
       "entry_min_admitted_members_ratio": "All",
+      "requires_explicit_entry": false,
       "entry_frozen_teams": false,
       "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
       "allows_multiple_attempts": true,
       "entry_participant_type": "User",
       "duration": "10:20:31",
       "no_score": true,
       "default_language_tag": "en",
       "prompt_to_join_group_by_code": true,
-      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -250,11 +210,17 @@ Feature: Get item view information
         "description": "Description 1"
       },
 
-      "children": []
+      "permissions": {
+        "can_edit": "none",
+        "can_grant_view": "none",
+        "can_view": "content_with_descendants",
+        "can_watch": "none",
+        "is_owner": false
+      }
     }
     """
 
-  Scenario: Full access on all items (with user language, as user)
+  Scenario: Full access on the item (with user language, as user)
     Given I am the user with id "17"
     When I send a GET request to "/items/200"
     Then the response code should be 200
@@ -265,16 +231,18 @@ Feature: Get item view information
       "type": "Course",
       "display_details_in_parent": true,
       "validation_type": "All",
+      "requires_explicit_entry": true,
       "entry_min_admitted_members_ratio": "All",
       "entry_frozen_teams": false,
       "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
       "allows_multiple_attempts": true,
       "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
       "prompt_to_join_group_by_code": true,
-      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -293,166 +261,17 @@ Feature: Get item view information
         "edu_comment": "Un commentaire"
       },
 
-      "children": [
-        {
-          "id": "220",
-          "order": 1,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "Team",
-          "duration": "10:20:32",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "fr",
-            "title": "Chapitre B",
-            "image_url": "http://example.com/mf2.jpg",
-            "subtitle": "Sous-titre 2",
-            "description": "texte 2"
-          }
-        },
-        {
-          "id": "210",
-
-          "order": 2,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "User",
-          "duration": "10:20:31",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "fr",
-            "title": "Chapitre A",
-            "image_url": "http://example.com/mf1.jpg",
-            "subtitle": "Sous-titre 1",
-            "description": "texte 1"
-          }
-        }
-      ]
+      "permissions": {
+        "can_edit": "none",
+        "can_grant_view": "none",
+        "can_view": "solution",
+        "can_watch": "none",
+        "is_owner": false
+      }
     }
     """
 
-  Scenario: Info access on children (as user)
-    Given I am the user with id "22"
-    When I send a GET request to "/items/200"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "id": "200",
-      "type": "Course",
-      "display_details_in_parent": true,
-      "validation_type": "All",
-      "entry_min_admitted_members_ratio": "All",
-      "entry_frozen_teams": false,
-      "entry_max_team_size": 10,
-      "allows_multiple_attempts": true,
-      "entry_participant_type": "Team",
-      "duration": "10:20:30",
-      "no_score": true,
-      "default_language_tag": "en",
-      "prompt_to_join_group_by_code": true,
-      "has_attempts": false,
-
-      "title_bar_visible": true,
-      "read_only": true,
-      "full_screen": "forceYes",
-      "show_user_infos": true,
-      "url": "http://someurl",
-      "uses_api": true,
-      "hints_allowed": true,
-
-      "string": {
-        "language_tag": "en",
-        "title": "Category 1",
-        "image_url": "http://example.com/my0.jpg",
-        "subtitle": "Subtitle 0",
-        "description": "Description 0",
-        "edu_comment": "Some comment"
-      },
-
-      "children": [
-        {
-          "id": "220",
-          "order": 1,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "Team",
-          "duration": "10:20:32",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter B",
-            "image_url": "http://example.com/my2.jpg"
-          }
-        },
-        {
-          "id": "210",
-
-          "order": 2,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "User",
-          "duration": "10:20:31",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter A",
-            "image_url": "http://example.com/my1.jpg"
-          }
-        }
-      ]
-    }
-    """
-
-  Scenario: Full access on all items (as team)
+  Scenario: Full access on the item (as team)
     Given I am the user with id "11"
     When I send a GET request to "/items/200?as_team_id=13"
     Then the response code should be 200
@@ -463,16 +282,18 @@ Feature: Get item view information
       "type": "Course",
       "display_details_in_parent": true,
       "validation_type": "All",
+      "requires_explicit_entry": true,
       "entry_min_admitted_members_ratio": "All",
       "entry_frozen_teams": false,
       "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
       "allows_multiple_attempts": true,
       "entry_participant_type": "Team",
       "duration": "10:20:30",
       "no_score": true,
       "default_language_tag": "en",
       "prompt_to_join_group_by_code": true,
-      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
@@ -491,161 +312,57 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "children": [
-        {
-          "id": "220",
-          "order": 1,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "Team",
-          "duration": "10:20:32",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter B",
-            "image_url": "http://example.com/my2.jpg",
-            "subtitle": "Subtitle 2",
-            "description": "Description 2"
-          }
-        },
-        {
-          "id": "210",
-
-          "order": 2,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "User",
-          "duration": "10:20:31",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": true,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter A",
-            "image_url": "http://example.com/my1.jpg",
-            "subtitle": "Subtitle 1",
-            "description": "Description 1"
-          }
-        }
-      ]
+      "permissions": {
+        "can_edit": "none",
+        "can_grant_view": "none",
+        "can_view": "solution",
+        "can_watch": "none",
+        "is_owner": false
+      }
     }
     """
 
-  Scenario: Info access on children (as team)
-    Given I am the user with id "11"
-    When I send a GET request to "/items/200?as_team_id=26"
+  Scenario: Chapter (info access, as user)
+    Given I am the user with id "22"
+    When I send a GET request to "/items/210"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
-      "id": "200",
-      "type": "Course",
+      "id": "210",
+      "type": "Chapter",
       "display_details_in_parent": true,
       "validation_type": "All",
+      "requires_explicit_entry": false,
       "entry_min_admitted_members_ratio": "All",
       "entry_frozen_teams": false,
       "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
       "allows_multiple_attempts": true,
-      "entry_participant_type": "Team",
-      "duration": "10:20:30",
+      "entry_participant_type": "User",
+      "duration": "10:20:31",
       "no_score": true,
       "default_language_tag": "en",
       "prompt_to_join_group_by_code": true,
-      "has_attempts": false,
 
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
-      "url": "http://someurl",
-      "uses_api": true,
-      "hints_allowed": true,
 
       "string": {
         "language_tag": "en",
-        "title": "Category 1",
-        "image_url": "http://example.com/my0.jpg",
-        "subtitle": "Subtitle 0",
-        "description": "Description 0",
-        "edu_comment": "Some comment"
+        "title": "Chapter A",
+        "image_url": "http://example.com/my1.jpg"
       },
 
-      "children": [
-        {
-          "id": "220",
-          "order": 1,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "Team",
-          "duration": "10:20:32",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter B",
-            "image_url": "http://example.com/my2.jpg"
-          }
-        },
-        {
-          "id": "210",
-
-          "order": 2,
-          "category": "Discovery",
-          "content_view_propagation": "as_info",
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "entry_min_admitted_members_ratio": "All",
-          "entry_frozen_teams": false,
-          "entry_max_team_size": 10,
-          "allows_multiple_attempts": true,
-          "entry_participant_type": "User",
-          "duration": "10:20:31",
-          "no_score": true,
-          "default_language_tag": "en",
-          "prompt_to_join_group_by_code": true,
-          "has_attempts": false,
-
-          "string": {
-            "language_tag": "en",
-            "title": "Chapter A",
-            "image_url": "http://example.com/my1.jpg"
-          }
-        }
-      ]
+      "permissions": {
+        "can_edit": "none",
+        "can_grant_view": "none",
+        "can_view": "info",
+        "can_watch": "none",
+        "is_owner": false
+      }
     }
     """

@@ -48,7 +48,7 @@ func mockDBEnumQueries(sqlMock sqlmock.Sqlmock) {
 			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
 		WithArgs("permissions_granted", "can_grant_view").
 		WillReturnRows(sqlMock.NewRows([]string{"value"}).
-			AddRow("'none','content','content_with_descendants','solution','solution_with_grant'"))
+			AddRow("'none','enter','content','content_with_descendants','solution','solution_with_grant'"))
 	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
 			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
