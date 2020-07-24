@@ -56,7 +56,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`, ctx.TheLoginModuleTokenEndpointForCodeReturns)
 	s.Step(`^the login module "token" endpoint for code "([^"]*)" and code_verifier "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns)
-	s.Step(`^the login module "token" endpoint for code "([^"]*)" and code_verifier "([^"]*)" and redirect_uri "([^"]*)" returns (\d+) with body:$`,
+	s.Step(
+		`^the login module "token" endpoint for code "([^"]*)" and code_verifier "([^"]*)" and redirect_uri "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns)
 	s.Step(`^the login module "token" endpoint for refresh token "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleTokenEndpointForRefreshTokenReturns)
