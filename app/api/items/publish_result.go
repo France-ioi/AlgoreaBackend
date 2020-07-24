@@ -63,7 +63,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 		return service.InsufficientAccessRightsError
 	}
 
-	found, err := srv.Store.Permissions().WithViewPermissionForUser(user, "content").
+	found, err := srv.Store.Permissions().MatchingUserAncestors(user).WherePermissionIsAtLeast("view", "content").
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
