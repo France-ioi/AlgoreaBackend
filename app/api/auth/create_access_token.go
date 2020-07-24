@@ -54,6 +54,10 @@ import (
 //   in: query
 //   description: OAuth2 PKCE code verifier  (can also be given in form data)
 //   type: string
+// - name: redirect_uri
+//   in: query
+//   description: OAuth2 redirection URI
+//   type: string
 // - in: body
 //   name: parameters
 //   description: The optional parameters can be given in the body as well
@@ -66,6 +70,9 @@ import (
 //       code_verifier:
 //         type: string
 //         description: OAuth2 PKCE code verifier
+//       redirect_uri:
+//         type: string
+//         description: OAuth2 redirection URI
 // responses:
 //   "201":
 //     description: "Created. Success response with the new access token"
@@ -105,6 +112,9 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	if codeVerifier, ok := requestData["code_verifier"]; ok {
 		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", codeVerifier))
 	}
+	if redirectURI, ok := requestData["redirect_uri"]; ok {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", redirectURI))
+	}
 
 	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)
 	service.MustNotBeError(err)
@@ -138,6 +148,7 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]str
 	query := r.URL.Query()
 	extractOptionalParameter(query, "code", requestData)
 	extractOptionalParameter(query, "code_verifier", requestData)
+	extractOptionalParameter(query, "redirect_uri", requestData)
 
 	contentType := strings.ToLower(strings.TrimSpace(strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0]))
 	switch contentType {
@@ -145,6 +156,7 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]str
 		var jsonPayload struct {
 			Code         *string `json:"code"`
 			CodeVerifier *string `json:"code_verifier"`
+			RedirectURI  *string `json:"redirect_uri"`
 		}
 		defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
 		err := json.NewDecoder(r.Body).Decode(&jsonPayload)
@@ -157,6 +169,9 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]str
 		if jsonPayload.CodeVerifier != nil {
 			requestData["code_verifier"] = *jsonPayload.CodeVerifier
 		}
+		if jsonPayload.RedirectURI != nil {
+			requestData["redirect_uri"] = *jsonPayload.RedirectURI
+		}
 	case "application/x-www-form-urlencoded":
 		err := r.ParseForm()
 		if err != nil {
@@ -164,6 +179,7 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]str
 		}
 		extractOptionalParameter(r.PostForm, "code", requestData)
 		extractOptionalParameter(r.PostForm, "code_verifier", requestData)
+		extractOptionalParameter(r.PostForm, "redirect_uri", requestData)
 	}
 	return requestData, service.NoError
 }
