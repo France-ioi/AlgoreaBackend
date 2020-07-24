@@ -46,6 +46,10 @@ import (
 //   in: query
 //   description: OAuth2 PKCE code verifier
 //   type: string
+// - name: redirect_uri
+//   in: query
+//   description: OAuth2 redirection URI
+//   type: string
 // responses:
 //   "201":
 //     description: "Created. Success response with the new access token"
@@ -77,6 +81,9 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
 	if len(r.URL.Query()["code_verifier"]) != 0 {
 		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", r.URL.Query().Get("code_verifier")))
+	}
+	if len(r.URL.Query()["redirect_uri"]) != 0 {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", r.URL.Query().Get("redirect_uri")))
 	}
 
 	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)

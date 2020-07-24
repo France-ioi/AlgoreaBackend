@@ -73,6 +73,41 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 	return nil
 }
 
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns(code, codeVerifier, redirectURI string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	preprocessedCode, err := ctx.preprocessString(code)
+	if err != nil {
+		return err
+	}
+	preprocessedCodeVerifier, err := ctx.preprocessString(codeVerifier)
+	if err != nil {
+		return err
+	}
+	preprocessedRedirectURI, err := ctx.preprocessString(redirectURI)
+	if err != nil {
+		return err
+	}
+	preprocessedBody, err := ctx.preprocessString(body.Content)
+	if err != nil {
+		return err
+	}
+	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
+	authConfig := app.AuthConfig(ctx.application.Config)
+	params := url.Values{
+		"client_id":     {authConfig.GetString("ClientID")},
+		"client_secret": {authConfig.GetString("ClientSecret")},
+		"grant_type":    {"authorization_code"},
+		"code":          {preprocessedCode},
+		"code_verifier": {preprocessedCodeVerifier},
+		"redirect_uri":  {preprocessedRedirectURI},
+	}
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+		authConfig.GetString("LoginModuleURL")+"/oauth/token", responder,
+		httpmock.WithBody(
+			bytes.NewBufferString(params.Encode()))))
+	return nil
+}
+
 func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refreshToken string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)
