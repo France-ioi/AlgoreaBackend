@@ -49,7 +49,7 @@ Feature: Create an access token
         "badges":[],"client_id":1,"verification":[]
       }
       """
-    When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http://my.url"
+    When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"
     Then the response code should be 201
     And the response body should be, in JSON:
       """
