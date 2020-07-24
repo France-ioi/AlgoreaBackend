@@ -2,10 +2,12 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/jinzhu/gorm"
 	"golang.org/x/oauth2"
 
 	"github.com/go-chi/render"
@@ -44,6 +46,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 
 	var newToken string
 	var expiresIn int32
+	apiError := service.NoError
 
 	if user.IsTempUser {
 		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -60,9 +63,13 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 		// usage of the old refresh token for that reason.
 		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn = srv.refreshTokens(r.Context(), user, oldAccessToken)
+			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), user, oldAccessToken)
 			return nil
 		}))
+	}
+
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
@@ -73,11 +80,16 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	return service.NoError
 }
 
-func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (newToken string, expiresIn int32) {
+func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (
+	newToken string, expiresIn int32, apiError service.APIError) {
 	var refreshToken string
-	service.MustNotBeError(
-		srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
-			PluckFirst("refresh_token", &refreshToken).Error())
+	err := srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
+		PluckFirst("refresh_token", &refreshToken).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		logging.Warnf("No refresh token found in the DB for user %d", user.GroupID)
+		return "", 0, service.ErrNotFound(errors.New("no refresh token found in the DB for the authenticated user"))
+	}
+	service.MustNotBeError(err)
 	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
 	oldToken := &oauth2.Token{RefreshToken: refreshToken}
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
@@ -98,5 +110,5 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
 		return nil
 	}))
-	return newToken, expiresIn
+	return newToken, expiresIn, service.NoError
 }

@@ -265,3 +265,59 @@ Feature: Create an access token
       | 11                | 11             | true    |
     And the table "group_membership_changes" should be empty
     And the table "attempts" should stay unchanged
+
+  Scenario Outline: Accepts parameters from POST data
+    Given the time now is "2019-07-17T01:02:29+03:00"
+    And the DB time now is "2019-07-16 22:02:28"
+    And the template constant "code_from_oauth" is "somecode"
+    And the template constant "access_token_from_oauth" is "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6Ijc3M2IyMjY0ZDU0MDUzNWQ5OTFlMjNlODY0MzljNzJmYjI0MWI5ZWY1ZTI5NjMyYjc3OWQwNjdlNmJmZWRiYmUyZDM4NmQ4YmQ2OTBlNGI3In0.eyJhdWQiOiIxIiwianRpIjoiNzczYjIyNjRkNTQwNTM1ZDk5MWUyM2U4NjQzOWM3MmZiMjQxYjllZjVlMjk2MzJiNzc5ZDA2N2U2YmZlZGJiZTJkMzg2ZDhiZDY5MGU0YjciLCJpYXQiOjE1NjM1Mjk4MjUsIm5iZiI6MTU2MzUyOTgyNSwiZXhwIjoxNTk1MTUyMjI0LCJzdWIiOiIxMDAwMDAwMDEiLCJzY29wZXMiOlsiYWNjb3VudCJdfQ.hcMLfoK8ocb0dpJg-R6EViMePCE4uw_Zzid_CIzFMFT6khY7m1kLorzKgYLWbDBxyxG-RBWTjJIbE-0J96VvLegYoZo5JObHzZP_FQyOUQ-qVe98mjI3Mc0a-dmr5bQyPTS2OC2COlFnletMHhBe4D_DSh2Zi8TfN79kTjsYErN59Vc4Bz0sPPmnLRqdKbg8r6jVX-s6cidN8mgDjujAljiaPkjCCiumdMj9kSfTKLNxMu1e9-4GfN41xc72ikstcBXjvakTyeq2-M9Wcby4XA5fys313kKlKQy3WJAVW3D6qMEwRH566vesEIx-RWUIlkPyV4QvIaE3k4mKdiO6c21LSFFSlIfr6jkVaGDvi8Rc9g77CWgUXaZOsETliW0Yea0tL9fG1negRr9uQGKyOZCM1dxSlBJAKlD3kyLi4ykEw6uTp0tM-AdwRB7mUpu9bw3evpr7f0mN65Nhd-byAuys0PXyegZeSKxZB3i1mAzE6s7vUbADJcBOx0kRmfkpT3kfUkJ4c9QohVCpkIMl80sbxcv9RTck0P9W1J-LGUULTtcPeaLNz85q7DKKbdiTAcbqzQkxZn0hO2wrF-3L0p_ms-yQg8ebu-ZJIzUG5LQq6Szu-QpXyQPP3NdKqHEvMhKoFY-9BZwA9SCEfiB8kMwCm9TAfztZBiCRcS2I4LE"
+    And the template constant "refresh_token_from_oauth" is "def502008be6565fe7888139650994031dcf475fd4ec863d9d088562aeff095c4fb5026d189b05385b5d6e834bb26ed98d67b19f21c8e4f70e035083b8aba36027c748eb0a8fc987b900a96734eb3952733d8d87368cbf5194195dfee364ebe774117dc8e51075ea7afe356d985021a38be505ea7328137d0f3552dcf4ed1b7187affee3399964b81d396a597fb9ef78c1651c5203529cd016a9c9584fc024e597e47327c36431981000741c8e6e24066718b3b46d6278a0f13b0d1bd87e2811269a2464b832b765f45d40a878ce4d3bc9da03aad32dc6f17caa52f67befffd89bae734ac0b424d9a32bd2e47c47dfee43e534d36d6cc180759b3d220ddea18ba70d8490501934e960a9ad99012184fcd67f471a16c65db5185f24ace83857efefdd935280cc0a9653150d89f9ca531283ec9e566592de626d0c350ddd682f59ede69f29acfb0bc3104d826afabd0f1e1a246375154c78a9ad27a2c47bde5159686a4264bd91f16ffa185554d09858402a68"
+    And the login module "token" endpoint for code "{{code_from_oauth}}" and code_verifier "789012" returns 200 with body:
+      """
+      {
+        "token_type":"Bearer",
+        "expires_in":31622400,
+        "access_token":"{{access_token_from_oauth}}",
+        "refresh_token":"{{refresh_token_from_oauth}}"
+      }
+      """
+    And the login module "account" endpoint for token "{{access_token_from_oauth}}" returns 200 with body:
+      """
+      {
+        "id":100000001, "login":"mohammed","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Mohammed",
+        "last_name":"Amrani","real_name_visible":false,"timezone":"Africa\/Algiers","country_code":"DZ",
+        "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
+        "role":"student","school_grade":null,"student_id":"123456789","ministry_of_education":null,
+        "ministry_of_education_fr":false,"birthday":"2000-07-02","presentation":"I'm Mohammed Amrani",
+        "website":"http://mohammed.freepages.com","ip":"127.0.0.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
+        "gender":"m","graduation_year":2020,"graduation_grade_expire_at":"2020-07-01 00:00:00",
+        "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
+        "logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
+        "origin_instance_id":null,"creator_client_id":null,"nationality":"AL",
+        "primary_email":"mohammedam@gmail.com","secondary_email":"mohammed.amrani@gmail.com",
+        "primary_email_verified":null,"secondary_email_verified":null,"has_picture":false,
+        "badges":[],"client_id":1,"verification":[]
+      }
+      """
+    And the "Content-Type" request header is "<content-type>"
+    When I send a POST request to "/auth/token?code=wrong_code&code_verifier=123456" with the following body:
+      """
+      <data>
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {
+          "access_token": "{{access_token_from_oauth}}",
+          "expires_in": 31622400
+        }
+      }
+      """
+  Examples:
+    | content-type                      | data                                         |
+    | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012           |
+    | application/jsoN; charset=utf8   | {"code":"somecode","code_verifier":"789012"} |
