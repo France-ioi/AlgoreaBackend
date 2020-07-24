@@ -1,8 +1,12 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -24,32 +28,51 @@ import (
 //     If the "Authorization" header is not given, the service converts the given OAuth2 authorization code into tokens,
 //     creates or updates the authenticated user in the DB with the data returned by the login module,
 //     and saves new access & refresh tokens into the DB as well.
-//     If OAuth2 authentication has used the PKCE extension, the '{code_verifier}' should be provided
-//     so it can be sent together with the '{code}' to the authentication server.
+//     If OAuth2 authentication has used the PKCE extension, the `{code_verifier}` should be provided
+//     so it can be sent together with the `{code}` to the authentication server.
 //
 //
 //     If the "Authorization" header is given, the service refreshes the access token
 //     (locally for temporary users or via the login module for normal users) and
 //     saves it into the DB keeping only the input token (from authorization headers) and the new token.
 //     Since the login module responds with both access and refresh tokens, the service updates the user's
-//     refresh token in this case as well.
+//     refresh token in this case as well. If there is no refresh token for the user in the DB,
+//     the 'not found' error is returned.
 //
 //
-//   * One of the “Authorization” header and the '{code}' parameter should be present (not both at once).
+//   * One of the “Authorization” header and the `{code}` parameter should be present (not both at once).
 // security: []
+// consumes:
+//   - application/json
+//   - application/x-www-form-urlencoded
 // parameters:
 // - name: code
 //   in: query
-//   description: OAuth2 code
+//   description: OAuth2 code (can also be given in form data)
 //   type: string
 // - name: code_verifier
 //   in: query
-//   description: OAuth2 PKCE code verifier
+//   description: OAuth2 PKCE code verifier  (can also be given in form data)
 //   type: string
 // - name: redirect_uri
 //   in: query
 //   description: OAuth2 redirection URI
 //   type: string
+// - in: body
+//   name: parameters
+//   description: The optional parameters can be given in the body as well
+//   schema:
+//     type: object
+//     properties:
+//       code:
+//         type: string
+//         description: OAuth2 code
+//       code_verifier:
+//         type: string
+//         description: OAuth2 PKCE code verifier
+//       redirect_uri:
+//         type: string
+//         description: OAuth2 redirection URI
 // responses:
 //   "201":
 //     description: "Created. Success response with the new access token"
@@ -58,32 +81,39 @@ import (
 //       "$ref": "#/definitions/userCreateTmpResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
+	requestData, apiError := parseRequestParametersForCreateAccessToken(r)
+	if apiError != service.NoError {
+		return apiError
+	}
+
 	// "Authorization" header is given, requesting a new token from the given token
 	if len(r.Header["Authorization"]) != 0 {
-		if len(r.URL.Query()["code"]) != 0 {
+		if _, ok := requestData["code"]; ok {
 			return service.ErrInvalidRequest(
-				errors.New("only one of the 'code' query parameter and the 'Authorization' header can be given"))
+				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
 		}
 		auth.UserMiddleware(srv.Store.Sessions())(service.AppHandler(srv.refreshAccessToken)).ServeHTTP(w, r)
 		return service.NoError
 	}
 
 	// the code is given, requesting a token from code and optionally code_verifier, and create/update user.
-	code, err := service.ResolveURLQueryGetStringField(r, "code")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
+	code, ok := requestData["code"]
+	if !ok {
+		return service.ErrInvalidRequest(errors.New("missing code"))
 	}
 
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
-	if len(r.URL.Query()["code_verifier"]) != 0 {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", r.URL.Query().Get("code_verifier")))
+	if codeVerifier, ok := requestData["code_verifier"]; ok {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", codeVerifier))
 	}
-	if len(r.URL.Query()["redirect_uri"]) != 0 {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", r.URL.Query().Get("redirect_uri")))
+	if redirectURI, ok := requestData["redirect_uri"]; ok {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", redirectURI))
 	}
 
 	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)
@@ -111,6 +141,47 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		"expires_in":   time.Until(token.Expiry).Round(time.Second) / time.Second,
 	})))
 	return service.NoError
+}
+
+func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]string, service.APIError) {
+	requestData := make(map[string]string, 2)
+	query := r.URL.Query()
+	extractOptionalParameter(query, "code", requestData)
+	extractOptionalParameter(query, "code_verifier", requestData)
+
+	contentType := strings.ToLower(strings.TrimSpace(strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0]))
+	switch contentType {
+	case "application/json":
+		var jsonPayload struct {
+			Code         *string `json:"code"`
+			CodeVerifier *string `json:"code_verifier"`
+		}
+		defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
+		err := json.NewDecoder(r.Body).Decode(&jsonPayload)
+		if err != nil {
+			return nil, service.ErrInvalidRequest(err)
+		}
+		if jsonPayload.Code != nil {
+			requestData["code"] = *jsonPayload.Code
+		}
+		if jsonPayload.CodeVerifier != nil {
+			requestData["code_verifier"] = *jsonPayload.CodeVerifier
+		}
+	case "application/x-www-form-urlencoded":
+		err := r.ParseForm()
+		if err != nil {
+			return nil, service.ErrInvalidRequest(err)
+		}
+		extractOptionalParameter(r.PostForm, "code", requestData)
+		extractOptionalParameter(r.PostForm, "code_verifier", requestData)
+	}
+	return requestData, service.NoError
+}
+
+func extractOptionalParameter(query url.Values, paramName string, requestData map[string]string) {
+	if len(query[paramName]) != 0 {
+		requestData[paramName] = query.Get(paramName)
+	}
 }
 
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
@@ -141,6 +212,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 
 		return selfGroupID
 	}
+	service.MustNotBeError(err)
 
 	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
@@ -152,8 +224,6 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 
 	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
-
-	service.MustNotBeError(err)
 	service.MustNotBeError(s.ByID(groupID).UpdateColumn(userData).Error())
 	return groupID
 }
