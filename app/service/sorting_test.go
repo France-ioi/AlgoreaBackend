@@ -101,6 +101,39 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`unallowed field in sorting parameters: "class"`))},
+		{name: "'null last' for a non-nullable field",
+			args: args{
+				urlParameters: "?sort=name$",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+				},
+				defaultRules:         "-name,id",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantAPIError: ErrInvalidRequest(errors.New(`'null last' sorting cannot be applied to a non-nullable field: "name"`))},
+		{name: "applies default null sorting for nullable fields",
+			args: args{
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Nullable: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+				},
+				defaultRules:         "-name,id",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantSQL:      "SELECT id FROM `users` ORDER BY name IS NULL, name DESC, id ASC",
+			wantAPIError: NoError},
+		{name: "'null last'",
+			args: args{
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Nullable: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+				},
+				defaultRules:         "id,-name$",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantSQL:      "SELECT id FROM `users` ORDER BY id ASC, name IS NOT NULL, name DESC",
+			wantAPIError: NoError},
 		{name: "add a tie-breaker field",
 			args: args{
 				urlParameters: "",
@@ -170,6 +203,70 @@ func TestApplySorting(t *testing.T) {
 				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
 				"ORDER BY name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
+			wantAPIError:     NoError},
+		{name: "sorting + paging by a nullable field",
+			args: args{
+				urlParameters: "?from.id=1&from.name=Joe&from.flag=1",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Nullable: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+					"flag": {ColumnName: "bFlag", FieldType: "bool"},
+				},
+				defaultRules:         "-name,id,flag",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantSQL: "SELECT id FROM `users` " +
+				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
+				"ORDER BY name IS NULL, name DESC, id ASC, bFlag ASC",
+			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
+			wantAPIError:     NoError},
+		{name: "sorting + paging by a nullable field (from value is null, null first)",
+			args: args{
+				urlParameters: "?from.id=1&from.name=[NULL]&from.flag=1",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Nullable: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+					"flag": {ColumnName: "bFlag", FieldType: "bool"},
+				},
+				defaultRules:         "-name,id,flag",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantSQL: "SELECT id FROM `users` " +
+				"WHERE ((name IS NOT NULL) OR (name IS NULL AND id > ?) OR (name IS NULL AND id = ? AND bFlag > ?)) " +
+				"ORDER BY name IS NULL, name DESC, id ASC, bFlag ASC",
+			wantSQLArguments: []driver.Value{1, 1, true},
+			wantAPIError:     NoError},
+		{name: "sorting + paging by a nullable field (from value is null, null last)",
+			args: args{
+				urlParameters: "?from.id=1&from.name=[NULL]&from.flag=1",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Nullable: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+					"flag": {ColumnName: "bFlag", FieldType: "bool"},
+				},
+				defaultRules:         "-name$,id,flag",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantSQL: "SELECT id FROM `users` " +
+				"WHERE ((name IS NULL AND id > ?) OR (name IS NULL AND id = ? AND bFlag > ?)) " +
+				"ORDER BY name IS NOT NULL, name DESC, id ASC, bFlag ASC",
+			wantSQLArguments: []driver.Value{1, 1, true},
+			wantAPIError:     NoError},
+		{name: "sorting + paging by a nullable field (from value is null, null last, nullable field is the last field)",
+			args: args{
+				urlParameters: "?from.id=1&from.name=[NULL]&from.flag=1",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Nullable: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+					"flag": {ColumnName: "bFlag", FieldType: "bool"},
+				},
+				defaultRules:         "id,flag,name$",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantSQL: "SELECT id FROM `users` " +
+				"WHERE ((id > ?) OR (id = ? AND bFlag > ?) OR (id = ? AND bFlag = ? AND name IS NULL)) " +
+				"ORDER BY id ASC, bFlag ASC, name IS NOT NULL, name ASC",
+			wantSQLArguments: []driver.Value{1, 1, true},
 			wantAPIError:     NoError},
 		{name: "wrong value in from.id field",
 			args: args{
