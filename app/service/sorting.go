@@ -47,9 +47,9 @@ func (t sortingType) asSQL(columnName string) string {
 	var result string
 	switch t.nullPlacement {
 	case last:
-		result += columnName + " IS NOT NULL, "
-	case first:
 		result += columnName + " IS NULL, "
+	case first:
+		result += columnName + " IS NOT NULL, "
 	}
 	result += columnName + " "
 	if t.sortingDirection == asc {
@@ -287,9 +287,11 @@ func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortin
 			}
 			conditionPrefix = fmt.Sprintf("%s%s IS NULL", conditionPrefix, columnName)
 		} else {
-			conditions = append(conditions,
-				fmt.Sprintf("(%s%s %s ?)", conditionPrefix, columnName,
-					fieldsSortingTypes[fieldName].conditionSign()))
+			condition := fmt.Sprintf("%s %s ?", columnName, fieldsSortingTypes[fieldName].conditionSign())
+			if fieldsSortingTypes[fieldName].nullPlacement == last {
+				condition = fmt.Sprintf("(%s OR %s IS NULL)", condition, columnName)
+			}
+			conditions = append(conditions, fmt.Sprintf("(%s%s)", conditionPrefix, condition))
 			conditionPrefix = fmt.Sprintf("%s%s = ?", conditionPrefix, columnName)
 
 			queryValuesPart = append(queryValuesPart, fromValues[index])
