@@ -18,6 +18,8 @@ type FieldSortingParams struct {
 	ColumnNameForOrdering string
 	// FieldType is one of "int64", "bool", "string", "time"
 	FieldType string
+	// Nullable means that the field can be null
+	Nullable bool
 	// Unique means that sorting rules containing this parameter will not be augmented with a tie-breaker field
 	Unique bool
 }
@@ -25,44 +27,63 @@ type FieldSortingParams struct {
 type sortingDirection int
 
 const (
-	asc     sortingDirection = 1
-	desc    sortingDirection = -1
-	unknown sortingDirection = 0
+	asc  sortingDirection = 1
+	desc sortingDirection = -1
 )
 
-func (d sortingDirection) asSQL() string {
-	if d == asc {
-		return "ASC"
-	}
-	return "DESC"
+type nullPlacement int
+
+const (
+	first nullPlacement = -1
+	last  nullPlacement = 1
+)
+
+type sortingType struct {
+	sortingDirection
+	nullPlacement
 }
 
-func (d sortingDirection) conditionSign() string {
-	if d == asc {
+func (t sortingType) asSQL(columnName string) string {
+	var result string
+	switch t.nullPlacement {
+	case last:
+		result += columnName + " IS NULL, "
+	case first:
+		result += columnName + " IS NOT NULL, "
+	}
+	result += columnName + " "
+	if t.sortingDirection == asc {
+		return result + "ASC"
+	}
+	return result + "DESC"
+}
+
+func (t sortingType) conditionSign() string {
+	if t.sortingDirection == asc {
 		return ">"
 	}
 	return "<"
 }
 
-// ApplySortingAndPaging applies ordering and paging according to given accepted fields and sorting rules
+// ApplySortingAndPaging applies ordering and paging according to given accepted fields and sorting types
 // taking into the account the URL parameters 'from.*'.
 // When the `skipSortParameter` is true, the 'sort' request parameter is ignored.
 func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
 	defaultRules string, tieBreakerFieldNames []string, skipSortParameter bool) (*database.DB, APIError) {
 	sortingRules := prepareSortingRulesAndAcceptedFields(r, defaultRules, skipSortParameter)
 
-	usedFields, fieldsDirections, err := parseSortingRules(sortingRules, acceptedFields, tieBreakerFieldNames)
+	usedFields, fieldsSortingTypes, err := parseSortingRules(sortingRules, acceptedFields, tieBreakerFieldNames)
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
-	query = applyOrder(query, usedFields, acceptedFields, fieldsDirections)
+	query = applyOrder(query, usedFields, acceptedFields, fieldsSortingTypes)
 
-	fromValues, err := parsePagingParameters(r, usedFields, acceptedFields, fieldsDirections)
+	fromValues, err := parsePagingParameters(r, usedFields, acceptedFields, fieldsSortingTypes)
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
 
-	query = applyPagingConditions(query, usedFields, fieldsDirections, acceptedFields, fromValues)
+	query = applyPagingConditions(query, usedFields, fieldsSortingTypes, acceptedFields, fromValues)
 	return query, NoError
 }
 
@@ -78,23 +99,24 @@ func prepareSortingRulesAndAcceptedFields(r *http.Request, defaultRules string, 
 	return sortingRules
 }
 
-// parseSortingRules returns a slice with used fields and a map fieldName -> direction
+// parseSortingRules returns a slice with used fields and a map fieldName -> sortingType
 // It also checks that there are no unallowed fields in the rules.
 func parseSortingRules(sortingRules string, acceptedFields map[string]*FieldSortingParams, tieBreakerFieldNames []string) (
-	usedFields []string, fieldsDirections map[string]sortingDirection, err error) {
+	usedFields []string, fieldsSortingTypes map[string]sortingType, err error) {
 	sortStatements := strings.Split(sortingRules, ",")
 	usedFields = make([]string, 0, len(sortStatements)+1)
-	fieldsDirections = make(map[string]sortingDirection, len(sortStatements)+1)
+	fieldsSortingTypes = make(map[string]sortingType, len(sortStatements)+1)
 	includesUniqueField := false
 	for _, sortStatement := range sortStatements {
-		fieldName, direction := getFieldNameAndDirectionFromSortStatement(sortStatement)
-		if fieldsDirections[fieldName] != 0 {
-			return nil, nil, fmt.Errorf("a field cannot be a sorting parameter more than once: %q", fieldName)
+		fieldName, sorting := getFieldNameAndSortingTypeFromSortStatement(sortStatement)
+		err = validateSortingField(fieldsSortingTypes, fieldName, acceptedFields, sorting)
+		if err != nil {
+			return nil, nil, err
 		}
-		if _, ok := acceptedFields[fieldName]; !ok {
-			return nil, nil, fmt.Errorf("unallowed field in sorting parameters: %q", fieldName)
+		if acceptedFields[fieldName].Nullable && sorting.nullPlacement == 0 {
+			sorting.nullPlacement = first
 		}
-		fieldsDirections[fieldName] = direction
+		fieldsSortingTypes[fieldName] = sorting
 		usedFields = append(usedFields, fieldName)
 		if acceptedFields[fieldName].Unique {
 			includesUniqueField = true
@@ -102,35 +124,55 @@ func parseSortingRules(sortingRules string, acceptedFields map[string]*FieldSort
 	}
 	if !includesUniqueField {
 		for _, tieBreakerFieldName := range tieBreakerFieldNames {
-			if fieldsDirections[tieBreakerFieldName] == 0 {
-				fieldsDirections[tieBreakerFieldName] = 1
+			if fieldsSortingTypes[tieBreakerFieldName].sortingDirection == 0 {
+				fieldsSortingTypes[tieBreakerFieldName] = sortingType{sortingDirection: 1}
 				usedFields = append(usedFields, tieBreakerFieldName)
 			}
 		}
 	}
-	return
+	return usedFields, fieldsSortingTypes, err
 }
 
-// getFieldNameAndDirectionFromSortStatement extracts a field name and a sorting direction
+func validateSortingField(
+	fieldsSortingTypes map[string]sortingType, fieldName string, acceptedFields map[string]*FieldSortingParams, sorting sortingType) error {
+	if _, ok := fieldsSortingTypes[fieldName]; ok {
+		return fmt.Errorf("a field cannot be a sorting parameter more than once: %q", fieldName)
+	}
+	if _, ok := acceptedFields[fieldName]; !ok {
+		return fmt.Errorf("unallowed field in sorting parameters: %q", fieldName)
+	}
+	if !acceptedFields[fieldName].Nullable && sorting.nullPlacement != 0 {
+		return fmt.Errorf("'null last' sorting cannot be applied to a non-nullable field: %q", fieldName)
+	}
+	return nil
+}
+
+// getFieldNameAndSortingTypeFromSortStatement extracts a field name and a sorting type
 // from a given sorting statement.
 // "id"   -> ("id", 1)
-// "-name -> ("name", -1)
-func getFieldNameAndDirectionFromSortStatement(sortStatement string) (string, sortingDirection) {
+// "-name -> ("name", {-1, 0})
+// "-date$ -> ("date", {-1, 1}) # null last
+func getFieldNameAndSortingTypeFromSortStatement(sortStatement string) (string, sortingType) {
 	var direction sortingDirection
+	var np nullPlacement
 	if len(sortStatement) > 0 && sortStatement[0] == '-' {
 		sortStatement = sortStatement[1:]
 		direction = desc
 	} else {
 		direction = asc
 	}
+	if len(sortStatement) > 0 && sortStatement[len(sortStatement)-1] == '$' {
+		np = last
+		sortStatement = sortStatement[:len(sortStatement)-1]
+	}
 	fieldName := sortStatement
-	return fieldName, direction
+	return fieldName, sortingType{direction, np}
 }
 
 // applyOrder appends the "ORDER BY" statement to given query according to the given list of used fields,
-// the fields configuration (acceptedFields) and sorting directions
+// the fields configuration (acceptedFields) and sorting types
 func applyOrder(query *database.DB, usedFields []string, acceptedFields map[string]*FieldSortingParams,
-	fieldsDirections map[string]sortingDirection) *database.DB {
+	fieldsSortingTypes map[string]sortingType) *database.DB {
 	usedFieldsNumber := len(usedFields)
 	orderStrings := make([]string, 0, usedFieldsNumber)
 	for _, field := range usedFields {
@@ -140,7 +182,7 @@ func applyOrder(query *database.DB, usedFields []string, acceptedFields map[stri
 		} else {
 			columnName = acceptedFields[field].ColumnName
 		}
-		orderStrings = append(orderStrings, columnName+" "+fieldsDirections[field].asSQL())
+		orderStrings = append(orderStrings, fieldsSortingTypes[field].asSQL(columnName))
 	}
 	if len(orderStrings) > 0 {
 		query = query.Order(strings.Join(orderStrings, ", "))
@@ -151,7 +193,7 @@ func applyOrder(query *database.DB, usedFields []string, acceptedFields map[stri
 // parsePagingParameters returns a slice of values provided for paging in a request URL (none or all should be present)
 // The values are in the order of the 'usedFields' and converted according to 'FieldType' of 'acceptedFields'
 func parsePagingParameters(r *http.Request, usedFields []string,
-	acceptedFields map[string]*FieldSortingParams, fieldsDirections map[string]sortingDirection) ([]interface{}, error) {
+	acceptedFields map[string]*FieldSortingParams, fieldsSortingTypes map[string]sortingType) ([]interface{}, error) {
 	fromValueSkipped := false
 	fromValueAccepted := false
 	fromValues := make([]interface{}, 0, len(usedFields))
@@ -181,7 +223,7 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 	for fieldName := range r.URL.Query() {
 		if strings.HasPrefix(fieldName, fromPrefix) {
 			fieldNameSuffix := fieldName[len(fromPrefix):]
-			if fieldsDirections[fieldNameSuffix] == unknown {
+			if _, ok := fieldsSortingTypes[fieldNameSuffix]; !ok {
 				unknownFromFields = append(unknownFromFields, fieldName)
 			}
 		}
@@ -199,6 +241,9 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 func getFromValueForField(r *http.Request, fieldName string,
 	acceptedFields map[string]*FieldSortingParams) (interface{}, error) {
 	fromFieldName := "from." + fieldName
+	if acceptedFields[fieldName].Nullable && r.URL.Query()[fromFieldName][0] == "[NULL]" {
+		return nil, nil
+	}
 	switch acceptedFields[fieldName].FieldType {
 	case "string":
 		return r.URL.Query()[fromFieldName][0], nil
@@ -214,7 +259,7 @@ func getFromValueForField(r *http.Request, fieldName string,
 }
 
 // applyPagingConditions adds filtering on paging values into the query
-func applyPagingConditions(query *database.DB, usedFields []string, fieldsDirections map[string]sortingDirection,
+func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortingTypes map[string]sortingType,
 	acceptedFields map[string]*FieldSortingParams, fromValues []interface{}) *database.DB {
 	if len(fromValues) == 0 {
 		return query
@@ -231,13 +276,27 @@ func applyPagingConditions(query *database.DB, usedFields []string, fieldsDirect
 		if len(conditionPrefix) > 0 {
 			conditionPrefix += " AND "
 		}
-		conditions = append(conditions,
-			fmt.Sprintf("(%s%s %s ?)", conditionPrefix, acceptedFields[fieldName].ColumnName,
-				fieldsDirections[fieldName].conditionSign()))
-		conditionPrefix = fmt.Sprintf("%s%s = ?", conditionPrefix, acceptedFields[fieldName].ColumnName)
+		columnName := acceptedFields[fieldName].ColumnName
+		if fromValues[index] == nil {
+			if fieldsSortingTypes[fieldName].nullPlacement == first {
+				conditions = append(conditions,
+					fmt.Sprintf("(%s%s IS NOT NULL)", conditionPrefix, columnName))
+			} else if index == len(usedFields)-1 {
+				conditions = append(conditions,
+					fmt.Sprintf("(%s%s IS NULL)", conditionPrefix, columnName))
+			}
+			conditionPrefix = fmt.Sprintf("%s%s IS NULL", conditionPrefix, columnName)
+		} else {
+			condition := fmt.Sprintf("%s %s ?", columnName, fieldsSortingTypes[fieldName].conditionSign())
+			if fieldsSortingTypes[fieldName].nullPlacement == last {
+				condition = fmt.Sprintf("(%s OR %s IS NULL)", condition, columnName)
+			}
+			conditions = append(conditions, fmt.Sprintf("(%s%s)", conditionPrefix, condition))
+			conditionPrefix = fmt.Sprintf("%s%s = ?", conditionPrefix, columnName)
 
-		queryValuesPart = append(queryValuesPart, fromValues[index])
-		queryValues = append(queryValues, queryValuesPart...)
+			queryValuesPart = append(queryValuesPart, fromValues[index])
+			queryValues = append(queryValues, queryValuesPart...)
+		}
 	}
 	if len(conditions) > 0 {
 		query = query.Where(strings.Join(conditions, " OR "), queryValues...)
