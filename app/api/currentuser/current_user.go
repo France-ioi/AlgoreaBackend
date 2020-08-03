@@ -41,8 +41,10 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-memberships/by-code", service.AppHandler(srv.joinGroupByCode).ServeHTTP)
 	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
 	router.Get("/current-user/group-memberships-history", service.AppHandler(srv.getGroupMembershipsHistory).ServeHTTP)
-	router.Get("/current-user/group-memberships/activities", service.AppHandler(srv.getRootActivities).ServeHTTP)
-	router.Get("/current-user/group-memberships/skills", service.AppHandler(srv.getRootSkills).ServeHTTP)
+
+	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Store))
+	routerWithParticipant.Get("/current-user/group-memberships/activities", service.AppHandler(srv.getRootActivities).ServeHTTP)
+	routerWithParticipant.Get("/current-user/group-memberships/skills", service.AppHandler(srv.getRootSkills).ServeHTTP)
 
 	router.Put("/current-user/notifications-read-at", service.AppHandler(srv.updateNotificationsReadAt).ServeHTTP)
 	router.Put("/current-user/refresh", service.AppHandler(srv.refresh).ServeHTTP)

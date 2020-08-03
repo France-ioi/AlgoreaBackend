@@ -104,7 +104,7 @@ Background:
 
   Scenario: Should fail when attempt_id is not given
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/children?as_team_id=13"
+    When I send a GET request to "/items/200/children?as_team_id=15"
     Then the response code should be 400
     And the response error message should contain "Missing attempt_id"
 

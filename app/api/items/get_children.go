@@ -133,15 +133,12 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID, apiError := service.GetParticipantIDFromRequest(httpReq, user, srv.Store)
-	if apiError != service.NoError {
-		return apiError
-	}
+	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
 	found, err := srv.Store.Permissions().
-		MatchingGroupAncestors(groupID).
+		MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "content").
-		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", groupID).
+		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", participantID).
 		Where("permissions.item_id = ?", itemID).
 		Where("results.attempt_id = ?", attemptID).
 		Where("results.started_at IS NOT NULL").
@@ -158,7 +155,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 
 	var rawData []rawChildItem
 	service.MustNotBeError(
-		constructItemChildrenQuery(srv.Store, itemID, groupID, attemptID, watchedGroupIDSet, watchedGroupID,
+		constructItemChildrenQuery(srv.Store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID,
 			`items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
 				validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
 				can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
@@ -166,7 +163,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 					(SELECT MAX(results.score_computed) AS best_score
 					FROM results
 					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score`,
-			[]interface{}{groupID},
+			[]interface{}{participantID},
 			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`).

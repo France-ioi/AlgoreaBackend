@@ -163,13 +163,9 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID, apiError := service.GetParticipantIDFromRequest(httpReq, user, srv.Store)
-	if apiError != service.NoError {
-		return apiError
-	}
+	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	rawData := getRawItemData(srv.Store.Items(), itemID, groupID, user)
-
+	rawData := getRawItemData(srv.Store.Items(), itemID, participantID, user)
 	if rawData == nil {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}

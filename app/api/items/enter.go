@@ -70,13 +70,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 	}
 
 	user := srv.GetUser(r)
-	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-	}
+	participantID := service.ParticipantIDFromContext(r.Context())
 
 	apiError := service.NoError
 	var entryState *itemGetEntryStateResponse
@@ -87,14 +81,14 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 	}
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var ok bool
-		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, groupID, parentAttemptID, false, true)
+		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, false, true)
 		service.MustNotBeError(err)
 		if !ok {
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error // rollback
 		}
 
-		entryState, apiError = srv.getItemInfoAndEntryState(ids[len(ids)-1], groupID, user, store, true)
+		entryState, apiError = srv.getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
 		if apiError != service.NoError {
 			return apiError.Error
 		}

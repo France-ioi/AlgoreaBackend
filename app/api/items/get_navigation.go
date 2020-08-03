@@ -124,12 +124,9 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	user := srv.GetUser(httpReq)
-	groupID, apiError := service.GetParticipantIDFromRequest(httpReq, user, srv.Store)
-	if apiError != service.NoError {
-		return apiError
-	}
+	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	attemptID, apiError := srv.resolveAttemptIDForNavigationData(httpReq, groupID, itemID)
+	attemptID, apiError := srv.resolveAttemptIDForNavigationData(httpReq, participantID, itemID)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -139,7 +136,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 		return apiError
 	}
 
-	rawData := getRawNavigationData(srv.Store, itemID, groupID, attemptID, user, watchedGroupID, watchedGroupIDSet)
+	rawData := getRawNavigationData(srv.Store, itemID, participantID, attemptID, user, watchedGroupID, watchedGroupIDSet)
 
 	if len(rawData) == 0 || rawData[0].ID != itemID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))

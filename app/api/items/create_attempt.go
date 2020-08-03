@@ -78,27 +78,13 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	user := srv.GetUser(r)
-
-	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
-	}
+	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var attemptID int64
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var ok bool
-		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, groupID, parentAttemptID, true, true)
+		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
 			apiError = service.InsufficientAccessRightsError
@@ -106,12 +92,12 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		}
 
 		itemID := ids[len(ids)-1]
-		apiError = checkIfAttemptCreationIsPossible(store, itemID, groupID)
+		apiError = checkIfAttemptCreationIsPossible(store, itemID, participantID)
 		if apiError != service.NoError {
 			return apiError.Error // rollback
 		}
 
-		attemptID, err = store.Attempts().CreateNew(groupID, parentAttemptID, itemID, user.GroupID)
+		attemptID, err = store.Attempts().CreateNew(participantID, parentAttemptID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
 		return store.Results().Propagate()

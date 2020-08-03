@@ -54,27 +54,13 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 		return service.ErrForbidden(errors.New("implicit attempts cannot be ended"))
 	}
 
-	user := srv.GetUser(r)
-	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
-	}
+	participantID := service.ParticipantIDFromContext(r.Context())
 
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Attempts().
-			Where("participant_id = ?", groupID).
+			Where("participant_id = ?", participantID).
 			Where("id = ?", attemptID).
 			Where("allows_submissions_until > NOW()").
 			Where("ended_at IS NULL").
@@ -102,7 +88,7 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 				attempts.allows_submissions_until = LEAST(NOW(), attempts.allows_submissions_until),
 				groups_groups.expires_at = LEAST(NOW(), groups_groups.expires_at)
 			WHERE attempts.participant_id = ? AND attempts.id IN(SELECT id FROM attempts_to_update)`,
-			groupID, attemptID, groupID, groupID).
+			participantID, attemptID, participantID, participantID).
 			Error())
 
 		return store.GroupGroups().After()

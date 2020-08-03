@@ -1,7 +1,6 @@
 package items
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -148,7 +147,8 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
-func (srv *Service) resolveParametersForListAttempts(r *http.Request) (itemID, groupID, parentAttemptID int64, apiError service.APIError) {
+func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
+	itemID, participantID, parentAttemptID int64, apiError service.APIError) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
@@ -159,27 +159,13 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (itemID, g
 		return 0, 0, 0, apiError
 	}
 
-	user := srv.GetUser(r)
-	groupID = user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return 0, 0, 0, service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return 0, 0, 0, service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
-	}
+	participantID = service.ParticipantIDFromContext(r.Context())
 
 	if attemptIDSet {
 		if attemptID != 0 {
 			var result struct{ ParentAttemptID int64 }
 			err = srv.Store.Attempts().
-				Where("attempts.participant_id = ? AND attempts.id = ?", groupID, attemptID).
+				Where("attempts.participant_id = ? AND attempts.id = ?", participantID, attemptID).
 				Select("IF(attempts.root_item_id = ?, attempts.parent_attempt_id, attempts.id) AS parent_attempt_id", itemID).
 				Take(&result).Error()
 			if gorm.IsRecordNotFoundError(err) {
@@ -190,7 +176,7 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (itemID, g
 		}
 	}
 
-	found, err := srv.Store.Permissions().MatchingGroupAncestors(groupID).
+	found, err := srv.Store.Permissions().MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "content").
 		Where("item_id = ?", itemID).HasRows()
 
@@ -198,5 +184,5 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (itemID, g
 	if !found {
 		return 0, 0, 0, service.InsufficientAccessRightsError
 	}
-	return itemID, groupID, parentAttemptID, service.NoError
+	return itemID, participantID, parentAttemptID, service.NoError
 }

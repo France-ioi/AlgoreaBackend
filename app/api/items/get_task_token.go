@@ -91,14 +91,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	}
 
 	user := srv.GetUser(r)
-
-	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-	}
+	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var itemInfo struct {
 		AccessSolutions   bool
@@ -114,21 +107,9 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	}
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		// if `as_team_id` is given, it should be the user's team related to the item
-		if groupID != user.GroupID {
-			var found bool
-			found, err = store.Groups().TeamGroupForUser(groupID, user).WithWriteLock().
-				Where("groups.id = ?", groupID).HasRows()
-			service.MustNotBeError(err)
-			if !found {
-				apiError = service.InsufficientAccessRightsError
-				return apiError.Error // rollback
-			}
-		}
-
 		// the group should have can_view >= 'content' permission on the item
 		err = store.Items().ByID(itemID).
-			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", groupID).
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", participantID).
 			Joins(`
 				JOIN permissions_generated
 					ON permissions_generated.item_id = items.id AND
@@ -147,7 +128,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		service.MustNotBeError(err)
 
 		resultScope := store.Results().
-			Where("results.participant_id = ?", groupID).
+			Where("results.participant_id = ?", participantID).
 			Where("results.attempt_id = ?", attemptID).
 			Where("results.item_id = ?", itemID)
 
@@ -178,7 +159,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	}
 	service.MustNotBeError(err)
 
-	fullAttemptID := fmt.Sprintf("%d/%d", groupID, attemptID)
+	fullAttemptID := fmt.Sprintf("%d/%d", participantID, attemptID)
 	randomSeed := crc64.Checksum([]byte(fullAttemptID), crc64.MakeTable(crc64.ECMA))
 
 	taskToken := token.Task{

@@ -118,11 +118,7 @@ func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) se
 
 func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) service.APIError {
 	user := srv.GetUser(r)
-
-	participantID, apiError := service.GetParticipantIDFromRequest(r, user, srv.Store)
-	if apiError != service.NoError {
-		return apiError
-	}
+	participantID := service.ParticipantIDFromContext(r.Context())
 
 	rawData := srv.getRootItemsFromDB(participantID, user, getActivities)
 

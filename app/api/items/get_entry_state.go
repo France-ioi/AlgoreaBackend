@@ -137,6 +137,8 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	user := srv.GetUser(r)
+
+	// We do not use the participant middleware as we get groups_groups.frozen_membership using the same SQL query
 	groupID := user.GroupID
 	if len(r.URL.Query()["as_team_id"]) != 0 {
 		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")

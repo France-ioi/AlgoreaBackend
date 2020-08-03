@@ -1,7 +1,6 @@
 package items
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -70,27 +69,12 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-
-	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
-	}
+	participantID := service.ParticipantIDFromContext(r.Context())
 
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var ok bool
-		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, groupID, attemptID, true, true)
+		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, attemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
 			apiError = service.InsufficientAccessRightsError
@@ -115,7 +99,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 				latest_activity_at = IF(started_at IS NULL, NOW(), latest_activity_at),
 				result_propagation_state = IF(started_at IS NULL, 'to_be_propagated', result_propagation_state),
 				started_at = IFNULL(started_at, NOW())`,
-			groupID, attemptID, itemID)
+			participantID, attemptID, itemID)
 		service.MustNotBeError(result.Error())
 
 		if result.RowsAffected() != 0 {

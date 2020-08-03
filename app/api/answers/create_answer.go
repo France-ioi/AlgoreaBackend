@@ -76,19 +76,9 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 	}
 
 	user := srv.GetUser(httpReq)
+	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	groupID := user.GroupID
-	var found bool
-	if len(httpReq.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(httpReq, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-
-		found, err = srv.Store.Results().ExistsForUserTeam(user, groupID, attemptID, itemID)
-	} else {
-		found, err = srv.Store.Results().ByID(groupID, attemptID, itemID).HasRows()
-	}
+	found, err := srv.Store.Results().ByID(participantID, attemptID, itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
@@ -103,7 +93,7 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 
 			service.MustNotBeError(answersStore.Where("answers.author_id = ?", user.GroupID).
 				Where("answers.attempt_id = ?", attemptID).
-				Where("answers.participant_id = ?", groupID).
+				Where("answers.participant_id = ?", participantID).
 				Where("answers.item_id = ?", itemID).
 				Where("answers.type = 'Current'").
 				Delete().Error())
@@ -115,7 +105,7 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 				"id":             answerID,
 				"author_id":      user.GroupID,
 				"attempt_id":     attemptID,
-				"participant_id": groupID,
+				"participant_id": participantID,
 				"item_id":        itemID,
 				"type":           answerType,
 				"state":          requestData.State,

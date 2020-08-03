@@ -31,25 +31,29 @@ const skill = "Skill"
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
+	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Store))
+
 	router.Post("/items", service.AppHandler(srv.createItem).ServeHTTP)
-	router.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)
-	router.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
+	routerWithParticipant.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)
 	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
-	router.Get("/items/{item_id}/children", service.AppHandler(srv.getItemChildren).ServeHTTP)
-	router.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
-	router.Get("/items/{item_id}/attempts/{attempt_id}/task-token", service.AppHandler(srv.getTaskToken).ServeHTTP)
-	router.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
-	router.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
-	router.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
+
+	routerWithParticipant.Get("/items/{item_id}/children", service.AppHandler(srv.getItemChildren).ServeHTTP)
+	routerWithParticipant.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
+	routerWithParticipant.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
+
+	routerWithParticipant.Get("/items/{item_id}/attempts/{attempt_id}/task-token", service.AppHandler(srv.getTaskToken).ServeHTTP)
+	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
+	routerWithParticipant.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
+	routerWithParticipant.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
 	router.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
 	router.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
 	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
 	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 	router.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
-	router.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)
-	router.Post("/attempts/{attempt_id}/end", service.AppHandler(srv.endAttempt).ServeHTTP)
-	router.Post("/items/{ids:(\\d+/)+}start-result", service.AppHandler(srv.startResult).ServeHTTP)
+	routerWithParticipant.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)
+	routerWithParticipant.Post("/attempts/{attempt_id}/end", service.AppHandler(srv.endAttempt).ServeHTTP)
+	routerWithParticipant.Post("/items/{ids:(\\d+/)+}start-result", service.AppHandler(srv.startResult).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.Task, otherTokenFieldName string,
