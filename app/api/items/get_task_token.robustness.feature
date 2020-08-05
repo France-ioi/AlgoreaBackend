@@ -98,14 +98,14 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
     Given I am the user with id "101"
     When I send a GET request to "/items/60/attempts/0/task-token?as_team_id=102"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
 
   Scenario: Attempt group is not a team
     Given I am the user with id "101"
     When I send a GET request to "/items/60/attempts/0/task-token?as_team_id=103"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
 
   Scenario: No result in the DB

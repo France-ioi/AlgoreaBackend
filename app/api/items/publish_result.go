@@ -75,20 +75,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 		return service.ErrInvalidRequest(err)
 	}
 
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		var groupID int64
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
-
+	if service.ParticipantIDFromContext(r.Context()) != user.GroupID {
 		return service.ErrInvalidRequest(errors.New("the service doesn't support 'as_team_id'"))
 	}
 

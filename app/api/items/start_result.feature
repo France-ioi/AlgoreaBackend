@@ -67,7 +67,6 @@ Feature: Start a result for an item
     | 50      |
     | 10      |
 
-
   Scenario: User is able to start a result as a team
     Given I am the user with id "101"
     When I send a POST request to "/items/60/start-result?as_team_id=102&attempt_id=0"

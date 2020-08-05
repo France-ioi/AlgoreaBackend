@@ -60,7 +60,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 31       | 50      | content            |
-    When I send a POST request to "/items/50/enter?as_team_id=21&parent_attempt_id=0"
+    When I send a POST request to "/items/50/enter?as_team_id=11&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -116,10 +116,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 50 | 1                       | User                   | fr                   | true    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
-      | 21       | 50      | solution                 |
+      | 11       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
     And I am the user with id "31"
-    When I send a POST request to "/items/50/enter?as_team_id=21&parent_attempt_id=0"
+    When I send a POST request to "/items/50/enter?as_team_id=11&parent_attempt_id=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -168,7 +168,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And I am the user with id "21"
     When I send a POST request to "/items/60/enter?as_team_id=11&parent_attempt_id=0"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty

@@ -115,4 +115,3 @@ Feature: Start a result for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged
-

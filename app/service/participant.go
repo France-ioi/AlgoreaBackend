@@ -1,11 +1,45 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/render"
+
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
+
+type participantMiddlewareKey int
+
+const ctxParticipant participantMiddlewareKey = iota
+
+// ParticipantMiddleware is a middleware retrieving a participant from the request content.
+// The participant id is the `as_team_id` parameter value if it is given or the user's `group_id` otherwise.
+// If `as_team_id` is given, it should be an id of a team and the user should be a member of this team, otherwise
+// the 'forbidden' error is returned.
+func ParticipantMiddleware(dataStore *database.DataStore) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user := auth.UserFromContext(r.Context())
+			participantID, apiError := GetParticipantIDFromRequest(r, user, dataStore)
+			if apiError != NoError {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				_ = render.Render(w, r, apiError.httpResponse())
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), ctxParticipant, participantID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// ParticipantIDFromContext retrieves a participant id  set by the middleware from a context
+func ParticipantIDFromContext(ctx context.Context) int64 {
+	return ctx.Value(ctxParticipant).(int64)
+}
 
 // GetParticipantIDFromRequest returns `as_team_id` parameter value if it is given or the user's `group_id` otherwise.
 // If `as_team_id` is given, it should be an id of a team and the user should be a member of this team, otherwise
@@ -20,9 +54,7 @@ func GetParticipantIDFromRequest(httpReq *http.Request, user *database.User, sto
 		}
 
 		var found bool
-		found, err = store.Groups().ByID(groupID).Where("type = 'Team'").
-			Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id").
-			Where("groups_groups_active.child_group_id = ?", user.GroupID).HasRows()
+		found, err = store.Groups().TeamGroupForUser(groupID, user).HasRows()
 		MustNotBeError(err)
 		if !found {
 			return 0, ErrForbidden(errors.New("can't use given as_team_id as a user's team"))

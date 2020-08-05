@@ -134,7 +134,7 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 }
 
 func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
-	ids []int64, groupID, attemptID, parentAttemptID int64, attemptIDSet bool, user *database.User, apiError service.APIError) {
+	ids []int64, participantID, attemptID, parentAttemptID int64, attemptIDSet bool, user *database.User, apiError service.APIError) {
 	var err error
 	ids, err = idsFromRequest(r)
 	if err != nil {
@@ -147,21 +147,8 @@ func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
 	}
 
 	user = srv.GetUser(r)
-	groupID = user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
-		if err != nil {
-			return nil, 0, 0, 0, false, nil, service.ErrInvalidRequest(err)
-		}
-
-		var found bool
-		found, err = srv.Store.Groups().TeamGroupForUser(groupID, user).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			return nil, 0, 0, 0, false, nil, service.ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
-		}
-	}
-	return ids, groupID, attemptID, parentAttemptID, attemptIDSet, user, service.NoError
+	participantID = service.ParticipantIDFromContext(r.Context())
+	return ids, participantID, attemptID, parentAttemptID, attemptIDSet, user, service.NoError
 }
 
 func (srv *Service) attemptIDOrParentAttemptID(r *http.Request) (
