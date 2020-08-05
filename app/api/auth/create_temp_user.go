@@ -78,7 +78,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 
 		domainConfig := domain.ConfigFromContext(r.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(
-			[]map[string]interface{}{{"parent_group_id": domainConfig.RootTempGroupID, "child_group_id": userID}}))
+			[]map[string]interface{}{{"parent_group_id": domainConfig.TempUsersGroupID, "child_group_id": userID}}))
 
 		var err error
 		token, expiresIn, err = auth.CreateNewTempSession(store.Sessions(), userID)

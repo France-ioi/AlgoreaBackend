@@ -12,7 +12,7 @@ Feature: Get group children (groupChildrenView)
       | 27 | Our Friends   | 0     | Friends | true    | false     | 56789abcde |
       | 28 | Other         | 0     | Other   | true    | false     | null       |
       | 29 | User          | 0     | User    | true    | false     | null       |
-      | 30 | RootSelf      | 0     | Base    | true    | false     | null       |
+      | 30 | AllUsers      | 0     | Base    | true    | false     | null       |
       | 42 | Their Class   | -3    | Class   | true    | false     | null       |
       | 43 | Other Root    | -2    | Base    | true    | false     | 3567894abc |
       | 44 | Other Team    | -1    | Team    | true    | false     | 678934abcd |
@@ -55,13 +55,13 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0}
     ]
     """
 
@@ -72,13 +72,13 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0},
       {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
@@ -91,13 +91,13 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0},
       {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
@@ -110,9 +110,9 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0},
       {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
@@ -131,7 +131,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -148,7 +148,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -159,17 +159,17 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
     ]
     """
 
   Scenario: User is a manager of the parent group, paging applied, User is skipped
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/children?from.name=Root&from.id=24&types_exclude=User"
+    When I send a GET request to "/groups/13/children?from.name=Our%20Team&from.id=25&types_exclude=User"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "RootSelf", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0}
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0}
     ]
     """

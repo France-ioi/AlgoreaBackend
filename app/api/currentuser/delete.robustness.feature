@@ -3,15 +3,12 @@ Feature: Delete the current user - robustness
     Given the DB time now is "2019-08-09 23:59:59"
     And the database has the following table 'groups':
       | id | type  | name      | require_lock_membership_approval_until |
-      | 1  | Base  | Root      | null                                   |
-      | 2  | Base  | RootSelf  | null                                   |
-      | 4  | Base  | RootTemp  | null                                   |
+      | 2  | Base  | AllUsers  | null                                   |
+      | 4  | Base  | TempUsers | null                                   |
       | 21 | User  | user      | null                                   |
       | 50 | Class | Our class | 2019-08-10 00:00:00                    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | lock_membership_approved_at |
-      | 1               | 2              | null                        |
-      | 1               | 50             | null                        |
       | 2               | 4              | null                        |
       | 2               | 21             | null                        |
       | 50              | 21             | 2019-05-30 11:00:00         |
@@ -54,21 +51,14 @@ Feature: Delete the current user - robustness
     And the table "users" should be empty
     And the table "groups" should be:
       | id | type  | name      | require_lock_membership_approval_until |
-      | 1  | Base  | Root      | null                                   |
-      | 2  | Base  | RootSelf  | null                                   |
-      | 4  | Base  | RootTemp  | null                                   |
+      | 2  | Base  | AllUsers  | null                                   |
+      | 4  | Base  | TempUsers | null                                   |
       | 50 | Class | Our class | 2019-08-10 00:00:00                    |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
-      | 1               | 2              |
-      | 1               | 50             |
       | 2               | 4              |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
-      | 1                 | 1              | true    |
-      | 1                 | 2              | false   |
-      | 1                 | 4              | false   |
-      | 1                 | 50             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
       | 4                 | 4              | true    |

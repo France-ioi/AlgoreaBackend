@@ -302,7 +302,7 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 			}
 			relationsToCreate = append(relationsToCreate,
 				map[string]interface{}{
-					"parent_group_id":                domainConfig.RootSelfGroupID,
+					"parent_group_id":                domainConfig.AllUsersGroupID,
 					"child_group_id":                 userGroupID,
 					"personal_info_view_approved_at": nil, "lock_membership_approved_at": nil, "watch_approved_at": nil},
 				map[string]interface{}{

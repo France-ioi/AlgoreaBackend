@@ -6,18 +6,15 @@ Feature: Create a temporary user
       domains:
         -
           domains: [127.0.0.1]
-          rootGroup: 1
-          rootSelfGroup: 2
-          rootTempGroup: 4
+          allUsersGroup: 2
+          tempUsersGroup: 4
       """
     And the database has the following table 'groups':
-      | id | name     | type | text_id  |
-      | 1  | Root     | Base | Root     |
-      | 2  | RootSelf | Base | RootSelf |
-      | 4  | RootTemp | User | RootTemp |
+      | id | name      | type | text_id   |
+      | 2  | AllUsers  | Base | AllUsers  |
+      | 4  | TempUsers | User | TempUsers |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
-      | 1               | 2              |
       | 2               | 4              |
 
   Scenario: Create a new temporary user
@@ -49,10 +46,6 @@ Feature: Create a temporary user
       | 4               | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
-      | 1                   | 1                   | true    |
-      | 1                   | 2                   | false   |
-      | 1                   | 4                   | false   |
-      | 1                   | 5577006791947779410 | false   |
       | 2                   | 2                   | true    |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
