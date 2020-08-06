@@ -162,7 +162,7 @@ func checkUserHasAppropriateCanGrantViewPermissionForItem(viewPermissionToSet st
 }
 
 func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
-	dbMap["latest_update_on"] = database.Now()
+	dbMap["latest_update_at"] = database.Now()
 
 	columnsToUpdate := make([]string, 0, len(dbMap))
 	for key := range dbMap {

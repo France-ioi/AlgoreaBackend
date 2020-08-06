@@ -45,7 +45,7 @@ Feature: Change item access rights for a group
       | 23       | 101     | info                      |
       | 23       | 103     | info                      |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | source_group_id | latest_update_on    |
+      | group_id | item_id | can_view | source_group_id | latest_update_at    |
       | 23       | 100     | content  | 23              | 2019-05-30 11:00:00 |
     And the database has the following table 'attempts':
       | id | participant_id |
@@ -61,7 +61,7 @@ Feature: Change item access rights for a group
       | 21       | 102     | solution           | solution                 | answer              | all                |
       | 21       | 103     | solution           | solution                 | answer              | all                |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | source_group_id | latest_update_on    |
+      | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | source_group_id | latest_update_at    |
       | 21       | 102     | solution | solution_with_grant | answer_with_grant | all_with_grant | 23              | 2019-05-30 11:00:00 |
     When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
       """
@@ -71,7 +71,7 @@ Feature: Change item access rights for a group
       """
     Then the response should be "updated"
     And the table "permissions_granted" should be:
-      | group_id | item_id | source_group_id | origin           | can_view   | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
+      | group_id | item_id | source_group_id | origin           | can_view   | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
       | 21       | 102     | 23              | group_membership | solution   | 0                                                  |
       | 23       | 100     | 23              | group_membership | content    | 0                                                  |
       | 23       | 102     | 25              | group_membership | <can_view> | 1                                                  |
@@ -100,7 +100,7 @@ Feature: Change item access rights for a group
       | 21       | 102     | solution           | solution                 | answer              | all                |
       | 23       | 102     | none               | none                     | none                | none               |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | origin           | source_group_id | latest_update_on    |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | origin           | source_group_id | latest_update_at    |
       | 21       | 102     | solution | solution       | answer    | all      | group_membership | 23              | 2019-05-30 11:00:00 |
       | 23       | 102     | none     | none           | none      | none     | group_membership | 25              | 2019-05-30 11:00:00 |
     When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
@@ -111,7 +111,7 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "permissions_granted" should be:
-      | group_id | item_id | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
+      | group_id | item_id | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
       | 21       | 102     | 23              | group_membership | solution | solution       | answer    | all      | 0                                                  |
       | 23       | 100     | 23              | group_membership | content  | none           | none      | none     | 0                                                  |
       | 23       | 102     | 25              | group_membership | solution | none           | none      | none     | 1                                                  |
@@ -139,7 +139,7 @@ Feature: Change item access rights for a group
       | 31       | 102     | none               | none                     | none                | none               | 0                  |
       | 31       | 103     | none               | none                     | none                | none               | 0                  |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view | is_owner | source_group_id | origin           | latest_update_on    |
+      | group_id | item_id | can_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 102     | none     | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 101     | content  | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
     When I send a PUT request to "/groups/25/permissions/31/102" with the following body:
@@ -150,7 +150,7 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "permissions_granted" should be:
-      | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
+      | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
       | 21       | 102     | none     | 1        | 23              | group_membership | 0                                                  |
       | 23       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 101     | content  | 0        | 23              | group_membership | 0                                                  |
@@ -185,7 +185,7 @@ Feature: Change item access rights for a group
       | 31       | 102     | content_with_descendants | none                     | 0                  |
       | 31       | 103     | content_with_descendants | none                     | 0                  |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view                 | can_grant_view | is_owner | source_group_id | origin           | latest_update_on    |
+      | group_id | item_id | can_view                 | can_grant_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 100     | solution                 | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | content_with_descendants | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
     When I send a PUT request to "/groups/25/permissions/31/100" with the following body:
@@ -196,7 +196,7 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "permissions_granted" should be:
-      | group_id | item_id | can_view                 | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
+      | group_id | item_id | can_view                 | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
       | 21       | 100     | solution                 | 1        | 23              | group_membership | 0                                                  |
       | 23       | 100     | content                  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 100     | content_with_descendants | 0        | 23              | group_membership | 0                                                  |
@@ -236,7 +236,7 @@ Feature: Change item access rights for a group
       | 31       | 102     | content            | none                     | 0                  |
       | 31       | 103     | content            | none                     | 0                  |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_on    |
+      | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 100     | none     | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | content  | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
     When I send a PUT request to "/groups/25/permissions/31/100" with the following body:
@@ -247,7 +247,7 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "permissions_granted" should be:
-      | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
+      | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
       | 21       | 100     | none     | 1        | 23              | group_membership | 0                                                  |
       | 23       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
@@ -287,7 +287,7 @@ Feature: Change item access rights for a group
       | 31       | 102     | info               | none                     | 0                  |
       | 31       | 103     | info               | none                     | 0                  |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_on    |
+      | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 100     | none     | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | info     | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
     When I send a PUT request to "/groups/25/permissions/31/100" with the following body:
@@ -298,7 +298,7 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "permissions_granted" should be:
-      | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
+      | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
       | 21       | 100     | none     | 1        | 23              | group_membership | 0                                                  |
       | 23       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 100     | info     | 0        | 23              | group_membership | 0                                                  |
