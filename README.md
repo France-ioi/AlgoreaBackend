@@ -61,6 +61,12 @@ Probably you may also want to run
 ```
 to insert the data required by the config.
 
+Also, after changing the DB data manually, you probably want to run
+```
+./bin/AlgoreaBackend db-recompute
+```
+in order to recompute DB caches.
+
 ## Testing
 
 Run all tests (unit and bdd):

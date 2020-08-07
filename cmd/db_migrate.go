@@ -70,13 +70,7 @@ func init() { // nolint:gochecknoinits
 				fmt.Print("Running ANALYZE TABLE `items`\n")
 				_, err = db.Exec("ANALYZE TABLE `items`")
 				assertNoError(err, "Cannot execute ANALYZE TABLE")
-				err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-					fmt.Print("Running GroupGroupStore.After()\n")
-					assertNoError(store.GroupGroups().After(), "Cannot compute groups_groups") // calls createNewAncestors()
-					fmt.Print("Running ItemItemStore.After()\n")
-					assertNoError(store.ItemItems().After(), "Cannot compute items_items") // calls createNewAncestors() & computeAllAccess()
-					return nil
-				})
+				assertNoError(recomputeDBCaches(gormDB), "Cannot recompute db caches")
 			}
 
 			if db.Close() != nil {
@@ -87,4 +81,14 @@ func init() { // nolint:gochecknoinits
 	}
 
 	rootCmd.AddCommand(migrateCmd)
+}
+
+func recomputeDBCaches(gormDB *database.DB) error {
+	return database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+		fmt.Print("Running GroupGroupStore.After()\n")
+		assertNoError(store.GroupGroups().After(), "Cannot compute groups_groups") // calls createNewAncestors()
+		fmt.Print("Running ItemItemStore.After()\n")
+		assertNoError(store.ItemItems().After(), "Cannot compute items_items") // calls createNewAncestors() & computeAllAccess()
+		return nil
+	})
 }

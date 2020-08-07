@@ -60,6 +60,8 @@ db-migrate: $(BIN_PATH)
 	$(BIN_PATH) db-migrate
 db-migrate-undo: $(BIN_PATH)
 	$(BIN_PATH) db-migrate-undo
+db-recompute: $(BIN_PATH)
+	$(BIN_PATH) db-recompute
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
