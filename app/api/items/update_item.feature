@@ -29,7 +29,7 @@ Background:
     | 11       | 60      | solution           | solution_with_grant      | all_with_grant     | true               |
     | 11       | 70      | solution           | solution_with_grant      | all_with_grant     | true               |
   And the database has the following table 'permissions_granted':
-    | group_id | item_id | can_view | is_owner | source_group_id | latest_update_on    |
+    | group_id | item_id | can_view | is_owner | source_group_id | latest_update_at    |
     | 11       | 21      | solution | false    | 11              | 2019-05-30 11:00:00 |
     | 11       | 50      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 60      | none     | true     | 11              | 2019-05-30 11:00:00 |
@@ -88,7 +88,7 @@ Background:
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
       | 11       | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
     And the database table 'results' has also the following rows:
@@ -145,7 +145,7 @@ Background:
       | 11                  | User                | jdoe            |
       | 5577006791947779410 | ContestParticipants | 50-participants |
     And the table "permissions_granted" should be:
-      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
       | 11                  | 21      | solution | none           | none      | none     | false    | 11                  | 0                                                       |
       | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
       | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
@@ -184,7 +184,7 @@ Background:
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
       | 11       | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
     And the database table 'results' has also the following rows:
@@ -223,7 +223,7 @@ Background:
       | id | type | name |
       | 11 | User | jdoe |
     And the table "permissions_granted" should be:
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
       | 11       | 21      | solution | none           | none      | none     | false    | 11              | 0                                                       |
       | 11       | 50      | none     | none           | none      | none     | true     | 11              | 0                                                       |
       | 11       | 60      | none     | none           | none      | none     | true     | 11              | 0                                                       |
@@ -272,7 +272,7 @@ Background:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
     When I send a PUT request to "/items/21" with the following body:
       """
@@ -298,7 +298,7 @@ Background:
       | id                  | type                | name            |
       | 11                  | User                | jdoe            |
     And the table "permissions_granted" should be:
-      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
       | 11                  | 21      | solution | none           | none      | none     | false    | 11                  | 0                                                       |
       | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
       | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |

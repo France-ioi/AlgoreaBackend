@@ -17,9 +17,8 @@ func Middleware(domains []ConfigItem) func(next http.Handler) http.Handler {
 	for _, domain := range domains {
 		for _, host := range domain.Domains {
 			domainsMap[host] = &CtxConfig{
-				RootGroupID:     domain.RootGroup,
-				RootSelfGroupID: domain.RootSelfGroup,
-				RootTempGroupID: domain.RootTempGroup,
+				AllUsersGroupID:  domain.AllUsersGroup,
+				TempUsersGroupID: domain.TempUsersGroup,
 			}
 			if host == "default" {
 				defaultConfig = domainsMap[host]

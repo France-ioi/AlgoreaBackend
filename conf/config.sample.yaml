@@ -30,6 +30,5 @@ logging:
 domains:
   -
     domains: [default] # of a list of domains
-    rootGroup: 10
-    rootSelfGroup: 3
-    rootTempGroup: 2
+    allUsersGroup: 3
+    tempUsersGroup: 2

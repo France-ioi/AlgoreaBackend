@@ -85,7 +85,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	}, result)
 	var count int64
 	assert.NoError(t, dataStore.PermissionsGranted().
-		Where("TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) > 1").Count(&count).Error())
+		Where("TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) > 1").Count(&count).Error())
 	assert.Zero(t, count)
 	assert.NoError(t, dataStore.Permissions().
 		Where("can_view_generated != 'content'").Count(&count).Error())

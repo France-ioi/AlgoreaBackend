@@ -22,15 +22,15 @@ func TestMiddleware(t *testing.T) {
 			name: "ok",
 			domains: []ConfigItem{
 				{
-					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
-					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 7,
+					Domains:       []string{"france-ioi.org", "www.france-ioi.org"},
+					AllUsersGroup: 6, TempUsersGroup: 7,
 				},
 				{
-					Domains:   []string{"192.168.0.1", "127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
+					Domains:       []string{"192.168.0.1", "127.0.0.1"},
+					AllUsersGroup: 2, TempUsersGroup: 4,
 				},
 			},
-			expectedConfig:     &CtxConfig{RootGroupID: 1, RootSelfGroupID: 2, RootTempGroupID: 4},
+			expectedConfig:     &CtxConfig{AllUsersGroupID: 2, TempUsersGroupID: 4},
 			expectedStatusCode: http.StatusOK,
 			shouldEnterService: true,
 		},
@@ -38,15 +38,15 @@ func TestMiddleware(t *testing.T) {
 			name: "use default",
 			domains: []ConfigItem{
 				{
-					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
-					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 7,
+					Domains:       []string{"france-ioi.org", "www.france-ioi.org"},
+					AllUsersGroup: 6, TempUsersGroup: 7,
 				},
 				{
-					Domains:   []string{"default"},
-					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
+					Domains:       []string{"default"},
+					AllUsersGroup: 2, TempUsersGroup: 4,
 				},
 			},
-			expectedConfig:     &CtxConfig{RootGroupID: 1, RootSelfGroupID: 2, RootTempGroupID: 4},
+			expectedConfig:     &CtxConfig{AllUsersGroupID: 2, TempUsersGroupID: 4},
 			expectedStatusCode: http.StatusOK,
 			shouldEnterService: true,
 		},
@@ -54,12 +54,12 @@ func TestMiddleware(t *testing.T) {
 			name: "wrong domain",
 			domains: []ConfigItem{
 				{
-					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
-					RootGroup: 4, RootSelfGroup: 5, RootTempGroup: 7,
+					Domains:       []string{"france-ioi.org", "www.france-ioi.org"},
+					AllUsersGroup: 5, TempUsersGroup: 7,
 				},
 				{
-					Domains:   []string{"192.168.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
+					Domains:       []string{"192.168.0.1"},
+					AllUsersGroup: 2, TempUsersGroup: 4,
 				},
 			},
 			expectedStatusCode: http.StatusNotImplemented,

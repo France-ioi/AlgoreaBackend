@@ -4,7 +4,7 @@ CREATE TABLE `permissions_granted` (
     `item_id` BIGINT(20) NOT NULL,
     `source_group_id` BIGINT(20) NOT NULL,
     `origin` ENUM('group_membership','item_unlocking','self','other') NOT NULL,
-    `latest_update_on` DATETIME NOT NULL DEFAULT NOW()
+    `latest_update_at` DATETIME NOT NULL DEFAULT NOW()
         COMMENT 'Last time one of the attributes has been modified',
     `can_view` ENUM('none','info','content','content_with_descendants','solution') NOT NULL DEFAULT 'none'
         COMMENT 'The level of visibility the group has on the item',
@@ -189,7 +189,7 @@ END
 DELETE `groups_items` FROM `groups_items` LEFT JOIN `groups` ON `groups`.`id` = `groups_items`.`group_id` WHERE `groups`.`id` IS NULL;
 DELETE `groups_items` FROM `groups_items` LEFT JOIN `items` ON `items`.`id` = `groups_items`.`item_id` WHERE `items`.`id` IS NULL;
 
-INSERT INTO `permissions_granted` (group_id, item_id, source_group_id, latest_update_on, can_view, is_owner)
+INSERT INTO `permissions_granted` (group_id, item_id, source_group_id, latest_update_at, can_view, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
        IFNULL(`groups_items`.`creator_id`, IF(`groups_items`.`creator_user_id` = 0, -1, -3)) AS `source_group_id`,
@@ -197,7 +197,7 @@ SELECT `groups_items`.`group_id`,
                              IFNULL(`groups_items`.`partial_access_since`, '1000-01-01 00:00:00'),
                              IFNULL(`groups_items`.`full_access_since`, '1000-01-01 00:00:00'),
                              IFNULL(`groups_items`.`solutions_access_since`, '1000-01-01 00:00:00')
-                         ), '1000-01-01 00:00:00'), NOW()) AS `latest_update_on`,
+                         ), '1000-01-01 00:00:00'), NOW()) AS `latest_update_at`,
        CASE
            WHEN `groups_items`.`solutions_access_since` IS NOT NULL THEN 'solution'
            WHEN `groups_items`.`full_access_since` IS NOT NULL THEN 'content_with_descendants'
@@ -211,11 +211,11 @@ WHERE `groups_items`.`partial_access_since` IS NOT NULL OR
       `groups_items`.`solutions_access_since` IS NOT NULL OR
       `groups_items`.`owner_access`;
 
-INSERT INTO `permissions_granted` (group_id, item_id, source_group_id, latest_update_on, can_view, can_grant_view, can_watch, can_edit, is_owner)
+INSERT INTO `permissions_granted` (group_id, item_id, source_group_id, latest_update_at, can_view, can_grant_view, can_watch, can_edit, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
        IFNULL(`groups_items`.`creator_id`, IF(`groups_items`.`creator_user_id` = 0, -1, -3)) AS `source_group_id`,
-       NOW() AS `latest_update_on`,
+       NOW() AS `latest_update_at`,
        'solution' AS `can_view`,
        'solution' AS `can_grant_view`,
        'answer' AS `can_watch`,
@@ -224,7 +224,7 @@ SELECT `groups_items`.`group_id`,
 FROM `groups_items`
 WHERE `groups_items`.`manager_access`
 ON DUPLICATE KEY UPDATE
-    `permissions_granted`.`latest_update_on` = LEAST(`permissions_granted`.`latest_update_on`, NOW()),
+    `permissions_granted`.`latest_update_at` = LEAST(`permissions_granted`.`latest_update_at`, NOW()),
     `permissions_granted`.`can_view` = 'solution',
     `permissions_granted`.`can_grant_view` = 'solution',
     `permissions_granted`.`can_watch` = 'answer',
@@ -393,11 +393,11 @@ SELECT `permissions_granted`.`group_id`,
        `users`.`group_id` AS `creator_id`,
        IFNULL(`users`.`group_id`, 0) AS `creator_user_id`,
        IF(`permissions_granted`.`can_view` = 'solution',
-           `permissions_granted`.`latest_update_on`, NULL) AS `solutions_access_since`,
+           `permissions_granted`.`latest_update_at`, NULL) AS `solutions_access_since`,
        IF(`permissions_granted`.`can_view` IN ('solution', 'content_with_descendants'),
-          `permissions_granted`.`latest_update_on`, NULL) AS `full_access_since`,
+          `permissions_granted`.`latest_update_at`, NULL) AS `full_access_since`,
        IF(`permissions_granted`.`can_view` IN ('solution', 'content_with_descendants', 'content'),
-          `permissions_granted`.`latest_update_on`, NULL) AS `partial_access_since`,
+          `permissions_granted`.`latest_update_at`, NULL) AS `partial_access_since`,
        `permissions_granted`.`is_owner` AS `owner_access`,
        `permissions_granted`.`can_edit` = 'all' AS `manager_access`
 FROM `permissions_granted`

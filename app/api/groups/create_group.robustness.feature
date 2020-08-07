@@ -100,9 +100,6 @@ Feature: Create a group (groupCreate) - robustness
     | Unknown  |
     | User     |
     | Base     |
-    | RootSelf |
-    | Root     |
-    | RootTemp |
 
   Scenario: Temporary user
     Given I am the user with id "31"

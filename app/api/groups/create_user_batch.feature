@@ -2,7 +2,7 @@ Feature: Create a user batch
   Background:
     Given the database has the following table 'groups':
       | id | type    | name     | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
-      | 2  | Base    | RootSelf | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
+      | 2  | Base    | AllUsers | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
       | 3  | Club    | Club     | 2017-08-10 12:34:55 | view                                  | 3030-01-01 00:00:00                    | 1                      |
       | 4  | Friends | Friends  | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
       | 21 | User    | owner    | 2016-08-10 12:34:55 | none                                  | null                                   | 0                      |
@@ -30,7 +30,7 @@ Feature: Create a user batch
       domains:
         -
           domains: [127.0.0.1]
-          rootSelfGroup: 2
+          allUsersGroup: 2
       """
 
   Scenario: Create a new user batch
@@ -100,7 +100,7 @@ Feature: Create a user batch
       | 8674665223082153551 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000030 | test_custom_ctc | en               | null  | null        | null      |
     And the table "groups" should be:
       | id                  | name            | type    | description     | created_at          | is_open | send_emails |
-      | 2                   | RootSelf        | Base    | null            | 2015-08-10 12:34:55 | false   | false       |
+      | 2                   | AllUsers        | Base    | null            | 2015-08-10 12:34:55 | false   | false       |
       | 3                   | Club            | Club    | null            | 2017-08-10 12:34:55 | false   | false       |
       | 4                   | Friends         | Friends | null            | 2018-08-10 12:34:55 | false   | false       |
       | 21                  | owner           | User    | null            | 2016-08-10 12:34:55 | false   | false       |

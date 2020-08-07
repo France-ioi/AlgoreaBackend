@@ -2,15 +2,13 @@ Feature: Delete the current user
   Background:
     Given the database has the following table 'groups':
       | id  | type  | name       | require_lock_membership_approval_until |
-      | 1   | Base  | Root       | null                                   |
-      | 2   | Base  | RootSelf   | 9999-12-31 23:59:59                    |
-      | 4   | Base  | RootTemp   | null                                   |
+      | 2   | Base  | AllUsers   | 9999-12-31 23:59:59                    |
+      | 4   | Base  | TempUsers  | null                                   |
       | 21  | User  | user       | null                                   |
       | 31  | User  | tmp-1234   | null                                   |
       | 100 | Class | Some class | null                                   |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
-      | 1               | 2              |
       | 2               | 4              |
       | 2               | 21             |
       | 4               | 31             |
@@ -55,14 +53,12 @@ Feature: Delete the current user
       | 1         | tmp-1234 | 31       |
     And the table "groups" should be:
       | id  | type  | name       |
-      | 1   | Base  | Root       |
-      | 2   | Base  | RootSelf   |
-      | 4   | Base  | RootTemp   |
+      | 2   | Base  | AllUsers   |
+      | 4   | Base  | TempUsers  |
       | 31  | User  | tmp-1234   |
       | 100 | Class | Some class |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
-      | 1               | 2              |
       | 2               | 4              |
       | 4               | 31             |
     And the table "group_pending_requests" should be:
@@ -73,10 +69,6 @@ Feature: Delete the current user
       | 100      | 31        |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
-      | 1                 | 1              | true    |
-      | 1                 | 2              | false   |
-      | 1                 | 4              | false   |
-      | 1                 | 31             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
       | 2                 | 31             | false   |
@@ -101,14 +93,12 @@ Feature: Delete the current user
       | 0         | user  | 21       |
     And the table "groups" should be:
       | id  | type  | name       |
-      | 1   | Base  | Root       |
-      | 2   | Base  | RootSelf   |
-      | 4   | Base  | RootTemp   |
+      | 2   | Base  | AllUsers   |
+      | 4   | Base  | TempUsers  |
       | 21  | User  | user       |
       | 100 | Class | Some class |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
-      | 1               | 2              |
       | 2               | 4              |
       | 2               | 21             |
     And the table "group_pending_requests" should be:
@@ -119,10 +109,6 @@ Feature: Delete the current user
       | 100      | 21        |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
-      | 1                 | 1              | true    |
-      | 1                 | 2              | false   |
-      | 1                 | 4              | false   |
-      | 1                 | 21             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
       | 2                 | 21             | false   |

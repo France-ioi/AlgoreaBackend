@@ -258,7 +258,7 @@ func (s *ResultStore) Propagate() (err error) {
 
 		result := ds.db.Exec(`
 			INSERT INTO permissions_granted
-				(group_id, item_id, source_group_id, origin, can_view, latest_update_on)
+				(group_id, item_id, source_group_id, origin, can_view, latest_update_at)
 				SELECT
 					groups.id AS group_id,
 					item_unlocking_rules.unlocked_item_id AS item_id,
@@ -272,7 +272,7 @@ func (s *ResultStore) Propagate() (err error) {
 				JOIN ` + "`groups`" + ` ON groups.id = results.participant_id
 				WHERE results.result_propagation_state = 'to_be_propagated'
 			ON DUPLICATE KEY UPDATE
-				latest_update_on = IF(can_view = 'content', latest_update_on, NOW()),
+				latest_update_at = IF(can_view = 'content', latest_update_at, NOW()),
 				can_view = 'content'`)
 
 		mustNotBeError(result.Error)

@@ -8,7 +8,7 @@ groups:
   - {id: 7, type: "Other"}
   - {id: 8, type: "Base", name: "Root"}
   - {id: 9, type: "User"}
-  - {id: 11, type: "Base", name: "RootSelf"}
+  - {id: 11, type: "Base", name: "AllUsers"}
   - {id: 111, type: "User"}
 
 users: [{group_id: 111}]

@@ -220,13 +220,13 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 	service.MustNotBeError(err)
 
-	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
+	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.AllUsersGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	groupsToCreate := make([]map[string]interface{}, 0, 2)
 	if !found {
 		groupsToCreate = append(groupsToCreate,
-			map[string]interface{}{"parent_group_id": domainConfig.RootSelfGroupID, "child_group_id": groupID})
+			map[string]interface{}{"parent_group_id": domainConfig.AllUsersGroupID, "child_group_id": groupID})
 	}
 
 	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
@@ -249,7 +249,7 @@ func createGroupsFromLogin(store *database.GroupStore, login string, domainConfi
 	}))
 
 	service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking([]map[string]interface{}{
-		{"parent_group_id": domainConfig.RootSelfGroupID, "child_group_id": selfGroupID},
+		{"parent_group_id": domainConfig.AllUsersGroupID, "child_group_id": selfGroupID},
 	}))
 
 	return selfGroupID

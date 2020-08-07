@@ -5,8 +5,7 @@ Feature: Add a parent-child relation between two groups - robustness
       | id | name     | type  |
       | 11 | Group A  | Class |
       | 13 | Group B  | Class |
-      | 15 | Root     | Base  |
-      | 16 | RootSelf | Base  |
+      | 16 | AllUsers | Base  |
       | 18 | User     | User  |
       | 19 | Team     | Team  |
       | 21 | owner    | User  |
@@ -29,7 +28,6 @@ Feature: Add a parent-child relation between two groups - robustness
       | 11       | 25         | memberships           |
       | 11       | 27         | memberships_and_group |
       | 13       | 27         | memberships_and_group |
-      | 15       | 27         | memberships_and_group |
       | 16       | 27         | memberships_and_group |
       | 18       | 27         | memberships_and_group |
       | 19       | 27         | memberships_and_group |
@@ -102,15 +100,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Child group is Root
-    Given I am the user with id "27"
-    When I send a POST request to "/groups/13/relations/15"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
-  Scenario: Child group is RootSelf
+  Scenario: Child group is AllUsers groups
     Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/16"
     Then the response code should be 403
