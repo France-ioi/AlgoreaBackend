@@ -107,9 +107,9 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	}
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, map[string]interface{}{
+	render.Respond(w, r, service.CreationSuccess(map[string]interface{}{
 		"id": strconv.FormatInt(attemptID, 10),
-	})
+	}))
 	return service.NoError
 }
 

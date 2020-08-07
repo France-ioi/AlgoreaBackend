@@ -49,7 +49,9 @@ Feature: Create an attempt for an item
     And the response body should be, in JSON:
       """
       {
-        "id": "1"
+        "success": true,
+        "message": "created",
+        "data": {"id": "1"}
       }
       """
     And the table "attempts" should be:
@@ -73,7 +75,9 @@ Feature: Create an attempt for an item
     And the response body should be, in JSON:
       """
       {
-        "id": "1"
+        "success": true,
+        "message": "created",
+        "data": {"id": "1"}
       }
       """
     And the table "attempts" should be:
@@ -91,7 +95,9 @@ Feature: Create an attempt for an item
     And the response body should be, in JSON:
       """
       {
-        "id": "2"
+        "success": true,
+        "message": "created",
+        "data": {"id": "2"}
       }
       """
     And the table "attempts" should be:
@@ -111,7 +117,9 @@ Feature: Create an attempt for an item
     And the response body should be, in JSON:
       """
       {
-        "id": "3"
+        "success": true,
+        "message": "created",
+        "data": {"id": "3"}
       }
       """
     And the table "attempts" should be:
