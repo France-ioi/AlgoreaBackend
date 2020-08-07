@@ -44,7 +44,7 @@ func (resp *answersSubmitResponse) UnmarshalJSON(raw []byte) error {
 	return nil
 }
 
-type askHintResponse struct {
+type responseWithTaskToken struct {
 	Data struct {
 		TaskToken token.Task `json:"task_token"`
 	} `json:"data"`
@@ -54,7 +54,7 @@ type askHintResponse struct {
 	PublicKey *rsa.PublicKey
 }
 
-type askHintResponseWrapper struct {
+type responseWithTaskTokenWrapper struct {
 	Data struct {
 		TaskToken *string `json:"task_token"`
 	} `json:"data"`
@@ -62,8 +62,8 @@ type askHintResponseWrapper struct {
 	Success bool   `json:"success"`
 }
 
-func (resp *askHintResponse) UnmarshalJSON(raw []byte) error {
-	wrapper := askHintResponseWrapper{}
+func (resp *responseWithTaskToken) UnmarshalJSON(raw []byte) error {
+	wrapper := responseWithTaskTokenWrapper{}
 	if err := json.Unmarshal(raw, &wrapper); err != nil {
 		return err
 	}
@@ -72,28 +72,6 @@ func (resp *askHintResponse) UnmarshalJSON(raw []byte) error {
 	if wrapper.Data.TaskToken != nil {
 		resp.Data.TaskToken.PublicKey = resp.PublicKey
 		return (&resp.Data.TaskToken).UnmarshalString(*wrapper.Data.TaskToken)
-	}
-	return nil
-}
-
-type getTaskTokenResponse struct {
-	TaskToken token.Task `json:"task_token"`
-
-	PublicKey *rsa.PublicKey
-}
-
-type getTaskTokenResponseWrapper struct {
-	TaskToken *string `json:"task_token"`
-}
-
-func (resp *getTaskTokenResponse) UnmarshalJSON(raw []byte) error {
-	wrapper := getTaskTokenResponseWrapper{}
-	if err := json.Unmarshal(raw, &wrapper); err != nil {
-		return err
-	}
-	if wrapper.TaskToken != nil {
-		resp.TaskToken.PublicKey = resp.PublicKey
-		return (&resp.TaskToken).UnmarshalString(*wrapper.TaskToken)
 	}
 	return nil
 }
@@ -134,11 +112,11 @@ func (resp *saveGradeResponse) UnmarshalJSON(raw []byte) error {
 }
 
 var knownTypes = map[string]reflect.Type{
-	"AnswersSubmitRequest":  reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
-	"AnswersSubmitResponse": reflect.TypeOf(&answersSubmitResponse{}).Elem(),
-	"AskHintResponse":       reflect.TypeOf(&askHintResponse{}).Elem(),
-	"SaveGradeResponse":     reflect.TypeOf(&saveGradeResponse{}).Elem(),
-	"GetTaskTokenResponse":  reflect.TypeOf(&getTaskTokenResponse{}).Elem(),
+	"AnswersSubmitRequest":      reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
+	"AnswersSubmitResponse":     reflect.TypeOf(&answersSubmitResponse{}).Elem(),
+	"AskHintResponse":           reflect.TypeOf(&responseWithTaskToken{}).Elem(),
+	"SaveGradeResponse":         reflect.TypeOf(&saveGradeResponse{}).Elem(),
+	"GenerateTaskTokenResponse": reflect.TypeOf(&responseWithTaskToken{}).Elem(),
 }
 
 func getZeroStructPtr(typeName string) (interface{}, error) {
