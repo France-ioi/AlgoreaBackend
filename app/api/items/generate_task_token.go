@@ -14,14 +14,14 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation GET /items/{item_id}/attempts/{attempt_id}/task-token items itemTaskTokenGet
+// swagger:operation POST /items/{item_id}/attempts/{attempt_id}/generate-task-token items itemTaskTokenGenerate
 // ---
-// summary: Get a task token
+// summary: Generate a task token
 // description: >
-//   Get a task token with the refreshed attempt.
+//   Generate a task token with the refreshed attempt.
 //
 //
-//   * `started_at` (if it is NULL) and `latest_activity_at` of `results` are set to the current time.
+//   * `latest_activity_at` of `results` is set to the current time.
 //
 //   * Then the service returns a task token with fresh data for the attempt for the given item.
 //
@@ -32,7 +32,7 @@ import (
 //     * the user (or `{as_team_id}`) should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
 //     * there should be a row in the `results` table with `participant_id` equal to the user's group (or `{as_team_id}`),
-//       `attempt_id` = `{attempt_id}`, `item_id` = `{item_id}`,
+//       `attempt_id` = `{attempt_id}`, `item_id` = `{item_id}`, `started_at` set,
 //     * the attempt with (`participant_id`, `{attempt_id}`) should have allows_submissions_until in the future,
 //
 //   otherwise the 'forbidden' error is returned.
@@ -78,7 +78,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
@@ -137,6 +137,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 			Select("hints_requested, hints_cached").
 			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 			Where("NOW() < attempts.allows_submissions_until").
+			Where("results.started_at IS NOT NULL").
 			Take(&resultInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
@@ -147,7 +148,6 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 
 		// update results
 		service.MustNotBeError(resultScope.UpdateColumn(map[string]interface{}{
-			"started_at":               gorm.Expr("IFNULL(started_at, ?)", database.Now()),
 			"latest_activity_at":       database.Now(),
 			"result_propagation_state": "to_be_propagated",
 		}).Error())
@@ -182,9 +182,9 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, map[string]interface{}{
+	render.Respond(w, r, service.UpdateSuccess(map[string]interface{}{
 		"task_token": signedTaskToken,
-	})
+	}))
 	return service.NoError
 }
 
