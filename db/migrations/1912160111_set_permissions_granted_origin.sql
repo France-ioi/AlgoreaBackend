@@ -9,12 +9,12 @@ UPDATE `permissions_granted` SET `origin` = 'self' WHERE `source_group_id` = `gr
 
 /* 2837 rows */
 UPDATE `permissions_granted`
-    JOIN `item_unlocking_rules` ON `item_unlocking_rules`.`unlocked_item_id` = `permissions_granted`.`item_id`
+    JOIN `item_dependencies` ON `item_dependencies`.`dependent_item_id` = `permissions_granted`.`item_id`
     JOIN `groups` ON `groups`.`id` = `permissions_granted`.`group_id` AND `groups`.`type` = 'UserSelf'
     JOIN `groups_attempts`
         ON `groups_attempts`.`group_id` = `permissions_granted`.`group_id` AND
-           `groups_attempts`.`item_id` = `item_unlocking_rules`.`unlocking_item_id` AND
-           `groups_attempts`.`score` >= `item_unlocking_rules`.`score`
+           `groups_attempts`.`item_id` = `item_dependencies`.`item_id` AND
+           `groups_attempts`.`score` >= `item_dependencies`.`score`
 SET `permissions_granted`.`origin` = 'item_unlocking',
     `permissions_granted`.`source_group_id` = `permissions_granted`.`group_id`
 WHERE `origin` = 'other' AND `can_view` = 'content' AND `can_grant_view` = 'none' AND

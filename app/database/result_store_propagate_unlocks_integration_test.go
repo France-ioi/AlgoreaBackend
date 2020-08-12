@@ -52,16 +52,19 @@ func testUnlocks(db *database.DB, t *testing.T) {
 			"score_computed", 100,
 		).Error())
 	}
-	itemUnlockingRuleStore := database.NewDataStore(db).ItemUnlockingRules()
-	for unlockingItemID, unlockedItemIDs := range map[int64][]int64{1: {1001, 1002}, 3: {2001, 2002}, 4: {4001, 4002}} {
-		for _, unlockedItemID := range unlockedItemIDs {
-			assert.NoError(t, itemUnlockingRuleStore.InsertMap(map[string]interface{}{
-				"unlocking_item_id": unlockingItemID, "unlocked_item_id": unlockedItemID,
+	itemDependencyStore := database.NewDataStore(db).ItemDependencies()
+	for itemID, dependentItemIDs := range map[int64][]int64{1: {1001, 1002}, 3: {2001, 2002}, 4: {4001, 4002}} {
+		for _, dependentItemID := range dependentItemIDs {
+			assert.NoError(t, itemDependencyStore.InsertMap(map[string]interface{}{
+				"item_id": itemID, "dependent_item_id": dependentItemID, "score": 100,
 			}))
 		}
 	}
-	assert.NoError(t, itemUnlockingRuleStore.InsertMap(map[string]interface{}{
-		"unlocking_item_id": 4, "unlocked_item_id": 4003, "score": 101,
+	assert.NoError(t, itemDependencyStore.InsertMap(map[string]interface{}{
+		"item_id": 4, "dependent_item_id": 4003, "score": 101,
+	}))
+	assert.NoError(t, itemDependencyStore.InsertMap(map[string]interface{}{
+		"item_id": 4, "dependent_item_id": 4004, "score": nil,
 	}))
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {

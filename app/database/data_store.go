@@ -116,9 +116,9 @@ func (s *DataStore) ItemItems() *ItemItemStore {
 	return &ItemItemStore{NewDataStoreWithTable(s.DB, "items_items")}
 }
 
-// ItemUnlockingRules returns an ItemUnlockingRuleStore
-func (s *DataStore) ItemUnlockingRules() *ItemUnlockingRuleStore {
-	return &ItemUnlockingRuleStore{NewDataStoreWithTable(s.DB, "item_unlocking_rules")}
+// ItemDependencies returns an ItemDependencyStore
+func (s *DataStore) ItemDependencies() *ItemDependencyStore {
+	return &ItemDependencyStore{NewDataStoreWithTable(s.DB, "item_dependencies")}
 }
 
 // Languages returns a LanguageStore
