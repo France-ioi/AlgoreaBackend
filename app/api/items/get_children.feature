@@ -127,7 +127,6 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": false
         },
-        "requires_explicit_entry": false,
         "results": [
           {
             "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
