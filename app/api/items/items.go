@@ -38,6 +38,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
 
 	routerWithParticipant.Get("/items/{item_id}/children", service.AppHandler(srv.getItemChildren).ServeHTTP)
+	routerWithParticipant.Get("/items/{item_id}/parents", service.AppHandler(srv.getItemParents).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
 

@@ -10,19 +10,19 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
-type itemChildStringNotInfo struct {
+type listItemStringNotInfo struct {
 	// Nullable; only if `can_view` >= 'content'
 	Subtitle *string `json:"subtitle"`
 }
 
-type childItemString struct {
+type listItemString struct {
 	// required: true
 	LanguageTag string `json:"language_tag"`
 	// Nullable
 	// required: true
 	Title *string `json:"title"`
 
-	*itemChildStringNotInfo
+	*listItemStringNotInfo
 }
 
 // swagger:model childItem
@@ -30,9 +30,7 @@ type childItem struct {
 	*commonItemFields
 
 	// required: true
-	String childItemString `json:"string"`
-
-	// items_items (child nodes only)
+	String listItemString `json:"string"`
 
 	// `items_items.order`
 	// required: true
@@ -51,7 +49,7 @@ type childItem struct {
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 }
 
-type rawChildItem struct {
+type rawListItem struct {
 	*RawCommonItemFields
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
@@ -122,18 +120,11 @@ type rawChildItem struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
+	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError :=
+		srv.resolveGetParentsOrChildrenServiceParams(httpReq)
+	if apiError != service.NoError {
+		return apiError
 	}
-
-	attemptID, err := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
-
-	user := srv.GetUser(httpReq)
-	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
 	found, err := srv.Store.Permissions().
 		MatchingGroupAncestors(participantID).
@@ -148,12 +139,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		return service.InsufficientAccessRightsError
 	}
 
-	watchedGroupID, watchedGroupIDSet, apiError := srv.resolveWatchedGroupID(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
-
-	var rawData []rawChildItem
+	var rawData []rawListItem
 	service.MustNotBeError(
 		constructItemChildrenQuery(srv.Store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID,
 			`items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
@@ -176,8 +162,29 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 	return service.NoError
 }
 
+func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, groupID, attemptID int64,
+	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+	externalColumnList string) *database.DB {
+	return constructItemListQuery(
+		dataStore, groupID, watchedGroupIDSet, watchedGroupID, columnList, columnListValues,
+		externalColumnList,
+		func(db *database.DB) *database.DB {
+			return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", parentItemID)
+		},
+		func(db *database.DB) *database.DB {
+			return db.Joins("JOIN items_items ON items_items.child_item_id = item_id").
+				Where("items_items.parent_item_id = ?", parentItemID)
+		},
+		func(db *database.DB) *database.DB {
+			return db.
+				Where(
+					"WHERE attempts.id IS NULL OR IF(attempts.root_item_id <=> results.item_id, attempts.parent_attempt_id, attempts.id) = ?",
+					attemptID)
+		})
+}
+
 func (srv *Service) childItemsFromRawData(
-	rawData []rawChildItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []childItem {
+	rawData []rawListItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []childItem {
 	result := make([]childItem, 0, len(rawData))
 	var currentChild *childItem
 	for index := range rawData {
@@ -186,7 +193,7 @@ func (srv *Service) childItemsFromRawData(
 				commonItemFields: rawData[index].RawCommonItemFields.asItemCommonFields(permissionGrantedStore),
 				BestScore:        rawData[index].BestScore,
 				Results:          make([]structures.ItemResult, 0, 1),
-				String: childItemString{
+				String: listItemString{
 					LanguageTag: rawData[index].StringLanguageTag,
 					Title:       rawData[index].StringTitle,
 				},
@@ -194,7 +201,7 @@ func (srv *Service) childItemsFromRawData(
 				Order:    rawData[index].Order,
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
-				child.String.itemChildStringNotInfo = &itemChildStringNotInfo{Subtitle: rawData[index].StringSubtitle}
+				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 			}
 			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
 			result = append(result, child)

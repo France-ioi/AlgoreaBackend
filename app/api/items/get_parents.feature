@@ -1,4 +1,4 @@
-Feature: Get item children
+Feature: Get item parents
 
   Background:
     Given the database has the following table 'groups':
@@ -43,8 +43,8 @@ Feature: Get item children
       | 22         | 15       | true              |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order | category  |
-      | 200            | 210           | 2           | Discovery |
-      | 200            | 220           | 1           | Discovery |
+      | 210            | 200           | 2           | Discovery |
+      | 220            | 200           | 1           | Discovery |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
       | 11       | 200     | solution                 | enter                    | children           | result              | true               |
@@ -67,17 +67,17 @@ Feature: Get item children
       | tag |
       | fr  |
     And the database has the following table 'attempts':
-      | id | participant_id | created_at          |
-      | 0  | 11             | 2019-05-30 10:00:00 |
-      | 0  | 13             | 2019-05-30 10:00:00 |
-      | 0  | 17             | 2019-05-30 10:00:00 |
-      | 0  | 22             | 2019-05-30 10:00:00 |
-      | 1  | 11             | 2019-05-30 11:00:00 |
-      | 1  | 13             | 2019-05-30 11:00:00 |
-      | 1  | 17             | 2019-05-30 10:00:00 |
+      | id | participant_id | created_at          | root_item_id | parent_attempt_id |
+      | 0  | 11             | 2019-05-30 10:00:00 | null         | null              |
+      | 0  | 13             | 2019-05-30 10:00:00 | null         | null              |
+      | 0  | 17             | 2019-05-30 10:00:00 | null         | null              |
+      | 0  | 22             | 2019-05-30 10:00:00 | null         | null              |
+      | 1  | 11             | 2019-05-30 11:00:00 | null         | null              |
+      | 1  | 13             | 2019-05-30 11:00:00 | null         | null              |
+      | 1  | 17             | 2019-05-30 10:00:00 | 200          | 0                 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at        |
-      | 0          | 11             | 200     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 11.1           | null                |
+      | 0          | 11             | 200     | null                | 2019-05-30 11:00:01 | 11.1           | null                |
       | 0          | 11             | 210     | null                | 2018-05-30 11:00:01 | 12.2           | null                |
       | 0          | 11             | 220     | 2019-05-30 11:00:00 | 2019-05-30 11:00:02 | 13.3           | null                |
       | 0          | 13             | 200     | 2019-05-30 11:00:00 | 2019-05-30 11:00:03 | 0.0            | null                |
@@ -87,16 +87,17 @@ Feature: Get item children
       | 0          | 17             | 210     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 10.0           | 2019-05-30 11:00:01 |
       | 0          | 22             | 200     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null                |
       | 0          | 26             | 200     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null                |
-      | 1          | 11             | 200     | 2019-05-30 12:00:00 | 2019-05-30 12:00:01 | 21.1           | null                |
+      | 1          | 11             | 200     | null                | 2019-05-30 12:00:01 | 21.1           | null                |
       | 1          | 11             | 210     | null                | 2018-05-30 12:00:01 | 22.2           | null                |
       | 1          | 11             | 220     | 2019-05-30 12:00:00 | 2019-05-30 12:00:02 | 3.3            | null                |
       | 1          | 13             | 210     | 2019-05-30 12:00:00 | 2019-05-30 12:00:03 | 24.4           | null                |
       | 1          | 13             | 220     | null                | 2018-05-30 12:00:02 | 5.5            | null                |
+      | 1          | 17             | 200     | 2018-05-30 11:00:00 | 2018-05-30 11:00:01 | 10.0           | 2018-05-30 11:00:01 |
       | 1          | 17             | 210     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 20.0           | 2019-05-30 11:00:01 |
 
   Scenario: Full access on all items (as user)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/children?attempt_id=1"
+    When I send a GET request to "/items/200/parents?attempt_id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -127,17 +128,15 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": false
         },
-        "results": [
-          {
-            "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
-            "attempt_id": "1",
-            "ended_at": null,
-            "latest_activity_at": "2019-05-30T12:00:02Z",
-            "score_computed": 3.3,
-            "started_at": "2019-05-30T12:00:00Z",
-            "validated": false
-          }
-        ]
+        "result": {
+          "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+          "attempt_id": "1",
+          "ended_at": null,
+          "latest_activity_at": "2019-05-30T12:00:02Z",
+          "score_computed": 3.3,
+          "started_at": "2019-05-30T12:00:00Z",
+          "validated": false
+        }
       },
       {
         "id": "210",
@@ -165,24 +164,22 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": true
         },
-        "results": [
-          {
-            "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
-            "attempt_id": "1",
-            "ended_at": null,
-            "latest_activity_at": "2018-05-30T12:00:01Z",
-            "score_computed": 22.2,
-            "started_at": null,
-            "validated": false
-          }
-        ]
+        "result": {
+          "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+          "attempt_id": "1",
+          "ended_at": null,
+          "latest_activity_at": "2018-05-30T12:00:01Z",
+          "score_computed": 22.2,
+          "started_at": null,
+          "validated": false
+        }
       }
     ]
     """
 
   Scenario: Full access on all items (with user language, as user)
     Given I am the user with id "17"
-    When I send a GET request to "/items/200/children?attempt_id=0"
+    When I send a GET request to "/items/200/parents?attempt_id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -208,7 +205,7 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": false
         },
-        "results": [],
+        "result": null,
         "string": {
           "language_tag": "fr",
           "title": "Chapitre B",
@@ -236,17 +233,15 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": false
         },
-        "results": [
-          {
-            "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
-            "attempt_id": "0",
-            "ended_at": null,
-            "latest_activity_at": "2019-05-30T11:00:01Z",
-            "score_computed": 10,
-            "started_at": "2019-05-30T11:00:00Z",
-            "validated": true
-          }
-        ],
+        "result": {
+          "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+          "attempt_id": "0",
+          "ended_at": null,
+          "latest_activity_at": "2019-05-30T11:00:01Z",
+          "score_computed": 10,
+          "started_at": "2019-05-30T11:00:00Z",
+          "validated": true
+        },
         "string": {
           "language_tag": "fr",
           "title": "Chapitre A",
@@ -256,9 +251,9 @@ Feature: Get item children
     ]
     """
 
-  Scenario: Info access on children (as user)
+  Scenario: Info access on parents (as user)
     Given I am the user with id "22"
-    When I send a GET request to "/items/200/children?attempt_id=0"
+    When I send a GET request to "/items/200/parents?attempt_id=0"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -277,7 +272,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "requires_explicit_entry": false,
-        "results": [],
+        "result": null,
         "string": {
           "language_tag": "en",
           "title": "Chapter B"
@@ -304,7 +299,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "requires_explicit_entry": false,
-        "results": [],
+        "result": null,
         "string": {
           "language_tag": "en",
           "title": "Chapter A"
@@ -322,7 +317,7 @@ Feature: Get item children
 
   Scenario: Full access on all items (as team)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/children?as_team_id=13&attempt_id=0"
+    When I send a GET request to "/items/200/parents?as_team_id=13&attempt_id=0"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -353,17 +348,15 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": false
         },
-        "results": [
-          {
-            "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
-            "attempt_id": "0",
-            "ended_at": null,
-            "latest_activity_at": "2018-05-30T11:00:02Z",
-            "score_computed": 15.5,
-            "started_at": null,
-            "validated": false
-          }
-        ]
+        "result": {
+          "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+          "attempt_id": "0",
+          "ended_at": null,
+          "latest_activity_at": "2018-05-30T11:00:02Z",
+          "score_computed": 15.5,
+          "started_at": null,
+          "validated": false
+        }
       },
       {
         "id": "210",
@@ -391,24 +384,22 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": false
         },
-        "results": [
-          {
-            "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
-            "attempt_id": "0",
-            "ended_at": null,
-            "latest_activity_at": "2019-05-30T11:00:03Z",
-            "score_computed": 14.4,
-            "started_at": "2019-05-30T11:00:00Z",
-            "validated": false
-          }
-        ]
+        "result": {
+          "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+          "attempt_id": "0",
+          "ended_at": null,
+          "latest_activity_at": "2019-05-30T11:00:03Z",
+          "score_computed": 14.4,
+          "started_at": "2019-05-30T11:00:00Z",
+          "validated": false
+        }
       }
     ]
     """
 
-  Scenario: Info access on children (as team)
+  Scenario: Info access on parents (as team)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/children?as_team_id=26&attempt_id=0"
+    When I send a GET request to "/items/200/parents?as_team_id=26&attempt_id=0"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -438,7 +429,7 @@ Feature: Get item children
           "can_watch": "none",
           "is_owner": false
         },
-        "results": []
+        "result": null
       },
       {
         "id": "210",
@@ -465,14 +456,14 @@ Feature: Get item children
           "is_owner": false
         },
         "requires_explicit_entry": false,
-        "results": []
+        "result": null
       }
     ]
     """
 
-  Scenario: Info access on children (as user) with watched_group_id
+  Scenario: Info access on parents (as user) with watched_group_id
     Given I am the user with id "22"
-    When I send a GET request to "/items/200/children?attempt_id=0&watched_group_id=15"
+    When I send a GET request to "/items/200/parents?attempt_id=0&watched_group_id=15"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -491,7 +482,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "requires_explicit_entry": false,
-        "results": [],
+        "result": null,
         "string": {
           "language_tag": "en",
           "title": "Chapter B"
@@ -521,7 +512,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "requires_explicit_entry": false,
-        "results": [],
+        "result": null,
         "string": {
           "language_tag": "en",
           "title": "Chapter A"
