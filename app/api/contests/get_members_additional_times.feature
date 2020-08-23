@@ -12,21 +12,25 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 21 | owner       | User    |
       | 31 | john        | User    |
       | 41 | jane        | User    |
+      | 51 | jack        | User    |
+      | 61 | jack        | User    |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
       | john  | 31       |
       | jane  | 41       |
+      | jack  | 51       |
+      | paul  | 61       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 11       | 21         |
-      | 13       | 21         |
-      | 14       | 21         |
-      | 15       | 21         |
-      | 16       | 21         |
-      | 17       | 21         |
-      | 31       | 21         |
-      | 41       | 21         |
+      | group_id | manager_id | can_grant_group_access | can_watch_members |
+      | 11       | 21         | true                   | true              |
+      | 13       | 21         | false                  | false             |
+      | 14       | 21         | false                  | false             |
+      | 15       | 21         | false                  | false             |
+      | 16       | 21         | false                  | false             |
+      | 17       | 21         | false                  | false             |
+      | 31       | 21         | false                  | false             |
+      | 41       | 21         | false                  | false             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 11             |
@@ -36,6 +40,8 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 11              | 15             |
       | 11              | 16             |
       | 11              | 17             |
+      | 11              | 51             |
+      | 11              | 61             |
       | 14              | 31             |
       | 14              | 41             |
       | 15              | 31             |
@@ -52,22 +58,26 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 10               | 60            |
       | 10               | 70            |
       | 60               | 70            |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 51       | 50      | 51              | 9999-12-31 23:59:58 | 9999-12-31 23:59:59 |
+      | 61       | 50      | 61              | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 10       | 50      | none                     |
-      | 11       | 50      | none                     |
-      | 11       | 70      | content_with_descendants |
-      | 13       | 50      | content                  |
-      | 13       | 60      | info                     |
-      | 15       | 60      | info                     |
-      | 16       | 60      | info                     |
-      | 21       | 50      | solution                 |
-      | 21       | 60      | content_with_descendants |
-      | 21       | 70      | content_with_descendants |
-      | 31       | 50      | content_with_descendants |
-      | 31       | 70      | content_with_descendants |
-      | 41       | 50      | content                  |
-      | 41       | 70      | content                  |
+      | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
+      | 10       | 50      | none                     | none                     | none                |
+      | 11       | 50      | none                     | none                     | none                |
+      | 11       | 70      | content_with_descendants | none                     | none                |
+      | 13       | 50      | content                  | none                     | none                |
+      | 13       | 60      | info                     | none                     | none                |
+      | 14       | 50      | content_with_descendants | none                     | none                |
+      | 15       | 60      | info                     | none                     | none                |
+      | 16       | 60      | info                     | none                     | none                |
+      | 21       | 50      | none                     | enter                    | result              |
+      | 21       | 60      | content_with_descendants | content                  | answer              |
+      | 21       | 70      | content_with_descendants | none                     | answer              |
+      | 31       | 70      | content_with_descendants | none                     | none                |
+      | 41       | 50      | info                     | none                     | none                |
+      | 41       | 70      | content                  | none                     | none                |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -88,6 +98,8 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 15             | 1  | 60           |
       | 31             | 1  | 50           |
       | 41             | 1  | 50           |
+      | 51             | 1  | 50           |
+      | 61             | 1  | 50           |
 
   Scenario: Non-team contest
     Given I am the user with id "21"
@@ -96,6 +108,13 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     And the response body should be, in JSON:
     """
     [
+      {
+        "group_id": "51",
+        "name": "jack",
+        "type": "User",
+        "additional_time": 0,
+        "total_additional_time": 3660
+      },
       {
         "group_id": "41",
         "name": "jane",

@@ -15,8 +15,8 @@ import (
 // description: >
 //                Return one group matching the name and satisfying:
 //
-//                  * the group has access to the contest (info, content or content_with_descendants);
-//                  * the authenticated user is a manager of the group;
+//                  * the group can view (at least 'can_view:info') or enter (`can_enter_from` < `can_enter_until`) the item;
+//                  * the authenticated user is a manager of the group with `can_grant_group_access` and `can_watch_members` permissions;
 //                  * the `groups.name` (matching `login` if a "User" group) is matching the input `name` parameter (case-insensitive)
 //
 //                If there are several groups or users matching, returns the first one (by `id`).
@@ -28,7 +28,8 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have at least `content_with_descendants` access on the input item.
+//                  * the authenticated user should have `can_grant_view` >= 'enter', and `can_watch` >= 'result'
+//                    on the input item.
 //
 //                Otherwise, the "Forbidden" response is returned.
 //
@@ -79,6 +80,8 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	service.MustNotBeError(err)
 
 	groupsManagedByUserSubQuery := srv.Store.GroupAncestors().ManagedByUser(user).
+		Group("groups_ancestors.child_group_id").
+		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").
 		Select("groups_ancestors.child_group_id").SubQuery()
 	query := srv.Store.Groups().
 		Joins(`
@@ -87,6 +90,9 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		Joins(`
 			LEFT JOIN permissions_generated ON permissions_generated.group_id = found_group_ancestors.ancestor_group_id AND
 				permissions_generated.item_id = ?`, itemID).
+		Joins(`
+			LEFT JOIN permissions_granted ON permissions_granted.group_id = found_group_ancestors.ancestor_group_id AND
+				permissions_granted.item_id = ?`, itemID).
 		Joins(`
 			LEFT JOIN groups_contest_items ON groups_contest_items.group_id = found_group_ancestors.ancestor_group_id AND
 				groups_contest_items.item_id = ?`, itemID).
@@ -101,8 +107,11 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 			groups.type,
 			IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
 			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
+		Having(`
+			MAX(permissions_generated.can_view_generated_value) >= ? OR
+			MAX(permissions_granted.can_enter_from < permissions_granted.can_enter_until)`,
+			srv.Store.PermissionsGranted().ViewIndexByName("info")).
 		Group("groups.id").
-		HavingMaxPermissionGreaterThan("view", "none").
 		Order("groups.id")
 
 	if participantType == team {

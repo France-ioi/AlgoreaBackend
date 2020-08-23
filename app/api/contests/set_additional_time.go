@@ -28,8 +28,10 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have at least `content_with_descendants` access on the input item;
-//                  * the authenticated user should be a manager of the `group_id`;
+//                  * the authenticated user should have `can_grant_view` >= 'enter' on the input item;
+//                  * the authenticated user should have `can_watch` >= 'result' on the input item;
+//                  * the authenticated user should be a manager of the `group_id`
+//                    with `can_grant_group_access` and `can_watch_members` permissions;
 //                  * if the contest is team-only (`items.entry_participant_type` = 'Team'), then the group should not be a user.
 //
 //                Otherwise, the "Forbidden" response is returned.
@@ -69,6 +71,8 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 
 	var groupType string
 	err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
+		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").
+		Group("groups.id").
 		PluckFirst("groups.type", &groupType).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError

@@ -16,14 +16,6 @@ func (conn *DB) HavingMaxPermissionAtLeast(permissionKind, permissionName string
 			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
 }
 
-// HavingMaxPermissionGreaterThan returns a composable query filtered by `MAX(can_*_generated_value)` > indexOf(`permissionName`)
-// depending on the given permission kind
-func (conn *DB) HavingMaxPermissionGreaterThan(permissionKind, permissionName string) *DB {
-	return newDB(conn.db.
-		Having("MAX("+permissionColumnByKind(permissionKind)+") > ?",
-			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
-}
-
 // JoinsPermissionsForGroupToItemsWherePermissionAtLeast returns a composable query with access rights (as *_generated_value)
 // for all the items on that the given group has 'permissionKind' >= `neededPermission`.
 func (conn *DB) JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID int64, permissionKind, neededPermission string) *DB {

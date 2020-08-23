@@ -4,6 +4,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | id | name    | type  |
       | 12 | Group A | Class |
       | 13 | Group B | Other |
+      | 14 | Group C | Other |
       | 21 | owner   | User  |
       | 31 | john    | User  |
     And the database has the following table 'users':
@@ -11,9 +12,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | owner | 21       |
       | john  | 31       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
-      | 31       | 21         |
+      | group_id | manager_id | can_grant_group_access | can_watch_members |
+      | 12       | 21         | false                  | true              |
+      | 13       | 21         | true                   | true              |
+      | 14       | 21         | true                   | false             |
+      | 31       | 21         | true                   | true              |
     And the groups ancestors are computed
     And the database has the following table 'items':
       | id | duration | entry_participant_type | default_language_tag |
@@ -24,15 +27,15 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 80 | 00:00:04 | Team                   | fr                   |
       | 90 | 00:00:04 | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 13       | 50      | content                  |
-      | 13       | 60      | info                     |
-      | 13       | 70      | content_with_descendants |
-      | 21       | 50      | content                  |
-      | 21       | 60      | content_with_descendants |
-      | 21       | 70      | content_with_descendants |
-      | 21       | 80      | content_with_descendants |
-      | 21       | 90      | info                     |
+      | group_id | item_id | can_grant_view_generated | can_watch_generated |
+      | 13       | 50      | enter                    | result              |
+      | 13       | 60      | enter                    | result              |
+      | 13       | 70      | enter                    | result              |
+      | 21       | 50      | none                     | result              |
+      | 21       | 60      | enter                    | result              |
+      | 21       | 70      | enter                    | result              |
+      | 21       | 80      | enter                    | result              |
+      | 21       | 90      | enter                    | none                |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 13       | 50      | 01:00:00        |
@@ -80,7 +83,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: No such item
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/90/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/contests/404/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -102,7 +105,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should stay unchanged
 
-  Scenario: The user is not a contest admin (can_view = content)
+  Scenario: The user is not a contest admin (can_grant_view = none)
     Given I am the user with id "21"
     When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=0"
     Then the response code should be 403
@@ -110,7 +113,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should stay unchanged
 
-  Scenario: The user is not a contest admin (can_view = info)
+  Scenario: The user is not a contest admin (can_watch = none)
     Given I am the user with id "21"
     When I send a PUT request to "/contests/90/groups/13/additional-times?seconds=0"
     Then the response code should be 403
@@ -118,9 +121,17 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should stay unchanged
 
-  Scenario: The user is not a manager of the group
+  Scenario: The user cannot grant access to the group
     Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/12/additional-times?seconds=0"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "permissions_generated" should stay unchanged
+    And the table "groups_contest_items" should stay unchanged
+
+  Scenario: The user cannot watch group members
+    Given I am the user with id "21"
+    When I send a PUT request to "/contests/70/groups/14/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
