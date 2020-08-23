@@ -27,10 +27,13 @@ type GroupGetResponseCodePart struct {
 // swagger:ignore
 type GroupGetResponseManagerPermissionsPart struct {
 	CurrentUserCanManageValue int `json:"-"`
+	// required:true
 	// enum: none,memberships,memberships_and_group
-	CurrentUserCanManage           string `json:"current_user_can_manage"`
-	CurrentUserCanGrantGroupAccess bool   `json:"current_user_can_grant_group_access"`
-	CurrentUserCanWatchMembers     bool   `json:"current_user_can_watch_members"`
+	CurrentUserCanManage string `json:"current_user_can_manage"`
+	// required:true
+	CurrentUserCanGrantGroupAccess bool `json:"current_user_can_grant_group_access"`
+	// required:true
+	CurrentUserCanWatchMembers bool `json:"current_user_can_watch_members"`
 }
 
 // swagger:model groupGetResponse
@@ -49,7 +52,7 @@ type groupGetResponse struct {
 	// required:true
 	CreatedAt *database.Time `json:"created_at"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,Session
+	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
 	// Nullable
 	// required:true

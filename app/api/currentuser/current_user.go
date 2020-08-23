@@ -37,6 +37,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.createGroupLeaveRequest).ServeHTTP)
 	router.Post("/current-user/group-leave-requests/{group_id}/withdraw", service.AppHandler(srv.withdrawGroupLeaveRequest).ServeHTTP)
 
+	router.Get("/current-user/managed-groups", service.AppHandler(srv.getManagedGroups).ServeHTTP)
+
 	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
 	router.Post("/current-user/group-memberships/by-code", service.AppHandler(srv.joinGroupByCode).ServeHTTP)
 	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
