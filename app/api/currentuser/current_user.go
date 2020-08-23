@@ -27,6 +27,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Delete("/current-user", service.AppHandler(srv.delete).ServeHTTP)
 
 	router.Get("/current-user/available-groups", service.AppHandler(srv.searchForAvailableGroups).ServeHTTP)
+	router.Get("/current-user/check-login-id", service.AppHandler(srv.checkLoginID).ServeHTTP)
 
 	router.Get("/current-user/group-invitations", service.AppHandler(srv.getGroupInvitations).ServeHTTP)
 	router.Post("/current-user/group-invitations/{group_id}/accept", service.AppHandler(srv.acceptGroupInvitation).ServeHTTP)
