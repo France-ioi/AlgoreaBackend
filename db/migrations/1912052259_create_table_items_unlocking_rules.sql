@@ -1,19 +1,21 @@
 -- +migrate Up
-CREATE TABLE `item_unlocking_rules` (
-    `unlocking_item_id` BIGINT(20) NOT NULL,
-    `unlocked_item_id` BIGINT(20) NOT NULL,
-    `score` int(11) NOT NULL DEFAULT '100'
-        COMMENT 'Score of the unlocking item from which the unlocked item is unlocked, i.e. can_view:content is given.',
-    PRIMARY KEY (`unlocking_item_id`, `unlocked_item_id`),
-    CONSTRAINT `fk_item_unlocking_rules_unlocking_item_id_items_id`
-        FOREIGN KEY (`unlocking_item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_item_unlocking_rules_unlocked_item_id_items_id`
-        FOREIGN KEY (`unlocked_item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
+CREATE TABLE `item_dependencies` (
+    `item_id` BIGINT(20) NOT NULL,
+    `dependent_item_id` BIGINT(20) NOT NULL,
+    `score` INT(11) NOT NULL DEFAULT '100'
+        COMMENT 'Score of the item from which the dependent item is unlocked (if grant_content_view is true), i.e. can_view:content is given',
+    `grant_content_view` TINYINT(1) NOT NULL DEFAULT '1'
+        COMMENT 'Whether obtaining the required score at the item grants content view to the dependent item',
+    PRIMARY KEY (`item_id`, `dependent_item_id`),
+    CONSTRAINT `fk_item_dependencies_item_id_items_id`
+        FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_item_dependencies_dependent_item_id_items_id`
+        FOREIGN KEY (`dependent_item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
 );
 
-INSERT INTO `item_unlocking_rules` (`unlocking_item_id`, `unlocked_item_id`, `score`)
-    SELECT `items`.`id` AS `unlocking_item_id`,
-           `ids`.`id` AS `unlocked_item_id`,
+INSERT INTO `item_dependencies` (`item_id`, `dependent_item_id`, `score`)
+    SELECT `items`.`id` AS `item_id`,
+           `ids`.`id` AS `dependent_item_id`,
            `items`.`score_min_unlock` AS `score`
     FROM `items`
         JOIN JSON_TABLE(CONCAT('[', `items`.`unlocked_item_ids`, ']'), "$[*]" COLUMNS(`id` BIGINT PATH '$')) AS `ids`
@@ -33,8 +35,8 @@ ALTER TABLE `groups_attempts`
         AFTER `finished`;
 
 UPDATE `groups_attempts`
-JOIN (SELECT `unlocking_item_id`, MIN(`score`) AS `score` FROM `item_unlocking_rules` GROUP BY `unlocking_item_id`) AS `rules`
-    ON `rules`.`unlocking_item_id` = `groups_attempts`.`item_id` AND `rules`.`score` <= `groups_attempts`.`score`
+JOIN (SELECT `item_id`, MIN(`score`) AS `score` FROM `item_dependencies` GROUP BY `item_id`) AS `rules`
+    ON `rules`.`item_id` = `groups_attempts`.`item_id` AND `rules`.`score` <= `groups_attempts`.`score` AND `rules`.`grant_content_view`
 SET `groups_attempts`.`has_unlocked_items` = 1;
 
 ALTER TABLE `items`
@@ -47,13 +49,14 @@ ALTER TABLE `items`
 
 UPDATE `items`
 JOIN (
-        SELECT `unlocking_item_id` AS `id`,
-               GROUP_CONCAT(`unlocked_item_id`) AS `unlocked_item_ids`,
+        SELECT `item_id` AS `id`,
+               GROUP_CONCAT(`dependent_item_id`) AS `unlocked_item_ids`,
                MAX(`score`) AS `score_min_unlock`
-        FROM `item_unlocking_rules`
-        GROUP BY `unlocking_item_id`
+        FROM `item_dependencies`
+        WHERE `item_dependencies`.`grant_content_view`
+        GROUP BY `item_id`
     ) AS `rules` USING (`id`)
 SET `items`.`unlocked_item_ids` = `rules`.`unlocked_item_ids`,
     `items`.`score_min_unlock` = `rules`.`score_min_unlock`;
 
-DROP TABLE `item_unlocking_rules`;
+DROP TABLE `item_dependencies`;

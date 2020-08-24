@@ -20,7 +20,7 @@ const propagateLockTimeout = 10 * time.Second
 //  Then, if an object has children, we update
 //    latest_activity_at, tasks_tried, tasks_with_help, validated_at.
 //  This step is repeated until no records are updated.
-// 3. We insert new permissions_granted for each unlocked item according to corresponding item_unlocking_rules.
+// 3. We insert new permissions_granted for each unlocked item according to corresponding item_dependencies.
 func (s *ResultStore) Propagate() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -261,14 +261,14 @@ func (s *ResultStore) Propagate() (err error) {
 				(group_id, item_id, source_group_id, origin, can_view, latest_update_at)
 				SELECT
 					groups.id AS group_id,
-					item_unlocking_rules.unlocked_item_id AS item_id,
+					item_dependencies.dependent_item_id AS item_id,
 					groups.id,
 					'item_unlocking',
 					'content',
 					NOW()
 				FROM results
-				JOIN item_unlocking_rules ON item_unlocking_rules.unlocking_item_id = results.item_id AND
-					item_unlocking_rules.score <= results.score_computed
+				JOIN item_dependencies ON item_dependencies.item_id = results.item_id AND
+					item_dependencies.score <= results.score_computed AND item_dependencies.grant_content_view
 				JOIN ` + "`groups`" + ` ON groups.id = results.participant_id
 				WHERE results.result_propagation_state = 'to_be_propagated'
 			ON DUPLICATE KEY UPDATE

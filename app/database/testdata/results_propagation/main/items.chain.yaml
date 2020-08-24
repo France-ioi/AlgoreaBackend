@@ -5,5 +5,5 @@ items:
   - { id: 4, default_language_tag: fr}
   - { id: 5, default_language_tag: fr}
   - { id: 55, default_language_tag: fr}
-item_unlocking_rules:
-  - { unlocking_item_id: 4, unlocked_item_id: 55}
+item_dependencies:
+  - { item_id: 4, dependent_item_id: 55}

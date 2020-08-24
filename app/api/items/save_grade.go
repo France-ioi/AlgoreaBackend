@@ -27,7 +27,7 @@ import (
 // description: >
 //
 //   Saves the grade returned by a grading app into the `gradings` table and updates the attempt results in the DB.
-//   When the `score` = 100 (full score), the service unlocks dependent locked items (if any) and updates `bAccessSolutions`
+//   When the `score` is big enough, the service unlocks locked dependent items (if any) and updates `bAccessSolutions`
 //   of the task token.
 //
 //
