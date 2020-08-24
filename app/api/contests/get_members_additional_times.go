@@ -18,7 +18,8 @@ import (
 //                  * teams if `items.entry_participant_type` = 'Team'
 //                  * end-users groups otherwise
 //
-//                linked to the item via `attempts.root_item_id` and having at least 'info' access to the item,
+//                linked to the item via `attempts.root_item_id`
+//                and able to view (at least 'can_view:info') or enter (`can_enter_from` < `can_enter_until`) the item,
 //                the service returns their `group_id`, `name`, `type` and `additional_time` & `total_additional_time`.
 //
 //
@@ -29,8 +30,10 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `solutions` or `full` access on the input item;
-//                  * the authenticated user should be a manager of the `group_id`.
+//                  * the authenticated user should have `can_grant_view` >= 'enter', and `can_watch` >= 'result'
+//                    on the input item;
+//                  * the authenticated user should be a manager of the `group_id`
+//                    with `can_grant_group_access` and `can_watch_members` permissions.
 // parameters:
 // - name: item_id
 //   description: "`id` of a timed contest"
@@ -96,7 +99,8 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	}
 	service.MustNotBeError(err)
 
-	ok, err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
+	ok, err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
+		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").HasRows()
 	service.MustNotBeError(err)
 	if !ok {
 		return service.InsufficientAccessRightsError
@@ -116,6 +120,9 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 			LEFT JOIN permissions_generated ON permissions_generated.group_id = found_group_ancestors.ancestor_group_id AND
 				permissions_generated.item_id = ?`, itemID).
 		Joins(`
+			LEFT JOIN permissions_granted ON permissions_granted.group_id = found_group_ancestors.ancestor_group_id AND
+				permissions_granted.item_id = ?`, itemID).
+		Joins(`
 			LEFT JOIN groups_contest_items ON groups_contest_items.group_id = found_group_ancestors.ancestor_group_id AND
 				groups_contest_items.item_id = ?`, itemID).
 		Joins(`
@@ -128,7 +135,10 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
 				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 		Group("found_group.id").
-		HavingMaxPermissionGreaterThan("view", "none")
+		Having(`
+			MAX(permissions_generated.can_view_generated_value) >= ? OR
+			MAX(permissions_granted.can_enter_from < permissions_granted.can_enter_until)`,
+			srv.Store.PermissionsGranted().ViewIndexByName("info"))
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,

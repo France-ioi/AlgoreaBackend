@@ -19,15 +19,16 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | owner | 21       |
       | john  | 31       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
-      | 14       | 21         |
-      | 15       | 21         |
-      | 16       | 21         |
-      | 31       | 21         |
+      | group_id | manager_id | can_grant_group_access | can_watch_members |
+      | 13       | 21         | true                   | true              |
+      | 14       | 21         | false                  | false             |
+      | 15       | 21         | true                   | true              |
+      | 16       | 21         | true                   | true              |
+      | 31       | 21         | true                   | true              |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
+      | 10              | 21             | 9999-12-31 23:59:59 |
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 9999-12-31 23:59:59 |
@@ -53,17 +54,17 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10             | 50            | 1           |
       | 10             | 70            | 1           |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 10       | 50      | none                     |
-      | 11       | 50      | none                     |
-      | 11       | 60      | none                     |
-      | 11       | 70      | content_with_descendants |
-      | 13       | 50      | content                  |
-      | 13       | 60      | info                     |
-      | 21       | 50      | solution                 |
-      | 21       | 60      | content_with_descendants |
-      | 21       | 70      | content_with_descendants |
-      | 36       | 10      | info                     |
+      | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
+      | 10       | 50      | none                     | enter                    | none                |
+      | 11       | 50      | none                     | none                     | none                |
+      | 11       | 60      | none                     | none                     | none                |
+      | 11       | 70      | content_with_descendants | none                     | none                |
+      | 13       | 50      | content                  | none                     | none                |
+      | 13       | 60      | info                     | none                     | none                |
+      | 21       | 50      | none                     | none                     | result              |
+      | 21       | 60      | content_with_descendants | none                     | none                |
+      | 21       | 70      | none                     | content                  | answer              |
+      | 36       | 10      | info                     | none                     | none                |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -108,6 +109,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
+      | 10              | 21             | 9999-12-31 23:59:59 |
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 3018-07-03 06:39:37 |
@@ -123,6 +125,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10                | 11             | 0       | 9999-12-31 23:59:59 |
       | 10                | 13             | 0       | 9999-12-31 23:59:59 |
       | 10                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 10                | 21             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 11                | 13             | 0       | 9999-12-31 23:59:59 |
       | 11                | 14             | 0       | 9999-12-31 23:59:59 |
@@ -171,6 +174,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
+      | 10              | 21             | 9999-12-31 23:59:59 |
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 9999-12-31 23:59:59 |
@@ -186,6 +190,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10                | 11             | 0       | 9999-12-31 23:59:59 |
       | 10                | 13             | 0       | 9999-12-31 23:59:59 |
       | 10                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 10                | 21             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 11                | 13             | 0       | 9999-12-31 23:59:59 |
       | 11                | 14             | 0       | 9999-12-31 23:59:59 |
@@ -257,6 +262,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
+      | 10              | 21             | 9999-12-31 23:59:59 |
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 9999-12-31 23:59:59 |
@@ -272,6 +278,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10                | 11             | 0       | 9999-12-31 23:59:59 |
       | 10                | 13             | 0       | 9999-12-31 23:59:59 |
       | 10                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 10                | 21             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 11                | 13             | 0       | 9999-12-31 23:59:59 |
       | 11                | 14             | 0       | 9999-12-31 23:59:59 |
@@ -312,6 +319,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
+      | 10              | 21             | 9999-12-31 23:59:59 |
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 9999-12-31 23:59:59 |
@@ -327,6 +335,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10                | 11             | 0       | 9999-12-31 23:59:59 |
       | 10                | 13             | 0       | 9999-12-31 23:59:59 |
       | 10                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 10                | 21             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 11                | 13             | 0       | 9999-12-31 23:59:59 |
       | 11                | 14             | 0       | 9999-12-31 23:59:59 |
@@ -376,6 +385,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
+      | 10              | 21             | 9999-12-31 23:59:59 |
       | 11              | 13             | 9999-12-31 23:59:59 |
       | 13              | 14             | 9999-12-31 23:59:59 |
       | 34              | 13             | 9999-12-31 23:59:59 |
@@ -391,6 +401,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10                | 11             | 0       | 9999-12-31 23:59:59 |
       | 10                | 13             | 0       | 9999-12-31 23:59:59 |
       | 10                | 14             | 0       | 9999-12-31 23:59:59 |
+      | 10                | 21             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 11                | 13             | 0       | 9999-12-31 23:59:59 |
       | 11                | 14             | 0       | 9999-12-31 23:59:59 |

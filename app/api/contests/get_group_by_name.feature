@@ -2,11 +2,14 @@ Feature: Get group by name (contestGetGroupByName)
   Background:
     Given the database has the following table 'groups':
       | id | name    | type  |
+      | 6  | Group B | Team  |
+      | 7  | Group B | Team  |
       | 10 | Parent  | Club  |
       | 11 | Group A | Class |
       | 13 | Group B | Team  |
       | 14 | Group B | Other |
       | 15 | Team    | Team  |
+      | 16 | Team A  | Team  |
       | 21 | owner   | User  |
       | 31 | john    | User  |
       | 41 | jane    | User  |
@@ -17,11 +20,14 @@ Feature: Get group by name (contestGetGroupByName)
       | john  | 31       |
       | jane  | 41       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 11       | 21         |
-      | 14       | 21         |
-      | 31       | 21         |
-      | 41       | 21         |
+      | group_id | manager_id | can_grant_group_access | can_watch_members |
+      | 6        | 21         | false                  | true              |
+      | 7        | 21         | true                   | false             |
+      | 11       | 21         | true                   | true              |
+      | 14       | 21         | true                   | true              |
+      | 16       | 21         | true                   | true              |
+      | 31       | 21         | true                   | true              |
+      | 41       | 21         | true                   | true              |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 11             |
@@ -45,23 +51,28 @@ Feature: Get group by name (contestGetGroupByName)
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 60               | 70            |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 16       | 70      | 16              | 9999-12-31 23:59:58 | 9999-12-31 23:59:59 |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 10       | 50      | content                  |
-      | 11       | 50      | none                     |
-      | 11       | 60      | info                     |
-      | 11       | 70      | content_with_descendants |
-      | 13       | 50      | content                  |
-      | 13       | 60      | info                     |
-      | 15       | 60      | info                     |
-      | 21       | 10      | content_with_descendants |
-      | 21       | 50      | solution                 |
-      | 21       | 60      | content_with_descendants |
-      | 21       | 70      | content_with_descendants |
-      | 31       | 50      | content_with_descendants |
-      | 31       | 70      | content_with_descendants |
-      | 41       | 10      | content                  |
-      | 41       | 70      | content                  |
+      | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
+      | 10       | 50      | content                  | enter                    | result              |
+      | 11       | 50      | none                     | none                     | none                |
+      | 11       | 60      | info                     | none                     | none                |
+      | 11       | 70      | content_with_descendants | none                     | none                |
+      | 6        | 50      | info                     | none                     | none                |
+      | 7        | 50      | info                     | none                     | none                |
+      | 13       | 50      | content                  | none                     | none                |
+      | 13       | 60      | info                     | none                     | none                |
+      | 15       | 60      | info                     | none                     | none                |
+      | 21       | 10      | content_with_descendants | enter                    | result              |
+      | 21       | 50      | info                     | enter                    | result              |
+      | 21       | 60      | content_with_descendants | content                  | answer              |
+      | 21       | 70      | content_with_descendants | enter                    | result              |
+      | 31       | 50      | content_with_descendants | none                     | none                |
+      | 31       | 70      | content_with_descendants | none                     | none                |
+      | 41       | 10      | content                  | none                     | none                |
+      | 41       | 70      | content                  | none                     | none                |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -77,7 +88,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 41       | 10      | 00:02:00        |
       | 41       | 70      | 00:01:00        |
 
-  Scenario: Content access for group, solutions access for user, additional time from parent groups
+  Scenario: Additional time from parent groups
     Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/by-name?name=Group%20B"
     Then the response code should be 200
@@ -92,7 +103,7 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Info access for group, full access for user
+  Scenario: Additional time for the group itself
     Given I am the user with id "21"
     When I send a GET request to "/contests/60/groups/by-name?name=Group%20B"
     Then the response code should be 200
@@ -107,7 +118,7 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Full access for group, full access for user, additional time is null
+  Scenario: Additional time is null
     Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/by-name?name=Group%20B"
     Then the response code should be 200
@@ -116,6 +127,21 @@ Feature: Get group by name (contestGetGroupByName)
     {
       "group_id": "13",
       "name": "Group B",
+      "type": "Team",
+      "additional_time": 0,
+      "total_additional_time": 0
+    }
+    """
+
+  Scenario: Group cannot view the item, but can enter it
+    Given I am the user with id "21"
+    When I send a GET request to "/contests/70/groups/by-name?name=Team%20A"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "group_id": "16",
+      "name": "Team A",
       "type": "Team",
       "additional_time": 0,
       "total_additional_time": 0

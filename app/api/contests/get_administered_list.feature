@@ -8,20 +8,27 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | admin          | 51       | en               |
       | guest          | 61       | en               |
       | panas          | 71       | uk               |
+    And the database has the following table 'groups':
+      | id | type  | name       |
+      | 80 | Other | Some group |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 80              | 21             |
+    And the groups ancestors are computed
     And the database has the following table 'languages':
       | tag |
       | en  |
       | fr  |
       | sl  |
-    And the groups ancestors are computed
     And the database has the following table 'items':
-      | id | duration | default_language_tag | allows_multiple_attempts | entry_participant_type |
-      | 50 | 00:00:00 | fr                   | 0                        | Team                   |
-      | 60 | 00:00:01 | en                   | 1                        | User                   |
-      | 10 | 00:00:02 | en                   | 0                        | Team                   |
-      | 70 | 00:00:03 | fr                   | 0                        | User                   |
-      | 80 | 00:00:03 | sl                   | 0                        | Team                   |
-      | 90 | 00:00:03 | sl                   | 0                        | User                   |
+      | id | duration | default_language_tag | allows_multiple_attempts | entry_participant_type | requires_explicit_entry |
+      | 10 | 00:00:02 | en                   | 0                        | Team                   | true                    |
+      | 40 | 00:00:00 | fr                   | 0                        | Team                   | false                   |
+      | 50 | 00:00:00 | fr                   | 0                        | Team                   | true                    |
+      | 60 | 00:00:01 | en                   | 1                        | User                   | true                    |
+      | 70 | 00:00:03 | fr                   | 0                        | User                   | true                    |
+      | 80 | 00:00:03 | sl                   | 0                        | Team                   | true                    |
+      | 90 | 00:00:03 | sl                   | 0                        | User                   | true                    |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 0           |
@@ -36,23 +43,28 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 70      | en           | Contest 2  |
       | 70      | fr           | Concours 2 |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 21       | 50      | solution                 |
-      | 21       | 60      | content_with_descendants |
-      | 21       | 70      | content_with_descendants |
-      | 31       | 50      | solution                 |
-      | 31       | 60      | content_with_descendants |
-      | 31       | 70      | content_with_descendants |
-      | 41       | 10      | content                  |
-      | 41       | 50      | solution                 |
-      | 41       | 60      | solution                 |
-      | 41       | 70      | content_with_descendants |
-      | 51       | 10      | info                     |
-      | 51       | 50      | solution                 |
-      | 51       | 60      | solution                 |
-      | 51       | 70      | content_with_descendants |
-      | 71       | 80      | content_with_descendants |
-      | 71       | 90      | content_with_descendants |
+      | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
+      | 21       | 40      | solution                 | enter                    | result              |
+      | 21       | 50      | solution                 | enter                    | result              |
+      | 21       | 60      | info                     | none                     | none                |
+      | 21       | 70      | content_with_descendants | content                  | answer              |
+      | 21       | 80      | none                     | none                     | answer              |
+      | 21       | 90      | info                     | none                     | answer              |
+      | 31       | 50      | solution                 | enter                    | result              |
+      | 31       | 60      | content_with_descendants | content                  | answer              |
+      | 31       | 70      | info                     | enter                    | result              |
+      | 31       | 80      | content_with_descendants | enter                    | none                |
+      | 41       | 10      | content                  | none                     | none                |
+      | 41       | 50      | solution                 | enter                    | result              |
+      | 41       | 60      | solution                 | enter                    | result              |
+      | 41       | 70      | content_with_descendants | enter                    | result              |
+      | 51       | 10      | info                     | none                     | none                |
+      | 51       | 50      | solution                 | enter                    | result              |
+      | 51       | 60      | solution                 | enter                    | result              |
+      | 51       | 70      | content_with_descendants | enter                    | result              |
+      | 71       | 80      | content_with_descendants | enter                    | result              |
+      | 71       | 90      | content_with_descendants | enter                    | result              |
+      | 80       | 60      | none                     | enter                    | result              |
 
   Scenario: User's default language is French (most parents are invisible)
     Given I am the user with id "21"

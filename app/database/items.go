@@ -22,7 +22,7 @@ func (conn *DB) WhereItemsAreVisible(groupID int64) *DB {
 }
 
 // WhereGroupHasPermissionOnItems returns a subview of the items
-// on that the given group has `can_view_generated` >= `viewPermission`
+// on that the given group has `can_[permissionKind]_generated` >= `neededPermission`
 // basing on the given view.
 func (conn *DB) WhereGroupHasPermissionOnItems(groupID int64, permissionKind, neededPermission string) *DB {
 	itemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().
