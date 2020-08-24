@@ -268,7 +268,7 @@ func (s *ResultStore) Propagate() (err error) {
 					NOW()
 				FROM results
 				JOIN item_dependencies ON item_dependencies.item_id = results.item_id AND
-					item_dependencies.score <= results.score_computed
+					item_dependencies.score <= results.score_computed AND item_dependencies.grant_content_view
 				JOIN ` + "`groups`" + ` ON groups.id = results.participant_id
 				WHERE results.result_propagation_state = 'to_be_propagated'
 			ON DUPLICATE KEY UPDATE

@@ -64,7 +64,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		"item_id": 4, "dependent_item_id": 4003, "score": 101,
 	}))
 	assert.NoError(t, itemDependencyStore.InsertMap(map[string]interface{}{
-		"item_id": 4, "dependent_item_id": 4004, "score": nil,
+		"item_id": 4, "dependent_item_id": 4004, "score": 1, "grant_content_view": false,
 	}))
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {

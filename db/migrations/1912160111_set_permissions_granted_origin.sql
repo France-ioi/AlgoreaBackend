@@ -9,7 +9,7 @@ UPDATE `permissions_granted` SET `origin` = 'self' WHERE `source_group_id` = `gr
 
 /* 2837 rows */
 UPDATE `permissions_granted`
-    JOIN `item_dependencies` ON `item_dependencies`.`dependent_item_id` = `permissions_granted`.`item_id`
+    JOIN `item_dependencies` ON `item_dependencies`.`dependent_item_id` = `permissions_granted`.`item_id` AND `item_dependencies`.`grant_content_view`
     JOIN `groups` ON `groups`.`id` = `permissions_granted`.`group_id` AND `groups`.`type` = 'UserSelf'
     JOIN `groups_attempts`
         ON `groups_attempts`.`group_id` = `permissions_granted`.`group_id` AND

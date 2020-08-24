@@ -2,8 +2,10 @@
 CREATE TABLE `item_dependencies` (
     `item_id` BIGINT(20) NOT NULL,
     `dependent_item_id` BIGINT(20) NOT NULL,
-    `score` int(11)
-        COMMENT 'Score of the item from which (if it is not null) the dependent item is unlocked, i.e. can_view:content is given.',
+    `score` INT(11) NOT NULL DEFAULT '100'
+        COMMENT 'Score of the item from which the dependent item is unlocked (if grant_content_view is true), i.e. can_view:content is given',
+    `grant_content_view` TINYINT(1) NOT NULL DEFAULT '1'
+        COMMENT 'Whether obtaining the required score at the item grants content view to the dependent item',
     PRIMARY KEY (`item_id`, `dependent_item_id`),
     CONSTRAINT `fk_item_dependencies_item_id_items_id`
         FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE,
@@ -34,7 +36,7 @@ ALTER TABLE `groups_attempts`
 
 UPDATE `groups_attempts`
 JOIN (SELECT `item_id`, MIN(`score`) AS `score` FROM `item_dependencies` GROUP BY `item_id`) AS `rules`
-    ON `rules`.`item_id` = `groups_attempts`.`item_id` AND `rules`.`score` <= `groups_attempts`.`score`
+    ON `rules`.`item_id` = `groups_attempts`.`item_id` AND `rules`.`score` <= `groups_attempts`.`score` AND `rules`.`grant_content_view`
 SET `groups_attempts`.`has_unlocked_items` = 1;
 
 ALTER TABLE `items`
@@ -51,6 +53,7 @@ JOIN (
                GROUP_CONCAT(`dependent_item_id`) AS `unlocked_item_ids`,
                MAX(`score`) AS `score_min_unlock`
         FROM `item_dependencies`
+        WHERE `item_dependencies`.`grant_content_view`
         GROUP BY `item_id`
     ) AS `rules` USING (`id`)
 SET `items`.`unlocked_item_ids` = `rules`.`unlocked_item_ids`,
