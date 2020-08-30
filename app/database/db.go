@@ -214,7 +214,7 @@ func (conn *DB) Group(query string) *DB {
 // Order specifies order when retrieve records from database, set reorder to `true` to overwrite defined conditions
 //     db.Order("name DESC")
 //     db.Order("name DESC", true) // reorder
-//     db.Order(gorm.Expr("name = ? DESC", "first")) // sql expression
+//     db.Order(gorm.SqlExpr("name = ? DESC", "first")) // sql expression
 func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
 	return newDB(conn.db.Order(value, reorder...))
 }
@@ -226,12 +226,12 @@ func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
 
 // Union specifies UNION of two queries (receiver UNION query)
 func (conn *DB) Union(query interface{}) *DB {
-	return newDB(conn.db.New().Raw("? UNION ?", conn.db.QueryExpr(), query))
+	return newDB(conn.db.New().Raw("? UNION ?", conn.db.SubQuery(), query))
 }
 
 // UnionAll specifies UNION ALL of two queries (receiver UNION ALL query)
 func (conn *DB) UnionAll(query interface{}) *DB {
-	return newDB(conn.db.New().Raw("? UNION ALL ?", conn.db.QueryExpr(), query))
+	return newDB(conn.db.New().Raw("? UNION ALL ?", conn.db.SubQuery(), query))
 }
 
 // Raw uses raw sql as conditions

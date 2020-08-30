@@ -150,9 +150,12 @@ func setAdditionalTimeForGroupInContest(
 	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS new_expires_at").Error())
 	service.MustNotBeError(store.Exec(`
 		CREATE TEMPORARY TABLE new_expires_at (
+			child_group_id BIGINT(20) NOT NULL,
+			expires_at DATETIME NOT NULL,
 			PRIMARY KEY child_group_id (child_group_id)
-		)
-		?`,
+		)`).Error())
+	service.MustNotBeError(store.Exec(`
+		INSERT INTO new_expires_at ?`,
 		// For each of groups participating/participated in the contest ...
 		store.GroupGroups().
 			Where("groups_groups.parent_group_id = ?", participantsGroupID).
