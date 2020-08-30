@@ -81,52 +81,44 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	var results database.GroupGroupTransitionResults
 	var approvalsToRequest map[int64]database.GroupApprovals
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		var groupInfo struct {
-			ID                 int64
-			CodeEndIsNull      bool
-			CodeLifetimeIsNull bool
-			FrozenMembership   bool
-		}
-		errInTransaction := store.Groups().WithWriteLock().
-			Where("type = 'Team'").Where("is_public").
-			Where("code LIKE ?", code).
-			Where("code_expires_at IS NULL OR NOW() < code_expires_at").
-			Select("id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null, frozen_membership").
-			Take(&groupInfo).Error()
-		if gorm.IsRecordNotFoundError(errInTransaction) {
+		info, errInTransaction := store.GetTeamJoiningByCodeInfoByCode(code, true)
+		service.MustNotBeError(errInTransaction)
+		if info == nil {
 			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error // rollback
 		}
-		service.MustNotBeError(errInTransaction)
 
-		if groupInfo.FrozenMembership {
+		if info.FrozenMembership {
 			apiError = service.ErrUnprocessableEntity(errors.New("group membership is frozen"))
 			return apiError.Error // rollback
 		}
 
-		apiError = checkIfCurrentParticipationsConflictWithExistingMemberships(store, groupInfo.ID, user)
-		if apiError != service.NoError {
+		var found bool
+		found, errInTransaction = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.TeamID, user, true)
+		service.MustNotBeError(errInTransaction)
+		if found {
+			apiError = service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations"))
 			return apiError.Error // rollback
 		}
 
 		var ok bool
-		ok, errInTransaction = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupInfo.ID, user.GroupID, true)
+		ok, errInTransaction = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.TeamID, user.GroupID, true)
 		service.MustNotBeError(errInTransaction)
 		if !ok {
 			apiError = service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))
 			return apiError.Error // rollback
 		}
 
-		if groupInfo.CodeEndIsNull && !groupInfo.CodeLifetimeIsNull {
-			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).
+		if info.CodeExpiresAtIsNull && !info.CodeLifetimeIsNull {
+			service.MustNotBeError(store.Groups().ByID(info.TeamID).
 				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
 		}
 
 		var approvals database.GroupApprovals
 		approvals.FromString(r.URL.Query().Get("approvals"))
 		results, approvalsToRequest, errInTransaction = store.GroupGroups().Transition(
-			database.UserJoinsGroupByCode, groupInfo.ID, []int64{user.GroupID},
+			database.UserJoinsGroupByCode, info.TeamID, []int64{user.GroupID},
 			map[int64]database.GroupApprovals{user.GroupID: approvals}, user.GroupID)
 		return errInTransaction
 	})
