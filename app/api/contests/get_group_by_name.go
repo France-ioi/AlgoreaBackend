@@ -122,11 +122,11 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 			Joins(`
 				LEFT JOIN `+"`groups`"+` AS user_group
 					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'User' AND
-						user_group.name LIKE ?`, groupName).
+						user_group.name = ? AND LENGTH(user_group.name) = LENGTH(?)`, groupName, groupName).
 			Group("groups.id, user_group.id").
-			Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)
+			Having("MAX(user_group.id) IS NOT NULL OR (groups.name = ? AND LENGTH(groups.name) = LENGTH(?))", groupName, groupName)
 	} else {
-		query = query.Where("groups.name LIKE ?", groupName)
+		query = query.Where("groups.name = ? AND LENGTH(groups.name) = LENGTH(?)", groupName, groupName)
 	}
 
 	var result contestInfo

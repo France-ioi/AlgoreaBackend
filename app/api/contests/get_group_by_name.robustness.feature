@@ -96,3 +96,9 @@ Feature: Get group by name (contestGetGroupByName) - robustness
     When I send a GET request to "/contests/70/groups/by-name?name=Group%20B%20"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: No such group (wildcards should not work)
+    Given I am the user with id "21"
+    When I send a GET request to "/contests/70/groups/by-name?name=%25"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
