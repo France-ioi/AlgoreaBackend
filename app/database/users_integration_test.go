@@ -97,11 +97,11 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 				var err error
 				if withLock {
 					assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-						got, err = trStore.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, &database.User{GroupID: tt.userID}, true)
+						got, err = trStore.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, tt.userID, true)
 						return err
 					}))
 				} else {
-					got, err = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, &database.User{GroupID: tt.userID}, false)
+					got, err = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, tt.userID, false)
 				}
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want, got)

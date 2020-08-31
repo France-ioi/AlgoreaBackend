@@ -196,7 +196,7 @@ func performBulkMembershipActionTransition(store *database.DataStore, action bul
 
 		if map[bulkMembershipAction]bool{acceptJoinRequestsAction: true, acceptLeaveRequestsAction: true}[action] {
 			ok, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
-				parentGroupID, groupID, action == acceptJoinRequestsAction)
+				parentGroupID, groupID, action == acceptJoinRequestsAction, true)
 			service.MustNotBeError(err)
 			if !ok {
 				return database.GroupGroupTransitionResults{groupID: "entry_condition_failed"}, nil

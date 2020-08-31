@@ -171,7 +171,7 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 		service.MustNotBeError(groupStore.ByID(groupID).WithWriteLock().PluckFirst("type", &groupType).Error())
 		if groupType == team {
 			var ok bool
-			ok, err = groupStore.CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true)
+			ok, err = groupStore.CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true, true)
 			service.MustNotBeError(err)
 			if !ok {
 				return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied")), "", database.GroupApprovals{}
@@ -221,13 +221,13 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	// If the group is a team, ensure that the current user is not a member of
 	// another team having attempts for the same contests.
 	if groupInfo.Type == team {
-		found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(groupID, user, true)
+		found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(groupID, user.GroupID, true)
 		service.MustNotBeError(err)
 		if found {
 			return service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations"))
 		}
 		var ok bool
-		ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true)
+		ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
 			return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))

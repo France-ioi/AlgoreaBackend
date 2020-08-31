@@ -95,7 +95,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 		}
 
 		var found bool
-		found, errInTransaction = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.TeamID, user, true)
+		found, errInTransaction = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.TeamID, user.GroupID, true)
 		service.MustNotBeError(errInTransaction)
 		if found {
 			apiError = service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations"))
@@ -103,7 +103,8 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 		}
 
 		var ok bool
-		ok, errInTransaction = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.TeamID, user.GroupID, true)
+		ok, errInTransaction = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
+			info.TeamID, user.GroupID, true, true)
 		service.MustNotBeError(errInTransaction)
 		if !ok {
 			apiError = service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))

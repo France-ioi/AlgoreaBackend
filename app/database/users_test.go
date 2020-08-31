@@ -35,7 +35,7 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships_
 	mock.ExpectQuery("^SELECT .+ FOR UPDATE\\b.+ FOR UPDATE$").WillReturnRows(mock.NewRows([]string{}))
 	mock.ExpectCommit()
 	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
-		_, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(1, &User{GroupID: 2}, true)
+		_, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(1, 2, true)
 		return err
 	}))
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -50,7 +50,7 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships_
 	mock.ExpectQuery("^SELECT .+$").WillReturnError(expectedError)
 	mock.ExpectRollback()
 	err := NewDataStore(db).InTransaction(func(store *DataStore) error {
-		_, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(1, &User{GroupID: 2}, false)
+		_, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(1, 2, false)
 		return err
 	})
 	assert.Equal(t, expectedError, err)

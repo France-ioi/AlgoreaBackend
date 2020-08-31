@@ -86,24 +86,27 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 // (for more info see description of the itemGetEntryState service).
 // The isAddition parameter specifies if we are going to add or remove a user.
 func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
-	teamGroupID, userID int64, isAddition bool) (bool, error) {
-	teamParticipationsQuery := s.Attempts().
+	teamGroupID, userID int64, isAddition, withLock bool) (bool, error) {
+	activeTeamParticipationsQuery := s.Attempts().
 		Joins(`
 			JOIN results ON results.participant_id = attempts.participant_id AND results.attempt_id = attempts.id AND
 				results.item_id = attempts.root_item_id`).
 		Where("attempts.participant_id = ?", teamGroupID).
 		Where("root_item_id IS NOT NULL").
 		Where("started_at IS NOT NULL").
-		Group("attempts.root_item_id").
-		WithWriteLock()
-
-	activeTeamParticipationsQuery := teamParticipationsQuery.
 		Where("NOW() < allows_submissions_until").
 		Where("ended_at IS NULL").
-		Select("item_id, MIN(started_at) AS started_at")
+		Select("item_id, MIN(started_at) AS started_at").
+		Group("attempts.root_item_id")
 
 	updatedMemberIDsQuery := s.ActiveGroupGroups().Where("parent_group_id = ?", teamGroupID).
-		Select("child_group_id").WithWriteLock()
+		Select("child_group_id")
+
+	if withLock {
+		activeTeamParticipationsQuery = activeTeamParticipationsQuery.WithWriteLock()
+		updatedMemberIDsQuery = updatedMemberIDsQuery.WithWriteLock()
+	}
+
 	if isAddition {
 		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID).QueryExpr())
 	} else {
@@ -118,7 +121,6 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 			LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
 				permissions_granted.item_id = items.id`).
 		Group("items.id, groups_ancestors_active.child_group_id").
-		WithWriteLock().
 		Select(`
 			items.id AS item_id,
 			items.entry_max_team_size,
@@ -127,6 +129,10 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 				MAX(permissions_granted.can_enter_from <= active_participations.started_at AND
 				    active_participations.started_at < permissions_granted.can_enter_until),
 				0) AS can_enter`)
+
+	if withLock {
+		membersPreconditionsQuery = membersPreconditionsQuery.WithWriteLock()
+	}
 
 	found, err := s.Raw(`
 		SELECT 1 FROM (?) members_preconditions

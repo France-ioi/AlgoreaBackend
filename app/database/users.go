@@ -10,7 +10,7 @@ func (conn *DB) WhereUsersAreDescendantsOfGroup(groupID int64) *DB {
 // CheckIfTeamParticipationsConflictWithExistingUserMemberships returns true if the given team
 // has at least one active participation conflicting with active participations of the given user's teams.
 func (store *DataStore) CheckIfTeamParticipationsConflictWithExistingUserMemberships(
-	teamID int64, user *User, withLock bool) (bool, error) {
+	teamID, userGroupID int64, withLock bool) (bool, error) {
 	contestsQuery := store.Attempts().
 		Where("attempts.participant_id = ?", teamID).Where("root_item_id IS NOT NULL").
 		Group("root_item_id")
@@ -18,7 +18,7 @@ func (store *DataStore) CheckIfTeamParticipationsConflictWithExistingUserMembers
 		contestsQuery = contestsQuery.WithWriteLock()
 	}
 
-	query := store.ActiveGroupGroups().Where("child_group_id = ?", user.GroupID).
+	query := store.ActiveGroupGroups().Where("child_group_id = ?", userGroupID).
 		Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id").
 		Joins("JOIN (?) AS teams_contests", contestsQuery. // all the team's attempts (not only active ones)
 									Select("root_item_id AS item_id, MAX(NOW() < attempts.allows_submissions_until) AS is_active").QueryExpr()).
