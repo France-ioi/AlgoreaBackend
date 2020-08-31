@@ -23,7 +23,7 @@ import (
 //   and `at` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `is_public` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `code`,
+//   * If there is no team with `is_public` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `{code}`,
 //     or if the current user is temporary, the forbidden error is returned.
 //
 //   * If the group is a team and the user is already on a team that has attempts for same contest
