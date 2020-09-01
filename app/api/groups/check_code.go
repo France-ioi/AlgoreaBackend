@@ -31,7 +31,7 @@ type groupCodeCheckResponse struct {
 //     or if the group membership is frozen;
 //
 //   * if there is already a row in `groups_groups` with the found team as a parent
-//     and the user’s selfGroup’s id as a child;
+//     and the user’s id as a child;
 //
 //   * if the group is a team and joining breaks entry conditions of at least one of the team's participations
 //     (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied).
