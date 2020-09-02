@@ -63,7 +63,7 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
 		Group("items.id")
 
-	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.QueryExpr())
+	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.SubQuery())
 }
 
 func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID int64,
@@ -254,7 +254,7 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 		subQuery = subQuery.WithWriteLock()
 		visibleItems = visibleItems.WithWriteLock()
 	}
-	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.QueryExpr())
+	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.SubQuery())
 }
 
 // CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),

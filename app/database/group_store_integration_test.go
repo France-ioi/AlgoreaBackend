@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -322,23 +323,27 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 	}
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(mainFixture, tt.fixture)
-			defer func() { _ = db.Close() }()
-			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-				store.GroupGroups().CreateNewAncestors()
-				got, err :=
-					store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(tt.args.teamGroupID, tt.args.userID, tt.args.isAddition)
-				if (err != nil) != tt.wantErr {
-					t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+		db := testhelpers.SetupDBWithFixtureString(mainFixture, tt.fixture)
+		defer func() { _ = db.Close() }()
+		for _, withLock := range []bool{true, false} {
+			withLock := withLock
+			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
+				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+					store.GroupGroups().CreateNewAncestors()
+					got, err :=
+						store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
+							tt.args.teamGroupID, tt.args.userID, tt.args.isAddition, withLock)
+					if (err != nil) != tt.wantErr {
+						t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+						return nil
+					}
+					if got != tt.want {
+						t.Errorf("got = %v, want %v", got, tt.want)
+					}
 					return nil
-				}
-				if got != tt.want {
-					t.Errorf("got = %v, want %v", got, tt.want)
-				}
-				return nil
-			}))
-		})
+				}))
+			})
+		}
 	}
 }
 func ptrString(s string) *string { return &s }

@@ -382,7 +382,7 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbTwo)
 				return db.Union(dbTwo.QueryExpr()), dbs
 			},
-			expectedQuery: "SELECT * FROM `myTable` UNION SELECT * FROM `otherTable`",
+			expectedQuery: "(SELECT * FROM `myTable` ) UNION SELECT * FROM `otherTable`",
 		},
 		{
 			name: "UnionAll",
@@ -391,7 +391,7 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbTwo)
 				return db.UnionAll(dbTwo.QueryExpr()), dbs
 			},
-			expectedQuery: "SELECT * FROM `myTable` UNION ALL SELECT * FROM `otherTable`",
+			expectedQuery: "(SELECT * FROM `myTable` ) UNION ALL SELECT * FROM `otherTable`",
 		},
 	}
 	for _, testCase := range tests {
@@ -743,9 +743,11 @@ func TestDB_RowsAffected(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	mock.ExpectBegin()
 	mock.ExpectExec("^" + regexp.QuoteMeta("UPDATE `myTable` SET `myColumn` = ?") + "$").
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(-1, 123))
+	mock.ExpectCommit()
 
 	rowsAffected := db.Table("myTable").UpdateColumn("myColumn", 1).RowsAffected()
 
@@ -757,9 +759,11 @@ func TestDB_Delete(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `myTable`") + `\s+` +
 		regexp.QuoteMeta("WHERE (id = 1)")).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
+	mock.ExpectCommit()
 
 	db = db.Table("myTable")
 
@@ -1091,9 +1095,11 @@ func TestDB_Updates(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `id` = ?, `name` = ?")).
 		WithArgs(1, someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
 
 	db = db.Table("myTable")
 	updateDB := db.Updates(map[string]interface{}{"id": 1, "name": someName})
@@ -1107,9 +1113,11 @@ func TestDB_UpdateColumn(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `name` = ?")).
 		WithArgs(someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
 
 	db = db.Table("myTable")
 	updateDB := db.UpdateColumn("name", someName)

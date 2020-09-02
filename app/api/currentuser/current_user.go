@@ -171,7 +171,7 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 		service.MustNotBeError(groupStore.ByID(groupID).WithWriteLock().PluckFirst("type", &groupType).Error())
 		if groupType == team {
 			var ok bool
-			ok, err = groupStore.CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true)
+			ok, err = groupStore.CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true, true)
 			service.MustNotBeError(err)
 			if !ok {
 				return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied")), "", database.GroupApprovals{}
@@ -221,39 +221,18 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	// If the group is a team, ensure that the current user is not a member of
 	// another team having attempts for the same contests.
 	if groupInfo.Type == team {
-		if apiErr := checkIfCurrentParticipationsConflictWithExistingMemberships(store, groupID, user); apiErr != service.NoError {
-			return apiErr
+		found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(groupID, user.GroupID, true)
+		service.MustNotBeError(err)
+		if found {
+			return service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations"))
 		}
 		var ok bool
-		ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true)
+		ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
 			return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))
 		}
 	}
 
-	return service.NoError
-}
-
-func checkIfCurrentParticipationsConflictWithExistingMemberships(
-	store *database.DataStore, groupID int64, user *database.User) service.APIError {
-	contestsQuery := store.Attempts().
-		Where("attempts.participant_id = ?", groupID).Where("root_item_id IS NOT NULL").
-		Group("root_item_id").WithWriteLock()
-
-	found, err := store.ActiveGroupGroups().Where("child_group_id = ?", user.GroupID).
-		Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id").
-		Joins("JOIN (?) AS teams_contests", contestsQuery. // all the team's attempts (not only active ones)
-									Select("root_item_id AS item_id, MAX(NOW() < attempts.allows_submissions_until) AS is_active").QueryExpr()).
-		Joins("JOIN items ON items.id = teams_contests.item_id").
-		Joins("JOIN attempts ON attempts.participant_id = groups.id AND attempts.root_item_id = items.id").
-		Where("groups.type = 'Team'").
-		Where("parent_group_id != ?", groupID).
-		Where("(teams_contests.is_active AND NOW() < attempts.allows_submissions_until) OR NOT items.allows_multiple_attempts").
-		WithWriteLock().HasRows()
-	service.MustNotBeError(err)
-	if found {
-		return service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations"))
-	}
 	return service.NoError
 }

@@ -1,0 +1,90 @@
+// +build !unit
+
+package database_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+)
+
+func TestDataStore_GetTeamJoiningByCodeInfoByCode(t *testing.T) {
+	tests := []struct {
+		name     string
+		code     string
+		withLock bool
+		want     *database.TeamJoiningByCodeInfo
+	}{
+		{name: "wrong code", code: "bcd"},
+		{name: "wrong code (the check is case-sensitive)", code: "UVWX"},
+		{name: "wrong code (wildcards do not work)", code: "%"},
+		{name: "group is not a team", code: "abcd", withLock: true},
+		{name: "group is not public", code: "efgh"},
+		{name: "expired code", code: "ijkl"},
+		{
+			name:     "ok",
+			code:     "mnop",
+			withLock: true,
+			want: &database.TeamJoiningByCodeInfo{
+				TeamID:              4,
+				CodeExpiresAtIsNull: false,
+				CodeLifetimeIsNull:  true,
+				FrozenMembership:    false,
+			},
+		},
+		{
+			name: "ok (expires at is null)",
+			code: "qrst",
+			want: &database.TeamJoiningByCodeInfo{
+				TeamID:              5,
+				CodeExpiresAtIsNull: true,
+				CodeLifetimeIsNull:  false,
+				FrozenMembership:    false,
+			},
+		},
+		{
+			name:     "ok (frozen membership)",
+			code:     "uvwx",
+			withLock: true,
+			want: &database.TeamJoiningByCodeInfo{
+				TeamID:              6,
+				CodeExpiresAtIsNull: true,
+				CodeLifetimeIsNull:  true,
+				FrozenMembership:    true,
+			},
+		},
+	}
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups:
+			- {id: 1, type: Class, code: abcd, is_public: 1}
+			- {id: 2, type: Team, code: efgh}
+			- {id: 3, type: Team, code: ijkl, is_public: 1, code_expires_at: 2019-05-30 11:00:00}
+			- {id: 4, type: Team, code: mnop, is_public: 1, code_expires_at: 3019-05-30 11:00:00}
+			- {id: 5, type: Team, code: qrst, is_public: 1, code_lifetime: 01:00:00}
+			- {id: 6, type: Team, code: uvwx, is_public: 1, frozen_membership: 1}
+		`)
+	defer func() { _ = db.Close() }()
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			store := database.NewDataStore(db)
+			var got *database.TeamJoiningByCodeInfo
+			var err error
+			if tt.withLock {
+				assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
+					got, err = trStore.GetTeamJoiningByCodeInfoByCode(tt.code, tt.withLock)
+					return err
+				}))
+			} else {
+				got, err = store.GetTeamJoiningByCodeInfoByCode(tt.code, tt.withLock)
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

@@ -32,7 +32,7 @@ type managedGroupsGetResponseRow struct {
 	CanWatchMembers bool `json:"can_watch_members"`
 }
 
-// swagger:operation GET /current-user/managed_groups groups managedGroupsView
+// swagger:operation GET /current-user/managed-groups groups managedGroupsView
 // ---
 // summary: List groups managed by the current user
 // description:

@@ -286,8 +286,8 @@ func TestDataStore_WithNamedLock(t *testing.T) {
 	store := NewDataStoreWithTable(db, "tableName")
 	err := store.WithNamedLock(lockName, timeout, func(s *DataStore) error {
 		assert.Equal(t, store.tableName, s.tableName)
-		assert.Equal(t, store, s)
-		assert.Equal(t, store.db, s.db)
+		assert.NotEqual(t, store, s)
+		assert.Equal(t, store.db.DB(), s.db.DB())
 		var result []interface{}
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})

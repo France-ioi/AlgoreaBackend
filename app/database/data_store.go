@@ -21,6 +21,11 @@ func NewDataStoreWithTable(conn *DB, tableName string) *DataStore {
 	return &DataStore{conn.Table(tableName), tableName}
 }
 
+// ActiveGroupGroups returns a GroupGroupStore working with the `groups_groups_active` view
+func (s *DataStore) ActiveGroupGroups() *GroupGroupStore {
+	return &GroupGroupStore{NewDataStoreWithTable(s.DB, "groups_groups_active")}
+}
+
 // Answers returns a AnswerStore
 func (s *DataStore) Answers() *AnswerStore {
 	return &AnswerStore{NewDataStoreWithTable(s.DB, "answers")}
@@ -64,11 +69,6 @@ func (s *DataStore) ActiveGroupAncestors() *GroupAncestorStore {
 // GroupGroups returns a GroupGroupStore
 func (s *DataStore) GroupGroups() *GroupGroupStore {
 	return &GroupGroupStore{NewDataStoreWithTable(s.DB, "groups_groups")}
-}
-
-// ActiveGroupGroups returns a GroupGroupStore working with the `groups_groups_active` view
-func (s *DataStore) ActiveGroupGroups() *GroupGroupStore {
-	return &GroupGroupStore{NewDataStoreWithTable(s.DB, "groups_groups_active")}
 }
 
 // GroupMembershipChanges returns a GroupMembershipChangeStore
