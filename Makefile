@@ -19,6 +19,7 @@ GODOG=$(BIN_DIR)/godog
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
+PWD=$(shell pwd)
 
 # extract AWS_PROFILE if given
 ifdef AWS_PROFILE
@@ -88,7 +89,14 @@ clean:
 lambda-build:
 	GOOS=linux $(GOBUILD) -o $(BIN_PATH)-linux
 lambda-archive: lambda-build
-	zip -j $(LOCAL_BIN_DIR)/lambda.zip $(BIN_PATH)-linux
+	# create an archive with the linux binary, the lambda config file and private_key.pem/public_key.pem that must be stored in the current directory
+	rm -rf $(LOCAL_BIN_DIR)/lambda.zip
+	TMPDIR=`mktemp -d -t algoreabackend-XXXXXXXXXX` && \
+	cp $(BIN_PATH)-linux ./private_key.pem ./public_key.pem "$$TMPDIR/" && \
+	mkdir -p "$$TMPDIR/conf" && \
+	cp ./conf/config.lambda.yaml "$$TMPDIR/conf/config.yaml" && \
+	cd "$$TMPDIR" && zip -r $(PWD)/$(LOCAL_BIN_DIR)/lambda.zip . && \
+	rm -rf "$$TMPDIR"
 lambda-upload: lambda-archive
 	# pass AWS profile with AWS_PROFILE: make AWS_PROFILE="myprofile" lambda-upload
 	aws lambda update-function-code --function-name AlgoreaBackend --zip-file fileb://$(LOCAL_BIN_DIR)/lambda.zip $(AWS_PARAMS)
