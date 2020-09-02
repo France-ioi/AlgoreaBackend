@@ -130,6 +130,57 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             | not_ready      |
       | One                              | not_ready      |
 
+  Scenario Outline: entry_min_admitted_members_ratio is ignored when the team itself can enter the contest (depending on entering_time_* & can_enter_*)
+    Given the database has the following table 'items':
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag | entering_time_min   | entering_time_max   |
+      | 60 | 00:00:00 | 1                       | Team                   | All                              | 3                   | fr                   | <entering_time_min> | <entering_time_max> |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 60      | 31              | <can_enter_from>    | <can_enter_until>   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
+    And I am the user with id "31"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": <users_can_enter>,
+      "entry_min_admitted_members_ratio": "All",
+      "max_team_size": 3,
+      "other_members": [
+        {
+          "can_enter": <users_can_enter>,
+          "attempts_restriction_violated": false,
+          "first_name": "Jane",
+          "group_id": "41",
+          "last_name": null,
+          "login": "jane"
+        },
+        {
+          "can_enter": <users_can_enter>,
+          "attempts_restriction_violated": false,
+          "first_name": "Jack",
+          "group_id": "51",
+          "last_name": "Daniel",
+          "login": "jack"
+        }
+      ],
+      "current_team_is_frozen": false,
+      "frozen_teams_required": false,
+      "state": "<expected_state>"
+    }
+    """
+  Examples:
+    | can_enter_from      | can_enter_until     | entering_time_min   | entering_time_max   | expected_state | users_can_enter |
+    | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 3008-12-31 23:59:59 | ready          | true            |
+    | 3007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 3008-12-31 23:59:59 | not_ready      | false           |
+    | 2007-01-01 10:21:21 | 2008-01-01 10:21:21 | 2007-12-31 23:59:59 | 3008-12-31 23:59:59 | not_ready      | false           |
+    | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 5099-12-31 23:59:59 | 9999-12-31 23:59:59 | not_ready      | false           |
+    | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 | not_ready      | false           |
+
   Scenario Outline: Team-only contest when one member can enter
     Given the database has the following table 'items':
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
@@ -336,6 +387,60 @@ Feature: Get entry state (itemGetEntryState)
       | All                              |
       | Half                             |
       | One                              |
+
+  Scenario Outline: Team-only contest ignores size of the team when the team itself can enter the contest (depending on entering_time_* & can_enter_*)
+    Given the database has the following table 'items':
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag | entering_time_min   | entering_time_max   |
+      | 60 | 00:00:00 | 1                       | Team                   | None                             | 2                   | fr                   | <entering_time_min> | <entering_time_max> |
+    And the database table 'permissions_granted' has also the following row:
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 60      | 31              | <can_enter_from>    | <can_enter_until>   |
+      | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 51              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
+    And I am the user with id "31"
+    When I send a GET request to "/items/60/entry-state?as_team_id=11"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": <users_can_enter>,
+      "entry_min_admitted_members_ratio": "None",
+      "max_team_size": 2,
+      "other_members": [
+        {
+          "can_enter": <users_can_enter>,
+          "attempts_restriction_violated": false,
+          "first_name": "Jane",
+          "group_id": "41",
+          "last_name": null,
+          "login": "jane"
+        },
+        {
+          "can_enter": <users_can_enter>,
+          "attempts_restriction_violated": false,
+          "first_name": "Jack",
+          "group_id": "51",
+          "last_name": "Daniel",
+          "login": "jack"
+        }
+      ],
+      "current_team_is_frozen": false,
+      "frozen_teams_required": false,
+      "state": "<expected_state>"
+    }
+    """
+  Examples:
+    | can_enter_from      | can_enter_until     | entering_time_min   | entering_time_max   | expected_state | users_can_enter |
+    | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 3008-12-31 23:59:59 | ready          | true            |
+    | 3007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 3008-12-31 23:59:59 | not_ready      | true            |
+    | 2007-01-01 10:21:21 | 2008-01-01 10:21:21 | 2007-12-31 23:59:59 | 3008-12-31 23:59:59 | not_ready      | true            |
+    | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 5099-12-31 23:59:59 | 9999-12-31 23:59:59 | not_ready      | false           |
+    | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 | not_ready      | false           |
 
   Scenario Outline: State is already_started for an individual contest
     Given the database table 'groups' has also the following row:
