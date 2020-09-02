@@ -1,0 +1,32 @@
+# config to be used for now with lambda deployment, with all config entries (to be overridden by env vars) and
+# with domains (not definable with env varaibles)
+server:
+  rootpath: "/"
+  port: 8080
+  compress: false
+auth:
+  loginModuleURL: ""
+  clientID: ""
+  clientSecret: ""
+token:
+  platformName: ""
+  publicKeyFile: ""
+  privateKeyFile: ""
+database:
+  user: ""
+  passwd: ""
+  addr: ""
+  dbname: ""
+  net: tcp
+  allownativepasswords: true
+logging:
+  format: "" # text, json
+  output: stdout # stdout, stderr, file
+  level: debug # debug, info, warning, error, fatal, panic
+  logSQLQueries: true
+  logRawSQLQueries: false
+domains:
+  -
+    domains: [default]
+    allUsersGroup: 1
+    tempUsersGroup: 4
