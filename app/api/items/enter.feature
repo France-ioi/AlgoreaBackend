@@ -1,14 +1,15 @@
 Feature: Enters a contest as a group (user self or team) (contestEnter)
   Background:
     Given the database has the following table 'groups':
-      | id | name         | type                |
-      | 11 | Team 2       | Team                |
-      | 21 | owner        | User                |
-      | 31 | john         | User                |
-      | 41 | jane         | User                |
-      | 51 | jack         | User                |
-      | 98 | item60-group | ContestParticipants |
-      | 99 | item50-group | ContestParticipants |
+      | id | name         | type                | root_activity_id |
+      | 10 | Class        | Class               | 10               |
+      | 11 | Team 2       | Team                | 60               |
+      | 21 | owner        | User                | null             |
+      | 31 | john         | User                | 50               |
+      | 41 | jane         | User                | null             |
+      | 51 | jack         | User                | null             |
+      | 98 | item60-group | ContestParticipants | null             |
+      | 99 | item50-group | ContestParticipants | null             |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -17,15 +18,16 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | jack  | 51       | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 10              | 31             |
       | 11              | 31             |
       | 11              | 41             |
       | 11              | 51             |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id | default_language_tag | is_root |
-      | 10 | fr                   | true    |
-      | 20 | fr                   | false   |
-      | 30 | fr                   | false   |
+      | id | default_language_tag |
+      | 10 | fr                   |
+      | 20 | fr                   |
+      | 30 | fr                   |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 20               | 30            |
@@ -101,12 +103,15 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 1          | 31             | 50      | 3019-10-10 10:10:10 |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
+      | 10              | 31             | 9999-12-31 23:59:59 |
       | 11              | 31             | 9999-12-31 23:59:59 |
       | 11              | 41             | 9999-12-31 23:59:59 |
       | 11              | 51             | 9999-12-31 23:59:59 |
       | 99              | 31             | 3019-10-10 11:11:11 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
+      | 10                | 10             | 1       | 9999-12-31 23:59:59 |
+      | 10                | 31             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
@@ -118,8 +123,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a team-only contest
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag | is_root |
-      | 60 | 05:05:05 | 1                       | Team                   | Half                             | 3                   | 98                    | fr                   | true    |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 05:05:05 | 1                       | Team                   | Half                             | 3                   | 98                    | fr                   |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
@@ -167,12 +172,15 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 1          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
+      | 10              | 31             | 9999-12-31 23:59:59 |
       | 11              | 31             | 9999-12-31 23:59:59 |
       | 11              | 41             | 9999-12-31 23:59:59 |
       | 11              | 51             | 9999-12-31 23:59:59 |
       | 98              | 11             | 3019-10-10 16:16:16 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
+      | 10                | 10             | 1       | 9999-12-31 23:59:59 |
+      | 10                | 31             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
@@ -184,8 +192,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Reenter a contest as a team
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag | is_root |
-      | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                             | 10                  | 99                    | fr                   | true    |
+      | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                             | 10                  | 99                    | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 99              | 11             | 2019-05-30 11:00:00 |
@@ -235,12 +243,15 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 2          | 11             | 60      | 3019-10-10 10:10:10 | done                     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
+      | 10              | 31             | 9999-12-31 23:59:59 |
       | 11              | 31             | 9999-12-31 23:59:59 |
       | 11              | 41             | 9999-12-31 23:59:59 |
       | 11              | 51             | 9999-12-31 23:59:59 |
       | 99              | 11             | 3019-10-10 13:13:13 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
+      | 10                | 10             | 1       | 9999-12-31 23:59:59 |
+      | 10                | 31             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
@@ -252,8 +263,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a contest that doesn't have items.participants_group_id set
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | default_language_tag | is_root |
-      | 50 | 01:01:01 | 1                       | User                   | None                             | fr                   | true    |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | default_language_tag |
+      | 50 | 01:01:01 | 1                       | User                   | None                             | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -299,8 +310,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a contest with empty duration
     Given the database table 'items' has also the following row:
-      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag | is_root |
-      | 50 | null     | 1                       | User                   | None                             | 99                    | fr                   | true    |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
+      | 50 | null     | 1                       | User                   | None                             | 99                    | fr                   |
     And the database table 'items_ancestors' has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
@@ -346,12 +357,15 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 1          | 31             | 50      | 3019-10-10 10:10:10 |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
+      | 10              | 31             | 9999-12-31 23:59:59 |
       | 11              | 31             | 9999-12-31 23:59:59 |
       | 11              | 41             | 9999-12-31 23:59:59 |
       | 11              | 51             | 9999-12-31 23:59:59 |
       | 99              | 31             | 9999-12-31 23:59:59 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
+      | 10                | 10             | 1       | 9999-12-31 23:59:59 |
+      | 10                | 31             | 0       | 9999-12-31 23:59:59 |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |

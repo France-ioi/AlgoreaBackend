@@ -91,8 +91,8 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_BreadcrumbsHierarchyForParentAttempt(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
-			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1, is_root: 1}
-			- {id: 2, default_language_tag: fr, is_root: 1}
+			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
+			- {id: 2, default_language_tag: fr}
 			- {id: 3, default_language_tag: fr, allows_multiple_attempts: 1}
 			- {id: 4, default_language_tag: fr}
 			- {id: 5, default_language_tag: fr, allows_multiple_attempts: 1}
@@ -109,26 +109,26 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {parent_item_id: 6, child_item_id: 8, child_order: 1}
 		groups:
 			- {id: 50, root_activity_id: 4}
-			- {id: 100}
+			- {id: 100, root_activity_id: 2}
 			- {id: 101, root_activity_id: 4}
 			- {id: 102}
-			- {id: 103}
-			- {id: 104}
-			- {id: 105}
-			- {id: 106}
-			- {id: 107}
-			- {id: 108}
-			- {id: 109}
-			- {id: 110}
-			- {id: 111}
-			- {id: 112}
-			- {id: 113}
-			- {id: 114}
-			- {id: 115}
-			- {id: 116}
-			- {id: 117}
-			- {id: 118}
-			- {id: 119}
+			- {id: 103, root_activity_id: 2}
+			- {id: 104, root_activity_id: 2}
+			- {id: 105, root_activity_id: 2}
+			- {id: 106, root_activity_id: 2}
+			- {id: 107, root_activity_id: 2}
+			- {id: 108, root_activity_id: 2}
+			- {id: 109, root_activity_id: 2}
+			- {id: 110, root_activity_id: 2}
+			- {id: 111, root_activity_id: 2}
+			- {id: 112, root_activity_id: 2}
+			- {id: 113, root_activity_id: 2}
+			- {id: 114, root_activity_id: 2}
+			- {id: 115, root_activity_id: 2}
+			- {id: 116, root_activity_id: 2}
+			- {id: 117, root_activity_id: 2}
+			- {id: 118, root_activity_id: 2}
+			- {id: 119, root_activity_id: 1}
 			- {id: 120, root_skill_id: 4}
 			- {id: 121}
 		groups_groups:
@@ -345,14 +345,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "first item is a root item",
-			args:                 args{ids: []int64{2, 4}, groupID: 100, parentAttemptID: 200},
-			want:                 true,
-			wantAttemptIDMap:     map[int64]int64{2: 200},
-			wantAttemptNumberMap: map[int64]int{},
-		},
-		{
-			name: "first item is neither a root item nor the group's activity/skill",
+			name: "first item is not the group's activity/skill",
 			args: args{ids: []int64{6, 8}, groupID: 101, parentAttemptID: 201},
 		},
 		{
@@ -494,8 +487,8 @@ func assertBreadcrumbsHierarchy(t *testing.T,
 func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
-			- {id: 1, default_language_tag: fr, is_root: 1, allows_multiple_attempts: 1}
-			- {id: 2, default_language_tag: fr, is_root: 1}
+			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
+			- {id: 2, default_language_tag: fr}
 			- {id: 3, default_language_tag: fr, allows_multiple_attempts: 1}
 			- {id: 4, default_language_tag: fr}
 			- {id: 5, default_language_tag: fr, allows_multiple_attempts: 1}
@@ -512,26 +505,26 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {parent_item_id: 6, child_item_id: 8, child_order: 1}
 		groups:
 			- {id: 50, root_activity_id: 4}
-			- {id: 100}
+			- {id: 100, root_activity_id: 2}
 			- {id: 101, root_activity_id: 4}
 			- {id: 102}
-			- {id: 103}
-			- {id: 104}
-			- {id: 105}
-			- {id: 106}
-			- {id: 107}
-			- {id: 108}
-			- {id: 109}
-			- {id: 110}
-			- {id: 111}
-			- {id: 112}
-			- {id: 113}
-			- {id: 114}
-			- {id: 115}
-			- {id: 116}
-			- {id: 117}
-			- {id: 118}
-			- {id: 119}
+			- {id: 103, root_activity_id: 2}
+			- {id: 104, root_activity_id: 2}
+			- {id: 105, root_activity_id: 2}
+			- {id: 106, root_activity_id: 2}
+			- {id: 107, root_activity_id: 2}
+			- {id: 108, root_activity_id: 2}
+			- {id: 109, root_activity_id: 2}
+			- {id: 110, root_activity_id: 2}
+			- {id: 111, root_activity_id: 2}
+			- {id: 112, root_activity_id: 2}
+			- {id: 113, root_activity_id: 2}
+			- {id: 114, root_activity_id: 2}
+			- {id: 115, root_activity_id: 2}
+			- {id: 116, root_activity_id: 2}
+			- {id: 117, root_activity_id: 2}
+			- {id: 118, root_activity_id: 2}
+			- {id: 119, root_activity_id: 1}
 			- {id: 120, root_skill_id: 4}
 			- {id: 121}
 		groups_groups:
@@ -788,13 +781,7 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "first item is a root item",
-			args:                 args{ids: []int64{2, 4}, groupID: 100, attemptID: 201},
-			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
-			wantAttemptNumberMap: map[int64]int{},
-		},
-		{
-			name: "first item is neither a root item nor the group's activity/skill",
+			name: "first item is not the group's activity/skill",
 			args: args{ids: []int64{6, 8}, groupID: 101, attemptID: 202},
 		},
 		{

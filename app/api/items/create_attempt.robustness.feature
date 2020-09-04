@@ -1,11 +1,11 @@
 Feature: Create an attempt for an item - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  | type  |
-      | 101 | User  |
-      | 102 | Team  |
-      | 103 | Class |
-      | 104 | Team  |
+      | id  | type  | root_activity_id | root_skill_id |
+      | 101 | User  | null             | null          |
+      | 102 | Team  | null             | null          |
+      | 103 | Class | 50               | 90            |
+      | 104 | Team  | 50               | 90            |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |
@@ -15,10 +15,10 @@ Feature: Create an attempt for an item - robustness
       | 104             | 101            |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag | is_root |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   | true    |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   | false   |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   | true    |
+      | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |

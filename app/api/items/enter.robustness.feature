@@ -1,14 +1,15 @@
 Feature: Enters a contest as a group (user self or team) (contestEnter) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name         | type                |
-      | 10 | Team 1       | Team                |
-      | 11 | Team 2       | Team                |
-      | 21 | owner        | User                |
-      | 31 | john         | User                |
-      | 41 | jane         | User                |
-      | 51 | jack         | User                |
-      | 99 | item50-group | ContestParticipants |
+      | id | name         | type                | root_activity_id |
+      | 9  | Class        | Class               | 50               |
+      | 10 | Team 1       | Team                | null             |
+      | 11 | Team 2       | Team                | 60               |
+      | 21 | owner        | User                | null             |
+      | 31 | john         | User                | null             |
+      | 41 | jane         | User                | null             |
+      | 51 | jack         | User                | null             |
+      | 99 | item50-group | ContestParticipants | null             |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -17,6 +18,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | jack  | 51       | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 9               | 31             |
       | 10              | 31             |
       | 10              | 41             |
       | 10              | 51             |
@@ -55,8 +57,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
   Scenario: The item is not visible to the team
     Given I am the user with id "31"
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | default_language_tag | is_root |
-      | 50 | 1                       | fr                   | true    |
+      | id | requires_explicit_entry | default_language_tag |
+      | 50 | 1                       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 31       | 50      | content            |
@@ -81,8 +83,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The item is not visible to the user (can_view = none)
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | default_language_tag | is_root |
-      | 50 | 1                       | fr                   | true    |
+      | id | requires_explicit_entry | default_language_tag |
+      | 50 | 1                       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 31       | 50      | none               |
@@ -96,8 +98,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The item is visible, but it's not a contest
     Given the database has the following table 'items':
-      | id | default_language_tag | is_root |
-      | 50 | fr                   | true    |
+      | id | default_language_tag |
+      | 50 | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 21       | 50      | solution                 |
@@ -112,8 +114,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: as_team_id is given while the item's entry_participant_type = User
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | default_language_tag | is_root |
-      | 50 | 1                       | User                   | fr                   | true    |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 50 | 1                       | User                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | solution                 |
@@ -128,8 +130,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: as_team_id is not a team related to the item while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | default_language_tag | is_root |
-      | 60 | 1                       | Team                   | fr                   | true    |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 60 | 1                       | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -144,8 +146,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: as_team_id is not given while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | default_language_tag | is_root |
-      | 60 | 1                       | Team                   | fr                   | true    |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 60 | 1                       | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -159,8 +161,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The current user is not a member of as_team_id while the item's entry_participant_type = Team
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | default_language_tag | is_root |
-      | 60 | 1                       | Team                   | fr                   | true    |
+      | id | requires_explicit_entry | entry_participant_type | default_language_tag |
+      | 60 | 1                       | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -175,8 +177,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The contest is not ready
     Given the database has the following table 'items':
-      | id | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag | is_root |
-      | 60 | 1                       | Team                   | All                              | 3                   | fr                   | true    |
+      | id | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag |
+      | 60 | 1                       | Team                   | All                              | 3                   | fr                   |
     And the database table 'permissions_granted' has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
@@ -201,8 +203,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario Outline: Reenter a non-team contest
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag | is_root |
-      | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   | true    |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
+      | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at   |
       | 99              | 31             | <expires_at> |
@@ -237,8 +239,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: Reenter an already entered (not expired) contest as a team
     Given the database has the following table 'items':
-      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag | is_root |
-      | 60 | 01:01:01 | 1                       | Team                   | None                             | 10                  | 99                    | fr                   | true    |
+      | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | 1                       | Team                   | None                             | 10                  | 99                    | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 99              | 11             |

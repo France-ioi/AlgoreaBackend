@@ -3,9 +3,10 @@ Feature: Get item breadcrumbs
 Background:
   Given the database has the following table 'groups':
     | id | name    | text_id | grade | type  | root_activity_id | root_skill_id |
-    | 11 | jdoe    |         | -2    | User  | null             | null          |
-    | 13 | Group B |         | -2    | Class | null             | null          |
+    | 11 | jdoe    |         | -2    | User  | 22               | null          |
+    | 13 | Group B |         | -2    | Class | 21               | null          |
     | 14 | Team B  |         | -2    | Team  | 23               | 25            |
+    | 15 | Group C |         | -2    | Class | 21               | null          |
   And the database has the following table 'languages':
     | tag |
     | en  |
@@ -14,12 +15,12 @@ Background:
     | login | group_id | default_language |
     | jdoe  | 11       | fr               |
   And the database has the following table 'items':
-    | id | type    | default_language_tag | is_root | allows_multiple_attempts |
-    | 21 | Course  | en                   | 1       | 0                        |
-    | 22 | Chapter | en                   | 1       | 1                        |
-    | 23 | Chapter | en                   | 0       | 1                        |
-    | 24 | Task    | fr                   | 0       | 0                        |
-    | 25 | Chapter | en                   | 0       | 1                        |
+    | id | type    | default_language_tag | allows_multiple_attempts |
+    | 21 | Course  | en                   | 0                        |
+    | 22 | Chapter | en                   | 1                        |
+    | 23 | Chapter | en                   | 1                        |
+    | 24 | Task    | fr                   | 0                        |
+    | 25 | Chapter | en                   | 1                        |
   And the database has the following table 'items_strings':
     | item_id | language_tag | title            |
     | 21      | en           | Graph: Methods   |
@@ -31,6 +32,7 @@ Background:
     | parent_group_id | child_group_id |
     | 13              | 11             |
     | 14              | 11             |
+    | 15              | 14             |
   And the groups ancestors are computed
 
 Scenario: Full access on all the breadcrumbs (as a user)

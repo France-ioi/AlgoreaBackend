@@ -25,8 +25,8 @@ func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root items (items.is_root) or
-//    a root activity/skill (groups.root_activity_id/root_skill_id) of a group the `groupID` is a descendant of,
+//  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
+//    of a group the `groupID` is a descendant of,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids`,
 //  * the `groupID` group has a started, allowing submission, not ended result for each item but the last,
@@ -59,7 +59,7 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 		Where("item_id IN (?)", ids).
 		Joins("JOIN items ON items.id = permissions.item_id").
 		Select(`
-			items.id, items.is_root, items.allows_multiple_attempts,
+			items.id, items.allows_multiple_attempts,
 			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
 		Group("items.id")
 
@@ -78,7 +78,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 	}
 
 	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).
-		Where("items0.is_root OR items0.id IN ? OR items0.id IN ?",
+		Where("items0.id IN ? OR items0.id IN ?",
 			participantActivities.SubQuery(), participantSkills.SubQuery())
 
 	for i := 1; i < len(ids); i++ {
@@ -118,7 +118,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids (but the last item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root items (items.is_root) or a root activity/skill (groups.root_activity_id/root_skill_id)
+//  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
 //    of a group the `groupID` is a descendant of,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
@@ -150,8 +150,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 // BreadcrumbsHierarchyForAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids if it is a valid participation hierarchy
 // for the given `attemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root items (items.is_root) or
-//    the activity/skill item (groups.root_activity_id/root_skill_id) of a group
+//  * the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
 //    the `groupID` is a descendant of,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
@@ -246,7 +245,7 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 		Where("item_id IN(?)", ids).
 		Joins("JOIN items ON items.id = permissions.item_id").
 		Select(`
-			items.id, items.is_root, items.allows_multiple_attempts,
+			items.id, items.allows_multiple_attempts,
 			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
 		Group("items.id")
 

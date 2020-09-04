@@ -12,9 +12,9 @@ Feature: List official sessions for item_id - robustness
       | 13              | 11             |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id  | allows_multiple_attempts | default_language_tag | is_root |
-      | 200 | 0                        | fr                   | true    |
-      | 210 | 1                        | fr                   | false   |
+      | id  | allows_multiple_attempts | default_language_tag |
+      | 200 | 0                        | fr                   |
+      | 210 | 1                        | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | none                     |

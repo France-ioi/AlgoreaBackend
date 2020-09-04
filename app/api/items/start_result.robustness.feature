@@ -1,11 +1,11 @@
 Feature: Start a result for an item - robustness
   Background:
     Given the database has the following table 'groups':
-      | id  | type  |
-      | 101 | User  |
-      | 102 | Team  |
-      | 103 | Class |
-      | 104 | Team  |
+      | id  | type  | root_activity_id | root_skill_id |
+      | 101 | User  | 70               | null          |
+      | 102 | Team  | null             | null          |
+      | 103 | Class | 50               | 90            |
+      | 104 | Team  | 50               | 90            |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |
@@ -15,11 +15,11 @@ Feature: Start a result for an item - robustness
       | 104             | 101            |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag | is_root | requires_explicit_entry |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   | true    | false                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   | false   | false                   |
-      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   | true    | true                    |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   | true    | false                   |
+      | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag | requires_explicit_entry |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   | false                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   | false                   |
+      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   | true                    |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   | false                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |
