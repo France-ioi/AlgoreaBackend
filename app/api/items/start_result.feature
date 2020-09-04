@@ -1,24 +1,29 @@
 Feature: Start a result for an item
   Background:
     Given the database has the following table 'groups':
-      | id  | type | root_activity_id |
-      | 101 | User | null             |
-      | 102 | Team | 60               |
-      | 111 | User | null             |
+      | id  | type  | root_activity_id |
+      | 90  | Class | 10               |
+      | 91  | Other | 50               |
+      | 101 | User  | null             |
+      | 102 | Team  | 60               |
+      | 111 | User  | null             |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |
       | jane  | 111      |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 90              | 111            |
+      | 90              | 102            |
+      | 91              | 111            |
       | 102             | 101            |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag | is_root |
-      | 10 | null                                                                    | Chapter | 1                        | fr                   | true    |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   | true    |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | fr                   | false   |
-      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   | false   |
+      | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag |
+      | 10 | null                                                                    | Chapter | 1                        | fr                   |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | fr                   |
+      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
