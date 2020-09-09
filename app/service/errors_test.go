@@ -96,6 +96,13 @@ func TestNotFound(t *testing.T) {
 	assert.Equal(http.StatusNotFound, recorder.Code)
 }
 
+func TestConflict(t *testing.T) {
+	assert := assertlib.New(t)
+	recorder := responseForError(service.ErrConflict(errors.New("conflict error")))
+	assert.Equal(`{"success":false,"message":"Conflict","error_text":"Conflict error"}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusConflict, recorder.Code)
+}
+
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
