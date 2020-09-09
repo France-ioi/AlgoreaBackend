@@ -50,6 +50,15 @@ import (
 //
 //   The action should not create cycles in the groups relations graph, otherwise
 //   the `group_id` gets skipped with `cycle` as the result.
+//
+//
+//   If `groups.enforce_max_participants` is true and the new number of participants exceeds `groups.max_participants`
+//   for the `{parent_group_id}` group,
+//   all the valid joining groups get skipped with `full` as the result.
+//   (The number of participants is computed as the number of non-expired users or teams which are direct children
+//   of the group + invitations (join requests are not counted)).
+//
+//
 //   The response status code on success (200) doesn't depend on per-group results.
 // parameters:
 // - name: parent_group_id

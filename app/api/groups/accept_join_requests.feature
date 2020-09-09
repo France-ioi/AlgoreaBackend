@@ -1,20 +1,20 @@
 Feature: Accept group requests
   Background:
     Given the database has the following table 'groups':
-      | id  | type    | require_personal_info_access_approval |
-      | 11  | Class   | none                                  |
-      | 13  | Team    | none                                  |
-      | 14  | Friends | view                                  |
-      | 21  | User    | none                                  |
-      | 31  | User    | none                                  |
-      | 111 | User    | none                                  |
-      | 121 | User    | none                                  |
-      | 122 | User    | none                                  |
-      | 123 | User    | none                                  |
-      | 131 | User    | none                                  |
-      | 141 | User    | none                                  |
-      | 151 | User    | none                                  |
-      | 161 | User    | none                                  |
+      | id  | type    | require_personal_info_access_approval | enforce_max_participants | max_participants |
+      | 11  | Class   | none                                  | false                    | null             |
+      | 13  | Team    | none                                  | false                    | null             |
+      | 14  | Friends | view                                  | true                     | 7                |
+      | 21  | User    | none                                  | false                    | null             |
+      | 31  | User    | none                                  | false                    | null             |
+      | 111 | User    | none                                  | false                    | null             |
+      | 121 | User    | none                                  | false                    | null             |
+      | 122 | User    | none                                  | false                    | null             |
+      | 123 | User    | none                                  | false                    | null             |
+      | 131 | User    | none                                  | false                    | null             |
+      | 141 | User    | none                                  | false                    | null             |
+      | 151 | User    | none                                  | false                    | null             |
+      | 161 | User    | none                                  | false                    | null             |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
@@ -120,6 +120,43 @@ Feature: Accept group requests
       | 141               | 141            | 1       |
       | 151               | 151            | 1       |
       | 161               | 161            | 1       |
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
+
+  Scenario: The group is full
+    Given I am the user with id "21"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage  |
+      | 14       | 21         | memberships |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
+      | 14       | 11        | invitation   | 0                           | 0                        | 0              | 2019-06-05 00:00:00 |
+      | 14       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00 |
+      | 14       | 31        | join_request | 1                           | 0                        | 0              | 2019-06-02 00:00:00 |
+      | 14       | 141       | join_request | 1                           | 1                        | 1              | 2019-06-03 00:00:00 |
+      | 14       | 161       | join_request | 0                           | 0                        | 0              | 2019-06-04 00:00:00 |
+    When I send a POST request to "/groups/14/join-requests/accept?group_ids=31,141,21,11,13,122,151"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "data": {
+        "141": "full",
+        "31": "full",
+        "11": "invalid",
+        "13": "invalid",
+        "21": "invalid",
+        "122": "invalid",
+        "151": "invalid"
+      },
+      "message": "updated",
+      "success": true
+    }
+    """
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
 

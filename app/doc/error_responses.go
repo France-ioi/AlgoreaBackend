@@ -31,6 +31,13 @@ type forbiddenResponse struct {
 	Body struct{ forbidden }
 }
 
+// Conflict. Wrong resource state is not allowing to perform the operation
+// swagger:response conflictResponse
+type conflictResponse struct {
+	// in: body
+	Body struct{ forbidden }
+}
+
 // Not Found. The requested object (or its scope) is not found
 // (note that this error may be caused by insufficient access rights)
 // swagger:response notFoundResponse

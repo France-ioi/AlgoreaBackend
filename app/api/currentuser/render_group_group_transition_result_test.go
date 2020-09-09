@@ -29,6 +29,13 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 				`"error_text":"Cycles in the group relations graph are not allowed"}`,
 		},
 		{
+			name:           "full",
+			result:         database.Full,
+			wantStatusCode: http.StatusConflict,
+			wantResponseBody: `{"success":false,"message":"Conflict",` +
+				`"error_text":"The group is full"}`,
+		},
+		{
 			name:             "invalid (not found)",
 			result:           database.Invalid,
 			actions:          []userGroupRelationAction{acceptInvitationAction, rejectInvitationAction, leaveGroupAction},

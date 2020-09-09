@@ -59,6 +59,12 @@ import (
 //   If the group is a team and joining breaks entry conditions of at least one of the team's participations
 //   (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
 //   the unprocessable entity error is returned.
+//
+//
+//   If `groups.enforce_max_participants` is true and the number of participants >= `groups.max_participants`,
+//   the conflict error is returned.
+//   (The number of participants is computed as the number of non-expired users or teams which are direct children
+//    of the group + invitations (join requests are not counted)).
 // parameters:
 // - name: group_id
 //   in: path
@@ -79,6 +85,8 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
+//   "409":
+//     "$ref": "#/responses/conflictResponse"
 //   "422":
 //     "$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //   "500":

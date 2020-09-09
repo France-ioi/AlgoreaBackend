@@ -17,6 +17,9 @@ import (
 //               (or there is a direct relation between the user
 //                and the group... which should not happen)
 // "unchanged" - if an invitation has been already sent
+// "full"      - for all the invitations if `groups.enforce_max_participants` is true and
+//               the new total number of non-expired users or teams
+//               which are direct children of the group + invitations > `groups.max_participants`
 // "success"   - all other cases (note: user requests become accepted if any)
 
 const maxAllowedLoginsToInvite = 100
@@ -60,6 +63,12 @@ const maxAllowedLoginsToInvite = 100
 //
 //   The action should not create cycles in the groups relations graph, otherwise
 //   the login gets skipped with `cycle` as the result.
+//
+//
+//   If `groups.enforce_max_participants` is true and the new number of participants exceeds `groups.max_participants`,
+//   all the valid logins get skipped with `full` as the result.
+//   (The number of participants is computed as the number of non-expired users or teams which are direct children
+//   of the group + invitations (join requests are not counted)).
 //
 //
 //   The response status code on success (201) doesn't depend on per-group results.

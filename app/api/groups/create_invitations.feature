@@ -1,15 +1,15 @@
 Feature: Invite users
   Background:
     Given the database has the following table 'groups':
-      | id  | type  | require_personal_info_access_approval |
-      | 13  | Team  | none                                  |
-      | 21  | User  | none                                  |
-      | 101 | User  | none                                  |
-      | 102 | User  | none                                  |
-      | 103 | User  | none                                  |
-      | 104 | User  | none                                  |
-      | 444 | Team  | none                                  |
-      | 555 | Class | view                                  |
+      | id  | type  | require_personal_info_access_approval | enforce_max_participants | max_participants |
+      | 13  | Team  | none                                  | true                     | 2                |
+      | 21  | User  | none                                  | false                    | null             |
+      | 101 | User  | none                                  | false                    | null             |
+      | 102 | User  | none                                  | false                    | null             |
+      | 103 | User  | none                                  | false                    | null             |
+      | 104 | User  | none                                  | false                    | null             |
+      | 444 | Team  | none                                  | false                    | null             |
+      | 555 | Class | view                                  | false                    | null             |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | temp_user |
       | owner | 21       | Jean-Michel | Blanquer  | false     |
@@ -48,7 +48,7 @@ Feature: Invite users
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
-        "logins": ["john", "jane", "owner", "barack", "tmp"]
+        "logins": ["john", "owner", "barack", "tmp"]
       }
       """
     Then the response code should be 201
@@ -57,7 +57,6 @@ Feature: Invite users
       {
         "data": {
           "john": "success",
-          "jane": "success",
           "owner": "success",
           "barack": "not_found",
           "tmp": "not_found"
@@ -71,12 +70,43 @@ Feature: Invite users
       | group_id | member_id | type       | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 21        | invitation | 1                                         |
       | 13       | 101       | invitation | 1                                         |
-      | 13       | 102       | invitation | 1                                         |
     And the table "group_membership_changes" should be:
       | group_id | member_id | action             | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 21        | invitation_created | 21           | 1                                         |
       | 13       | 101       | invitation_created | 21           | 1                                         |
-      | 13       | 102       | invitation_created | 21           | 1                                         |
+    And the table "groups_ancestors" should stay unchanged
+    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
+
+  Scenario: The group is full
+    Given I am the user with id "21"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage            |
+      | 13       | 21         | memberships_and_group |
+    When I send a POST request to "/groups/13/invitations" with the following body:
+      """
+      {
+        "logins": ["john", "jane", "owner", "barack", "tmp"]
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "data": {
+          "john": "full",
+          "jane": "full",
+          "owner": "full",
+          "barack": "not_found",
+          "tmp": "not_found"
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "groups_groups" should be empty
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged

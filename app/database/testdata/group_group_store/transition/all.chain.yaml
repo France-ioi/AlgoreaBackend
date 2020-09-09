@@ -1,15 +1,21 @@
 groups:
-  - {id: 1}
-  - {id: 2}
-  - {id: 3}
-  - {id: 4}
-  - {id: 5}
-  - {id: 6}
-  - {id: 7}
-  - {id: 10}
-  - {id: 11}
-  - {id: 20}
+  - {id: 1, type: User}
+  - {id: 2, type: Team}
+  - {id: 3, type: User}
+  - {id: 4, type: Team}
+  - {id: 5, type: User}
+  - {id: 6, type: Team}
+  - {id: 7, type: User}
+  - {id: 10, type: Team}
+  - {id: 11, type: User}
+  - {id: 20, max_participants: 6, enforce_max_participants: 1}
   - {id: 30}
+  - {id: 50, type: Class}
+  - {id: 51, type: Club}
+  - {id: 52, type: Friends}
+  - {id: 53, type: Other}
+  - {id: 54, type: Session}
+  - {id: 55, type: Base}
   - {id: 111}
 users:
   - {group_id: 111}
@@ -20,6 +26,12 @@ groups_groups:
   - {parent_group_id: 20, child_group_id: 7, expires_at: 2019-05-30 11:00:00}
   - {parent_group_id: 20, child_group_id: 10}
   - {parent_group_id: 20, child_group_id: 11}
+  - {parent_group_id: 20, child_group_id: 50}
+  - {parent_group_id: 20, child_group_id: 51}
+  - {parent_group_id: 20, child_group_id: 52}
+  - {parent_group_id: 20, child_group_id: 53}
+  - {parent_group_id: 20, child_group_id: 54}
+  - {parent_group_id: 20, child_group_id: 55}
   - {parent_group_id: 30, child_group_id: 20}
 group_pending_requests:
   - {group_id: 20, member_id: 2, type: invitation}
@@ -43,6 +55,12 @@ groups_ancestors:
   - {ancestor_group_id: 20, child_group_id: 10}
   - {ancestor_group_id: 20, child_group_id: 11}
   - {ancestor_group_id: 20, child_group_id: 20}
+  - {ancestor_group_id: 20, child_group_id: 50}
+  - {ancestor_group_id: 20, child_group_id: 51}
+  - {ancestor_group_id: 20, child_group_id: 52}
+  - {ancestor_group_id: 20, child_group_id: 53}
+  - {ancestor_group_id: 20, child_group_id: 54}
+  - {ancestor_group_id: 20, child_group_id: 55}
   - {ancestor_group_id: 30, child_group_id: 4}
   - {ancestor_group_id: 30, child_group_id: 5}
   - {ancestor_group_id: 30, child_group_id: 6, expires_at: 2019-05-30 11:00:00}
@@ -51,6 +69,18 @@ groups_ancestors:
   - {ancestor_group_id: 30, child_group_id: 11}
   - {ancestor_group_id: 30, child_group_id: 20}
   - {ancestor_group_id: 30, child_group_id: 30}
+  - {ancestor_group_id: 30, child_group_id: 50}
+  - {ancestor_group_id: 30, child_group_id: 51}
+  - {ancestor_group_id: 30, child_group_id: 52}
+  - {ancestor_group_id: 30, child_group_id: 53}
+  - {ancestor_group_id: 30, child_group_id: 54}
+  - {ancestor_group_id: 30, child_group_id: 55}
+  - {ancestor_group_id: 50, child_group_id: 50}
+  - {ancestor_group_id: 51, child_group_id: 51}
+  - {ancestor_group_id: 52, child_group_id: 52}
+  - {ancestor_group_id: 53, child_group_id: 53}
+  - {ancestor_group_id: 54, child_group_id: 54}
+  - {ancestor_group_id: 55, child_group_id: 55}
   - {ancestor_group_id: 111, child_group_id: 111}
 items:
   - {id: 1, default_language_tag: fr}
