@@ -1,16 +1,17 @@
 Feature: Join a group using a code (groupsJoinByCode) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type  | code       | code_expires_at     | code_lifetime | is_public | require_watch_approval | frozen_membership |
-      | 11 | Team  | 3456789abc | 2017-04-29 06:38:38 | null          | true      | 0                      | false             |
-      | 12 | Team  | abc3456789 | null                | null          | true      | 1                      | false             |
-      | 14 | Team  | cba9876543 | null                | null          | true      | 0                      | false             |
-      | 15 | Team  | 75987654ab | null                | null          | false     | 0                      | false             |
-      | 16 | Class | dcef123492 | null                | null          | false     | 0                      | false             |
-      | 17 | Team  | 5987654abc | null                | null          | true      | 0                      | false             |
-      | 18 | Team  | 87654abcde | null                | null          | true      | 0                      | true              |
-      | 21 | User  | null       | null                | null          | false     | 0                      | false             |
-      | 22 | User  | null       | null                | null          | false     | 0                      | false             |
+      | id | type  | code       | code_expires_at     | code_lifetime | is_public | require_watch_approval | frozen_membership | max_participants | enforce_max_participants |
+      | 11 | Team  | 3456789abc | 2017-04-29 06:38:38 | null          | true      | 0                      | false             | 0                | false                    |
+      | 12 | Team  | abc3456789 | null                | null          | true      | 1                      | false             | 0                | false                    |
+      | 14 | Team  | cba9876543 | null                | null          | true      | 0                      | false             | 0                | false                    |
+      | 15 | Team  | 75987654ab | null                | null          | false     | 0                      | false             | 0                | false                    |
+      | 16 | Class | dcef123492 | null                | null          | false     | 0                      | false             | 0                | false                    |
+      | 17 | Team  | 5987654abc | null                | null          | true      | 0                      | false             | 0                | false                    |
+      | 18 | Team  | 87654abcde | null                | null          | true      | 0                      | true              | 0                | false                    |
+      | 19 | Team  | 987654abcd | null                | null          | true      | 0                      | false             | 0                | true                     |
+      | 21 | User  | null       | null                | null          | false     | 0                      | false             | 0                | false                    |
+      | 22 | User  | null       | null                | null          | false     | 0                      | false             | 0                | false                    |
     And the database has the following table 'users':
       | login | group_id | temp_user |
       | john  | 21       | false     |
@@ -158,6 +159,22 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       "success": false,
       "message": "Unprocessable Entity",
       "error_text": "Group membership is frozen"
+    }
+    """
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Cannot join if enforce_max_participants is true and the limit is reached
+    Given I am the user with id "21"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=987654abcd"
+    Then the response code should be 409
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Conflict",
+      "error_text": "The group is full"
     }
     """
     And the table "groups" should stay unchanged

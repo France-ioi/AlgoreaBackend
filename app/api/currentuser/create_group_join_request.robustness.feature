@@ -1,18 +1,19 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | is_public | type    | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | frozen_membership |
-      | 11 | 1         | Class   | none                                  | null                                   | 0                      | false             |
-      | 13 | 1         | Friends | none                                  | null                                   | 0                      | false             |
-      | 14 | 1         | Team    | none                                  | null                                   | 0                      | false             |
-      | 15 | 0         | Club    | none                                  | null                                   | 0                      | false             |
-      | 16 | 1         | Team    | edit                                  | 9999-12-31 23:59:59                    | 1                      | false             |
-      | 17 | 1         | Team    | none                                  | null                                   | 0                      | false             |
-      | 18 | 1         | Team    | none                                  | null                                   | 0                      | true              |
-      | 19 | 1         | Team    | none                                  | null                                   | 0                      | false             |
-      | 21 | 0         | User    | none                                  | null                                   | 0                      | false             |
-      | 22 | 0         | User    | none                                  | null                                   | 0                      | false             |
-      | 23 | 1         | User    | none                                  | null                                   | 0                      | false             |
+      | id | is_public | type    | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | frozen_membership | enforce_max_participants | max_participants |
+      | 11 | 1         | Class   | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 13 | 1         | Friends | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 14 | 1         | Team    | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 15 | 0         | Club    | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 16 | 1         | Team    | edit                                  | 9999-12-31 23:59:59                    | 1                      | false             | false                    | 0                |
+      | 17 | 1         | Team    | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 18 | 1         | Team    | none                                  | null                                   | 0                      | true              | false                    | 0                |
+      | 19 | 1         | Team    | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 20 | 1         | Team    | none                                  | null                                   | 0                      | false             | true                     | 0                |
+      | 21 | 0         | User    | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 22 | 0         | User    | none                                  | null                                   | 0                      | false             | false                    | 0                |
+      | 23 | 1         | User    | none                                  | null                                   | 0                      | false             | false                    | 0                |
     And the database has the following table 'users':
       | group_id | login | temp_user |
       | 21       | john  | false     |
@@ -244,6 +245,19 @@ Feature: User sends a request to join a group - robustness
       "success": false,
       "message": "Unprocessable Entity",
       "error_text": "Group membership is frozen"
+    }
+    """
+
+  Scenario: Can't send request to a group when enforce_max_participants=1 and the limit is exceeded
+    Given I am the user with id "23"
+    When I send a POST request to "/current-user/group-requests/20"
+    Then the response code should be 409
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Conflict",
+      "error_text": "The group is full"
     }
     """
 

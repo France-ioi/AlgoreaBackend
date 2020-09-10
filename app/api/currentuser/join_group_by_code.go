@@ -40,6 +40,11 @@ import (
 //
 //   * If the group requires some approvals from the user and those are not given in `approval`,
 //     the unprocessable entity error is returned with a list of missing approvals.
+//
+//   * If `groups.enforce_max_participants` is true and the number of participants >= `groups.max_participants`,
+//     the conflict error is returned.
+//     (The number of participants is computed as the number of non-expired users or teams which are direct children
+//      of the group + invitations (join requests are not counted)).
 // parameters:
 // - name: code
 //   in: query
@@ -62,6 +67,8 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
+//   "409":
+//     "$ref": "#/responses/conflictResponse"
 //   "422":
 //     "$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //   "500":

@@ -47,6 +47,13 @@ type forbidden struct {
 	Message string `json:"message"`
 }
 
+type conflict struct {
+	genericError
+	// required: true
+	// enum: Conflict
+	Message string `json:"message"`
+}
+
 type notFound struct {
 	genericError
 	// required: true

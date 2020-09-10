@@ -71,6 +71,12 @@ func ErrNotFound(err error) APIError {
 	return APIError{http.StatusNotFound, err}
 }
 
+// ErrConflict is for errors caused by wrong resource state not allowing to perform the operation
+// It results in a 409 Conflict
+func ErrConflict(err error) APIError {
+	return APIError{http.StatusConflict, err}
+}
+
 // ErrUnprocessableEntity is for errors caused by our inability to perform data modifications for some reason
 // It results in a 422 Unprocessable Entity
 func ErrUnprocessableEntity(err error) APIError {

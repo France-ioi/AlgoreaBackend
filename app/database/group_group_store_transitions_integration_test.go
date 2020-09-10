@@ -48,20 +48,22 @@ type groupAncestor struct {
 }
 
 type transitionTest struct {
-	name                       string
-	action                     database.GroupGroupTransitionAction
-	relationsToChange          []int64
-	approvals                  map[int64]database.GroupApprovals
-	createPendingCycleWithType string
-	wantResult                 database.GroupGroupTransitionResults
-	wantApprovalsToRequest     map[int64]database.GroupApprovals
-	wantGroupGroups            []groupGroup
-	wantGroupPendingRequests   []groupPendingRequest
-	wantGroupAncestors         []groupAncestor
-	wantGroupMembershipChanges []groupMembershipChange
-	wantGrantedPermissions     []grantedPermission
-	wantGeneratedPermissions   []permissionsGeneratedResultRow
-	shouldRunListeners         bool
+	name                        string
+	action                      database.GroupGroupTransitionAction
+	relationsToChange           []int64
+	approvals                   map[int64]database.GroupApprovals
+	createPendingCycleWithType  string
+	doNotEnforceMaxParticipants bool
+	maxParticipants             *int
+	wantResult                  database.GroupGroupTransitionResults
+	wantApprovalsToRequest      map[int64]database.GroupApprovals
+	wantGroupGroups             []groupGroup
+	wantGroupPendingRequests    []groupPendingRequest
+	wantGroupAncestors          []groupAncestor
+	wantGroupMembershipChanges  []groupMembershipChange
+	wantGrantedPermissions      []grantedPermission
+	wantGeneratedPermissions    []permissionsGeneratedResultRow
+	shouldRunListeners          bool
 }
 
 var allTheIDs = []int64{1, 2, 3, 4, 5, 6, 7, 10, 11, 20, 30}
@@ -85,6 +87,12 @@ var allPossibleGroupsAncestors = []groupAncestor{
 	{AncestorGroupID: 20, ChildGroupID: 10},
 	{AncestorGroupID: 20, ChildGroupID: 11},
 	{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
+	{AncestorGroupID: 20, ChildGroupID: 50},
+	{AncestorGroupID: 20, ChildGroupID: 51},
+	{AncestorGroupID: 20, ChildGroupID: 52},
+	{AncestorGroupID: 20, ChildGroupID: 53},
+	{AncestorGroupID: 20, ChildGroupID: 54},
+	{AncestorGroupID: 20, ChildGroupID: 55},
 	{AncestorGroupID: 30, ChildGroupID: 1},
 	{AncestorGroupID: 30, ChildGroupID: 2},
 	{AncestorGroupID: 30, ChildGroupID: 3},
@@ -96,6 +104,18 @@ var allPossibleGroupsAncestors = []groupAncestor{
 	{AncestorGroupID: 30, ChildGroupID: 11},
 	{AncestorGroupID: 30, ChildGroupID: 20},
 	{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
+	{AncestorGroupID: 30, ChildGroupID: 50},
+	{AncestorGroupID: 30, ChildGroupID: 51},
+	{AncestorGroupID: 30, ChildGroupID: 52},
+	{AncestorGroupID: 30, ChildGroupID: 53},
+	{AncestorGroupID: 30, ChildGroupID: 54},
+	{AncestorGroupID: 30, ChildGroupID: 55},
+	{AncestorGroupID: 50, ChildGroupID: 50, IsSelf: true},
+	{AncestorGroupID: 51, ChildGroupID: 51, IsSelf: true},
+	{AncestorGroupID: 52, ChildGroupID: 52, IsSelf: true},
+	{AncestorGroupID: 53, ChildGroupID: 53, IsSelf: true},
+	{AncestorGroupID: 54, ChildGroupID: 54, IsSelf: true},
+	{AncestorGroupID: 55, ChildGroupID: 55, IsSelf: true},
 	{AncestorGroupID: 111, ChildGroupID: 111, IsSelf: true},
 }
 
@@ -116,6 +136,12 @@ var groupAncestorsUnchanged = []groupAncestor{
 	{AncestorGroupID: 20, ChildGroupID: 10},
 	{AncestorGroupID: 20, ChildGroupID: 11},
 	{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
+	{AncestorGroupID: 20, ChildGroupID: 50},
+	{AncestorGroupID: 20, ChildGroupID: 51},
+	{AncestorGroupID: 20, ChildGroupID: 52},
+	{AncestorGroupID: 20, ChildGroupID: 53},
+	{AncestorGroupID: 20, ChildGroupID: 54},
+	{AncestorGroupID: 20, ChildGroupID: 55},
 	{AncestorGroupID: 30, ChildGroupID: 4},
 	{AncestorGroupID: 30, ChildGroupID: 5},
 	{AncestorGroupID: 30, ChildGroupID: 6, ExpiresAt: "2019-05-30 11:00:00"},
@@ -124,6 +150,18 @@ var groupAncestorsUnchanged = []groupAncestor{
 	{AncestorGroupID: 30, ChildGroupID: 11},
 	{AncestorGroupID: 30, ChildGroupID: 20},
 	{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
+	{AncestorGroupID: 30, ChildGroupID: 50},
+	{AncestorGroupID: 30, ChildGroupID: 51},
+	{AncestorGroupID: 30, ChildGroupID: 52},
+	{AncestorGroupID: 30, ChildGroupID: 53},
+	{AncestorGroupID: 30, ChildGroupID: 54},
+	{AncestorGroupID: 30, ChildGroupID: 55},
+	{AncestorGroupID: 50, ChildGroupID: 50, IsSelf: true},
+	{AncestorGroupID: 51, ChildGroupID: 51, IsSelf: true},
+	{AncestorGroupID: 52, ChildGroupID: 52, IsSelf: true},
+	{AncestorGroupID: 53, ChildGroupID: 53, IsSelf: true},
+	{AncestorGroupID: 54, ChildGroupID: 54, IsSelf: true},
+	{AncestorGroupID: 55, ChildGroupID: 55, IsSelf: true},
 	{AncestorGroupID: 111, ChildGroupID: 111, IsSelf: true},
 }
 
@@ -134,6 +172,12 @@ var groupsGroupsUnchanged = []groupGroup{
 	{ParentGroupID: 20, ChildGroupID: 7, ExpiresAt: "2019-05-30 11:00:00"},
 	{ParentGroupID: 20, ChildGroupID: 10},
 	{ParentGroupID: 20, ChildGroupID: 11},
+	{ParentGroupID: 20, ChildGroupID: 50},
+	{ParentGroupID: 20, ChildGroupID: 51},
+	{ParentGroupID: 20, ChildGroupID: 52},
+	{ParentGroupID: 20, ChildGroupID: 53},
+	{ParentGroupID: 20, ChildGroupID: 54},
+	{ParentGroupID: 20, ChildGroupID: 55},
 	{ParentGroupID: 30, ChildGroupID: 20},
 }
 
@@ -173,15 +217,15 @@ var userIDPtr = &userID
 const maxDateTime = "9999-12-31 23:59:59"
 
 func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action database.GroupGroupTransitionAction,
-	expectedGroupMembershipAction database.GroupMembershipAction, acceptDirectRelations bool) transitionTest {
+	expectedGroupMembershipAction database.GroupMembershipAction,
+	doNotEnforceMaxParticipants bool, maxParticipants *int) transitionTest {
 	resultForDirectRelations := database.Invalid
-	if acceptDirectRelations {
-		resultForDirectRelations = database.Unchanged
-	}
 	return transitionTest{
-		name:              name,
-		action:            action,
-		relationsToChange: allTheIDs,
+		name:                        name,
+		action:                      action,
+		relationsToChange:           allTheIDs,
+		doNotEnforceMaxParticipants: doNotEnforceMaxParticipants,
+		maxParticipants:             maxParticipants,
 		wantResult: database.GroupGroupTransitionResults{
 			1: "success", 2: "success", 3: "success", 6: "success", 7: "success",
 
@@ -202,6 +246,12 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 			{ParentGroupID: 20, ChildGroupID: 7},
 			{ParentGroupID: 20, ChildGroupID: 10},
 			{ParentGroupID: 20, ChildGroupID: 11},
+			{ParentGroupID: 20, ChildGroupID: 50},
+			{ParentGroupID: 20, ChildGroupID: 51},
+			{ParentGroupID: 20, ChildGroupID: 52},
+			{ParentGroupID: 20, ChildGroupID: 53},
+			{ParentGroupID: 20, ChildGroupID: 54},
+			{ParentGroupID: 20, ChildGroupID: 55},
 			{ParentGroupID: 30, ChildGroupID: 20},
 		},
 		wantGroupAncestors: allPossibleGroupsAncestors,
@@ -217,13 +267,43 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 	}
 }
 
-func testTransitionAcceptingPendingRequest(name string, action database.GroupGroupTransitionAction,
-	acceptedID int64, pendingType, expectedGroupMembershipAction database.GroupMembershipAction) transitionTest {
+func testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(name string, action database.GroupGroupTransitionAction,
+	acceptDirectRelations bool) transitionTest {
+	resultForDirectRelations := database.Invalid
+	if acceptDirectRelations {
+		resultForDirectRelations = database.Unchanged
+	}
 	return transitionTest{
-		name:                       name,
-		action:                     action,
-		relationsToChange:          allTheIDs,
-		createPendingCycleWithType: pendingType.PendingType(),
+		name:              name,
+		action:            action,
+		relationsToChange: allTheIDs,
+		maxParticipants:   ptrInt(8),
+		wantResult: database.GroupGroupTransitionResults{
+			1: "full", 2: "full", 3: "full", 6: "full", 7: "full",
+
+			4: resultForDirectRelations, 5: resultForDirectRelations, 10: resultForDirectRelations, 11: resultForDirectRelations,
+			20: "invalid",
+			30: "cycle",
+		},
+		wantGroupPendingRequests:   groupPendingRequestsUnchanged,
+		wantGroupGroups:            groupsGroupsUnchanged,
+		wantGroupAncestors:         groupAncestorsUnchanged,
+		wantGroupMembershipChanges: nil,
+		wantGrantedPermissions:     grantedPermissionsUnchanged,
+		shouldRunListeners:         false,
+	}
+}
+
+func testTransitionAcceptingPendingRequest(name string, action database.GroupGroupTransitionAction,
+	acceptedID int64, pendingType, expectedGroupMembershipAction database.GroupMembershipAction,
+	doNotEnforceMaxParticipants bool, maxParticipants *int) transitionTest {
+	return transitionTest{
+		name:                        name,
+		action:                      action,
+		relationsToChange:           allTheIDs,
+		createPendingCycleWithType:  pendingType.PendingType(),
+		doNotEnforceMaxParticipants: doNotEnforceMaxParticipants,
+		maxParticipants:             maxParticipants,
 		wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 			acceptedID: "success", 30: "cycle",
 		}),
@@ -242,6 +322,26 @@ func testTransitionAcceptingPendingRequest(name string, action database.GroupGro
 		},
 		wantGrantedPermissions: grantedPermissionsUnchanged,
 		shouldRunListeners:     true,
+	}
+}
+
+func testTransitionAcceptingPendingRequestEnforcingMaxParticipants(name string, action database.GroupGroupTransitionAction,
+	acceptedID int64, pendingType database.GroupMembershipAction) transitionTest {
+	return transitionTest{
+		name:                       name + " (enforcing max participants)",
+		action:                     action,
+		relationsToChange:          allTheIDs,
+		createPendingCycleWithType: pendingType.PendingType(),
+		maxParticipants:            ptrInt(5),
+		wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
+			acceptedID: "full", 30: "cycle",
+		}),
+		wantGroupGroups:            groupsGroupsUnchanged,
+		wantGroupPendingRequests:   patchGroupPendingRequests(groupPendingRequestsUnchanged, pendingType.PendingType(), nil, nil),
+		wantGroupAncestors:         groupAncestorsUnchanged,
+		wantGroupMembershipChanges: nil,
+		wantGrantedPermissions:     grantedPermissionsUnchanged,
+		shouldRunListeners:         false,
 	}
 }
 
@@ -285,10 +385,11 @@ func testTransitionRemovingUserFromGroup(name string, action database.GroupGroup
 func TestGroupGroupStore_Transition(t *testing.T) {
 	tests := []transitionTest{
 		{
-			name:                       "AdminCreatesInvitation",
-			action:                     database.AdminCreatesInvitation,
-			createPendingCycleWithType: "join_request",
-			relationsToChange:          allTheIDs,
+			name:                        "AdminCreatesInvitation",
+			action:                      database.AdminCreatesInvitation,
+			createPendingCycleWithType:  "join_request",
+			relationsToChange:           allTheIDs,
+			doNotEnforceMaxParticipants: true,
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 3: "success", 6: "success", 7: "success",
 				2: "unchanged",
@@ -318,9 +419,63 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners:     true,
 		},
 		{
-			name:              "UserCreatesJoinRequest",
-			action:            database.UserCreatesJoinRequest,
-			relationsToChange: allTheIDs,
+			name:                       "AdminCreatesInvitation (max participants limit is not exceeded)",
+			action:                     database.AdminCreatesInvitation,
+			createPendingCycleWithType: "join_request",
+			relationsToChange:          allTheIDs,
+			maxParticipants:            ptrInt(9),
+			wantResult: database.GroupGroupTransitionResults{
+				1: "success", 3: "success", 6: "success", 7: "success",
+				2: "unchanged",
+				4: "invalid", 5: "invalid", 10: "invalid", 11: "invalid", 20: "invalid",
+				30: "cycle",
+			},
+			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged,
+				nil, []groupGroup{{ParentGroupID: 20, ChildGroupID: 3}}),
+			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "join_request",
+				map[string]*groupPendingRequest{"20_3": nil, "20_7": {GroupID: 20, MemberID: 7, Type: "invitation"}},
+				[]groupPendingRequest{
+					{GroupID: 20, MemberID: 1, Type: "invitation"},
+					{GroupID: 20, MemberID: 6, Type: "invitation"},
+				}),
+			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged, nil,
+				[]groupAncestor{
+					{AncestorGroupID: 20, ChildGroupID: 3},
+					{AncestorGroupID: 30, ChildGroupID: 3},
+				}),
+			wantGroupMembershipChanges: []groupMembershipChange{
+				{GroupID: 20, MemberID: 1, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
+				{GroupID: 20, MemberID: 3, Action: "join_request_accepted", InitiatorID: userIDPtr, At: currentTimePtr},
+				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
+				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
+			},
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     true,
+		},
+		{
+			name:                       "AdminCreatesInvitation (enforce max participants)",
+			action:                     database.AdminCreatesInvitation,
+			createPendingCycleWithType: "join_request",
+			relationsToChange:          allTheIDs,
+			maxParticipants:            ptrInt(8),
+			wantResult: database.GroupGroupTransitionResults{
+				1: "full", 3: "full", 6: "full", 7: "full",
+				2: "unchanged",
+				4: "invalid", 5: "invalid", 10: "invalid", 11: "invalid", 20: "invalid",
+				30: "cycle",
+			},
+			wantGroupGroups:            groupsGroupsUnchanged,
+			wantGroupPendingRequests:   patchGroupPendingRequests(groupPendingRequestsUnchanged, "join_request", nil, nil),
+			wantGroupAncestors:         groupAncestorsUnchanged,
+			wantGroupMembershipChanges: nil,
+			wantGrantedPermissions:     grantedPermissionsUnchanged,
+			shouldRunListeners:         false,
+		},
+		{
+			name:                        "UserCreatesJoinRequest",
+			action:                      database.UserCreatesJoinRequest,
+			relationsToChange:           allTheIDs,
+			doNotEnforceMaxParticipants: true,
 			approvals: map[int64]database.GroupApprovals{
 				1: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
 				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
@@ -356,8 +511,71 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGrantedPermissions: grantedPermissionsUnchanged,
 			shouldRunListeners:     false,
 		},
-		testTransitionAcceptingPendingRequest(
-			"UserAcceptsInvitation", database.UserAcceptsInvitation, 2, database.InvitationCreated, database.InvitationAccepted),
+		{
+			name:              "UserCreatesJoinRequest (max participants limit is not exceeded)",
+			action:            database.UserCreatesJoinRequest,
+			relationsToChange: allTheIDs,
+			maxParticipants:   ptrInt(6),
+			approvals: map[int64]database.GroupApprovals{
+				1: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
+				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
+				7: {PersonalInfoViewApproval: false, LockMembershipApproval: false, WatchApproval: true},
+			},
+			wantResult: database.GroupGroupTransitionResults{
+				1: "success", 6: "success", 7: "success",
+				3: "unchanged",
+				2: "invalid", 4: "invalid", 5: "invalid", 10: "invalid", 11: "invalid", 20: "invalid",
+				30: "cycle",
+			},
+			wantGroupGroups: groupsGroupsUnchanged,
+			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "",
+				map[string]*groupPendingRequest{
+					"20_7": {GroupID: 20, MemberID: 7, Type: "join_request", WatchApproved: true},
+				},
+				[]groupPendingRequest{
+					{
+						GroupID: 20, MemberID: 1, Type: "join_request", PersonalInfoViewApproved: true,
+						LockMembershipApproved: true, WatchApproved: true,
+					},
+					{
+						GroupID: 20, MemberID: 6, Type: "join_request", PersonalInfoViewApproved: true,
+						LockMembershipApproved: true,
+					},
+				}),
+			wantGroupAncestors: groupAncestorsUnchanged,
+			wantGroupMembershipChanges: []groupMembershipChange{
+				{GroupID: 20, MemberID: 1, Action: "join_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
+				{GroupID: 20, MemberID: 6, Action: "join_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
+				{GroupID: 20, MemberID: 7, Action: "join_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
+			},
+			wantGrantedPermissions: grantedPermissionsUnchanged,
+			shouldRunListeners:     false,
+		},
+		{
+			name:              "UserCreatesJoinRequest (enforce max participants)",
+			action:            database.UserCreatesJoinRequest,
+			relationsToChange: allTheIDs,
+			approvals: map[int64]database.GroupApprovals{
+				1: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
+				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
+				7: {PersonalInfoViewApproval: false, LockMembershipApproval: false, WatchApproval: true},
+			},
+			maxParticipants: ptrInt(5),
+			wantResult: database.GroupGroupTransitionResults{
+				1: "full", 6: "full", 7: "full",
+				3: "unchanged",
+				2: "invalid", 4: "invalid", 5: "invalid", 10: "invalid", 11: "invalid", 20: "invalid",
+				30: "cycle",
+			},
+			wantGroupGroups:            groupsGroupsUnchanged,
+			wantGroupPendingRequests:   patchGroupPendingRequests(groupPendingRequestsUnchanged, "", nil, nil),
+			wantGroupAncestors:         groupAncestorsUnchanged,
+			wantGroupMembershipChanges: nil,
+			wantGrantedPermissions:     grantedPermissionsUnchanged,
+			shouldRunListeners:         false,
+		},
+		testTransitionAcceptingPendingRequest("UserAcceptsInvitation",
+			database.UserAcceptsInvitation, 2, database.InvitationCreated, database.InvitationAccepted, false, nil),
 		{
 			name:                       "UserAcceptsInvitation (should not do anything when all transitions cause cycles)",
 			action:                     database.UserAcceptsInvitation,
@@ -370,8 +588,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGrantedPermissions:     grantedPermissionsUnchanged,
 			shouldRunListeners:         false,
 		},
-		testTransitionAcceptingPendingRequest(
-			"AdminAcceptsJoinRequest", database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted),
+		testTransitionAcceptingPendingRequest("AdminAcceptsJoinRequest",
+			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, true, nil),
+		testTransitionAcceptingPendingRequest("AdminAcceptsJoinRequest (max participants limit is not exceeded)",
+			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, false, ptrInt(7)),
+		testTransitionAcceptingPendingRequestEnforcingMaxParticipants(
+			"AdminAcceptsJoinRequest", database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated),
 		{
 			name:              "UserRefusesInvitation",
 			action:            database.UserRefusesInvitation,
@@ -520,9 +742,18 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners:     false,
 		},
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
-			"UserCreatesAcceptedJoinRequest", database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false),
+			"UserCreatesAcceptedJoinRequest", database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, true, nil),
+		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserCreatesAcceptedJoinRequest (max participants limit is not exceeded)",
+			database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false, ptrInt(9)),
+		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
+			"UserCreatesAcceptedJoinRequest (enforce max participants)",
+			database.UserCreatesAcceptedJoinRequest, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
-			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, false),
+			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, true, nil),
+		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserJoinsGroupByCode (max participants limit is not exceeded)",
+			database.UserJoinsGroupByCode, database.JoinedByCode, false, ptrInt(9)),
+		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
+			"UserJoinsGroupByCode (enforce max participants)", database.UserJoinsGroupByCode, false),
 		{
 			name:              "AdminRemovesDirectRelation",
 			action:            database.AdminRemovesDirectRelation,
@@ -565,6 +796,14 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 						) VALUES (20, ?, ?, 1, 1, 1)`,
 						id, tt.createPendingCycleWithType).Error())
 				}
+			}
+
+			if tt.maxParticipants != nil {
+				assert.NoError(t, dataStore.Groups().ByID(20).UpdateColumn("max_participants", *tt.maxParticipants).Error())
+			}
+
+			if tt.doNotEnforceMaxParticipants {
+				assert.NoError(t, dataStore.Groups().ByID(20).UpdateColumn("enforce_max_participants", false).Error())
 			}
 
 			var result database.GroupGroupTransitionResults
@@ -1162,3 +1401,5 @@ func assertGeneratedPermissionsEqual(
 		Order("group_id, item_id").Scan(&generatedPermissions).Error())
 	assert.EqualValues(t, expected, generatedPermissions)
 }
+
+func ptrInt(i int) *int { return &i }

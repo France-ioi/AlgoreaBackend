@@ -250,6 +250,10 @@ const (
 	Invalid GroupGroupTransitionResult = "invalid"
 	// ApprovalsMissing means that one or more approvals required by the transition are missing
 	ApprovalsMissing GroupGroupTransitionResult = "approvals_missing"
+	// Full means that the parent group is full (in terms of `groups.max_participants`) when `enforce_max_participants` is true
+	// (The number of participants is computed as the number of non-expired users or teams which are direct children
+	//  of the group + invitations (join requests are not counted).)
+	Full GroupGroupTransitionResult = "full"
 	// Success means that the transition was performed successfully
 	Success GroupGroupTransitionResult = "success"
 	// Unchanged means that the transition has been already performed
@@ -305,10 +309,12 @@ type stateInfo struct {
 	WatchApprovedAt            *Time
 }
 
-type requiredApprovals struct {
+type requiredApprovalsAndLimits struct {
 	RequirePersonalInfoAccessApproval bool
 	RequireLockMembershipApproval     bool
 	RequireWatchApproval              bool
+	EnforceMaxParticipants            bool
+	MaxParticipants                   int
 }
 
 // Transition performs a groups_groups relation transition according to groupGroupTransitionRules
@@ -323,13 +329,14 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(dataStore *DataStore) error {
 		var oldActions []stateInfo
-		var groupRequiredApprovals requiredApprovals
+		var groupRequiredApprovalsAndLimits requiredApprovalsAndLimits
 
 		mustNotBeError(dataStore.Groups().ByID(parentGroupID).
 			Select(`
 				require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
 				NOW() < IFNULL(require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
-				require_watch_approval`).WithWriteLock().Scan(&groupRequiredApprovals).Error())
+				require_watch_approval, enforce_max_participants, max_participants`).
+			WithWriteLock().Scan(&groupRequiredApprovalsAndLimits).Error())
 
 		// Here we get current states for each childGroupID:
 		// the current state can be one of
@@ -373,10 +380,13 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		// build the transition plan depending on the current states (oldActionsMap)
 		idsToInsertPending, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
 			idsToDeleteRelation, idsChanged := buildTransitionsPlan(
-			parentGroupID, childGroupIDs, results, oldActionsMap, groupRequiredApprovals, approvals, approvalsToRequest, action)
+			parentGroupID, childGroupIDs, results, oldActionsMap, &groupRequiredApprovalsAndLimits, approvals, approvalsToRequest, action)
 
 		performCyclesChecking(dataStore, idsToCheckCycle, parentGroupID, results, idsToInsertPending, idsToInsertRelation,
 			idsToDeletePending, idsToDeleteRelation, idsChanged)
+
+		enforceMaxSize(dataStore, action, parentGroupID, &groupRequiredApprovalsAndLimits, results, idsToInsertPending,
+			idsToInsertRelation, idsToDeletePending, idsToDeleteRelation, idsChanged)
 
 		shouldCreateNewAncestors := false
 		shouldPropagatePermissions := false
@@ -436,6 +446,43 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		return nil
 	}))
 	return results, approvalsToRequest, nil
+}
+
+func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, parentGroupID int64,
+	limits *requiredApprovalsAndLimits, results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupMembershipAction,
+	idsToInsertRelation, idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	if !limits.EnforceMaxParticipants || !map[GroupGroupTransitionAction]bool{
+		UserJoinsGroupByCode: true, UserCreatesJoinRequest: true, UserCreatesAcceptedJoinRequest: true,
+		AdminCreatesInvitation: true, AdminAcceptsJoinRequest: true,
+	}[action] {
+		return
+	}
+
+	changedIDsList := make([]int64, 0, len(idsChanged))
+	for id := range idsChanged {
+		changedIDsList = append(changedIDsList, id)
+	}
+	var activeRelationsCount int
+	mustNotBeError(dataStore.ActiveGroupGroups().Where("parent_group_id = ?", parentGroupID).
+		Joins("JOIN `groups` ON groups.id = child_group_id").
+		Where("groups.type IN ('User', 'Team')").
+		Where("child_group_id NOT IN(?)", changedIDsList).WithWriteLock().Count(&activeRelationsCount).Error())
+	var invitationsCount int
+	mustNotBeError(dataStore.GroupPendingRequests().
+		Where("group_id = ?", parentGroupID).
+		Where("type = 'invitation'").Where("member_id NOT IN(?)", changedIDsList).
+		WithWriteLock().Count(&invitationsCount).Error())
+
+	membersCount := activeRelationsCount + invitationsCount
+	for _, itemAction := range idsChanged {
+		if itemAction.isActive() || itemAction == InvitationCreated {
+			membersCount++
+		}
+	}
+	if membersCount > limits.MaxParticipants || membersCount == limits.MaxParticipants && action == UserCreatesJoinRequest {
+		deleteIDsFromTransitionPlan(changedIDsList, Full, results,
+			idsToInsertPending, idsToInsertRelation, idsToDeletePending, idsToDeleteRelation, idsChanged)
+	}
 }
 
 func resolveApprovalTimesForGroupsGroups(oldActionsMap map[int64]stateInfo, id int64, approvals map[int64]GroupApprovals) (
@@ -506,27 +553,32 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 		for id := range idsToCheckCycle {
 			idsToCheckCycleSlice = append(idsToCheckCycleSlice, id)
 		}
-		var cycleIDs []map[string]interface{}
+		var cycleIDs []int64
 		mustNotBeError(s.GroupAncestors().
 			WithWriteLock().
-			Select("ancestor_group_id AS group_id").
 			Where("child_group_id = ? AND ancestor_group_id IN (?)", parentGroupID, idsToCheckCycleSlice).
-			ScanIntoSliceOfMaps(&cycleIDs).Error())
+			Pluck("ancestor_group_id", &cycleIDs).Error())
 
-		for _, cycleID := range cycleIDs {
-			groupID := cycleID["group_id"].(int64)
-			results[groupID] = Cycle
-			delete(idsToInsertRelation, groupID)
-			delete(idsToInsertPending, groupID)
-			delete(idsToDeletePending, groupID)
-			delete(idsToDeleteRelation, groupID)
-			delete(idsChanged, groupID)
-		}
+		deleteIDsFromTransitionPlan(cycleIDs, Cycle, results,
+			idsToInsertPending, idsToInsertRelation, idsToDeletePending, idsToDeleteRelation, idsChanged)
+	}
+}
+
+func deleteIDsFromTransitionPlan(ids []int64, status GroupGroupTransitionResult,
+	results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation,
+	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	for _, groupID := range ids {
+		results[groupID] = status
+		delete(idsToInsertRelation, groupID)
+		delete(idsToInsertPending, groupID)
+		delete(idsToDeletePending, groupID)
+		delete(idsToDeleteRelation, groupID)
+		delete(idsChanged, groupID)
 	}
 }
 
 func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results GroupGroupTransitionResults,
-	oldActionsMap map[int64]stateInfo, groupRequiredApprovals requiredApprovals,
+	oldActionsMap map[int64]stateInfo, groupRequiredApprovals *requiredApprovalsAndLimits,
 	approvals, approvalsToRequest map[int64]GroupApprovals, action GroupGroupTransitionAction,
 ) (idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation, idsToCheckCycle,
 	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
@@ -598,7 +650,7 @@ func buildOneTransition(id int64, oldAction stateInfo, toAction GroupMembershipA
 	}
 }
 
-func approvalsOK(oldAction *stateInfo, groupRequiredApprovals requiredApprovals, approvals GroupApprovals) (
+func approvalsOK(oldAction *stateInfo, groupRequiredApprovals *requiredApprovalsAndLimits, approvals GroupApprovals) (
 	ok bool, approvalsToRequest GroupApprovals) {
 	var approvalsToCheck GroupApprovals
 	if oldAction.Action.hasApprovals() {
