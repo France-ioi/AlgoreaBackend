@@ -28,7 +28,7 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `can_grant_view` >= 'enter', and `can_watch` >= 'result'
+//                  * the authenticated user should have `can_view` >= 'content, `can_grant_view` >= 'enter', and `can_watch` >= 'result'
 //                    on the input item.
 //
 //                Otherwise, the "Forbidden" response is returned.

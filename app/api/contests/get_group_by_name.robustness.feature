@@ -22,6 +22,7 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | id | duration | default_language_tag | entry_participant_type |
       | 10 | 00:00:02 | fr                   | Team                   |
       | 11 | 00:00:02 | fr                   | Team                   |
+      | 12 | 00:00:02 | fr                   | Team                   |
       | 50 | 00:00:00 | fr                   | User                   |
       | 60 | null     | fr                   | User                   |
       | 70 | 00:00:03 | fr                   | Team                   |
@@ -30,13 +31,15 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 13       | 10      | info                     | none                     | none                |
       | 13       | 11      | info                     | none                     | none                |
+      | 13       | 12      | info                     | none                     | none                |
       | 13       | 50      | content                  | none                     | none                |
       | 13       | 60      | info                     | none                     | none                |
       | 13       | 70      | content_with_descendants | none                     | none                |
       | 13       | 80      | none                     | enter                    | result              |
       | 15       | 70      | info                     | none                     | none                |
-      | 21       | 10      | none                     | none                     | result              |
-      | 21       | 11      | none                     | enter                    | none                |
+      | 21       | 10      | content                  | none                     | result              |
+      | 21       | 11      | content                  | enter                    | none                |
+      | 21       | 12      | none                     | enter                    | result              |
       | 21       | 50      | none                     | none                     | none                |
       | 21       | 60      | content_with_descendants | enter                    | result              |
       | 21       | 70      | content_with_descendants | enter                    | result              |
@@ -70,6 +73,12 @@ Feature: Get group by name (contestGetGroupByName) - robustness
   Scenario: Cannot watch results on the item
     Given I am the user with id "21"
     When I send a GET request to "/contests/11/groups/by-name?name=Group%20B"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: Cannot view content of the item
+    Given I am the user with id "21"
+    When I send a GET request to "/contests/12/groups/by-name?name=Group%20B"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 

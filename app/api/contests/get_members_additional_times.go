@@ -30,8 +30,8 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `can_grant_view` >= 'enter', and `can_watch` >= 'result'
-//                    on the input item;
+//                  * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
+//                    and `can_watch` >= 'result' on the input item;
 //                  * the authenticated user should be a manager of the `group_id`
 //                    with `can_grant_group_access` and `can_watch_members` permissions.
 // parameters:

@@ -66,7 +66,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 13       | 60      | info                     | none                     | none                |
       | 15       | 60      | info                     | none                     | none                |
       | 21       | 10      | content_with_descendants | enter                    | result              |
-      | 21       | 50      | info                     | enter                    | result              |
+      | 21       | 50      | content                  | enter                    | result              |
       | 21       | 60      | content_with_descendants | content                  | answer              |
       | 21       | 70      | content_with_descendants | enter                    | result              |
       | 31       | 50      | content_with_descendants | none                     | none                |
