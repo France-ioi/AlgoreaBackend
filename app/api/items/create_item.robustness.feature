@@ -17,6 +17,7 @@ Feature: Create item - robustness
       | 24 | false    | fr                   | Chapter |
       | 25 | false    | fr                   | Chapter |
       | 26 | false    | fr                   | Skill   |
+      | 27 | false    | fr                   | Chapter |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -28,8 +29,8 @@ Feature: Create item - robustness
       | 11       | 4       | solution           | children           |
       | 11       | 5       | solution           | children           |
       | 11       | 21      | solution           | children           |
-      | 11       | 22      | none               | none               |
-      | 11       | 24      | info               | none               |
+      | 11       | 22      | info               | children           |
+      | 11       | 24      | solution           | none               |
       | 11       | 25      | info               | none               |
       | 11       | 26      | info               | none               |
     And the database has the following table 'permissions_granted':
@@ -496,7 +497,7 @@ Feature: Create item - robustness
       | 90 | fr                   | <type> |
     And the database table 'permissions_generated' has also the following row:
       | group_id | item_id | can_view_generated | can_edit_generated |
-      | 11       | 90      | info               | children           |
+      | 11       | 90      | content            | children           |
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -696,7 +697,7 @@ Feature: Create item - robustness
         "parent": {"item_id": "21"},
         "children": [
           {"item_id": "4", "order": 1},
-          {"item_id": "22", "order": 2}
+          {"item_id": "27", "order": 2}
         ]
       }
       """

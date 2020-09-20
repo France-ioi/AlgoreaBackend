@@ -71,6 +71,7 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //
 //   The user should have
 //
+//     * `can_view` >= 'content' on the item, otherwise the "forbidden" response is returned;
 //     * `can_edit` >= 'children' on the item to edit children or `can_edit` >= 'all' to edit the item's properties,
 //       otherwise the "forbidden" response is returned;
 //     * `can_view` != 'none' on the `children` items (if any), otherwise the "bad request"
@@ -122,6 +123,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
 			Joins("JOIN items ON items.id = item_id").
 			Where("item_id = ?", itemID).
+			HavingMaxPermissionAtLeast("view", "content").
 			HavingMaxPermissionAtLeast("edit", "children").
 			Select(`
 				items.participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated,

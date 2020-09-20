@@ -18,9 +18,9 @@ Feature: Update an item string entry
       | 50      | sl           | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
-      | 11       | 21      | solution           | none               | false              |
+      | 11       | 21      | content            | none               | false              |
       | 11       | 50      | solution           | all                | true               |
-      | 11       | 60      | solution           | all                | true               |
+      | 11       | 60      | content            | all                | true               |
     And the groups ancestors are computed
     And the database has the following table 'languages':
       | tag |

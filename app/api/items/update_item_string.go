@@ -39,7 +39,7 @@ type itemStringUpdateRequest struct {
 //   If `language_tag` is not specified, uses the item’s default language.
 //
 //
-//   The user should have `can_edit` >= 'all' on the item, otherwise the "forbidden" response is returned.
+//   The user should have `can_view` >= 'content' and `can_edit` >= 'all' on the item, otherwise the "forbidden" response is returned.
 // parameters:
 // - name: item_id
 //   in: path
@@ -96,6 +96,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
 			Where("item_id = ?", itemID).
+			WherePermissionIsAtLeast("view", "content").
 			WherePermissionIsAtLeast("edit", "all").
 			HasRows()
 		service.MustNotBeError(err)
