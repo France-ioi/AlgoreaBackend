@@ -23,7 +23,7 @@ type updatePermissionsInput struct {
 //   to a user (identified by `group_id` of his self group).
 //
 //   * The user giving the access must be a manager (with `can_grant_group_access` permission)
-//     of `{source_group_id}` which should be an ancestor of the `{group_id}`.
+//     of `{source_group_id}` which should be a parent of the `{group_id}`.
 //
 //   * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
 //     for the item.
@@ -115,11 +115,11 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 func checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *database.DataStore, user *database.User,
 	sourceGroupID, groupID, itemID int64) service.APIError {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
-	// the 'sourceGroupID' should be an ancestor of 'groupID'
+	// the 'sourceGroupID' should be a parent of 'groupID'
 	found, err := s.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
 		Joins(`
-				JOIN groups_ancestors_active AS descendants
-					ON descendants.ancestor_group_id = groups.id AND descendants.child_group_id = ?`, groupID).
+				JOIN groups_groups_active AS children
+					ON children.parent_group_id = groups.id AND children.child_group_id = ?`, groupID).
 		Where("group_managers.can_grant_group_access").
 		HasRows()
 	service.MustNotBeError(err)

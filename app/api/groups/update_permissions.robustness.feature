@@ -192,7 +192,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: source_group_id is not an ancestor of group_id
+  Scenario: source_group_id is not a parent of group_id
     Given I am the user with id "21"
     When I send a PUT request to "/groups/25/permissions/21/102" with the following body:
     """
