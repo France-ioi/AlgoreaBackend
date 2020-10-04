@@ -11,8 +11,8 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	clearAllDBEnums()
-	mockDBEnumQueries(dbMock)
+	ClearAllDBEnums()
+	MockDBEnumQueries(dbMock)
 
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT items.id FROM `items` "+
 		"JOIN LATERAL ("+

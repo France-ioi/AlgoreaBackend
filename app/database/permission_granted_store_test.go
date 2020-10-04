@@ -42,7 +42,7 @@ func TestPermissionGrantedStore_ViewIndexByName(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
@@ -53,7 +53,7 @@ func TestPermissionGrantedStore_ViewIndexByName(t *testing.T) {
 			map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"})
 	})
 	defer monkey.UnpatchAll()
-	defer clearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, 5, permissionGrantedStore.ViewIndexByName("solution"))
 	assert.Panics(t, func() { permissionGrantedStore.ViewIndexByName("unknown") })
@@ -64,7 +64,7 @@ func TestPermissionGrantedStore_ViewNameByIndex(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
@@ -75,7 +75,7 @@ func TestPermissionGrantedStore_ViewNameByIndex(t *testing.T) {
 			map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"})
 	})
 	defer monkey.UnpatchAll()
-	defer clearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, "solution", permissionGrantedStore.ViewNameByIndex(5))
 	assert.Equal(t, "content_with_descendants", permissionGrantedStore.ViewNameByIndex(4))
@@ -86,11 +86,11 @@ func TestPermissionGrantedStore_ViewNameByIndex_Load(t *testing.T) {
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockDBEnumQueries(sqlMock)
+	MockDBEnumQueries(sqlMock)
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
-	defer clearAllDBEnums()
+	ClearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, "solution", permissionGrantedStore.ViewNameByIndex(5))
 }
@@ -100,7 +100,7 @@ func TestPermissionGrantedStore_GrantViewEnum(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
@@ -111,13 +111,13 @@ func TestPermissionGrantedStore_GrantViewEnum(t *testing.T) {
 			map[int]string{1: "none", 2: "content", 3: "content_with_descendants", 4: "solution", 5: "solution_with_grant"})
 	})
 	defer monkey.UnpatchAll()
-	defer clearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByName("solution_with_grant"))
 	assert.Equal(t, 3, permissionGrantedStore.GrantViewIndexByName("content_with_descendants"))
 	assert.Panics(t, func() { permissionGrantedStore.GrantViewIndexByName("unknown") })
 	assert.Equal(t, 4, permissionGrantedStore.GrantViewIndexByName("solution"))
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	assert.Equal(t, "solution_with_grant", permissionGrantedStore.GrantViewNameByIndex(5))
 	assert.Equal(t, "content_with_descendants", permissionGrantedStore.GrantViewNameByIndex(3))
 	assert.Panics(t, func() { permissionGrantedStore.GrantViewNameByIndex(0) })
@@ -128,11 +128,11 @@ func TestPermissionGrantedStore_GrantViewIndexByName_Load(t *testing.T) {
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockDBEnumQueries(sqlMock)
+	MockDBEnumQueries(sqlMock)
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
-	defer clearAllDBEnums()
+	ClearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, 6, permissionGrantedStore.GrantViewIndexByName("solution_with_grant"))
 }
@@ -142,7 +142,7 @@ func TestPermissionGrantedStore_EditEnum(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
@@ -156,12 +156,12 @@ func TestPermissionGrantedStore_EditEnum(t *testing.T) {
 			map[int]string{1: "none", 2: "children", 3: "all", 4: "all_with_grant"})
 	})
 	defer monkey.UnpatchAll()
-	defer clearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, 4, permissionGrantedStore.EditIndexByName("all_with_grant"))
 	assert.Equal(t, 3, permissionGrantedStore.EditIndexByName("all"))
 	assert.Panics(t, func() { permissionGrantedStore.EditIndexByName("unknown") })
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	assert.Equal(t, "all_with_grant", permissionGrantedStore.EditNameByIndex(4))
 	assert.Equal(t, "all", permissionGrantedStore.EditNameByIndex(3))
 	assert.Panics(t, func() { permissionGrantedStore.EditNameByIndex(0) })
@@ -171,11 +171,11 @@ func TestPermissionGrantedStore_EditIndexByName_Load(t *testing.T) {
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockDBEnumQueries(sqlMock)
+	MockDBEnumQueries(sqlMock)
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
-	defer clearAllDBEnums()
+	ClearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, 4, permissionGrantedStore.EditIndexByName("all_with_grant"))
 }
@@ -185,18 +185,18 @@ func TestPermissionGrantedStore_WatchEnum(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	permissionsGrantedStore := NewDataStore(db).PermissionsGranted()
 
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	fakeDBEnums("permissions_granted.can_watch",
 		map[string]int{"none": 1, "result": 2, "answer": 3, "answer_with_grant": 4},
 		map[int]string{1: "none", 2: "result", 3: "answer", 4: "answer_with_grant"})
-	defer clearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, 4, permissionsGrantedStore.WatchIndexByName("answer_with_grant"))
 	assert.Equal(t, 3, permissionsGrantedStore.WatchIndexByName("answer"))
 	assert.Equal(t, 2, permissionsGrantedStore.WatchIndexByName("result"))
 	assert.Equal(t, 1, permissionsGrantedStore.WatchIndexByName("none"))
 	assert.Panics(t, func() { permissionsGrantedStore.WatchIndexByName("unknown") })
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	fakeDBEnums("permissions_granted.can_watch",
 		map[string]int{"none": 1, "result": 2, "answer": 3, "answer_with_grant": 4},
 		map[int]string{1: "none", 2: "result", 3: "answer", 4: "answer_with_grant"})

@@ -29,8 +29,8 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 func TestDB_WhereUserHasViewPermissionOnItems(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	clearAllDBEnums()
-	mockDBEnumQueries(mock)
+	ClearAllDBEnums()
+	MockDBEnumQueries(mock)
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT * FROM `items` WHERE (EXISTS(SELECT 1 FROM permissions_generated AS permissions "+
@@ -49,8 +49,8 @@ func TestDB_WhereUserHasViewPermissionOnItems(t *testing.T) {
 func TestDB_WhereItemsAreVisible(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	clearAllDBEnums()
-	mockDBEnumQueries(mock)
+	ClearAllDBEnums()
+	MockDBEnumQueries(mock)
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT * FROM `items` WHERE (EXISTS(SELECT 1 FROM permissions_generated AS permissions "+

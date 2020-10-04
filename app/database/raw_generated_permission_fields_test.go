@@ -50,9 +50,9 @@ func TestRawGeneratedPermissionFields_AsItemPermissions(t *testing.T) {
 		},
 	}
 	db, mock := NewDBMock()
-	clearAllDBEnums()
-	mockDBEnumQueries(mock)
-	defer clearAllDBEnums()
+	ClearAllDBEnums()
+	MockDBEnumQueries(mock)
+	defer ClearAllDBEnums()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 	for _, tt := range tests {
 		tt := tt

@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,8 +12,8 @@ func TestDB_getFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	clearAllDBEnums()
-	defer clearAllDBEnums()
+	ClearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	expectedError := errors.New("some error")
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
@@ -34,44 +33,6 @@ func TestDB_getFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 	})
 	assert.Nil(t, enumValueIndex2Name)
 	assert.Nil(t, enumValueName2Index)
-}
-
-func mockDBEnumQueries(sqlMock sqlmock.Sqlmock) {
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("permissions_granted", "can_view").
-		WillReturnRows(sqlMock.NewRows([]string{"value"}).
-			AddRow("'none','info','content','content_with_descendants','solution'"))
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("permissions_granted", "can_grant_view").
-		WillReturnRows(sqlMock.NewRows([]string{"value"}).
-			AddRow("'none','enter','content','content_with_descendants','solution','solution_with_grant'"))
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("permissions_granted", "can_watch").
-		WillReturnRows(sqlMock.NewRows([]string{"value"}).
-			AddRow("'none','result','answer','answer_with_grant'"))
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("permissions_granted", "can_edit").
-		WillReturnRows(sqlMock.NewRows([]string{"value"}).
-			AddRow("'none','children','all','all_with_grant'"))
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("group_managers", "can_manage").
-		WillReturnRows(sqlMock.NewRows([]string{"value"}).
-			AddRow("'none','memberships','memberships_and_group'"))
-}
-
-func clearAllDBEnums() {
-	enumValueIndex2Name = nil
-	enumValueName2Index = nil
 }
 
 func fakeDBEnums(enumName string, name2index map[string]int, index2name map[int]string) {

@@ -11,9 +11,9 @@ func TestPermissionGeneratedStore_AggregatedPermissionsForItemsVisibleToGroup(t 
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	clearAllDBEnums()
-	mockDBEnumQueries(mock)
-	defer clearAllDBEnums()
+	ClearAllDBEnums()
+	MockDBEnumQueries(mock)
+	defer ClearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
@@ -38,8 +38,8 @@ func TestPermissionGeneratedStore_AggregatedPermissionsForItemsOnWhichGroupHasVi
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockDBEnumQueries(mock)
-	defer clearAllDBEnums()
+	MockDBEnumQueries(mock)
+	defer ClearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
