@@ -159,7 +159,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //   The user should have
 //
-//     * `can_edit` >= 'children' on the `parent.item_id`,
+//     * `can_view` >= 'content' and `can_edit` >= 'children' on the `parent.item_id`,
 //     * `can_view` != 'none' on the `children` items (if any),
 //
 //   otherwise the "bad request" response is returned.
@@ -262,12 +262,13 @@ func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formda
 }
 
 // constructParentItemIDValidator constructs a validator for the Parent.ItemID field.
-// The validator checks that the user has rights to manage the parent item's children (can_edit >= children).
+// The validator checks that the user has rights to manage the parent item's children (can_view >= content & can_edit >= children).
 func constructParentItemIDValidator(
 	store *database.DataStore, user *database.User, parentInfo *parentItemInfo) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		err := store.Items().
-			WhereUserHasPermissionOnItems(user, "edit", "children").
+			JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
+			WherePermissionIsAtLeast("edit", "children").
 			Where("items.id = ?", fl.Field().Interface().(int64)).Select("items.type").
 			Limit(1).Scan(&parentInfo).Error()
 		if gorm.IsRecordNotFoundError(err) {

@@ -61,9 +61,9 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 11       | 70      | content_with_descendants | none                     | none                |
       | 13       | 50      | content                  | none                     | none                |
       | 13       | 60      | info                     | none                     | none                |
-      | 21       | 50      | none                     | none                     | result              |
+      | 21       | 50      | content                  | none                     | result              |
       | 21       | 60      | content_with_descendants | none                     | none                |
-      | 21       | 70      | none                     | content                  | answer              |
+      | 21       | 70      | content_with_descendants | content                  | answer              |
       | 36       | 10      | info                     | none                     | none                |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |

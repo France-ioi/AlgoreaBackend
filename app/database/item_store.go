@@ -283,6 +283,7 @@ func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAcces
 // for getting a contest with the given item id managed by the given user
 func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 	return s.ByID(contestItemID).Where("items.duration IS NOT NULL").
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "grant_view", "enter").
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
+		WherePermissionIsAtLeast("grant_view", "enter").
 		WherePermissionIsAtLeast("watch", "result")
 }

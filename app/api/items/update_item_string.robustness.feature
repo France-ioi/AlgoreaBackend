@@ -10,6 +10,7 @@ Feature: Update an item string entry - robustness
     And the database has the following table 'items':
       | id | default_language_tag |
       | 21 | en                   |
+      | 22 | en                   |
       | 50 | en                   |
       | 60 | sl                   |
     And the database has the following table 'items_strings':
@@ -19,6 +20,7 @@ Feature: Update an item string entry - robustness
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
       | 11       | 21      | solution           | children           | false              |
+      | 11       | 22      | info               | all                | false              |
       | 11       | 50      | solution           | all                | true               |
     And the groups ancestors are computed
     And the database has the following table 'languages':
@@ -141,6 +143,17 @@ Feature: Update an item string entry - robustness
   Scenario: The user doesn't have rights to manage the item (can_edit = children)
     And I am the user with id "11"
     When I send a PUT request to "/items/21/strings/default" with the following body:
+      """
+      {
+        "title": "The title"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "No access rights to edit the item"
+
+  Scenario: The user doesn't have rights to manage the item (can_view = info)
+    And I am the user with id "11"
+    When I send a PUT request to "/items/22/strings/default" with the following body:
       """
       {
         "title": "The title"

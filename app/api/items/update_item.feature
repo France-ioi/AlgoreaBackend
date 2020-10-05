@@ -23,14 +23,14 @@ Background:
     | 50               | 21            |
     | 50               | 60            |
   And the database has the following table 'permissions_generated':
-    | group_id | item_id | can_view_generated | can_grant_view_generated | can_edit_generated | is_owner_generated |
-    | 11       | 21      | solution           | none                     | children           | false              |
-    | 11       | 50      | solution           | solution_with_grant      | all                | true               |
-    | 11       | 60      | solution           | solution_with_grant      | all_with_grant     | true               |
-    | 11       | 70      | solution           | solution_with_grant      | all_with_grant     | true               |
+    | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | is_owner_generated |
+    | 11       | 21      | content                  | none                     | children           | false              |
+    | 11       | 50      | content_with_descendants | solution_with_grant      | all                | true               |
+    | 11       | 60      | solution                 | solution_with_grant      | all_with_grant     | true               |
+    | 11       | 70      | content                  | solution_with_grant      | all_with_grant     | true               |
   And the database has the following table 'permissions_granted':
     | group_id | item_id | can_view | is_owner | source_group_id | latest_update_at    |
-    | 11       | 21      | solution | false    | 11              | 2019-05-30 11:00:00 |
+    | 11       | 21      | content  | false    | 11              | 2019-05-30 11:00:00 |
     | 11       | 50      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 60      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 70      | none     | true     | 11              | 2019-05-30 11:00:00 |
@@ -67,12 +67,7 @@ Background:
     And the table "groups" should stay unchanged
     And the table "attempts" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "permissions_generated" should be:
-      | group_id | item_id | can_view_generated | is_owner_generated |
-      | 11       | 21      | solution           | false              |
-      | 11       | 50      | solution           | true               |
-      | 11       | 60      | solution           | true               |
-      | 11       | 70      | solution           | true               |
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
@@ -146,7 +141,7 @@ Background:
       | 5577006791947779410 | ContestParticipants | 50-participants |
     And the table "permissions_granted" should be:
       | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
-      | 11                  | 21      | solution | none           | none      | none     | false    | 11                  | 0                                                       |
+      | 11                  | 21      | content  | none           | none      | none     | false    | 11                  | 0                                                       |
       | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
       | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
       | 11                  | 70      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
@@ -155,7 +150,7 @@ Background:
       | 5577006791947779410 | 50      | content  | none           | none      | none     | false    | 5577006791947779410 | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 11                  | 21      | solution           | none                     | none                | none               | false              |
+      | 11                  | 21      | content            | none                     | none                | none               | false              |
       | 11                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11                  | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11                  | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
@@ -222,17 +217,10 @@ Background:
     And the table "groups" should be:
       | id | type | name |
       | 11 | User | jdoe |
-    And the table "permissions_granted" should be:
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
-      | 11       | 21      | solution | none           | none      | none     | false    | 11              | 0                                                       |
-      | 11       | 50      | none     | none           | none      | none     | true     | 11              | 0                                                       |
-      | 11       | 60      | none     | none           | none      | none     | true     | 11              | 0                                                       |
-      | 11       | 70      | none     | none           | none      | none     | true     | 11              | 0                                                       |
-      | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 0                                                       |
-      | 11       | 134     | none     | none           | none      | none     | true     | 11              | 0                                                       |
+    And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 11       | 21      | solution           | none                     | none                | none               | false              |
+      | 11       | 21      | content            | none                     | none                | none               | false              |
       | 11       | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
@@ -297,20 +285,14 @@ Background:
     And the table "groups" should be:
       | id                  | type                | name            |
       | 11                  | User                | jdoe            |
-    And the table "permissions_granted" should be:
-      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
-      | 11                  | 21      | solution | none           | none      | none     | false    | 11                  | 0                                                       |
-      | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
-      | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
-      | 11                  | 70      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
-      | 11                  | 112     | solution | content        | answer    | all      | false    | 11                  | 0                                                       |
+    And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should be:
-      | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 11                  | 21      | solution           | none                     | none                | none               | false              |
-      | 11                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-      | 11                  | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-      | 11                  | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-      | 11                  | 112     | solution           | content                  | answer              | all                | false              |
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11       | 21      | content            | none                     | none                | none               | false              |
+      | 11       | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 112     | solution           | content                  | answer              | all                | false              |
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged but the row with item_id "50"
     And the table "results" at item_id "50" should be:

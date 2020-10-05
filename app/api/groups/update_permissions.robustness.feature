@@ -1,11 +1,12 @@
 Feature: Change item access rights for a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name       | type  |
-      | 21 | owner      | User  |
-      | 23 | user       | User  |
-      | 25 | some class | Class |
-      | 31 | admin      | User  |
+      | id | name          | type  |
+      | 21 | owner         | User  |
+      | 23 | user          | User  |
+      | 25 | some class    | Class |
+      | 26 | another class | Class |
+      | 31 | admin         | User  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
@@ -15,6 +16,14 @@ Feature: Change item access rights for a group - robustness
       | group_id | manager_id | can_grant_group_access |
       | 23       | 21         | 1                      |
       | 25       | 21         | 0                      |
+      | 25       | 31         | 1                      |
+      | 26       | 21         | 1                      |
+      | 26       | 31         | 1                      |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 25              | 23             |
+      | 25              | 31             |
+      | 26              | 23             |
     And the groups ancestors are computed
     And the database has the following table 'items':
       | id  | default_language_tag |
@@ -45,12 +54,13 @@ Feature: Change item access rights for a group - robustness
       | 25       | 101     | info               | none                     | 0                  |
       | 31       | 102     | none               | content_with_descendants | 0                  |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view           | is_owner | source_group_id | latest_update_at    |
-      | 21       | 100     | none     | none                     | 1        | 23              | 2019-05-30 11:00:00 |
-      | 21       | 102     | none     | solution                 | 1        | 23              | 2019-05-30 11:00:00 |
-      | 25       | 100     | content  | none                     | 0        | 23              | 2019-05-30 11:00:00 |
-      | 25       | 101     | info     | none                     | 0        | 23              | 2019-05-30 11:00:00 |
-      | 31       | 102     | none     | content_with_descendants | 0        | 31              | 2019-05-30 11:00:00 |
+      | group_id | item_id | can_view | can_grant_view           | can_enter_until     | is_owner | source_group_id | latest_update_at    |
+      | 21       | 100     | none     | none                     | 9999-12-31 23:59:59 | 1        | 23              | 2019-05-30 11:00:00 |
+      | 21       | 102     | none     | solution                 | 9999-12-31 23:59:59 | 1        | 23              | 2019-05-30 11:00:00 |
+      | 23       | 101     | none     | none                     | 2018-05-30 11:00:00 | 0        | 26              | 2019-05-30 11:00:00 |
+      | 25       | 100     | content  | none                     | 9999-12-31 23:59:59 | 0        | 23              | 2019-05-30 11:00:00 |
+      | 25       | 101     | info     | none                     | 9999-12-31 23:59:59 | 0        | 23              | 2019-05-30 11:00:00 |
+      | 31       | 102     | none     | content_with_descendants | 9999-12-31 23:59:59 | 0        | 31              | 2019-05-30 11:00:00 |
 
   Scenario: Invalid source_group_id
     Given I am the user with id "21"
@@ -93,7 +103,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: Invalid can_view
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
+    When I send a PUT request to "/groups/26/permissions/23/102" with the following body:
     """
     {
       "can_view": "unknown"
@@ -127,29 +137,41 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: The user doesn't have enough rights to set can_view
+  Scenario: The user doesn't have enough rights to set permissions
     Given I am the user with id "31"
-    When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
+    When I send a PUT request to "/groups/26/permissions/23/101" with the following body:
     """
     {
-      "can_view": "solution"
+      "can_view": "info",
+      "can_grant_view": "solution",
+      "can_watch": "answer",
+      "can_edit": "all",
+      "can_make_session_official": true,
+      "is_owner": true,
+      "can_enter_from": "2019-05-30T11:00:00Z",
+      "can_enter_until": "2019-05-30T11:00:00Z"
     }
     """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "permissions_granted" should stay unchanged
-    And the table "permissions_generated" should stay unchanged
-
-  Scenario: The user doesn't have enough rights to set can_view = info
-    Given I am the user with id "31"
-    When I send a PUT request to "/groups/25/permissions/23/103" with the following body:
+    Then the response code should be 400
+    And the response error message should contain "Invalid input data"
+    And the response body should be, in JSON:
     """
     {
-      "can_view": "info"
+      "error_text": "Invalid input data",
+      "errors": {
+        "can_view": ["the value is not permitted"],
+        "can_grant_view": ["the value is not permitted"],
+        "can_watch": ["the value is not permitted"],
+        "can_edit": ["the value is not permitted"],
+        "can_make_session_official": ["the value is not permitted"],
+        "is_owner": ["the value is not permitted"],
+        "can_enter_from": ["the value is not permitted"],
+        "can_enter_until": ["the value is not permitted"]
+      },
+      "message": "Bad Request",
+      "success": false
     }
     """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
@@ -192,7 +214,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: source_group_id is not an ancestor of group_id
+  Scenario: source_group_id is not a parent of group_id
     Given I am the user with id "21"
     When I send a PUT request to "/groups/25/permissions/21/102" with the following body:
     """
@@ -232,8 +254,8 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: There are no item's parents visible to the group
-    Given I am the user with id "21"
-    When I send a PUT request to "/groups/23/permissions/23/103" with the following body:
+    Given I am the user with id "31"
+    When I send a PUT request to "/groups/25/permissions/23/103" with the following body:
     """
     {
       "can_view": "solution"

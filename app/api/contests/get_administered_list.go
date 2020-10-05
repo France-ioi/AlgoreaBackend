@@ -43,7 +43,7 @@ type contestAdminListRow struct {
 //
 //
 //                For all explicit-entry items that are timed contests and for that the user is a contest admin
-//                (has `can_grant_view` >= 'enter', and `can_watch` >= 'result'),
+//                (has `can_view` >= 'content', `can_grant_view` >= 'enter', and `can_watch` >= 'result'),
 //                returns item info (`id`, `title`, `team_only_contest`, parents' `title`-s).
 //                Only parents visible to the user are listed.
 //
@@ -95,7 +95,8 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			items.entry_participant_type,
 			COALESCE(user_strings.title, default_strings.title) AS title_translation,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS title_language_tag`).
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "grant_view", "enter").
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
+		WherePermissionIsAtLeast("grant_view", "enter").
 		WherePermissionIsAtLeast("watch", "result").
 		JoinsUserAndDefaultItemStrings(user).
 		Where("items.duration IS NOT NULL").

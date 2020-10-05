@@ -1,8 +1,11 @@
+// +build !prod
+
 package database
 
 import (
 	"fmt"
 	"os"
+	"regexp"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 )
@@ -22,4 +25,44 @@ func NewDBMock() (*DB, sqlmock.Sqlmock) {
 	}
 
 	return db, mock
+}
+
+// MockDBEnumQueries stubs all the db queries for loading permission enums
+func MockDBEnumQueries(sqlMock sqlmock.Sqlmock) {
+	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
+		WithArgs("permissions_granted", "can_view").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'none','info','content','content_with_descendants','solution'"))
+	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
+		WithArgs("permissions_granted", "can_grant_view").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'none','enter','content','content_with_descendants','solution','solution_with_grant'"))
+	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
+		WithArgs("permissions_granted", "can_watch").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'none','result','answer','answer_with_grant'"))
+	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
+		WithArgs("permissions_granted", "can_edit").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'none','children','all','all_with_grant'"))
+	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
+		WithArgs("group_managers", "can_manage").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'none','memberships','memberships_and_group'"))
+}
+
+// ClearAllDBEnums clears all cached permission enums
+func ClearAllDBEnums() {
+	enumValueIndex2Name = nil
+	enumValueName2Index = nil
 }

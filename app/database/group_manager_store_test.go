@@ -11,11 +11,11 @@ func TestGroupManagerStore_CanManage(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	groupManagerStore := NewDataStore(db).GroupManagers()
 
-	clearAllDBEnums()
+	ClearAllDBEnums()
 	fakeDBEnums("group_managers.can_manage",
 		map[string]int{"none": 1, "memberships": 2, "memberships_and_group": 3},
 		map[int]string{1: "none", 2: "memberships", 3: "memberships_and_group"})
-	defer clearAllDBEnums()
+	defer ClearAllDBEnums()
 
 	assert.Equal(t, 3, groupManagerStore.CanManageIndexByName("memberships_and_group"))
 	assert.Equal(t, 2, groupManagerStore.CanManageIndexByName("memberships"))

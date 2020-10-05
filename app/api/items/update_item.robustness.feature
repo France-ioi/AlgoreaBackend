@@ -6,6 +6,7 @@ Feature: Update item - robustness
     And the database has the following table 'items':
       | id | default_language_tag | type    | requires_explicit_entry | duration |
       | 4  | fr                   | Chapter | 0                       | null     |
+      | 20 | fr                   | Chapter | 0                       | null     |
       | 21 | fr                   | Chapter | 0                       | null     |
       | 22 | fr                   | Chapter | 0                       | null     |
       | 23 | fr                   | Skill   | 0                       | null     |
@@ -13,6 +14,7 @@ Feature: Update item - robustness
       | 25 | fr                   | Course  | 1                       | 00:00:01 |
       | 50 | fr                   | Chapter | 0                       | null     |
       | 60 | fr                   | Chapter | 0                       | null     |
+      | 70 | fr                   | Skill   | 0                       | null     |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -24,20 +26,24 @@ Feature: Update item - robustness
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
       | 11       | 4       | solution           | none               | false              |
+      | 11       | 20      | info               | all                | false              |
       | 11       | 21      | solution           | none               | false              |
       | 11       | 22      | none               | children           | false              |
       | 11       | 23      | info               | all                | false              |
       | 11       | 24      | solution           | children           | false              |
       | 11       | 25      | solution           | all                | false              |
       | 11       | 50      | solution           | all                | false              |
+      | 11       | 70      | solution           | all                | false              |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | can_edit | is_owner | source_group_id |
       | 11       | 4       | solution | none     | false    | 11              |
+      | 11       | 20      | info     | all      | false    | 11              |
       | 11       | 21      | solution | none     | false    | 11              |
       | 11       | 23      | info     | all      | false    | 11              |
       | 11       | 24      | solution | children | false    | 11              |
       | 11       | 25      | solution | all      | false    | 11              |
       | 11       | 50      | solution | all      | false    | 11              |
+      | 11       | 70      | solution | all      | false    | 11              |
     And the groups ancestors are computed
     And the database has the following table 'languages':
       | tag |
@@ -137,7 +143,7 @@ Feature: Update item - robustness
 
   Scenario: The user doesn't have rights to edit the item (can_edit = children)
     And I am the user with id "11"
-    When I send a PUT request to "/items/22" with the following body:
+    When I send a PUT request to "/items/24" with the following body:
       """
       {
         "url": "http://someurl.com"
@@ -145,6 +151,22 @@ Feature: Update item - robustness
       """
     Then the response code should be 403
     And the response error message should contain "No access rights to edit the item's properties"
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+
+  Scenario: The user doesn't have rights to edit the item (can_view = info)
+    And I am the user with id "11"
+    When I send a PUT request to "/items/20" with the following body:
+      """
+      {
+        "url": "http://someurl.com"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "No access rights to edit the item"
     And the table "items" should stay unchanged
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
@@ -307,7 +329,7 @@ Feature: Update item - robustness
 
   Scenario: A child is a skill while the item is not a skill
     Given I am the user with id "11"
-    When I send a PUT request to "/items/22" with the following body:
+    When I send a PUT request to "/items/50" with the following body:
       """
       {
         "children": [
@@ -396,7 +418,7 @@ Feature: Update item - robustness
 
   Scenario: A skill cannot have a duration or require an explicit entry
     Given I am the user with id "11"
-    When I send a PUT request to "/items/23" with the following body:
+    When I send a PUT request to "/items/70" with the following body:
       """
       {
         "duration": "00:00:01",

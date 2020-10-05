@@ -46,13 +46,13 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 21       | 40      | solution                 | enter                    | result              |
       | 21       | 50      | solution                 | enter                    | result              |
-      | 21       | 60      | info                     | none                     | none                |
+      | 21       | 60      | content                  | none                     | none                |
       | 21       | 70      | content_with_descendants | content                  | answer              |
-      | 21       | 80      | none                     | none                     | answer              |
-      | 21       | 90      | info                     | none                     | answer              |
+      | 21       | 80      | content                  | none                     | answer              |
+      | 21       | 90      | info                     | enter                    | answer              |
       | 31       | 50      | solution                 | enter                    | result              |
       | 31       | 60      | content_with_descendants | content                  | answer              |
-      | 31       | 70      | info                     | enter                    | result              |
+      | 31       | 70      | content                  | enter                    | result              |
       | 31       | 80      | content_with_descendants | enter                    | none                |
       | 41       | 10      | content                  | none                     | none                |
       | 41       | 50      | solution                 | enter                    | result              |

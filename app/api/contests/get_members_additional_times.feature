@@ -72,7 +72,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 14       | 50      | content_with_descendants | none                     | none                |
       | 15       | 60      | info                     | none                     | none                |
       | 16       | 60      | info                     | none                     | none                |
-      | 21       | 50      | none                     | enter                    | result              |
+      | 21       | 50      | content                  | enter                    | result              |
       | 21       | 60      | content_with_descendants | content                  | answer              |
       | 21       | 70      | content_with_descendants | none                     | answer              |
       | 31       | 70      | content_with_descendants | none                     | none                |
