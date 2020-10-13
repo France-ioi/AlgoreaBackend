@@ -37,6 +37,13 @@ Feature: Start results for an item path - robustness
     And the response error message should contain "Unable to parse one of the integers given as query args (value: '11111111111111111111111111111', param: 'ids')"
     And the table "attempts" should stay unchanged
 
+  Scenario: The path is too long
+    Given I am the user with id "101"
+    When I send a POST request to "/items/1/2/3/4/5/6/7/8/9/10/11/start-result-path"
+    Then the response code should be 400
+    And the response error message should contain "No more than 10 ids expected"
+    And the table "results" should stay unchanged
+
   Scenario: Invalid as_team_id
     Given I am the user with id "101"
     When I send a POST request to "/items/50/start-result-path?as_team_id=abc"
