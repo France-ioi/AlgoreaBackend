@@ -87,7 +87,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 
 	var result []map[string]interface{}
 	apiError := service.NoError
-	var previousAttemptID int64
+	var attemptID int64
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
@@ -98,11 +98,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 		data := result[0]
 		rowsToInsert := make([]map[string]interface{}, 0, len(data))
 		for index, itemID := range ids {
-			attemptID := data[fmt.Sprintf("attempt_id%d", index)]
-			if attemptID == nil {
-				attemptID = previousAttemptID
-			}
-			previousAttemptID = attemptID.(int64)
+			attemptID = data[fmt.Sprintf("attempt_id%d", index)].(int64)
 			if data[fmt.Sprintf("has_started_result%d", index)].(int64) == 1 {
 				continue
 			}
@@ -130,7 +126,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
-		"attempt_id": strconv.FormatInt(previousAttemptID, 10),
+		"attempt_id": strconv.FormatInt(attemptID, 10),
 	})))
 	return service.NoError
 }
@@ -168,7 +164,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		score += fmt.Sprintf("((results%d.started_at IS NULL OR attempts%d.id IS NULL) << %d)", i, i, len(ids)-i-1)
 		subQuery = subQuery.
 			Joins(fmt.Sprintf(`
-				LEFT JOIN attempts AS attempts%d ON attempts%d.participant_id = ? AND
+				JOIN attempts AS attempts%d ON attempts%d.participant_id = ? AND
 					(NOT items%d.requires_explicit_entry OR attempts%d.root_item_id = items%d.id)`+previousAttemptCondition, i, i, i, i, i),
 				participantID).
 			Joins(fmt.Sprintf(`
