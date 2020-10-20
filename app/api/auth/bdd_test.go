@@ -8,6 +8,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func TestMain(m *testing.M) {
-	testhelpers.RunGodogTests(m)
+func TestBDD(t *testing.T) {
+	testhelpers.RunGodogTests(t)
 }

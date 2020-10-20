@@ -11,6 +11,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
@@ -22,7 +23,7 @@ var opt = godog.Options{
 
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package)
-func RunGodogTests(m *testing.M) {
+func RunGodogTests(t *testing.T) {
 	appenv.SetDefaultEnvToTest()
 
 	opt.Paths = featureFilesInCurrentDir()
@@ -31,11 +32,7 @@ func RunGodogTests(m *testing.M) {
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
 		FeatureContext(s)
 	}, opt)
-
-	if st := m.Run(); st > status {
-		status = st
-	}
-	os.Exit(status)
+	assert.Zero(t, status)
 }
 
 func featureFilesInCurrentDir() []string {

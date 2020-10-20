@@ -75,6 +75,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 
 	if withWriteLock {
 		participantActivities = participantActivities.WithWriteLock()
+		participantSkills = participantSkills.WithWriteLock()
 	}
 
 	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).

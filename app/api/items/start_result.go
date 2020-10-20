@@ -24,7 +24,7 @@ import (
 //       the participant is a descendant of,
 //     * the last item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
 //     * `{ids}` should be an ordered list of parent-child items,
-//     * the group creating the attempt should have at least 'content' access on each of the items in `{ids}`,
+//     * the group starting the result should have at least 'content' access on each of the items in `{ids}`,
 //     * the participant should have a started, allowing submission, not ended result for each item but the last,
 //       with `{attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //     * if `{ids}` consists of only one item, the `{attempt_id}` should be zero,

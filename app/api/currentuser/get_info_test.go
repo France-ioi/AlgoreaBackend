@@ -18,9 +18,10 @@ func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
 	mock.ExpectQuery("^SELECT").WillReturnRows(mock.NewRows([]string{"id"})) // no rows
 
 	srv := &Service{Base: &service.Base{Store: database.NewDataStore(db)}}
-	monkey.PatchInstanceMethod(reflect.TypeOf(srv.Base), "GetUser", func(*service.Base, *http.Request) *database.User {
+	patch := monkey.PatchInstanceMethod(reflect.TypeOf(srv.Base), "GetUser", func(*service.Base, *http.Request) *database.User {
 		return &database.User{GroupID: 123}
 	})
+	defer patch.Unpatch()
 	result := srv.getInfo(nil, nil)
 	assert.Equal(t, service.InsufficientAccessRightsError, result)
 
