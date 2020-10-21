@@ -66,13 +66,16 @@ Feature: Get item view information
       | id | participant_id | created_at          |
       | 0  | 11             | 2019-05-30 10:00:00 |
       | 0  | 13             | 2019-05-30 10:00:00 |
+      | 1  | 13             | 2019-05-30 10:00:00 |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          |
-      | 0          | 11             | 200     | 2019-05-30 11:00:00 |
-      | 0          | 11             | 210     | null                |
-      | 0          | 11             | 220     | 2019-05-30 11:00:00 |
-      | 0          | 13             | 210     | 2019-05-30 11:00:00 |
-      | 0          | 13             | 220     | null                |
+      | attempt_id | participant_id | item_id | started_at          | score_computed |
+      | 0          | 11             | 200     | 2019-05-30 11:00:00 | 0              |
+      | 0          | 11             | 210     | null                | 10             |
+      | 0          | 11             | 220     | 2019-05-30 11:00:00 | 0              |
+      | 0          | 13             | 200     | 2019-05-30 11:00:00 | 1              |
+      | 0          | 13             | 210     | 2019-05-30 11:00:00 | 0              |
+      | 0          | 13             | 220     | null                | 0              |
+      | 1          | 13             | 200     | 2019-05-30 11:00:00 | 2              |
 
   Scenario: Full access on the item (as user)
     Given I am the user with id "11"
@@ -105,6 +108,8 @@ Feature: Get item view information
       "url": "http://someurl",
       "uses_api": true,
       "hints_allowed": true,
+
+      "best_score": 0,
 
       "string": {
         "language_tag": "en",
@@ -154,6 +159,8 @@ Feature: Get item view information
       "full_screen": "forceYes",
       "show_user_infos": true,
 
+      "best_score": 10,
+
       "string": {
         "language_tag": "en",
         "title": "Chapter A",
@@ -201,6 +208,8 @@ Feature: Get item view information
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
+
+      "best_score": 0,
 
       "string": {
         "language_tag": "en",
@@ -251,6 +260,8 @@ Feature: Get item view information
       "url": "http://someurl",
       "uses_api": true,
       "hints_allowed": true,
+
+      "best_score": 0,
 
       "string": {
         "language_tag": "fr",
@@ -303,6 +314,8 @@ Feature: Get item view information
       "uses_api": true,
       "hints_allowed": true,
 
+      "best_score": 2,
+
       "string": {
         "language_tag": "en",
         "title": "Category 1",
@@ -350,6 +363,8 @@ Feature: Get item view information
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
+
+      "best_score": 0,
 
       "string": {
         "language_tag": "en",

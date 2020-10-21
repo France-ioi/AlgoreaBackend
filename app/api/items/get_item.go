@@ -113,6 +113,10 @@ type itemResponse struct {
 	// required: true
 	EnteringTimeMax time.Time `json:"entering_time_max"`
 
+	// max among all attempts of the user (or of the team given in `{as_team_id}`)
+	// required: true
+	BestScore float32 `json:"best_score"`
+
 	// required: true
 	String itemStringRoot `json:"string"`
 
@@ -193,6 +197,7 @@ type rawItem struct {
 	URL                          *string // only if not a chapter
 	UsesAPI                      bool    // only if not a chapter
 	HintsAllowed                 bool    // only if not a chapter
+	BestScore                    float32
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `sql:"column:language_tag"`
@@ -240,7 +245,11 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database
 			IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
 			IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description,
 			IF(user_strings.language_tag IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
-			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated`)
+			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
+			IFNULL(
+					(SELECT MAX(results.score_computed) AS best_score
+					FROM results
+					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score`, groupID)
 
 	err := query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -266,6 +275,7 @@ func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *d
 		ShowUserInfos:                rawData.ShowUserInfos,
 		EnteringTimeMin:              time.Time(rawData.EnteringTimeMin),
 		EnteringTimeMax:              time.Time(rawData.EnteringTimeMax),
+		BestScore:                    rawData.BestScore,
 	}
 	result.String.itemStringNotInfo = constructStringNotInfo(rawData, permissionGrantedStore)
 
