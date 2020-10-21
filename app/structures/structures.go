@@ -58,9 +58,8 @@ type ItemResult struct {
 	// Nullable
 	// required:true
 	StartedAt *time.Time `json:"started_at"`
-	// Nullable
 	// required:true
-	LatestActivityAt *time.Time `json:"latest_activity_at"`
+	LatestActivityAt time.Time `json:"latest_activity_at"`
 	// Nullable
 	// required:true
 	EndedAt *time.Time `json:"ended_at"`

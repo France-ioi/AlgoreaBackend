@@ -14,7 +14,7 @@ type RawItemResultFields struct {
 	ScoreComputed    float32
 	Validated        bool
 	StartedAt        *database.Time
-	LatestActivityAt *database.Time
+	LatestActivityAt database.Time
 	EndedAt          *database.Time
 
 	// attempts
@@ -30,7 +30,7 @@ func (raw *RawItemResultFields) asItemResult() *structures.ItemResult {
 		ScoreComputed:                 raw.ScoreComputed,
 		Validated:                     raw.Validated,
 		StartedAt:                     (*time.Time)(raw.StartedAt),
-		LatestActivityAt:              (*time.Time)(raw.LatestActivityAt),
+		LatestActivityAt:              time.Time(raw.LatestActivityAt),
 		EndedAt:                       (*time.Time)(raw.EndedAt),
 		AttemptAllowsSubmissionsUntil: time.Time(raw.AttemptAllowsSubmissionsUntil),
 	}
