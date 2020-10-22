@@ -148,7 +148,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 1, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 1, started_at: 2019-05-30 11:00:00}
-					- {participant_id: 101, attempt_id: 2, item_id: 2, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 2, item_id: 2}
 					- {participant_id: 101, attempt_id: 2, item_id: 21, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 22}
 					- {participant_id: 101, attempt_id: 3, item_id: 22, started_at: 2019-05-30 11:00:00}
