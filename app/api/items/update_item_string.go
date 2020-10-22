@@ -36,7 +36,7 @@ type itemStringUpdateRequest struct {
 //   creates a new one otherwise.
 //
 //
-//   If `language_tag` is not specified, uses the item’s default language.
+//   If `language_tag` = 'default', uses the item’s default language.
 //
 //
 //   The user should have `can_view` >= 'content' and `can_edit` >= 'all' on the item, otherwise the "forbidden" response is returned.
