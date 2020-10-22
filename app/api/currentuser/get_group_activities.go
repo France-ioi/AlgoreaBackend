@@ -34,7 +34,7 @@ type rawRootItem struct {
 	ScoreComputed    float32
 	Validated        bool
 	StartedAt        *database.Time
-	LatestActivityAt *database.Time
+	LatestActivityAt database.Time
 	EndedAt          *database.Time
 
 	// attempts
@@ -167,7 +167,7 @@ func generateItemResultFromRawData(rawData *rawRootItem) structures.ItemResult {
 		ScoreComputed:                 rawData.ScoreComputed,
 		Validated:                     rawData.Validated,
 		StartedAt:                     (*time.Time)(rawData.StartedAt),
-		LatestActivityAt:              (*time.Time)(rawData.LatestActivityAt),
+		LatestActivityAt:              time.Time(rawData.LatestActivityAt),
 		EndedAt:                       (*time.Time)(rawData.EndedAt),
 		AttemptAllowsSubmissionsUntil: time.Time(rawData.AttemptAllowsSubmissionsUntil),
 	}
