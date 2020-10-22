@@ -141,7 +141,6 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		Where("items0.id IN ? OR items0.id IN ?",
 			participantActivities.SubQuery(), participantSkills.SubQuery())
 
-	previousAttemptIDForCondition := "attempts0.id"
 	var score string
 	var columns string
 	attemptIsActiveCondition := "1"
@@ -153,15 +152,13 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 			const comma = ", "
 			columns += comma
 			previousAttemptCondition = fmt.Sprintf(` AND
-					IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = %s`,
-				i, i, i, i, previousAttemptIDForCondition)
+					IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id`, i, i, i, i, i-1)
 		}
 
-		columnsForOrder += fmt.Sprintf(", IFNULL(attempts%d.id, -1) DESC", i)
+		columnsForOrder += fmt.Sprintf(", attempts%d.id DESC", i)
 		attemptIsActiveCondition = fmt.Sprintf(
-			"IF(attempts%d.id IS NOT NULL, attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until, 1) AND %s",
-			i, i, i, attemptIsActiveCondition)
-		score += fmt.Sprintf("((results%d.started_at IS NULL OR attempts%d.id IS NULL) << %d)", i, i, len(ids)-i-1)
+			"attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until AND %s", i, i, attemptIsActiveCondition)
+		score += fmt.Sprintf("((results%d.started_at IS NULL) << %d)", i, len(ids)-i-1)
 		subQuery = subQuery.
 			Joins(fmt.Sprintf(`
 				JOIN attempts AS attempts%d ON attempts%d.participant_id = ? AND
@@ -180,9 +177,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 				i+1, i+1, i, i+1), ids[i+1]).
 				Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", i+1, i+1, i+1))
 		}
-		previousAttemptIDForCondition = fmt.Sprintf("IFNULL(attempts%d.id, %s)", i, previousAttemptIDForCondition)
-		columns += fmt.Sprintf("%s AS attempt_id%d, results%d.started_at IS NOT NULL AS has_started_result%d",
-			previousAttemptIDForCondition, i, i, i)
+		columns += fmt.Sprintf("attempts%d.id AS attempt_id%d, results%d.started_at IS NOT NULL AS has_started_result%d", i, i, i, i)
 	}
 	subQuery = subQuery.Select(columns).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
 		Order(score + columnsForOrder).Limit(1)
