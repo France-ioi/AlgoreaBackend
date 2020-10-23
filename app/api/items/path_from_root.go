@@ -17,7 +17,8 @@ import (
 //   Finds a path from any of root items to a given item.
 //
 //
-//   The path consists only of the items visible to the participant.
+//   The path consists only of the items visible to the participant
+//   (`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
 //   Of all possible paths the service chooses the one having missing/not-started results located closer
 //   to the end of the path, preferring paths having less missing/not-started results and having higher values of `attempt_id`.
 //   The chain of attempts of the path cannot have missing results for items requiring explicit entry or not started results
@@ -88,7 +89,10 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 	visibleItems := store.Permissions().MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "info").
 		Joins("JOIN items ON items.id = permissions.item_id").
-		Select("items.id, requires_explicit_entry").Group("items.id")
+		Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
+		Group("items.id")
+
+	canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 
 	var pathStrings []string
 	service.MustNotBeError(store.Raw(`
@@ -100,23 +104,24 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 						UNION
 						SELECT visible_items.id FROM participant_ancestors JOIN visible_items ON visible_items.id = root_skill_id),
 					item_ancestors AS (
-						SELECT visible_items.id, requires_explicit_entry
+						SELECT visible_items.id, requires_explicit_entry, can_view_generated_value
 						FROM items_ancestors
 						JOIN visible_items ON visible_items.id = items_ancestors.ancestor_item_id WHERE child_item_id = ?
 						UNION
-						SELECT id, requires_explicit_entry FROM visible_items WHERE id = ?),
+						SELECT id, requires_explicit_entry, can_view_generated_value FROM visible_items WHERE id = ?),
 					root_ancestors AS (
-						SELECT item_ancestors.id, requires_explicit_entry
+						SELECT item_ancestors.id, requires_explicit_entry, can_view_generated_value
 						FROM item_ancestors
 						JOIN root_items ON root_items.id = item_ancestors.id)
 				(SELECT CAST(root_ancestors.id AS CHAR(1024)), root_ancestors.id, attempts.id, results.started_at IS NULL,
-				       CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)), attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
+				        CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)), attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 				FROM root_ancestors
 				JOIN attempts ON attempts.participant_id = ? AND
 					(NOT root_ancestors.requires_explicit_entry OR attempts.root_item_id = root_ancestors.id)
 				LEFT JOIN results ON results.participant_id = attempts.participant_id AND
 					attempts.id = results.attempt_id AND results.item_id = root_ancestors.id
-				WHERE (NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
+				WHERE (root_ancestors.id = ? OR root_ancestors.can_view_generated_value >= ?) AND
+					(NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
 					(results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until) AND
 					(results.attempt_id IS NOT NULL OR attempts.id = 0))
 				UNION
@@ -131,10 +136,12 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 					IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.last_attempt_id
 				LEFT JOIN results ON results.participant_id = attempts.participant_id AND
 						attempts.id = results.attempt_id AND results.item_id = item_ancestors.id
-				WHERE (NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
+				WHERE paths.last_item_id <> ? AND (item_ancestors.id = ? OR item_ancestors.can_view_generated_value >= ?) AND
+					(NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
 					(results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until AND paths.is_active)))
 			SELECT path FROM paths WHERE paths.last_item_id = ? ORDER BY score, attempts DESC LIMIT 1`,
-		participantAncestors.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, participantID, itemID).
+		participantAncestors.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, itemID, canViewContentIndex,
+		participantID, itemID, itemID, canViewContentIndex, itemID).
 		ScanIntoSlices(&pathStrings).Error())
 
 	if len(pathStrings) == 0 {

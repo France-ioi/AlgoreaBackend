@@ -27,7 +27,7 @@ func Test_findItemPath(t *testing.T) {
 			name: "fails if not enough permissions for the first item",
 			fixture: `
 				permissions_generated:
-					- {group_id: 200, item_id: 1, can_view_generated: none}
+					- {group_id: 200, item_id: 1, can_view_generated: info}
 					- {group_id: 200, item_id: 2, can_view_generated: info}
 			`,
 			args: args{participantID: 101, itemID: 2},
@@ -36,7 +36,7 @@ func Test_findItemPath(t *testing.T) {
 			name: "fails if not enough permissions for the second item",
 			fixture: `
 				permissions_generated:
-					- {group_id: 200, item_id: 1, can_view_generated: info}
+					- {group_id: 200, item_id: 1, can_view_generated: content}
 					- {group_id: 200, item_id: 2, can_view_generated: none}
 			`,
 			args: args{participantID: 101, itemID: 2},
@@ -46,7 +46,7 @@ func Test_findItemPath(t *testing.T) {
 			fixture: `
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
-					- {group_id: 200, item_id: 2, can_view_generated: content}
+					- {group_id: 200, item_id: 2, can_view_generated: info}
 			`,
 			args: args{participantID: 101, itemID: 2},
 			want: []string{"1", "2"},
@@ -56,7 +56,7 @@ func Test_findItemPath(t *testing.T) {
 			fixture: `
 				permissions_generated:
 					- {group_id: 200, item_id: 3, can_view_generated: content}
-					- {group_id: 200, item_id: 4, can_view_generated: content}
+					- {group_id: 200, item_id: 4, can_view_generated: info}
 			`,
 			args: args{participantID: 101, itemID: 4},
 			want: []string{"3", "4"},
@@ -114,7 +114,7 @@ func Test_findItemPath(t *testing.T) {
 			fixture: `
 				permissions_generated:
 					- {group_id: 101, item_id: 1, can_view_generated: content}
-					- {group_id: 101, item_id: 2, can_view_generated: content}
+					- {group_id: 101, item_id: 2, can_view_generated: info}
 				attempts:
 					- {participant_id: 101, id: 1}
 				results:
@@ -134,7 +134,7 @@ func Test_findItemPath(t *testing.T) {
 				permissions_generated:
 					- {group_id: 101, item_id: 1, can_view_generated: content}
 					- {group_id: 101, item_id: 2, can_view_generated: content}
-					- {group_id: 101, item_id: 21, can_view_generated: info}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
 					- {group_id: 101, item_id: 22, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1}
@@ -169,7 +169,7 @@ func Test_findItemPath(t *testing.T) {
 				permissions_generated:
 					- {group_id: 101, item_id: 1, can_view_generated: content}
 					- {group_id: 101, item_id: 2, can_view_generated: content}
-					- {group_id: 101, item_id: 21, can_view_generated: info}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
 					- {group_id: 101, item_id: 22, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1}
@@ -203,7 +203,7 @@ func Test_findItemPath(t *testing.T) {
 				permissions_generated:
 					- {group_id: 101, item_id: 1, can_view_generated: content}
 					- {group_id: 101, item_id: 2, can_view_generated: content}
-					- {group_id: 101, item_id: 21, can_view_generated: info}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
 					- {group_id: 101, item_id: 22, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1}

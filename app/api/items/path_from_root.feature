@@ -57,7 +57,7 @@ Feature: Find an item path
       | 3          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
       | 3          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
 
-  Scenario Outline: Find a path for the user's self group
+  Scenario Outline: Find a path as a user
     Given I am the user with id "111"
     When I send a GET request to "/items/<item_id>/path-from-root"
     Then the response code should be 200
