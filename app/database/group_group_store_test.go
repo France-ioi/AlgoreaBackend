@@ -56,6 +56,11 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 		childGroupID  = 2
 	)
 
+	fakeDBEnums("permissions_granted.can_view",
+		map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5},
+		map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"})
+	defer ClearAllDBEnums()
+
 	mock.MatchExpectationsInOrder(true)
 	mock.ExpectBegin()
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
