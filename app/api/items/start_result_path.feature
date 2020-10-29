@@ -149,7 +149,6 @@ Feature: Start results for an item path
         "data": {
           "attempt_id": "3"
         }
-
       }
       """
     And the table "attempts" should stay unchanged
