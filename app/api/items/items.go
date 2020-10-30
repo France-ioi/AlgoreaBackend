@@ -41,6 +41,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithParticipant.Get("/items/{item_id}/parents", service.AppHandler(srv.getItemParents).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
+	routerWithParticipant.Get("/items/{item_id}/prerequisites", service.AppHandler(srv.getItemPrerequisites).ServeHTTP)
 
 	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/generate-task-token",
 		service.AppHandler(srv.generateTaskToken).ServeHTTP)
