@@ -66,7 +66,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 	childrenQuery := constructItemChildrenQuery(dataStore, rootID, groupID, attemptID, watchedGroupIDSet, watchedGroupID,
 		commonAttributes+
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
-			 IFNULL(?, 0) AS has_visible_children`,
+			 IFNULL(?, 0) AS has_visible_children, child_order`,
 		[]interface{}{hasVisibleChildrenQuery}, "",
 	)
 
