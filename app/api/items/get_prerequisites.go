@@ -9,8 +9,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model prerequisiteItem
-type prerequisiteItem struct {
+// swagger:model prerequisiteOrDependencyItem
+type prerequisiteOrDependencyItem struct {
 	*commonItemFields
 
 	// item_dependencies.score
@@ -29,7 +29,7 @@ type prerequisiteItem struct {
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 }
 
-type rawPrerequisiteListItem struct {
+type rawPrerequisiteOrDependencyItem struct {
 	*RawCommonItemFields
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
@@ -83,7 +83,7 @@ type rawPrerequisiteListItem struct {
 //     schema:
 //       type: array
 //       items:
-//         "$ref": "#/definitions/prerequisiteItem"
+//         "$ref": "#/definitions/prerequisiteOrDependencyItem"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -93,6 +93,12 @@ type rawPrerequisiteListItem struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+	return srv.getItemPrerequisitesOrDependencies(rw, httpReq, "dependent_item_id", "item_id")
+}
+
+func (srv *Service) getItemPrerequisitesOrDependencies(
+	rw http.ResponseWriter, httpReq *http.Request,
+	givenColumn, joinToColumn string) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -116,7 +122,7 @@ func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.R
 		return service.InsufficientAccessRightsError
 	}
 
-	var rawData []rawPrerequisiteListItem
+	var rawData []rawPrerequisiteOrDependencyItem
 	service.MustNotBeError(
 		constructItemListWithoutResultsQuery(
 			srv.Store, participantID, watchedGroupIDSet, watchedGroupID,
@@ -133,27 +139,29 @@ func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.R
 				IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
 			[]interface{}{participantID},
 			func(db *database.DB) *database.DB {
-				return db.Joins("JOIN item_dependencies ON item_dependencies.dependent_item_id = ? AND item_dependencies.item_id = items.id", itemID).
+				return db.Joins(
+					"JOIN item_dependencies ON item_dependencies."+givenColumn+" = ? AND item_dependencies."+joinToColumn+" = items.id", itemID).
 					JoinsUserAndDefaultItemStrings(user)
 			},
 			func(db *database.DB) *database.DB {
-				return db.Joins("JOIN item_dependencies ON item_dependencies.item_id = permissions.item_id").
-					Where("item_dependencies.dependent_item_id = ?", itemID)
+				return db.Joins("JOIN item_dependencies ON item_dependencies."+joinToColumn+" = permissions.item_id").
+					Where("item_dependencies."+givenColumn+"= ?", itemID)
 			}).
 			Order("title, subtitle, id").
 			Scan(&rawData).Error())
 
-	response := srv.prerequisiteItemsFromRawData(rawData, watchedGroupIDSet, srv.Store.PermissionsGranted())
+	response := srv.prerequisiteOrDependencyItemsFromRawData(rawData, watchedGroupIDSet, srv.Store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
 }
 
-func (srv *Service) prerequisiteItemsFromRawData(
-	rawData []rawPrerequisiteListItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []prerequisiteItem {
-	result := make([]prerequisiteItem, 0, len(rawData))
+func (srv *Service) prerequisiteOrDependencyItemsFromRawData(
+	rawData []rawPrerequisiteOrDependencyItem, watchedGroupIDSet bool,
+	permissionGrantedStore *database.PermissionGrantedStore) []prerequisiteOrDependencyItem {
+	result := make([]prerequisiteOrDependencyItem, 0, len(rawData))
 	for index := range rawData {
-		child := prerequisiteItem{
+		item := prerequisiteOrDependencyItem{
 			commonItemFields: rawData[index].RawCommonItemFields.asItemCommonFields(permissionGrantedStore),
 			BestScore:        rawData[index].BestScore,
 			String: listItemString{
@@ -164,10 +172,10 @@ func (srv *Service) prerequisiteItemsFromRawData(
 			GrantContentView: rawData[index].GrantContentView,
 		}
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
-			child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
+			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
-		result = append(result, child)
+		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
+		result = append(result, item)
 	}
 	return result
 }
