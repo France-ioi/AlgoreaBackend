@@ -79,7 +79,7 @@ type rawPrerequisiteListItem struct {
 //   type: integer
 // responses:
 //   "200":
-//     description: OK. Success response with item children data
+//     description: OK. Success response with prerequisite items
 //     schema:
 //       type: array
 //       items:
