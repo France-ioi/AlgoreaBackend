@@ -78,13 +78,6 @@ Feature: Start a result for an item - robustness
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged
 
-  Scenario: No access to the item (type='Skill')
-    Given I am the user with id "101"
-    When I send a POST request to "/items/90/start-result?attempt_id=0"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "attempts" should stay unchanged
-
   Scenario: User is not a team member
     Given I am the user with id "101"
     When I send a POST request to "/items/60/start-result?as_team_id=102&attempt_id=0"
