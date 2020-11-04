@@ -28,7 +28,6 @@ import (
 //     * the participant should have a started, allowing submission, not ended result for each item but the last,
 //       with `{attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //     * if `{ids}` consists of only one item, the `{attempt_id}` should be zero,
-//     * the last item in `{ids}` should be either 'Task', 'Course', or 'Chapter',
 //
 //   otherwise the 'forbidden' error is returned.
 // parameters:
@@ -83,7 +82,6 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		itemID := ids[len(ids)-1]
 		var found bool
 		found, err = store.Items().ByID(itemID).
-			Where("items.type IN('Task','Course','Chapter')").
 			Where("NOT items.requires_explicit_entry").WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {

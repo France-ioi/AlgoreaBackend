@@ -1,12 +1,12 @@
 Feature: Start a result for an item
   Background:
     Given the database has the following table 'groups':
-      | id  | type  | root_activity_id |
-      | 90  | Class | 10               |
-      | 91  | Other | 50               |
-      | 101 | User  | null             |
-      | 102 | Team  | 60               |
-      | 111 | User  | null             |
+      | id  | type  | root_activity_id | root_skill_id |
+      | 90  | Class | 10               | null          |
+      | 91  | Other | 50               | null          |
+      | 101 | User  | null             | null          |
+      | 102 | Team  | 60               | null          |
+      | 111 | User  | null             | 80            |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 101      |
@@ -24,6 +24,7 @@ Feature: Start a result for an item
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
       | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | fr                   |
       | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
+      | 80 | null                                                                    | Skill   | 0                        | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
@@ -41,6 +42,7 @@ Feature: Start a result for an item
       | 102      | 70      | content                  |
       | 111      | 10      | content_with_descendants |
       | 111      | 50      | content_with_descendants |
+      | 111      | 80      | content                  |
     And the database has the following table 'attempts':
       | id | participant_id | created_at          |
       | 0  | 101            | 2019-05-30 11:00:00 |
@@ -71,6 +73,7 @@ Feature: Start a result for an item
     | item_id |
     | 50      |
     | 10      |
+    | 80      |
 
   Scenario: User is able to start a result as a team
     Given I am the user with id "101"
