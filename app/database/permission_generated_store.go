@@ -31,7 +31,7 @@ func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasP
 	groupID int64, permissionKind, neededPermission string) *DB {
 	return s.
 		Select(`
-			item_id,
+			permissions.item_id,
 			MAX(can_view_generated_value) AS can_view_generated_value,
 			MAX(can_grant_view_generated_value) AS can_grant_view_generated_value,
 			MAX(can_watch_generated_value) AS can_watch_generated_value,

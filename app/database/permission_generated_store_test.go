@@ -16,7 +16,7 @@ func TestPermissionGeneratedStore_AggregatedPermissionsForItemsVisibleToGroup(t 
 	defer ClearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
+		"SELECT permissions.item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
 			"MAX(can_grant_view_generated_value) AS can_grant_view_generated_value, "+
 			"MAX(can_watch_generated_value) AS can_watch_generated_value, "+
 			"MAX(can_edit_generated_value) AS can_edit_generated_value, "+
@@ -42,7 +42,7 @@ func TestPermissionGeneratedStore_AggregatedPermissionsForItemsOnWhichGroupHasVi
 	defer ClearAllDBEnums()
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
+		"SELECT permissions.item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
 			"MAX(can_grant_view_generated_value) AS can_grant_view_generated_value, "+
 			"MAX(can_watch_generated_value) AS can_watch_generated_value, "+
 			"MAX(can_edit_generated_value) AS can_edit_generated_value, "+

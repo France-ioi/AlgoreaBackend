@@ -148,7 +148,8 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 				IFNULL(
 					(SELECT MAX(results.score_computed) AS best_score
 					FROM results
-					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score`,
+					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
+				child_order`,
 			[]interface{}{participantID},
 			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,

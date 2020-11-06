@@ -16,7 +16,7 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT items.id FROM `items` "+
 		"JOIN LATERAL ("+
-		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
+		"SELECT permissions.item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
 		"MAX(can_grant_view_generated_value) AS can_grant_view_generated_value, "+
 		"MAX(can_watch_generated_value) AS can_watch_generated_value, "+
 		"MAX(can_edit_generated_value) AS can_edit_generated_value, "+

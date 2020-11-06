@@ -66,7 +66,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 	childrenQuery := constructItemChildrenQuery(dataStore, rootID, groupID, attemptID, watchedGroupIDSet, watchedGroupID,
 		commonAttributes+
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
-			 IFNULL(?, 0) AS has_visible_children`,
+			 IFNULL(?, 0) AS has_visible_children, child_order`,
 		[]interface{}{hasVisibleChildrenQuery}, "",
 	)
 
@@ -102,10 +102,9 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 	return result
 }
 
-func constructItemListQuery(dataStore *database.DataStore, groupID int64,
+func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID int64,
 	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
-	externalColumnList string,
-	joinItemsItemsFunc, joinItemsItemsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB) *database.DB {
+	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc func(*database.DB) *database.DB) *database.DB {
 	watchedGroupCanViewQuery := interface{}(gorm.Expr("NULL"))
 	watchedGroupParticipantsQuery := interface{}(gorm.Expr("(SELECT NULL AS id)"))
 	watchedGroupAvgScoreQuery := interface{}(gorm.Expr("(SELECT NULL AS avg_score, NULL AS all_validated)"))
@@ -139,20 +138,31 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64,
 	values = append(values, watchedGroupCanViewQuery, canWatchResultEnumIndex, canWatchResultEnumIndex, canWatchResultEnumIndex)
 	itemsWithoutResultsQuery := dataStore.Raw("WITH watched_group_participants AS ? ?",
 		watchedGroupParticipantsQuery,
-		joinItemsItemsFunc(
+		joinItemRelationsToItemsFunc(
 			dataStore.Items().
 				Joins("JOIN ? AS permissions ON items.id = permissions.item_id",
-					joinItemsItemsToPermissionsFunc(
+					joinItemRelationsToPermissionsFunc(
 						dataStore.Permissions().AggregatedPermissionsForItemsVisibleToGroup(groupID)).SubQuery())).
 			Select(
 				columnList+`,
-				child_order, ? AS watched_group_can_view,
+				? AS watched_group_can_view,
 				can_watch_generated_value >= ? AS can_watch_for_group_results,
 				IF(can_watch_generated_value >= ?, watched_group_stats.avg_score, 0) AS watched_group_avg_score,
 				IF(can_watch_generated_value >= ?, watched_group_stats.all_validated, 0) AS watched_group_all_validated`,
 				values...).
 			Joins("JOIN LATERAL ? AS watched_group_stats", watchedGroupAvgScoreQuery).
-			SubQuery()).SubQuery()
+			SubQuery())
+
+	return itemsWithoutResultsQuery
+}
+
+func constructItemListQuery(dataStore *database.DataStore, groupID int64,
+	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+	externalColumnList string,
+	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB) *database.DB {
+
+	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, watchedGroupIDSet, watchedGroupID,
+		columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
 
 	if externalColumnList != "" {
 		externalColumnList += ", "
@@ -167,7 +177,7 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64,
 			FROM ? AS items
 			LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id
 			LEFT JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id`,
-			itemsWithoutResultsQuery, groupID)).
+			itemsWithoutResultsQuery.SubQuery(), groupID)).
 			Order("child_order, items.id, attempt_id")
 	service.MustNotBeError(itemsQuery.Error())
 	return itemsQuery
