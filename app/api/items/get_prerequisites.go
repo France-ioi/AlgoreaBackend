@@ -15,9 +15,10 @@ type prerequisiteOrDependencyItem struct {
 
 	// item_dependencies.score
 	// required: true
-	Score int `json:"score"`
+	DependencyRequiredScore int `json:"dependency_required_score"`
+	// item_dependencies.grant_content_view
 	// required: true
-	GrantContentView bool `json:"grant_content_view"`
+	DependencyGrantContentView bool `json:"dependency_grant_content_view"`
 
 	// required: true
 	String listItemString `json:"string"`
@@ -41,8 +42,8 @@ type rawPrerequisiteOrDependencyItem struct {
 	BestScore float32
 
 	// from item_dependencies
-	Score            int
-	GrantContentView bool
+	DependencyRequiredScore    int
+	DependencyGrantContentView bool
 
 	*RawWatchedGroupStatFields
 }
@@ -129,7 +130,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 			`items.allows_multiple_attempts, items.id, items.type, items.default_language_tag,
 				validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
 				can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
-				score, grant_content_view,
+				score AS dependency_required_score, grant_content_view AS dependency_grant_content_view,
 				IFNULL(
 					(SELECT MAX(results.score_computed) AS best_score
 					FROM results
@@ -168,8 +169,8 @@ func (srv *Service) prerequisiteOrDependencyItemsFromRawData(
 				LanguageTag: rawData[index].StringLanguageTag,
 				Title:       rawData[index].StringTitle,
 			},
-			Score:            rawData[index].Score,
-			GrantContentView: rawData[index].GrantContentView,
+			DependencyRequiredScore:    rawData[index].DependencyRequiredScore,
+			DependencyGrantContentView: rawData[index].DependencyGrantContentView,
 		}
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}

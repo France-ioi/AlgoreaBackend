@@ -107,8 +107,8 @@ Feature: Get item prerequisites
     [
       {
         "id": "220",
-        "score": 30,
-        "grant_content_view": false,
+        "dependency_required_score": 30,
+        "dependency_grant_content_view": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -134,8 +134,8 @@ Feature: Get item prerequisites
       },
       {
         "id": "210",
-        "score": 20,
-        "grant_content_view": true,
+        "dependency_required_score": 20,
+        "dependency_grant_content_view": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -171,8 +171,8 @@ Feature: Get item prerequisites
     [
       {
         "id": "220",
-        "score": 30,
-        "grant_content_view": false,
+        "dependency_required_score": 30,
+        "dependency_grant_content_view": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -198,8 +198,8 @@ Feature: Get item prerequisites
       },
       {
         "id": "210",
-        "score": 20,
-        "grant_content_view": true,
+        "dependency_required_score": 20,
+        "dependency_grant_content_view": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -235,8 +235,8 @@ Feature: Get item prerequisites
     [
       {
         "id": "220",
-        "score": 30,
-        "grant_content_view": false,
+        "dependency_required_score": 30,
+        "dependency_grant_content_view": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -261,8 +261,8 @@ Feature: Get item prerequisites
       },
       {
         "id": "210",
-        "score": 20,
-        "grant_content_view": true,
+        "dependency_required_score": 20,
+        "dependency_grant_content_view": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -297,8 +297,8 @@ Feature: Get item prerequisites
     [
       {
         "id": "220",
-        "score": 30,
-        "grant_content_view": false,
+        "dependency_required_score": 30,
+        "dependency_grant_content_view": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -324,8 +324,8 @@ Feature: Get item prerequisites
       },
       {
         "id": "210",
-        "score": 20,
-        "grant_content_view": true,
+        "dependency_required_score": 20,
+        "dependency_grant_content_view": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -361,8 +361,8 @@ Feature: Get item prerequisites
     [
       {
         "id": "220",
-        "score": 30,
-        "grant_content_view": false,
+        "dependency_required_score": 30,
+        "dependency_grant_content_view": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -387,8 +387,8 @@ Feature: Get item prerequisites
       },
       {
         "id": "210",
-        "score": 20,
-        "grant_content_view": true,
+        "dependency_required_score": 20,
+        "dependency_grant_content_view": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -423,8 +423,8 @@ Feature: Get item prerequisites
     [
       {
         "id": "220",
-        "score": 30,
-        "grant_content_view": false,
+        "dependency_required_score": 30,
+        "dependency_grant_content_view": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -452,8 +452,8 @@ Feature: Get item prerequisites
       },
       {
         "id": "210",
-        "score": 20,
-        "grant_content_view": true,
+        "dependency_required_score": 20,
+        "dependency_grant_content_view": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
