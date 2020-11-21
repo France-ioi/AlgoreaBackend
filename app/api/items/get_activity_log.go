@@ -317,7 +317,14 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 		return nil, apiError
 	}
 
-	unionQuery := srv.Store.Raw("SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un",
+	// There is a bug in Gorm. They assume that queries constructed with Raw() already contain WHERE.
+	// It is easier to add a workaround here than to patch Gorm because many programs depend on this behavior.
+	unionQueryString := "SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un"
+	if len(r.URL.Query()["from.answer_id"]) > 0 {
+		unionQueryString += " WHERE "
+	}
+
+	unionQuery := srv.Store.Raw(unionQueryString,
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery = service.NewQueryLimiter().Apply(r, unionQuery)
 	unionQuery, apiError = service.ApplySortingAndPaging(r, unionQuery,
