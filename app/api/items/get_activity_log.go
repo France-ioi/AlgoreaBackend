@@ -275,7 +275,7 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 		Where("participant_id IN (SELECT id FROM participants)")
 
 	startedResultsQuery = service.NewQueryLimiter().Apply(r, startedResultsQuery)
-	startedResultsQuery, apiError = service.ApplySortingAndPaging(r, startedResultsQuery,
+	startedResultsQuery, _ = service.ApplySortingAndPaging(r, startedResultsQuery,
 		map[string]*service.FieldSortingParams{
 			"at":             {ColumnName: "started_at", FieldType: "time"},
 			"item_id":        {ColumnName: "item_id", FieldType: "int64"},
@@ -285,9 +285,6 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 			"answer_id":      {FieldType: "int64", Ignore: true},
 		},
 		"-at,item_id,participant_id,-attempt_id,-activity_type,answer_id", []string{"participant_id", "attempt_id", "item_id"}, true)
-	if apiError != service.NoError {
-		return nil, apiError
-	}
 
 	validatedResultsQuery := srv.Store.Results().
 		Select(`
@@ -303,7 +300,7 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 		Where("results.participant_id IN (SELECT id FROM participants)")
 
 	validatedResultsQuery = service.NewQueryLimiter().Apply(r, validatedResultsQuery)
-	validatedResultsQuery, apiError = service.ApplySortingAndPaging(r, validatedResultsQuery,
+	validatedResultsQuery, _ = service.ApplySortingAndPaging(r, validatedResultsQuery,
 		map[string]*service.FieldSortingParams{
 			"at":             {ColumnName: "validated_at", FieldType: "time"},
 			"item_id":        {ColumnName: "item_id", FieldType: "int64"},
@@ -313,9 +310,6 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 			"answer_id":      {FieldType: "int64", Ignore: true},
 		},
 		"-at,item_id,participant_id,-attempt_id,-activity_type,answer_id", []string{"participant_id", "attempt_id", "item_id"}, true)
-	if apiError != service.NoError {
-		return nil, apiError
-	}
 
 	// There is a bug in Gorm. They assume that queries constructed with Raw() already contain WHERE.
 	// It is easier to add a workaround here than to patch Gorm because many programs depend on this behavior.
@@ -327,7 +321,7 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 	unionQuery := srv.Store.Raw(unionQueryString,
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery = service.NewQueryLimiter().Apply(r, unionQuery)
-	unionQuery, apiError = service.ApplySortingAndPaging(r, unionQuery,
+	unionQuery, _ = service.ApplySortingAndPaging(r, unionQuery,
 		map[string]*service.FieldSortingParams{
 			"at":             {ColumnName: "at", FieldType: "time"},
 			"participant_id": {ColumnName: "participant_id", FieldType: "int64"},
@@ -341,9 +335,6 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 		},
 		"-at,item_id,participant_id,-attempt_id,-activity_type,answer_id",
 		[]string{"participant_id", "attempt_id", "item_id", "activity_type", "answer_id"}, true)
-	if apiError != service.NoError {
-		return nil, apiError
-	}
 
 	query := srv.Store.Raw(`
 		WITH items_to_show AS ?, participants AS ?
