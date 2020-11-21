@@ -94,3 +94,9 @@ Feature: Get activity log - robustness
     When I send a GET request to "/items/200/log?watched_group_id=13&from.answer_id=1"
     Then the response code should be 400
     And the response error message should contain "All 'from' parameters (from.at, from.item_id, from.participant_id, from.attempt_id, from.activity_type, from.answer_id) or none of them must be present"
+
+  Scenario: Should fail when some of from.activity_type is invalid
+    Given I am the user with id "23"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=grading"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for from.activity_type (should be one of (result_started, submission, result_validated))"

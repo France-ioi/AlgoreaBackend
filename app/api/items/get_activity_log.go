@@ -165,7 +165,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request) servi
 		var ok bool
 		if intValue, ok = map[string]int{"result_started": 1, "submission": 2, "result_validated": 3}[stringValue]; !ok {
 			return service.ErrInvalidRequest(
-				errors.New("wrong value for from.activity_type (should be one of (result_started, submission, result_validated"))
+				errors.New("wrong value for from.activity_type (should be one of (result_started, submission, result_validated))"))
 		}
 		urlParams["from.activity_type"] = []string{strconv.Itoa(intValue)}
 		r.URL.RawQuery = urlParams.Encode()
