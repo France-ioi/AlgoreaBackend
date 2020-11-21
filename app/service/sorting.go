@@ -22,6 +22,8 @@ type FieldSortingParams struct {
 	Nullable bool
 	// Unique means that sorting rules containing this parameter will not be augmented with a tie-breaker field
 	Unique bool
+	// Ignore means that the field doesn't participate in conditions and sorting while it is still allowed in sorting rules
+	Ignore bool
 }
 
 type sortingDirection int
@@ -76,13 +78,25 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields m
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
-	query = applyOrder(query, usedFields, acceptedFields, fieldsSortingTypes)
 
 	fromValues, err := parsePagingParameters(r, usedFields, acceptedFields, fieldsSortingTypes)
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
 
+	filteredUsedFields := make([]string, 0, len(usedFields))
+	filteredFromValues := make([]interface{}, 0, len(fromValues))
+	for index, field := range usedFields {
+		if !acceptedFields[field].Ignore {
+			filteredUsedFields = append(filteredUsedFields, field)
+			if len(fromValues) > 0 {
+				filteredFromValues = append(filteredFromValues, fromValues[index])
+			}
+		}
+	}
+	usedFields = filteredUsedFields
+	fromValues = filteredFromValues
+	query = applyOrder(query, usedFields, acceptedFields, fieldsSortingTypes)
 	query = applyPagingConditions(query, usedFields, fieldsSortingTypes, acceptedFields, fromValues)
 	return query, NoError
 }

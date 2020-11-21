@@ -1,4 +1,4 @@
-Feature: Get recent activity for group_id and item_id - robustness
+Feature: Get activity log - robustness
   Background:
     Given the database has the following users:
       | login   | temp_user | group_id | first_name  | last_name |
@@ -6,11 +6,16 @@ Feature: Get recent activity for group_id and item_id - robustness
       | user    | 0         | 11       | John        | Doe       |
       | owner   | 0         | 23       | Jean-Michel | Blanquer  |
     And the database has the following table 'groups':
-      | id |
-      | 13 |
+      | id | type  |
+      | 13 | Class |
+      | 30 | Team  |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 30              | 23             |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 23         |
+      | group_id | manager_id | can_watch_members |
+      | 13       | 21         | false             |
+      | 13       | 23         | true              |
     And the groups ancestors are computed
     And the database has the following table 'attempts':
       | id | participant_id |
@@ -39,47 +44,53 @@ Feature: Get recent activity for group_id and item_id - robustness
       | ancestor_item_id | child_item_id |
       | 200              | 200           |
 
-  Scenario: Wrong group
+  Scenario: Wrong as_team_id
     Given I am the user with id "23"
-    When I send a GET request to "/groups/abc/recent_activity?item_id=200"
+    When I send a GET request to "/items/200/log?as_team_id=abc"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for group_id (should be int64)"
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+
+  Scenario: Wrong watched_group_id
+    Given I am the user with id "23"
+    When I send a GET request to "/items/200/log?watched_group_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for watched_group_id (should be int64)"
+
+  Scenario: Both as_team_id and watched_group_id are given
+    Given I am the user with id "23"
+    When I send a GET request to "/items/200/log?watched_group_id=13&as_team_id=30"
+    Then the response code should be 400
+    And the response error message should contain "Only one of as_team_id and watched_group_id can be given"
 
   Scenario: Wrong item
     Given I am the user with id "23"
-    When I send a GET request to "/groups/13/recent_activity?item_id=abc"
+    When I send a GET request to "/items/abc/log?watched_group_id=13"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
-  Scenario: Should fail when user is not a manager of the group
+  Scenario: Should fail when user cannot watch group members of watched_group_id
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200"
+    When I send a GET request to "/items/200/log?watched_group_id=13"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    And the response error message should contain "No rights to watch for watched_group_id"
 
   Scenario: Should fail when user doesn't exist
     Given I am the user with id "404"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200"
+    When I send a GET request to "/items/200/log"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: Should return empty array when user is an admin of the group, but has no access rights to the item
     Given I am the user with id "23"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200"
+    When I send a GET request to "/items/200/log?watched_group_id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     []
     """
 
-  Scenario: Should fail when from.id is given, but from.created_at is not
+  Scenario: Should fail when some of from.* parameters are missing
     Given I am the user with id "23"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.id=1"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.answer_id=1"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.created_at, from.id) or none of them must be present"
-
-  Scenario: Should fail when from.created_at is given, but from.id is not
-    Given I am the user with id "23"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.created_at=2017-05-30T06:38:38Z"
-    Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.created_at, from.id) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.at, from.item_id, from.participant_id, from.attempt_id, from.activity_type, from.answer_id) or none of them must be present"
