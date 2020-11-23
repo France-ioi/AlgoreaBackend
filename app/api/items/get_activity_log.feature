@@ -1,0 +1,456 @@
+Feature: Get activity log
+  Background:
+    Given the database has the following users:
+      | login | temp_user | group_id | first_name  | last_name | default_language |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
+      | user  | 0         | 11       | John        | Doe       | en               |
+      | jane  | 0         | 31       | Jane        | Doe       | en               |
+      | paul  | 0         | 41       | Paul        | Smith     | en               |
+    And the database has the following table 'groups':
+      | id | type  | name       |
+      | 13 | Class | Our Class  |
+      | 20 | Other | Some Group |
+      | 30 | Team  | Our Team   |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_watch_members |
+      | 11       | 31         | true              |
+      | 13       | 21         | true              |
+      | 31       | 31         | true              |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 13              | 11             | 2019-05-30 11:00:00            |
+      | 13              | 41             | 2019-05-30 11:00:00            |
+      | 20              | 21             | null                           |
+      | 30              | 21             | null                           |
+    And the groups ancestors are computed
+    And the database has the following table 'attempts':
+      | id | participant_id |
+      | 0  | 11             |
+      | 1  | 11             |
+    And the database has the following table 'results':
+      | attempt_id | item_id | participant_id | started_at          | validated_at        | latest_submission_at |
+      | 0          | 200     | 11             | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2020-05-29 06:38:38  |
+      | 0          | 200     | 30             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 0          | 201     | 11             | 2017-05-29 06:38:00 | null                | 2020-05-29 06:38:38  |
+      | 0          | 202     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 0          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 1          | 200     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 1          | 200     | 31             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 1          | 200     | 41             | 2016-05-29 06:38:00 | 2016-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 1          | 201     | 11             | null                | 2017-05-29 06:38:38 | 2020-05-29 06:38:38  |
+      | 1          | 202     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 1          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+    And the database has the following table 'answers':
+      | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
+      | 1  | 11        | 11             | 0          | 201     | Submission | Current | 2017-05-29 06:38:38 |
+      | 4  | 11        | 11             | 1          | 201     | Saved      | Current | 2017-05-30 06:38:38 |
+      | 5  | 11        | 11             | 1          | 201     | Current    | Current | 2017-05-30 06:38:38 |
+      | 7  | 31        | 11             | 0          | 201     | Submission | Current | 2017-05-29 06:38:38 |
+      | 11 | 11        | 11             | 0          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 12 | 11        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 13 | 41        | 41             | 1          | 200     | Submission | Current | 2017-05-30 06:38:38 |
+      | 14 | 11        | 11             | 1          | 200     | Saved      | Current | 2017-05-30 06:38:38 |
+      | 15 | 11        | 11             | 1          | 200     | Current    | Current | 2017-05-30 06:38:38 |
+      | 16 | 31        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 17 | 31        | 11             | 0          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | 18 | 31        | 11             | 1          | 200     | Submission | Current | 2017-05-30 06:38:38 |
+      | 21 | 11        | 11             | 0          | 202     | Submission | Current | 2017-05-29 06:38:38 |
+      | 22 | 11        | 11             | 1          | 202     | Submission | Current | 2017-05-29 06:38:38 |
+      | 23 | 11        | 11             | 1          | 202     | Submission | Current | 2017-05-30 06:38:38 |
+      | 24 | 11        | 11             | 1          | 202     | Saved      | Current | 2017-05-30 06:38:38 |
+      | 25 | 11        | 11             | 1          | 202     | Current    | Current | 2017-05-30 06:38:38 |
+      | 26 | 31        | 11             | 1          | 202     | Submission | Current | 2017-05-29 06:38:38 |
+      | 27 | 31        | 11             | 0          | 202     | Submission | Current | 2017-05-29 06:38:38 |
+      | 28 | 31        | 11             | 1          | 202     | Submission | Current | 2017-05-30 06:38:38 |
+      | 31 | 11        | 11             | 0          | 203     | Submission | Current | 2017-05-29 06:38:38 |
+      | 32 | 11        | 11             | 1          | 203     | Submission | Current | 2017-05-29 06:38:38 |
+      | 33 | 11        | 11             | 1          | 203     | Submission | Current | 2017-05-30 06:38:38 |
+      | 34 | 11        | 11             | 1          | 203     | Saved      | Current | 2017-05-30 06:38:38 |
+      | 35 | 11        | 11             | 1          | 203     | Current    | Current | 2017-05-30 06:38:38 |
+      | 36 | 31        | 11             | 1          | 203     | Submission | Current | 2017-05-29 06:38:38 |
+      | 37 | 31        | 11             | 0          | 203     | Submission | Current | 2017-05-29 06:38:38 |
+      | 38 | 31        | 11             | 1          | 203     | Submission | Current | 2017-05-30 06:38:38 |
+    And the database has the following table 'gradings':
+      | answer_id | graded_at           | score |
+      | 2         | 2017-05-29 06:38:38 | 100   |
+      | 1         | 2017-05-29 06:38:38 | 99    |
+      | 3         | 2017-05-30 06:38:38 | 100   |
+      | 4         | 2017-05-30 06:38:38 | 100   |
+      | 5         | 2017-05-30 06:38:38 | 100   |
+      | 6         | 2017-05-29 06:38:38 | 100   |
+      | 7         | 2017-05-29 06:38:38 | 98    |
+      | 8         | 2017-05-30 06:38:38 | 100   |
+    And the database has the following table 'items':
+      | id  | type    | no_score | default_language_tag |
+      | 200 | Course  | false    | fr                   |
+      | 201 | Chapter | false    | fr                   |
+      | 202 | Chapter | false    | fr                   |
+      | 203 | Chapter | false    | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_watch_generated |
+      | 20       | 200     | none               | result              |
+      | 21       | 200     | info               | none                |
+      | 21       | 201     | info               | result              |
+      | 21       | 202     | info               | result              |
+      | 21       | 203     | none               | result              |
+      | 30       | 200     | content            | answer              |
+      | 31       | 200     | content            | answer              |
+      | 31       | 201     | content            | answer              |
+      | 31       | 202     | content            | answer              |
+      | 31       | 203     | content            | none                |
+    And the database has the following table 'items_ancestors':
+      | ancestor_item_id | child_item_id |
+      | 200              | 201           |
+      | 200              | 203           |
+    And the database has the following table 'items_strings':
+      | item_id | language_tag | title      | image_url                  | subtitle     | description   | edu_comment    |
+      | 200     | en           | Course 1   | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 200     | fr           | Cours 1    | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+      | 201     | en           | Chapter 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 201     | fr           | Chapitre 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+      | 202     | en           | Chapter 2  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 202     | fr           | Chapitre 2 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+      | 203     | en           | Chapter 3  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 203     | fr           | Chapitre 3 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+    And the database has the following table 'languages':
+      | tag |
+      | fr  |
+
+  Scenario: User is a manager of the group and there are visible descendants of the item
+    This spec also checks:
+      1) that answers having type != "Submission" are filtered out,
+      2) activities ordering,
+      3) filtering by users groups,
+      4) that a user cannot see names of other users without approval
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/log?watched_group_id=13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-30T06:38:38Z",
+        "answer_id": "18",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "from_answer_id": "18"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-30T06:38:38Z",
+        "answer_id": "13",
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
+        "from_answer_id": "13"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-29T06:38:38Z",
+        "answer_id": "12",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "12"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-29T06:38:38Z",
+        "answer_id": "16",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "from_answer_id": "16"
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-29T06:38:38Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "16"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-29T06:38:38Z",
+        "answer_id": "11",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "11"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-29T06:38:38Z",
+        "answer_id": "17",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "from_answer_id": "17"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:38Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "17"
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-29T06:38:38Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "17"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-29T06:38:38Z",
+        "answer_id": "1",
+        "score": 99,
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "1"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-29T06:38:38Z",
+        "answer_id": "7",
+        "score": 98,
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "from_answer_id": "7"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "7"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "7"
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2016-05-30T12:00:00Z",
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
+        "from_answer_id": "7"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2016-05-29T06:38:00Z",
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
+        "from_answer_id": "7"
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the first row
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/log?watched_group_id=13&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "-1"
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_validated&from.at=2017-05-30T12:00:00Z&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=-1&limit=2"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "submission",
+        "at": "2017-05-30T06:38:38Z",
+        "answer_id": "18",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "from_answer_id": "18"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-30T06:38:38Z",
+        "answer_id": "13",
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
+        "from_answer_id": "13"
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the sixth and the seventh rows
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=submission&from.at=2017-05-29T06:38:38Z&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=16&limit=2"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-29T06:38:38Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "16"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-29T06:38:38Z",
+        "answer_id": "11",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "11"
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the eleventh row
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.at=2017-05-29T06:38:38Z&from.participant_id=11&from.attempt_id=0&from.item_id=200&from.answer_id=17&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-29T06:38:38Z",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
+        "from_answer_id": "17"
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the last rows
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.at=2017-05-29T06:38:00Z&from.participant_id=11&from.attempt_id=0&from.item_id=201&from.answer_id=7"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2016-05-30T12:00:00Z",
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
+        "from_answer_id": "7"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2016-05-29T06:38:00Z",
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
+        "from_answer_id": "7"
+      }
+    ]
+    """
+
+  Scenario: User can see their own name
+    Given I am the user with id "31"
+    When I send a GET request to "/items/200/log?limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "31", "name": "jane", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
+        "from_answer_id": "-1"
+      }
+    ]
+    """
+
+  Scenario: A user can view activity of his team
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/log?as_team_id=30"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "from_answer_id": "-1"
+      }
+    ]
+    """
