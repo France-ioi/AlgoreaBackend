@@ -185,7 +185,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			LEFT JOIN groups_groups_active AS team_links
 			ON team_links.child_group_id = users.group_id`).
 		Joins(`
-			JOIN `+"`groups`"+` AS teams
+			LEFT JOIN `+"`groups`"+` AS teams
 			ON teams.type = 'Team' AND
 				teams.id = team_links.parent_group_id`).
 		Joins(`
