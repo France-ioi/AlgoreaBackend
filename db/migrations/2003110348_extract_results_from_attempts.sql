@@ -252,7 +252,9 @@ SET `results`.`id` = FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1
 
 DROP TABLE `attempts`;
 
-ALTER TABLE `answers` DROP FOREIGN KEY `fk_answers_participant_id_attempt_id_item_id_results`;
+ALTER TABLE `answers`
+    DROP FOREIGN KEY `fk_answers_participant_id_attempt_id_item_id_results`,
+    DROP INDEX `fk_answers_participant_id_attempt_id_item_id_results`;
 
 # 2,392,792 rows :/
 UPDATE `answers` JOIN `results` USING(`participant_id`, `attempt_id`, `item_id`)
