@@ -120,7 +120,7 @@ jobs:
           no_output_timeout: 10m
       - run:
           name: Undo all migrations
-          command: for m in `git diff --name-only HEAD..origin/master | grep "db/migrations/"`; do if ! make db-migrate-undo; then break; fi; done
+          command: for m in `git diff --name-only HEAD..origin/master | grep "db/migrations/"`; do if ! make db-migrate-undo; then exit 1; fi; done
           no_output_timeout: 10m
       - run:
           name: Re-apply all migrations
