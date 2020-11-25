@@ -102,6 +102,9 @@ jobs:
           at: ./
       - restore_cache: *CACHEKEYMOD
       - run: sudo apt-get update
+      - run:
+          name: Skip if no new migrations added
+          command: git diff --name-only HEAD..origin/master | grep -q "db/migrations/" || circleci-agent step halt
       - run: sudo apt-get install default-mysql-client             # required for db-restore
       - run: cp conf/config.sample.yaml conf/config.yaml           # as env var are not loaded for entries not in config file (bug)
       - run: cp conf/config.test.sample.yaml conf/config.test.yaml # the dbname is specified in conf/config.test.yaml
@@ -117,11 +120,11 @@ jobs:
       - run:
           name: Apply all migrations
           command: make db-migrate
-          no_output_timeout: 2h
+          no_output_timeout: 10m
       - run:
           name: Undo all migrations
-          command: for m in db/migrations/*.sql; do if ! make db-migrate-undo; then break; fi; done
-          no_output_timeout: 30m
+          command: for m in `git diff --name-only HEAD..origin/master | grep "db/migrations/"`; do if ! make db-migrate-undo; then exit 1; fi; done
+          no_output_timeout: 10m
       - run:
           name: Re-apply all migrations
           command: make db-migrate
