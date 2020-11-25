@@ -35,8 +35,8 @@ ALTER TABLE `groups_attempts`
         AFTER `finished`;
 
 UPDATE `groups_attempts`
-JOIN (SELECT `item_id`, MIN(`score`) AS `score` FROM `item_dependencies` GROUP BY `item_id`) AS `rules`
-    ON `rules`.`item_id` = `groups_attempts`.`item_id` AND `rules`.`score` <= `groups_attempts`.`score` AND `rules`.`grant_content_view`
+JOIN (SELECT `item_id`, MIN(`score`) AS `score` FROM `item_dependencies` WHERE `grant_content_view` GROUP BY `item_id`) AS `rules`
+    ON `rules`.`item_id` = `groups_attempts`.`item_id` AND `rules`.`score` <= `groups_attempts`.`score`
 SET `groups_attempts`.`has_unlocked_items` = 1;
 
 ALTER TABLE `items`
