@@ -12,6 +12,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 16 | Team    | First Team     |
       | 17 | Other   | A custom group |
       | 18 | Club    | Our Club       |
+      | 19 | Club    | Another Club   |
       | 20 | Friends | My Friends     |
       | 21 | User    | owner          |
       | 51 | User    | johna          |
@@ -40,6 +41,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 1        | 21         |
+      | 19       | 21         |
       | 51       | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
@@ -64,6 +66,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 16              | 63             |
       | 16              | 65             |
       | 16              | 67             |
+      | 19              | 69             |
       | 20              | 21             |
     And the groups ancestors are computed
     And the database has the following table 'items':
@@ -677,6 +680,66 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       },
       {
         "group_id": "55",
+        "hints_requested": 0,
+        "item_id": "215",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      }
+    ]
+    """
+
+  Scenario: Users are direct members of the input group_id which is not a team
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/19/user-progress?parent_item_ids=210"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "group_id": "69",
+        "item_id": "211",
+        "latest_activity_at": null,
+        "score": 0,
+        "hints_requested": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "69",
+        "hints_requested": 0,
+        "item_id": "212",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "69",
+        "hints_requested": 0,
+        "item_id": "213",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "69",
+        "hints_requested": 0,
+        "item_id": "214",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "69",
         "hints_requested": 0,
         "item_id": "215",
         "latest_activity_at": null,

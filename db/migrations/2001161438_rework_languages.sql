@@ -126,6 +126,7 @@ SET `default_language_id` = `languages`.`id`;
 
 ALTER TABLE `items`
     DROP FOREIGN KEY `fk_items_id_default_language_tag_items_strings_item_language_tag`,
+    DROP INDEX `fk_items_id_default_language_tag_items_strings_item_language_tag`,
     DROP COLUMN `default_language_tag`,
     DROP COLUMN `is_root`,
     ADD COLUMN `display_children_as_tabs` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0'

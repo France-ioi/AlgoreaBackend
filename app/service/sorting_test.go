@@ -101,6 +101,16 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`unallowed field in sorting parameters: "class"`))},
+		{name: "allows ignored field in sort",
+			args: args{
+				urlParameters: "?sort=name",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {Ignore: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+				},
+				defaultRules: "-name,id",
+			},
+		},
 		{name: "'null last' for a non-nullable field",
 			args: args{
 				urlParameters: "?sort=name$",
@@ -203,6 +213,20 @@ func TestApplySorting(t *testing.T) {
 				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
 				"ORDER BY name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
+			wantAPIError:     NoError},
+		{name: "sorting + paging (ignored fields are skipped)",
+			args: args{
+				urlParameters: "?from.id=1&from.name=Joe&from.flag=1",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Ignore: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+					"flag": {ColumnName: "bFlag", FieldType: "bool", Ignore: true},
+				},
+				defaultRules:         "-name,id,flag",
+				tieBreakerFieldNames: []string{"id"},
+			},
+			wantSQL:          "SELECT id FROM `users` WHERE ((id > ?)) ORDER BY id ASC",
+			wantSQLArguments: []driver.Value{1},
 			wantAPIError:     NoError},
 		{name: "sorting + paging by a nullable field",
 			args: args{
@@ -336,15 +360,15 @@ func TestApplySorting(t *testing.T) {
 			shouldPanic: errors.New(`unsupported type "interface{}" for field "name"`)},
 		{name: "unallowed from fields",
 			args: args{
-				urlParameters: "?from.field=Joe&from.version=2&from.name=Jane",
+				urlParameters: "?from.field=Joe&from.version=2&from.name=Jane&from.id=1234",
 				acceptedFields: map[string]*FieldSortingParams{
 					"id":   {ColumnName: "id", FieldType: "int64"},
-					"name": {ColumnName: "name", FieldType: "string"},
+					"name": {ColumnName: "name", FieldType: "string", Ignore: true},
 				},
-				defaultRules:         "id",
+				defaultRules:         "name,id",
 				tieBreakerFieldNames: []string{"id"},
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`unallowed paging parameters (from.field, from.name, from.version)`))},
+			wantAPIError: ErrInvalidRequest(errors.New(`unallowed paging parameters (from.field, from.version)`))},
 		{name: "paging by time",
 			args: args{
 				urlParameters: "?from.submitted_at=" + url.QueryEscape("2006-01-02T15:04:05+03:00") + "&from.id=1",
