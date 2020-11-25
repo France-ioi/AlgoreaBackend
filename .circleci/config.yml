@@ -102,6 +102,9 @@ jobs:
           at: ./
       - restore_cache: *CACHEKEYMOD
       - run: sudo apt-get update
+      - run:
+          name: Skip if no new migrations added
+          command: git diff --name-only HEAD..origin/master | grep -q "db/migrations/" || circleci-agent step halt
       - run: sudo apt-get install default-mysql-client             # required for db-restore
       - run: cp conf/config.sample.yaml conf/config.yaml           # as env var are not loaded for entries not in config file (bug)
       - run: cp conf/config.test.sample.yaml conf/config.test.yaml # the dbname is specified in conf/config.test.yaml
