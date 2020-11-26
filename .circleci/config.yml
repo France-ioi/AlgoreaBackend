@@ -101,10 +101,21 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_cache: *CACHEKEYMOD
-      - run: sudo apt-get update
       - run:
           name: Skip if no new migrations added
-          command: git diff --name-only HEAD..origin/master | grep -q "db/migrations/" || circleci-agent step halt
+          command: |
+            EARLIEST_CHANGED_MIGRATION=$( \
+              git diff --name-only `if [ "<<pipeline.git.branch>>" = "master" ]; then echo "<<pipeline.git.base_revision>>"; else echo "origin/master"; fi`..<<pipeline.git.revision>> | \
+                (grep "db/migrations/" || true) | sort | head -n 1 | sed "s/db\/migrations\///" \
+            )
+            [ -z "$EARLIEST_CHANGED_MIGRATION" ] && circleci-agent step halt && exit 0
+            MIGRATIONS_TO_UNDO=$( \
+              ls -Ar db/migrations/*.sql | sed "s/db\/migrations\///" | \
+                awk "{cnt+=1} \$0==\"$EARLIEST_CHANGED_MIGRATION\" {print cnt; exit} \$0<\"$EARLIEST_CHANGED_MIGRATION\"{print cnt-1; exit}" \
+            )
+            [ -z "$MIGRATIONS_TO_UNDO" ] && MIGRATIONS_TO_UNDO=0
+            echo "export MIGRATIONS_TO_UNDO=\"$MIGRATIONS_TO_UNDO\"" >> $BASH_ENV
+      - run: sudo apt-get update
       - run: sudo apt-get install default-mysql-client             # required for db-restore
       - run: cp conf/config.sample.yaml conf/config.yaml           # as env var are not loaded for entries not in config file (bug)
       - run: cp conf/config.test.sample.yaml conf/config.test.yaml # the dbname is specified in conf/config.test.yaml
@@ -123,7 +134,7 @@ jobs:
           no_output_timeout: 10m
       - run:
           name: Undo all migrations
-          command: for m in `git diff --name-only HEAD..origin/master | grep "db/migrations/"`; do if ! make db-migrate-undo; then exit 1; fi; done
+          command: for ((i=0; i<$MIGRATIONS_TO_UNDO; i++)); do if ! make db-migrate-undo; then exit 1; fi; done
           no_output_timeout: 10m
       - run:
           name: Re-apply all migrations
