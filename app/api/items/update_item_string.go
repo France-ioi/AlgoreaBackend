@@ -19,10 +19,10 @@ type itemStringUpdateRequest struct {
 	Title string `json:"title" validate:"max=200"`
 	// Nullable
 	// maxLength: 100
-	ImageURL *string `json:"image_url" validate:"max=100"`
+	ImageURL *string `json:"image_url" validate:"omitempty,max=100"`
 	// Nullable
 	// maxLength: 200
-	Subtitle *string `json:"subtitle" validate:"max=200"`
+	Subtitle *string `json:"subtitle" validate:"omitempty,max=200"`
 	// Nullable
 	Description *string `json:"description"`
 }

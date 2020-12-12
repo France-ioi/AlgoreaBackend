@@ -90,11 +90,61 @@ Feature: Update an item string entry
       }
       """
     Then the response should be "updated"
-    Then the response should be "updated"
     And the table "items_strings" should stay unchanged but the row with item_id "60"
     And the table "items_strings" at item_id "60" should be:
       | item_id | language_tag | title     | image_url                   | subtitle     | description     |
       | 60      | en           | The title | http://mysite.com/image.jpg | The subtitle | The description |
+
+  Scenario: Insert the specified language string with nulls
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/60/strings/en" with the following body:
+      """
+      {
+        "title": "The title",
+        "image_url": null,
+        "subtitle": null,
+        "description": null
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_strings" should stay unchanged but the row with item_id "60"
+    And the table "items_strings" at item_id "60" should be:
+      | item_id | language_tag | title     | image_url | subtitle | description |
+      | 60      | en           | The title | null      | null     | null        |
+
+  Scenario: Insert the specified language string with empty strings
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/60/strings/en" with the following body:
+      """
+      {
+        "title": "",
+        "image_url": "",
+        "subtitle": "",
+        "description": ""
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_strings" should stay unchanged but the row with item_id "60"
+    And the table "items_strings" at item_id "60" should be:
+      | item_id | language_tag | title | image_url | subtitle | description |
+      | 60      | en           |       |           |          |             |
+
+  Scenario: Update the specified language string with nulls
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50/strings/sl" with the following body:
+      """
+      {
+        "title": "The title",
+        "image_url": null,
+        "subtitle": null,
+        "description": null
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_strings" should stay unchanged but the row with language_tag "sl"
+    And the table "items_strings" at language_tag "sl" should be:
+      | item_id | language_tag | title     | image_url | subtitle | description |
+      | 50      | sl           | The title | null      | null     | null        |
 
   Scenario: Valid without any fields
     Given I am the user with id "11"
