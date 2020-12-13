@@ -15,7 +15,7 @@ WHERE (`latest_submission_at` IS NOT NULL OR `latest_hint_at` IS NOT NULL) AND `
 
 /*
   Set started_at for results having descendant results with started_at set for the same attempt.
-  Items linked to both ancestor and descendant results must be visible for the participant.
+  We only start a result for an ancestor item if both ancestor and descendant items are visible for the participant.
 */
 INSERT INTO `results` (`participant_id`, `attempt_id`, `item_id`, `started_at`)
 SELECT STRAIGHT_JOIN results.participant_id, results.attempt_id, results.item_id,
