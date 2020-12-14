@@ -1489,4 +1489,29 @@ func TestDefault(t *testing.T) {
 	assert.Equal(t, gorm.Expr("DEFAULT"), Default())
 }
 
+func Test_EscapeLikeString(t *testing.T) {
+	type args struct {
+		s               string
+		escapeCharacter byte
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "all characters",
+			args: args{s: "|some _string_ 100%|", escapeCharacter: '|'},
+			want: "||some |_string|_ 100|%||",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got := EscapeLikeString(tt.args.s, tt.args.escapeCharacter)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func ptrString(s string) *string { return &s }
