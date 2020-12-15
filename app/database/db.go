@@ -624,3 +624,35 @@ func QuoteName(name string) string {
 func Default() interface{} {
 	return gorm.Expr("DEFAULT")
 }
+
+// EscapeLikeString escapes string with the given escape character.
+// This escapes the contents of a string (provided as string)
+// by adding the escape character before percent signs (%), and underscore signs (_).
+func EscapeLikeString(v string, escapeCharacter byte) string {
+	pos := 0
+	buf := make([]byte, len(v)*3)
+
+	for i := 0; i < len(v); i++ {
+		c := v[i]
+		switch c {
+		case escapeCharacter:
+			buf[pos] = escapeCharacter
+			buf[pos+1] = escapeCharacter
+			pos += 2
+		case '%':
+			buf[pos] = escapeCharacter
+			buf[pos+1] = '%'
+			pos += 2
+		case '_':
+			buf[pos] = escapeCharacter
+			buf[pos+1] = '_'
+			pos += 2
+		default:
+			buf[pos] = c
+			pos++
+		}
+	}
+
+	result := buf[:pos]
+	return *(*string)(unsafe.Pointer(&result)) // nolint:gosec
+}
