@@ -11,49 +11,72 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func TestDataStore_GetTeamJoiningByCodeInfoByCode(t *testing.T) {
+func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 	tests := []struct {
 		name     string
 		code     string
 		withLock bool
-		want     *database.TeamJoiningByCodeInfo
+		want     *database.GroupJoiningByCodeInfo
 	}{
 		{name: "wrong code", code: "bcd"},
 		{name: "wrong code (the check is case-sensitive)", code: "UVWX"},
 		{name: "wrong code (wildcards do not work)", code: "%"},
-		{name: "group is not a team", code: "abcd", withLock: true},
-		{name: "group is not public", code: "efgh"},
+		{name: "wrong code (group is a user)", code: "xyza"},
+		{
+			name:     "group is not a team",
+			code:     "abcd",
+			withLock: true,
+			want: &database.GroupJoiningByCodeInfo{
+				GroupID:             1,
+				CodeExpiresAtIsNull: true,
+				CodeLifetimeIsNull:  true,
+				Type:                "Class",
+			},
+		},
+		{
+			name: "group is not public",
+			code: "efgh",
+			want: &database.GroupJoiningByCodeInfo{
+				GroupID:             2,
+				CodeExpiresAtIsNull: true,
+				CodeLifetimeIsNull:  true,
+				Type:                "Team",
+			},
+		},
 		{name: "expired code", code: "ijkl"},
 		{
 			name:     "ok",
 			code:     "mnop",
 			withLock: true,
-			want: &database.TeamJoiningByCodeInfo{
-				TeamID:              4,
+			want: &database.GroupJoiningByCodeInfo{
+				GroupID:             4,
 				CodeExpiresAtIsNull: false,
 				CodeLifetimeIsNull:  true,
 				FrozenMembership:    false,
+				Type:                "Team",
 			},
 		},
 		{
 			name: "ok (expires at is null)",
 			code: "qrst",
-			want: &database.TeamJoiningByCodeInfo{
-				TeamID:              5,
+			want: &database.GroupJoiningByCodeInfo{
+				GroupID:             5,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  false,
 				FrozenMembership:    false,
+				Type:                "Team",
 			},
 		},
 		{
 			name:     "ok (frozen membership)",
 			code:     "uvwx",
 			withLock: true,
-			want: &database.TeamJoiningByCodeInfo{
-				TeamID:              6,
+			want: &database.GroupJoiningByCodeInfo{
+				GroupID:             6,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  true,
 				FrozenMembership:    true,
+				Type:                "Team",
 			},
 		},
 	}
@@ -66,6 +89,7 @@ func TestDataStore_GetTeamJoiningByCodeInfoByCode(t *testing.T) {
 			- {id: 4, type: Team, code: mnop, is_public: 1, code_expires_at: 3019-05-30 11:00:00}
 			- {id: 5, type: Team, code: qrst, is_public: 1, code_lifetime: 01:00:00}
 			- {id: 6, type: Team, code: uvwx, is_public: 1, frozen_membership: 1}
+			- {id: 7, type: User, code: xyza}
 		`)
 	defer func() { _ = db.Close() }()
 
@@ -73,15 +97,15 @@ func TestDataStore_GetTeamJoiningByCodeInfoByCode(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			store := database.NewDataStore(db)
-			var got *database.TeamJoiningByCodeInfo
+			var got *database.GroupJoiningByCodeInfo
 			var err error
 			if tt.withLock {
 				assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-					got, err = trStore.GetTeamJoiningByCodeInfoByCode(tt.code, tt.withLock)
+					got, err = trStore.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 					return err
 				}))
 			} else {
-				got, err = store.GetTeamJoiningByCodeInfoByCode(tt.code, tt.withLock)
+				got, err = store.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 			}
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)

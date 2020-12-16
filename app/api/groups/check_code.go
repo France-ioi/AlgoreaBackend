@@ -24,13 +24,13 @@ type groupCodeCheckResponse struct {
 //   to join a group with the given code.
 //   The service returns false:
 //
-//   * if there is no team with `is_public` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `{code}`;
+//   * if there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User';
 //
 //   * if the group is a team and the user is already on a team that has attempts for same contest
 //     while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
 //     or if the group membership is frozen;
 //
-//   * if there is already a row in `groups_groups` with the found team as a parent
+//   * if there is already an active row in `groups_groups` with the found group as a parent
 //     and the user’s id as a child;
 //
 //   * if the group is a team and joining breaks entry conditions of at least one of the team's participations
@@ -74,19 +74,31 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.AP
 }
 
 func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code string) bool {
-	info, err := store.GetTeamJoiningByCodeInfoByCode(code, false)
+	info, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
 	service.MustNotBeError(err)
 	if info == nil || info.FrozenMembership {
 		return false
 	}
 
-	found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.TeamID, userIDToCheck, false)
+	alreadyMember, err := store.ActiveGroupGroups().
+		Where("parent_group_id = ?", info.GroupID).Where("child_group_id = ?", userIDToCheck).
+		HasRows()
+	service.MustNotBeError(err)
+	if alreadyMember {
+		return false
+	}
+
+	if info.Type != "Team" {
+		return true
+	}
+
+	found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.GroupID, userIDToCheck, false)
 	service.MustNotBeError(err)
 	if found {
 		return false
 	}
 
-	ok, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.TeamID, userIDToCheck, true, false)
+	ok, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
 	service.MustNotBeError(err)
 	return ok
 }

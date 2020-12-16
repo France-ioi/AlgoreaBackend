@@ -2,24 +2,25 @@ package database
 
 import "github.com/jinzhu/gorm"
 
-// TeamJoiningByCodeInfo represents info related to ability to join a team by code
-type TeamJoiningByCodeInfo struct {
-	TeamID              int64
+// GroupJoiningByCodeInfo represents info related to ability to join a team by code
+type GroupJoiningByCodeInfo struct {
+	GroupID             int64
+	Type                string
 	CodeExpiresAtIsNull bool
 	CodeLifetimeIsNull  bool
 	FrozenMembership    bool
 }
 
-// GetTeamJoiningByCodeInfoByCode returns TeamJoiningByCodeInfo for a given code
+// GetGroupJoiningByCodeInfoByCode returns GroupJoiningByCodeInfo for a given code
 // (or null if there is no public team with this code or the code has expired)
-func (s *DataStore) GetTeamJoiningByCodeInfoByCode(code string, withLock bool) (*TeamJoiningByCodeInfo, error) {
-	var info TeamJoiningByCodeInfo
+func (s *DataStore) GetGroupJoiningByCodeInfoByCode(code string, withLock bool) (*GroupJoiningByCodeInfo, error) {
+	var info GroupJoiningByCodeInfo
 	query := s.Groups().
-		Where("type = 'Team'").Where("is_public").
+		Where("type <> 'User'").
 		Where("code = ?", code).
 		Where("code_expires_at IS NULL OR NOW() < code_expires_at").
 		Select(`
-			id AS team_id, code_expires_at IS NULL AS code_expires_at_is_null,
+			id AS group_id, type, code_expires_at IS NULL AS code_expires_at_is_null,
 			code_lifetime IS NULL AS code_lifetime_is_null, frozen_membership`)
 	if withLock {
 		query = query.WithWriteLock()
