@@ -13,17 +13,17 @@ import (
 
 // swagger:operation POST /current-user/group-memberships/by-code group-memberships groupsJoinByCode
 // ---
-// summary: Join a team using a code
+// summary: Join a group using a code
 // description:
-//   Lets a user to join a team group by a code.
+//   Lets a user to join a group by a code.
 //   On success the service inserts a row into `groups_groups`
-//   with `parent_group_id` = `id` of the team found by the code and `child_group_id` = `group_id` of the user
+//   with `parent_group_id` = `id` of the group found by the code and `child_group_id` = `group_id` of the user
 //   and another row into `group_membership_changes`
-//   with `group_id` = `id` of the team, `member_id` = `group_id` of the user, `action`=`joined_by_code`,
+//   with `group_id` = `id` of the group, `member_id` = `group_id` of the user, `action`=`joined_by_code`,
 //   and `at` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `is_public` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `{code}`,
+//   * If there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User'
 //     or if the current user is temporary, the forbidden error is returned.
 //
 //   * If the group is a team and the user is already on a team that has attempts for same contest
@@ -31,7 +31,7 @@ import (
 //     or if the group membership is frozen,
 //     the unprocessable entity error is returned.
 //
-//   * If there is already a row in `groups_groups` with the found team as a parent
+//   * If there is already a row in `groups_groups` with the found group as a parent
 //     and the authenticated user’s selfGroup’s id as a child, the unprocessable entity error is returned.
 //
 //   * If the group is a team and joining breaks entry conditions of at least one of the team's participations
@@ -88,7 +88,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	var results database.GroupGroupTransitionResults
 	var approvalsToRequest map[int64]database.GroupApprovals
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		info, errInTransaction := store.GetTeamJoiningByCodeInfoByCode(code, true)
+		info, errInTransaction := store.GetGroupJoiningByCodeInfoByCode(code, true)
 		service.MustNotBeError(errInTransaction)
 		if info == nil {
 			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
@@ -101,32 +101,19 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			return apiError.Error // rollback
 		}
 
-		var found bool
-		found, errInTransaction = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.TeamID, user.GroupID, true)
-		service.MustNotBeError(errInTransaction)
-		if found {
-			apiError = service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations"))
-			return apiError.Error // rollback
-		}
-
-		var ok bool
-		ok, errInTransaction = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
-			info.TeamID, user.GroupID, true, true)
-		service.MustNotBeError(errInTransaction)
-		if !ok {
-			apiError = service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))
+		if apiError = checkPossibilityToJoinTeam(store, info, user); apiError != service.NoError {
 			return apiError.Error // rollback
 		}
 
 		if info.CodeExpiresAtIsNull && !info.CodeLifetimeIsNull {
-			service.MustNotBeError(store.Groups().ByID(info.TeamID).
+			service.MustNotBeError(store.Groups().ByID(info.GroupID).
 				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
 		}
 
 		var approvals database.GroupApprovals
 		approvals.FromString(r.URL.Query().Get("approvals"))
 		results, approvalsToRequest, errInTransaction = store.GroupGroups().Transition(
-			database.UserJoinsGroupByCode, info.TeamID, []int64{user.GroupID},
+			database.UserJoinsGroupByCode, info.GroupID, []int64{user.GroupID},
 			map[int64]database.GroupApprovals{user.GroupID: approvals}, user.GroupID)
 		return errInTransaction
 	})
@@ -136,4 +123,25 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	service.MustNotBeError(err)
 
 	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], approvalsToRequest[user.GroupID], joinGroupByCodeAction)
+}
+
+func checkPossibilityToJoinTeam(store *database.DataStore, info *database.GroupJoiningByCodeInfo, user *database.User) service.APIError {
+	var err error
+	if info.Type == "Team" {
+		var found bool
+		found, err = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.GroupID, user.GroupID, true)
+		service.MustNotBeError(err)
+		if found {
+			return service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations"))
+		}
+
+		var ok bool
+		ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
+			info.GroupID, user.GroupID, true, true)
+		service.MustNotBeError(err)
+		if !ok {
+			return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))
+		}
+	}
+	return service.NoError
 }
