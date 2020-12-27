@@ -203,7 +203,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request) servi
 
 func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, user *database.User) (*database.DB, service.APIError) {
 	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDSet, apiError := srv.resolveWatchedGroupID(r)
+	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
 		return nil, apiError
 	}

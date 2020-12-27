@@ -4,7 +4,6 @@ package items
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -387,28 +386,6 @@ func createContestParticipantsGroup(store *database.DataStore, itemID int64) int
 		"can_view":        "content",
 	}))
 	return participantsGroupID
-}
-
-func (srv *Service) resolveWatchedGroupID(httpReq *http.Request) (watchedGroupID int64, watchedGroupIDSet bool, apiError service.APIError) {
-	if len(httpReq.URL.Query()["watched_group_id"]) == 0 {
-		return 0, false, service.NoError
-	}
-
-	var err error
-	watchedGroupID, err = service.ResolveURLQueryGetInt64Field(httpReq, "watched_group_id")
-	if err != nil {
-		return 0, false, service.ErrInvalidRequest(err)
-	}
-	var found bool
-	found, err = srv.Store.ActiveGroupAncestors().ManagedByUser(srv.GetUser(httpReq)).
-		Where("groups_ancestors_active.child_group_id = ?", watchedGroupID).
-		Where("can_watch_members").HasRows()
-	service.MustNotBeError(err)
-	if !found {
-		return 0, false, service.ErrForbidden(errors.New("no rights to watch for watched_group_id"))
-	}
-	watchedGroupIDSet = true
-	return watchedGroupID, watchedGroupIDSet, service.NoError
 }
 
 type entryState string

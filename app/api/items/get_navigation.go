@@ -131,7 +131,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 		return apiError
 	}
 
-	watchedGroupID, watchedGroupIDSet, apiError := srv.resolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}

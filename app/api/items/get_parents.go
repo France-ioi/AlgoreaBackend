@@ -129,7 +129,7 @@ func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Reque
 	user = srv.GetUser(httpReq)
 	participantID = service.ParticipantIDFromContext(httpReq.Context())
 
-	watchedGroupID, watchedGroupIDSet, apiError = srv.resolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDSet, apiError = srv.ResolveWatchedGroupID(httpReq)
 	return itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError
 }
 
