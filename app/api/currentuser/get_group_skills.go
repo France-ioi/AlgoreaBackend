@@ -18,12 +18,23 @@ type skillsViewResponseRow struct {
 // ---
 // summary: List root skills
 // description:
-//   Returns the list of root skills of the groups the current user (or `{as_team_id}`) belongs to.
+//   If `{watched_group_id}` is not given, the service returns the list of root skills of the groups the current user
+//   (or `{as_team_id}`) belongs to.
+//   Otherwise, the service returns the list of root skills of all ancestor groups of the watched group which are also
+//   ancestors or descendants of at least one group that the current user manages.
+//   Only one of `{as_team_id}` and `{watched_group_id}` can be given.
 //
 //
 //   If `{as_team_id}` is given, it should be a user's parent team group, otherwise the "forbidden" error is returned.
+//
+//
+//   If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//   otherwise the "forbidden" error is returned.
 // parameters:
 // - name: as_team_id
+//   in: query
+//   type: integer
+// - name: watched_group_id
 //   in: query
 //   type: integer
 // responses:
