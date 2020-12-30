@@ -9,7 +9,17 @@ Feature: Get root activities for a participant group
       | 14 | info_root |         | -2    | User  | null             | 2019-01-30 08:26:45 |
       | 16 | info_mid  |         | -2    | User  | null             | 2019-01-30 08:26:44 |
       | 18 | french    |         | -2    | User  | null             | 2019-01-30 08:26:43 |
-      | 19 | Group C   |         | -2    | Team  | 210              | 2019-01-30 08:26:42 |
+      | 19 | Team      |         | -2    | Team  | 210              | 2019-01-30 08:26:42 |
+      | 20 | Group C   |         | -2    | Club  | 230              | 2019-01-30 08:26:42 |
+      | 21 | Group D   |         | -2    | Club  | 240              | 2019-01-30 08:26:42 |
+      | 22 | Group E   |         | -2    | Club  | 250              | 2019-01-30 08:26:42 |
+      | 23 | Group F   |         | -2    | Club  | 260              | 2019-01-30 08:26:42 |
+      | 24 | Group G   |         | -2    | Club  | 270              | 2019-01-30 08:26:42 |
+      | 25 | Group H   |         | -2    | Club  | 280              | 2019-01-30 08:26:42 |
+      | 26 | Group K   |         | -2    | Club  | 290              | 2019-01-30 08:26:42 |
+      | 27 | Group Z   |         | -2    | Club  | 300              | 2019-01-30 08:26:42 |
+      | 29 | Class     |         | -2    | Class | 280              | 2019-01-30 08:26:42 |
+      | 30 | manager   |         | -2    | User  | 280              | 2019-01-30 08:26:42 |
     And the database has the following table 'languages':
       | tag |
       | fr  |
@@ -19,6 +29,7 @@ Feature: Get root activities for a participant group
       | info_root | 0         | 14       |                  |
       | info_mid  | 0         | 16       |                  |
       | fr_user   | 0         | 18       | fr               |
+      | manager   | 0         | 30       | fr               |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 12             |
@@ -29,13 +40,22 @@ Feature: Get root activities for a participant group
       | 1               | 19             |
       | 12              | 11             |
       | 12              | 18             |
+      | 12              | 22             |
+      | 12              | 23             |
       | 13              | 11             |
       | 19              | 11             |
+      | 22              | 26             |
+      | 24              | 26             |
+      | 25              | 26             |
+      | 26              | 27             |
+      | 29              | 30             |
     And the groups ancestors are computed
     And the database has the following table 'group_managers':
       | manager_id | group_id | can_watch_members |
       | 12         | 1        | true              |
       | 12         | 19       | true              |
+      | 29         | 22       | true              |
+      | 30         | 24       | true              |
     And the database has the following table 'items':
       | id  | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
       | 200 | Course  | en                   | false    | false                   | User                   |
@@ -45,7 +65,13 @@ Feature: Get root activities for a participant group
       | 211 | Task    | en                   | false    | false                   | User                   |
       | 231 | Task    | en                   | false    | false                   | User                   |
       | 232 | Task    | en                   | false    | false                   | User                   |
+      | 240 | Task    | en                   | false    | false                   | User                   |
       | 250 | Task    | en                   | false    | false                   | User                   |
+      | 260 | Task    | en                   | false    | false                   | User                   |
+      | 270 | Task    | en                   | false    | false                   | User                   |
+      | 280 | Task    | en                   | false    | false                   | User                   |
+      | 290 | Task    | en                   | false    | false                   | User                   |
+      | 300 | Task    | en                   | false    | false                   | User                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 1        | 230     | none                     | none                     | result              | none               | false              |
@@ -90,6 +116,27 @@ Feature: Get root activities for a participant group
       | 19       | 200     | content                  | none                     | none                | none               | false              |
       | 19       | 210     | content                  | none                     | none                | none               | false              |
       | 19       | 211     | content                  | none                     | none                | none               | false              |
+      | 26       | 200     | content                  | none                     | none                | none               | false              |
+      | 26       | 210     | content                  | none                     | none                | none               | false              |
+      | 26       | 220     | content                  | none                     | none                | none               | false              |
+      | 26       | 230     | content                  | none                     | none                | none               | false              |
+      | 26       | 240     | content                  | none                     | none                | none               | false              |
+      | 26       | 250     | content                  | none                     | none                | none               | false              |
+      | 26       | 260     | content                  | none                     | none                | none               | false              |
+      | 26       | 270     | content                  | none                     | none                | none               | false              |
+      | 26       | 280     | content                  | none                     | none                | none               | false              |
+      | 26       | 290     | content                  | none                     | none                | none               | false              |
+      | 26       | 300     | content                  | none                     | none                | none               | false              |
+      | 30       | 210     | content_with_descendants | none                     | none                | none               | false              |
+      | 29       | 220     | content_with_descendants | none                     | none                | none               | false              |
+      | 30       | 230     | content_with_descendants | none                     | none                | none               | false              |
+      | 29       | 240     | content_with_descendants | none                     | none                | none               | false              |
+      | 30       | 250     | content_with_descendants | none                     | none                | none               | false              |
+      | 29       | 260     | content_with_descendants | none                     | none                | none               | false              |
+      | 30       | 270     | content_with_descendants | none                     | none                | none               | false              |
+      | 29       | 280     | content_with_descendants | none                     | none                | none               | false              |
+      | 30       | 290     | content_with_descendants | none                     | none                | none               | false              |
+      | 29       | 300     | content_with_descendants | none                     | none                | none               | false              |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order | content_view_propagation |
       | 200            | 210           | 3           | none                     |
@@ -119,6 +166,7 @@ Feature: Get root activities for a participant group
       | 0  | 13             | 2018-01-30 09:26:42 | null         | null              | null                |
       | 0  | 18             | 2018-01-30 09:26:42 | null         | null              | null                |
       | 0  | 19             | 2018-01-30 09:26:42 | null         | null              | null                |
+      | 0  | 26             | 2017-01-30 09:26:42 | null         | null              | null                |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | score_computed | submissions | started_at          | validated_at        | latest_activity_at  |
       | 0          | 11             | 200     | 91             | 11          | 2019-01-30 09:26:41 | null                | 2019-01-30 09:36:41 |
@@ -138,6 +186,7 @@ Feature: Get root activities for a participant group
       | 0          | 19             | 210     | 10             | 2           | 2018-01-30 09:26:42 | 2019-01-31 09:26:45 | 2018-01-30 09:36:42 |
       | 0          | 19             | 220     | 20             | 2           | 2018-01-30 09:26:42 | null                | 2018-01-30 09:36:42 |
       | 2          | 11             | 230     | 94             | 15          | 2019-01-30 09:26:48 | 2019-01-31 09:26:45 | 2019-01-30 09:36:48 |
+      | 0          | 26             | 200     | 10             | 3           | 2017-01-30 09:26:42 | null                | 2017-01-30 09:36:42 |
 
   Scenario: Get root activities for the current user
     Given I am the user with id "11"
@@ -315,7 +364,7 @@ Feature: Get root activities for a participant group
     [
       {
         "group_id": "19",
-        "name": "Group C",
+        "name": "Team",
         "type": "Team",
         "activity": {
           "id": "210",
@@ -337,6 +386,120 @@ Feature: Get root activities for a participant group
             }
           ]
         }
+      }
+    ]
+    """
+
+  Scenario: Get root activities for a watched group
+    Given I am the user with id "30"
+    When I send a GET request to "/current-user/group-memberships/activities?watched_group_id=26"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity": {
+          "best_score": 0,
+          "entry_participant_type": "User",
+          "has_visible_children": false,
+          "id": "250",
+          "no_score": false,
+          "permissions": {
+            "can_edit": "none",
+            "can_grant_view": "none",
+            "can_view": "content",
+            "can_watch": "none",
+            "is_owner": false
+          },
+          "requires_explicit_entry": false,
+          "results": [],
+          "string": {
+            "language_tag": null,
+            "title": null
+          },
+          "type": "Task"
+        },
+        "group_id": "22",
+        "name": "Group E",
+        "type": "Club"
+      },
+      {
+        "activity": {
+          "best_score": 0,
+          "entry_participant_type": "User",
+          "has_visible_children": false,
+          "id": "270",
+          "no_score": false,
+          "permissions": {
+            "can_edit": "none",
+            "can_grant_view": "none",
+            "can_view": "content",
+            "can_watch": "none",
+            "is_owner": false
+          },
+          "requires_explicit_entry": false,
+          "results": [],
+          "string": {
+            "language_tag": null,
+            "title": null
+          },
+          "type": "Task"
+        },
+        "group_id": "24",
+        "name": "Group G",
+        "type": "Club"
+      },
+      {
+        "activity": {
+          "best_score": 0,
+          "entry_participant_type": "User",
+          "has_visible_children": false,
+          "id": "290",
+          "no_score": false,
+          "permissions": {
+            "can_edit": "none",
+            "can_grant_view": "none",
+            "can_view": "content",
+            "can_watch": "none",
+            "is_owner": false
+          },
+          "requires_explicit_entry": false,
+          "results": [],
+          "string": {
+            "language_tag": null,
+            "title": null
+          },
+          "type": "Task"
+        },
+        "group_id": "26",
+        "name": "Group K",
+        "type": "Club"
+      },
+      {
+        "activity": {
+          "best_score": 0,
+          "entry_participant_type": "User",
+          "has_visible_children": false,
+          "id": "220",
+          "no_score": false,
+          "permissions": {
+            "can_edit": "none",
+            "can_grant_view": "none",
+            "can_view": "content_with_descendants",
+            "can_watch": "none",
+            "is_owner": false
+          },
+          "requires_explicit_entry": false,
+          "results": [],
+          "string": {
+            "language_tag": "en",
+            "title": "Chapter B"
+          },
+          "type": "Chapter"
+        },
+        "group_id": "1",
+        "name": "all",
+        "type": "Base"
       }
     ]
     """

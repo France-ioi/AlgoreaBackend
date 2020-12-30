@@ -108,7 +108,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	watchedGroupID, watchedGroupIDSet, apiError := srv.resolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}

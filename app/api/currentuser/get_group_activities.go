@@ -1,6 +1,7 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -89,12 +90,23 @@ type rootItem struct {
 // ---
 // summary: List root activities
 // description:
-//   Returns the list of root activities of the groups the current user (or `{as_team_id}`) belongs to.
+//   If `{watched_group_id}` is not given, the service returns the list of root activities of the groups the current user
+//   (or `{as_team_id}`) belongs to.
+//   Otherwise, the service returns the list of root activities of all ancestor groups of the watched group which are also
+//   ancestors or descendants of at least one group that the current user manages.
+//   Only one of `{as_team_id}` and `{watched_group_id}` can be given.
 //
 //
 //   If `{as_team_id}` is given, it should be a user's parent team group, otherwise the "forbidden" error is returned.
+//
+//
+//   If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//   otherwise the "forbidden" error is returned.
 // parameters:
 // - name: as_team_id
+//   in: query
+//   type: integer
+// - name: watched_group_id
 //   in: query
 //   type: integer
 // responses:
@@ -119,9 +131,27 @@ func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) service.APIError {
 	user := srv.GetUser(r)
 	participantID := service.ParticipantIDFromContext(r.Context())
+	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
+	if apiError != service.NoError {
+		return apiError
+	}
+	if watchedGroupIDSet && len(r.URL.Query()["as_team_id"]) != 0 {
+		return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
+	}
 
-	rawData := srv.getRootItemsFromDB(participantID, user, getActivities)
+	rawData := srv.getRootItemsFromDB(participantID, watchedGroupID, watchedGroupIDSet, user, getActivities)
+	activitiesResult, skillsResult := srv.generateRootItemListFromRawData(rawData, getActivities)
 
+	if getActivities {
+		render.Respond(w, r, activitiesResult)
+	} else {
+		render.Respond(w, r, skillsResult)
+	}
+	return service.NoError
+}
+
+func (srv *Service) generateRootItemListFromRawData(
+	rawData []rawRootItem, getActivities bool) ([]activitiesViewResponseRow, []skillsViewResponseRow) {
 	var activitiesResult []activitiesViewResponseRow
 	var skillsResult []skillsViewResponseRow
 	if getActivities {
@@ -152,13 +182,7 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 			currentItem.Results = append(currentItem.Results, generateItemResultFromRawData(&rawData[index]))
 		}
 	}
-
-	if getActivities {
-		render.Respond(w, r, activitiesResult)
-	} else {
-		render.Respond(w, r, skillsResult)
-	}
-	return service.NoError
+	return activitiesResult, skillsResult
 }
 
 func generateItemResultFromRawData(rawData *rawRootItem) structures.ItemResult {
@@ -198,25 +222,47 @@ func (srv *Service) generateRootItemInfoFromRawData(rawData *rawRootItem) *rootI
 	}
 }
 
-func (srv *Service) getRootItemsFromDB(participantID int64, user *database.User, selectActivities bool) []rawRootItem {
+func (srv *Service) getRootItemsFromDB(
+	watcherID, watchedGroupID int64, watchedGroupIDSet bool, user *database.User, selectActivities bool) []rawRootItem {
 	hasVisibleChildrenQuery := srv.Store.Permissions().
-		MatchingGroupAncestors(participantID).
+		MatchingGroupAncestors(watcherID).
 		WherePermissionIsAtLeast("view", "info").
 		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
 		Where("items_items.parent_item_id = items.id").
 		Select("1").Limit(1).SubQuery()
 
 	itemsWithResultsQuery := srv.Store.ActiveGroupAncestors().
-		Where("groups_ancestors_active.child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
+	groupID := watcherID
+	if watchedGroupIDSet {
+		groupsManagedByUserQuery := srv.Store.GroupManagers().
+			Joins(`
+				JOIN groups_ancestors_active ON
+					groups_ancestors_active.ancestor_group_id = group_managers.manager_id AND
+					groups_ancestors_active.child_group_id = ?`, user.GroupID).
+			Select("group_managers.group_id AS id")
+
+		groupsQuery := srv.Store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
+			groupsManagedByUserQuery.SubQuery(),
+			srv.Store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
+				Select("child_group_id").QueryExpr(), // descendants of managed groups
+			srv.Store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
+				Select("ancestor_group_id").QueryExpr()) // ancestors of managed groups
+		itemsWithResultsQuery = itemsWithResultsQuery.
+			Where("groups_ancestors_active.ancestor_group_id IN (?)", groupsQuery.QueryExpr())
+		groupID = watchedGroupID
+	}
+
+	itemsWithResultsQuery = itemsWithResultsQuery.Where("groups_ancestors_active.child_group_id = ?", groupID)
+
 	if selectActivities {
 		itemsWithResultsQuery = itemsWithResultsQuery.Joins("JOIN items ON items.id = groups.root_activity_id")
 	} else {
 		itemsWithResultsQuery = itemsWithResultsQuery.Joins("JOIN items ON items.id = groups.root_skill_id")
 	}
 	itemsWithResultsSubquery := itemsWithResultsQuery.
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(participantID, "view", "info").
-		Joins("LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id", participantID).
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info").
+		Joins("LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id", groupID).
 		Joins("LEFT JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Select(`
 			groups.id AS group_id, groups.name AS group_name, groups.type AS group_type, groups.created_at,
@@ -231,13 +277,17 @@ func (srv *Service) getRootItemsFromDB(participantID int64, user *database.User,
 			IFNULL(?, 0) AS has_visible_children,
 			results.attempt_id,
 			results.score_computed, results.validated, results.started_at, results.latest_activity_at,
-			attempts.ended_at`, participantID, hasVisibleChildrenQuery).
-		Group("groups.id, results.participant_id, results.attempt_id").SubQuery()
+			attempts.ended_at`, groupID, hasVisibleChildrenQuery).
+		Group("groups.id, results.participant_id, results.attempt_id")
+
+	if watchedGroupIDSet {
+		itemsWithResultsSubquery = itemsWithResultsSubquery.WhereItemsAreVisible(watcherID)
+	}
 
 	query := srv.Store.Raw(`
 		SELECT items.*, items.id AS item_id, COALESCE(user_strings.title, default_strings.title) AS title,
 			IF(user_strings.title IS NOT NULL, user_strings.language_tag, default_strings.language_tag) AS language_tag
- 		FROM ? AS items`, itemsWithResultsSubquery).
+		FROM ? AS items`, itemsWithResultsSubquery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Order("items.created_at, items.group_id, items.attempt_id")
 
