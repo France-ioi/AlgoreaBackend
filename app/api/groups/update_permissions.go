@@ -125,7 +125,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
-		apiErr = checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s, user, sourceGroupID, groupID, itemID)
+		apiErr = checkIfUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s, user, sourceGroupID, groupID, itemID)
 		if apiErr != service.NoError {
 			return apiErr.Error
 		}
@@ -362,8 +362,18 @@ const (
 	allWithGrant      = "all_with_grant"
 )
 
-func checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *database.DataStore, user *database.User,
+func checkIfUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *database.DataStore, user *database.User,
 	sourceGroupID, groupID, itemID int64) service.APIError {
+	apiError := checkIfUserIsManagerAllowedToGrantPermissions(s, user, sourceGroupID, groupID)
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	return checkIfItemOrOneOfItsParentsIsVisibleToGroup(s, groupID, itemID)
+}
+
+func checkIfUserIsManagerAllowedToGrantPermissions(
+	s *database.DataStore, user *database.User, sourceGroupID, groupID int64) service.APIError {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
 	// the 'sourceGroupID' should be a parent of 'groupID'
 	found, err := s.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
@@ -376,9 +386,12 @@ func checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *datab
 	if !found {
 		return service.InsufficientAccessRightsError
 	}
+	return service.NoError
+}
 
+func checkIfItemOrOneOfItsParentsIsVisibleToGroup(s *database.DataStore, groupID, itemID int64) service.APIError {
 	// at least one of the item's parents should be visible to the group
-	found, err = s.Permissions().MatchingGroupAncestors(groupID).
+	found, err := s.Permissions().MatchingGroupAncestors(groupID).
 		WherePermissionIsAtLeast("view", info).
 		Joins("JOIN items_items ON items_items.parent_item_id = permissions.item_id").
 		Where("items_items.child_item_id = ?", itemID).
