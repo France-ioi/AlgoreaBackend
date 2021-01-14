@@ -241,20 +241,25 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result map[
 		value = strconv.FormatInt(valueInt64, 10)
 	}
 
-	value = convertDateToRFC3339IfDate(value, valueName)
+	value = convertTimeToRFC3339IfTime(value, valueName)
 	result[valueName] = value
 }
 
-func convertDateToRFC3339IfDate(value interface{}, snakeCaseName string) interface{} {
+func convertTimeToRFC3339IfTime(value interface{}, snakeCaseName string) interface{} {
 	if value != nil &&
 		(strings.HasSuffix(snakeCaseName, "_date") || strings.HasSuffix(snakeCaseName, "_at") ||
 			strings.HasSuffix(snakeCaseName, "_since") || strings.HasSuffix(snakeCaseName, "_until") ||
 			snakeCaseName == "at") {
-		parsedTime, err := time.Parse("2006-01-02 15:04:05.999", value.(string))
-		if err != nil {
-			panic(err)
-		}
-		value = parsedTime.Format(time.RFC3339)
+		value = ConvertDBTimeToJSONTime(value)
 	}
 	return value
+}
+
+// ConvertDBTimeToJSONTime converts the DB datetime representation to RFC3339
+func ConvertDBTimeToJSONTime(data interface{}) string {
+	parsedTime, err := time.Parse("2006-01-02 15:04:05.999", data.(string))
+	if err != nil {
+		panic(err)
+	}
+	return parsedTime.Format(time.RFC3339)
 }
