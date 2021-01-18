@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -24,69 +25,75 @@ type aggregatesResultRow struct {
 }
 
 func TestResultStore_Propagate_Aggregates(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/aggregates")
-	defer func() { _ = db.Close() }()
+	for _, markAllResultsAsToBePropagated := range []bool{false, true} {
+		markAllResultsAsToBePropagated := markAllResultsAsToBePropagated
+		t.Run(fmt.Sprintf("mark all as to_be_propagated=%v", markAllResultsAsToBePropagated), func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/aggregates")
+			defer func() { _ = db.Close() }()
 
-	resultStore := database.NewDataStore(db).Results()
+			resultStore := database.NewDataStore(db).Results()
 
-	currentDate := time.Now().Round(time.Second).UTC()
-	oldDate := currentDate.AddDate(-1, -1, -1)
+			currentDate := time.Now().Round(time.Second).UTC()
+			oldDate := currentDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
-		Updates(map[string]interface{}{
-			"latest_activity_at": oldDate,
-			"tasks_tried":        1,
-			"tasks_with_help":    2,
-			"score_computed":     10,
-			"validated_at":       "2019-05-30 11:00:00",
-		}).Error())
-	assert.NoError(t, resultStore.
-		Where("(item_id = 3 AND participant_id = 101 AND attempt_id = 1) OR (item_id = 3 AND participant_id = 101 AND attempt_id = 2)").
-		Updates(map[string]interface{}{
-			"latest_activity_at": currentDate,
-			"tasks_tried":        5,
-			"tasks_with_help":    6,
-			"score_computed":     20,
-		}).Error())
-	assert.NoError(t, resultStore.
-		Where("(item_id = 4 AND participant_id = 101 AND attempt_id = 1) OR (item_id = 4 AND participant_id = 101 AND attempt_id = 2)").
-		Updates(map[string]interface{}{
-			"latest_activity_at": oldDate,
-			"tasks_tried":        9,
-			"tasks_with_help":    10,
-			"score_computed":     30,
-			"validated_at":       "2019-05-30 11:00:00",
-		}).Error())
+			assert.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
+				Updates(map[string]interface{}{
+					"latest_activity_at": oldDate,
+					"tasks_tried":        1,
+					"tasks_with_help":    2,
+					"score_computed":     10,
+					"validated_at":       "2019-05-30 11:00:00",
+				}).Error())
+			assert.NoError(t, resultStore.
+				Where("(item_id = 3 AND participant_id = 101 AND attempt_id = 1) OR (item_id = 3 AND participant_id = 101 AND attempt_id = 2)").
+				Updates(map[string]interface{}{
+					"latest_activity_at": currentDate,
+					"tasks_tried":        5,
+					"tasks_with_help":    6,
+					"score_computed":     20,
+				}).Error())
+			assert.NoError(t, resultStore.
+				Where("(item_id = 4 AND participant_id = 101 AND attempt_id = 1) OR (item_id = 4 AND participant_id = 101 AND attempt_id = 2)").
+				Updates(map[string]interface{}{
+					"latest_activity_at": oldDate,
+					"tasks_tried":        9,
+					"tasks_with_help":    10,
+					"score_computed":     30,
+					"validated_at":       "2019-05-30 11:00:00",
+				}).Error())
 
-	assert.NoError(t, resultStore.Where("item_id = 2 AND participant_id = 102 AND attempt_id = 1").Updates(map[string]interface{}{
-		"latest_activity_at": oldDate,
-	}).Error())
+			assert.NoError(t, resultStore.Where("item_id = 2 AND participant_id = 102 AND attempt_id = 1").Updates(map[string]interface{}{
+				"latest_activity_at": oldDate,
+			}).Error())
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
-	assert.NoError(t, err)
+			err := resultStore.InTransaction(func(s *database.DataStore) error {
+				assert.NoError(t, resultStore.UpdateColumn("result_propagation_state", "to_be_propagated").Error())
+				return s.Results().Propagate()
+			})
+			assert.NoError(t, err)
 
-	expected := []aggregatesResultRow{
-		{ParticipantID: 101, AttemptID: 1, ItemID: 1, LatestActivityAt: database.Time(oldDate), TasksTried: 1, TasksWithHelp: 2,
-			ScoreComputed: 10, ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(currentDate), TasksTried: 1 + 5 + 9,
-			TasksWithHelp:          2 + 6 + 10,
-			ScoreComputed:          23.3333, /* (10*1 + 20*2 + 30*3) / (1 + 2 + 3) */
-			ResultPropagationState: "done"}, // from 1, 3, 4
-		{ParticipantID: 101, AttemptID: 1, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
-			ScoreComputed: 20, ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 1, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
-			ScoreComputed: 30, ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 2, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
-			ScoreComputed: 20, ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 2, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
-			ScoreComputed: 30, ResultPropagationState: "done"},
-		// another user
-		{ParticipantID: 102, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(oldDate), ResultPropagationState: "done"},
+			expected := []aggregatesResultRow{
+				{ParticipantID: 101, AttemptID: 1, ItemID: 1, LatestActivityAt: database.Time(oldDate), TasksTried: 1, TasksWithHelp: 2,
+					ScoreComputed: 10, ResultPropagationState: "done"},
+				{ParticipantID: 101, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(currentDate), TasksTried: 1 + 5 + 9,
+					TasksWithHelp:          2 + 6 + 10,
+					ScoreComputed:          23.3333, /* (10*1 + 20*2 + 30*3) / (1 + 2 + 3) */
+					ResultPropagationState: "done"}, // from 1, 3, 4
+				{ParticipantID: 101, AttemptID: 1, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
+					ScoreComputed: 20, ResultPropagationState: "done"},
+				{ParticipantID: 101, AttemptID: 1, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
+					ScoreComputed: 30, ResultPropagationState: "done"},
+				{ParticipantID: 101, AttemptID: 2, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
+					ScoreComputed: 20, ResultPropagationState: "done"},
+				{ParticipantID: 101, AttemptID: 2, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
+					ScoreComputed: 30, ResultPropagationState: "done"},
+				// another user
+				{ParticipantID: 102, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(oldDate), ResultPropagationState: "done"},
+			}
+
+			assertAggregatesEqual(t, resultStore, expected)
+		})
 	}
-
-	assertAggregatesEqual(t, resultStore, expected)
 }
 
 func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
