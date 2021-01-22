@@ -34,7 +34,7 @@ func (s *ResultStore) Propagate() (err error) {
 		// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
 		// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
 		// to solve the descendant items. Chapters requiring explicit entry or placed outside of the scope
-		// of the attempts's root item are skipped).
+		// of the attempts' root item are skipped).
 		// (This query can take more than 30 seconds to run when executed for the first time after the db migration)
 		mustNotBeError(ds.Exec(`
 			INSERT INTO results (participant_id, attempt_id, item_id, latest_activity_at, result_propagation_state)
@@ -53,7 +53,7 @@ func (s *ResultStore) Propagate() (err error) {
 							 existing.attempt_id = IF(attempts.root_item_id = results.item_id, attempts.parent_attempt_id, results.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
 					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.result_propagation_state IS NULL OR existing.result_propagation_state != 'to_be_recomputed') AND
+								(existing.participant_id IS NULL OR existing.result_propagation_state != 'to_be_recomputed') AND
 								(results.result_propagation_state = 'to_be_recomputed' OR results.result_propagation_state = 'to_be_propagated')
 				UNION
 					SELECT results_to_insert.participant_id,
@@ -71,7 +71,7 @@ func (s *ResultStore) Propagate() (err error) {
 						     IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
 					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.result_propagation_state IS NULL OR existing.result_propagation_state != 'to_be_recomputed')
+								(existing.participant_id IS NULL OR existing.result_propagation_state != 'to_be_recomputed')
 			)
 			SELECT
 				results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id, '1000-01-01 00:00:00', 'to_be_recomputed'
@@ -88,7 +88,6 @@ func (s *ResultStore) Propagate() (err error) {
 						permissions_generated.item_id = results_to_insert.item_id AND
 						permissions_generated.can_view_generated != 'none' AND
 						groups_ancestors_active.child_group_id = results_to_insert.participant_id
-					LIMIT 1
 				) OR EXISTS(
 					SELECT 1 FROM permissions_generated
 					JOIN groups_ancestors_active
@@ -100,7 +99,6 @@ func (s *ResultStore) Propagate() (err error) {
 							WHERE grand_ancestors.child_item_id = results_to_insert.item_id
 						) AND permissions_generated.can_view_generated != 'none' AND
 						groups_ancestors_active.child_group_id = results_to_insert.participant_id
-					LIMIT 1
 			)) AND (
 				attempts.root_item_id IS NULL OR attempts.root_item_id = results_to_insert.item_id OR
 				root_item_descendant.ancestor_item_id IS NOT NULL))
@@ -110,57 +108,14 @@ func (s *ResultStore) Propagate() (err error) {
 
 		hasChanges := true
 
-		var markAsProcessingStatement, updateStatement *sql.Stmt
+		var updateStatement *sql.Stmt
 
 		for hasChanges {
-			// We mark as "processing" all objects that were marked as 'to_be_recomputed' and
+			// We process only those objects that were marked as 'to_be_recomputed' and
 			// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
 			// This way we prevent infinite looping as we never process items that are ancestors of themselves
-			if markAsProcessingStatement == nil {
-				const markAsProcessingQuery = `
-					UPDATE results AS parent
-					JOIN (
-						SELECT *
-						FROM (
-							SELECT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
-							FROM results AS inner_parent
-							WHERE result_propagation_state = 'to_be_recomputed' AND
-								NOT EXISTS (
-									SELECT items_items.child_item_id
-									FROM items_items
-									JOIN results AS children
-										ON children.item_id = items_items.child_item_id
-									WHERE items_items.parent_item_id = inner_parent.item_id AND
-										children.participant_id = inner_parent.participant_id AND
-										children.attempt_id = inner_parent.attempt_id AND
-										children.result_propagation_state = 'to_be_recomputed'
-								) AND NOT EXISTS (
-									SELECT items_items.child_item_id
-									FROM items_items
-									JOIN attempts
-										ON attempts.root_item_id = items_items.child_item_id
-									JOIN results AS children
-										ON children.item_id = items_items.child_item_id AND
-										   children.attempt_id = attempts.id
-									WHERE items_items.parent_item_id = inner_parent.item_id AND
-										attempts.participant_id = inner_parent.participant_id AND
-										attempts.parent_attempt_id = inner_parent.attempt_id AND
-										children.participant_id = inner_parent.participant_id AND
-										children.result_propagation_state = 'to_be_recomputed'
-								)
-							) AS tmp2
-					) AS tmp
-						USING(participant_id, attempt_id, item_id)
-					SET result_propagation_state = 'processing'`
-
-				markAsProcessingStatement, err = ds.db.CommonDB().Prepare(markAsProcessingQuery)
-				mustNotBeError(err)
-				defer func() { mustNotBeError(markAsProcessingStatement.Close()) }()
-			}
-			_, err = markAsProcessingStatement.Exec()
-			mustNotBeError(err)
-
-			// For every object marked as 'processing', we compute all the characteristics based on the children:
+			//
+			// For every object, we compute all the characteristics based on the children:
 			//  - latest_activity_at as the max of children's
 			//  - tasks_with_help, tasks_tried as the sum of children's per-item maximums
 			//  - children_validated as the number of children items with validated == 1
@@ -169,6 +124,8 @@ func (s *ResultStore) Propagate() (err error) {
 			if updateStatement == nil {
 				const updateQuery = `
 					UPDATE results AS target_results
+					JOIN items
+						ON target_results.item_id = items.id
 					LEFT JOIN LATERAL (
 						SELECT
 							target_results.participant_id,
@@ -213,8 +170,6 @@ func (s *ResultStore) Propagate() (err error) {
 						WHERE items_items.parent_item_id = target_results.item_id AND NOT items.no_score
 						GROUP BY items_items.parent_item_id
 					) AS children_stats ON 1
-					JOIN items
-						ON target_results.item_id = items.id
 					SET
 						target_results.latest_activity_at = GREATEST(
 							IFNULL(children_stats.latest_activity_at, '1000-01-01 00:00:00'),
@@ -241,8 +196,39 @@ func (s *ResultStore) Propagate() (err error) {
 								WHEN 'diff' THEN children_stats.average_score + target_results.score_edit_value
 								ELSE children_stats.average_score
 							END, 0), 100)),
-						target_results.result_propagation_state = 'to_be_propagated'
-					WHERE target_results.result_propagation_state = 'processing'`
+						target_results.result_propagation_state = 'to_be_propagated'` +
+					// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
+					`WHERE (target_results.participant_id, target_results.attempt_id, target_results.item_id) IN (
+						SELECT *
+						FROM (
+							SELECT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
+							FROM results AS inner_parent
+							WHERE result_propagation_state = 'to_be_recomputed' AND
+								NOT EXISTS (
+									SELECT 1
+									FROM items_items
+									JOIN results AS children
+										ON children.participant_id = inner_parent.participant_id AND
+										   children.attempt_id = inner_parent.attempt_id AND
+										   children.item_id = items_items.child_item_id
+									WHERE items_items.parent_item_id = inner_parent.item_id AND
+										    children.result_propagation_state = 'to_be_recomputed'
+								) AND NOT EXISTS (
+									SELECT 1
+									FROM items_items
+									JOIN attempts
+										ON attempts.participant_id = inner_parent.participant_id AND
+										   attempts.parent_attempt_id = inner_parent.attempt_id AND
+										   attempts.root_item_id = items_items.child_item_id
+									JOIN results AS children
+										ON children.participant_id = inner_parent.participant_id AND
+										   children.item_id = items_items.child_item_id AND
+											 children.attempt_id = attempts.id
+									WHERE items_items.parent_item_id = inner_parent.item_id AND
+										children.result_propagation_state = 'to_be_recomputed'
+								)
+						) AS tmp2
+					)`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(updateStatement.Close()) }()

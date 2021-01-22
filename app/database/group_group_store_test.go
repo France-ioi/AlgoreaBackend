@@ -95,8 +95,6 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectPrepare("^UPDATE ")
 	mock.ExpectExec("^UPDATE ").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectPrepare("^UPDATE ")
-	mock.ExpectExec("^UPDATE ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("^UPDATE ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
