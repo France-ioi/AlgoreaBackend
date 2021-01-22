@@ -30,18 +30,30 @@ type itemWithDefaultLanguageTag struct {
 type updateItemRequest struct {
 	itemWithDefaultLanguageTag `json:"item,squash"`
 	Children                   []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
+
+	childrenIDsCache []int64
+}
+
+func (in *updateItemRequest) childrenIDs() []int64 {
+	if in.childrenIDsCache != nil {
+		return in.childrenIDsCache
+	}
+	in.childrenIDsCache = make([]int64, len(in.Children))
+	for index := range in.Children {
+		in.childrenIDsCache[index] = in.Children[index].ItemID
+	}
+	return in.childrenIDsCache
 }
 
 func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore, itemID int64) bool {
 	if len(in.Children) == 0 {
 		return true
 	}
-	ids := make([]int64, len(in.Children)+1)
-	for index := range in.Children {
-		if in.Children[index].ItemID == itemID {
+	ids := in.childrenIDs()
+	for _, id := range ids {
+		if id == itemID {
 			return false
 		}
-		ids[index] = in.Children[index].ItemID
 	}
 	var count int64
 	service.MustNotBeError(store.ItemAncestors().WithWriteLock().
@@ -206,7 +218,12 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 	input *updateItemRequest, childrenPermissionMap map[int64]permissionAndType) (apiError service.APIError, err error) {
 	if formData.IsSet("children") {
 		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
-			service.MustNotBeError(lockedStore.ItemItems().Delete("parent_item_id = ?", itemID).Error())
+			deleteStatement := lockedStore.ItemItems().DB
+			newChildrenIDs := input.childrenIDs()
+			if len(newChildrenIDs) > 0 {
+				deleteStatement = deleteStatement.Where("child_item_id NOT IN(?)", newChildrenIDs)
+			}
+			service.MustNotBeError(deleteStatement.Delete("parent_item_id = ?", itemID).Error())
 
 			if !input.checkItemsRelationsCycles(lockedStore, itemID) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))

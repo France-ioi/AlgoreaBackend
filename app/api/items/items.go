@@ -4,7 +4,6 @@ package items
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -345,24 +344,25 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 		return
 	}
 
-	var values = make([]interface{}, 0, len(spec)*9)
-
+	values := make([]map[string]interface{}, 0, len(spec))
 	for index := range spec {
-		values = append(values,
-			spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order, spec[index].Category,
-			spec[index].ScoreWeight, spec[index].ContentViewPropagation,
-			spec[index].UpperViewLevelsPropagation, spec[index].GrantViewPropagation, spec[index].WatchPropagation,
-			spec[index].EditPropagation)
+		values = append(values, map[string]interface{}{
+			"parent_item_id":                spec[index].ParentItemID,
+			"child_item_id":                 spec[index].ChildItemID,
+			"child_order":                   spec[index].Order,
+			"category":                      spec[index].Category,
+			"score_weight":                  spec[index].ScoreWeight,
+			"content_view_propagation":      spec[index].ContentViewPropagation,
+			"upper_view_levels_propagation": spec[index].UpperViewLevelsPropagation,
+			"grant_view_propagation":        spec[index].GrantViewPropagation,
+			"watch_propagation":             spec[index].WatchPropagation,
+			"edit_propagation":              spec[index].EditPropagation,
+		})
 	}
 
-	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	// nolint:gosec
-	query :=
-		`INSERT INTO items_items (
-			parent_item_id, child_item_id, child_order, category, score_weight,
-			content_view_propagation, upper_view_levels_propagation, grant_view_propagation,
-			watch_propagation, edit_propagation) VALUES ` + valuesMarks
-	service.MustNotBeError(store.Exec(query, values...).Error())
+	service.MustNotBeError(store.ItemItems().InsertOrUpdateMaps(values,
+		[]string{"child_order", "category", "score_weight", "content_view_propagation",
+			"upper_view_levels_propagation", "grant_view_propagation", "watch_propagation", "edit_propagation"}))
 }
 
 // createContestParticipantsGroup creates a new contest participants group for the given item and

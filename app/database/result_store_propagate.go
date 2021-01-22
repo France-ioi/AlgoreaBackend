@@ -189,13 +189,13 @@ func (s *ResultStore) Propagate() (err error) {
 								THEN children_stats.max_validated_at
 							ELSE NULL
 						END,
-						target_results.score_computed = IF(items.no_score OR children_stats.average_score IS NULL,
+						target_results.score_computed = IFNULL(IF(items.no_score OR children_stats.average_score IS NULL,
 							0,
 							LEAST(GREATEST(CASE target_results.score_edit_rule
 								WHEN 'set' THEN target_results.score_edit_value
 								WHEN 'diff' THEN children_stats.average_score + target_results.score_edit_value
 								ELSE children_stats.average_score
-							END, 0), 100)),
+							END, 0), 100)), 0),
 						target_results.result_propagation_state = 'to_be_propagated'` +
 					// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
 					`WHERE (target_results.participant_id, target_results.attempt_id, target_results.item_id) IN (
