@@ -30,6 +30,15 @@ type groupChildrenViewResponseRow struct {
 	// The number of descendant users
 	// required:true
 	UserCount int32 `json:"user_count"`
+	// required:true
+	// enum: none,memberships,memberships_and_group
+	CanManage string `json:"can_manage"`
+	// required:true
+	CanGrantGroupAccess bool `json:"can_grant_group_access"`
+	// required:true
+	CanWatchMembers bool `json:"can_watch_members"`
+
+	CanManageValue int `json:"-"`
 }
 
 // swagger:operation GET /groups/{group_id}/children group-memberships groupChildrenView
@@ -139,7 +148,19 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				JOIN groups_groups_active ON groups_groups_active.child_group_id = users.group_id
 				JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id
 				WHERE groups_ancestors_active.ancestor_group_id = groups.id
-			) AS user_count`).
+			) AS user_count,
+			can_manage_value, can_grant_group_access, can_watch_members`).
+		Joins(`
+			JOIN LATERAL (
+				SELECT IFNULL(MAX(can_manage_value), 1) AS can_manage_value,
+				       IFNULL(MAX(can_grant_group_access), 0) AS can_grant_group_access,
+				       IFNULL(MAX(can_watch_members), 0) AS can_watch_members
+				FROM group_managers
+				JOIN groups_ancestors_active AS manager_ancestors
+					ON manager_ancestors.ancestor_group_id = group_managers.manager_id AND manager_ancestors.child_group_id = ?
+				JOIN groups_ancestors_active AS group_ancestors
+					ON group_ancestors.ancestor_group_id = group_managers.group_id AND group_ancestors.child_group_id = groups.id
+			) AS manager_permissions`, user.GroupID).
 		Where("groups.id IN(?)",
 			srv.Store.ActiveGroupGroups().
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
@@ -158,6 +179,10 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 
 	var result []groupChildrenViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
+	groupManagerStore := srv.Store.GroupManagers()
+	for index := range result {
+		result[index].CanManage = groupManagerStore.CanManageNameByIndex(result[index].CanManageValue)
+	}
 
 	render.Respond(w, r, result)
 	return service.NoError
