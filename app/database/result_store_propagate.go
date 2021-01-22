@@ -53,7 +53,7 @@ func (s *ResultStore) Propagate() (err error) {
 							 existing.attempt_id = IF(attempts.root_item_id = results.item_id, attempts.parent_attempt_id, results.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
 					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.result_propagation_state IS NULL OR existing.result_propagation_state != 'to_be_propagated') AND
+								(existing.result_propagation_state IS NULL OR existing.result_propagation_state != 'to_be_recomputed') AND
 								(results.result_propagation_state = 'to_be_recomputed' OR results.result_propagation_state = 'to_be_propagated')
 				UNION
 					SELECT results_to_insert.participant_id,
@@ -71,7 +71,7 @@ func (s *ResultStore) Propagate() (err error) {
 						     IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
 					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.result_propagation_state IS NULL OR existing.result_propagation_state != 'to_be_propagated')
+								(existing.result_propagation_state IS NULL OR existing.result_propagation_state != 'to_be_recomputed')
 			)
 			SELECT
 				results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id, '1000-01-01 00:00:00', 'to_be_recomputed'
