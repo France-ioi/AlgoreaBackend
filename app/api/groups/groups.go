@@ -22,6 +22,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 	router.Post("/groups", service.AppHandler(srv.createGroup).ServeHTTP)
+	router.Get("/groups/roots", service.AppHandler(srv.getRoots).ServeHTTP)
 	router.Get("/groups/{group_id}", service.AppHandler(srv.getGroup).ServeHTTP)
 	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
 	router.Get("/groups/{source_group_id}/permissions/{group_id}/{item_id}",
