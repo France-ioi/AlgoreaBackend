@@ -34,6 +34,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Delete("/groups/{group_id}/code", service.AppHandler(srv.removeCode).ServeHTTP)
 	router.Get("/groups/is-code-valid", service.AppHandler(srv.checkCode).ServeHTTP)
 
+	router.Get("/groups/{group_id}/navigation", service.AppHandler(srv.getNavigation).ServeHTTP)
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
 	router.Get("/groups/{group_id}/team-descendants", service.AppHandler(srv.getTeamDescendants).ServeHTTP)
 	router.Get("/groups/{group_id}/user-descendants", service.AppHandler(srv.getUserDescendants).ServeHTTP)
