@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -48,16 +49,34 @@ type groupRootsViewResponseRow struct {
 func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	usersAncestorsQuery := srv.Store.ActiveGroupAncestors().
-		Select("ancestor_group_id").
-		Joins(`
-			JOIN groups_groups_active
-				ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id AND
-				   groups_groups_active.child_group_id = ?`, user.GroupID).
-		Union(srv.Store.ActiveGroupAncestors().
-			Select("ancestor_group_id").Where("child_group_id = ?", user.GroupID).SubQuery())
+	innerQuery := srv.Store.Groups().
+		Where(`
+			groups.id IN(?) OR groups.id IN(?)`,
+			ancestorsOfJoinedGroups(srv.Store, user).QueryExpr(), ancestorsOfManagedGroups(srv.Store, user).QueryExpr()).
+		Where("groups.type != 'Base'").
+		Where("groups.id != ?", user.GroupID).
+		Where(`
+			NOT EXISTS(
+				SELECT 1 FROM ` + "`groups`" + ` AS parent_group
+				JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = parent_group.id AND
+					   groups_groups_active.child_group_id = groups.id
+				WHERE parent_group.type != 'Base'
+			)`).
+		Order("groups.name")
 
-	innerQuery := srv.Store.Groups().Select(`
+	var result []groupRootsViewResponseRow
+	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, innerQuery, user).Scan(&result).Error())
+
+	render.Respond(w, r, result)
+	return service.NoError
+}
+
+func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *database.User) *database.DB {
+	usersAncestorsQuery := store.ActiveGroupAncestors().
+		Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
+
+	db = db.Select(`
 		groups.id as id, groups.name, groups.type,
 		IF(
 			EXISTS(
@@ -107,40 +126,22 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 					'none'
 				)
 			)
-		) AS 'current_user_managership'`, user.GroupID, user.GroupID).
-		Where(`
-			groups.id IN(
-				SELECT ancestor_group_id FROM user_ancestors
-			) OR groups.id IN(
-				SELECT groups_ancestors_active.child_group_id
-				FROM groups_ancestors_active
-				JOIN group_managers
-					ON group_managers.group_id = groups_ancestors_active.ancestor_group_id
-				JOIN user_ancestors ON user_ancestors.ancestor_group_id = group_managers.manager_id
-			) OR groups.id IN(
-				SELECT groups_ancestors_active.ancestor_group_id
-				FROM groups_ancestors_active
-				JOIN group_managers
-					ON group_managers.group_id = groups_ancestors_active.child_group_id
-				JOIN user_ancestors ON user_ancestors.ancestor_group_id = group_managers.manager_id
-			)`).
-		Where("groups.type != 'Base'").
-		Where("groups.id != ?", user.GroupID).
-		Where(`
-			NOT EXISTS(
-				SELECT 1 FROM ` + "`groups`" + ` AS parent_group
-				JOIN groups_groups_active
-					ON groups_groups_active.parent_group_id = parent_group.id AND
-					   groups_groups_active.child_group_id = groups.id
-				WHERE parent_group.type != 'Base'
-			)`).
-		Order("groups.name")
+		) AS 'current_user_managership'`, user.GroupID, user.GroupID)
 
-	var result []groupRootsViewResponseRow
-	service.MustNotBeError(
-		srv.Store.Raw("WITH user_ancestors AS ? ?", usersAncestorsQuery.SubQuery(), innerQuery.SubQuery()).
-			Scan(&result).Error())
+	return store.Raw("WITH user_ancestors AS ? ?", usersAncestorsQuery.SubQuery(), db.QueryExpr())
+}
 
-	render.Respond(w, r, result)
-	return service.NoError
+func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *database.DB {
+	return store.ActiveGroupGroups().
+		Where("groups_groups_active.child_group_id = ?", user.GroupID).
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id").
+		Select("groups_ancestors_active.ancestor_group_id")
+}
+
+func ancestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
+	return store.ActiveGroupAncestors().ManagedByUser(user).
+		Joins(`
+			JOIN groups_ancestors_active AS ancestors_of_managed
+				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id`).
+		Select("ancestors_of_managed.ancestor_group_id")
 }

@@ -29,14 +29,10 @@ Feature: Get root groups (groupRootsView)
       | 25 | Ancestor                                 | Base    |
       | 41 | user                                     | User    |
       | 49 | User                                     | User    |
-      | 51 | john                                     | User    |
-      | 53 | jane                                     | User    |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 41       | Jean-Michel | Blanquer  |
       | jack  | 49       | Jack        | Smith     |
-      | john  | 51       | John        | Doe       |
-      | jane  | 53       | Jane        | Doe       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 2        | 41         |
@@ -136,13 +132,6 @@ Feature: Get root groups (groupRootsView)
       {
         "id": "19",
         "name": "Managed By Ancestor",
-        "type": "Class",
-        "current_user_membership": "none",
-        "current_user_managership": "direct"
-      },
-      {
-        "id": "10",
-        "name": "Managed By Ancestor Team",
         "type": "Class",
         "current_user_membership": "none",
         "current_user_managership": "direct"
