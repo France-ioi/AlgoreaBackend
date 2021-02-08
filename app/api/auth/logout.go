@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -28,6 +29,11 @@ func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIEr
 		service.MustNotBeError(store.RefreshTokens().Delete("user_id = ?", user.GroupID).Error())
 		return nil
 	}))
+
+	cookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
+	if _, cookieErr := r.Cookie("access_token"); cookieErr == nil && cookieAttributes.UseCookie {
+		http.SetCookie(w, cookieAttributes.SessionCookie("", -1000))
+	}
 
 	render.Respond(w, r, &service.Response{Success: true, Message: "success"})
 	return service.NoError

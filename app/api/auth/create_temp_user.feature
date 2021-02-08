@@ -1,5 +1,4 @@
 Feature: Create a temporary user
-
   Background:
     Given the application config is:
       """
@@ -16,19 +15,22 @@ Feature: Create a temporary user
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 2               | 4              |
+    And the time now is "2020-07-16T22:02:28Z"
+    And the DB time now is "2020-07-16 22:02:28"
 
-  Scenario: Create a new temporary user
+  Scenario Outline: Create a new temporary user
     Given the generated auth key is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
-    When I send a POST request to "/auth/temp-user"
+    When I send a POST request to "/auth/temp-user<query>"
     Then the response code should be 201
     And the response body should be, in JSON:
       """
       {
         "success": true,
         "message": "created",
-        "data": {"access_token": "ny93zqri9a2adn4v1ut6izd76xb3pccw", "expires_in": 7200}
+        "data": {<token_in_data> "expires_in": 7200}
       }
       """
+    And the response header "Set-Cookie" should be "<expected_cookie>"
     And logs should contain:
       """
       Generated a session token expiring in 7200 seconds for a temporary user with group_id = 5577006791947779410
@@ -53,8 +55,14 @@ Feature: Create a temporary user
       | 4                   | 5577006791947779410 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |
     And the table "sessions" should be:
-      | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 | user_id             | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at)) < 3 | issuer  |
-      | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                     | 5577006791947779410 | true                                             | backend |
+      | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 | user_id             | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at)) < 3 | issuer  | use_cookie   | cookie_secure   | cookie_same_site   | cookie_domain   | cookie_path   |
+      | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                     | 5577006791947779410 | true                                             | backend | <use_cookie> | <cookie_secure> | <cookie_same_site> | <cookie_domain> | <cookie_path> |
     And the table "attempts" should be:
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
+  Examples:
+    | query                            | expected_cookie                                                                                                                                               | use_cookie | token_in_data                                      | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
+    |                                  | [NULL]                                                                                                                                                        | false      | "access_token":"ny93zqri9a2adn4v1ut6izd76xb3pccw", | false         | false            | null          | null        |
+    | ?use_cookie=0                    | [NULL]                                                                                                                                                        | false      | "access_token":"ny93zqri9a2adn4v1ut6izd76xb3pccw", | false         | false            | null          | null        |
+    | ?use_cookie=1&cookie_secure=1    | access_token=ny93zqri9a2adn4v1ut6izd76xb3pccw; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None | true       |                                                    | true          | false            | 127.0.0.1     | /           |
+    | ?use_cookie=1&cookie_same_site=1 | access_token=ny93zqri9a2adn4v1ut6izd76xb3pccw; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       | true       |                                                    | false         | true             | 127.0.0.1     | /           |

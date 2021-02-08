@@ -10,14 +10,51 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/oauth2"
 )
 
 func TestSessionStore_InsertNewOAuth(t *testing.T) {
 	tests := []struct {
-		name    string
-		dbError error
-	}{{name: "success"}, {name: "error", dbError: errors.New("some error")}}
+		name             string
+		issuer           string
+		cookieAttributes SessionCookieAttributes
+		dbError          error
+	}{
+		{name: "success without cookie"},
+		{
+			name:   "success with cookie",
+			issuer: "login-module",
+			cookieAttributes: SessionCookieAttributes{
+				UseCookie: true,
+				Secure:    false,
+				SameSite:  false,
+				Domain:    "somedomain.com",
+				Path:      "/path/",
+			},
+		},
+		{
+			name:   "success with cookie 2",
+			issuer: "backend",
+			cookieAttributes: SessionCookieAttributes{
+				UseCookie: true,
+				Secure:    true,
+				SameSite:  false,
+				Domain:    "somedomain1.com",
+				Path:      "/path1/",
+			},
+		},
+		{
+			name:   "success with cookie 3",
+			issuer: "backend",
+			cookieAttributes: SessionCookieAttributes{
+				UseCookie: true,
+				Secure:    false,
+				SameSite:  true,
+				Domain:    "somedomain1.com",
+				Path:      "/path1/",
+			},
+		},
+		{name: "error", dbError: errors.New("some error")},
+	}
 	for _, test := range tests {
 		test := test
 
@@ -25,13 +62,17 @@ func TestSessionStore_InsertNewOAuth(t *testing.T) {
 		defer func() { _ = db.Close() }()
 
 		userID := int64(123456)
-		token := oauth2.Token{
-			AccessToken: "accesstoken",
-			Expiry:      time.Now(),
-		}
-		expectedExec := mock.ExpectExec("^" + regexp.QuoteMeta(
-			"INSERT INTO `sessions` (`access_token`, `expires_at`, `issued_at`, `issuer`, `user_id`) VALUES "+
-				"(?, ?, NOW(), ?, ?)") + "$")
+		token := "accesstoken"
+		secondsUntilExpiry := int32(1234)
+		expectedExec := mock.ExpectExec("^"+regexp.QuoteMeta(
+			"INSERT INTO `sessions` "+
+				"(`access_token`, `cookie_domain`, `cookie_path`, `cookie_same_site`, `cookie_secure`, `expires_at`, "+
+				"`issued_at`, `issuer`, `use_cookie`, `user_id`) VALUES "+
+				"(?, ?, ?, ?, ?, NOW() + INTERVAL ? SECOND, NOW(), ?, ?, ?)")+"$").
+			WithArgs(token, stringOrNil(test.cookieAttributes.Domain),
+				stringOrNil(test.cookieAttributes.Path),
+				test.cookieAttributes.SameSite, test.cookieAttributes.Secure, secondsUntilExpiry,
+				test.issuer, test.cookieAttributes.UseCookie, userID)
 
 		if test.dbError != nil {
 			expectedExec.WillReturnError(test.dbError)
@@ -39,7 +80,7 @@ func TestSessionStore_InsertNewOAuth(t *testing.T) {
 			expectedExec.WillReturnResult(sqlmock.NewResult(1, 1))
 		}
 
-		err := NewDataStore(db).Sessions().InsertNewOAuth(userID, &token)
+		err := NewDataStore(db).Sessions().InsertNewOAuth(userID, token, secondsUntilExpiry, test.issuer, &test.cookieAttributes)
 		assert.Equal(t, test.dbError, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}

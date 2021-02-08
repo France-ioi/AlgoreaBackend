@@ -3,7 +3,19 @@ Feature: Login callback - robustness
     Given the "Authorization" request header is "Bearer 1234567890"
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 400
-    And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header can be given"
+    And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header (or 'access_token' cookie) can be given"
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "sessions" should stay unchanged
+    And the table "refresh_tokens" should stay unchanged
+
+  Scenario: Both code and access_token cookie are present
+    Given the "Cookie" request header is "access_token=1234567890"
+    When I send a POST request to "/auth/token?code=somecode"
+    Then the response code should be 400
+    And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header (or 'access_token' cookie) can be given"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -173,3 +185,21 @@ Feature: Login callback - robustness
     | profile_body      | error_text                 |
     | {"login":"login"} | no id in user's profile    |
     | {"id":12345}      | no login in user's profile |
+
+  Scenario Outline: Invalid cookie attributes
+    Given I send a POST request to "/auth/token<query>"
+    Then the response code should be 400
+    And the response error message should contain "<expected_error>"
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "sessions" should stay unchanged
+    And the table "refresh_tokens" should stay unchanged
+  Examples:
+    | query                                            | expected_error                                                                 |
+    | ?use_cookie=1                                    | One of cookie_secure and cookie_same_site must be true when use_cookie is true |
+    | ?use_cookie=1&cookie_same_site=0&cookie_secure=0 | One of cookie_secure and cookie_same_site must be true when use_cookie is true |
+    | ?use_cookie=abc                                  | Wrong value for use_cookie (should have a boolean value (0 or 1))              |
+    | ?cookie_same_site=abc                            | Wrong value for cookie_same_site (should have a boolean value (0 or 1))        |
+    | ?cookie_secure=abc                               | Wrong value for cookie_secure (should have a boolean value (0 or 1))           |

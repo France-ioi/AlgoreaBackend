@@ -48,8 +48,11 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `sessions`  WHERE (user_id = ? AND access_token != ?)")+"$").
 						WithArgs(int64(2), "accesstoken").WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta(
-						"INSERT INTO `sessions` (`access_token`, `expires_at`, `issued_at`, `issuer`, `user_id`) VALUES (?, ?, NOW(), ?, ?)")+
-						"$").WithArgs("newaccesstoken", sqlmock.AnyArg(), "login-module", int64(2)).
+						"INSERT INTO `sessions` (`access_token`, `cookie_domain`, `cookie_path`, `cookie_same_site`, "+
+							"`cookie_secure`, `expires_at`, `issued_at`, `issuer`, `use_cookie`, `user_id`) "+
+							"VALUES (?, ?, ?, ?, ?, NOW() + INTERVAL ? SECOND, NOW(), ?, ?, ?)")+
+						"$").WithArgs("newaccesstoken", sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
+						sqlmock.AnyArg(), "login-module", sqlmock.AnyArg(), int64(2)).
 						WillReturnResult(sqlmock.NewResult(123, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `refresh_tokens` SET `refresh_token` = ? WHERE (user_id = ?)")+
 						"$").WithArgs("newfirstrefreshtoken", int64(2)).WillReturnResult(sqlmock.NewResult(-1, 1))
@@ -64,9 +67,12 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 				srv.AuthConfig.Set("clientSecret", expectedClientSecret)
 				if timeout {
 					router.With(middleware.Timeout(0)).
+						With(middleware.WithValue(parsedRequestData, map[string]interface{}{})).
 						Post("/auth/token", service.AppHandler(srv.refreshAccessToken).ServeHTTP)
 				} else {
-					router.Post("/auth/token", service.AppHandler(srv.refreshAccessToken).ServeHTTP)
+					router.
+						With(middleware.WithValue(parsedRequestData, map[string]interface{}{})).
+						Post("/auth/token", service.AppHandler(srv.refreshAccessToken).ServeHTTP)
 				}
 			})
 		assert.NoError(t, err)

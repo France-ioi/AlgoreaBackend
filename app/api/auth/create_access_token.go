@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -20,6 +22,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+type ctxKey int
+
+const parsedRequestData ctxKey = iota
 
 // swagger:operation POST /auth/token auth accessTokenCreate
 // ---
@@ -58,6 +64,24 @@ import (
 //   in: query
 //   description: OAuth2 redirection URI
 //   type: string
+// - name: use_cookie
+//   in: query
+//   description: If 1, set a cookie instead of returning the OAuth2 code in the data
+//   type: integer
+//   enum: [0,1]
+//   default: 0
+// - name: cookie_secure
+//   in: query
+//   description: If 1, set the cookie with the `Secure` attribute
+//   type: integer
+//   enum: [0,1]
+//   default: 0
+// - name: cookie_same_site
+//   in: query
+//   description: If 1, set the cookie with the `SameSite`='Strict' attribute value (instead of `SameSite`='None')
+//   type: integer
+//   enum: [0,1]
+//   default: 0
 // - in: body
 //   name: parameters
 //   description: The optional parameters can be given in the body as well
@@ -73,6 +97,15 @@ import (
 //       redirect_uri:
 //         type: string
 //         description: OAuth2 redirection URI
+//       use_cookie:
+//         type: boolean
+//         description: If true, set a cookie instead of returning the OAuth2 code in the data
+//       cookie_secure:
+//         type: boolean
+//         description: If true, set the cookie with the `Secure` attribute
+//       cookie_same_site:
+//         type: boolean
+//         description: If true, set the cookie with the `SameSite`='Strict' attribute value (instead of `SameSite`='None')
 // responses:
 //   "201":
 //     description: "Created. Success response with the new access token"
@@ -91,14 +124,22 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		return apiError
 	}
 
-	// "Authorization" header is given, requesting a new token from the given token
-	if len(r.Header["Authorization"]) != 0 {
+	_, cookieErr := r.Cookie("access_token")
+
+	// "Authorization" header / "access_token" cookie is given, requesting a new token from the given token
+	if len(r.Header["Authorization"]) != 0 || cookieErr == nil {
 		if _, ok := requestData["code"]; ok {
 			return service.ErrInvalidRequest(
-				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
+				errors.New("only one of the 'code' parameter and the 'Authorization' header (or 'access_token' cookie) can be given"))
 		}
-		auth.UserMiddleware(srv.Store.Sessions())(service.AppHandler(srv.refreshAccessToken)).ServeHTTP(w, r)
+		auth.UserMiddleware(srv.Store.Sessions())(service.AppHandler(srv.refreshAccessToken)).
+			ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), parsedRequestData, requestData)))
 		return service.NoError
+	}
+
+	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	// the code is given, requesting a token from code and optionally code_verifier, and create/update user.
@@ -110,13 +151,13 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
 	if codeVerifier, ok := requestData["code_verifier"]; ok {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", codeVerifier))
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", codeVerifier.(string)))
 	}
 	if redirectURI, ok := requestData["redirect_uri"]; ok {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", redirectURI))
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", redirectURI.(string)))
 	}
 
-	token, err := oauthConfig.Exchange(r.Context(), code, oauthOptions...)
+	token, err := oauthConfig.Exchange(r.Context(), code.(string), oauthOptions...)
 	service.MustNotBeError(err)
 
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
@@ -127,7 +168,8 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
-		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token))
+		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token.AccessToken,
+			int32(time.Until(token.Expiry)/time.Second), "login-module", cookieAttributes))
 
 		service.MustNotBeError(store.Exec(
 			"INSERT INTO refresh_tokens (user_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
@@ -136,55 +178,131 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		return nil
 	}))
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"access_token": token.AccessToken,
-		"expires_in":   time.Until(token.Expiry).Round(time.Second) / time.Second,
-	})))
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, token.AccessToken, token.Expiry, cookieAttributes)
 	return service.NoError
 }
 
-func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]string, service.APIError) {
-	requestData := make(map[string]string, 2)
+func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
+	rendererGenerator func(interface{}) render.Renderer, token string, expiresIn time.Time,
+	cookieAttributes *database.SessionCookieAttributes) {
+	secondsUntilExpiry := int32(time.Until(expiresIn).Round(time.Second) / time.Second)
+	response := map[string]interface{}{
+		"expires_in": secondsUntilExpiry,
+	}
+	oldCookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
+	if _, cookieErr := r.Cookie("access_token"); cookieErr == nil && oldCookieAttributes != nil &&
+		oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
+		http.SetCookie(w, oldCookieAttributes.SessionCookie("", -1000))
+	}
+	if cookieAttributes.UseCookie {
+		http.SetCookie(w, cookieAttributes.SessionCookie(token, secondsUntilExpiry))
+	} else {
+		response["access_token"] = token
+	}
+	service.MustNotBeError(render.Render(w, r, rendererGenerator(response)))
+}
+
+func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[string]interface{}) (
+	cookieAttributes *database.SessionCookieAttributes, apiError service.APIError) {
+	cookieAttributes = &database.SessionCookieAttributes{}
+	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
+		cookieAttributes.UseCookie = true
+		cookieAttributes.Domain = domain.CurrentDomainFromContext(r.Context())
+		cookieAttributes.Path = srv.ServerConfig.GetString("rootPath")
+		if value, ok := requestData["cookie_secure"]; ok && value.(bool) {
+			cookieAttributes.Secure = true
+		}
+		if value, ok := requestData["cookie_same_site"]; ok && value.(bool) {
+			cookieAttributes.SameSite = true
+		}
+		if !cookieAttributes.Secure && !cookieAttributes.SameSite {
+			return nil, service.ErrInvalidRequest(errors.New("one of cookie_secure and cookie_same_site must be true when use_cookie is true"))
+		}
+	}
+	return cookieAttributes, service.NoError
+}
+
+func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]interface{}, service.APIError) {
+	allowedParameters := []string{
+		"code", "code_verifier", "redirect_uri",
+		"use_cookie", "cookie_secure", "cookie_same_site",
+	}
+	requestData := make(map[string]interface{}, 2)
 	query := r.URL.Query()
-	extractOptionalParameter(query, "code", requestData)
-	extractOptionalParameter(query, "code_verifier", requestData)
-	extractOptionalParameter(query, "redirect_uri", requestData)
+	for _, parameterName := range allowedParameters {
+		extractOptionalParameter(query, parameterName, requestData)
+	}
 
 	contentType := strings.ToLower(strings.TrimSpace(strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0]))
 	switch contentType {
 	case "application/json":
-		var jsonPayload struct {
-			Code         *string `json:"code"`
-			CodeVerifier *string `json:"code_verifier"`
-			RedirectURI  *string `json:"redirect_uri"`
-		}
-		defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
-		err := json.NewDecoder(r.Body).Decode(&jsonPayload)
-		if err != nil {
-			return nil, service.ErrInvalidRequest(err)
-		}
-		if jsonPayload.Code != nil {
-			requestData["code"] = *jsonPayload.Code
-		}
-		if jsonPayload.CodeVerifier != nil {
-			requestData["code_verifier"] = *jsonPayload.CodeVerifier
-		}
-		if jsonPayload.RedirectURI != nil {
-			requestData["redirect_uri"] = *jsonPayload.RedirectURI
+		if apiError := parseJSONParams(r, requestData); apiError != service.NoError {
+			return nil, apiError
 		}
 	case "application/x-www-form-urlencoded":
 		err := r.ParseForm()
 		if err != nil {
 			return nil, service.ErrInvalidRequest(err)
 		}
-		extractOptionalParameter(r.PostForm, "code", requestData)
-		extractOptionalParameter(r.PostForm, "code_verifier", requestData)
-		extractOptionalParameter(r.PostForm, "redirect_uri", requestData)
+		for _, parameterName := range allowedParameters {
+			extractOptionalParameter(r.PostForm, parameterName, requestData)
+		}
+	}
+	return preprocessBooleanCookieAttributes(requestData)
+}
+
+func parseJSONParams(r *http.Request, requestData map[string]interface{}) service.APIError {
+	var jsonPayload struct {
+		Code           *string `json:"code"`
+		CodeVerifier   *string `json:"code_verifier"`
+		RedirectURI    *string `json:"redirect_uri"`
+		UseCookie      *bool   `json:"use_cookie"`
+		CookieSecure   *bool   `json:"cookie_secure"`
+		CookieSameSite *bool   `json:"cookie_same_site"`
+	}
+	defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
+	err := json.NewDecoder(r.Body).Decode(&jsonPayload)
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+	if jsonPayload.Code != nil {
+		requestData["code"] = *jsonPayload.Code
+	}
+	if jsonPayload.CodeVerifier != nil {
+		requestData["code_verifier"] = *jsonPayload.CodeVerifier
+	}
+	if jsonPayload.RedirectURI != nil {
+		requestData["redirect_uri"] = *jsonPayload.RedirectURI
+	}
+	bool2String := map[bool]string{false: "0", true: "1"}
+	if jsonPayload.UseCookie != nil {
+		requestData["use_cookie"] = bool2String[*jsonPayload.UseCookie]
+	}
+	if jsonPayload.CookieSecure != nil {
+		requestData["cookie_secure"] = bool2String[*jsonPayload.CookieSecure]
+	}
+	if jsonPayload.CookieSameSite != nil {
+		requestData["cookie_same_site"] = bool2String[*jsonPayload.CookieSameSite]
+	}
+	return service.NoError
+}
+
+func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, service.APIError) {
+	for _, flagName := range []string{"use_cookie", "cookie_secure", "cookie_same_site"} {
+		if stringValue, ok := requestData[flagName]; ok {
+			if _, ok = map[string]bool{"0": false, "1": true}[stringValue.(string)]; !ok {
+				return nil, service.ErrInvalidRequest(fmt.Errorf("wrong value for %s (should have a boolean value (0 or 1))", flagName))
+			}
+			delete(requestData, flagName)
+			if stringValue == "1" {
+				requestData[flagName] = true
+			}
+		}
 	}
 	return requestData, service.NoError
 }
 
-func extractOptionalParameter(query url.Values, paramName string, requestData map[string]string) {
+func extractOptionalParameter(query url.Values, paramName string, requestData map[string]interface{}) {
 	if len(query[paramName]) != 0 {
 		requestData[paramName] = query.Get(paramName)
 	}

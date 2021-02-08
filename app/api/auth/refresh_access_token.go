@@ -10,8 +10,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"golang.org/x/oauth2"
 
-	"github.com/go-chi/render"
-
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -41,12 +39,17 @@ func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() 
 var userIDsInProgress userIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
+	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
+	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
+	if apiError != service.NoError {
+		return apiError
+	}
+
 	user := srv.GetUser(r)
 	oldAccessToken := auth.BearerTokenFromContext(r.Context())
 
 	var newToken string
 	var expiresIn int32
-	apiError := service.NoError
 
 	if user.IsTempUser {
 		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -55,7 +58,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 				user.GroupID, oldAccessToken).Error())
 			var err error
-			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.GroupID)
+			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.GroupID, cookieAttributes)
 			return err
 		}))
 	} else {
@@ -63,7 +66,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 		// usage of the old refresh token for that reason.
 		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), user, oldAccessToken)
+			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), user, oldAccessToken, cookieAttributes)
 			return nil
 		}))
 	}
@@ -71,16 +74,13 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	if apiError != service.NoError {
 		return apiError
 	}
-
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"access_token": newToken,
-		"expires_in":   expiresIn,
-	})))
-
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
+		cookieAttributes)
 	return service.NoError
 }
 
-func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (
+func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string,
+	cookieAttributes *database.SessionCookieAttributes) (
 	newToken string, expiresIn int32, apiError service.APIError) {
 	var refreshToken string
 	err := srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
@@ -101,7 +101,8 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 		service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 			user.GroupID, oldAccessToken).Error())
 		// insert the new access token
-		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token))
+		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token.AccessToken,
+			int32(time.Until(token.Expiry)/time.Second), "login-module", cookieAttributes))
 		if refreshToken != token.RefreshToken {
 			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
 				UpdateColumn("refresh_token", token.RefreshToken).Error())
