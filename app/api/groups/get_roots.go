@@ -37,7 +37,7 @@ type groupRootsViewResponseRow struct {
 //   and do not have parents, not considering "type='Base'" groups
 // responses:
 //   "200":
-//     description: OK. Success response with an array root groups
+//     description: OK. Success response with an array of root groups
 //     schema:
 //       type: array
 //       items:
