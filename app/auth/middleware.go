@@ -30,6 +30,11 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 				database.SessionCookieAttributes
 			}
 			var authorized bool
+
+			if cookie, cookieErr := r.Cookie("access_token"); cookieErr == nil {
+				accessToken = cookie.Value
+			}
+
 			for _, authValue := range r.Header["Authorization"] {
 				parsedAuthValue := strings.SplitN(authValue, " ", 3)
 				// credentials = "Bearer" 1*SP b64token (see https://tools.ietf.org/html/rfc6750#section-2.1)

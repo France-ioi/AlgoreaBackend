@@ -23,6 +23,7 @@ func TestUserMiddleware(t *testing.T) {
 	tests := []struct {
 		name                     string
 		authHeaders              []string
+		cookieHeaders            []string
 		expectedAccessToken      string
 		userIDReturnedByDB       int64
 		dbError                  error
@@ -111,6 +112,37 @@ func TestUserMiddleware(t *testing.T) {
 			expectedBody:             "user_id:890123",
 		},
 		{
+			name:                     "accepts access token from cookies",
+			cookieHeaders:            []string{"cookie=something;access_token=1234567;key=value"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
+		},
+		{
+			name: "takes the first access token from cookies",
+			cookieHeaders: []string{
+				"cookie=something;access_token=1234567;key=value;access_token=2489101",
+				"cookie=5678901234",
+			},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
+		},
+		{
+			name:                     "prefers an access token from the Authorization header if both cookie and the Authorization header are given",
+			authHeaders:              []string{"Bearer 1234567"},
+			cookieHeaders:            []string{"cookie=5678901234"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
+		},
+		{
 			name:                     "sets user attributes",
 			authHeaders:              []string{"Bearer 1234567"},
 			expectedAccessToken:      "1234567",
@@ -138,7 +170,8 @@ func TestUserMiddleware(t *testing.T) {
 			logHook, restoreFunc := logging.MockSharedLoggerHook()
 			defer restoreFunc()
 
-			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.userIDReturnedByDB, tt.dbError)
+			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.cookieHeaders,
+				tt.userIDReturnedByDB, tt.dbError)
 			defer func() { _ = resp.Body.Close() }()
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
@@ -156,7 +189,7 @@ func TestUserMiddleware(t *testing.T) {
 	}
 }
 
-func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []string,
+func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, cookieHeaders []string,
 	userID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
 	dbmock, mock := database.NewDBMock()
 	defer func() { _ = dbmock.Close() }()
@@ -205,6 +238,9 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, nil)
 	for _, header := range authorizationHeaders {
 		mainRequest.Header.Add("Authorization", header)
+	}
+	for _, header := range cookieHeaders {
+		mainRequest.Header.Add("Cookie", header)
 	}
 	client := &http.Client{}
 	resp, _ := client.Do(mainRequest)
