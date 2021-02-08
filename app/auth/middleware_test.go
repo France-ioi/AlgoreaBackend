@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -109,6 +110,26 @@ func TestUserMiddleware(t *testing.T) {
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
 		},
+		{
+			name:                     "sets user attributes",
+			authHeaders:              []string{"Bearer 1234567"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody: `User:{"GroupID":890123,"Login":"login","LoginID":12345,"DefaultLanguage":"fr",` +
+				`"IsAdmin":true,"IsTempUser":true,"AccessGroupID":23456,"AllowSubgroups":true,"NotificationsReadAt":"2019-05-30T11:00:00Z"}`,
+		},
+		{
+			name:                     "sets cookie attributes",
+			authHeaders:              []string{"Bearer 1234567"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody: `CookieAttributes:{"UseCookie":true,"Secure":true,"SameSite":true,"Domain":"somedomain.org",` +
+				`"Path":"/api/"}`,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -143,7 +164,8 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
 				"SELECT users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id, "+
-					"users.temp_user, users.allow_subgroups, users.notifications_read_at, users.default_language "+
+					"users.temp_user, users.allow_subgroups, users.notifications_read_at, users.default_language, "+
+					"sessions.use_cookie, sessions.cookie_secure, sessions.cookie_same_site, sessions.cookie_domain, sessions.cookie_path "+
 					"FROM `sessions` "+
 					"JOIN users ON users.group_id = sessions.user_id "+
 					"WHERE (access_token = ?) AND (expires_at > NOW()) LIMIT 1") +
@@ -151,9 +173,12 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
-			neededRows := mock.NewRows([]string{"group_id"})
+			neededRows := mock.NewRows([]string{"group_id", "login", "login_id", "is_admin", "access_group_id", "temp_user",
+				"allow_subgroups", "notifications_read_at", "default_language", "use_cookie", "cookie_secure", "cookie_same_site",
+				"cookie_domain", "cookie_path"})
 			if userID != 0 {
-				neededRows = neededRows.AddRow(userID)
+				neededRows = neededRows.AddRow(userID, "login", "12345", int64(1), int64(23456), int64(1), int64(1),
+					[]byte("2019-05-30 11:00:00"), "fr", int64(1), int64(1), int64(1), "somedomain.org", "/api/")
 			}
 			expectation.WillReturnRows(neededRows)
 		}
@@ -165,7 +190,10 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string)
+		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes))
+		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))
+		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string) +
+			"\nCookieAttributes:" + string(cookieAttributes) + "\nUser:" + string(userAttributes)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))

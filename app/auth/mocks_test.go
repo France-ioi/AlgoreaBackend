@@ -17,6 +17,7 @@ func TestMiddlewareMock(t *testing.T) {
 	middleware := MockUserMiddleware(&database.User{GroupID: 42})
 	ts := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := UserFromContext(r.Context())
+		assert.NotNil(SessionCookieAttributesFromContext(r.Context()))
 		_, _ = w.Write([]byte(strconv.FormatInt(user.GroupID, 10)))
 	})))
 	defer ts.Close()

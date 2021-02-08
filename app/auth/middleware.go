@@ -16,6 +16,7 @@ type ctxKey int
 const (
 	ctxUser ctxKey = iota
 	ctxBearer
+	ctxSessionCookieAttributes
 )
 
 // UserMiddleware is a middleware retrieving a user from the request content.
@@ -24,7 +25,10 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var accessToken string
-			var user database.User
+			var dbData struct {
+				database.User
+				database.SessionCookieAttributes
+			}
 			var authorized bool
 			for _, authValue := range r.Header["Authorization"] {
 				parsedAuthValue := strings.SplitN(authValue, " ", 3)
@@ -47,10 +51,12 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 					Select(`
 						users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notifications_read_at,
-						users.default_language`).
+						users.default_language,
+						sessions.use_cookie, sessions.cookie_secure, sessions.cookie_same_site,
+						sessions.cookie_domain, sessions.cookie_path`).
 					Joins("JOIN users ON users.group_id = sessions.user_id").
 					Where("access_token = ?", accessToken).
-					Where("expires_at > NOW()").Take(&user).
+					Where("expires_at > NOW()").Take(&dbData).
 					Error()
 				authorized = err == nil
 				if err != nil && !gorm.IsRecordNotFoundError(err) {
@@ -70,7 +76,8 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 			}
 
 			ctx := context.WithValue(r.Context(), ctxBearer, accessToken)
-			ctx = context.WithValue(ctx, ctxUser, &user)
+			ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &dbData.SessionCookieAttributes)
+			ctx = context.WithValue(ctx, ctxUser, &dbData.User)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
