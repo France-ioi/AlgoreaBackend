@@ -5,6 +5,7 @@ package testhelpers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -112,11 +113,41 @@ func compareStrings(expected, actual string) error {
 }
 
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
-	if ctx.lastResponse.Header.Get(headerName) != headerValue {
-		return fmt.Errorf("headers %s different from expected. Expected: %s, got: %s",
-			headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
+	headerValue, err = ctx.preprocessString(headerValue)
+	if err != nil {
+		return err
+	}
+	headerName = http.CanonicalHeaderKey(headerName)
+	if headerValue != "[NULL]" {
+		if len(ctx.lastResponse.Header[headerName]) == 0 {
+			return fmt.Errorf("no such header '%s' in the response", headerName)
+		}
+		realValue := strings.Join(ctx.lastResponse.Header[headerName], "\n")
+		if realValue != headerValue {
+			return fmt.Errorf("headers %s different from expected.\nExpected:\n%s\ngot:\n%s",
+				headerName, headerValue, realValue)
+		}
+	} else if len(ctx.lastResponse.Header[headerName]) != 0 {
+		return fmt.Errorf("there should not be a '%s' header, but at least one is found", headerName)
 	}
 	return nil
+}
+
+func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersValue *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+	headerValue, err := ctx.preprocessString(headersValue.Content)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(headerValue, "\n")
+	trimmed := make([]string, 0, len(lines))
+	for i := range lines {
+		lines[i] = strings.TrimSpace(lines[i])
+		if lines[i] != "" {
+			trimmed = append(trimmed, lines[i])
+		}
+	}
+	headerValue = strings.Join(trimmed, "\n")
+	return ctx.TheResponseHeaderShouldBe(headerName, headerValue)
 }
 
 func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { // nolint
