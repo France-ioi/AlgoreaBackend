@@ -43,7 +43,8 @@ func Middleware(domains []ConfigItem) func(next http.Handler) http.Handler {
 				_, _ = w.Write(data)
 				return
 			}
-			ctx := context.WithValue(r.Context(), ctxDomainConfig, configuration)
+			ctx := context.WithValue(
+				context.WithValue(r.Context(), ctxDomainConfig, configuration), ctxDomain, domain)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
