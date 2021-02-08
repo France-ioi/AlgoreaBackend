@@ -228,7 +228,9 @@ Feature: Export the current user's data
       "sessions": [
         {
           "user_id": "11", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
-          "issued_at": "2019-07-16T22:02:28Z", "issuer": null
+          "issued_at": "2019-07-16T22:02:28Z", "issuer": null,
+          "use_cookie": 0, "cookie_secure": 0, "cookie_same_site": 0, "cookie_domain": null,
+          "cookie_path": null
         }
       ],
       "answers": [
@@ -272,7 +274,9 @@ Feature: Export the current user's data
       "sessions": [
         {
           "user_id": "31", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
-          "issued_at": "2019-07-16T22:02:28Z", "issuer": null
+          "issued_at": "2019-07-16T22:02:28Z", "issuer": null,
+          "use_cookie": 0, "cookie_secure": 0, "cookie_same_site": 0, "cookie_domain": null,
+          "cookie_path": null
         }
       ],
       "answers": []
