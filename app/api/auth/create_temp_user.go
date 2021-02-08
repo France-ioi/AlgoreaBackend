@@ -19,7 +19,7 @@ import (
 // summary: Create a temporary user
 // description: Creates a temporary user and generates an access token valid for 2 hours
 //
-//   * No “Authorization” header should be present
+//   * None of “Authorization” header and "access_token" cookie should be present
 // parameters:
 // - name: use_cookie
 //   in: query
