@@ -345,8 +345,8 @@ func TestDataStore_InsertMap(t *testing.T) {
 	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL)")).
-		WithArgs(int64(1), "some value").
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?)")).
+		WithArgs(int64(1), "some value", nil).
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").InsertMap(dataRow))
@@ -360,9 +360,9 @@ func TestDataStore_InsertOrUpdateMap(t *testing.T) {
 	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL) "+
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?) "+
 		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
-		WithArgs(int64(1), "some value").
+		WithArgs(int64(1), "some value", nil).
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
@@ -380,9 +380,9 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 	}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?), (?, ?, NULL) "+
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?), (?, ?, ?) "+
 		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
-		WithArgs(int64(1), "some value", "value", int64(2), "another value").
+		WithArgs(int64(1), "some value", "value", int64(2), "another value", nil).
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").

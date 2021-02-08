@@ -486,12 +486,8 @@ func (conn *DB) constructInsertMapsStatement(dataMaps []map[string]interface{}, 
 	for index, dataMap := range dataMaps {
 		_, _ = builder.WriteRune('(')
 		for keyIndex, key := range keys {
-			if dataMap[key] == nil {
-				_, _ = builder.WriteString("NULL")
-			} else {
-				_, _ = builder.WriteRune('?')
-				values = append(values, dataMap[key])
-			}
+			_, _ = builder.WriteRune('?')
+			values = append(values, dataMap[key])
 			if keyIndex != len(keys)-1 {
 				_, _ = builder.WriteString(", ")
 			}
