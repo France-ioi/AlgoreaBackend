@@ -39,7 +39,7 @@ func TestCreateNewTempSession(t *testing.T) {
 			assert.Equal(t, expectedCookieAttributes, cookieAttributes)
 			return nil
 		})
-	defer patch.Restore()
+	defer patch.Unpatch()
 
 	accessToken, expireIn, err := CreateNewTempSession(sessionStore, expectedUserID, expectedCookieAttributes)
 	assert.NoError(t, err)
@@ -87,7 +87,7 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 			}
 			return nil
 		})
-	defer patch.Restore()
+	defer patch.Unpatch()
 
 	accessToken, expireIn, err := CreateNewTempSession(
 		database.NewDataStore(db).Sessions(), expectedUserID, &database.SessionCookieAttributes{})
@@ -149,7 +149,7 @@ func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 			assert.Equal(t, expectedCookieAttributes, cookieAttributes)
 			return expectedError
 		})
-	defer patch.Restore()
+	defer patch.Unpatch()
 
 	accessToken, expireIn, err := CreateNewTempSession(
 		database.NewDataStore(db).Sessions(), expectedUserID, &database.SessionCookieAttributes{})
