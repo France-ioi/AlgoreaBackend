@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -8,8 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"bou.ke/monkey"
 	"github.com/go-chi/chi"
-	assertlib "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
@@ -71,16 +74,14 @@ func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
 			list, err := ResolveURLQueryGetInt64SliceField(req, "ids")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(err, testCase.expectedErrMsg)
+				assert.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(err)
+				assert.NoError(t, err)
 			}
-			assert.Equal(testCase.expectedList, list)
+			assert.Equal(t, testCase.expectedList, list)
 		})
 	}
 }
@@ -132,19 +133,17 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			r := chi.NewRouter()
 			called := false
 			handler := func(w http.ResponseWriter, r *http.Request) {
 				called = true
 				value, err := ResolveURLQueryPathInt64Field(r, "id")
 				if testCase.expectedErrMsg != "" {
-					assert.EqualError(err, testCase.expectedErrMsg)
+					assert.EqualError(t, err, testCase.expectedErrMsg)
 				} else {
-					assert.NoError(err)
+					assert.NoError(t, err)
 				}
-				assert.Equal(testCase.expectedValue, value)
+				assert.Equal(t, testCase.expectedValue, value)
 			}
 			r.Get(testCase.routeString, handler)
 
@@ -155,7 +154,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 				_ = response.Body.Close()
 			}
 			ts.Close()
-			assert.True(called, "The handler was not called")
+			assert.True(t, called, "The handler was not called")
 		})
 	}
 }
@@ -214,19 +213,17 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			called := false
 			r := chi.NewRouter()
 			handler := func(w http.ResponseWriter, r *http.Request) {
 				called = true
 				value, err := ResolveURLQueryPathInt64SliceField(r, "ids")
 				if testCase.expectedErrMsg != "" {
-					assert.EqualError(err, testCase.expectedErrMsg)
+					assert.EqualError(t, err, testCase.expectedErrMsg)
 				} else {
-					assert.NoError(err)
+					assert.NoError(t, err)
 				}
-				assert.Equal(testCase.expectedList, value)
+				assert.Equal(t, testCase.expectedList, value)
 			}
 			r.Get(`/{ids:.*}something`, handler)
 			ts := httptest.NewServer(r)
@@ -236,7 +233,7 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 				_ = response.Body.Close()
 			}
 			ts.Close()
-			assert.True(called, "The handler was not called")
+			assert.True(t, called, "The handler was not called")
 		})
 	}
 }
@@ -270,16 +267,14 @@ func TestResolveURLQueryGetStringField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
 			list, err := ResolveURLQueryGetStringField(req, "name")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(err, testCase.expectedErrMsg)
+				assert.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(err)
+				assert.NoError(t, err)
 			}
-			assert.Equal(testCase.expectedValue, list)
+			assert.Equal(t, testCase.expectedValue, list)
 		})
 	}
 }
@@ -325,16 +320,14 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
 			list, err := ResolveURLQueryGetBoolField(req, "flag")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(err, testCase.expectedErrMsg)
+				assert.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(err)
+				assert.NoError(t, err)
 			}
-			assert.Equal(testCase.expectedValue, list)
+			assert.Equal(t, testCase.expectedValue, list)
 		})
 	}
 }
@@ -366,16 +359,14 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
 			dateTime, err := ResolveURLQueryGetTimeField(req, "time")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(err, testCase.expectedErrMsg)
+				assert.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(err)
+				assert.NoError(t, err)
 			}
-			assert.True(testCase.expectedValue.Equal(dateTime))
+			assert.True(t, testCase.expectedValue.Equal(dateTime))
 		})
 	}
 }
@@ -427,16 +418,14 @@ func TestResolveURLQueryGetStringSliceField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
 			list, err := ResolveURLQueryGetStringSliceField(req, "values")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(err, testCase.expectedErrMsg)
+				assert.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(err)
+				assert.NoError(t, err)
 			}
-			assert.Equal(testCase.expectedList, list)
+			assert.Equal(t, testCase.expectedList, list)
 		})
 	}
 }
@@ -506,91 +495,67 @@ func TestResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(t *testi
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			assert := assertlib.New(t)
-
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
 			list, err := ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(req, "fruits",
 				map[string]bool{"apple": true, "orange": true, "pear": true})
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(err, testCase.expectedErrMsg)
+				assert.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(err)
+				assert.NoError(t, err)
 			}
 			sort.Strings(list)
 			sort.Strings(testCase.expectedList)
-			assert.Equal(testCase.expectedList, list)
+			assert.Equal(t, testCase.expectedList, list)
 		})
 	}
 }
 
-func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
+func TestResolveURLQueryPathInt64SliceFieldWithLimit(t *testing.T) {
+	expectedRequest := &http.Request{}
+	expectedParamName := "param_name"
+	expectedError := errors.New("some error")
 	tests := []struct {
-		name  string
-		dbMap []map[string]interface{}
-		want  []map[string]interface{}
+		name       string
+		limit      int
+		mockResult []int64
+		mockError  error
+		want       []int64
+		wantErr    error
 	}{
 		{
-			"nested structures",
-			[]map[string]interface{}{{
-				"User__ID":            int64(1),
-				"Item__String__Title": "Chapter 1",
-				"Item__String__ID":    "2",
-			}},
-			[]map[string]interface{}{
-				{
-					"User": map[string]interface{}{"ID": "1"},
-					"Item": map[string]interface{}{"String": map[string]interface{}{"Title": "Chapter 1", "ID": "2"}},
-				},
-			},
+			name:       "normal",
+			limit:      10,
+			mockResult: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			want:       []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		},
 		{
-			"keeps nil fields",
-			[]map[string]interface{}{{"TheGreatestUser": nil, "otherField": 1}},
-			[]map[string]interface{}{{"TheGreatestUser": nil, "otherField": 1}},
+			name:       "limit",
+			limit:      2,
+			mockResult: []int64{1, 2, 3},
+			want:       nil,
+			wantErr:    fmt.Errorf("no more than %d %s expected", 2, expectedParamName),
 		},
 		{
-			"replaces empty sub-maps with nils",
-			[]map[string]interface{}{{"the_greatest_user": nil, "empty_sub_map__field1": nil, "empty_sub_map__field2": nil}},
-			[]map[string]interface{}{{"the_greatest_user": nil, "empty_sub_map": nil}},
-		},
-		{
-			"converts int64 into string",
-			[]map[string]interface{}{{
-				"int64":             int64(123),
-				"int32":             int32(1234),
-				"nbCorrectionsRead": int64(12345),
-				"iGrade":            int64(-1),
-			}}, // gorm returns numbers as int64
-			[]map[string]interface{}{{
-				"int64":             "123",
-				"int32":             int32(1234),
-				"nbCorrectionsRead": "12345",
-				"iGrade":            "-1",
-			}},
-		},
-		{
-			"handles datetime",
-			[]map[string]interface{}{{
-				"my_date":   "2019-05-30 11:00:00",
-				"null_date": nil,
-			}},
-			[]map[string]interface{}{{
-				"my_date":   "2019-05-30T11:00:00Z",
-				"null_date": nil,
-			}},
+			name:       "error",
+			limit:      2,
+			mockResult: []int64{1, 2, 3},
+			mockError:  expectedError,
+			wantErr:    expectedError,
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConvertSliceOfMapsFromDBToJSON(tt.dbMap)
-			assertlib.Equal(t, tt.want, got)
+			patch := monkey.Patch(ResolveURLQueryPathInt64SliceField, func(r *http.Request, paramName string) ([]int64, error) {
+				assert.Equal(t, expectedRequest, r)
+				assert.Equal(t, expectedParamName, paramName)
+				return tt.mockResult, tt.mockError
+			})
+			defer patch.Unpatch()
+
+			got, err := ResolveURLQueryPathInt64SliceFieldWithLimit(expectedRequest, expectedParamName, tt.limit)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.wantErr, err)
 		})
 	}
-}
-
-func TestConvertSliceOfMapsFromDBToJSON_PanicsWhenDatetimeIsInvalid(t *testing.T) {
-	assertlib.Panics(t, func() {
-		ConvertSliceOfMapsFromDBToJSON([]map[string]interface{}{{"some_date": "1234:13:05 24:60:60"}})
-	})
 }
