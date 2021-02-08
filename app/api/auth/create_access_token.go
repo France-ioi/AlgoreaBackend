@@ -78,7 +78,7 @@ const parsedRequestData ctxKey = iota
 //   default: 0
 // - name: cookie_same_site
 //   in: query
-//   description: If 1, set the cookie with the `SameSite`='Strict' attribute value (instead of `SameSite`='None')
+//   description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //   type: integer
 //   enum: [0,1]
 //   default: 0
@@ -105,7 +105,7 @@ const parsedRequestData ctxKey = iota
 //         description: If true, set the cookie with the `Secure` attribute
 //       cookie_same_site:
 //         type: boolean
-//         description: If true, set the cookie with the `SameSite`='Strict' attribute value (instead of `SameSite`='None')
+//         description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 // responses:
 //   "201":
 //     description: "Created. Success response with the new access token"

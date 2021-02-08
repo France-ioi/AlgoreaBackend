@@ -35,7 +35,7 @@ import (
 //   default: 0
 // - name: cookie_same_site
 //   in: query
-//   description: If 1, set the cookie with the `SameSite`='Strict' attribute value (instead of `SameSite`='None')
+//   description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //   type: integer
 //   enum: [0,1]
 //   default: 0
