@@ -20,7 +20,7 @@ type userCreateTmpResponse struct {
 	CreatedResponse
 	// required:true
 	Data struct {
-		// required:true
+		// Only if the cookie is not enabled
 		AccessToken string `json:"access_token"`
 		// Number of seconds until the token's expiration
 		// (when received by the UI, must be converted to actual time)

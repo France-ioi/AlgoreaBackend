@@ -31,14 +31,17 @@ const parsedRequestData ctxKey = iota
 // ---
 // summary: Create or refresh an access token
 // description:
-//     If the "Authorization" header is not given, the service converts the given OAuth2 authorization code into tokens,
+//     If none of the "Authorization" header and "access_token" cookie are given,
+//     the service converts the given OAuth2 authorization code into tokens,
 //     creates or updates the authenticated user in the DB with the data returned by the login module,
 //     and saves new access & refresh tokens into the DB as well.
 //     If OAuth2 authentication has used the PKCE extension, the `{code_verifier}` should be provided
 //     so it can be sent together with the `{code}` to the authentication server.
 //
 //
-//     If the "Authorization" header is given, the service refreshes the access token
+//     If the "Authorization" header or/and the "access_token" is given
+//     (when both are given, the "Authorization" header is used),
+//     the service refreshes the access token
 //     (locally for temporary users or via the login module for normal users) and
 //     saves it into the DB keeping only the input token (from authorization headers) and the new token.
 //     Since the login module responds with both access and refresh tokens, the service updates the user's
@@ -46,7 +49,8 @@ const parsedRequestData ctxKey = iota
 //     the 'not found' error is returned.
 //
 //
-//   * One of the “Authorization” header and the `{code}` parameter should be present (not both at once).
+//   * One of the access token (via “Authorization” header or "access_token" cookie)
+//     and the `{code}` parameter should be present (not both at once).
 // security: []
 // consumes:
 //   - application/json
