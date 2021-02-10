@@ -3,6 +3,7 @@ Feature: Update item
 Background:
   Given the database has the following table 'groups':
     | id | name | type |
+    | 10 | Club | Club |
     | 11 | jdoe | User |
   And the database has the following table 'users':
     | login | temp_user | group_id |
@@ -24,16 +25,21 @@ Background:
     | 50               | 60            |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | is_owner_generated |
+    | 10       | 50      | content_with_descendants | solution_with_grant      | all                | true               |
     | 11       | 21      | content                  | none                     | children           | false              |
-    | 11       | 50      | content_with_descendants | solution_with_grant      | all                | true               |
+    | 11       | 50      | none                     | none                     | none               | false              |
     | 11       | 60      | solution                 | solution_with_grant      | all_with_grant     | true               |
     | 11       | 70      | content                  | solution_with_grant      | all_with_grant     | true               |
   And the database has the following table 'permissions_granted':
     | group_id | item_id | can_view | is_owner | source_group_id | latest_update_at    |
+    | 10       | 50      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 21      | content  | false    | 11              | 2019-05-30 11:00:00 |
-    | 11       | 50      | none     | true     | 11              | 2019-05-30 11:00:00 |
+    | 11       | 50      | none     | false    | 11              | 2019-05-30 11:00:00 |
     | 11       | 60      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 70      | none     | true     | 11              | 2019-05-30 11:00:00 |
+  And the database has the following table 'groups_groups':
+    | parent_group_id | child_group_id |
+    | 10              | 11             |
   And the groups ancestors are computed
   And the database has the following table 'attempts':
     | id | participant_id |
@@ -137,12 +143,14 @@ Background:
       | 50               | 134           |
     And the table "groups" should be:
       | id                  | type                | name            |
+      | 10                  | Club                | Club            |
       | 11                  | User                | jdoe            |
       | 5577006791947779410 | ContestParticipants | 50-participants |
     And the table "permissions_granted" should be:
       | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
+      | 10                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
       | 11                  | 21      | content  | none           | none      | none     | false    | 11                  | 0                                                       |
-      | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
+      | 11                  | 50      | none     | none           | none      | none     | false    | 11                  | 0                                                       |
       | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
       | 11                  | 70      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
       | 11                  | 112     | solution | content        | answer    | all      | false    | 11                  | 0                                                       |
@@ -150,8 +158,11 @@ Background:
       | 5577006791947779410 | 50      | content  | none           | none      | none     | false    | 5577006791947779410 | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 10                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 10                  | 112     | info               | none                     | none                | none               | false              |
+      | 10                  | 134     | solution           | solution                 | answer              | all                | false              |
       | 11                  | 21      | content            | none                     | none                | none               | false              |
-      | 11                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11                  | 50      | none               | none                     | none                | none               | false              |
       | 11                  | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11                  | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11                  | 112     | solution           | content                  | answer              | all                | false              |
@@ -216,12 +227,16 @@ Background:
       | 70               | 134           |
     And the table "groups" should be:
       | id | type | name |
+      | 10 | Club | Club |
       | 11 | User | jdoe |
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 10       | 21      | none               | none                     | none                | none               | false              |
+      | 10       | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 10       | 60      | none               | none                     | none                | none               | false              |
       | 11       | 21      | content            | none                     | none                | none               | false              |
-      | 11       | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 50      | none               | none                     | none                | none               | false              |
       | 11       | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
@@ -283,13 +298,17 @@ Background:
       | 50               | 21            |
       | 50               | 112           |
     And the table "groups" should be:
-      | id                  | type                | name            |
-      | 11                  | User                | jdoe            |
+      | id | type | name |
+      | 10 | Club | Club |
+      | 11 | User | jdoe |
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 10       | 21      | none               | none                     | none                | none               | false              |
+      | 10       | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 10       | 112     | none               | none                     | none                | none               | false              |
       | 11       | 21      | content            | none                     | none                | none               | false              |
-      | 11       | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 11       | 50      | none               | none                     | none                | none               | false              |
       | 11       | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |

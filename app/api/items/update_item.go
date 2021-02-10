@@ -128,7 +128,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		var itemInfo struct {
 			ParticipantsGroupID   *int64
 			Type                  string
-			CanEditGenerated      string
+			CanEditGeneratedValue int
 			Duration              *string
 			RequiresExplicitEntry bool
 		}
@@ -138,7 +138,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			HavingMaxPermissionAtLeast("view", "content").
 			HavingMaxPermissionAtLeast("edit", "children").
 			Select(`
-				items.participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated,
+				items.participants_group_id, items.type, MAX(can_edit_generated_value) AS can_edit_generated_value,
 				items.duration, items.requires_explicit_entry`).
 			Group("item_id").
 			Scan(&itemInfo).Error()
@@ -171,8 +171,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		}
 
 		if len(itemData) > 0 &&
-			store.PermissionsGranted().PermissionIndexByKindAndName("edit", itemInfo.CanEditGenerated) <
-				store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all") {
+			itemInfo.CanEditGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all") {
 			apiError = service.ErrForbidden(errors.New("no access rights to edit the item's properties"))
 			return apiError.Error // rollback
 		}
