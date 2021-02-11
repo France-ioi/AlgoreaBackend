@@ -16,8 +16,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type itemWithDefaultLanguageTag struct {
-	Item item `json:"item,squash"`
+// ItemWithDefaultLanguageTag represents common item fields plus 'default_language_tag'
+type ItemWithDefaultLanguageTag struct {
+	Item `json:"item,squash"`
 	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
 	// minLength: 1
@@ -28,7 +29,7 @@ type itemWithDefaultLanguageTag struct {
 // updateItemRequest is the expected input for item updating
 // swagger:model itemEditRequest
 type updateItemRequest struct {
-	itemWithDefaultLanguageTag `json:"item,squash"`
+	ItemWithDefaultLanguageTag `json:"item,squash"`
 	Children                   []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 
 	childrenIDsCache []int64
@@ -128,7 +129,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		var itemInfo struct {
 			ParticipantsGroupID   *int64
 			Type                  string
-			CanEditGenerated      string
+			CanEditGeneratedValue int
 			Duration              *string
 			RequiresExplicitEntry bool
 		}
@@ -138,7 +139,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			HavingMaxPermissionAtLeast("view", "content").
 			HavingMaxPermissionAtLeast("edit", "children").
 			Select(`
-				items.participants_group_id, items.type, MAX(can_edit_generated) AS can_edit_generated,
+				items.participants_group_id, items.type, MAX(can_edit_generated_value) AS can_edit_generated_value,
 				items.duration, items.requires_explicit_entry`).
 			Group("item_id").
 			Scan(&itemInfo).Error()
@@ -165,14 +166,13 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return err // rollback
 		}
 
-		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageTag")
+		itemData := formData.ConstructPartialMapForDB("ItemWithDefaultLanguageTag")
 		if len(itemData) == 0 && !formData.IsSet("children") {
 			return nil // Nothing to do
 		}
 
 		if len(itemData) > 0 &&
-			store.PermissionsGranted().PermissionIndexByKindAndName("edit", itemInfo.CanEditGenerated) <
-				store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all") {
+			itemInfo.CanEditGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all") {
 			apiError = service.ErrForbidden(errors.New("no access rights to edit the item's properties"))
 			return apiError.Error // rollback
 		}
@@ -274,7 +274,7 @@ func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator
 func constructUpdateItemDurationRequiresExplicitEntryValidator(
 	formData *formdata.FormData, duration *string, requiresExplicitEntry bool) validator.Func { // nolint:gocritic
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		data := fl.Parent().Addr().Interface().(*item)
+		data := fl.Parent().Addr().Interface().(*Item)
 		var changed bool
 		if formData.IsSet("duration") {
 			if (duration == nil) != (data.Duration == nil) {

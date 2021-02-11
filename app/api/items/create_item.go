@@ -16,7 +16,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type item struct {
+// Item represents input fields that are common to itemCreate & itemUpdate
+type Item struct {
 	// Nullable
 	URL *string `json:"url"`
 	// default: false
@@ -59,8 +60,9 @@ type item struct {
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 }
 
-type itemWithRequiredType struct {
-	Item item `json:"item,squash"`
+// ItemWithRequiredType represents common item fields plus the required type field
+type ItemWithRequiredType struct {
+	Item `json:"item,squash"`
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
 	// enum: Chapter,Task,Course,Skill
@@ -113,7 +115,7 @@ type NewItemRequest struct {
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
 	// Nullable fields are of pointer types
-	Item itemWithRequiredType `json:"item,squash"`
+	ItemWithRequiredType `json:"item,squash"`
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
@@ -253,7 +255,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formdata.FormData, input *NewItemRequest, itemID int64) {
 	if formData.IsSet("as_root_of_group_id") {
 		columnName := "root_activity_id"
-		if input.Item.Type == skill {
+		if input.Type == skill {
 			columnName = "root_skill_id"
 		}
 		service.MustNotBeError(
@@ -326,7 +328,7 @@ func constructTypeSkillValidator(parentInfo *parentItemInfo) validator.Func {
 // The validator checks that when the duration is given and is not null, the field is true.
 func constructDurationRequiresExplicitEntryValidator() validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		data := fl.Parent().Addr().Interface().(*item)
+		data := fl.Parent().Addr().Interface().(*Item)
 		return data.RequiresExplicitEntry || !fl.Field().IsValid()
 	})
 }
@@ -335,7 +337,7 @@ func constructDurationRequiresExplicitEntryValidator() validator.Func {
 func constructCannotBeSetForSkillsValidator() validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		return fl.Field().IsZero() ||
-			fl.Top().Elem().FieldByName("Item").FieldByName("Type").String() != skill
+			fl.Top().Elem().FieldByName("Type").String() != skill
 	})
 }
 
@@ -386,7 +388,7 @@ func constructChildrenAllowedValidator(
 			return true
 		}
 		var itemType string
-		itemTypeField := fl.Top().Elem().FieldByName("Item").FieldByName("Type")
+		itemTypeField := fl.Top().Elem().FieldByName("Type")
 		if itemTypeField.IsValid() {
 			itemType = itemTypeField.String()
 		} else {
@@ -402,7 +404,7 @@ func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAn
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 
-		itemType := fl.Top().Elem().FieldByName("Item").FieldByName("Type").String()
+		itemType := fl.Top().Elem().FieldByName("Type").String()
 		if itemType == skill {
 			return true
 		}
@@ -420,8 +422,7 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should be able to manage its children")
 	formData.RegisterValidation("parent_item_type", constructParentItemTypeValidator(parentInfo))
-	formData.RegisterTranslation("parent_item_type",
-		"parent item cannot be Task or Course")
+	formData.RegisterTranslation("parent_item_type", "parent item cannot be Task or Course")
 
 	formData.RegisterValidation("as_root_of_group_id", constructAsRootOfGroupIDValidator(store, user, formData))
 	formData.RegisterTranslation("as_root_of_group_id", "should exist and the user should be able to manage the group")
@@ -455,7 +456,7 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
 	newItemRequest *NewItemRequest) (itemID int64) {
-	itemMap := formData.ConstructPartialMapForDB("Item")
+	itemMap := formData.ConstructPartialMapForDB("ItemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
 	service.MustNotBeError(store.WithForeignKeyChecksDisabled(func(fkStore *database.DataStore) error {
