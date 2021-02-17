@@ -178,12 +178,5 @@ func (srv *Service) attemptIDOrParentAttemptID(r *http.Request) (
 }
 
 func idsFromRequest(r *http.Request) ([]int64, error) {
-	ids, err := service.ResolveURLQueryPathInt64SliceField(r, "ids")
-	if err != nil {
-		return nil, err
-	}
-	if len(ids) > 10 {
-		return nil, errors.New("no more than 10 ids expected")
-	}
-	return ids, nil
+	return service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", 10)
 }
