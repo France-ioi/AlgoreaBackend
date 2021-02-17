@@ -1,36 +1,36 @@
 Feature: Get breadcrumbs (groupBreadcrumbsView)
   Background:
     Given the database has the following table 'groups':
-      | id | name                                     | type    | is_public |
-      | 1  | Joined Base                              | Base    | false     |
-      | 2  | Managed Base                             | Base    | false     |
-      | 3  | Base                                     | Base    | false     |
-      | 4  | Joined Class                             | Class   | false     |
-      | 5  | School                                   | Club    | false     |
-      | 6  | Joined Team                              | Team    | false     |
-      | 7  | Joined By Ancestor Team                  | Class   | false     |
-      | 8  | Ancestor Team                            | Team    | false     |
-      | 9  | Managed Class                            | Class   | false     |
-      | 10 | Managed By Ancestor Team                 | Class   | false     |
-      | 11 | Ancestor Team                            | Team    | false     |
-      | 12 | Managed Ancestor                         | Base    | false     |
-      | 13 | Root With Managed Ancestor               | Friends | false     |
-      | 14 | Root With Managed Descendant             | Other   | false     |
-      | 15 | Managed Descendant                       | Team    | false     |
-      | 16 | Joined By Ancestor                       | Class   | false     |
-      | 17 | Intermediate Group                       | Class   | false     |
-      | 18 | Ancestor                                 | Class   | false     |
-      | 19 | Managed By Ancestor                      | Class   | false     |
-      | 20 | Intermediate Group                       | Base    | false     |
-      | 21 | Ancestor                                 | Base    | false     |
-      | 22 | Root With Descendant Managed By Ancestor | Other   | false     |
-      | 23 | Descendant Managed By Ancestor           | Class   | false     |
-      | 24 | Intermediate Group                       | Base    | false     |
-      | 25 | Ancestor                                 | Base    | false     |
-      | 26 | Parent                                   | Class   | false     |
-      | 27 | Public                                   | Base    | true      |
-      | 41 | user                                     | User    | false     |
-      | 49 | User                                     | User    | false     |
+      | id | name                                | type    | is_public |
+      | 1  | Joined Base                         | Base    | false     |
+      | 2  | Managed Base                        | Base    | false     |
+      | 3  | Base                                | Base    | false     |
+      | 4  | Joined Class                        | Class   | false     |
+      | 5  | School                              | Club    | false     |
+      | 6  | Joined Team                         | Team    | false     |
+      | 7  | Joined By Ancestor Team             | Class   | false     |
+      | 8  | Ancestor Team                       | Team    | false     |
+      | 9  | Managed Class                       | Class   | false     |
+      | 10 | Managed By Ancestor Team            | Class   | false     |
+      | 11 | Ancestor Team                       | Team    | false     |
+      | 12 | Managed Ancestor                    | Base    | false     |
+      | 13 | With Managed Ancestor               | Friends | false     |
+      | 14 | With Managed Descendant             | Other   | false     |
+      | 15 | Managed Descendant                  | Team    | false     |
+      | 16 | Joined By Ancestor                  | Class   | false     |
+      | 17 | Intermediate Group                  | Class   | false     |
+      | 18 | Ancestor                            | Class   | false     |
+      | 19 | Managed By Ancestor                 | Class   | false     |
+      | 20 | Intermediate Group                  | Base    | false     |
+      | 21 | Ancestor                            | Base    | false     |
+      | 22 | With Descendant Managed By Ancestor | Other   | false     |
+      | 23 | Descendant Managed By Ancestor      | Class   | false     |
+      | 24 | Intermediate Group                  | Base    | false     |
+      | 25 | Ancestor                            | Base    | false     |
+      | 26 | Parent                              | Class   | false     |
+      | 27 | Public                              | Base    | true      |
+      | 41 | user                                | User    | false     |
+      | 49 | User                                | User    | false     |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 41       | Jean-Michel | Blanquer  |
@@ -123,9 +123,9 @@ Feature: Get breadcrumbs (groupBreadcrumbsView)
       {"id": "4", "name": "Joined Class", "type": "Class"},
       {"id": "19", "name": "Managed By Ancestor", "type": "Class"},
       {"id": "27", "name": "Public", "type": "Base"},
-      {"id": "22", "name": "Root With Descendant Managed By Ancestor", "type": "Other"},
-      {"id": "13", "name": "Root With Managed Ancestor", "type": "Friends"},
-      {"id": "14", "name": "Root With Managed Descendant", "type": "Other"}
+      {"id": "22", "name": "With Descendant Managed By Ancestor", "type": "Other"},
+      {"id": "13", "name": "With Managed Ancestor", "type": "Friends"},
+      {"id": "14", "name": "With Managed Descendant", "type": "Other"}
     ]
     """
 
@@ -183,7 +183,7 @@ Feature: Get breadcrumbs (groupBreadcrumbsView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "14", "name": "Root With Managed Descendant", "type": "Other"},
+      {"id": "14", "name": "With Managed Descendant", "type": "Other"},
       {"id": "15", "name": "Managed Descendant", "type": "Team"}
     ]
     """
@@ -195,6 +195,6 @@ Feature: Get breadcrumbs (groupBreadcrumbsView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "13", "name": "Root With Managed Ancestor", "type": "Friends"}
+      {"id": "13", "name": "With Managed Ancestor", "type": "Friends"}
     ]
     """
