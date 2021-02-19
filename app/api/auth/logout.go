@@ -31,7 +31,7 @@ func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIEr
 	}))
 
 	cookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
-	if _, cookieErr := r.Cookie("access_token"); cookieErr == nil && cookieAttributes.UseCookie {
+	if cookieAttributes.UseCookie {
 		http.SetCookie(w, cookieAttributes.SessionCookie("", -1000))
 	}
 
