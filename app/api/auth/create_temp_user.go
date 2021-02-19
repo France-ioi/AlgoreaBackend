@@ -105,7 +105,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 			[]map[string]interface{}{{"parent_group_id": domainConfig.TempUsersGroupID, "child_group_id": userID}}))
 
 		var err error
-		token, expiresIn, err = auth.CreateNewTempSession(store.Sessions(), userID, cookieAttributes)
+		token, expiresIn, err = auth.CreateNewTempSession(store.Sessions(), userID)
 		return err
 	}))
 
@@ -114,7 +114,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 	return service.NoError
 }
 
-func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*database.SessionCookieAttributes, service.APIError) {
+func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, service.APIError) {
 	requestData, apiError := parseCookieAttributesForCreateTempUser(r)
 	if apiError != service.NoError {
 		return nil, apiError

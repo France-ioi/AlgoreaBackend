@@ -83,16 +83,16 @@ Feature: Create an access token
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be empty
     And the table "sessions" should be:
-      | expires_at          | user_id             | issuer       | issued_at           | access_token                | use_cookie   | cookie_secure   | cookie_same_site   | cookie_domain   | cookie_path   |
-      | 2020-07-16 22:02:28 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} | <use_cookie> | <cookie_secure> | <cookie_same_site> | <cookie_domain> | <cookie_path> |
+      | expires_at          | user_id             | issuer       | issued_at           | access_token                |
+      | 2020-07-16 22:02:28 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
       | user_id             | refresh_token                |
       | 5577006791947779410 | {{refresh_token_from_oauth}} |
   Examples:
-    | query                            | token_in_data                                  | expected_cookie                                                                                                                                              | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-    |                                  | "access_token": "{{access_token_from_oauth}}", | [NULL]                                                                                                                                                       | false      | false         | false            | null          | null        |
-    | &use_cookie=1&cookie_secure=1    |                                                | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None | true       | true          | false            | 127.0.0.1     | /           |
-    | &use_cookie=1&cookie_same_site=1 |                                                | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       | true       | false         | true             | 127.0.0.1     | /           |
+    | query                            | token_in_data                                  | expected_cookie                                                                                                                                                            |
+    |                                  | "access_token": "{{access_token_from_oauth}}", | [NULL]                                                                                                                                                                     |
+    | &use_cookie=1&cookie_secure=1    |                                                | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None |
+    | &use_cookie=1&cookie_same_site=1 |                                                | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
 
   Scenario Outline: Update an existing user
     Given the time now is "2019-07-16T22:02:28Z"
@@ -152,9 +152,9 @@ Feature: Create an access token
       | 2               | 13             |
     And the groups ancestors are computed
     And the database has the following table 'sessions':
-      | expires_at          | user_id | issuer       | issued_at           | access_token         | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 | false      | false         | false            | null          | null        |
-      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 | false      | false         | false            | null          | null        |
+      | expires_at          | user_id | issuer       | issued_at           | access_token         |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
+      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
     And the database has the following table 'refresh_tokens':
       | user_id | refresh_token         |
       | 11      | previousrefreshtoken1 |
@@ -196,10 +196,10 @@ Feature: Create an access token
     And the table "group_membership_changes" should be empty
     And the table "attempts" should stay unchanged
     And the table "sessions" should be:
-      | expires_at          | user_id | issuer       | issued_at           | access_token                | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        | false      | false         | false            | null          | null        |
-      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        | false      | false         | false            | null          | null        |
-      | 2020-07-16 22:02:48 | 11      | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} | false      | false         | false            | null          | null        |
+      | expires_at          | user_id | issuer       | issued_at           | access_token                |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        |
+      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        |
+      | 2020-07-16 22:02:48 | 11      | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
       | user_id | refresh_token                |
       | 11      | {{refresh_token_from_oauth}} |
@@ -326,8 +326,8 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "[NULL]"
     And the table "sessions" should be:
-      | user_id             | access_token                | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-      | 5577006791947779410 | {{access_token_from_oauth}} | false      | false         | false            | null          | null        |
+      | user_id             | access_token                |
+      | 5577006791947779410 | {{access_token_from_oauth}} |
   Examples:
     | content-type                      | data                                                                        |
     | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url         |
@@ -353,9 +353,9 @@ Feature: Create an access token
       | 2               | 13             |
     And the groups ancestors are computed
     And the database has the following table 'sessions':
-      | expires_at          | user_id | issuer       | issued_at           | access_token         | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 | false      | false         | false            | null          | null        |
-      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 | false      | false         | false            | null          | null        |
+      | expires_at          | user_id | issuer       | issued_at           | access_token         |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
+      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
     And the database has the following table 'refresh_tokens':
       | user_id | refresh_token         |
       | 11      | previousrefreshtoken1 |
@@ -402,14 +402,14 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "sessions" should be:
-      | user_id | access_token                | use_cookie | cookie_secure   | cookie_same_site   | cookie_domain | cookie_path |
-      | 11      | {{access_token_from_oauth}} | true       | <cookie_secure> | <cookie_same_site> | 127.0.0.1     | /           |
-      | 11      | previousaccesstoken1        | false      | false           | false              | null          | null        |
-      | 13      | previousaccesstoken2        | false      | false           | false              | null          | null        |
+      | user_id | access_token                |
+      | 11      | {{access_token_from_oauth}} |
+      | 11      | previousaccesstoken1        |
+      | 13      | previousaccesstoken2        |
     Examples:
-      | query                                                     | expected_cookie                                                                                                                                              | cookie_secure | cookie_same_site |
-      | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=1    | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=None | true          | false            |
-      | ?code={{code_from_oauth}}&use_cookie=1&cookie_same_site=1 | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; SameSite=Strict       | false         | true             |
+      | query                                                     | expected_cookie                                                                                                                                                            |
+      | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=1    | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=None |
+      | ?code={{code_from_oauth}}&use_cookie=1&cookie_same_site=1 | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; SameSite=Strict       |
 
   Scenario Outline: Accepts parameters from POST data and sets the cookie correctly
     Given the time now is "2019-07-17T01:02:29+03:00"
@@ -463,13 +463,13 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "sessions" should be:
-      | user_id             | access_token                | use_cookie | cookie_secure   | cookie_same_site   | cookie_domain | cookie_path |
-      | 5577006791947779410 | {{access_token_from_oauth}} | true       | <cookie_secure> | <cookie_same_site> | 127.0.0.1     | /           |
+      | user_id             | access_token                |
+      | 5577006791947779410 | {{access_token_from_oauth}} |
     Examples:
-      | content-type                      | data                                                                                                                                        | expected_cookie                                                                                                                                                | cookie_secure | cookie_same_site |
-      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1                                            | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   | true          | false            |
-      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1&cookie_same_site=1                         | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict | true          | true             |
-      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=0&cookie_same_site=1                         | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         | false         | true             |
-      | application/jsoN; charset=utf8    | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true}                          | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   | true          | false            |
-      | application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true,"cookie_same_site":true}  | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict | true          | true             |
-      | Application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":false,"cookie_same_site":true} | access_token={{access_token_from_oauth}}; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         | false         | true             |
+      | content-type                      | data                                                                                                                                        | expected_cookie                                                                                                                                                              |
+      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1                                            | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   |
+      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1&cookie_same_site=1                         | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=0&cookie_same_site=1                         | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
+      | application/jsoN; charset=utf8    | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true}                          | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   |
+      | application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true,"cookie_same_site":true}  | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+      | Application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":false,"cookie_same_site":true} | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |

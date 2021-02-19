@@ -11,7 +11,7 @@ import (
 const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 
 // CreateNewTempSession creates a new session for a temporary user
-func CreateNewTempSession(s *database.SessionStore, userID int64, cookieAttributes *database.SessionCookieAttributes) (
+func CreateNewTempSession(s *database.SessionStore, userID int64) (
 	accessToken string, expiresIn int32, err error) {
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
@@ -20,7 +20,7 @@ func CreateNewTempSession(s *database.SessionStore, userID int64, cookieAttribut
 		if err != nil {
 			return err
 		}
-		return retryStore.Sessions().InsertNewOAuth(userID, accessToken, expiresIn, "backend", cookieAttributes)
+		return retryStore.Sessions().InsertNewOAuth(userID, accessToken, expiresIn, "backend")
 	})
 	if err != nil {
 		accessToken = ""

@@ -11,7 +11,7 @@ Feature: Create a temporary user - robustness
     And the table "sessions" should stay unchanged
 
   Scenario: access_token cookie is present
-    Given the "Cookie" request header is "access_token=1234567890"
+    Given the "Cookie" request header is "access_token=1!1234567890!!"
     When I send a POST request to "/auth/temp-user"
     Then the response code should be 400
     And the response error message should contain "Neither 'Authorization' header nor 'access_token' cookie should not be present"

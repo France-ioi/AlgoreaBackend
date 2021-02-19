@@ -18,11 +18,11 @@ func BearerTokenFromContext(ctx context.Context) string {
 }
 
 // SessionCookieAttributesFromContext retrieves session cookie attributes from a context set by the middleware
-func SessionCookieAttributesFromContext(ctx context.Context) *database.SessionCookieAttributes {
+func SessionCookieAttributesFromContext(ctx context.Context) *SessionCookieAttributes {
 	cookieAttributesFromContext := ctx.Value(ctxSessionCookieAttributes)
 	if cookieAttributesFromContext == nil {
 		return nil
 	}
-	attributesCopy := *(cookieAttributesFromContext.(*database.SessionCookieAttributes))
+	attributesCopy := *(cookieAttributesFromContext.(*SessionCookieAttributes))
 	return &attributesCopy
 }

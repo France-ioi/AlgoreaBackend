@@ -13,11 +13,11 @@ Feature: Create a new access token
     And the time now is "2019-07-16T22:02:28Z"
     And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
-      | user_id | expires_at          | access_token              | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-      | 12      | 2019-07-16 22:02:29 | someaccesstoken           | true       | true          | false            | a.127.0.0.1   | /api/       |
-      | 12      | 2019-07-16 22:02:40 | anotheraccesstoken        | false      | false         | false            | null          | null        |
-      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        | true       | false         | true             | null          | null        |
-      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane | false      | false         | false            | null          | null        |
+      | user_id | expires_at          | access_token              |
+      | 12      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 12      | 2019-07-16 22:02:40 | anotheraccesstoken        |
+      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the database has the following table 'refresh_tokens':
       | user_id | refresh_token       |
       | 13      | refreshtokenforjane |
@@ -49,17 +49,18 @@ Feature: Create a new access token
       Generated a session token expiring in 7200 seconds for a temporary user with group_id = 12
       """
     And the table "sessions" should be:
-      | user_id | expires_at          | access_token              | use_cookie   | cookie_secure   | cookie_same_site   | cookie_domain   | cookie_path   |
-      | 12      | 2019-07-16 22:02:29 | someaccesstoken           | true         | true            | false              | a.127.0.0.1     | /api/         |
-      | 12      | 2019-07-17 00:02:28 | newaccesstoken            | <use_cookie> | <cookie_secure> | <cookie_same_site> | <cookie_domain> | <cookie_path> |
-      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        | true         | false           | true               | null            | null          |
-      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane | false        | false           | false              | null            | null          |
+      | user_id | expires_at          | access_token              |
+      | 12      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 12      | 2019-07-17 00:02:28 | newaccesstoken            |
+      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the table "refresh_tokens" should stay unchanged
   Examples:
-    | query                            | token_in_data                    | expected_cookie                                                                                                                             | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-    |                                  | "access_token":"newaccesstoken", | [NULL]                                                                                                                                      | false      | false         | false            | null          | null        |
-    | ?use_cookie=1&cookie_secure=1    |                                  | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None | true       | true          | false            | 127.0.0.1     | /           |
-    | ?use_cookie=1&cookie_same_site=1 |                                  | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       | true       | false         | true             | 127.0.0.1     | /           |
+    | query                            | current_cookie        | token_in_data                    | expected_cookie                                                                                                                                           |
+    |                                  | [NULL]                | "access_token":"newaccesstoken", | [NULL]                                                                                                                                                    |
+    | ?use_cookie=1&cookie_secure=1    | [NULL]                |                                  | access_token=2!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None |
+    | ?use_cookie=1&cookie_same_site=1 | [NULL]                |                                  | access_token=1!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       |
+    | ?use_cookie=0                    | access_token=0!1234!! | "access_token":"newaccesstoken", | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; SameSite=None                                                                  |
 
   Scenario Outline: Request a new access token for a normal user
     Given the login module "token" endpoint for refresh token "refreshtokenforjane" returns 200 with body:
@@ -84,27 +85,27 @@ Feature: Create a new access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "sessions" should be:
-      | user_id | expires_at          | access_token          | use_cookie   | cookie_secure   | cookie_same_site   | cookie_domain   | cookie_path   |
-      | 12      | 2019-07-16 22:02:29 | someaccesstoken       | true         | true            | false              | a.127.0.0.1     | /api/         |
-      | 12      | 2019-07-16 22:02:40 | anotheraccesstoken    | false        | false           | false              | null            | null          |
-      | 13      | 2019-07-16 22:02:29 | accesstokenforjane    | true         | false           | true               | null            | null          |
-      | 13      | 2020-07-16 22:02:28 | newaccesstokenforjane | <use_cookie> | <cookie_secure> | <cookie_same_site> | <cookie_domain> | <cookie_path> |
+      | user_id | expires_at          | access_token          |
+      | 12      | 2019-07-16 22:02:29 | someaccesstoken       |
+      | 12      | 2019-07-16 22:02:40 | anotheraccesstoken    |
+      | 13      | 2019-07-16 22:02:29 | accesstokenforjane    |
+      | 13      | 2020-07-16 22:02:28 | newaccesstokenforjane |
     And the table "refresh_tokens" should be:
       | user_id | refresh_token          |
       | 13      | newrefreshtokenforjane |
       | 14      | refreshtokenforjohn    |
   Examples:
-    | query                            | token_in_data                            | expected_cookie                                                                                                                                        | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-    |                                  | "access_token": "newaccesstokenforjane", | [NULL]                                                                                                                                                 | false      | false         | false            | null          | null        |
-    | ?use_cookie=1&cookie_secure=1    |                                          | access_token=newaccesstokenforjane; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None | true       | true          | false            | 127.0.0.1     | /           |
-    | ?use_cookie=1&cookie_same_site=1 |                                          | access_token=newaccesstokenforjane; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       | true       | false         | true             | 127.0.0.1     | /           |
+    | query                            | token_in_data                            | expected_cookie                                                                                                                                                      |
+    |                                  | "access_token": "newaccesstokenforjane", | [NULL]                                                                                                                                                               |
+    | ?use_cookie=1&cookie_secure=1    |                                          | access_token=2!newaccesstokenforjane!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None |
+    | ?use_cookie=1&cookie_same_site=1 |                                          | access_token=1!newaccesstokenforjane!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
 
   Scenario Outline: Accepts access_token cookie and removes it if cookie attributes differ for a normal user
     Given the database table 'sessions' has also the following rows:
-      | user_id | expires_at          | access_token              | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-      | 13      | 2019-07-16 22:02:31 | onemoreaccesstokenforjane | true       | true          | false            | 127.0.0.1     | /           |
-      | 13      | 2019-07-16 22:02:31 | andmoreaccesstokenforjane | true       | true          | false            | null          | null        |
-      | 13      | 2019-07-16 22:02:31 | moremoraccesstokenforjane | true       | true          | true             | a.127.0.0.1   | /           |
+      | user_id | expires_at          | access_token              |
+      | 13      | 2019-07-16 22:02:31 | onemoreaccesstokenforjane |
+      | 13      | 2019-07-16 22:02:31 | andmoreaccesstokenforjane |
+      | 13      | 2019-07-16 22:02:31 | moremoraccesstokenforjane |
     And the login module "token" endpoint for refresh token "refreshtokenforjane" returns 200 with body:
       """
       {
@@ -114,7 +115,7 @@ Feature: Create a new access token
         "refresh_token":"newrefreshtoken"
       }
       """
-    And the "Cookie" request header is "access_token=<token>"
+    And the "Cookie" request header is "access_token=<token_cookie>"
     When I send a POST request to "/auth/token?use_cookie=1&cookie_secure=1"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -128,24 +129,23 @@ Feature: Create a new access token
     And the response headers "Set-Cookie" should be:
       """
         <cookie_removal>
-        access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None
+        access_token=2!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None
       """
   Examples:
-    | token                     | cookie_removal                                                                                                                 |
-    | accesstokenforjane        | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; SameSite=Strict                                     |
-    | anotheraccesstokenforjane |                                                                                                                                |
-    | onemoreaccesstokenforjane |                                                                                                                                |
-    | andmoreaccesstokenforjane | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                               |
-    | moremoraccesstokenforjane | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict |
+    | token_cookie                              | cookie_removal                                                                                                                 |
+    | 1!accesstokenforjane!!                    | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; SameSite=Strict                                     |
+    | 2!onemoreaccesstokenforjane!127.0.0.1!/   |                                                                                                                                |
+    | 2!andmoreaccesstokenforjane!!             | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                               |
+    | 3!moremoraccesstokenforjane!a.127.0.0.1!/ | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict |
 
   Scenario Outline: Accepts access_token cookie and removes it if cookie attributes differ for a temporary user
     Given the generated auth key is "newaccesstoken"
     And the database table 'sessions' has also the following rows:
-      | user_id | expires_at          | access_token       | use_cookie | cookie_secure | cookie_same_site | cookie_domain | cookie_path |
-      | 12      | 2019-07-16 22:02:31 | onemoreaccesstoken | true       | true          | false            | 127.0.0.1     | /           |
-      | 12      | 2019-07-16 22:02:31 | andmoreaccesstoken | true       | true          | false            | null          | null        |
-      | 12      | 2019-07-16 22:02:31 | moremoraccesstoken | true       | true          | true             | a.127.0.0.1   | /           |
-    And the "Cookie" request header is "access_token=<token>"
+      | user_id | expires_at          | access_token       |
+      | 12      | 2019-07-16 22:02:31 | onemoreaccesstoken |
+      | 12      | 2019-07-16 22:02:31 | andmoreaccesstoken |
+      | 12      | 2019-07-16 22:02:31 | moremoraccesstoken |
+    And the "Cookie" request header is "access_token=<token_cookie>"
     When I send a POST request to "/auth/token?use_cookie=1&cookie_secure=1"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -159,15 +159,14 @@ Feature: Create a new access token
     And the response headers "Set-Cookie" should be:
       """
         <cookie_removal>
-        access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None
+        access_token=2!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None
       """
     Examples:
-      | token              | cookie_removal                                                                                                                   |
-      | someaccesstoken    | access_token=; Path=/api/; Domain=a.127.0.0.1; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None |
-      | anotheraccesstoken |                                                                                                                                  |
-      | onemoreaccesstoken |                                                                                                                                  |
-      | andmoreaccesstoken | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                                 |
-      | moremoraccesstoken | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict   |
+      | token_cookie                        | cookie_removal                                                                                                                   |
+      | 2!someaccesstoken!a.127.0.0.1!/api/ | access_token=; Path=/api/; Domain=a.127.0.0.1; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None |
+      | 2!onemoreaccesstoken!127.0.0.1!/    |                                                                                                                                  |
+      | 2!andmoreaccesstoken!!              | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                                 |
+      | 3!moremoraccesstoken!a.127.0.0.1!/  | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict   |
 
   Scenario Outline: Accepts cookie parameters from post data
     Given the generated auth key is "newaccesstoken"
@@ -192,17 +191,17 @@ Feature: Create a new access token
       Generated a session token expiring in 7200 seconds for a temporary user with group_id = 12
       """
     And the table "sessions" should be:
-      | user_id | expires_at          | access_token              | use_cookie | cookie_secure   | cookie_same_site   | cookie_domain | cookie_path |
-      | 12      | 2019-07-16 22:02:29 | someaccesstoken           | true       | true            | false              | a.127.0.0.1   | /api/       |
-      | 12      | 2019-07-17 00:02:28 | newaccesstoken            | true       | <cookie_secure> | <cookie_same_site> | 127.0.0.1     | /           |
-      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        | true       | false           | true               | null          | null        |
-      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane | false      | false           | false              | null          | null        |
+      | user_id | expires_at          | access_token              |
+      | 12      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 12      | 2019-07-17 00:02:28 | newaccesstoken            |
+      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the table "refresh_tokens" should stay unchanged
   Examples:
-    | content-type                      | data                                                              | expected_cookie                                                                                                                               | cookie_secure | cookie_same_site |
-    | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1                                      | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None   | true          | false            |
-    | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1&cookie_same_site=1                   | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict | true          | true             |
-    | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=0&cookie_same_site=1                   | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         | false         | true             |
-    | application/jsoN; charset=utf8    | {"use_cookie":true,"cookie_secure":true}                          | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None   | true          | false            |
-    | application/json                  | {"use_cookie":true,"cookie_secure":true,"cookie_same_site":true}  | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict | true          | true             |
-    | Application/json                  | {"use_cookie":true,"cookie_secure":false,"cookie_same_site":true} | access_token=newaccesstoken; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         | false         | true             |
+    | content-type                      | data                                                              | expected_cookie                                                                                                                                             |
+    | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1                                      | access_token=2!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None   |
+    | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1&cookie_same_site=1                   | access_token=3!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
+    | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=0&cookie_same_site=1                   | access_token=1!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
+    | application/jsoN; charset=utf8    | {"use_cookie":true,"cookie_secure":true}                          | access_token=2!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None   |
+    | application/json                  | {"use_cookie":true,"cookie_secure":true,"cookie_same_site":true}  | access_token=3!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
+    | Application/json                  | {"use_cookie":true,"cookie_secure":false,"cookie_same_site":true} | access_token=1!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |

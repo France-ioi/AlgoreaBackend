@@ -25,14 +25,12 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var accessToken string
-			var dbData struct {
-				database.User
-				database.SessionCookieAttributes
-			}
+			var user database.User
+			var cookieAttributes SessionCookieAttributes
 			var authorized bool
 
 			if cookie, cookieErr := r.Cookie("access_token"); cookieErr == nil {
-				accessToken = cookie.Value
+				accessToken, cookieAttributes = unmarshalSessionCookieValue(cookie.Value)
 			}
 
 			for _, authValue := range r.Header["Authorization"] {
@@ -40,6 +38,8 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 				// credentials = "Bearer" 1*SP b64token (see https://tools.ietf.org/html/rfc6750#section-2.1)
 				if len(parsedAuthValue) == 2 && parsedAuthValue[0] == "Bearer" {
 					accessToken = parsedAuthValue[1]
+					// Delete the cookie since the Authorization header is given
+					deleteSessionCookie(w, &cookieAttributes)
 					break
 				}
 			}
@@ -56,12 +56,10 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 					Select(`
 						users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notifications_read_at,
-						users.default_language,
-						sessions.use_cookie, sessions.cookie_secure, sessions.cookie_same_site,
-						sessions.cookie_domain, sessions.cookie_path`).
+						users.default_language`).
 					Joins("JOIN users ON users.group_id = sessions.user_id").
 					Where("access_token = ?", accessToken).
-					Where("expires_at > NOW()").Take(&dbData).
+					Where("expires_at > NOW()").Take(&user).
 					Error()
 				authorized = err == nil
 				if err != nil && !gorm.IsRecordNotFoundError(err) {
@@ -81,9 +79,16 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 			}
 
 			ctx := context.WithValue(r.Context(), ctxBearer, accessToken)
-			ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &dbData.SessionCookieAttributes)
-			ctx = context.WithValue(ctx, ctxUser, &dbData.User)
+			ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &cookieAttributes)
+			ctx = context.WithValue(ctx, ctxUser, &user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
+	}
+}
+
+func deleteSessionCookie(w http.ResponseWriter, cookieAttributes *SessionCookieAttributes) {
+	if cookieAttributes.UseCookie {
+		http.SetCookie(w, cookieAttributes.SessionCookie("", -1000))
+		*cookieAttributes = SessionCookieAttributes{}
 	}
 }

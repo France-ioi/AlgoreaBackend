@@ -12,7 +12,7 @@ Feature: Login callback - robustness
     And the table "refresh_tokens" should stay unchanged
 
   Scenario: Both code and access_token cookie are present
-    Given the "Cookie" request header is "access_token=1234567890"
+    Given the "Cookie" request header is "access_token=1!1234567890!!"
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 400
     And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header (or 'access_token' cookie) can be given"

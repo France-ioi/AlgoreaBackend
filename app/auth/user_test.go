@@ -33,7 +33,7 @@ func TestBearerTokenFromContext(t *testing.T) {
 func TestSessionCookieAttributesFromContext(t *testing.T) {
 	assert := assertlib.New(t)
 
-	expectedCookieAttributes := &database.SessionCookieAttributes{
+	expectedCookieAttributes := &SessionCookieAttributes{
 		UseCookie: true,
 		Secure:    true,
 		SameSite:  true,

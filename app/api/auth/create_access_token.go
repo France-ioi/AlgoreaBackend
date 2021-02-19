@@ -173,7 +173,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
 		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token.AccessToken,
-			int32(time.Until(token.Expiry)/time.Second), "login-module", cookieAttributes))
+			int32(time.Until(token.Expiry)/time.Second), "login-module"))
 
 		service.MustNotBeError(store.Exec(
 			"INSERT INTO refresh_tokens (user_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
@@ -188,14 +188,13 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 
 func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
 	rendererGenerator func(interface{}) render.Renderer, token string, expiresIn time.Time,
-	cookieAttributes *database.SessionCookieAttributes) {
+	cookieAttributes *auth.SessionCookieAttributes) {
 	secondsUntilExpiry := int32(time.Until(expiresIn).Round(time.Second) / time.Second)
 	response := map[string]interface{}{
 		"expires_in": secondsUntilExpiry,
 	}
 	oldCookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
-	if _, cookieErr := r.Cookie("access_token"); cookieErr == nil && oldCookieAttributes != nil &&
-		oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
+	if oldCookieAttributes != nil && oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
 		http.SetCookie(w, oldCookieAttributes.SessionCookie("", -1000))
 	}
 	if cookieAttributes.UseCookie {
@@ -207,8 +206,8 @@ func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWr
 }
 
 func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[string]interface{}) (
-	cookieAttributes *database.SessionCookieAttributes, apiError service.APIError) {
-	cookieAttributes = &database.SessionCookieAttributes{}
+	cookieAttributes *auth.SessionCookieAttributes, apiError service.APIError) {
+	cookieAttributes = &auth.SessionCookieAttributes{}
 	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
 		cookieAttributes.UseCookie = true
 		cookieAttributes.Domain = domain.CurrentDomainFromContext(r.Context())

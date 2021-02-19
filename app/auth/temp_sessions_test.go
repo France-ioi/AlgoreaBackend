@@ -27,21 +27,18 @@ func TestCreateNewTempSession(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
-	expectedCookieAttributes := &database.SessionCookieAttributes{}
 	sessionStore := database.NewDataStore(db).Sessions()
 	patch := monkey.PatchInstanceMethod(reflect.TypeOf(sessionStore), "InsertNewOAuth",
-		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string,
-			cookieAttributes *database.SessionCookieAttributes) error {
+		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string) error {
 			assert.Equal(t, expectedUserID, userID)
 			assert.Equal(t, token, expectedAccessToken)
 			assert.Equal(t, int32(2*60*60), expiresIn) // 2 hours
 			assert.Equal(t, "backend", issuer)
-			assert.Equal(t, expectedCookieAttributes, cookieAttributes)
 			return nil
 		})
 	defer patch.Unpatch()
 
-	accessToken, expireIn, err := CreateNewTempSession(sessionStore, expectedUserID, expectedCookieAttributes)
+	accessToken, expireIn, err := CreateNewTempSession(sessionStore, expectedUserID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessToken, accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -66,18 +63,15 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
-	expectedCookieAttributes := &database.SessionCookieAttributes{}
 	sessionStore := database.NewDataStore(db).Sessions()
 
 	var counter int
 	patch := monkey.PatchInstanceMethod(reflect.TypeOf(sessionStore), "InsertNewOAuth",
-		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string,
-			cookieAttributes *database.SessionCookieAttributes) error {
+		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string) error {
 			assert.Equal(t, expectedUserID, userID)
 			assert.Equal(t, token, expectedAccessTokens[counter])
 			assert.Equal(t, int32(2*60*60), expiresIn) // 2 hours
 			assert.Equal(t, "backend", issuer)
-			assert.Equal(t, expectedCookieAttributes, cookieAttributes)
 			counter++
 			if counter == 1 {
 				return &mysql.MySQLError{
@@ -89,8 +83,7 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 		})
 	defer patch.Unpatch()
 
-	accessToken, expireIn, err := CreateNewTempSession(
-		database.NewDataStore(db).Sessions(), expectedUserID, &database.SessionCookieAttributes{})
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessTokens[1], accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -117,8 +110,7 @@ func TestCreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 
 	expectedUserID := int64(12345)
 
-	accessToken, expireIn, err := CreateNewTempSession(
-		database.NewDataStore(db).Sessions(), expectedUserID, &database.SessionCookieAttributes{})
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -136,23 +128,19 @@ func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 
 	expectedUserID := int64(12345)
 	expectedError := errors.New("some error")
-	expectedCookieAttributes := &database.SessionCookieAttributes{}
 	sessionStore := database.NewDataStore(db).Sessions()
 
 	patch := monkey.PatchInstanceMethod(reflect.TypeOf(sessionStore), "InsertNewOAuth",
-		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string,
-			cookieAttributes *database.SessionCookieAttributes) error {
+		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string) error {
 			assert.Equal(t, expectedUserID, userID)
 			assert.Equal(t, token, expectedAccessToken)
 			assert.Equal(t, int32(2*60*60), expiresIn) // 2 hours
 			assert.Equal(t, "backend", issuer)
-			assert.Equal(t, expectedCookieAttributes, cookieAttributes)
 			return expectedError
 		})
 	defer patch.Unpatch()
 
-	accessToken, expireIn, err := CreateNewTempSession(
-		database.NewDataStore(db).Sessions(), expectedUserID, &database.SessionCookieAttributes{})
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours

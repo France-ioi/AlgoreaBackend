@@ -58,7 +58,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 				user.GroupID, oldAccessToken).Error())
 			var err error
-			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.GroupID, cookieAttributes)
+			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.GroupID)
 			return err
 		}))
 	} else {
@@ -66,7 +66,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 		// usage of the old refresh token for that reason.
 		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), user, oldAccessToken, cookieAttributes)
+			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), user, oldAccessToken)
 			return nil
 		}))
 	}
@@ -79,8 +79,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	return service.NoError
 }
 
-func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string,
-	cookieAttributes *database.SessionCookieAttributes) (
+func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (
 	newToken string, expiresIn int32, apiError service.APIError) {
 	var refreshToken string
 	err := srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
@@ -102,7 +101,7 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 			user.GroupID, oldAccessToken).Error())
 		// insert the new access token
 		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token.AccessToken,
-			int32(time.Until(token.Expiry)/time.Second), "login-module", cookieAttributes))
+			int32(time.Until(token.Expiry)/time.Second), "login-module"))
 		if refreshToken != token.RefreshToken {
 			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
 				UpdateColumn("refresh_token", token.RefreshToken).Error())
