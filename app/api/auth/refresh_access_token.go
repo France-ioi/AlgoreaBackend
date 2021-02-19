@@ -40,16 +40,14 @@ var userIDsInProgress userIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
-	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
-	if apiError != service.NoError {
-		return apiError
-	}
+	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
 
 	user := srv.GetUser(r)
 	oldAccessToken := auth.BearerTokenFromContext(r.Context())
 
 	var newToken string
 	var expiresIn int32
+	apiError := service.NoError
 
 	if user.IsTempUser {
 		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {

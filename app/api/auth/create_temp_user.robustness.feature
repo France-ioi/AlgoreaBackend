@@ -3,18 +3,18 @@ Feature: Create a temporary user - robustness
     Given the "Authorization" request header is "Bearer 1234567890"
     When I send a POST request to "/auth/temp-user"
     Then the response code should be 400
-    And the response error message should contain "Neither 'Authorization' header nor 'access_token' cookie should not be present"
+    And the response error message should contain "The 'Authorization' header must not be present"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
 
-  Scenario: access_token cookie is present
+  Scenario: access_token cookie is present and use_cookie=1
     Given the "Cookie" request header is "access_token=1!1234567890!!"
-    When I send a POST request to "/auth/temp-user"
+    When I send a POST request to "/auth/temp-user?use_cookie=1&cookie_secure=1"
     Then the response code should be 400
-    And the response error message should contain "Neither 'Authorization' header nor 'access_token' cookie should not be present"
+    And the response error message should contain "The 'access_token' cookie must not be present"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged

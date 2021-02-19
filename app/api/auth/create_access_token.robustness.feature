@@ -3,7 +3,7 @@ Feature: Login callback - robustness
     Given the "Authorization" request header is "Bearer 1234567890"
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 400
-    And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header (or 'access_token' cookie) can be given"
+    And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header can be given"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -11,11 +11,11 @@ Feature: Login callback - robustness
     And the table "sessions" should stay unchanged
     And the table "refresh_tokens" should stay unchanged
 
-  Scenario: Both code and access_token cookie are present
+  Scenario: Both code and access_token cookie are present while use_cookie=1
     Given the "Cookie" request header is "access_token=1!1234567890!!"
-    When I send a POST request to "/auth/token?code=somecode"
+    When I send a POST request to "/auth/token?code=somecode&use_cookie=1&cookie_secure=1"
     Then the response code should be 400
-    And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header (or 'access_token' cookie) can be given"
+    And the response error message should contain "Only one of the 'code' parameter and the 'access_token' cookie can be given"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -23,10 +23,10 @@ Feature: Login callback - robustness
     And the table "sessions" should stay unchanged
     And the table "refresh_tokens" should stay unchanged
 
-  Scenario: The code is missing
+  Scenario: The code is missing for an unauthenticated user
     When I send a POST request to "/auth/token"
-    Then the response code should be 400
-    And the response error message should contain "Missing code"
+    Then the response code should be 401
+    And the response error message should contain "No access token provided"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged

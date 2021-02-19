@@ -33,6 +33,7 @@ Feature: Create a new access token
   Scenario Outline: Request a new access token for a temporary user
     Given the generated auth key is "newaccesstoken"
     And the "Authorization" request header is "Bearer someaccesstoken"
+    And the "Cookie" request header is "<current_cookie>"
     When I send a POST request to "/auth/token<query>"
     Then the response code should be 201
     And the response body should be, in JSON:

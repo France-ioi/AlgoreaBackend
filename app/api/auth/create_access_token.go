@@ -49,8 +49,11 @@ const parsedRequestData ctxKey = iota
 //     the 'not found' error is returned.
 //
 //
-//   * One of the access token (via “Authorization” header or "access_token" cookie)
-//     and the `{code}` parameter should be present (not both at once).
+//   * The "Authorization" header is not allowed when the `{code}` is given.
+//
+//   * The "access_token" cookie is not allowed when the `{code}` is given and `{use_cookie}`=1.
+//
+//   * When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
 // security: []
 // consumes:
 //   - application/json
@@ -128,28 +131,27 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		return apiError
 	}
 
-	_, cookieErr := r.Cookie("access_token")
-
-	// "Authorization" header / "access_token" cookie is given, requesting a new token from the given token
-	if len(r.Header["Authorization"]) != 0 || cookieErr == nil {
-		if _, ok := requestData["code"]; ok {
-			return service.ErrInvalidRequest(
-				errors.New("only one of the 'code' parameter and the 'Authorization' header (or 'access_token' cookie) can be given"))
-		}
-		auth.UserMiddleware(srv.Store.Sessions())(service.AppHandler(srv.refreshAccessToken)).
-			ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), parsedRequestData, requestData)))
-		return service.NoError
-	}
-
 	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	// the code is given, requesting a token from code and optionally code_verifier, and create/update user.
-	code, ok := requestData["code"]
-	if !ok {
-		return service.ErrInvalidRequest(errors.New("missing code"))
+	code, codeGiven := requestData["code"]
+	if codeGiven {
+		if cookieAttributes.UseCookie {
+			if _, cookieErr := r.Cookie("access_token"); cookieErr == nil {
+				return service.ErrInvalidRequest(errors.New("only one of the 'code' parameter and the 'access_token' cookie can be given"))
+			}
+		}
+		if len(r.Header["Authorization"]) != 0 {
+			return service.ErrInvalidRequest(
+				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
+		}
+	} else {
+		// The code is not given, requesting a new token from the given token
+		auth.UserMiddleware(srv.Store.Sessions())(service.AppHandler(srv.refreshAccessToken)).
+			ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), parsedRequestData, requestData)))
+		return service.NoError
 	}
 
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)

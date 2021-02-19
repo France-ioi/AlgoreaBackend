@@ -112,13 +112,15 @@ func compareStrings(expected, actual string) error {
 	return nil
 }
 
+const nullHeaderValue = "[NULL]"
+
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
 	headerValue, err = ctx.preprocessString(headerValue)
 	if err != nil {
 		return err
 	}
 	headerName = http.CanonicalHeaderKey(headerName)
-	if headerValue != "[NULL]" {
+	if headerValue != nullHeaderValue {
 		if len(ctx.lastResponse.Header[headerName]) == 0 {
 			return fmt.Errorf("no such header '%s' in the response", headerName)
 		}
