@@ -21,8 +21,6 @@ import (
 //
 //   * The "Authorization" header must not be given.
 //
-//   * The "access_token" cookie must not be given when `{use_cookie}`=1.
-//
 //   * When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
 // parameters:
 // - name: use_cookie
@@ -61,12 +59,6 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 
 	if len(r.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("the 'Authorization' header must not be present"))
-	}
-
-	if cookieAttributes.UseCookie {
-		if _, cookieErr := r.Cookie("access_token"); cookieErr == nil {
-			return service.ErrInvalidRequest(errors.New("the 'access_token' cookie must not be present"))
-		}
 	}
 
 	var token string

@@ -20,6 +20,7 @@ Feature: Create a temporary user
 
   Scenario Outline: Create a new temporary user
     Given the generated auth key is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
+    And the "Cookie" request header is "<cookie>"
     When I send a POST request to "/auth/temp-user<query>"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -61,8 +62,8 @@ Feature: Create a temporary user
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
   Examples:
-    | query                            | expected_cookie                                                                                                                                                             | token_in_data                                      |
-    |                                  | [NULL]                                                                                                                                                                      | "access_token":"ny93zqri9a2adn4v1ut6izd76xb3pccw", |
-    | ?use_cookie=0                    | [NULL]                                                                                                                                                                      | "access_token":"ny93zqri9a2adn4v1ut6izd76xb3pccw", |
-    | ?use_cookie=1&cookie_secure=1    | access_token=2!ny93zqri9a2adn4v1ut6izd76xb3pccw!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None |                                                    |
-    | ?use_cookie=1&cookie_same_site=1 | access_token=1!ny93zqri9a2adn4v1ut6izd76xb3pccw!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       |                                                    |
+    | query                            | cookie                          | expected_cookie                                                                                                                                                             | token_in_data                                      |
+    |                                  | [NULL]                          | [NULL]                                                                                                                                                                      | "access_token":"ny93zqri9a2adn4v1ut6izd76xb3pccw", |
+    | ?use_cookie=0                    | [NULL]                          | [NULL]                                                                                                                                                                      | "access_token":"ny93zqri9a2adn4v1ut6izd76xb3pccw", |
+    | ?use_cookie=1&cookie_secure=1    | [NULL]                          | access_token=2!ny93zqri9a2adn4v1ut6izd76xb3pccw!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None |                                                    |
+    | ?use_cookie=1&cookie_same_site=1 | access_token=2!abcd!127.0.0.1!/ | access_token=1!ny93zqri9a2adn4v1ut6izd76xb3pccw!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       |                                                    |

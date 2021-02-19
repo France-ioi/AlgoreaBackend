@@ -51,8 +51,6 @@ const parsedRequestData ctxKey = iota
 //
 //   * The "Authorization" header is not allowed when the `{code}` is given.
 //
-//   * The "access_token" cookie is not allowed when the `{code}` is given and `{use_cookie}`=1.
-//
 //   * When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
 // security: []
 // consumes:
@@ -138,11 +136,6 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 
 	code, codeGiven := requestData["code"]
 	if codeGiven {
-		if cookieAttributes.UseCookie {
-			if _, cookieErr := r.Cookie("access_token"); cookieErr == nil {
-				return service.ErrInvalidRequest(errors.New("only one of the 'code' parameter and the 'access_token' cookie can be given"))
-			}
-		}
 		if len(r.Header["Authorization"]) != 0 {
 			return service.ErrInvalidRequest(
 				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))

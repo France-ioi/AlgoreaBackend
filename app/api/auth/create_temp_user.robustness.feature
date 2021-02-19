@@ -10,17 +10,6 @@ Feature: Create a temporary user - robustness
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
 
-  Scenario: access_token cookie is present and use_cookie=1
-    Given the "Cookie" request header is "access_token=1!1234567890!!"
-    When I send a POST request to "/auth/temp-user?use_cookie=1&cookie_secure=1"
-    Then the response code should be 400
-    And the response error message should contain "The 'access_token' cookie must not be present"
-    And the table "users" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-    And the table "sessions" should stay unchanged
-
   Scenario Outline: Invalid cookie attributes
     Given I send a POST request to "/auth/temp-user<query>"
     Then the response code should be 400
