@@ -474,7 +474,7 @@ Feature: Create an access token
       | application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true,"cookie_same_site":true}  | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
       | Application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":false,"cookie_same_site":true} | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
 
-  Scenario: Ignores the cookie when both code and access_token cookie are present
+  Scenario: Ignores and deletes the cookie when both code and access_token cookie are present
     Given the "Cookie" request header is "access_token=1!1234567890!example.org!/api/"
     Given the time now is "2019-07-17T01:02:29+03:00"
     And the DB time now is "2019-07-16 22:02:28"
@@ -521,4 +521,8 @@ Feature: Create an access token
         }
       }
       """
-    And the response header "Set-Cookie" should be "access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None"
+    And the response headers "Set-Cookie" should be:
+    """
+      access_token=; Path=/api/; Domain=example.org; Expires=Tue, 16 Jul 2019 21:45:49 GMT; Max-Age=0; HttpOnly; SameSite=Strict
+      access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None
+    """

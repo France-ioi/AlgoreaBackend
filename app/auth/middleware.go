@@ -24,14 +24,10 @@ const (
 func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			var accessToken string
 			var user database.User
-			var cookieAttributes SessionCookieAttributes
 			var authorized bool
 
-			if cookie, cookieErr := r.Cookie("access_token"); cookieErr == nil {
-				accessToken, cookieAttributes = unmarshalSessionCookieValue(cookie.Value)
-			}
+			accessToken, cookieAttributes := ParseSessionCookie(r)
 
 			for _, authValue := range r.Header["Authorization"] {
 				parsedAuthValue := strings.SplitN(authValue, " ", 3)
@@ -84,6 +80,14 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// ParseSessionCookie parses the 'access_token' cookie (if given) and returns the access token among with cookie attributes
+func ParseSessionCookie(r *http.Request) (accessToken string, cookieAttributes SessionCookieAttributes) {
+	if cookie, cookieErr := r.Cookie("access_token"); cookieErr == nil {
+		accessToken, cookieAttributes = unmarshalSessionCookieValue(cookie.Value)
+	}
+	return accessToken, cookieAttributes
 }
 
 func deleteSessionCookie(w http.ResponseWriter, cookieAttributes *SessionCookieAttributes) {

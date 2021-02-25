@@ -31,7 +31,7 @@ const parsedRequestData ctxKey = iota
 // ---
 // summary: Create or refresh an access token
 // description:
-//     If none of the "Authorization" header and "access_token" cookie are given,
+//     If the `{code}` is given and the "Authorization" header is not given,
 //     the service converts the given OAuth2 authorization code into tokens,
 //     creates or updates the authenticated user in the DB with the data returned by the login module,
 //     and saves new access & refresh tokens into the DB as well.
@@ -39,14 +39,18 @@ const parsedRequestData ctxKey = iota
 //     so it can be sent together with the `{code}` to the authentication server.
 //
 //
-//     If the "Authorization" header or/and the "access_token" is given
-//     (when both are given, the "Authorization" header is used),
+//     If the `{code}` is not given while the "Authorization" header or/and the "access_token" is given
+//     (when both are given, the "Authorization" header is used and the cookie gets deleted),
 //     the service refreshes the access token
 //     (locally for temporary users or via the login module for normal users) and
-//     saves it into the DB keeping only the input token (from authorization headers) and the new token.
+//     saves it into the DB keeping only the input token and the new token.
 //     Since the login module responds with both access and refresh tokens, the service updates the user's
 //     refresh token in this case as well. If there is no refresh token for the user in the DB,
 //     the 'not found' error is returned.
+//
+//
+//     If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
+//     the old cookie gets deleted (otherwise, just overwritten).
 //
 //
 //   * The "Authorization" header is not allowed when the `{code}` is given.
@@ -189,6 +193,10 @@ func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWr
 		"expires_in": secondsUntilExpiry,
 	}
 	oldCookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
+	if oldCookieAttributes == nil {
+		oldCookieAttributes = &auth.SessionCookieAttributes{}
+		_, *oldCookieAttributes = auth.ParseSessionCookie(r)
+	}
 	if oldCookieAttributes != nil && oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
 		http.SetCookie(w, oldCookieAttributes.SessionCookie("", -1000))
 	}
