@@ -104,7 +104,7 @@ type itemResponse struct {
 	// required: true
 	ReadOnly bool `json:"read_only"`
 	// required: true
-	// enum: forceYes,,forceNo,default
+	// enum: forceYes,forceNo,default
 	FullScreen string `json:"full_screen"`
 	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`
