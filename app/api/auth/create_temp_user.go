@@ -17,7 +17,8 @@ import (
 // swagger:operation POST /auth/temp-user auth tempUserCreate
 // ---
 // summary: Create a temporary user
-// description: Creates a temporary user and generates an access token valid for 2 hours
+// description: Creates a temporary user and generates an access token valid for 2 hours.
+//
 //
 //     If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
 //     the old cookie gets deleted (otherwise, just overwritten).
