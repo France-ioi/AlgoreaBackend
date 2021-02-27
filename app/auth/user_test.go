@@ -29,3 +29,23 @@ func TestBearerTokenFromContext(t *testing.T) {
 
 	assert.Equal(expectedToken, token)
 }
+
+func TestSessionCookieAttributesFromContext(t *testing.T) {
+	assert := assertlib.New(t)
+
+	expectedCookieAttributes := &SessionCookieAttributes{
+		UseCookie: true,
+		Secure:    true,
+		SameSite:  true,
+		Domain:    "somedomain.org",
+		Path:      "/api/",
+	}
+	ctx := context.WithValue(context.Background(), ctxSessionCookieAttributes, expectedCookieAttributes)
+	cookieAttributes := SessionCookieAttributesFromContext(ctx)
+
+	assert.False(expectedCookieAttributes == cookieAttributes)
+	assert.EqualValues(expectedCookieAttributes, cookieAttributes)
+
+	ctx = context.WithValue(context.Background(), ctxSessionCookieAttributes, nil)
+	assert.Nil(SessionCookieAttributesFromContext(ctx))
+}

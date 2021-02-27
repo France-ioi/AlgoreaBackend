@@ -35,6 +35,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response body should be, in JSON:$`, ctx.TheResponseBodyShouldBeJSON)
 	s.Step(`^the response body decoded as "([^"]+)" should be, in JSON:$`, ctx.TheResponseDecodedBodyShouldBeJSON)
 	s.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, ctx.TheResponseHeaderShouldBe)
+	s.Step(`^the response headers? "([^"]*)" should be:`, ctx.TheResponseHeadersShouldBe)
 	s.Step(`^the response should be "([^"]*)"$`, ctx.TheResponseShouldBe)
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
 

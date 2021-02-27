@@ -3,8 +3,6 @@ package auth
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -13,7 +11,8 @@ import (
 const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 
 // CreateNewTempSession creates a new session for a temporary user
-func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken string, expiresIn int32, err error) {
+func CreateNewTempSession(s *database.SessionStore, userID int64) (
+	accessToken string, expiresIn int32, err error) {
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
 	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
@@ -21,12 +20,7 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 		if err != nil {
 			return err
 		}
-		return retryStore.Sessions().InsertMap(map[string]interface{}{
-			"access_token": accessToken,
-			"expires_at":   gorm.Expr("?  + INTERVAL ? SECOND", database.Now(), expiresIn),
-			"user_id":      userID,
-			"issuer":       "backend",
-		})
+		return retryStore.Sessions().InsertNewOAuth(userID, accessToken, expiresIn, "backend")
 	})
 	if err != nil {
 		accessToken = ""

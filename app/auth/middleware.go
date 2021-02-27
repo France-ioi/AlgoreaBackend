@@ -16,6 +16,7 @@ type ctxKey int
 const (
 	ctxUser ctxKey = iota
 	ctxBearer
+	ctxSessionCookieAttributes
 )
 
 // UserMiddleware is a middleware retrieving a user from the request content.
@@ -23,14 +24,18 @@ const (
 func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			var accessToken string
 			var user database.User
 			var authorized bool
+
+			accessToken, cookieAttributes := ParseSessionCookie(r)
+
 			for _, authValue := range r.Header["Authorization"] {
 				parsedAuthValue := strings.SplitN(authValue, " ", 3)
 				// credentials = "Bearer" 1*SP b64token (see https://tools.ietf.org/html/rfc6750#section-2.1)
 				if len(parsedAuthValue) == 2 && parsedAuthValue[0] == "Bearer" {
 					accessToken = parsedAuthValue[1]
+					// Delete the cookie since the Authorization header is given
+					deleteSessionCookie(w, &cookieAttributes)
 					break
 				}
 			}
@@ -70,8 +75,24 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 			}
 
 			ctx := context.WithValue(r.Context(), ctxBearer, accessToken)
+			ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &cookieAttributes)
 			ctx = context.WithValue(ctx, ctxUser, &user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
+	}
+}
+
+// ParseSessionCookie parses the 'access_token' cookie (if given) and returns the access token among with cookie attributes
+func ParseSessionCookie(r *http.Request) (accessToken string, cookieAttributes SessionCookieAttributes) {
+	if cookie, cookieErr := r.Cookie("access_token"); cookieErr == nil {
+		accessToken, cookieAttributes = unmarshalSessionCookieValue(cookie.Value)
+	}
+	return accessToken, cookieAttributes
+}
+
+func deleteSessionCookie(w http.ResponseWriter, cookieAttributes *SessionCookieAttributes) {
+	if cookieAttributes.UseCookie {
+		http.SetCookie(w, cookieAttributes.SessionCookie("", -1000))
+		*cookieAttributes = SessionCookieAttributes{}
 	}
 }

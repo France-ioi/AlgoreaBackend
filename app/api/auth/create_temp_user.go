@@ -6,8 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
-
-	"github.com/go-chi/render"
+	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -18,9 +17,34 @@ import (
 // swagger:operation POST /auth/temp-user auth tempUserCreate
 // ---
 // summary: Create a temporary user
-// description: Creates a temporary user and generates an access token valid for 2 hours
+// description: Creates a temporary user and generates an access token valid for 2 hours.
 //
-//   * No “Authorization” header should be present
+//
+//     If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
+//     the old cookie gets deleted (otherwise, just overwritten).
+//
+//   * The "Authorization" header must not be given.
+//
+//   * When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
+// parameters:
+// - name: use_cookie
+//   in: query
+//   description: If 1, set a cookie instead of returning the OAuth2 code in the data
+//   type: integer
+//   enum: [0,1]
+//   default: 0
+// - name: cookie_secure
+//   in: query
+//   description: If 1, set the cookie with the `Secure` attribute
+//   type: integer
+//   enum: [0,1]
+//   default: 0
+// - name: cookie_same_site
+//   in: query
+//   description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
+//   type: integer
+//   enum: [0,1]
+//   default: 0
 // responses:
 //   "201":
 //     description: "Created. Success response with the new access token"
@@ -32,8 +56,13 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) service.APIError {
+	cookieAttributes, apiError := srv.resolveCookieAttributesFromRequest(r)
+	if apiError != service.NoError {
+		return apiError
+	}
+
 	if len(r.Header["Authorization"]) != 0 {
-		return service.ErrInvalidRequest(errors.New("'Authorization' header should not be present"))
+		return service.ErrInvalidRequest(errors.New("the 'Authorization' header must not be present"))
 	}
 
 	var token string
@@ -85,9 +114,30 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		return err
 	}))
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"access_token": token,
-		"expires_in":   expiresIn,
-	})))
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess,
+		token, time.Now().Add(time.Duration(expiresIn)*time.Second), cookieAttributes)
 	return service.NoError
+}
+
+func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, service.APIError) {
+	requestData, apiError := parseCookieAttributesForCreateTempUser(r)
+	if apiError != service.NoError {
+		return nil, apiError
+	}
+	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
+	if apiError != service.NoError {
+		return nil, apiError
+	}
+	return cookieAttributes, service.NoError
+}
+
+func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, service.APIError) {
+	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
+	requestData := make(map[string]interface{}, 2)
+	query := r.URL.Query()
+	for _, parameterName := range allowedParameters {
+		extractOptionalParameter(query, parameterName, requestData)
+	}
+
+	return preprocessBooleanCookieAttributes(requestData)
 }

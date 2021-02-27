@@ -3,12 +3,11 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"regexp"
+	"reflect"
 	"strings"
 	"testing"
 
 	"bou.ke/monkey"
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 
@@ -28,12 +27,18 @@ func TestCreateNewTempSession(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
-	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (`access_token`, `expires_at`, `issuer`, `user_id`) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserID).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+	sessionStore := database.NewDataStore(db).Sessions()
+	patch := monkey.PatchInstanceMethod(reflect.TypeOf(sessionStore), "InsertNewOAuth",
+		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string) error {
+			assert.Equal(t, expectedUserID, userID)
+			assert.Equal(t, token, expectedAccessToken)
+			assert.Equal(t, int32(2*60*60), expiresIn) // 2 hours
+			assert.Equal(t, "backend", issuer)
+			return nil
+		})
+	defer patch.Unpatch()
 
-	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(sessionStore, expectedUserID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessToken, accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -58,23 +63,31 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
-	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (`access_token`, `expires_at`, `issuer`, `user_id`) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessTokens[0], 2*60*60, "backend", expectedUserID).
-		WillReturnError(
-			&mysql.MySQLError{
-				Number:  1062,
-				Message: fmt.Sprintf("ERROR 1062 (23000): Duplicate entry '%s' for key 'PRIMARY'", expectedAccessTokens[0]),
-			})
-	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (`access_token`, `expires_at`, `issuer`, `user_id`) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessTokens[1], 2*60*60, "backend", expectedUserID).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+	sessionStore := database.NewDataStore(db).Sessions()
+
+	var counter int
+	patch := monkey.PatchInstanceMethod(reflect.TypeOf(sessionStore), "InsertNewOAuth",
+		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string) error {
+			assert.Equal(t, expectedUserID, userID)
+			assert.Equal(t, token, expectedAccessTokens[counter])
+			assert.Equal(t, int32(2*60*60), expiresIn) // 2 hours
+			assert.Equal(t, "backend", issuer)
+			counter++
+			if counter == 1 {
+				return &mysql.MySQLError{
+					Number:  1062,
+					Message: fmt.Sprintf("ERROR 1062 (23000): Duplicate entry '%s' for key 'PRIMARY'", expectedAccessTokens[0]),
+				}
+			}
+			return nil
+		})
+	defer patch.Unpatch()
 
 	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessTokens[1], accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
+	assert.Equal(t, 2, counter)
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
@@ -115,10 +128,17 @@ func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 
 	expectedUserID := int64(12345)
 	expectedError := errors.New("some error")
-	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (`access_token`, `expires_at`, `issuer`, `user_id`) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserID).
-		WillReturnError(expectedError)
+	sessionStore := database.NewDataStore(db).Sessions()
+
+	patch := monkey.PatchInstanceMethod(reflect.TypeOf(sessionStore), "InsertNewOAuth",
+		func(sessionStore *database.SessionStore, userID int64, token string, expiresIn int32, issuer string) error {
+			assert.Equal(t, expectedUserID, userID)
+			assert.Equal(t, token, expectedAccessToken)
+			assert.Equal(t, int32(2*60*60), expiresIn) // 2 hours
+			assert.Equal(t, "backend", issuer)
+			return expectedError
+		})
+	defer patch.Unpatch()
 
 	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.Equal(t, expectedError, err)

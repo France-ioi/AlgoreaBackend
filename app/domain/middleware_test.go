@@ -14,6 +14,7 @@ func TestMiddleware(t *testing.T) {
 		name               string
 		domains            []ConfigItem
 		expectedConfig     *CtxConfig
+		expectedDomain     string
 		expectedStatusCode int
 		expectedBody       string
 		shouldEnterService bool
@@ -31,6 +32,7 @@ func TestMiddleware(t *testing.T) {
 				},
 			},
 			expectedConfig:     &CtxConfig{AllUsersGroupID: 2, TempUsersGroupID: 4},
+			expectedDomain:     "127.0.0.1",
 			expectedStatusCode: http.StatusOK,
 			shouldEnterService: true,
 		},
@@ -46,6 +48,7 @@ func TestMiddleware(t *testing.T) {
 					AllUsersGroup: 2, TempUsersGroup: 4,
 				},
 			},
+			expectedDomain:     "127.0.0.1",
 			expectedConfig:     &CtxConfig{AllUsersGroupID: 2, TempUsersGroupID: 4},
 			expectedStatusCode: http.StatusOK,
 			shouldEnterService: true,
@@ -70,13 +73,13 @@ func TestMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			assertMiddleware(t, tt.domains, tt.shouldEnterService, tt.expectedStatusCode, tt.expectedBody, tt.expectedConfig)
+			assertMiddleware(t, tt.domains, tt.shouldEnterService, tt.expectedStatusCode, tt.expectedBody, tt.expectedConfig, tt.expectedDomain)
 		})
 	}
 }
 
 func assertMiddleware(t *testing.T, domains []ConfigItem, shouldEnterService bool,
-	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig) {
+	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig, expectedDomain string) {
 	// dummy server using the middleware
 	middleware := Middleware(domains)
 	enteredService := false // used to log if the service has been reached
@@ -84,6 +87,8 @@ func assertMiddleware(t *testing.T, domains []ConfigItem, shouldEnterService boo
 		enteredService = true // has passed into the service
 		configuration := r.Context().Value(ctxDomainConfig).(*CtxConfig)
 		assert.Equal(t, expectedConfig, configuration)
+		domain := r.Context().Value(ctxDomain).(string)
+		assert.Equal(t, expectedDomain, domain)
 		w.WriteHeader(http.StatusOK)
 	})
 	mainSrv := httptest.NewServer(middleware(handler))

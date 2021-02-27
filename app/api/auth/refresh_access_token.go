@@ -10,8 +10,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"golang.org/x/oauth2"
 
-	"github.com/go-chi/render"
-
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -41,6 +39,9 @@ func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() 
 var userIDsInProgress userIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
+	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
+	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
+
 	user := srv.GetUser(r)
 	oldAccessToken := auth.BearerTokenFromContext(r.Context())
 
@@ -71,12 +72,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	if apiError != service.NoError {
 		return apiError
 	}
-
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"access_token": newToken,
-		"expires_in":   expiresIn,
-	})))
-
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
+		cookieAttributes)
 	return service.NoError
 }
 
@@ -101,7 +98,8 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 		service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 			user.GroupID, oldAccessToken).Error())
 		// insert the new access token
-		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token))
+		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token.AccessToken,
+			int32(time.Until(token.Expiry)/time.Second), "login-module"))
 		if refreshToken != token.RefreshToken {
 			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
 				UpdateColumn("refresh_token", token.RefreshToken).Error())

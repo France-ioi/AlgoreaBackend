@@ -8,6 +8,7 @@ type ctxKey int
 
 const (
 	ctxDomainConfig ctxKey = iota
+	ctxDomain
 )
 
 // CtxConfig contains domain-specific settings related to a request context
@@ -28,4 +29,9 @@ func ConfigFromContext(ctx context.Context) *CtxConfig {
 	conf := ctx.Value(ctxDomainConfig).(*CtxConfig)
 	confCopy := *conf
 	return &confCopy
+}
+
+// CurrentDomainFromContext retrieves the current domain from a context set by the middleware
+func CurrentDomainFromContext(ctx context.Context) string {
+	return ctx.Value(ctxDomain).(string)
 }

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -9,7 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	assertlib "github.com/stretchr/testify/assert"
 
@@ -19,14 +22,20 @@ import (
 )
 
 func TestUserMiddleware(t *testing.T) {
+	now := time.Now()
+	patch := monkey.Patch(time.Now, func() time.Time { return now })
+	defer patch.Unpatch()
+
 	tests := []struct {
 		name                     string
 		authHeaders              []string
+		cookieHeaders            []string
 		expectedAccessToken      string
 		userIDReturnedByDB       int64
 		dbError                  error
 		expectedStatusCode       int
 		expectedServiceWasCalled bool
+		expectedCookie           *http.Cookie
 		expectedBody             string
 		expectedLogs             string
 	}{
@@ -109,6 +118,85 @@ func TestUserMiddleware(t *testing.T) {
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
 		},
+		{
+			name:                     "accepts access token from cookies",
+			cookieHeaders:            []string{"cookie=something;access_token=3!1234567!example.org!/api/;key=value"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
+		},
+		{
+			name: "takes the first access token from cookies",
+			cookieHeaders: []string{
+				"cookie=something;access_token=2!1234567!127.0.0.1!/;key=value;access_token=3!2489101!!",
+				"cookie=5678901234",
+			},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
+		},
+		{
+			name:                     "prefers an access token from the Authorization header if both cookie and the Authorization header are given",
+			authHeaders:              []string{"Bearer 1234567"},
+			cookieHeaders:            []string{"cookie=5678901234"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
+		},
+		{
+			name:                     "sets user attributes",
+			authHeaders:              []string{"Bearer 1234567"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody: `User:{"GroupID":890123,"Login":"login","LoginID":12345,"DefaultLanguage":"fr",` +
+				`"IsAdmin":true,"IsTempUser":true,"AccessGroupID":23456,"AllowSubgroups":true,"NotificationsReadAt":"2019-05-30T11:00:00Z"}`,
+		},
+		{
+			name:                     "sets cookie attributes when there is no cookie",
+			authHeaders:              []string{"Bearer 1234567"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             `CookieAttributes:{"UseCookie":false,"Secure":false,"SameSite":false,"Domain":"","Path":""}`,
+		},
+		{
+			name:                     "sets cookie attributes when there is a cookie",
+			cookieHeaders:            []string{"access_token=3!1234567!example.org!/api/"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             `CookieAttributes:{"UseCookie":true,"Secure":true,"SameSite":true,"Domain":"example.org","Path":"/api/"}`,
+		},
+		{
+			name:                     "deletes the cookie when both the cookie and the header are given",
+			cookieHeaders:            []string{"access_token=3!1234567!example.org!/api/"},
+			authHeaders:              []string{"Bearer 2345678"},
+			expectedAccessToken:      "2345678",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedCookie: &http.Cookie{
+				Name:     "access_token",
+				Path:     "/api/",
+				Domain:   "example.org",
+				Expires:  time.Now().UTC().Add(-1000 * time.Second),
+				MaxAge:   -1,
+				Secure:   true,
+				HttpOnly: true,
+				SameSite: http.SameSiteStrictMode,
+			},
+			expectedBody: `CookieAttributes:{"UseCookie":false,"Secure":false,"SameSite":false,"Domain":"","Path":""}`,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -117,12 +205,16 @@ func TestUserMiddleware(t *testing.T) {
 			logHook, restoreFunc := logging.MockSharedLoggerHook()
 			defer restoreFunc()
 
-			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.userIDReturnedByDB, tt.dbError)
+			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.cookieHeaders,
+				tt.userIDReturnedByDB, tt.dbError)
 			defer func() { _ = resp.Body.Close() }()
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
 			assert.Equal("application/json; charset=utf-8", resp.Header.Get("Content-Type"))
 			assert.Equal(tt.expectedServiceWasCalled, serviceWasCalled)
+			if tt.expectedCookie != nil {
+				assert.Equal(resp.Cookies()[0].String(), tt.expectedCookie.String())
+			}
 			assert.Contains(string(bodyBytes), tt.expectedBody)
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 			if tt.expectedLogs == "" {
@@ -135,7 +227,7 @@ func TestUserMiddleware(t *testing.T) {
 	}
 }
 
-func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []string,
+func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, cookieHeaders []string,
 	userID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
 	dbmock, mock := database.NewDBMock()
 	defer func() { _ = dbmock.Close() }()
@@ -151,9 +243,11 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
-			neededRows := mock.NewRows([]string{"group_id"})
+			neededRows := mock.NewRows([]string{"group_id", "login", "login_id", "is_admin", "access_group_id", "temp_user",
+				"allow_subgroups", "notifications_read_at", "default_language"})
 			if userID != 0 {
-				neededRows = neededRows.AddRow(userID)
+				neededRows = neededRows.AddRow(userID, "login", "12345", int64(1), int64(23456), int64(1), int64(1),
+					[]byte("2019-05-30 11:00:00"), "fr")
 			}
 			expectation.WillReturnRows(neededRows)
 		}
@@ -165,7 +259,10 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string)
+		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes))
+		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))
+		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string) +
+			"\nCookieAttributes:" + string(cookieAttributes) + "\nUser:" + string(userAttributes)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))
@@ -177,6 +274,9 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, nil)
 	for _, header := range authorizationHeaders {
 		mainRequest.Header.Add("Authorization", header)
+	}
+	for _, header := range cookieHeaders {
+		mainRequest.Header.Add("Cookie", header)
 	}
 	client := &http.Client{}
 	resp, _ := client.Do(mainRequest)

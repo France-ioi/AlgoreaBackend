@@ -12,6 +12,7 @@ func MockUserMiddleware(user *database.User) func(next http.Handler) http.Handle
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := context.WithValue(r.Context(), ctxBearer, "accesstoken")
+			ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &SessionCookieAttributes{})
 			ctx = context.WithValue(ctx, ctxUser, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

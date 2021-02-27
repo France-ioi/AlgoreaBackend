@@ -10,13 +10,19 @@ import (
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
-	if ctx.requestHeaders == nil {
-		ctx.requestHeaders = make(map[string][]string)
-	}
 	value, err := ctx.preprocessString(value)
 	if err != nil {
 		return err
 	}
+
+	if value == nullHeaderValue {
+		return nil
+	}
+
+	if ctx.requestHeaders == nil {
+		ctx.requestHeaders = make(map[string][]string)
+	}
+
 	ctx.requestHeaders[name] = append(ctx.requestHeaders[name], value)
 	return nil
 }
