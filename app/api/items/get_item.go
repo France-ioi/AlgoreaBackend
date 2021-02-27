@@ -101,6 +101,9 @@ type itemResponse struct {
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 	// required: true
 	TitleBarVisible bool `json:"title_bar_visible"`
+	// Nullable
+	// required: true
+	TextID *string `json:"text_id"`
 	// required: true
 	ReadOnly bool `json:"read_only"`
 	// required: true
@@ -194,6 +197,7 @@ type rawItem struct {
 	EntryFrozenTeams             bool
 	EntryMaxTeamSize             int32
 	PromptToJoinGroupByCode      bool
+	TextID                       *string
 	URL                          *string // only if not a chapter
 	UsesAPI                      bool    // only if not a chapter
 	HintsAllowed                 bool    // only if not a chapter
@@ -229,6 +233,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database
 			items.entry_participant_type,
 			items.duration,
 			items.no_score,
+			items.text_id,
 			items.default_language_tag,
 			items.prompt_to_join_group_by_code,
 			items.title_bar_visible,
@@ -270,6 +275,7 @@ func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *d
 		EntryMaxTeamSize:             rawData.EntryMaxTeamSize,
 		PromptToJoinGroupByCode:      rawData.PromptToJoinGroupByCode,
 		TitleBarVisible:              rawData.TitleBarVisible,
+		TextID:                       rawData.TextID,
 		ReadOnly:                     rawData.ReadOnly,
 		FullScreen:                   rawData.FullScreen,
 		ShowUserInfos:                rawData.ShowUserInfos,
