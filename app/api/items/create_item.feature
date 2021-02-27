@@ -1,5 +1,4 @@
 Feature: Create item
-
   Background:
     Given the database has the following table 'groups':
       | id | name    | type    | root_activity_id | root_skill_id |
@@ -313,58 +312,6 @@ Feature: Create item
       | attempt_id | participant_id | item_id             | result_propagation_state |
       | 0          | 11             | 12                  | done                     |
       | 0          | 11             | 21                  | done                     |
-
-  Scenario: Valid with empty full_screen and requires_explicit_entry
-    Given I am the user with id "11"
-    When I send a POST request to "/items" with the following body:
-    """
-    {
-      "type": "Course",
-      "full_screen": "",
-      "language_tag": "sl",
-      "title": "my title",
-      "parent": {"item_id": "21"},
-      "requires_explicit_entry": true
-    }
-    """
-    Then the response code should be 201
-    And the response body should be, in JSON:
-    """
-    {
-      "success": true,
-      "message": "created",
-      "data": { "id": "5577006791947779410" }
-    }
-    """
-    And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | participants_group_id |
-      | 5577006791947779410 | Course | null | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 1                       | 0               | 0        | 0                            | 8674665223082153551   |
-    And the table "items_strings" should be:
-      | item_id             | language_tag | title    | image_url | subtitle | description |
-      | 5577006791947779410 | sl           | my title | null      | null     | null        |
-    And the table "items_items" should be:
-      | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
-      | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
-    And the table "items_ancestors" should be:
-      | ancestor_item_id | child_item_id       |
-      | 21               | 5577006791947779410 |
-    And the table "permissions_granted" should be:
-      | group_id            | item_id             | source_group_id     | origin           | can_view | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) < 3 |
-      | 11                  | 21                  | 11                  | group_membership | solution | none           | none      | children | 0        | 0                                                       |
-      | 11                  | 5577006791947779410 | 11                  | self             | none     | none           | none      | none     | 1        | 1                                                       |
-      | 8674665223082153551 | 5577006791947779410 | 8674665223082153551 | group_membership | content  | none           | none      | none     | 0        | 1                                                       |
-    And the table "permissions_generated" should be:
-      | group_id            | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 11                  | 21                  | solution           | none                     | none                | children           | 0                  |
-      | 11                  | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
-      | 8674665223082153551 | 5577006791947779410 | content            | none                     | none                | none               | 0                  |
-    And the table "groups" should be:
-      | id                  | type                | name                             |
-      | 10                  | Friends             | Friends                          |
-      | 11                  | User                | jdoe                             |
-      | 8674665223082153551 | ContestParticipants | 5577006791947779410-participants |
-    And the table "attempts" should stay unchanged
-
 
   Scenario: Valid when type=Skill
     Given I am the user with id "11"

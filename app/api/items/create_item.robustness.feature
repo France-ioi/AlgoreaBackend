@@ -377,6 +377,7 @@ Feature: Create item - robustness
     Examples:
       | field                            | value       | error                                                                     |
       | full_screen                      | wrong value | full_screen must be one of [forceYes forceNo default]                     |
+      | full_screen                      |             | full_screen must be one of [forceYes forceNo default]                     |
       | type                             | Wrong       | type must be one of [Chapter Task Course Skill]                           |
       | type                             | Skill       | type can be equal to 'Skill' only if the parent item is a skill           |
       | validation_type                  | Wrong       | validation_type must be one of [None All AllButOne Categories One Manual] |

@@ -28,8 +28,8 @@ type Item struct {
 	TextID                 *string `json:"text_id"`
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
 	ReadOnly               bool    `json:"read_only"`
-	// enum: forceYes,forceNo,default,
-	FullScreen   string `json:"full_screen" validate:"omitempty,oneof=forceYes forceNo default"`
+	// enum: forceYes,forceNo,default
+	FullScreen   string `json:"full_screen" validate:"oneof=forceYes forceNo default"`
 	HintsAllowed bool   `json:"hints_allowed"`
 	FixedRanks   bool   `json:"fixed_ranks"`
 

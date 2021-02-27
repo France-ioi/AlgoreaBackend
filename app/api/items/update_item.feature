@@ -247,25 +247,6 @@ Background:
       | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
       | 0          | 11             | 70      | 56.666668      | done                     |
 
-  Scenario: Valid with empty full_screen
-    Given I am the user with id "11"
-    When I send a PUT request to "/items/50" with the following body:
-      """
-      {
-        "full_screen": ""
-      }
-      """
-    Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "50"
-    And the table "items" at id "50" should be:
-      | id | type    | url                  | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entering_time_min   | entering_time_max   | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
-      | 50 | Chapter | http://someurl2.com/ | en                   | 1        | Task 2  | 0                 | 1                         | 0        | 1         |             | 1             | 1           | One             | Half                             | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | null                  |
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
-
   Scenario: Should set content_view_propagation to 'none' by default if can_grant_view = 'none' for the parent item
     Given I am the user with id "11"
     And the database has the following table 'items':

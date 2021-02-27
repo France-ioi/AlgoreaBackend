@@ -82,6 +82,7 @@ Feature: Update item - robustness
     | default_language_tag             | "unknow"      | default language should exist and there should be item's strings in this language  |
     | default_language_tag             | "sl"          | default language should exist and there should be item's strings in this language  | # no strings for the tag
     | full_screen                      | "wrong value" | full_screen must be one of [forceYes forceNo default]                              |
+    | full_screen                      | ""            | full_screen must be one of [forceYes forceNo default]                              |
     | validation_type                  | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]          |
     | entry_min_admitted_members_ratio | "Wrong"       | entry_min_admitted_members_ratio must be one of [All Half One None]                |
     | duration                         | "12:34"       | invalid duration                                                                   |
