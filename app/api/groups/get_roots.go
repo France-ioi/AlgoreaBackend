@@ -117,10 +117,12 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 				IF(
 					EXISTS(
 						SELECT 1 FROM user_ancestors
-						JOIN groups_ancestors_active AS group_descendants ON group_descendants.ancestor_group_id = groups.id
-						JOIN group_managers
-							ON group_managers.group_id = group_descendants.child_group_id AND
-								 group_managers.manager_id = user_ancestors.ancestor_group_id
+						JOIN group_managers ON group_managers.manager_id = user_ancestors.ancestor_group_id
+						JOIN groups_ancestors_active AS managed_groups
+							ON managed_groups.ancestor_group_id = group_managers.group_id
+						JOIN groups_ancestors_active AS group_descendants
+							ON group_descendants.ancestor_group_id = groups.id AND
+							   group_descendants.child_group_id = managed_groups.child_group_id
 					),
 					'descendant',
 					'none'
