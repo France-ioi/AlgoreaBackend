@@ -189,10 +189,10 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			IF(result_with_best_score.participant_id IS NULL,
 				0,
 				(
-					SELECT IF(result_with_best_score.validated,
+					SELECT GREATEST(IF(result_with_best_score.validated,
 						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
 						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
-					)
+					), 0)
 					FROM results
 					WHERE participant_id = end_members.id AND item_id = items.id
 				)

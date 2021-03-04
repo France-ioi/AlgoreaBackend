@@ -207,6 +207,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 3          | 14             | 211     | 2017-05-29 06:38:38 | 50             | 2017-05-30 06:38:38 | 10           | 20          | 2017-05-30 06:38:38 | 2018-05-27 06:38:38 |
       | 0          | 15             | 211     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-26 06:38:38 |
       | 0          | 15             | 212     | 2017-03-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-25 06:38:38 |
+      | 0          | 14             | 214     | 3017-03-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-25 06:38:38 |
       | 0          | 16             | 212     | 2019-01-01 00:00:00 | 10             | null                | 0            | 0           | null                | 2019-06-01 00:00:00 |
       | 4          | 14             | 211     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-24 06:38:38 |
       | 1          | 15             | 211     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-23 06:38:38 |
@@ -408,7 +409,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "group_id": "14",
         "hints_requested": 0,
         "item_id": "214",
-        "latest_activity_at": null,
+        "latest_activity_at": "2018-05-25T06:38:38Z",
         "score": 0,
         "submissions": 0,
         "time_spent": 0,
@@ -732,7 +733,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "group_id": "14",
         "hints_requested": 0,
         "item_id": "214",
-        "latest_activity_at": null,
+        "latest_activity_at": "2018-05-25T06:38:38Z",
         "score": 0,
         "submissions": 0,
         "time_spent": 0,

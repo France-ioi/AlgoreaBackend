@@ -220,6 +220,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 1          | 67             | 212     | 2019-01-01 00:00:00 | 10             | 2017-05-30 06:38:38 | 6            | 7           | null                | 2019-07-01 00:00:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
       | 0          | 67             | 213     | 2018-11-01 00:00:00 | 0              | null                | 0            | 0           | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
       | 0          | 67             | 214     | 2017-05-29 06:38:38 | 15             | 2017-05-29 06:38:48 | 10           | 11          | 2017-05-29 06:38:48 | 2017-05-30 06:38:48 | # min(validated_at) for 67, 214 comes from this line (from a user)
+      | 0          | 67             | 215     | 3018-11-01 00:00:00 | 0              | null                | 0            | 0           | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
       | 4          | 14             | 211     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-24 06:38:38 |
       | 1          | 15             | 211     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-23 06:38:38 |
       | 1          | 15             | 212     | 2017-03-29 06:38:38 | 100            | null                | 0            | 0           | null                | 2018-05-22 06:38:38 |
@@ -278,7 +279,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "67",
         "hints_requested": 0,
         "item_id": "215",
-        "latest_activity_at": null,
+        "latest_activity_at": "2018-11-01T00:00:00Z",
         "score": 0,
         "submissions": 0,
         "time_spent": 0,
