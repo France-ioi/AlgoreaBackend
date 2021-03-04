@@ -166,7 +166,11 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //   otherwise the "bad request" response is returned.
 //
+//
 //   The current user should not be temporary, otherwise the "forbidden" error response is returned.
+//
+//
+//   At least one of `parent` and `as_root_of_group_id` should be given, otherwise the "bad request" error response is returned.
 // parameters:
 // - in: body
 //   name: data
