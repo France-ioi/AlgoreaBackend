@@ -64,7 +64,7 @@ type itemActivityLogResponseRow struct {
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
 }
 
-// swagger:operation GET /items/{item_id}/log items itemActivityLog
+// swagger:operation GET /items/{item_id}/log items itemActivityLogForItem
 // ---
 // summary: Activity log on an item
 // description: >
@@ -149,13 +149,101 @@ type itemActivityLogResponseRow struct {
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-
+func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
+
+	return srv.getActivityLog(w, r, &itemID)
+}
+
+// swagger:operation GET /items/log items itemActivityLogForAllItems
+// ---
+// summary: Activity log for all visible items
+// description: >
+//   Returns rows from `answers` having `type` = "Submission" and started/validated `results`
+//   with additional info on users and items for the participant or the `{watched_group_id}` group
+//   (only one of `{as_team_id}` and `{watched_group_id}` can be given).
+//
+//
+//   If possible, items titles are shown in the authenticated user's default language.
+//   Otherwise, the item's default language is used.
+//
+//
+//   If `{watched_group_id}` is given, all rows of the result are related to descendant groups of `{watched_group_id}`
+//   and items that are visible to the current user (at least 'info' access with `can_watch` >= 'result').
+//
+//
+//   If `{watched_group_id}` is not given, all rows of the result are related to the participant group (the current user or `{as_team_id}`)
+//   and items that are visible to the current user (at least 'info' access).
+// parameters:
+// - name: as_team_id
+//   in: query
+//   type: integer
+// - name: watched_group_id
+//   description: The current user should be a manager of the watched group with `can_watch_members` = true,
+//                otherwise the 'forbidden' error is returned
+//   in: query
+//   type: integer
+// - name: from.at
+//   description: Start the page from the row next to the row with `at` = `{from.at}`
+//                (all other `from.*` parameters are required when `from.at` is present)
+//   in: query
+//   type: string
+// - name: from.item_id
+//   description: Start the page from the row next to the row with `item_id`=`{from.item_id}`
+//                (all other `from.*` parameters are required when `from.item_id` is present)
+//   in: query
+//   type: integer
+// - name: from.participant_id
+//   description: Start the page from the row next to the row with `participant_id`=`{from.participant_id}`
+//                (all other `from.*` parameters are required when `from.participant_id` is present)
+//   in: query
+//   type: integer
+// - name: from.attempt_id
+//   description: Start the page from the row next to the row with `attempt_id`=`{from.attempt_id}`
+//                (all other `from.*` parameters are required when `from.attempt_id` is present)
+//   in: query
+//   type: integer
+// - name: from.answer_id
+//   description: Start the page from the row next to the row with `from_answer_id`=`{from.answer_id}`
+//                (all other `from.*` parameters are required when `from.answer_id` is present)
+//   in: query
+//   type: integer
+// - name: from.activity_type
+//   description: Start the page from the row next to the row with `activity_type`=`{from.activity_type}`
+//                (all other `from.*` parameters are required when `from.activity_type` is present)
+//   in: query
+//   type: string
+//   enum: [result_started,submission,result_validated]
+// - name: limit
+//   description: Display the first N rows
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     description: OK. The array of users answers
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/itemActivityLogResponseRow"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
+func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) service.APIError {
+	return srv.getActivityLog(w, r, nil)
+}
+
+func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) service.APIError {
+	user := srv.GetUser(r)
 
 	// check and patch from.activity_type to make it integer
 	urlParams := r.URL.Query()
@@ -201,7 +289,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request) servi
 	return service.NoError
 }
 
-func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, user *database.User) (*database.DB, service.APIError) {
+func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, user *database.User) (*database.DB, service.APIError) {
 	participantID := service.ParticipantIDFromContext(r.Context())
 	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
@@ -216,12 +304,17 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID int64, use
 			Select("child_group_id AS id")
 	}
 
-	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
 	visibleItemDescendants := srv.Store.Permissions().MatchingGroupAncestors(user.GroupID).
 		Select("item_id AS id").
-		Where("item_id = ? OR item_id IN ?", itemID, itemDescendants.SubQuery()).
 		Group("item_id").
 		HavingMaxPermissionAtLeast("view", "info")
+
+	if itemID != nil {
+		itemDescendants := srv.Store.ItemAncestors().DescendantsOf(*itemID).Select("child_item_id")
+		visibleItemDescendants = visibleItemDescendants.
+			Where("item_id = ? OR item_id IN ?", *itemID, itemDescendants.SubQuery())
+	}
+
 	if watchedGroupIDSet {
 		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
 	}
