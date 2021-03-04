@@ -3,7 +3,7 @@ Feature: Search for groups available to the current user
     Given the database has the following table 'groups':
       | id | type    | name                                      | description            | is_public |
       | 1  | Class   | (the) Our Class                           | Our class group        | 1         |
-      | 2  | Team    | (the) Our Team ___                        | Our team group         | 1         |
+      | 2  | Team    | (the) Our Team ___                        | null                   | 1         |
       | 3  | Club    | (the) Our Club                            | Our club group         | 1         |
       | 4  | Friends | (the) \|\|\|Our Friends \\\\\\%\\\\%\\ :) | Group for our friends  | 1         |
       | 5  | Other   | Other people                              | Group for other people | 1         |
@@ -39,7 +39,7 @@ Feature: Search for groups available to the current user
       {
         "id": "2",
         "name": "(the) Our Team ___",
-        "description": "Our team group",
+        "description": null,
         "type": "Team"
       },
       {
@@ -73,7 +73,7 @@ Feature: Search for groups available to the current user
       {
         "id": "2",
         "name": "(the) Our Team ___",
-        "description": "Our team group",
+        "description": null,
         "type": "Team"
       },
       {
@@ -117,7 +117,7 @@ Feature: Search for groups available to the current user
       {
         "id": "2",
         "name": "(the) Our Team ___",
-        "description": "Our team group",
+        "description": null,
         "type": "Team"
       }
     ]
