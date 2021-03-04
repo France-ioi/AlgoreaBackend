@@ -27,12 +27,25 @@ Feature: Get root groups (groupRootsView)
       | 23 | Descendant Managed By Ancestor           | Class   |
       | 24 | Intermediate Group                       | Base    |
       | 25 | Ancestor                                 | Base    |
-      | 41 | user                                     | User    |
-      | 49 | User                                     | User    |
+      | 26 | S1                                       | Club    |
+      | 27 | S2                                       | Club    |
+      | 28 | C1                                       | Class   |
+      | 29 | C2                                       | Class   |
+      | 30 | C3                                       | Class   |
+      | 31 | U1                                       | User    |
+      | 32 | U2                                       | User    |
+      | 33 | U3                                       | User    |
+      | 34 | U3                                       | User    |
+      | 41 | owner                                    | User    |
+      | 49 | jack                                     | User    |
+      | 50 | jane                                     | User    |
+      | 51 | john                                     | User    |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 41       | Jean-Michel | Blanquer  |
       | jack  | 49       | Jack        | Smith     |
+      | jane  | 50       | Jane        | Doe       |
+      | john  | 51       | John        | Doe       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 2        | 41         |
@@ -43,6 +56,8 @@ Feature: Get root groups (groupRootsView)
       | 15       | 41         |
       | 19       | 21         |
       | 23       | 25         |
+      | 26       | 50         |
+      | 28       | 51         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | expires_at          |
       | 1               | 41             | 9999-12-31 23:59:59 |
@@ -64,6 +79,16 @@ Feature: Get root groups (groupRootsView)
       | 22              | 23             | 9999-12-31 23:59:59 |
       | 24              | 41             | 9999-12-31 23:59:59 |
       | 25              | 24             | 9999-12-31 23:59:59 |
+      | 26              | 28             | 9999-12-31 23:59:59 |
+      | 26              | 29             | 9999-12-31 23:59:59 |
+      | 27              | 29             | 9999-12-31 23:59:59 |
+      | 27              | 30             | 9999-12-31 23:59:59 |
+      | 28              | 31             | 9999-12-31 23:59:59 |
+      | 28              | 32             | 9999-12-31 23:59:59 |
+      | 29              | 32             | 9999-12-31 23:59:59 |
+      | 29              | 33             | 9999-12-31 23:59:59 |
+      | 30              | 33             | 9999-12-31 23:59:59 |
+      | 30              | 34             | 9999-12-31 23:59:59 |
       | 5               | 41             | 2010-01-01 00:00:00 |
       | 7               | 41             | 2010-01-01 00:00:00 |
       | 9               | 41             | 2010-01-01 00:00:00 |
@@ -181,5 +206,46 @@ Feature: Get root groups (groupRootsView)
     And the response body should be, in JSON:
     """
     [
+    ]
+    """
+
+  Scenario: Ancestors of managed groups are shown
+    Given I am the user with id "50"
+    When I send a GET request to "/groups/roots"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "current_user_managership": "direct",
+        "current_user_membership": "none",
+        "id": "26",
+        "name": "S1",
+        "type": "Club"
+      },
+      {
+        "current_user_managership": "descendant",
+        "current_user_membership": "none",
+        "id": "27",
+        "name": "S2",
+        "type": "Club"
+      }
+    ]
+    """
+
+  Scenario: Ancestors of managed users are not shown
+    Given I am the user with id "51"
+    When I send a GET request to "/groups/roots"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "current_user_managership": "descendant",
+        "current_user_membership": "none",
+        "id": "26",
+        "name": "S1",
+        "type": "Club"
+      }
     ]
     """

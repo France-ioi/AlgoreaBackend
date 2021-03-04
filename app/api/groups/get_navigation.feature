@@ -29,12 +29,25 @@ Feature: Get navigation data (groupNavigationView)
       | 25 | Ancestor                                 | Base    | false     |
       | 26 | Parent                                   | Class   | false     |
       | 27 | Public                                   | Base    | true      |
-      | 41 | user                                     | User    | false     |
-      | 49 | User                                     | User    | false     |
+      | 28 | S1                                       | Club    | false     |
+      | 29 | S2                                       | Club    | false     |
+      | 30 | C1                                       | Class   | false     |
+      | 31 | C2                                       | Class   | false     |
+      | 32 | C3                                       | Class   | false     |
+      | 33 | U1                                       | User    | false     |
+      | 34 | U2                                       | User    | false     |
+      | 35 | U3                                       | User    | false     |
+      | 36 | U3                                       | User    | false     |
+      | 41 | owner                                    | User    | false     |
+      | 49 | jack                                     | User    | false     |
+      | 50 | jane                                     | User    | false     |
+      | 51 | john                                     | User    | false     |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 41       | Jean-Michel | Blanquer  |
       | jack  | 49       | Jack        | Smith     |
+      | jane  | 50       | Jane        | Doe       |
+      | john  | 51       | John        | Doe       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 2        | 41         |
@@ -45,6 +58,8 @@ Feature: Get navigation data (groupNavigationView)
       | 15       | 41         |
       | 19       | 21         |
       | 23       | 25         |
+      | 28       | 50         |
+      | 31       | 51         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | expires_at          |
       | 1               | 41             | 9999-12-31 23:59:59 |
@@ -79,6 +94,16 @@ Feature: Get navigation data (groupNavigationView)
       | 26              | 22             | 9999-12-31 23:59:59 |
       | 26              | 25             | 2010-01-01 00:00:00 |
       | 26              | 27             | 9999-12-31 23:59:59 |
+      | 28              | 30             | 9999-12-31 23:59:59 |
+      | 28              | 31             | 9999-12-31 23:59:59 |
+      | 29              | 31             | 9999-12-31 23:59:59 |
+      | 29              | 32             | 9999-12-31 23:59:59 |
+      | 30              | 33             | 9999-12-31 23:59:59 |
+      | 30              | 34             | 9999-12-31 23:59:59 |
+      | 31              | 34             | 9999-12-31 23:59:59 |
+      | 31              | 35             | 9999-12-31 23:59:59 |
+      | 32              | 35             | 9999-12-31 23:59:59 |
+      | 32              | 36             | 9999-12-31 23:59:59 |
       | 5               | 41             | 2010-01-01 00:00:00 |
       | 7               | 41             | 2010-01-01 00:00:00 |
       | 9               | 41             | 2010-01-01 00:00:00 |
@@ -211,7 +236,7 @@ Feature: Get navigation data (groupNavigationView)
       "children": [
         {
           "id": "41",
-          "name": "user",
+          "name": "owner",
           "type": "User",
           "current_user_managership": "ancestor",
           "current_user_membership": "none"
@@ -343,5 +368,49 @@ Feature: Get navigation data (groupNavigationView)
       "name": "Root With Managed Ancestor",
       "type": "Friends",
       "children": []
+    }
+    """
+
+  Scenario: Ancestors of managed groups are visible
+    Given I am the user with id "50"
+    When I send a GET request to "/groups/29/navigation"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "29",
+      "name": "S2",
+      "type": "Club",
+      "children": [
+        {
+          "current_user_managership": "ancestor",
+          "current_user_membership": "none",
+          "id": "31",
+          "name": "C2",
+          "type": "Class"
+        }
+      ]
+    }
+    """
+
+  Scenario: Ancestors of managed users are not visible
+    Given I am the user with id "51"
+    When I send a GET request to "/groups/28/navigation"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "28",
+      "name": "S1",
+      "type": "Club",
+      "children": [
+        {
+          "current_user_managership": "direct",
+          "current_user_membership": "none",
+          "id": "31",
+          "name": "C2",
+          "type": "Class"
+        }
+      ]
     }
     """

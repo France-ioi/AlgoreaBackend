@@ -142,8 +142,10 @@ func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *da
 
 func ancestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
 	return store.ActiveGroupAncestors().ManagedByUser(user).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Joins(`
 			JOIN groups_ancestors_active AS ancestors_of_managed
-				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id`).
+				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id AND
+				   (groups.type != 'User' OR ancestors_of_managed.is_self)`).
 		Select("ancestors_of_managed.ancestor_group_id")
 }
