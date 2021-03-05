@@ -37,6 +37,12 @@ docker exec -it algoreabackend_db_1 mysql -h localhost -u algorea -pa_db_passwor
 
 The application needs a database (MySQL) to run and requires it for a major part of its tests.
 
+It is recommended to set
+  * `innodb_lock_wait_timeout`=1,
+  * `max-allowed-packet`=10485760
+
+and provide at least 2Gb of memory to the MySQL server.
+
 To make testing and development easier, a `docker-compose` file declares a database using the default configuration. Launch `docker-compose up` to run tests without any configuration efforts.
 
 ## Configuration
