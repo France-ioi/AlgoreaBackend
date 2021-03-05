@@ -175,10 +175,10 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			IFNULL(MAX(result_with_best_score.submissions), 0) AS submissions,
 			IF(MAX(result_with_best_score.participant_id) IS NULL,
 				0,
-				IF(MAX(result_with_best_score.validated),
+				GREATEST(IF(MAX(result_with_best_score.validated),
 					TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), MIN(first_validated_result.validated_at)),
 					TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), NOW())
-				)
+				), 0)
 			) AS time_spent`).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
