@@ -1,4 +1,4 @@
-package currentuser
+package groups
 
 import (
 	"fmt"
@@ -14,19 +14,13 @@ import (
 
 const minSearchStringLength = 3
 
-// swagger:operation GET /current-user/available-groups groups groupsJoinableSearch
+// swagger:operation GET /groups/possible-subgroups groups groupsPossibleSubgroupsSearch
 // ---
-// summary: Search for groups to join
+// summary: Search for possible subgroups
 // description: >
-//   Searches for groups that can be joined freely, based on a substring of their name.
-//   Returns groups with `is_public` = 1 and `type` != 'User', whose `name` has `search` as a substring,
-//   and for that the current user is not already a member and don’t have pending requests/invitations.
-//
-//
-//   Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
-//   at the beginning. This causes MySQL to explore every row having `is_public`=1. Moreover, actually
-//   it has to examine every row of the `groups` table since there is no index for the `is_public` column.
-//   But since there are not too many groups and the result rows count is limited, the search works almost well.
+//   Searches for groups that can be added as subgroups, based on a substring of their name.
+//   Returns groups for which the user is a manager with `can_manage` = 'memberships_and_group',
+//   whose `name` has `{search}` as a substring.
 // parameters:
 // - name: search
 //   in: query
@@ -80,7 +74,7 @@ const minSearchStringLength = 3
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Request) service.APIError {
 	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -95,28 +89,16 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 
 	user := srv.GetUser(r)
 
-	skipGroups := srv.Store.GroupGroups().
-		Select("groups_groups.parent_group_id").
-		Where("groups_groups.child_group_id = ?", user.GroupID).
-		SubQuery()
-
-	skipPending := srv.Store.GroupPendingRequests().
-		Select("group_pending_requests.group_id").
-		Where("group_pending_requests.member_id = ?", user.GroupID).
-		Where("group_pending_requests.type IN ('join_request', 'invitation')").
-		SubQuery()
-
 	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := srv.Store.Groups().
+	query := srv.Store.Groups().ManagedBy(user).
+		Where("group_managers.can_manage = 'memberships_and_group'").
+		Group("groups.id").
+		Where("groups.type != 'User'").
 		Select(`
 			groups.id,
 			groups.name,
 			groups.type,
 			groups.description`).
-		Where("groups.is_public").
-		Where("type != 'User'").
-		Where("groups.id NOT IN ?", skipGroups).
-		Where("groups.id NOT IN ?", skipPending).
 		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
