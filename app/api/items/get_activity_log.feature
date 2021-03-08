@@ -454,3 +454,334 @@ Feature: Get activity log
       }
     ]
     """
+
+  Scenario: Get activity for all visible items, the user is a manager of the watched group
+  This spec also checks:
+  1) that answers having type != "Submission" are filtered out,
+  2) activities ordering,
+  3) filtering by users groups,
+  4) that a user cannot see names of other users without approval
+    Given I am the user with id "21"
+    When I send a GET request to "/items/log?watched_group_id=13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+			{
+				"activity_type": "result_validated",
+				"at": "2017-05-30T12:00:00Z",
+				"attempt_id": "1",
+				"from_answer_id": "-1",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "result_validated",
+				"at": "2017-05-30T12:00:00Z",
+				"attempt_id": "1",
+				"from_answer_id": "-1",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "result_validated",
+				"at": "2017-05-30T12:00:00Z",
+				"attempt_id": "0",
+				"from_answer_id": "-1",
+				"item": {"id": "202", "string": { "title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "18",
+				"at": "2017-05-30T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "18",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "13",
+				"at": "2017-05-30T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "13",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "41", "name": "paul", "type": "User"},
+				"user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "23",
+				"at": "2017-05-30T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "23",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "28",
+				"at": "2017-05-30T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "28",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "12",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "12",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "16",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "16",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+			},
+			{
+				"activity_type": "result_validated",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "16",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "11",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "11",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "17",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "17",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+			},
+			{
+				"activity_type": "result_started",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "17",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "result_validated",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "17",
+				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "1",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "1",
+				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"score": 99,
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "7",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "7",
+				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"score": 98,
+				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "22",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "22",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "26",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "1",
+				"from_answer_id": "26",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "21",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "21",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "submission",
+				"answer_id": "27",
+				"at": "2017-05-29T06:38:38Z",
+				"attempt_id": "0",
+				"from_answer_id": "27",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+			},
+			{
+				"activity_type": "result_started",
+				"at": "2017-05-29T06:38:00Z",
+				"attempt_id": "1",
+				"from_answer_id": "27",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "result_started",
+				"at": "2017-05-29T06:38:00Z",
+				"attempt_id": "0",
+				"from_answer_id": "27",
+				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "result_started",
+				"at": "2017-05-29T06:38:00Z",
+				"attempt_id": "1",
+				"from_answer_id": "27",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "result_started",
+				"at": "2017-05-29T06:38:00Z",
+				"attempt_id": "0",
+				"from_answer_id": "27",
+				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+				"participant": {"id": "11", "name": "user", "type": "User"},
+				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+			},
+			{
+				"activity_type": "result_validated",
+				"at": "2016-05-30T12:00:00Z",
+				"attempt_id": "1",
+				"from_answer_id": "27",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "41", "name": "paul", "type": "User"},
+				"user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
+			},
+			{
+				"activity_type": "result_started",
+				"at": "2016-05-29T06:38:00Z",
+				"attempt_id": "1",
+				"from_answer_id": "27",
+				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+				"participant": {"id": "41", "name": "paul", "type": "User"},
+				"user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
+			}
+    ]
+    """
+
+  Scenario: Get activity of the current user for all visible items
+    Given I am the user with id "31"
+    When I send a GET request to "/items/log"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "31", "name": "jane", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "participant": {"id": "31", "name": "jane", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
+        "from_answer_id": "-1"
+      }
+    ]
+    """
+
+  Scenario: Get activity of the current user for all visible items (only the first row)
+    Given I am the user with id "31"
+    When I send a GET request to "/items/log?limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "31", "name": "jane", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
+        "from_answer_id": "-1"
+      }
+    ]
+    """
+
+  Scenario: Get activity of the current user for all visible items (start from the second row)
+    Given I am the user with id "31"
+    When I send a GET request to "/items/log?from.activity_type=result_validated&from.at=2017-05-30T12:00:00Z&from.participant_id=31&from.attempt_id=1&from.item_id=200&from.answer_id=-1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "participant": {"id": "31", "name": "jane", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
+        "from_answer_id": "-1"
+      }
+    ]
+    """

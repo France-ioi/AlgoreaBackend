@@ -100,3 +100,54 @@ Feature: Get activity log - robustness
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=grading"
     Then the response code should be 400
     And the response error message should contain "Wrong value for from.activity_type (should be one of (result_started, submission, result_validated))"
+
+  Scenario: Wrong as_team_id (without item_id)
+    Given I am the user with id "23"
+    When I send a GET request to "/items/log?as_team_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+
+  Scenario: Wrong watched_group_id (without item_id)
+    Given I am the user with id "23"
+    When I send a GET request to "/items/log?watched_group_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for watched_group_id (should be int64)"
+
+  Scenario: Both as_team_id and watched_group_id are given (without item_id)
+    Given I am the user with id "23"
+    When I send a GET request to "/items/200/log?watched_group_id=13&as_team_id=30"
+    Then the response code should be 400
+    And the response error message should contain "Only one of as_team_id and watched_group_id can be given"
+
+  Scenario: Should fail when user cannot watch group members of watched_group_id (without item_id)
+    Given I am the user with id "21"
+    When I send a GET request to "/items/log?watched_group_id=13"
+    Then the response code should be 403
+    And the response error message should contain "No rights to watch for watched_group_id"
+
+  Scenario: Should fail when user doesn't exist (without item_id)
+    Given I am the user with id "404"
+    When I send a GET request to "/items/log"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+
+  Scenario: Should return empty array when user is an admin of the group, but has no visible items (without item_id)
+    Given I am the user with id "23"
+    When I send a GET request to "/items/log?watched_group_id=13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    []
+    """
+
+  Scenario: Should fail when some of from.* parameters are missing (without item_id)
+    Given I am the user with id "23"
+    When I send a GET request to "/items/log?watched_group_id=13&from.answer_id=1"
+    Then the response code should be 400
+    And the response error message should contain "All 'from' parameters (from.at, from.item_id, from.participant_id, from.attempt_id, from.activity_type, from.answer_id) or none of them must be present"
+
+  Scenario: Should fail when some of from.activity_type is invalid (without item_id)
+    Given I am the user with id "23"
+    When I send a GET request to "/items/log?watched_group_id=13&from.activity_type=grading"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for from.activity_type (should be one of (result_started, submission, result_validated))"
