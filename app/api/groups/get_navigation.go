@@ -48,8 +48,8 @@ type groupNavigationViewResponse struct {
 // summary: Get navigation data
 // description: >
 //
-//   Lists child groups visible to the user, so either 1) ancestors of a group he joined,
-//   2) ancestors of a group he manages, 3) descendants of a group he manages,
+//   Lists child groups visible to the user, so either 1) ancestors of a group he joined, or
+//   2) ancestors of a non-user group he manages, or 3) descendants of a group he manages, or
 //   4) groups with `is_public` = 1. Ordered alphabetically by name.
 //
 //
