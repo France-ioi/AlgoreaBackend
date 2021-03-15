@@ -8,6 +8,14 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// UserCountPart contains the number of descendant users for a group.
+// This field is only displayed if the current user is a manager of the group.
+// swagger:ignore
+type UserCountPart struct {
+	// The number of descendant users (returned only if the current user is a manager)
+	UserCount int32 `json:"user_count"`
+}
+
 // swagger:model groupChildrenViewResponseRow
 type groupChildrenViewResponseRow struct {
 	// The sub-group's `groups.id`
@@ -24,30 +32,29 @@ type groupChildrenViewResponseRow struct {
 	IsOpen bool `json:"is_open"`
 	// required:true
 	IsPublic bool `json:"is_public"`
-	// Nullable
 	// required:true
-	Code *string `json:"code"`
-	// The number of descendant users
-	// required:true
-	UserCount int32 `json:"user_count"`
-	// required:true
-	// enum: none,memberships,memberships_and_group
-	CanManage string `json:"can_manage"`
-	// required:true
-	CanGrantGroupAccess bool `json:"can_grant_group_access"`
-	// required:true
-	CanWatchMembers bool `json:"can_watch_members"`
-
-	CanManageValue int `json:"-"`
+	CurrentUserIsManager bool `json:"current_user_is_manager"`
+	*ManagerPermissionsPart
+	*UserCountPart
 }
 
 // swagger:operation GET /groups/{group_id}/children group-memberships groupChildrenView
 // ---
 // summary: List group's children
-// description: Returns children of the group having types
+// description: >
+//   Returns visible children of the group having types
 //   specified by `types_include` and `types_exclude` parameters.
 //
-//   * The authenticated user should be a manager of the parent group.
+//
+//   A group is visible if it is either
+//   1) an ancestor of a group the current user joined, or 2) an ancestor of a non-user group he manages, or
+//   3) a descendant of a group he manages, or 4) a public group.
+//
+//
+//   * The `group_id` should be visible to the current user.
+//
+//
+//   Note: `user_count` and `current_user_can_*` fields are omitted when the user is not a manager of the group.
 // parameters:
 // - name: group_id
 //   in: path
@@ -135,32 +142,37 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
-		return apiError
+	found, err := pickVisibleGroups(srv.Store.Groups().ByID(groupID), user).HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.Groups().
+	query := pickVisibleGroups(srv.Store.Groups().DB, user).
 		Select(`
 			groups.id as id, groups.name, groups.type, groups.grade,
-			groups.is_open, groups.is_public, groups.code,
-			(
-				SELECT COUNT(DISTINCT users.group_id) FROM users
+			groups.is_open, groups.is_public,
+			IF(manager_permissions.found,
+				(SELECT COUNT(DISTINCT users.group_id) FROM users
 				JOIN groups_groups_active ON groups_groups_active.child_group_id = users.group_id
 				JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id
-				WHERE groups_ancestors_active.ancestor_group_id = groups.id
+				WHERE groups_ancestors_active.ancestor_group_id = groups.id),
+				0
 			) AS user_count,
-			can_manage_value, can_grant_group_access, can_watch_members`).
+			manager_permissions.found AS current_user_is_manager,
+			current_user_can_manage_value, current_user_can_grant_group_access, current_user_can_watch_members`).
 		Joins(`
-			JOIN LATERAL (
-				SELECT IFNULL(MAX(can_manage_value), 1) AS can_manage_value,
-				       IFNULL(MAX(can_grant_group_access), 0) AS can_grant_group_access,
-				       IFNULL(MAX(can_watch_members), 0) AS can_watch_members
+			LEFT JOIN LATERAL (
+				SELECT COUNT(*) > 0 AS found,
+				       IFNULL(MAX(can_manage_value), 1) AS current_user_can_manage_value,
+				       IFNULL(MAX(can_grant_group_access), 0) AS current_user_can_grant_group_access,
+				       IFNULL(MAX(can_watch_members), 0) AS current_user_can_watch_members
 				FROM group_managers
 				JOIN groups_ancestors_active AS manager_ancestors
 					ON manager_ancestors.ancestor_group_id = group_managers.manager_id AND manager_ancestors.child_group_id = ?
 				JOIN groups_ancestors_active AS group_ancestors
 					ON group_ancestors.ancestor_group_id = group_managers.group_id AND group_ancestors.child_group_id = groups.id
-			) AS manager_permissions`, user.GroupID).
+			) AS manager_permissions ON 1`, user.GroupID).
 		Where("groups.id IN(?)",
 			srv.Store.ActiveGroupGroups().
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
@@ -181,7 +193,13 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 	service.MustNotBeError(query.Scan(&result).Error())
 	groupManagerStore := srv.Store.GroupManagers()
 	for index := range result {
-		result[index].CanManage = groupManagerStore.CanManageNameByIndex(result[index].CanManageValue)
+		if !result[index].CurrentUserIsManager {
+			result[index].ManagerPermissionsPart = nil
+			result[index].UserCountPart = nil
+		} else {
+			result[index].ManagerPermissionsPart.CurrentUserCanManage =
+				groupManagerStore.CanManageNameByIndex(result[index].CurrentUserCanManageValue)
+		}
 	}
 
 	render.Respond(w, r, result)

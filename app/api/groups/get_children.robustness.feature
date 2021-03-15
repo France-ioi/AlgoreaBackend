@@ -2,7 +2,7 @@ Feature: Get group children (groupChildrenView) - robustness
   Background:
     Given the database has the following table 'groups':
       | id | name    | grade | type  | is_open | is_public | code       |
-      | 11 | Group A | -3    | Class | true    | true      | ybqybxnlyo |
+      | 11 | Group A | -3    | Class | true    | false     | ybqybxnlyo |
       | 13 | Group B | -2    | Class | true    | true      | ybabbxnlyo |
     And the database has the following users:
       | login | temp_user | group_id | first_name  | last_name | default_language |
@@ -12,7 +12,7 @@ Feature: Get group children (groupChildrenView) - robustness
       | 13       | 21         |
     And the groups ancestors are computed
 
-  Scenario: User is not a manager of the parent group
+  Scenario: The group is invisible
     Given I am the user with id "21"
     When I send a GET request to "/groups/11/children"
     Then the response code should be 403
@@ -20,7 +20,7 @@ Feature: Get group children (groupChildrenView) - robustness
 
   Scenario: User doesn't exist
     Given I am the user with id "404"
-    When I send a GET request to "/groups/11/children"
+    When I send a GET request to "/groups/13/children"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
