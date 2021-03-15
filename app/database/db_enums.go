@@ -31,7 +31,7 @@ func (db *DB) loadDBEnum(fullColumnName string) {
 	columnName := parsedColumn[1]
 
 	var valuesString string
-	mustNotBeError(NewDataStore(newDB(db.db.New())).Table("information_schema.COLUMNS").
+	mustNotBeError(NewDataStore(db.New()).Table("information_schema.COLUMNS").
 		Set("gorm:query_option", "").
 		Where("TABLE_SCHEMA = DATABASE()").
 		Where("TABLE_NAME = ?", tableName).

@@ -80,6 +80,11 @@ func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 	return sql.Open("instrumented-mysql", sourceDSN)
 }
 
+// New clones a new db connection without search conditions
+func (conn *DB) New() *DB {
+	return newDB(conn.db.New())
+}
+
 func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	return conn.inTransactionWithCount(txFunc, 0)
 }
@@ -226,12 +231,12 @@ func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
 
 // Union specifies UNION of two queries (receiver UNION query)
 func (conn *DB) Union(query interface{}) *DB {
-	return newDB(conn.db.New().Raw("? UNION ?", conn.db.SubQuery(), query))
+	return conn.New().Raw("? UNION ?", conn.db.SubQuery(), query)
 }
 
 // UnionAll specifies UNION ALL of two queries (receiver UNION ALL query)
 func (conn *DB) UnionAll(query interface{}) *DB {
-	return newDB(conn.db.New().Raw("? UNION ALL ?", conn.db.SubQuery(), query))
+	return conn.New().Raw("? UNION ALL ?", conn.db.SubQuery(), query)
 }
 
 // Raw uses raw sql as conditions
