@@ -14,25 +14,25 @@ import (
 // These fields are only displayed if the current user is a manager of the group.
 // swagger:ignore
 type GroupGetResponseCodePart struct {
-	// Nullable
+	// Nullable; returned only if the current user is a manager
 	Code *string `json:"code"`
-	// Nullable
+	// Nullable; returned only if the current user is a manager
 	CodeLifetime *string `json:"code_lifetime"`
-	// Nullable
+	// Nullable; returned only if the current user is a manager
 	CodeExpiresAt *database.Time `json:"code_expires_at"`
 }
 
-// GroupGetResponseManagerPermissionsPart contains fields related to permissions for managing the group.
+// ManagerPermissionsPart contains fields related to permissions for managing the group.
 // These fields are only displayed if the current user is a manager of the group.
 // swagger:ignore
-type GroupGetResponseManagerPermissionsPart struct {
+type ManagerPermissionsPart struct {
 	CurrentUserCanManageValue int `json:"-"`
-	// required:true
+	// returned only if the current user is a manager
 	// enum: none,memberships,memberships_and_group
 	CurrentUserCanManage string `json:"current_user_can_manage"`
-	// required:true
+	// returned only if the current user is a manager
 	CurrentUserCanGrantGroupAccess bool `json:"current_user_can_grant_group_access"`
-	// required:true
+	// returned only if the current user is a manager
 	CurrentUserCanWatchMembers bool `json:"current_user_can_watch_members"`
 }
 
@@ -73,7 +73,7 @@ type groupGetResponse struct {
 	CurrentUserIsMember bool `json:"current_user_is_member"`
 
 	*GroupGetResponseCodePart
-	*GroupGetResponseManagerPermissionsPart
+	*ManagerPermissionsPart
 }
 
 // swagger:operation GET /groups/{group_id} groups groupGet
@@ -84,11 +84,13 @@ type groupGetResponse struct {
 //   Returns the group identified by the given `group_id`.
 //
 //
-//   The authenticated user should be a manager of `group_id` OR a descendant of the group OR  the group's `is_public`=1,
+//   The `group_id` group should be visible to the current user, so it should be either
+//   an ancestor of a group he joined, or an ancestor of a non-user group he manages, or
+//   a descendant of a group he manages, or a public group,
 //   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 //
 //
-//   Note: `code*` fields are omitted when the user is not a manager of the group.
+//   Note: `code*` and `current_user_can_*` fields are omitted when the user is not a manager of the group.
 // parameters:
 // - name: group_id
 //   in: path
@@ -115,7 +117,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	user := srv.GetUser(r)
 
-	query := srv.Store.Groups().
+	query := pickVisibleGroups(srv.Store.Groups().DB, user).
 		Joins(`
 			LEFT JOIN ? AS manager_access ON child_group_id = groups.id`,
 			srv.Store.GroupAncestors().ManagedByUser(user).
@@ -128,13 +130,8 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 				Where("groups_ancestors.child_group_id = ?", groupID).
 				Group("groups_ancestors.child_group_id").SubQuery()).
 		Joins(`
-			LEFT JOIN groups_ancestors_active AS groups_descendants
-				ON groups_descendants.ancestor_group_id = groups.id AND
-					groups_descendants.child_group_id = ?`, user.GroupID).
-		Joins(`
 			LEFT JOIN groups_groups_active
 				ON groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
-		Where("manager_access.found OR groups_descendants.ancestor_group_id IS NOT NULL OR groups.is_public").
 		Where("groups.id = ?", groupID).
 		Where("groups.type != 'User'").
 		Select(
@@ -160,9 +157,9 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	if !result.CurrentUserIsManager {
 		result.GroupGetResponseCodePart = nil
-		result.GroupGetResponseManagerPermissionsPart = nil
+		result.ManagerPermissionsPart = nil
 	} else {
-		result.GroupGetResponseManagerPermissionsPart.CurrentUserCanManage =
+		result.ManagerPermissionsPart.CurrentUserCanManage =
 			srv.Store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
 	}
 
