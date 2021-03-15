@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -87,23 +88,18 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 
 	user := srv.GetUser(r)
 
-	ancestorsOfJoinedGroupsQuery := ancestorsOfJoinedGroups(srv.Store, user).QueryExpr()
-	ancestorsOfManagedGroupsQuery := ancestorsOfManagedGroups(srv.Store, user).QueryExpr()
-
 	var result groupNavigationViewResponse
-	err = srv.Store.Groups().ByID(groupID).
-		Where("is_public OR id IN(?) OR id IN(?)", ancestorsOfJoinedGroupsQuery, ancestorsOfManagedGroupsQuery).
+	err = pickVisibleGroups(srv.Store.Groups().ByID(groupID), user).
 		Select("id, name, type").Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	query := srv.Store.Groups().
+	query := pickVisibleGroups(srv.Store.Groups().DB, user).
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).
-		Where("is_public OR id IN(?) OR id IN(?)", ancestorsOfJoinedGroupsQuery, ancestorsOfManagedGroupsQuery).
 		Order("name")
 	query = service.NewQueryLimiter().Apply(r, query)
 
@@ -111,4 +107,12 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 
 	render.Respond(w, r, result)
 	return service.NoError
+}
+
+func pickVisibleGroups(db *database.DB, user *database.User) *database.DB {
+	ancestorsOfJoinedGroupsQuery := ancestorsOfJoinedGroups(database.NewDataStore(db.New()), user).QueryExpr()
+	ancestorsOfManagedGroupsQuery := ancestorsOfManagedGroups(database.NewDataStore(db.New()), user).QueryExpr()
+
+	return db.Where("groups.is_public OR groups.id IN(?) OR groups.id IN(?)",
+		ancestorsOfJoinedGroupsQuery, ancestorsOfManagedGroupsQuery)
 }

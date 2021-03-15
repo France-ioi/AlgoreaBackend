@@ -70,12 +70,8 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	}
 	user := srv.GetUser(r)
 
-	ancestorsOfJoinedGroupsQuery := ancestorsOfJoinedGroups(srv.Store, user).QueryExpr()
-	ancestorsOfManagedGroupsQuery := ancestorsOfManagedGroups(srv.Store, user).QueryExpr()
-
 	var result []groupBreadcrumbsViewResponseRow
-	err = srv.Store.Groups().Where("id IN(?)", ids).
-		Where("is_public OR id IN(?) OR id IN(?)", ancestorsOfJoinedGroupsQuery, ancestorsOfManagedGroupsQuery).
+	err = pickVisibleGroups(srv.Store.Groups().Where("id IN(?)", ids), user).
 		Select("id, name, type").
 		Order(gorm.Expr("FIELD(id"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
 		Scan(&result).Error()
