@@ -61,13 +61,27 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships_and_group", "can_grant_group_access": false, "can_watch_members": true},
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1, "can_manage": "none", "can_grant_group_access": true, "can_watch_members": true},
-      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": true},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false}
     ]
     """
 
@@ -78,15 +92,33 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships_and_group", "can_grant_group_access": false, "can_watch_members": true},
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1, "can_manage": "none", "can_grant_group_access": true, "can_watch_members": true},
-      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": true},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false}
     ]
     """
 
@@ -97,15 +129,33 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships_and_group", "can_grant_group_access": false, "can_watch_members": true},
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1, "can_manage": "none", "can_grant_group_access": true, "can_watch_members": true},
-      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": true},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false}
     ]
     """
 
@@ -116,11 +166,21 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships_and_group", "can_grant_group_access": false, "can_watch_members": true},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false}
     ]
     """
 
@@ -131,13 +191,27 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1, "can_manage": "none", "can_grant_group_access": true, "can_watch_members": true},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships_and_group", "can_grant_group_access": false, "can_watch_members": true},
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false}
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": true},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true},
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false}
     ]
     """
 
@@ -148,13 +222,27 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1, "can_manage": "none", "can_grant_group_access": true, "can_watch_members": true},
-      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships_and_group", "can_grant_group_access": false, "can_watch_members": true},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false},
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false}
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": true},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false},
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false}
     ]
     """
 
@@ -165,7 +253,9 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false}
     ]
     """
 
@@ -176,7 +266,9 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false}
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false}
     ]
     """
 
@@ -187,14 +279,65 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true, "code": null, "user_count": 1, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "code": "56789abcde", "user_count": 1, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "code": "456789abcd", "user_count": 1, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true, "code": "3456789abc", "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false},
-      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true, "code": null, "user_count": 0, "can_manage": "memberships", "can_grant_group_access": true, "can_watch_members": false}
+      {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true,
+       "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false},
+      {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
+       "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false}
+    ]
+    """
+
+  Scenario: User is a member of some descendant groups
+    Given I am the user with id "53"
+    When I send a GET request to "/groups/13/children"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true, "current_user_is_manager": false},
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "current_user_is_manager": false}
+    ]
+    """
+
+  Scenario: User is a member of some descendant groups (start from the second row)
+    Given I am the user with id "53"
+    When I send a GET request to "/groups/13/children?from.name=Our%20Friends&from.id=27"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true, "current_user_is_manager": false}
+    ]
+    """
+
+  Scenario: Public group
+    Given I am the user with id "51"
+    When I send a GET request to "/groups/11/children"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
     ]
     """

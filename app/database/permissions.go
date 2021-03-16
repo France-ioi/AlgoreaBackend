@@ -19,7 +19,7 @@ func (conn *DB) HavingMaxPermissionAtLeast(permissionKind, permissionName string
 // JoinsPermissionsForGroupToItemsWherePermissionAtLeast returns a composable query with access rights (as *_generated_value)
 // for all the items on that the given group has 'permissionKind' >= `neededPermission`.
 func (conn *DB) JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID int64, permissionKind, neededPermission string) *DB {
-	permissionsQuery := NewDataStore(newDB(conn.db.New())).Permissions().
+	permissionsQuery := NewDataStore(conn.New()).Permissions().
 		AggregatedPermissionsForItemsOnWhichGroupHasPermission(groupID, permissionKind, neededPermission).
 		Where("permissions.item_id = items.id") // This condition is needed to filter by item_id before aggregating
 	// The JOIN LATERAL allows us to filter permissions on both group_id & item_id here

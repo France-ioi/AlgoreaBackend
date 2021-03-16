@@ -15,7 +15,7 @@ Feature: Get group by groupID (groupView) - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
-  Scenario: Should fail when the user is neither an owner of the group nor a descendant of the group and is_public=0
+  Scenario: Should fail when the group is not visible
     Given I am the user with id "21"
     When I send a GET request to "/groups/13"
     Then the response code should be 403

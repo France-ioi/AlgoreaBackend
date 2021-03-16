@@ -72,11 +72,10 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 }
 
 func findGroupPath(store *database.DataStore, groupID int64, user *database.User) []string {
-	visibleAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
-		Joins("JOIN `groups` on groups.id = ancestor_group_id").
+	visibleAncestors := pickVisibleGroups(
+		store.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
+			Joins("JOIN `groups` ON groups.id = ancestor_group_id"), user).
 		Select("ancestor_group_id AS id").
-		Where("is_public OR ancestor_group_id IN(?) OR ancestor_group_id IN(?) OR is_public",
-			ancestorsOfJoinedGroups(store, user).QueryExpr(), ancestorsOfManagedGroups(store, user).QueryExpr()).
 		Where("groups.type != 'Base'")
 
 	var pathStrings []string

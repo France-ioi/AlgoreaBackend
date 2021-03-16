@@ -29,12 +29,12 @@ type groupBreadcrumbsViewResponseRow struct {
 //   Returns brief information for groups listed in `ids`.
 //
 //
-//   Each group must be visible to the current user, so either
+//   Each group must be visible to the current user, so it should be either
 //
-//     1. ancestors of group the current user joined,
-//     2. ancestors of group he manages,
-//     3. descendants of group he manages,
-//     4. groups with is_public=1,
+//     1. an ancestor of a group the current user joined, or
+//     2. an ancestor of a non-user group he manages, or
+//     3. a descendant of a group he manages, or
+//     4. a group with is_public=1,
 //
 //   otherwise the 'forbidden' error is returned. Also, there must be no duplicates in the list.
 //
@@ -70,12 +70,8 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	}
 	user := srv.GetUser(r)
 
-	ancestorsOfJoinedGroupsQuery := ancestorsOfJoinedGroups(srv.Store, user).QueryExpr()
-	ancestorsOfManagedGroupsQuery := ancestorsOfManagedGroups(srv.Store, user).QueryExpr()
-
 	var result []groupBreadcrumbsViewResponseRow
-	err = srv.Store.Groups().Where("id IN(?)", ids).
-		Where("is_public OR id IN(?) OR id IN(?)", ancestorsOfJoinedGroupsQuery, ancestorsOfManagedGroupsQuery).
+	err = pickVisibleGroups(srv.Store.Groups().Where("id IN(?)", ids), user).
 		Select("id, name, type").
 		Order(gorm.Expr("FIELD(id"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
 		Scan(&result).Error()

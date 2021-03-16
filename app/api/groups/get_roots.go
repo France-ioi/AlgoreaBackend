@@ -33,7 +33,7 @@ type groupRootsViewResponseRow struct {
 // swagger:operation GET /groups/roots group-memberships groupRootsView
 // ---
 // summary: List root groups
-// description: Returns groups which are ancestors of a joined or managed groups
+// description: Returns groups which are ancestors of a joined groups or managed non-user groups
 //   and do not have parents, not considering "type='Base'" groups
 // responses:
 //   "200":
