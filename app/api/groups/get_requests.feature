@@ -6,10 +6,13 @@ Feature: Get requests for group_id
       | user    | 0         | 11       | John        | Doe       | 1     |
       | richard | 0         | 22       | Richard     | Roe       | 1     |
       | jane    | 0         | 31       | Jane        | Doe       | 2     |
+      | mark    | 0         | 41       | Mark        | Moe       | 2     |
+      | larry   | 0         | 51       | Larry       | Loe       | 2     |
     And the database has the following table 'groups':
       | id  |
       | 13  |
       | 14  |
+      | 15  |
       | 111 |
       | 121 |
       | 122 |
@@ -18,36 +21,44 @@ Feature: Get requests for group_id
       | 131 |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
+      | 14       | 15         | none        |
       | 13       | 21         | memberships |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 13              | 21             |
-      | 13              | 11             |
-      | 13              | 31             |
-      | 13              | 22             |
-      | 14              | 11             |
-      | 14              | 31             |
-      | 14              | 21             |
-      | 14              | 22             |
-      | 13              | 121            |
-      | 13              | 111            |
-      | 13              | 131            |
-      | 13              | 122            |
-      | 13              | 123            |
-      | 13              | 124            |
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 13              | 21             | null                           |
+      | 13              | 11             | null                           |
+      | 13              | 31             | null                           |
+      | 13              | 22             | null                           |
+      | 14              | 31             | null                           |
+      | 14              | 41             | 2017-05-30 11:00:00            |
+      | 14              | 22             | null                           |
+      | 15              | 21             | 2017-05-30 11:00:00            |
+      | 15              | 22             | null                           |
+      | 13              | 121            | null                           |
+      | 13              | 111            | null                           |
+      | 13              | 131            | null                           |
+      | 13              | 122            | null                           |
+      | 13              | 123            | null                           |
+      | 13              | 124            | null                           |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | at                        |
-      | 13       | 21        | invitation   | {{relativeTime("-170h")}} |
-      | 13       | 31        | join_request | {{relativeTime("-168h")}} |
-      | 14       | 11        | invitation   | 2017-05-28 06:38:38       |
-      | 14       | 21        | join_request | 2017-05-27 06:38:38       |
+      | group_id | member_id | type         | at                        | personal_info_view_approved |
+      | 13       | 21        | invitation   | {{relativeTime("-170h")}} | false                       |
+      | 13       | 31        | join_request | {{relativeTime("-168h")}} | true                        |
+      | 13       | 41        | invitation   | {{relativeTime("-170h")}} | false                       |
+      | 13       | 51        | invitation   | {{relativeTime("-164h")}} | false                       |
+      | 14       | 11        | invitation   | 2017-05-28 06:38:38       | true                        |
+      | 14       | 21        | join_request | 2017-05-27 06:38:38       | false                       |
+      | 14       | 22        | join_request | 2017-05-27 06:38:38       | false                       |
+      | 15       | 22        | join_request | 2017-05-27 06:38:38       | true                        |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                        | initiator_id |
       | 13       | 21        | invitation_created    | {{relativeTime("-170h")}} | 11           |
       | 13       | 11        | invitation_refused    | {{relativeTime("-169h")}} | null         |
       | 13       | 31        | join_request_created  | {{relativeTime("-168h")}} | 21           |
+      | 13       | 41        | invitation_created    | {{relativeTime("-166h")}} | 21           |
       | 13       | 22        | join_request_refused  | {{relativeTime("-167h")}} | 11           |
+      | 13       | 51        | invitation_created    | {{relativeTime("-164h")}} | 41           |
       | 14       | 11        | invitation_created    | 2017-05-28 06:38:38       | 11           |
       | 14       | 31        | invitation_refused    | 2017-05-26 06:38:38       | 31           |
       | 14       | 21        | join_request_created  | 2017-05-27 06:38:38       | 21           |
@@ -67,59 +78,44 @@ Feature: Get requests for group_id
     """
     [
       {
+        "member_id": "51",
+        "inviting_user": {"first_name": "Mark", "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "joining_user": {"first_name": null, "grade": 2, "group_id": "51", "last_name": null, "login": "larry"},
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "41",
+        "inviting_user": {"first_name": "Jean-Michel", "group_id": "21", "last_name": "Blanquer", "login": "owner"},
+        "joining_user": {"first_name": "Mark", "grade": 2, "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
         "member_id": "22",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Richard",
-          "grade": 1,
-          "group_id": "22",
-          "last_name": "Roe",
-          "login": "richard"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "22", "last_name": null, "login": "richard"},
+        "at": "{{timeToRFC(db("group_membership_changes[5][at]"))}}",
         "action": "join_request_refused"
       },
       {
         "member_id": "31",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Jane",
-          "grade": 2,
-          "group_id": "31",
-          "last_name": "Doe",
-          "login": "jane"
-        },
+        "joining_user": {"first_name": "Jane", "grade": 2, "group_id": "31", "last_name": "Doe", "login": "jane"},
         "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
         "action": "join_request_created"
       },
       {
         "member_id": "11",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": null,
-          "grade": 1,
-          "group_id": "11",
-          "last_name": null,
-          "login": "user"
-        },
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "11", "last_name": null, "login": "user"},
         "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
         "action": "invitation_refused"
       },
       {
         "member_id": "21",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
-        "joining_user": {
-          "first_name": null,
-          "grade": 3,
-          "group_id": "21",
-          "last_name": null,
-          "login": "owner"
-        },
+        "inviting_user": {"first_name": "John", "group_id": "11", "last_name": "Doe", "login": "user"},
+        "joining_user": {"first_name": "Jean-Michel", "grade": 3, "group_id": "21", "last_name": "Blanquer", "login": "owner"},
         "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
         "action": "invitation_created"
       }
@@ -135,59 +131,44 @@ Feature: Get requests for group_id
     [
       {
         "member_id": "21",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
-        "joining_user": {
-          "first_name": null,
-          "grade": 3,
-          "group_id": "21",
-          "last_name": null,
-          "login": "owner"
-        },
+        "inviting_user": {"first_name": "John", "group_id": "11", "last_name": "Doe", "login": "user"},
+        "joining_user": {"first_name": "Jean-Michel", "grade": 3, "group_id": "21", "last_name": "Blanquer", "login": "owner"},
         "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "41",
+        "inviting_user": {"first_name": "Jean-Michel", "group_id": "21", "last_name": "Blanquer", "login": "owner"},
+        "joining_user": {"first_name": "Mark", "grade": 2, "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "51",
+        "inviting_user": {"first_name": "Mark", "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "joining_user": {"first_name": null, "grade": 2, "group_id": "51", "last_name": null, "login": "larry"},
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
         "action": "invitation_created"
       },
       {
         "member_id": "11",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": null,
-          "grade": 1,
-          "group_id": "11",
-          "last_name": null,
-          "login": "user"
-        },
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "11", "last_name": null, "login": "user"},
         "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
         "action": "invitation_refused"
       },
       {
         "member_id": "31",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Jane",
-          "grade": 2,
-          "group_id": "31",
-          "last_name": "Doe",
-          "login": "jane"
-        },
+        "joining_user": {"first_name": "Jane", "grade": 2, "group_id": "31", "last_name": "Doe", "login": "jane"},
         "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
         "action": "join_request_created"
       },
       {
         "member_id": "22",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Richard",
-          "grade": 1,
-          "group_id": "22",
-          "last_name": "Roe",
-          "login": "richard"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "22", "last_name": null, "login": "richard"},
+        "at": "{{timeToRFC(db("group_membership_changes[5][at]"))}}",
         "action": "join_request_refused"
       }
     ]
@@ -203,57 +184,42 @@ Feature: Get requests for group_id
       {
         "member_id": "31",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Jane",
-          "grade": 2,
-          "group_id": "31",
-          "last_name": "Doe",
-          "login": "jane"
-        },
+        "joining_user": {"first_name": "Jane", "grade": 2, "group_id": "31", "last_name": "Doe", "login": "jane"},
         "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
         "action": "join_request_created"
       },
       {
+        "member_id": "51",
+        "inviting_user": {"first_name": "Mark", "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "joining_user": {"first_name": null, "grade": 2, "group_id": "51", "last_name": null, "login": "larry"},
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "41",
+        "inviting_user": {"first_name": "Jean-Michel", "group_id": "21", "last_name": "Blanquer", "login": "owner"},
+        "joining_user": {"first_name": "Mark", "grade": 2, "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
         "member_id": "21",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
-        "joining_user": {
-          "first_name": null,
-          "grade": 3,
-          "group_id": "21",
-          "last_name": null,
-          "login": "owner"
-        },
+        "inviting_user": {"first_name": "John", "group_id": "11", "last_name": "Doe", "login": "user"},
+        "joining_user": {"first_name": "Jean-Michel", "grade": 3, "group_id": "21", "last_name": "Blanquer", "login": "owner"},
         "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
         "action": "invitation_created"
       },
       {
         "member_id": "22",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Richard",
-          "grade": 1,
-          "group_id": "22",
-          "last_name": "Roe",
-          "login": "richard"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "22", "last_name": null, "login": "richard"},
+        "at": "{{timeToRFC(db("group_membership_changes[5][at]"))}}",
         "action": "join_request_refused"
       },
       {
         "member_id": "11",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": null,
-          "grade": 1,
-          "group_id": "11",
-          "last_name": null,
-          "login": "user"
-        },
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "11", "last_name": null, "login": "user"},
         "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
         "action": "invitation_refused"
       }
@@ -268,17 +234,11 @@ Feature: Get requests for group_id
     """
     [
       {
-        "member_id": "22",
-        "inviting_user": null,
-        "joining_user": {
-          "first_name": "Richard",
-          "grade": 1,
-          "group_id": "22",
-          "last_name": "Roe",
-          "login": "richard"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
-        "action": "join_request_refused"
+        "member_id": "51",
+        "inviting_user": {"first_name": "Mark", "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "joining_user": {"first_name": null, "grade": 2, "group_id": "51", "last_name": null, "login": "larry"},
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
+        "action": "invitation_created"
       }
     ]
     """
@@ -291,46 +251,37 @@ Feature: Get requests for group_id
     """
     [
       {
+        "member_id": "51",
+        "inviting_user": {"first_name": "Mark", "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "joining_user": {"first_name": null, "grade": 2, "group_id": "51", "last_name": null, "login": "larry"},
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "41",
+        "inviting_user": {"first_name": "Jean-Michel", "group_id": "21", "last_name": "Blanquer", "login": "owner"},
+        "joining_user": {"first_name": "Mark", "grade": 2, "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
         "member_id": "22",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Richard",
-          "grade": 1,
-          "group_id": "22",
-          "last_name": "Roe",
-          "login": "richard"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "22", "last_name": null, "login": "richard"},
+        "at": "{{timeToRFC(db("group_membership_changes[5][at]"))}}",
         "action": "join_request_refused"
       },
       {
         "member_id": "31",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Jane",
-          "grade": 2,
-          "group_id": "31",
-          "last_name": "Doe",
-          "login": "jane"
-        },
+        "joining_user": {"first_name": "Jane", "grade": 2, "group_id": "31", "last_name": "Doe", "login": "jane"},
         "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
         "action": "join_request_created"
       },
       {
         "member_id": "21",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
-        "joining_user": {
-          "first_name": null,
-          "grade": 3,
-          "group_id": "21",
-          "last_name": null,
-          "login": "owner"
-        },
+        "inviting_user": {"first_name": "John", "group_id": "11", "last_name": "Doe", "login": "user"},
+        "joining_user": {"first_name": "Jean-Michel", "grade": 3, "group_id": "21", "last_name": "Blanquer", "login": "owner"},
         "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
         "action": "invitation_created"
       }
@@ -345,46 +296,37 @@ Feature: Get requests for group_id
     """
     [
       {
+        "member_id": "51",
+        "inviting_user": {"first_name": "Mark", "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "joining_user": {"first_name": null, "grade": 2, "group_id": "51", "last_name": null, "login": "larry"},
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "41",
+        "inviting_user": {"first_name": "Jean-Michel", "group_id": "21", "last_name": "Blanquer", "login": "owner"},
+        "joining_user": {"first_name": "Mark", "grade": 2, "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
         "member_id": "21",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
-        "joining_user": {
-          "first_name": null,
-          "grade": 3,
-          "group_id": "21",
-          "last_name": null,
-          "login": "owner"
-        },
+        "inviting_user": {"first_name": "John", "group_id": "11", "last_name": "Doe", "login": "user"},
+        "joining_user": {"first_name": "Jean-Michel", "grade": 3, "group_id": "21", "last_name": "Blanquer", "login": "owner"},
         "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
         "action": "invitation_created"
       },
       {
         "member_id": "22",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Richard",
-          "grade": 1,
-          "group_id": "22",
-          "last_name": "Roe",
-          "login": "richard"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "22", "last_name": null, "login": "richard"},
+        "at": "{{timeToRFC(db("group_membership_changes[5][at]"))}}",
         "action": "join_request_refused"
       },
       {
         "member_id": "11",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": null,
-          "grade": 1,
-          "group_id": "11",
-          "last_name": null,
-          "login": "user"
-        },
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "11", "last_name": null, "login": "user"},
         "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
         "action": "invitation_refused"
       }
@@ -399,42 +341,38 @@ Feature: Get requests for group_id
     """
     [
       {
+        "member_id": "41",
+        "inviting_user": {"first_name": "Jean-Michel", "group_id": "21", "last_name": "Blanquer", "login": "owner"},
+        "joining_user": {"first_name": "Mark", "grade": 2, "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "51",
+        "inviting_user": {"first_name": "Mark", "group_id": "41", "last_name": "Moe", "login": "mark"},
+        "joining_user": {"first_name": null, "grade": 2, "group_id": "51", "last_name": null, "login": "larry"},
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
+        "action": "invitation_created"
+      },
+      {
         "member_id": "11",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": null,
-          "grade": 1,
-          "group_id": "11",
-          "last_name": null,
-          "login": "user"
-        },
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "11", "last_name": null, "login": "user"},
         "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
         "action": "invitation_refused"
       },
       {
         "member_id": "31",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Jane",
-          "grade": 2,
-          "group_id": "31",
-          "last_name": "Doe",
-          "login": "jane"
-        },
+        "joining_user": {"first_name": "Jane", "grade": 2, "group_id": "31", "last_name": "Doe", "login": "jane"},
         "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
         "action": "join_request_created"
       },
       {
         "member_id": "22",
         "inviting_user": null,
-        "joining_user": {
-          "first_name": "Richard",
-          "grade": 1,
-          "group_id": "22",
-          "last_name": "Roe",
-          "login": "richard"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "joining_user": {"first_name": null, "grade": 1, "group_id": "22", "last_name": null, "login": "richard"},
+        "at": "{{timeToRFC(db("group_membership_changes[5][at]"))}}",
         "action": "join_request_refused"
       }
     ]
