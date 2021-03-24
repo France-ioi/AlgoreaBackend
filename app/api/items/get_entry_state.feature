@@ -1,28 +1,44 @@
 Feature: Get entry state (itemGetEntryState)
   Background:
     Given the database has the following table 'groups':
-      | id | name   | type | frozen_membership |
-      | 10 | Team 1 | Team | 1                 |
-      | 11 | Team 2 | Team | 0                 |
-      | 21 | owner  | User | 0                 |
-      | 31 | john   | User | 0                 |
-      | 41 | jane   | User | 0                 |
-      | 51 | jack   | User | 0                 |
+      | id | name   | type  | frozen_membership |
+      | 10 | Team 1 | Team  | 1                 |
+      | 11 | Team 2 | Team  | 0                 |
+      | 12 | Team 3 | Team  | 0                 |
+      | 13 | Club   | Club  | 0                 |
+      | 14 | School | Other | 0                 |
+      | 21 | owner  | User  | 0                 |
+      | 31 | john   | User  | 0                 |
+      | 41 | jane   | User  | 0                 |
+      | 51 | jack   | User  | 0                 |
+      | 61 | mark   | User  | 0                 |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
       | john  | 31       | John        | Doe       |
       | jane  | 41       | Jane        | null      |
       | jack  | 51       | Jack        | Daniel    |
+      | mark  | 61       | Mark        | Moe       |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 10              | 31             |
-      | 10              | 41             |
-      | 10              | 51             |
-      | 11              | 31             |
-      | 11              | 41             |
-      | 11              | 51             |
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 10              | 31             | null                           |
+      | 10              | 41             | null                           |
+      | 10              | 51             | null                           |
+      | 11              | 31             | null                           |
+      | 11              | 41             | null                           |
+      | 11              | 51             | null                           |
+      | 12              | 31             | null                           |
+      | 12              | 61             | null                           |
+      | 13              | 41             | 2019-05-30 11:00:00            |
+      | 13              | 51             | 2019-05-30 11:00:00            |
+      | 13              | 61             | null                           |
+      | 14              | 31             | null                           |
+      | 14              | 41             | null                           |
+      | 14              | 61             | 2019-05-30 11:00:00            |
     And the groups ancestors are computed
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 14         |
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':
@@ -824,3 +840,36 @@ Feature: Get entry state (itemGetEntryState)
     | team_id | current_team_is_frozen | state     |
     | 10      | true                   | ready     |
     | 11      | false                  | not_ready |
+
+  Scenario: Hides personal info for users who haven't give the approval
+    And the database has the following table 'items':
+      | id | duration | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | entry_min_admitted_members_ratio | default_language_tag |
+      | 60 | 00:00:00 | 1                       | 1                        | Team                   | None                             | fr                   |
+    And the database has the following table 'permissions_generated':
+      | group_id  | item_id | can_view_generated       |
+      | 12        | 60      | info                     |
+      | 21        | 60      | content_with_descendants |
+    And I am the user with id "31"
+    When I send a GET request to "/items/60/entry-state?as_team_id=12"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": false,
+      "entry_min_admitted_members_ratio": "None",
+      "max_team_size": 0,
+      "other_members": [
+        {
+          "can_enter": false,
+          "attempts_restriction_violated": false,
+          "first_name": null,
+          "group_id": "61",
+          "last_name": null,
+          "login": "mark"
+        }
+      ],
+      "current_team_is_frozen": false,
+      "frozen_teams_required": false,
+      "state": "not_ready"
+    }
+    """
