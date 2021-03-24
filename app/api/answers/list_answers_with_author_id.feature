@@ -6,6 +6,7 @@ Background:
     | 13 | Group B |         | -2    | Class |
     | 21 | other   |         | -2    | User  |
     | 23 | Group C |         | -2    | Class |
+    | 24 | Group D |         | -2    | Class |
     | 25 | jane    |         | -2    | User  |
   And the database has the following table 'users':
     | login | temp_user | group_id | first_name | last_name |
@@ -15,12 +16,18 @@ Background:
   And the database has the following table 'group_managers':
     | group_id | manager_id |
     | 13       | 21         |
+    | 24       | 21         |
   And the database has the following table 'groups_groups':
     | parent_group_id | child_group_id | personal_info_view_approved_at |
     | 13              | 11             | 2019-05-30 11:00:00            |
     | 13              | 25             | null                           |
+    | 23              | 25             | 2019-05-30 11:00:00            |
     | 23              | 21             | null                           |
   And the groups ancestors are computed
+  And the database has the following table 'group_pending_requests':
+    | group_id | member_id | personal_info_view_approved |
+    | 13       | 25        | true                        |
+    | 23       | 25        | true                        |
   And the database has the following table 'items':
     | id  | type    | no_score | default_language_tag |
     | 190 | Chapter | false    | fr                   |

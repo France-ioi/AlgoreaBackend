@@ -23,11 +23,11 @@ import (
 //   * If `author_id` is given, the authenticated user should be the input `author_id`
 //     or a manager of a group containing the input `author_id`.
 //
-//   * If `attempt_id` is given, the authenticated user should be a member of the group
-//   or an owner of the group attached to the attempt.
+//   * If `attempt_id` is given, the authenticated user should be a member
+//   or a manager of the group attached to the attempt.
 //
 //
-//   Users `first_name` and `last_name` are only shown for the authenticated user or if the user
+//   Users' `first_name` and `last_name` are only shown for the authenticated user or if the user
 //   approved access to their personal info for some group managed by the authenticated user.
 // parameters:
 // - name: item_id
