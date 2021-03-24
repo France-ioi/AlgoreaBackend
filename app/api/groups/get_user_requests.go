@@ -57,6 +57,11 @@ type groupUserRequestsViewResponseRow struct {
 //   (`can_manage` >= 'memberships') (if `{group_id}` is not given).
 //
 //
+//   `first_name` and `last_name` are nulls for users whose personal info is not visible to the current user.
+//   A user can see personal info of his own and of those members/candidates of his managed groups
+//   who have provided view access to their personal data.
+//
+//
 //   If `{group_id}` is given, the authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
 //   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 // parameters:
@@ -138,6 +143,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 		return apiError
 	}
 
+	user := srv.GetUser(r)
 	query := srv.Store.GroupPendingRequests().
 		Select(`
 			group_pending_requests.at,
@@ -145,11 +151,12 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 			group.name AS group__name,
 			user.group_id AS user__group_id,
 			user.login AS user__login,
-			user.first_name AS user__first_name,
-			user.last_name AS user__last_name,
+			IF(users_with_approval.group_id IS NOT NULL, user.first_name, NULL) AS user__first_name,
+			IF(users_with_approval.group_id IS NOT NULL, user.last_name, NULL) AS user__last_name,
 			user.grade AS user__grade`).
 		Joins("JOIN `groups` AS `group` ON group.id = group_pending_requests.group_id").
 		Joins(`LEFT JOIN users AS user ON user.group_id = member_id`).
+		Joins(`LEFT JOIN users_with_approval ON users_with_approval.group_id = user.group_id`).
 		Where("group_pending_requests.type IN (?)", types)
 	tieBreakerFieldNames := []string{"group.id", "user.group_id"}
 	if groupIDSet {
@@ -162,7 +169,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 		}
 	} else {
 		query = query.Where("group_pending_requests.group_id IN ?",
-			srv.Store.ActiveGroupAncestors().ManagedByUser(srv.GetUser(r)).Where("can_manage != 'none'").
+			srv.Store.ActiveGroupAncestors().ManagedByUser(user).Where("can_manage != 'none'").
 				Select("groups_ancestors_active.child_group_id").SubQuery())
 	}
 
@@ -181,6 +188,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 		return apiError
 	}
 
+	query = attachUsersWithApproval(query, user)
 	var result []groupUserRequestsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 

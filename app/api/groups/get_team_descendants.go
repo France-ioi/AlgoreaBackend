@@ -13,6 +13,11 @@ import (
 // summary: List group's team descendants
 // description: Returns all teams (`type` = "Team") among the descendants of the given group
 //
+//
+//   `first_name` and `last_name` of descendant team members are only visible to the members themselves and
+//   to managers of those groups to which those members provided view access to personal data.
+//
+//
 //   * The authenticated user should be a manager of the parent group.
 // parameters:
 // - name: group_id
@@ -119,11 +124,16 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	service.MustNotBeError(srv.Store.Users().
 		Select(`
 			member_links.parent_group_id AS linked_group_id,
-			users.group_id, users.first_name, users.last_name, users.login, users.grade`).
+			users.group_id,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name,
+			users.login, users.grade`,
+			user.GroupID, user.GroupID).
 		Joins(`
 			JOIN groups_groups_active AS member_links ON
 				member_links.child_group_id = users.group_id AND
 				member_links.parent_group_id IN (?)`, groupIDs).
+		WithPersonalInfoViewApprovals(user).
 		Order("member_links.parent_group_id, member_links.child_group_id").
 		Scan(&membersResult).Error())
 

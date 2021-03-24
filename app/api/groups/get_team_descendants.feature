@@ -14,6 +14,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 18 | Club    | Our Club       | -2    |
       | 20 | Friends | My Friends     | -2    |
       | 21 | User    | owner          | -2    |
+      | 22 | Class   | Managed Class  | -2    |
       | 51 | User    | johna          | -2    |
       | 53 | User    | johnb          | -2    |
       | 55 | User    | johnc          | -2    |
@@ -40,28 +41,32 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 1        | 21         |
+      | 22       | 20         |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 1               | 11             |
-      | 3               | 13             |
-      | 11              | 14             |
-      | 11              | 16             |
-      | 11              | 17             |
-      | 11              | 18             |
-      | 11              | 59             |
-      | 13              | 14             |
-      | 13              | 15             |
-      | 13              | 69             |
-      | 14              | 51             |
-      | 14              | 53             |
-      | 14              | 55             |
-      | 15              | 57             |
-      | 15              | 59             |
-      | 15              | 61             |
-      | 16              | 63             |
-      | 16              | 65             |
-      | 16              | 67             |
-      | 20              | 21             |
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 1               | 11             | null                           |
+      | 3               | 13             | null                           |
+      | 11              | 14             | null                           |
+      | 11              | 16             | null                           |
+      | 11              | 17             | null                           |
+      | 11              | 18             | null                           |
+      | 11              | 59             | null                           |
+      | 13              | 14             | null                           |
+      | 13              | 15             | null                           |
+      | 13              | 69             | null                           |
+      | 14              | 51             | null                           |
+      | 14              | 53             | null                           |
+      | 14              | 55             | null                           |
+      | 15              | 57             | null                           |
+      | 15              | 59             | null                           |
+      | 15              | 61             | null                           |
+      | 16              | 63             | null                           |
+      | 16              | 65             | null                           |
+      | 16              | 67             | null                           |
+      | 20              | 21             | null                           |
+      | 20              | 67             | 2019-05-30 11:00:00            |
+      | 22              | 63             | 2019-05-30 11:00:00            |
+      | 22              | 65             | 2019-05-30 11:00:00            |
     And the groups ancestors are computed
 
   Scenario: Get descendant teams
@@ -90,9 +95,9 @@ Feature: List team descendants of the group (groupTeamDescendantView)
             "group_id": 65
           },
           {
-            "first_name": "Jane",
+            "first_name": null,
             "grade": -2,
-            "last_name": "Doe",
+            "last_name": null,
             "login": "janed",
             "group_id": 67
           }
@@ -110,21 +115,21 @@ Feature: List team descendants of the group (groupTeamDescendantView)
         "id": "14",
         "members": [
           {
-            "first_name": "John",
+            "first_name": null,
             "grade": 1,
-            "last_name": "Adams",
+            "last_name": null,
             "login": "johna",
             "group_id": 51
           },
           {
-            "first_name": "John",
+            "first_name": null,
             "grade": 2,
-            "last_name": "Baker",
+            "last_name": null,
             "login": "johnb",
             "group_id": 53
           },
           {
-            "first_name": "John",
+            "first_name": null,
             "grade": 3,
             "last_name": null,
             "login": "johnc",
@@ -168,9 +173,9 @@ Feature: List team descendants of the group (groupTeamDescendantView)
             "group_id": 65
           },
           {
-            "first_name": "Jane",
+            "first_name": null,
             "grade": -2,
-            "last_name": "Doe",
+            "last_name": null,
             "login": "janed",
             "group_id": 67
           }
@@ -198,21 +203,21 @@ Feature: List team descendants of the group (groupTeamDescendantView)
         "id": "14",
         "members": [
           {
-            "first_name": "John",
+            "first_name": null,
             "grade": 1,
-            "last_name": "Adams",
+            "last_name": null,
             "login": "johna",
             "group_id": 51
           },
           {
-            "first_name": "John",
+            "first_name": null,
             "grade": 2,
-            "last_name": "Baker",
+            "last_name": null,
             "login": "johnb",
             "group_id": 53
           },
           {
-            "first_name": "John",
+            "first_name": null,
             "grade": 3,
             "last_name": null,
             "login": "johnc",
