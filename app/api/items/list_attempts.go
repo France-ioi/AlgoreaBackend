@@ -52,6 +52,10 @@ type attemptsListResponseRow struct {
 //    for the given item within the parent attempt.
 //
 //
+//    `first_name` and `last_name` of attempt creators are only visible to attempt creators themselves and
+//    to managers of those attempt creators' groups to which they provided view access to personal data.
+//
+//
 //    Restrictions:
 //      * `{as_team_id}` (if given) should be the current user's team,
 //      * the participant should have at least 'content' access on the item,
@@ -115,18 +119,21 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 	if apiError != service.NoError {
 		return apiError
 	}
+	user := srv.GetUser(r)
 
 	query := srv.Store.Results().Where("results.participant_id = ?", groupID).
 		Where("item_id = ?", itemID).
 		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
-		Joins("LEFT JOIN users AS creators ON creators.group_id = attempts.creator_id").
+		Joins("LEFT JOIN users ON users.group_id = attempts.creator_id").
 		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID).
+		WithPersonalInfoViewApprovals(user).
 		Select(`
 			attempts.id, attempts.created_at, attempts.allows_submissions_until,
 			results.score_computed, results.validated, attempts.ended_at,
-			results.started_at, results.latest_activity_at, creators.login AS user_creator__login,
-			creators.first_name AS user_creator__first_name, creators.last_name AS user_creator__last_name,
-			creators.group_id AS user_creator__group_id`)
+			results.started_at, results.latest_activity_at, users.login AS user_creator__login,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
+			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError = service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
 		"id": {ColumnName: "results.attempt_id", FieldType: "int64"},

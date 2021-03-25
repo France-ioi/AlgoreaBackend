@@ -74,8 +74,12 @@ type groupRequestsViewResponseRow struct {
 //   Otherwise all rejected invitations/requests are shown.
 //
 //
-//   Invited user’s `first_name` and `last_name` are nulls
-//   if `group_membership_changes.action` = "invitation_created" or "invitation_refused".
+//   `first_name` and `last_name` are nulls for joining users whose personal info is not visible to the current user.
+//   A user can see personal info of his own and of those members/candidates of his managed groups
+//   who have provided view access to their personal data.
+//
+//
+//   Inviting users are displayed only if `group_membership_changes.action` = "invitation_created".
 //
 //
 //   The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
@@ -159,8 +163,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			action,
 			joining_user.group_id AS joining_user__group_id,
 			joining_user.login AS joining_user__login,
-			IF(action IN ('invitation_created', 'invitation_refused'), NULL, joining_user.first_name) AS joining_user__first_name,
-			IF(action IN ('invitation_created', 'invitation_refused'), NULL, joining_user.last_name) AS joining_user__last_name,
+			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.first_name) AS joining_user__first_name,
+			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.last_name) AS joining_user__last_name,
 			joining_user.grade AS joining_user__grade,
 			inviting_user.group_id AS inviting_user__group_id,
 			inviting_user.login AS inviting_user__login,
@@ -170,6 +174,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			LEFT JOIN users AS inviting_user
 				ON inviting_user.group_id = initiator_id AND action = 'invitation_created'`).
 		Joins(`JOIN users AS joining_user ON joining_user.group_id = member_id`).
+		Joins(`LEFT JOIN users_with_approval AS joining_user_with_approval ON joining_user_with_approval.group_id = joining_user.group_id`).
 		Joins(`
 			LEFT JOIN group_pending_requests
 				ON group_pending_requests.group_id = group_membership_changes.group_id AND
@@ -207,6 +212,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		return apiError
 	}
 
+	query = attachUsersWithApproval(query, user)
+
 	var result []groupRequestsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 	for index := range result {
@@ -217,4 +224,23 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 
 	render.Respond(w, r, result)
 	return service.NoError
+}
+
+func attachUsersWithApproval(conn *database.DB, user *database.User) *database.DB {
+	return conn.New().Raw("WITH managed_groups AS ?, users_with_approval AS ? ?",
+		database.NewDataStore(conn.New()).ActiveGroupAncestors().ManagedByUser(user).
+			Select("groups_ancestors_active.child_group_id AS id").SubQuery(),
+		conn.New().Table("managed_groups").
+			Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = managed_groups.id").
+			Where("groups_groups_active.personal_info_view_approved").
+			Select("groups_groups_active.child_group_id AS group_id").
+			Group("groups_groups_active.child_group_id").Union(
+			conn.New().Table("managed_groups").
+				Joins("JOIN group_pending_requests ON group_pending_requests.group_id = managed_groups.id").
+				Where("group_pending_requests.personal_info_view_approved").
+				Where("group_pending_requests.type = 'join_request'").
+				Select("group_pending_requests.member_id AS group_id").
+				Group("group_pending_requests.member_id").SubQuery()).
+			Union(conn.New().Raw("SELECT ?", user.GroupID).SubQuery()).SubQuery(),
+		conn.QueryExpr())
 }

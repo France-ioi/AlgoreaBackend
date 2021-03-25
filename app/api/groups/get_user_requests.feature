@@ -12,6 +12,7 @@ Feature: Get pending requests for managed groups
       | 13  | Class      |
       | 14  | Friends    |
       | 22  | Group      |
+      | 23  | Club       |
       | 111 | Subgroup 1 |
       | 121 | Subgroup 2 |
       | 122 | Subgroup 3 |
@@ -25,33 +26,35 @@ Feature: Get pending requests for managed groups
       | 13       | 31         | none        |
       | 14       | 31         | memberships |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 1               | 13             |
-      | 1               | 14             |
-      | 13              | 21             |
-      | 13              | 11             |
-      | 13              | 31             |
-      | 13              | 22             |
-      | 14              | 11             |
-      | 14              | 31             |
-      | 14              | 21             |
-      | 14              | 22             |
-      | 13              | 121            |
-      | 13              | 111            |
-      | 13              | 131            |
-      | 13              | 122            |
-      | 13              | 123            |
-      | 13              | 124            |
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 1               | 13             | null                           |
+      | 1               | 14             | null                           |
+      | 1               | 21             | 2019-05-30 11:00:00            |
+      | 13              | 21             | null                           |
+      | 13              | 11             | null                           |
+      | 13              | 31             | 2019-05-30 11:00:00            |
+      | 13              | 22             | null                           |
+      | 14              | 11             | null                           |
+      | 14              | 31             | null                           |
+      | 14              | 21             | null                           |
+      | 14              | 22             | null                           |
+      | 13              | 121            | null                           |
+      | 13              | 111            | null                           |
+      | 13              | 131            | null                           |
+      | 13              | 122            | null                           |
+      | 13              | 123            | null                           |
+      | 13              | 124            | null                           |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type          | at                        |
-      | 13       | 21        | invitation    | {{relativeTime("-170h")}} |
-      | 13       | 31        | join_request  | {{relativeTime("-168h")}} |
-      | 13       | 41        | join_request  | {{relativeTime("-169h")}} |
-      | 13       | 11        | leave_request | {{relativeTime("-171h")}} |
-      | 14       | 11        | invitation    | 2017-05-28 06:38:38       |
-      | 14       | 21        | join_request  | 2017-05-27 06:38:38       |
-      | 14       | 31        | leave_request | 2017-05-27 06:38:38       |
+      | group_id | member_id | type          | at                        | personal_info_view_approved |
+      | 13       | 21        | invitation    | {{relativeTime("-170h")}} | true                        |
+      | 13       | 31        | join_request  | {{relativeTime("-168h")}} | false                       |
+      | 13       | 41        | join_request  | {{relativeTime("-169h")}} | true                        |
+      | 13       | 11        | leave_request | {{relativeTime("-171h")}} | false                       |
+      | 14       | 11        | invitation    | 2017-05-28 06:38:38       | false                       |
+      | 14       | 21        | join_request  | 2017-05-27 06:38:38       | false                       |
+      | 14       | 31        | leave_request | 2017-05-27 06:38:38       | false                       |
+      | 23       | 21        | join_request  | 2017-05-27 06:38:38       | true                        |
 
   Scenario: group_id is given (default sort)
     Given I am the user with id "21"
@@ -439,7 +442,7 @@ Feature: Get pending requests for managed groups
 
   Scenario: group_id is not given, another user (sort by group name desc & login)
     Given I am the user with id "31"
-    When I send a GET request to "/groups/user-requests?sort=-group.name,user.login"
+    When I send a GET request to "/groups/user-requests?types=join_request,leave_request&sort=-group.name,user.login"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -451,10 +454,24 @@ Feature: Get pending requests for managed groups
           "name": "Friends"
         },
         "user": {
-          "first_name": "Jean-Michel",
+          "first_name": "Jane",
+          "grade": 2,
+          "group_id": "31",
+          "last_name": "Doe",
+          "login": "jane"
+        }
+      },
+      {
+        "at": "2017-05-27T06:38:38Z",
+        "group": {
+          "id": "14",
+          "name": "Friends"
+        },
+        "user": {
+          "first_name": null,
           "grade": 3,
           "group_id": "21",
-          "last_name": "Blanquer",
+          "last_name": null,
           "login": "owner"
         }
       }
@@ -474,10 +491,10 @@ Feature: Get pending requests for managed groups
           "name": "Class"
         },
         "user": {
-          "first_name": "John",
+          "first_name": null,
           "grade": 1,
           "group_id": "11",
-          "last_name": "Doe",
+          "last_name": null,
           "login": "user"
         },
         "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}"
@@ -526,10 +543,10 @@ Feature: Get pending requests for managed groups
           "name": "Class"
         },
         "user": {
-          "first_name": "John",
+          "first_name": null,
           "grade": 1,
           "group_id": "11",
-          "last_name": "Doe",
+          "last_name": null,
           "login": "user"
         },
         "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}"

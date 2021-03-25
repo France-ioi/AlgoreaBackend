@@ -68,6 +68,11 @@ type itemGetEntryStateResponse struct {
 //                (the current user or his team if `as_team_id` is set),
 //                returns the entry state, i.e. whether the participant can enter the item, and info on each team member.
 //
+//
+//                `first_name` and `last_name` of other members are only visible to managers of
+//                those members' groups to which they provided view access to personal data.
+//
+//
 //                The entry state is one of:
 //                  * 'already_started' if the participant has an `attempts` row for the item
 //                    (with `attempts.root_item_id` = `{item_id}`) allowing submissions;
@@ -284,9 +289,12 @@ func (srv *Service) getEntryStateInfo(groupID, itemID int64, user *database.User
 			Group("groups_groups_active.child_group_id").
 			Order("groups_groups_active.child_group_id").
 			Select(`
-				users.first_name, users.last_name, users.group_id AS group_id, users.login,
+				IF(MAX(personal_info_view_approvals.approved), users.first_name, NULL) AS first_name,
+				IF(MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name,
+        users.group_id AS group_id, users.login,
 				(? OR IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0)) AND
-				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, teamCanEnter)
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, teamCanEnter).
+			WithPersonalInfoViewApprovals(user)
 		if lock {
 			canEnterQuery = canEnterQuery.WithWriteLock()
 		}

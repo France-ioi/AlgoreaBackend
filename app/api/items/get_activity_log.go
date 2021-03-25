@@ -77,6 +77,10 @@ type itemActivityLogResponseRow struct {
 //   Otherwise, the item's default language is used.
 //
 //
+//   `first_name` and `last_name` of users are only visible to the users themselves and
+//   to managers of those users' groups to which they provided view access to personal data.
+//
+//
 //   If `{watched_group_id}` is given, all rows of the result are related to descendant groups of `{watched_group_id}`
 //   and items that are descendants of `{item_id}` (+ `{item_id}` itself) and visible to the current user
 //   (at least 'info' access with `can_watch` >= 'result').
@@ -169,6 +173,10 @@ func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request
 //
 //   If possible, items titles are shown in the authenticated user's default language.
 //   Otherwise, the item's default language is used.
+//
+//
+//   `first_name` and `last_name` of users are only visible to the users themselves and
+//   to managers of those users' groups to which they provided view access to personal data.
 //
 //
 //   If `{watched_group_id}` is given, all rows of the result are related to descendant groups of `{watched_group_id}`

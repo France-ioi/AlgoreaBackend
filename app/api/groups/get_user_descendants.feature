@@ -14,12 +14,15 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 18 | Club    | Our Club       | -2    |
       | 20 | Friends | My Friends     | -2    |
       | 21 | User    | owner          | -2    |
+      | 22 | Club    | Club           | -2    |
+      | 23 | Club    | School         | -2    |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 10    |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 1        | 21         |
+      | 23       | 22         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
@@ -31,27 +34,30 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 11              | 18             |
       | 13              | 14             |
       | 13              | 15             |
+      | 22              | 21             |
     And the groups ancestors are computed
 
-  Scenario: One group with 4 grand children (different parents)
+  Scenario: One group with 5 grand children (different parents)
     Given the database table 'groups' has also the following rows:
       | id | type | name  | grade |
       | 51 | User | johna | -2    |
       | 53 | User | johnb | -2    |
       | 55 | User | johnc | -2    |
-      | 57 | User | johnd | -2    |
+      | 57 | User | jackd | -2    |
     And the database table 'users' has also the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |
       | johnb | 53       | John       | Baker     | null  |
       | johnc | 55       | John       | null      | 3     |
-      | johnd | 57       | John       | Doe       | 3     |
+      | jackd | 57       | Jack       | Doe       | 3     |
     And the database table 'groups_groups' has also the following rows:
-      | parent_group_id | child_group_id |
-      | 11              | 51             |
-      | 17              | 53             |
-      | 16              | 55             |
-      | 18              | 57             |
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 11              | 51             | null                           |
+      | 11              | 21             | null                           |
+      | 17              | 53             | 2019-05-30 11:00:00            |
+      | 16              | 55             | null                           |
+      | 18              | 57             | null                           |
+      | 23              | 51             | 2019-05-30 11:00:00            |
     And the groups ancestors are computed
     And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
@@ -59,6 +65,12 @@ Feature: List user descendants of the group (groupUserDescendantView)
     And the response body should be, in JSON:
     """
     [
+      {
+        "id": "57",
+        "name": "jackd",
+        "parents": [{"id": "18", "name": "Our Club"}],
+        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "jackd"}
+      },
       {
         "id": "51",
         "name": "johna",
@@ -75,13 +87,13 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "55",
         "name": "johnc",
         "parents": [{"id": "16", "name": "First Team"}],
-        "user": {"first_name": "John", "grade": 3, "last_name": null, "login": "johnc"}
+        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "johnc"}
       },
       {
-        "id": "57",
-        "name": "johnd",
-        "parents": [{"id": "18", "name": "Our Club"}],
-        "user": {"first_name": "John", "grade": 3, "last_name": "Doe", "login": "johnd"}
+        "id": "21",
+        "name": "owner",
+        "parents": [{"id": "11", "name": "Our Class"}],
+        "user": {"first_name": "Jean-Michel", "grade": 10, "last_name": "Blanquer", "login": "owner"}
       }
     ]
     """
@@ -91,10 +103,10 @@ Feature: List user descendants of the group (groupUserDescendantView)
     """
     [
       {
-        "id": "51",
-        "name": "johna",
-        "parents": [{"id": "11", "name": "Our Class"}],
-        "user": {"first_name": null, "grade": 1, "last_name": "Adams", "login": "johna"}
+        "id": "57",
+        "name": "jackd",
+        "parents": [{"id": "18", "name": "Our Club"}],
+        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "jackd"}
       }
     ]
     """
@@ -113,13 +125,13 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "55",
         "name": "johnc",
         "parents": [{"id": "16", "name": "First Team"}],
-        "user": {"first_name": "John", "grade": 3, "last_name": null, "login": "johnc"}
+        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "johnc"}
       },
       {
-        "id": "57",
-        "name": "johnd",
-        "parents": [{"id": "18", "name": "Our Club"}],
-        "user": {"first_name": "John", "grade": 3, "last_name": "Doe", "login": "johnd"}
+        "id": "21",
+        "name": "owner",
+        "parents": [{"id": "11", "name": "Our Class"}],
+        "user": {"first_name": "Jean-Michel", "grade": 10, "last_name": "Blanquer", "login": "owner"}
       }
     ]
     """
@@ -132,9 +144,9 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |
     And the database table 'groups_groups' has also the following rows:
-      | parent_group_id | child_group_id |
-      | 11              | 51             |
-      | 13              | 51             |
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 11              | 51             | 2019-05-30 11:00:00            |
+      | 13              | 51             | null                           |
     And the groups ancestors are computed
     And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
@@ -193,7 +205,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "51",
         "name": "johna",
         "parents": [{"id": "11", "name": "Our Class"}, {"id": "14", "name": "Super Team"}],
-        "user": {"first_name": null, "grade": 1, "last_name": "Adams", "login": "johna"}
+        "user": {"first_name": null, "grade": 1, "last_name": null, "login": "johna"}
       }
     ]
     """

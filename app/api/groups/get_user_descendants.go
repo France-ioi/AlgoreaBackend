@@ -13,6 +13,11 @@ import (
 // summary: List group's user descendants
 // description: Return all users (`type` = "User") among the descendants of the given group
 //
+//
+//   `first_name` and `last_name` of descendant users are only visible to the users themselves and
+//   to managers of those groups to which those users provided view access to personal data.
+//
+//
 //   * The authenticated user should be a manager of the parent group.
 // parameters:
 // - name: group_id
@@ -72,13 +77,16 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 	query := srv.Store.Groups().
 		Select(`
 			groups.id, groups.name,
-			users.first_name, users.last_name, users.login, users.grade`).
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.first_name, NULL) AS first_name,
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name,
+			users.login, users.grade`, user.GroupID, user.GroupID).
 		Joins("JOIN groups_groups_active ON groups_groups_active.child_group_id = groups.id").
 		Joins(`
 			JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id AND
 				groups_ancestors_active.ancestor_group_id = ?`, groupID).
 		Joins("JOIN users ON users.group_id = groups.id").
-		Group("groups.id")
+		Group("groups.id").
+		WithPersonalInfoViewApprovals(user)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
