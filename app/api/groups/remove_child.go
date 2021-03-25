@@ -1,7 +1,6 @@
 package groups
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -14,12 +13,16 @@ import (
 // ---
 // summary: Remove a subgroup
 // description: >
-//   Remove a child group from a parent group and optionally delete that group and its subgroups.
+//   Removes a child group from a parent group and optionally deletes that group and its subgroups.
 //
 //
-//   Deletes the relation from `groups_groups`. If `delete_orphans` is true and the child group becomes an orphan
+//   Deletes the relation from `groups_groups`. If `{delete_orphans}` is true and the child group becomes an orphan
 //   then the service also deletes that group, its parent-child relations, and recursively deletes each
 //   new orphaned group.
+//
+//
+//   If `{delete_orphans}` is false and the child removal makes it an orphan (it doesn't have other parent groups),
+//   the service deletes the relation keeping the orphaned child group.
 //
 //
 //   If a group gets deleted, the service also deletes `groups_groups`, `attempts`, `results`,
@@ -28,14 +31,9 @@ import (
 //   Access rights are updated accordingly too.
 //
 //
-//   If `delete_orphans` is false and the child removal would make it an orphan (it doesn't have other parent groups),
-//   the service doesn't change anything, and returns the "unprocessable entity" (422) response
-//   so that the user can consider setting `delete_orphans` to true.
-//
-//
 //   Restrictions (otherwise the 'forbidden' error is returned):
-//     * the authenticated user should be a manager of both `parent_group_id` and `child_group_id,
-//     * the authenticated user should have `can_manage` >= 'memberships' on the `parent_group_id`,
+//     * the authenticated user should be a manager of both `{parent_group_id}` and `{child_group_id}`,
+//     * the authenticated user should have `can_manage` >= 'memberships' on the `{parent_group_id}`,
 //     * the parent group should not be of type "User" or "Team",
 //     * the child group should not be of types "Base" or "User"
 //       (since there are more appropriate services for removing users from groups: groupLeave and groupRemoveMembers).
@@ -109,11 +107,6 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 
 	if apiErr != service.NoError {
 		return apiErr
-	}
-
-	if err == database.ErrGroupBecomesOrphan {
-		return service.ErrUnprocessableEntity(
-			fmt.Errorf("group %d would become an orphan: confirm that you want to delete it", childGroupID))
 	}
 
 	service.MustNotBeError(err)

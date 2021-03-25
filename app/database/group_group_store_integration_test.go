@@ -17,7 +17,6 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 		name                         string
 		fixture                      string
 		shouldDeleteOrphans          bool
-		wantErr                      error
 		remainingGroupIDs            []int64
 		remainingGroupsGroups        []map[string]interface{}
 		remainingGroupsAncestors     []map[string]interface{}
@@ -25,17 +24,13 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 		expectedGeneratedPermissions []permissionsGeneratedResultRow
 	}{
 		{
-			name:                "refuses to produce orphans",
-			fixture:             "orphan",
-			shouldDeleteOrphans: false,
-			wantErr:             database.ErrGroupBecomesOrphan,
-			remainingGroupIDs:   []int64{1, 2},
-			remainingGroupsGroups: []map[string]interface{}{
-				{"parent_group_id": "1", "child_group_id": "2"},
-			},
+			name:                  "can produce orphans",
+			fixture:               "orphan",
+			shouldDeleteOrphans:   false,
+			remainingGroupIDs:     []int64{1, 2},
+			remainingGroupsGroups: nil,
 			remainingGroupsAncestors: []map[string]interface{}{
 				{"ancestor_group_id": "1", "child_group_id": "1"},
-				{"ancestor_group_id": "1", "child_group_id": "2"},
 				{"ancestor_group_id": "2", "child_group_id": "2"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
@@ -161,7 +156,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			err := dataStore.InTransaction(func(s *database.DataStore) error {
 				return s.GroupGroups().DeleteRelation(1, 2, tt.shouldDeleteOrphans)
 			})
-			assert.Equal(t, tt.wantErr, err)
+			assert.Nil(t, err)
 			assertGroupRelations(t, dataStore, tt.remainingGroupIDs, tt.remainingGroupsGroups, tt.remainingGroupsAncestors)
 			assertGroupLinkedObjects(t, dataStore, tt.remainingGroupIDs, tt.expectedGrantedPermissions, tt.expectedGeneratedPermissions)
 		})
