@@ -106,10 +106,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			Where("child_group_id = ?", childGroupID).
 			Where("parent_group_id != ?", parentGroupID).HasRows()
 		mustNotBeError(err)
-		shouldDeleteChildGroup = !shouldDeleteChildGroup
-		if shouldDeleteChildGroup && !shouldDeleteOrphans {
-			return ErrGroupBecomesOrphan
-		}
+		shouldDeleteChildGroup = (!shouldDeleteChildGroup) && shouldDeleteOrphans
 
 		var candidatesForDeletion []int64
 		if shouldDeleteChildGroup {
@@ -124,6 +121,9 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				Pluck("groups.id", &candidatesForDeletion).Error())
 		}
 
+		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
+		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
+
 		const deleteGroupsQuery = `
 			DELETE group_children, group_parents, filters
 			FROM ` + "`groups`" + `
@@ -135,11 +135,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				ON filters.group_id = groups.id
 			WHERE groups.id IN(?)`
 
-		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
-		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
-
 		var shouldPropagatePermissions bool
-
 		if shouldDeleteChildGroup {
 			// we delete the orphan here in order to recalculate new ancestors correctly
 			// (no need to delete permissions here since we have a cascade delete in the DB)

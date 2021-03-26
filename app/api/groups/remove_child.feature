@@ -99,3 +99,32 @@ Feature: Remove a direct parent-child relation between two groups
       | 22                | 22             | 1       |
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" should not contain id "13"
+
+  Scenario: Delete a relation making a child group an orphan
+    Given I am the user with id "21"
+    When I send a DELETE request to "/groups/22/relations/13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "success": true,
+      "message": "deleted"
+    }
+    """
+    And the table "groups_groups" should be:
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
+      | 22              | 11             |
+      | 22              | 14             |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id | child_group_id | is_self |
+      | 11                | 11             | 1       |
+      | 13                | 11             | 0       |
+      | 13                | 13             | 1       |
+      | 14                | 14             | 1       |
+      | 21                | 21             | 1       |
+      | 22                | 11             | 0       |
+      | 22                | 14             | 0       |
+      | 22                | 22             | 1       |
+    And the table "groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
