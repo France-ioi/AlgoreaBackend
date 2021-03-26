@@ -24,22 +24,34 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 		expectedGeneratedPermissions []permissionsGeneratedResultRow
 	}{
 		{
-			name:                  "can produce orphans",
-			fixture:               "orphan",
-			shouldDeleteOrphans:   false,
-			remainingGroupIDs:     []int64{1, 2},
-			remainingGroupsGroups: nil,
+			name:                "can produce orphans",
+			fixture:             "orphan",
+			shouldDeleteOrphans: false,
+			remainingGroupIDs:   []int64{1, 2, 3, 4, 5},
+			remainingGroupsGroups: []map[string]interface{}{
+				{"parent_group_id": "2", "child_group_id": "5"},
+			},
 			remainingGroupsAncestors: []map[string]interface{}{
 				{"ancestor_group_id": "1", "child_group_id": "1"},
 				{"ancestor_group_id": "2", "child_group_id": "2"},
+				{"ancestor_group_id": "2", "child_group_id": "5"},
+				{"ancestor_group_id": "3", "child_group_id": "3"},
+				{"ancestor_group_id": "4", "child_group_id": "4"},
+				{"ancestor_group_id": "5", "child_group_id": "5"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
 				{GroupID: 2, ItemID: 1, SourceGroupID: 2, Origin: "group_membership", CanView: "none"},
+				{GroupID: 3, ItemID: 1, SourceGroupID: 3, Origin: "group_membership", CanView: "none"},
+				{GroupID: 4, ItemID: 1, SourceGroupID: 4, Origin: "group_membership", CanView: "none"},
+				{GroupID: 5, ItemID: 1, SourceGroupID: 5, Origin: "group_membership", CanView: "none"},
 			},
 			expectedGeneratedPermissions: []permissionsGeneratedResultRow{
 				{GroupID: 1, ItemID: 1, CanViewGenerated: "none"},
 				{GroupID: 2, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 3, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 4, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 5, ItemID: 1, CanViewGenerated: "none"},
 			},
 		},
 		{
@@ -73,16 +85,22 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			name:                  "deletes orphans",
 			fixture:               "orphan",
 			shouldDeleteOrphans:   true,
-			remainingGroupIDs:     []int64{1},
+			remainingGroupIDs:     []int64{1, 3, 4},
 			remainingGroupsGroups: nil,
 			remainingGroupsAncestors: []map[string]interface{}{
 				{"ancestor_group_id": "1", "child_group_id": "1"},
+				{"ancestor_group_id": "3", "child_group_id": "3"},
+				{"ancestor_group_id": "4", "child_group_id": "4"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
+				{GroupID: 3, ItemID: 1, SourceGroupID: 3, Origin: "group_membership", CanView: "none"},
+				{GroupID: 4, ItemID: 1, SourceGroupID: 4, Origin: "group_membership", CanView: "none"},
 			},
 			expectedGeneratedPermissions: []permissionsGeneratedResultRow{
 				{GroupID: 1, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 3, ItemID: 1, CanViewGenerated: "none"},
+				{GroupID: 4, ItemID: 1, CanViewGenerated: "none"},
 			},
 		},
 		{
@@ -173,10 +191,10 @@ func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
 	totalRemainingGroupIDs = append(totalRemainingGroupIDs, int64(111))
 	assert.NoError(t, dataStore.Groups().Order("id").Pluck("id", &ids).Error())
 	assert.Equal(t, totalRemainingGroupIDs, ids)
-	assert.NoError(t, dataStore.GroupGroups().Select("parent_group_id, child_group_id").Order("parent_group_id, child_group_id").
+	assert.NoError(t, dataStore.ActiveGroupGroups().Select("parent_group_id, child_group_id").Order("parent_group_id, child_group_id").
 		ScanIntoSliceOfMaps(&rows).Error())
 	assert.Equal(t, remainingGroupsGroups, rows)
-	assert.NoError(t, dataStore.GroupAncestors().Select("ancestor_group_id, child_group_id").Order("ancestor_group_id, child_group_id").
+	assert.NoError(t, dataStore.ActiveGroupAncestors().Select("ancestor_group_id, child_group_id").Order("ancestor_group_id, child_group_id").
 		ScanIntoSliceOfMaps(&rows).Error())
 	assert.Equal(t, remainingGroupsAncestors, rows)
 	var count int64

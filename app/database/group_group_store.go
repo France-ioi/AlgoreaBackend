@@ -102,7 +102,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) error {
 		// check if parent_group_id is the only parent of child_group_id
 		var shouldDeleteChildGroup bool
-		shouldDeleteChildGroup, err = s.GroupGroups().WithWriteLock().
+		shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithWriteLock().
 			Where("child_group_id = ?", childGroupID).
 			Where("parent_group_id != ?", parentGroupID).HasRows()
 		mustNotBeError(err)
@@ -113,7 +113,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			// Candidates for deletion are all groups that are descendants of childGroupID filtered by type
 			mustNotBeError(s.Groups().WithWriteLock().
 				Joins(`
-					JOIN groups_ancestors AS ancestors ON
+					JOIN groups_ancestors_active AS ancestors ON
 						ancestors.child_group_id = groups.id AND
 						ancestors.is_self = 0 AND
 						ancestors.ancestor_group_id = ?`, childGroupID).
@@ -160,13 +160,13 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				mustNotBeError(s.Groups().WithWriteLock().
 					Joins(`
 						LEFT JOIN(
-							SELECT groups_ancestors.child_group_id
-							FROM groups_ancestors
+							SELECT groups_ancestors_active.child_group_id
+							FROM groups_ancestors_active
 							WHERE
-								groups_ancestors.ancestor_group_id NOT IN(?) AND
-								groups_ancestors.child_group_id IN(?) AND
-								groups_ancestors.is_self = 0
-							GROUP BY groups_ancestors.child_group_id
+								groups_ancestors_active.ancestor_group_id NOT IN(?) AND
+								groups_ancestors_active.child_group_id IN(?) AND
+								groups_ancestors_active.is_self = 0
+							GROUP BY groups_ancestors_active.child_group_id
 							FOR UPDATE
 						) AS ancestors
 						ON ancestors.child_group_id = groups.id`, candidatesForDeletion, candidatesForDeletion).
