@@ -18,12 +18,13 @@ Feature: Search for groups available to the current user
       | login | temp_user | group_id | first_name  | last_name | grade |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 5               | 21             |
-      | 6               | 21             |
-      | 9               | 21             |
-      | 10              | 21             |
-      | 1               | 7              |
+      | parent_group_id | child_group_id | expires_at          |
+      | 2               | 21             | 2019-05-30 11:00:00 |
+      | 5               | 21             | 9999-12-31 23:59:59 |
+      | 6               | 21             | 9999-12-31 23:59:59 |
+      | 9               | 21             | 9999-12-31 23:59:59 |
+      | 10              | 21             | 9999-12-31 23:59:59 |
+      | 1               | 7              | 9999-12-31 23:59:59 |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 1        | 21        | invitation   |
