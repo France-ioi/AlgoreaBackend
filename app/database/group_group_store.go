@@ -89,11 +89,6 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	return err
 }
 
-// ErrGroupBecomesOrphan is to be returned if a group is going to become an orphan
-// after the relation is deleted. DeleteRelation() returns this error to inform
-// the caller that a confirmation is needed (shouldDeleteOrphans should be true).
-var ErrGroupBecomesOrphan = errors.New("a group cannot become an orphan")
-
 // DeleteRelation deletes a relation between two groups. It can also delete orphaned groups.
 func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shouldDeleteOrphans bool) (err error) {
 	s.mustBeInTransaction()
