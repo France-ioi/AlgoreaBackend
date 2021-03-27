@@ -94,7 +94,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) error {
+	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(s *DataStore) error {
 		// check if parent_group_id is the only parent of child_group_id
 		var shouldDeleteChildGroup bool
 		shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithWriteLock().
@@ -103,93 +103,97 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 		mustNotBeError(err)
 		shouldDeleteChildGroup = (!shouldDeleteChildGroup) && shouldDeleteOrphans
 
-		var candidatesForDeletion []int64
 		if shouldDeleteChildGroup {
-			// Candidates for deletion are all groups that are descendants of childGroupID filtered by type
-			mustNotBeError(s.Groups().WithWriteLock().
-				Joins(`
-					JOIN groups_ancestors_active AS ancestors ON
-						ancestors.child_group_id = groups.id AND
-						ancestors.is_self = 0 AND
-						ancestors.ancestor_group_id = ?`, childGroupID).
-				Where("groups.type NOT IN('Base', 'User')").
-				Pluck("groups.id", &candidatesForDeletion).Error())
-		}
-
-		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
-		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
-
-		const deleteGroupsQuery = `
-			DELETE group_children, group_parents, filters
-			FROM ` + "`groups`" + `
-			LEFT JOIN groups_groups AS group_children
-				ON group_children.parent_group_id = groups.id
-			LEFT JOIN groups_groups AS group_parents
-				ON group_parents.child_group_id = groups.id
-			LEFT JOIN filters
-				ON filters.group_id = groups.id
-			WHERE groups.id IN(?)`
-
-		var shouldPropagatePermissions bool
-		if shouldDeleteChildGroup {
-			// we delete the orphan here in order to recalculate new ancestors correctly
-			// (no need to delete permissions here since we have a cascade delete in the DB)
-			mustNotBeError(s.db.Exec(deleteGroupsQuery, []int64{childGroupID}).Error)
-			shouldPropagatePermissions = true
+			s.GroupGroups().deleteGroupAndOrphanedDescendants(childGroupID)
 		} else {
-			permissionsResult := store.PermissionsGranted().
+			// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
+			mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
+
+			permissionsResult := s.PermissionsGranted().
 				Delete("origin = 'group_membership' AND source_group_id = ? AND group_id = ?", parentGroupID, childGroupID)
 			mustNotBeError(permissionsResult.Error())
-			shouldPropagatePermissions = permissionsResult.RowsAffected() > 0
-		}
+			shouldPropagatePermissions := permissionsResult.RowsAffected() > 0
 
-		// recalculate relations
-		s.GroupGroups().createNewAncestors()
+			// recalculate relations
+			s.GroupGroups().createNewAncestors()
 
-		if shouldDeleteChildGroup {
-			var idsToDelete []int64
-			// besides the group with id = childGroupID, we also want to delete its descendants
-			// whose ancestors list consists only of childGroupID descendants
-			// (since they would become orphans)
-			if len(candidatesForDeletion) > 0 {
-				mustNotBeError(s.Groups().WithWriteLock().
-					Joins(`
-						LEFT JOIN(
-							SELECT groups_ancestors_active.child_group_id
-							FROM groups_ancestors_active
-							WHERE
-								groups_ancestors_active.ancestor_group_id NOT IN(?) AND
-								groups_ancestors_active.child_group_id IN(?) AND
-								groups_ancestors_active.is_self = 0
-							GROUP BY groups_ancestors_active.child_group_id
-							FOR UPDATE
-						) AS ancestors
-						ON ancestors.child_group_id = groups.id`, candidatesForDeletion, candidatesForDeletion).
-					Where("groups.id IN (?)", candidatesForDeletion).
-					Where("ancestors.child_group_id IS NULL").
-					Pluck("groups.id", &idsToDelete).Error())
-
-				if len(idsToDelete) > 0 {
-					deleteResult := s.Exec(deleteGroupsQuery, idsToDelete)
-					mustNotBeError(deleteResult.Error())
-					if deleteResult.RowsAffected() > 0 {
-						s.GroupGroups().createNewAncestors()
-					}
-				}
+			if shouldPropagatePermissions {
+				s.PermissionsGranted().computeAllAccess()
 			}
-
-			idsToDelete = append(idsToDelete, childGroupID)
-			// triggers/cascading delete from many tables including groups_ancestors and groups_propagate
-			mustNotBeError(s.Groups().Delete("id IN (?)", idsToDelete).Error())
-		}
-
-		if shouldPropagatePermissions {
-			s.PermissionsGranted().computeAllAccess()
 		}
 
 		return nil
 	}))
 	return nil
+}
+
+func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
+	// Candidates for deletion are all groups that are descendants of groupID filtered by type
+	var candidatesForDeletion []int64
+	mustNotBeError(s.Groups().WithWriteLock().
+		Joins(`
+			JOIN groups_ancestors_active AS ancestors ON
+				ancestors.child_group_id = groups.id AND
+				ancestors.is_self = 0 AND
+				ancestors.ancestor_group_id = ?`, groupID).
+		Where("groups.type NOT IN('Base', 'User')").
+		Pluck("groups.id", &candidatesForDeletion).Error())
+
+	// we delete groups_groups linked to groupID here in order to recalculate new ancestors correctly
+	mustNotBeError(s.deleteObjectsLinkedToGroups([]int64{groupID}).Error())
+
+	// recalculate relations
+	s.GroupGroups().createNewAncestors()
+
+	var idsToDelete []int64
+	// besides the group with id = groupID, we also want to delete its descendants
+	// whose ancestors list consists only of groupID descendants
+	// (since they became orphans)
+	if len(candidatesForDeletion) > 0 {
+		mustNotBeError(s.Groups().WithWriteLock().
+			Joins(`
+				LEFT JOIN(
+					SELECT groups_ancestors_active.child_group_id
+					FROM groups_ancestors_active
+					WHERE
+						groups_ancestors_active.ancestor_group_id NOT IN(?) AND
+						groups_ancestors_active.child_group_id IN(?) AND
+						groups_ancestors_active.is_self = 0
+					GROUP BY groups_ancestors_active.child_group_id
+					FOR UPDATE
+				) AS ancestors
+				ON ancestors.child_group_id = groups.id`, candidatesForDeletion, candidatesForDeletion).
+			Where("groups.id IN (?)", candidatesForDeletion).
+			Where("ancestors.child_group_id IS NULL").
+			Pluck("groups.id", &idsToDelete).Error())
+
+		if len(idsToDelete) > 0 {
+			deleteResult := s.deleteObjectsLinkedToGroups(idsToDelete)
+			mustNotBeError(deleteResult.Error())
+			if deleteResult.RowsAffected() > 0 {
+				s.GroupGroups().createNewAncestors()
+			}
+		}
+	}
+
+	idsToDelete = append(idsToDelete, groupID)
+	// cascading deletes from many tables including groups_ancestors, groups_propagate, permission_granted & permissions_generated
+	mustNotBeError(s.Groups().Delete("id IN (?)", idsToDelete).Error())
+
+	s.PermissionsGranted().computeAllAccess()
+}
+
+func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
+	return s.Exec(`
+		DELETE group_children, group_parents, filters
+		FROM `+"`groups`"+`
+		LEFT JOIN groups_groups AS group_children
+			ON group_children.parent_group_id = groups.id
+		LEFT JOIN groups_groups AS group_parents
+			ON group_parents.child_group_id = groups.id
+		LEFT JOIN filters
+			ON filters.group_id = groups.id
+		WHERE groups.id IN(?)`, groupIDs)
 }
 
 // After is a "listener" that calls GroupGroupStore::createNewAncestors()
