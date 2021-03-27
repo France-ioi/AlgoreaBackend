@@ -41,10 +41,12 @@ import (
 // - name: parent_group_id
 //   in: path
 //   type: integer
+//   format: int64
 //   required: true
 // - name: child_group_id
 //   in: path
 //   type: integer
+//   format: int64
 //   required: true
 // - name: delete_orphans
 //   in: query
@@ -60,8 +62,6 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
-//   "422":
-//     "$ref": "#/responses/unprocessableEntityResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.APIError {

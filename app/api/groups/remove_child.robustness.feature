@@ -1,5 +1,4 @@
 Feature: Remove a direct parent-child relation between two groups - robustness
-
   Background:
     Given the database has the following table 'groups':
       | id | name     | type  |
