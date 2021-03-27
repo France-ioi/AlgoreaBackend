@@ -145,3 +145,15 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 		) OR MIN(entry_max_team_size) < COUNT(*)`, membersPreconditionsQuery.QueryExpr()).HasRows()
 	return !found, err
 }
+
+// DeleteGroup deletes a group and emerging orphaned groups
+func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	mustNotBeError(s.WithNamedLock("groups_groups", groupsRelationsLockTimeout, func(s *DataStore) error {
+		s.GroupGroups().deleteGroupAndOrphanedDescendants(groupID)
+		return nil
+	}))
+	return nil
+}
