@@ -42,11 +42,11 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
-		mustNotBeError(store.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
-		mustNotBeError(store.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
+	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(s *DataStore) (err error) {
+		mustNotBeError(s.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
+		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
-		found, err := store.GroupAncestors().
+		found, err := s.GroupAncestors().
 			WithWriteLock().
 			// do not allow cycles even via expired relations
 			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
@@ -56,10 +56,10 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 			return ErrRelationCycle
 		}
 
-		groupGroupStore := store.GroupGroups()
+		groupGroupStore := s.GroupGroups()
 		groupGroupStore.createRelation(parentGroupID, childGroupID)
 		groupGroupStore.createNewAncestors()
-		return store.Results().Propagate()
+		return s.Results().Propagate()
 	}))
 	return err
 }
@@ -80,8 +80,8 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
-		groupGroupStore := store.GroupGroups()
+	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(s *DataStore) (err error) {
+		groupGroupStore := s.GroupGroups()
 		mustNotBeError(s.InsertMaps(relations))
 		groupGroupStore.createNewAncestors()
 		return nil
