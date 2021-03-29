@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -24,8 +25,9 @@ import (
 //
 //   Restrictions (otherwise the 'forbidden' error is returned):
 //     * the authenticated user should be a manager with `can_manage` = 'memberships_and_group' on the `{group_id}`,
-//     * the group should not be of type "User",
-//     * the group must be empty (no active subgroups of any type).
+//     * the group should not be of type "User".
+//
+//   Also, the group must be empty (no active subgroups of any type), otherwise the 'not found' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -41,6 +43,8 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.APIError {
@@ -67,7 +71,7 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 		found, err = s.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
-			apiErr = service.InsufficientAccessRightsError
+			apiErr = service.ErrNotFound(errors.New("the group must be empty"))
 			return apiErr.Error // rollback
 		}
 
