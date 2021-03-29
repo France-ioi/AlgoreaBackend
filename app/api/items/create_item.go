@@ -525,8 +525,16 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 					ParentItemID: newItemRequest.Parent.ItemID, ChildItemID: itemID,
 					Order:    order,
 					Category: newItemRequest.Parent.Category, ScoreWeight: newItemRequest.Parent.ScoreWeight,
-					ContentViewPropagation: asInfo, UpperViewLevelsPropagation: asIs,
-					GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
+					ContentViewPropagation: valueOrDefault(
+						formData, "parent.content_view_propagation", newItemRequest.Parent.ContentViewPropagation, asInfo).(string),
+					UpperViewLevelsPropagation: valueOrDefault(
+						formData, "parent.upper_view_levels_propagation", newItemRequest.Parent.UpperViewLevelsPropagation, asIs).(string),
+					GrantViewPropagation: valueOrDefault(
+						formData, "parent.grant_view_propagation", newItemRequest.Parent.GrantViewPropagation, true).(bool),
+					WatchPropagation: valueOrDefault(
+						formData, "parent.watch_propagation", newItemRequest.Parent.WatchPropagation, true).(bool),
+					EditPropagation: valueOrDefault(
+						formData, "parent.edit_propagation", newItemRequest.Parent.EditPropagation, true).(bool),
 				})
 		}
 		parentChildSpec = append(parentChildSpec,
@@ -536,4 +544,11 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	service.MustNotBeError(store.ItemItems().After())
 
 	return itemID
+}
+
+func valueOrDefault(formData *formdata.FormData, fieldName string, value, defaultValue interface{}) interface{} {
+	if formData.IsSet(fieldName) {
+		return value
+	}
+	return defaultValue
 }
