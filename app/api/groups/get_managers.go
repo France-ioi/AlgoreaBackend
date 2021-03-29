@@ -36,7 +36,8 @@ type groupManagersViewResponseRow struct {
 	// required: true
 	CanWatchMembers bool `json:"can_watch_members"`
 
-	Type string `json:"-"`
+	Type           string `json:"-"`
+	CanManageValue int    `json:"-"`
 }
 
 // swagger:operation GET /groups/{group_id}/managers groups groupManagersView
@@ -44,8 +45,8 @@ type groupManagersViewResponseRow struct {
 // summary: List group managers
 // description: >
 //
-//   Returns a list of group managers
-//   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' group names.
+//   Lists managers of the given group and (optionally) managers of its ancestors
+//   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
 //
 //
 //   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
@@ -54,6 +55,12 @@ type groupManagersViewResponseRow struct {
 //   in: path
 //   type: integer
 //   required: true
+// - name: include_managers_of_ancestor_groups
+//   description: If equal to 1, the results include managers of all ancestor groups
+//   in: query
+//   type: integer
+//   enum: [0,1]
+//   default: 0
 // - name: sort
 //   in: query
 //   default: [name,id]
@@ -100,15 +107,36 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
+	var includeManagersOfAncestorGroups bool
+	if len(r.URL.Query()["include_managers_of_ancestor_groups"]) > 0 {
+		includeManagersOfAncestorGroups, err = service.ResolveURLQueryGetBoolField(r, "include_managers_of_ancestor_groups")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
+	}
+
 	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	query := srv.Store.GroupManagers().Where("group_managers.group_id = ?", groupID).
+	query := srv.Store.GroupManagers().
 		Joins("JOIN `groups` ON groups.id = group_managers.manager_id").
-		Joins("LEFT JOIN users ON users.group_id = groups.id").
-		Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
-            can_manage, can_grant_group_access, can_watch_members`)
+		Joins("LEFT JOIN users ON users.group_id = groups.id")
+
+	if includeManagersOfAncestorGroups {
+		query = query.
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = group_managers.group_id").
+			Where("groups_ancestors_active.child_group_id = ?", groupID).
+			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
+			        MAX(can_manage_value) AS can_manage_value,
+			        MAX(can_grant_group_access) AS can_grant_group_access,
+			        MAX(can_watch_members) AS can_watch_members`).
+			Group("groups.id")
+	} else {
+		query = query.Where("group_managers.group_id = ?", groupID).
+			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
+              can_manage_value, can_grant_group_access, can_watch_members`)
+	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
@@ -125,6 +153,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	for index := range result {
+		result[index].CanManage = srv.Store.GroupManagers().CanManageNameByIndex(result[index].CanManageValue)
 		if result[index].Type != "User" {
 			result[index].GroupManagersViewResponseRowUser = nil
 		}

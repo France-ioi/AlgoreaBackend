@@ -35,3 +35,9 @@ Feature: Get managers of group_id - robustness
     When I send a GET request to "/groups/13/managers?sort=myname"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "myname""
+
+  Scenario: include_managers_of_ancestor_groups is invalid
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/13/managers?include_managers_of_ancestor_groups=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for include_managers_of_ancestor_groups (should have a boolean value (0 or 1))"
