@@ -13,11 +13,10 @@ import (
 // ---
 // summary: Delete a group
 // description: >
-//   Removes a group, its parent-child relations, and recursively deletes each
-//   new orphaned group.
+//   Removes a group, its parent-child relations and other objects linked to it.
 //
 //
-//   The service also deletes `groups_groups`, `attempts`, `results`,
+//   The service deletes `groups_groups`, `attempts`, `results`,
 //   `group_membership_changes`, `group_pending_requests`,
 //   `permissions_granted`, `permissions_generated`, and `filters` linked to the group.
 //   Access rights are updated accordingly too.
@@ -25,7 +24,8 @@ import (
 //
 //   Restrictions (otherwise the 'forbidden' error is returned):
 //     * the authenticated user should be a manager with `can_manage` = 'memberships_and_group' on the `{group_id}`,
-//     * the group should not be of type "User".
+//     * the group should not be of type "User",
+//     * the group must be empty (no active subgroups of any type).
 // parameters:
 // - name: group_id
 //   in: path
@@ -61,6 +61,12 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 			Where("groups.type != 'User'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
+			apiErr = service.InsufficientAccessRightsError
+			return apiErr.Error // rollback
+		}
+		found, err = s.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithWriteLock().HasRows()
+		service.MustNotBeError(err)
+		if found {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
 		}

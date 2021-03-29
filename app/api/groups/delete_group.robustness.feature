@@ -12,6 +12,7 @@ Feature: Delete a group - robustness
       | teacher | 23       | John        | Smith     |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
+      | 11       | 21         | memberships_and_group |
       | 11       | 23         | memberships           |
       | 55       | 23         | memberships_and_group |
     And the database has the following table 'groups_groups':
@@ -54,6 +55,14 @@ Feature: Delete a group - robustness
   Scenario: The group doesn't exist
     Given I am the user with id "21"
     When I send a DELETE request to "/groups/404"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: The group has a child
+    Given I am the user with id "21"
+    When I send a DELETE request to "/groups/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
