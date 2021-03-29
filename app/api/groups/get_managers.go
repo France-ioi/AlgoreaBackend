@@ -8,6 +8,14 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// GroupManagersViewResponseRowUser contains names of a manager
+type GroupManagersViewResponseRowUser struct {
+	// Nullable; displayed only for users
+	FirstName *string `json:"first_name"`
+	// Nullable; displayed only for users
+	LastName *string `json:"last_name"`
+}
+
 // swagger:model groupManagersViewResponseRow
 type groupManagersViewResponseRow struct {
 	// `groups.id`
@@ -16,6 +24,10 @@ type groupManagersViewResponseRow struct {
 	// `groups.name`
 	// required: true
 	Name string `json:"name"`
+
+	// only for users
+	*GroupManagersViewResponseRowUser
+
 	// enum: none,memberships,memberships_and_group
 	// required: true
 	CanManage string `json:"can_manage"`
@@ -23,6 +35,8 @@ type groupManagersViewResponseRow struct {
 	CanGrantGroupAccess bool `json:"can_grant_group_access"`
 	// required: true
 	CanWatchMembers bool `json:"can_watch_members"`
+
+	Type string `json:"-"`
 }
 
 // swagger:operation GET /groups/{group_id}/managers groups groupManagersView
@@ -90,9 +104,11 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		return apiError
 	}
 
-	query := srv.Store.GroupManagers().Where("group_id = ?", groupID).
+	query := srv.Store.GroupManagers().Where("group_managers.group_id = ?", groupID).
 		Joins("JOIN `groups` ON groups.id = group_managers.manager_id").
-		Select(`groups.id, groups.name, can_manage, can_grant_group_access, can_watch_members`)
+		Joins("LEFT JOIN users ON users.group_id = groups.id").
+		Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
+            can_manage, can_grant_group_access, can_watch_members`)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
@@ -107,6 +123,12 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 
 	var result []groupManagersViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
+
+	for index := range result {
+		if result[index].Type != "User" {
+			result[index].GroupManagersViewResponseRowUser = nil
+		}
+	}
 
 	render.Respond(w, r, result)
 	return service.NoError
