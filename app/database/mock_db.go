@@ -59,6 +59,18 @@ func MockDBEnumQueries(sqlMock sqlmock.Sqlmock) {
 		WithArgs("group_managers", "can_manage").
 		WillReturnRows(sqlMock.NewRows([]string{"value"}).
 			AddRow("'none','memberships','memberships_and_group'"))
+	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
+		WithArgs("items_items", "content_view_propagation").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'none','as_info','as_content'"))
+	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
+		WithArgs("items_items", "upper_view_levels_propagation").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'use_content_view_propagation','as_content_with_descendants','as_is'"))
 }
 
 // ClearAllDBEnums clears all cached permission enums

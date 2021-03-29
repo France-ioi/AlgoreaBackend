@@ -1,5 +1,4 @@
 Feature: Update item
-
 Background:
   Given the database has the following table 'groups':
     | id | name | type |
@@ -419,7 +418,6 @@ Background:
       | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
       | 0          | 11             | 50      | 0              | done                     |
 
-
   Scenario Outline: Sets default values of items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly for each can_grant_view
     Given I am the user with id "11"
     And the database has the following table 'items':
@@ -568,3 +566,40 @@ Background:
       | can_edit_generated       | all                     | edit_propagation  | false |
       | can_edit_generated       | children                | edit_propagation  | false |
       | can_edit_generated       | none                    | edit_propagation  | false |
+
+  Scenario Outline: Allows setting items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation/watch_propagation/edit_propagation to the same of a lower value
+    Given I am the user with id "11"
+    And the database table 'items' has also the following rows:
+      | id  | default_language_tag |
+      | 112 | fr                   |
+    And the database table 'items_items' has also the following rows:
+      | parent_item_id | child_item_id | child_order | <field_name> |
+      | 21             | 112           | 1           | <old_value>  |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_view_generated |
+      | 11       | 112     | info               |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [{
+          "item_id": 112,
+          "order": 1,
+          "<field_name>": {{"<value>" != "true" && "<value>" != "false" ? "\"<value>\"" : <value>}}
+        }]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_items" at parent_item_id "21" should be:
+      | parent_item_id | child_item_id | child_order | <field_name> |
+      | 21             | 112           | 1           | <value>      |
+    Examples:
+      | field_name                    | old_value                    | value                        |
+      | content_view_propagation      | as_content                   | as_content                   |
+      | content_view_propagation      | as_content                   | as_info                      |
+      | content_view_propagation      | as_info                      | as_info                      |
+      | upper_view_levels_propagation | as_is                        | as_is                        |
+      | upper_view_levels_propagation | as_is                        | as_content_with_descendants  |
+      | upper_view_levels_propagation | as_content_with_descendants  | as_content_with_descendants  |
+      | grant_view_propagation        | true                         | true                         |
+      | watch_propagation             | true                         | true                         |
+      | edit_propagation              | true                         | true                         |
