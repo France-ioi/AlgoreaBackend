@@ -224,7 +224,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 				return apiError.Error
 			}
 
-			apiError = validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, lockedStore)
+			apiError = validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, nil, lockedStore)
 			if apiError != service.NoError {
 				return apiError.Error
 			}
