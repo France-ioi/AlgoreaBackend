@@ -75,7 +75,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -89,7 +90,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -113,7 +115,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -127,10 +130,10 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       },
       {
-        "at": "2017-05-27T06:38:38Z",
         "group": {
           "id": "14",
           "name": "Friends"
@@ -141,7 +144,9 @@ Feature: Get pending requests for managed groups
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
-        }
+        },
+        "at": "2017-05-27T06:38:38Z",
+        "type": "join_request"
       }
     ]
     """
@@ -154,7 +159,6 @@ Feature: Get pending requests for managed groups
     """
     [
       {
-        "at": "2017-05-27T06:38:38Z",
         "group": {
           "id": "14",
           "name": "Friends"
@@ -165,7 +169,9 @@ Feature: Get pending requests for managed groups
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
-        }
+        },
+        "at": "2017-05-27T06:38:38Z",
+        "type": "join_request"
       },
       {
         "group": {
@@ -179,7 +185,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -193,7 +200,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -217,7 +225,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -231,7 +240,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -255,10 +265,10 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       },
       {
-        "at": "2017-05-27T06:38:38Z",
         "group": {
           "id": "14",
           "name": "Friends"
@@ -269,7 +279,9 @@ Feature: Get pending requests for managed groups
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
-        }
+        },
+        "at": "2017-05-27T06:38:38Z",
+        "type": "join_request"
       },
       {
         "group": {
@@ -283,7 +295,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -307,7 +320,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -331,7 +345,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -345,7 +360,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -358,7 +374,6 @@ Feature: Get pending requests for managed groups
     """
     [
       {
-        "at": "2017-05-27T06:38:38Z",
         "group": {
           "id": "14",
           "name": "Friends"
@@ -369,7 +384,9 @@ Feature: Get pending requests for managed groups
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
-        }
+        },
+        "at": "2017-05-27T06:38:38Z",
+        "type": "join_request"
       },
       {
         "group": {
@@ -383,7 +400,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -397,7 +415,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -421,7 +440,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -435,7 +455,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       }
     ]
     """
@@ -448,7 +469,6 @@ Feature: Get pending requests for managed groups
     """
     [
       {
-        "at": "2017-05-27T06:38:38Z",
         "group": {
           "id": "14",
           "name": "Friends"
@@ -459,10 +479,11 @@ Feature: Get pending requests for managed groups
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
-        }
+        },
+        "at": "2017-05-27T06:38:38Z",
+        "type": "leave_request"
       },
       {
-        "at": "2017-05-27T06:38:38Z",
         "group": {
           "id": "14",
           "name": "Friends"
@@ -473,7 +494,9 @@ Feature: Get pending requests for managed groups
           "group_id": "21",
           "last_name": null,
           "login": "owner"
-        }
+        },
+        "at": "2017-05-27T06:38:38Z",
+        "type": "join_request"
       }
     ]
     """
@@ -497,7 +520,8 @@ Feature: Get pending requests for managed groups
           "last_name": null,
           "login": "user"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}",
+        "type": "leave_request"
       }
     ]
     """
@@ -521,7 +545,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[2][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -535,7 +560,8 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[3][at]"))}}",
+        "type": "join_request"
       },
       {
         "group": {
@@ -549,7 +575,8 @@ Feature: Get pending requests for managed groups
           "last_name": null,
           "login": "user"
         },
-        "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}"
+        "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}",
+        "type": "leave_request"
       }
     ]
     """

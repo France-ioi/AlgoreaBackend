@@ -13,9 +13,12 @@ import (
 
 // swagger:model groupUserRequestsViewResponseRow
 type groupUserRequestsViewResponseRow struct {
-	// Nullable
 	// required: true
 	At *database.Time `json:"at"`
+
+	// required: true
+	// enum: join_request,leave_request
+	Type string `json:"type"`
 
 	// required: true
 	Group struct {
@@ -147,6 +150,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 	query := srv.Store.GroupPendingRequests().
 		Select(`
 			group_pending_requests.at,
+			group_pending_requests.type,
 			group.id AS group__id,
 			group.name AS group__name,
 			user.group_id AS user__group_id,
