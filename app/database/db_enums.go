@@ -14,6 +14,8 @@ var (
 		"permissions_granted.can_watch",
 		"permissions_granted.can_edit",
 		"group_managers.can_manage",
+		"items_items.content_view_propagation",
+		"items_items.upper_view_levels_propagation",
 	}
 	enumName2Number     map[string]int
 	enumValueName2Index []map[string]int
@@ -21,11 +23,6 @@ var (
 )
 
 func (db *DB) loadDBEnum(fullColumnName string) {
-	enumName2Number = make(map[string]int, len(enumColumns))
-	for index := range enumColumns {
-		enumName2Number[enumColumns[index]] = index
-	}
-
 	parsedColumn := strings.SplitN(fullColumnName, ".", 2)
 	tableName := parsedColumn[0]
 	columnName := parsedColumn[1]
@@ -82,6 +79,11 @@ func (db *DB) getFromEnumUnderLock(getterFunc func() interface{}) interface{} {
 }
 
 func (db *DB) loadAllEnums() {
+	enumName2Number = make(map[string]int, len(enumColumns))
+	for index := range enumColumns {
+		enumName2Number[enumColumns[index]] = index
+	}
+
 	enumValueName2Index = make([]map[string]int, len(enumColumns))
 	enumValueIndex2Name = make([]map[int]string, len(enumColumns))
 	for _, fullColumnName := range enumColumns {

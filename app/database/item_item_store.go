@@ -26,3 +26,29 @@ func (s *ItemItemStore) After() (err error) {
 	s.PermissionsGranted().computeAllAccess()
 	return s.Results().Propagate()
 }
+
+// ContentViewPropagationNameByIndex returns the content view propagation level name with the given index from the enum
+func (s *ItemItemStore) ContentViewPropagationNameByIndex(index int) string {
+	getterFunc := func() interface{} { return requireDBEnumNameByIndex("items_items.content_view_propagation", index) }
+	return s.DB.getFromEnumUnderLock(getterFunc).(string)
+}
+
+// ContentViewPropagationIndexByName returns the index of the given content view propagation level in the enum
+func (s *ItemItemStore) ContentViewPropagationIndexByName(name string) int {
+	getterFunc := func() interface{} { return requireDBEnumIndexByName("items_items.content_view_propagation", name) }
+	return s.DB.getFromEnumUnderLock(getterFunc).(int)
+}
+
+// UpperViewLevelsPropagationNameByIndex  returns the upper-level view propagation kind name with the given index from the enum
+func (s *ItemItemStore) UpperViewLevelsPropagationNameByIndex(index int) string {
+	getterFunc := func() interface{} {
+		return requireDBEnumNameByIndex("items_items.upper_view_levels_propagation", index)
+	}
+	return s.DB.getFromEnumUnderLock(getterFunc).(string)
+}
+
+// UpperViewLevelsPropagationIndexByName returns the index of the given upper-level view propagation kind in the enum
+func (s *ItemItemStore) UpperViewLevelsPropagationIndexByName(name string) int {
+	getterFunc := func() interface{} { return requireDBEnumIndexByName("items_items.upper_view_levels_propagation", name) }
+	return s.DB.getFromEnumUnderLock(getterFunc).(int)
+}
