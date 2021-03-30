@@ -19,11 +19,11 @@ type GroupManagersViewResponseRowUser struct {
 // GroupManagersViewResponseRowThroughAncestorGroups contains permissions propagated from ancestor groups
 type GroupManagersViewResponseRowThroughAncestorGroups struct {
 	// enum: none,memberships,memberships_and_group
-	// displayed only when include_managers_of_ancestor_groups=1
+	// displayed only when include_managers_of_ancestor_groups=1, note that the group is an ancestor of itself
 	CanManageThroughAncestorGroups string `json:"can_manage_through_ancestor_groups"`
-	// displayed only when include_managers_of_ancestor_groups=1
+	// displayed only when include_managers_of_ancestor_groups=1, note that the group is an ancestor of itself
 	CanGrantGroupAccessThroughAncestorGroups bool `json:"can_grant_group_access_through_ancestor_groups"`
-	// displayed only when include_managers_of_ancestor_groups=1
+	// displayed only when include_managers_of_ancestor_groups=1, note that the group is an ancestor of itself
 	CanWatchMembersThroughAncestorGroups bool `json:"can_watch_members_through_ancestor_groups"`
 }
 
