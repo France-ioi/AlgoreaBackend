@@ -148,27 +148,39 @@ Feature: Get managers of group_id
     [
       {
         "id": "51", "name": "billg", "first_name": null, "last_name": null,
-        "can_manage": "memberships", "can_grant_group_access": false, "can_watch_members": true
+        "can_manage": "memberships", "can_grant_group_access": false, "can_watch_members": true,
+        "can_manage_through_ancestor_groups": "memberships", "can_grant_group_access_through_ancestor_groups": false,
+        "can_watch_members_through_ancestor_groups": true
       },
       {
         "id": "81", "name": "larry", "first_name": null, "last_name": null,
-        "can_manage": "memberships_and_group", "can_grant_group_access": true, "can_watch_members": true
+        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false,
+        "can_manage_through_ancestor_groups": "memberships_and_group", "can_grant_group_access_through_ancestor_groups": true,
+        "can_watch_members_through_ancestor_groups": true
       },
       {
         "id": "91", "name": "lp", "first_name": null, "last_name": null,
-        "can_manage": "none", "can_grant_group_access": true, "can_watch_members": false
+        "can_manage": "none", "can_grant_group_access": true, "can_watch_members": false,
+        "can_manage_through_ancestor_groups": "none", "can_grant_group_access_through_ancestor_groups": true,
+        "can_watch_members_through_ancestor_groups": false
       },
       {
         "id": "14", "name": "Our Friends",
-        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false
+        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false,
+        "can_manage_through_ancestor_groups": "none", "can_grant_group_access_through_ancestor_groups": false,
+        "can_watch_members_through_ancestor_groups": false
       },
       {
         "id": "21", "name": "owner", "first_name": "Jean-Michel", "last_name": "Blanquer",
-        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false
+        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false,
+        "can_manage_through_ancestor_groups": "none", "can_grant_group_access_through_ancestor_groups": false,
+        "can_watch_members_through_ancestor_groups": false
       },
       {
         "id": "61", "name": "zuck", "first_name": null, "last_name": null,
-        "can_manage": "memberships_and_group", "can_grant_group_access": true, "can_watch_members": false
+        "can_manage": "memberships_and_group", "can_grant_group_access": true, "can_watch_members": false,
+        "can_manage_through_ancestor_groups": "memberships_and_group", "can_grant_group_access_through_ancestor_groups": true,
+        "can_watch_members_through_ancestor_groups": false
       }
     ]
     """
@@ -182,11 +194,15 @@ Feature: Get managers of group_id
     [
       {
         "id": "91", "name": "lp", "first_name": null, "last_name": null,
-        "can_manage": "none", "can_grant_group_access": true, "can_watch_members": false
+        "can_manage": "none", "can_grant_group_access": true, "can_watch_members": false,
+        "can_manage_through_ancestor_groups": "none", "can_grant_group_access_through_ancestor_groups": true,
+        "can_watch_members_through_ancestor_groups": false
       },
       {
         "id": "81", "name": "larry", "first_name": null, "last_name": null,
-        "can_manage": "memberships_and_group", "can_grant_group_access": true, "can_watch_members": true
+        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false,
+        "can_manage_through_ancestor_groups": "memberships_and_group", "can_grant_group_access_through_ancestor_groups": true,
+        "can_watch_members_through_ancestor_groups": true
       }
     ]
     """
