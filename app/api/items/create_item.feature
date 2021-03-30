@@ -190,7 +190,7 @@ Feature: Create item
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
 
-  Scenario: Valid (all the fields are set)
+  Scenario Outline: Valid (all the fields are set)
     Given I am the user with id "11"
     And the database table 'items' has also the following rows:
       | id | default_language_tag |
@@ -245,9 +245,9 @@ Feature: Create item
           "score_weight": 3,
           "content_view_propagation": "as_content",
           "upper_view_levels_propagation": "use_content_view_propagation",
-          "grant_view_propagation": true,
-          "watch_propagation": true,
-          "edit_propagation": true
+          "grant_view_propagation": <grant_view_propagation>,
+          "watch_propagation": <watch_propagation>,
+          "edit_propagation": <edit_propagation>
         },
         "children": [
           {"item_id": "12"},
@@ -271,10 +271,10 @@ Feature: Create item
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category    | score_weight |
-      | 21                  | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Challenge   | 3            |
-      | 5577006791947779410 | 12                  | 0           | as_info                  | as_is                         | 0                      | 0                 | 0                | Undefined   | 1            |
-      | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Application | 2            |
+      | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation   | watch_propagation   | edit_propagation   | category    | score_weight |
+      | 21                  | 5577006791947779410 | 1           | as_content               | use_content_view_propagation  | <grant_view_propagation> | <watch_propagation> | <edit_propagation> | Challenge   | 3            |
+      | 5577006791947779410 | 12                  | 0           | as_info                  | as_is                         | 0                        | 0                   | 0                  | Undefined   | 1            |
+      | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                        | 1                   | 1                  | Application | 2            |
     And the table "items_ancestors" should be:
       | ancestor_item_id    | child_item_id       |
       | 21                  | 12                  |
@@ -295,23 +295,28 @@ Feature: Create item
       | 11                  | 5577006791947779410 | 11                  | self             | none                     | none                | none              | none           | 1        | 1                                                       |
       | 8674665223082153551 | 5577006791947779410 | 8674665223082153551 | group_membership | content                  | none                | none              | none           | 0        | 1                                                       |
     And the table "permissions_generated" should be:
-      | group_id            | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 10                  | 12                  | none               | none                     | none                | none               | 0                  |
-      | 10                  | 21                  | none               | content                  | none                | none               | 0                  |
-      | 10                  | 34                  | none               | content                  | none                | none               | 0                  |
-      | 10                  | 5577006791947779410 | none               | content                  | none                | none               | 0                  |
-      | 11                  | 12                  | solution           | solution                 | answer              | all                | 0                  |
-      | 11                  | 21                  | solution           | none                     | none                | children           | 0                  |
-      | 11                  | 34                  | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
-      | 11                  | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
-      | 8674665223082153551 | 12                  | info               | none                     | none                | none               | 0                  |
-      | 8674665223082153551 | 34                  | info               | none                     | none                | none               | 0                  |
-      | 8674665223082153551 | 5577006791947779410 | content            | none                     | none                | none               | 0                  |
+      | group_id            | item_id             | can_view_generated | can_grant_view_generated                          | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 10                  | 12                  | none               | none                                              | none                | none               | 0                  |
+      | 10                  | 21                  | none               | content                                           | none                | none               | 0                  |
+      | 10                  | 34                  | none               | {{<grant_view_propagation> ? "content" : "none"}} | none                | none               | 0                  |
+      | 10                  | 5577006791947779410 | none               | {{<grant_view_propagation> ? "content" : "none"}} | none                | none               | 0                  |
+      | 11                  | 12                  | solution           | solution                                          | answer              | all                | 0                  |
+      | 11                  | 21                  | solution           | none                                              | none                | children           | 0                  |
+      | 11                  | 34                  | solution           | solution_with_grant                               | answer_with_grant   | all_with_grant     | 0                  |
+      | 11                  | 5577006791947779410 | solution           | solution_with_grant                               | answer_with_grant   | all_with_grant     | 1                  |
+      | 8674665223082153551 | 12                  | info               | none                                              | none                | none               | 0                  |
+      | 8674665223082153551 | 34                  | info               | none                                              | none                | none               | 0                  |
+      | 8674665223082153551 | 5577006791947779410 | content            | none                                              | none                | none               | 0                  |
     And the table "attempts" should stay unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id             | result_propagation_state |
       | 0          | 11             | 12                  | done                     |
       | 0          | 11             | 21                  | done                     |
+  Examples:
+    | grant_view_propagation | watch_propagation | edit_propagation |
+    | true                   | false             | true             |
+    | false                  | true              | true             |
+    | false                  | false             | false            |
 
   Scenario: Valid when type=Skill
     Given I am the user with id "11"
