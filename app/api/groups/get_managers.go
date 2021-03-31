@@ -8,6 +8,25 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// GroupManagersViewResponseRowUser contains names of a manager
+type GroupManagersViewResponseRowUser struct {
+	// Nullable; displayed only for users
+	FirstName *string `json:"first_name"`
+	// Nullable; displayed only for users
+	LastName *string `json:"last_name"`
+}
+
+// GroupManagersViewResponseRowThroughAncestorGroups contains permissions propagated from ancestor groups
+type GroupManagersViewResponseRowThroughAncestorGroups struct {
+	// enum: none,memberships,memberships_and_group
+	// displayed only when include_managers_of_ancestor_groups=1, note that the group is an ancestor of itself
+	CanManageThroughAncestorGroups string `json:"can_manage_through_ancestor_groups"`
+	// displayed only when include_managers_of_ancestor_groups=1, note that the group is an ancestor of itself
+	CanGrantGroupAccessThroughAncestorGroups bool `json:"can_grant_group_access_through_ancestor_groups"`
+	// displayed only when include_managers_of_ancestor_groups=1, note that the group is an ancestor of itself
+	CanWatchMembersThroughAncestorGroups bool `json:"can_watch_members_through_ancestor_groups"`
+}
+
 // swagger:model groupManagersViewResponseRow
 type groupManagersViewResponseRow struct {
 	// `groups.id`
@@ -16,6 +35,12 @@ type groupManagersViewResponseRow struct {
 	// `groups.name`
 	// required: true
 	Name string `json:"name"`
+
+	// only for users
+	*GroupManagersViewResponseRowUser
+	// only when include_managers_of_ancestor_groups=1
+	*GroupManagersViewResponseRowThroughAncestorGroups
+
 	// enum: none,memberships,memberships_and_group
 	// required: true
 	CanManage string `json:"can_manage"`
@@ -23,6 +48,10 @@ type groupManagersViewResponseRow struct {
 	CanGrantGroupAccess bool `json:"can_grant_group_access"`
 	// required: true
 	CanWatchMembers bool `json:"can_watch_members"`
+
+	Type                                string `json:"-"`
+	CanManageValue                      int    `json:"-"`
+	CanManageThroughAncestorGroupsValue int    `json:"-"`
 }
 
 // swagger:operation GET /groups/{group_id}/managers groups groupManagersView
@@ -30,8 +59,8 @@ type groupManagersViewResponseRow struct {
 // summary: List group managers
 // description: >
 //
-//   Returns a list of group managers
-//   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' group names.
+//   Lists managers of the given group and (optionally) managers of its ancestors
+//   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
 //
 //
 //   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
@@ -40,6 +69,12 @@ type groupManagersViewResponseRow struct {
 //   in: path
 //   type: integer
 //   required: true
+// - name: include_managers_of_ancestor_groups
+//   description: If equal to 1, the results include managers of all ancestor groups
+//   in: query
+//   type: integer
+//   enum: [0,1]
+//   default: 0
 // - name: sort
 //   in: query
 //   default: [name,id]
@@ -86,13 +121,39 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
+	var includeManagersOfAncestorGroups bool
+	if len(r.URL.Query()["include_managers_of_ancestor_groups"]) > 0 {
+		includeManagersOfAncestorGroups, err = service.ResolveURLQueryGetBoolField(r, "include_managers_of_ancestor_groups")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
+	}
+
 	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	query := srv.Store.GroupManagers().Where("group_id = ?", groupID).
+	query := srv.Store.GroupManagers().
 		Joins("JOIN `groups` ON groups.id = group_managers.manager_id").
-		Select(`groups.id, groups.name, can_manage, can_grant_group_access, can_watch_members`)
+		Joins("LEFT JOIN users ON users.group_id = groups.id")
+
+	if includeManagersOfAncestorGroups {
+		query = query.
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = group_managers.group_id").
+			Where("groups_ancestors_active.child_group_id = ?", groupID).
+			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
+			        MAX(IF(groups_ancestors_active.is_self, can_manage_value, 1)) AS can_manage_value,
+			        MAX(IF(groups_ancestors_active.is_self, can_grant_group_access, 0)) AS can_grant_group_access,
+			        MAX(IF(groups_ancestors_active.is_self, can_watch_members, 0)) AS can_watch_members,
+			        MAX(can_manage_value) AS can_manage_through_ancestor_groups_value,
+			        MAX(can_grant_group_access) AS can_grant_group_access_through_ancestor_groups,
+			        MAX(can_watch_members) AS can_watch_members_through_ancestor_groups`).
+			Group("groups.id")
+	} else {
+		query = query.Where("group_managers.group_id = ?", groupID).
+			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
+              can_manage_value, can_grant_group_access, can_watch_members`)
+	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
@@ -107,6 +168,19 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 
 	var result []groupManagersViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
+
+	for index := range result {
+		result[index].CanManage = srv.Store.GroupManagers().CanManageNameByIndex(result[index].CanManageValue)
+		if result[index].Type != "User" {
+			result[index].GroupManagersViewResponseRowUser = nil
+		}
+		if !includeManagersOfAncestorGroups {
+			result[index].GroupManagersViewResponseRowThroughAncestorGroups = nil
+		} else {
+			result[index].CanManageThroughAncestorGroups =
+				srv.Store.GroupManagers().CanManageNameByIndex(result[index].CanManageThroughAncestorGroupsValue)
+		}
+	}
 
 	render.Respond(w, r, result)
 	return service.NoError
