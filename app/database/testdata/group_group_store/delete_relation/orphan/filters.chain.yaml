@@ -1,6 +1,9 @@
 groups:
   - {id: 1}
   - {id: 2}
+  - {id: 3}
+  - {id: 4}
+  - {id: 5}
   - {id: 111}
 
 users: [{group_id: 111}]
@@ -8,3 +11,6 @@ users: [{group_id: 111}]
 filters:
   - {group_id: 1, user_id: 111}
   - {group_id: 2, user_id: 111}
+  - {group_id: 3, user_id: 111}
+  - {group_id: 4, user_id: 111}
+  - {group_id: 5, user_id: 111}

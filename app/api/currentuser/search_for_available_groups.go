@@ -95,9 +95,9 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 
 	user := srv.GetUser(r)
 
-	skipGroups := srv.Store.GroupGroups().
-		Select("groups_groups.parent_group_id").
-		Where("groups_groups.child_group_id = ?", user.GroupID).
+	skipGroups := srv.Store.ActiveGroupGroups().
+		Select("groups_groups_active.parent_group_id").
+		Where("groups_groups_active.child_group_id = ?", user.GroupID).
 		SubQuery()
 
 	skipPending := srv.Store.GroupPendingRequests().

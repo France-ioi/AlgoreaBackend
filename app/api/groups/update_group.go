@@ -198,8 +198,8 @@ func validateRootActivityIDAndIsOfficial(
 		}
 		found, err := store.PermissionsGranted().WithWriteLock().
 			Joins(`
-				JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = permissions_granted.group_id AND
-				     groups_ancestors.child_group_id = ?`, user.GroupID).
+				JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_granted.group_id AND
+				     groups_ancestors_active.child_group_id = ?`, user.GroupID).
 			Where("permissions_granted.can_make_session_official OR permissions_granted.is_owner").
 			Where("permissions_granted.item_id = ?", rootActivityIDToCheck).
 			HasRows()

@@ -6,6 +6,8 @@ Feature: Update a group (groupEdit) - robustness
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | false               | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       | 1                 |
       | 14 | Group C | -2    | Group C is here | 2019-03-06 09:26:40 | Class | null                | false               | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 |
       | 15 | Group D | -2    | Group D is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 |
+      | 16 | Group E | -2    | Group E is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 |
+      | 17 | Group F | -2    | Group F is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 |
       | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 |
       | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 |
     And the database has the following table 'users':
@@ -17,21 +19,28 @@ Feature: Update a group (groupEdit) - robustness
       | 13       | 21         |
       | 14       | 21         |
       | 15       | 21         |
+      | 16       | 21         |
     And the groups ancestors are computed
+    And the database table 'groups_ancestors' has also the following rows:
+      | ancestor_group_id | child_group_id | expires_at          |
+      | 17                | 21             | 2019-05-30 11:00:00 |
     And the database has the following table 'items':
       | id   | default_language_tag | type   |
       | 123  | fr                   | Task   |
+      | 124  | fr                   | Task   |
       | 5678 | fr                   | Course |
       | 6789 | fr                   | Skill  |
       | 7890 | fr                   | Skill  |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 123     | info               |
+      | 21       | 124     | info               |
       | 21       | 5678    | none               |
       | 21       | 6789    | info               |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_make_session_official | source_group_id |
       | 21       | 123     | false                     | 13              |
+      | 17       | 124     | true                      | 13              |
 
   Scenario: Should fail if the user is not a manager of the group
     Given I am the user with id "31"
@@ -236,6 +245,19 @@ Feature: Update a group (groupEdit) - robustness
     """
     {
       "root_activity_id": "123"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "Not enough permissions for attaching the group to the activity as an official session"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+
+  Scenario: is_official_session is true in the db & root_activity_id becomes not null while the user doesn't have the permission because of expired membership
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/16" with the following body:
+    """
+    {
+      "root_activity_id": "124"
     }
     """
     Then the response code should be 403

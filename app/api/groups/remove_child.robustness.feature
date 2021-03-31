@@ -1,5 +1,4 @@
 Feature: Remove a direct parent-child relation between two groups - robustness
-
   Background:
     Given the database has the following table 'groups':
       | id | name     | type  |
@@ -7,6 +6,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 13 | Group B  | Class |
       | 14 | Group C  | Class |
       | 15 | Team     | Team  |
+      | 16 | Group D  | Class |
       | 21 | owner    | User  |
       | 22 | Group    | Class |
       | 23 | teacher  | User  |
@@ -21,19 +21,21 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 13       | 21         | memberships |
       | 14       | 21         | memberships |
       | 15       | 21         | memberships |
+      | 16       | 21         | memberships |
       | 22       | 21         | memberships |
       | 53       | 21         | none        |
       | 55       | 21         | memberships |
       | 11       | 23         | none        |
       | 55       | 23         | none        |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 11              | 55             |
-      | 13              | 11             |
-      | 13              | 55             |
-      | 15              | 55             |
-      | 22              | 13             |
-      | 55              | 14             |
+      | parent_group_id | child_group_id | expires_at          |
+      | 11              | 55             | 9999-12-31 23:59:59 |
+      | 13              | 11             | 9999-12-31 23:59:59 |
+      | 13              | 55             | 9999-12-31 23:59:59 |
+      | 15              | 55             | 9999-12-31 23:59:59 |
+      | 16              | 11             | 2019-05-30 11:00:00 |
+      | 22              | 13             | 9999-12-31 23:59:59 |
+      | 55              | 14             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
 
   Scenario: Parent group id is wrong
@@ -126,7 +128,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
 
   Scenario: Relation doesn't exist
     Given I am the user with id "21"
-    When I send a DELETE request to "/groups/14/relations/11"
+    When I send a DELETE request to "/groups/16/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
