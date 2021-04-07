@@ -86,20 +86,8 @@ clean:
 	$(GOCLEAN) -testcache
 	rm -rf $(LOCAL_BIN_DIR)/*
 
-lambda-build:
+linux-build:
 	GOOS=linux $(GOBUILD) -o $(BIN_PATH)-linux
-lambda-archive: lambda-build
-	# create an archive with the linux binary, the lambda config file and private_key.pem/public_key.pem that must be stored in the current directory
-	rm -rf $(LOCAL_BIN_DIR)/lambda.zip
-	TMPDIR=`mktemp -d -t algoreabackend-XXXXXXXXXX` && \
-	cp $(BIN_PATH)-linux ./private_key.pem ./public_key.pem "$$TMPDIR/" && \
-	mkdir -p "$$TMPDIR/conf" && \
-	cp ./conf/config.lambda.yaml "$$TMPDIR/conf/config.yaml" && \
-	cd "$$TMPDIR" && zip -r $(PWD)/$(LOCAL_BIN_DIR)/lambda.zip . && \
-	rm -rf "$$TMPDIR"
-lambda-upload: lambda-archive
-	# pass AWS profile with AWS_PROFILE: make AWS_PROFILE="myprofile" lambda-upload
-	aws lambda update-function-code --function-name AlgoreaBackend --zip-file fileb://$(LOCAL_BIN_DIR)/lambda.zip $(AWS_PARAMS)
 
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
