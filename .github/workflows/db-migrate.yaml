@@ -1,0 +1,33 @@
+name: Apply DB migrations
+
+on:
+- push
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.13'
+    - run: go version
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: go-${{ hashFiles('**/go.sum') }}
+        restore-keys: go-
+
+    - run: make
+    - shell: bash
+      env:
+        ALGOREA_DATABASE__USER: ${{ secrets.DBUSER }}
+        ALGOREA_DATABASE__PASSWD: ${{ secrets.DBPWD }}
+        ALGOREA_DATABASE__ADDR: ${{ secrets.DBADDR }}
+        ALGOREA_DATABASE__DBNAME: ${{ secrets.DBNAME }}
+        ALGOREA_DATABASE__NET: tcp
+      run: ./bin/AlgoreaBackend db-migrate
+
