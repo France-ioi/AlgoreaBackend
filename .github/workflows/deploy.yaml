@@ -15,18 +15,11 @@ jobs:
       with:
         go-version: '1.13'
     - run: go version
-    - name: Cache go modules
-      uses: actions/cache@v2
+    - uses: actions/cache@v2
       with:
-        path: /go/pkg/mod
-        key: go-deps-${{ hashFiles('go.sum') }}
-        restore-keys: global-mods
-    - name: Cache local builds
-      uses: actions/cache@v2
-      with:
-        path: .cache/go-build/
-        key: go-deps-${{ hashFiles('go.sum') }}
-        restore-keys: local-build
+        path: ~/go/pkg/mod
+        key: go-${{ hashFiles('**/go.sum') }}
+        restore-keys: go-
 
     - run: make linux-build
     - run: mkdir -p lambda-archive/conf
