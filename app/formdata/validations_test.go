@@ -65,6 +65,28 @@ func Test_validateDMYDate(t *testing.T) {
 	}
 }
 
+func Test_validateNull(t *testing.T) {
+	tests := []struct {
+		name string
+		fl   validator.FieldLevel
+		want bool
+	}{
+		{name: "nil", fl: &FieldLevel{FieldValue: nil}, want: true},
+		{name: "nil pointer", fl: &FieldLevel{FieldValue: (*string)(nil)}, want: true},
+		{name: "nil interface", fl: &FieldLevel{FieldValue: interface{}(nil)}, want: true},
+		{name: "nil interface of pointer", fl: &FieldLevel{FieldValue: interface{}((*string)(nil))}, want: true},
+		{name: "empty string", fl: &FieldLevel{FieldValue: ""}, want: false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			if got := validateNull(tt.fl); got != tt.want {
+				t.Errorf("validateNull() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // FieldLevel contains all the information and helper functions
 // to validate a field
 type FieldLevel struct {

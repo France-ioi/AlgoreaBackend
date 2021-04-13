@@ -37,6 +37,7 @@ type FormData struct {
 }
 
 const set = "set"
+const null = "null"
 const squash = "squash"
 
 // NewFormData creates a new FormData object for given definitions
@@ -80,10 +81,14 @@ func NewFormData(definitionStructure interface{}) *FormData {
 	})
 	formData.RegisterTranslation(set, "missing field")
 
-	formData.RegisterValidation("duration", validator.Func(validateDuration))
+	// This one is needed to check if the field is null
+	formData.RegisterValidation(null, formData.ValidatorSkippingUnsetFields(validateNull))
+	formData.RegisterTranslation(null, "should be null")
+
+	formData.RegisterValidation("duration", validateDuration)
 	formData.RegisterTranslation("duration", "invalid duration")
 
-	formData.RegisterValidation("dmy-date", validator.Func(validateDMYDate))
+	formData.RegisterValidation("dmy-date", validateDMYDate)
 	formData.RegisterTranslation("dmy-date", "should be dd-mm-yyyy")
 
 	return formData
