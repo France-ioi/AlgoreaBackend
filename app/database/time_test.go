@@ -56,7 +56,14 @@ func TestTime_Value(t *testing.T) {
 	tm := &time.Time{}
 	value, err := (*Time)(tm).Value()
 	assert.NoError(t, err)
-	assert.Equal(t, tm, value)
+	assert.Equal(t, "0001-01-01 00:00:00", value)
+}
+
+func TestTime_Value_Nil(t *testing.T) {
+	tm := (*Time)(nil)
+	value, err := tm.Value()
+	assert.NoError(t, err)
+	assert.Nil(t, value)
 }
 
 func TestTime_MarshalJSON(t *testing.T) {
