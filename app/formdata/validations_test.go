@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	validator "github.com/France-ioi/validator"
+	"github.com/France-ioi/validator"
 )
 
 func Test_validateDuration(t *testing.T) {

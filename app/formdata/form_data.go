@@ -2,6 +2,7 @@ package formdata
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -94,10 +95,13 @@ func (f *FormData) RegisterValidation(tag string, fn validator.Func) {
 func (f *FormData) RegisterTranslation(tag, text string) {
 	_ = f.validate.RegisterTranslation(tag, f.trans,
 		func(ut ut.Translator) (err error) {
-			return ut.Add(tag, text, false)
-		}, func(ut ut.Translator, fe validator.FieldError) string {
-			t, _ := ut.T(fe.Tag(), fe.Field())
-			return t
+			err = ut.Add(tag, text, false)
+			if err != nil {
+				panic(err)
+			}
+			return err
+		}, func(_ ut.Translator, fe validator.FieldError) string {
+			return fmt.Sprintf("%.0[1]s"+text, fe.Tag(), fe.Field(), fe.Param()) // %.0[1]s is needed to suppress the EXTRA suffix
 		})
 }
 
