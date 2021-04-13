@@ -61,6 +61,61 @@ func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T
 	})
 }
 
+func TestFormData_ValidatorSkippingUnsetFields(t *testing.T) {
+	f := NewFormData(&struct {
+		ID     *int64 `validate:"test"`
+		Nested *struct {
+			ID *int64 `validate:"test"`
+		} `validate:"test"`
+	}{})
+	f.RegisterValidation("test", f.ValidatorSkippingUnsetFields(func(validator.FieldLevel) bool {
+		return false
+	}))
+	f.RegisterTranslation("test", "failed")
+	err := f.ParseMapData(map[string]interface{}{})
+	assert.Nil(t, err)
+	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": nil})
+	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}}, err)
+	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
+	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+}
+
+func TestFormData_ValidatorSkippingUnchangedFields(t *testing.T) {
+	type nestedStruct struct {
+		ID *int64 `validate:"test"`
+	}
+	type testStruct struct {
+		ID     *int64        `validate:"test"`
+		Nested *nestedStruct `validate:"test"`
+	}
+
+	f := NewFormData(&testStruct{})
+	f.RegisterValidation("test", f.ValidatorSkippingUnchangedFields(func(validator.FieldLevel) bool {
+		return false
+	}))
+	f.RegisterTranslation("test", "failed")
+
+	err := f.ParseMapData(map[string]interface{}{})
+	assert.Nil(t, err)
+	f.SetOldValues(&testStruct{})
+	err = f.ParseMapData(map[string]interface{}{})
+	assert.Nil(t, err)
+	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
+	assert.Equal(t, FieldErrors{"Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+	i := int64(10)
+	j := int64(20)
+	f.SetOldValues(&testStruct{ID: &i, Nested: &nestedStruct{ID: &j}})
+	err = f.ParseMapData(map[string]interface{}{})
+	assert.Nil(t, err)
+	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": nil}})
+	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+	err = f.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
+	assert.Equal(t, FieldErrors{"Nested": []string{"failed"}}, err)
+	f.SetOldValues(nil)
+	err = f.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
+	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+}
+
 func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 	tests := []struct {
 		name     string

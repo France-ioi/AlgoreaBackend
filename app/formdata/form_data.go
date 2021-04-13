@@ -30,6 +30,7 @@ type FormData struct {
 	metadata            mapstructure.Metadata
 	usedKeys            map[string]bool
 	decodeErrors        map[string]bool
+	oldValues           interface{}
 
 	validate *validator.Validate
 	trans    ut.Translator
@@ -107,6 +108,11 @@ func (f *FormData) RegisterTranslation(tag, text string) {
 		})
 }
 
+// SetOldValues sets the internal pointer to the structure containing old values for validation
+func (f *FormData) SetOldValues(oldValues interface{}) {
+	f.oldValues = oldValues
+}
+
 // ParseJSONRequestData parses and validates JSON from the request according to the structure definition
 func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 	if err := f.decodeRequestJSONDataIntoStruct(r); err != nil {
@@ -166,6 +172,32 @@ func (f *FormData) IsValid(key string) bool {
 	return len(f.fieldErrors[key]) == 0
 }
 
+// ValidatorSkippingUnsetFields constructs a validator checking only fields given by the user
+func (f *FormData) ValidatorSkippingUnsetFields(nestedValidator validator.Func) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		path := f.getUsedKeysPathFromValidatorPath(fl.Path())
+		if !f.IsSet(path) {
+			return true
+		}
+		return nestedValidator(fl)
+	}
+}
+
+// ValidatorSkippingUnchangedFields constructs a validator checking only fields with changed values.
+// You might want to call f.SetOldValues(oldValues) before in order to provide the form with previous field values.
+func (f *FormData) ValidatorSkippingUnchangedFields(nestedValidator validator.Func) validator.Func {
+	return f.ValidatorSkippingUnsetFields(func(fl validator.FieldLevel) bool {
+		structPath := fl.StructPath()
+		structPath = structPath[strings.IndexRune(structPath, '.')+1:]
+		oldValue := getFieldValueByStructPath(reflect.ValueOf(f.oldValues), structPath)
+		newValue := getFieldValueByStructPath(fl.Field(), "")
+		if newValue == oldValue {
+			return true
+		}
+		return nestedValidator(fl)
+	})
+}
+
 var mapstructTypeErrorRegexp = regexp.MustCompile(`^'([^']*)'\s+(.*)$`)
 var mapstructDecodingErrorRegexp = regexp.MustCompile(`^error decoding '([^']*)':\s+(.*)$`)
 
@@ -184,6 +216,7 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 	f.fieldErrors = make(FieldErrors)
 	f.usedKeys = make(map[string]bool)
 	f.decodeErrors = make(map[string]bool)
+	f.metadata = mapstructure.Metadata{}
 
 	var decoder *mapstructure.Decoder
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
@@ -362,6 +395,33 @@ func getJSONSquash(structField *reflect.StructField) bool {
 		}
 	}
 	return false
+}
+
+func getFieldValueByStructPath(value reflect.Value, structPath string) interface{} {
+	if !value.IsValid() {
+		return nil
+	}
+	for value.Kind() == reflect.Ptr {
+		if value.IsNil() {
+			return nil
+		}
+		value = value.Elem()
+	}
+	if structPath == "" {
+		return value.Interface()
+	}
+
+	var fieldName string
+	nameLength := strings.IndexRune(structPath, '.')
+	if nameLength >= 0 {
+		fieldName = structPath[0:nameLength]
+		structPath = structPath[nameLength+1:]
+	} else {
+		fieldName = structPath
+		structPath = ""
+	}
+
+	return getFieldValueByStructPath(value.FieldByName(fieldName), structPath)
 }
 
 // toAnythingHookFunc returns a DecodeHookFunc that converts
