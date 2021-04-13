@@ -3,7 +3,7 @@ package groups
 import (
 	"errors"
 	"net/http"
-	"time"
+	"reflect"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -18,56 +18,60 @@ import (
 // Information of the group to be modified
 // swagger:model
 type groupUpdateInput struct {
-	Name  string `json:"name"`
-	Grade int32  `json:"grade"`
+	Name  string `json:"name" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Grade int32  `json:"grade" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	Description *string `json:"description"`
-	IsOpen      bool    `json:"is_open"`
+	Description *string `json:"description" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	IsOpen      bool    `json:"is_open" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// If changed from true to false, is automatically switches all requests to join this group from requestSent to requestRefused
-	IsPublic bool `json:"is_public"`
+	IsPublic bool `json:"is_public" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Duration after the first use of the code when it will expire
 	// Nullable
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	CodeLifetime *string `json:"code_lifetime" validate:"omitempty,duration"`
+	CodeLifetime *string `json:"code_lifetime" validate:"changing_requires_can_manage_at_least=memberships,null|duration"`
 	// Nullable
-	CodeExpiresAt *time.Time `json:"code_expires_at"`
+	CodeExpiresAt *database.Time `json:"code_expires_at" validate:"changing_requires_can_manage_at_least=memberships"`
 	// Nullable
-	RootActivityID *int64 `json:"root_activity_id"`
+	RootActivityID *int64 `json:"root_activity_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	RootSkillID *int64 `json:"root_skill_id"`
+	RootSkillID *int64 `json:"root_skill_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Can be set only if root_activity_id is set and
 	// the current user has the 'can_make_session_official' permission on the activity item
-	IsOfficialSession       bool `json:"is_official_session"`
-	OpenActivityWhenJoining bool `json:"open_activity_when_joining"`
-
-	RequireMembersToJoinParent bool `json:"require_members_to_join_parent"`
+	IsOfficialSession       bool `json:"is_official_session" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	OpenActivityWhenJoining bool `json:"open_activity_when_joining" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
 	// Can be changed only from false to true
 	// (changing auto-rejects all pending join/leave requests and withdraws all pending invitations)
-	FrozenMembership bool `json:"frozen_membership" validate:"frozen_membership"`
+	FrozenMembership bool `json:"frozen_membership"  validate:"changing_requires_can_manage_at_least=memberships,frozen_membership"`
+	// Nullable; cannot be set to null when enforce_max_participant is true
+	MaxParticipants *int `json:"max_participants" validate:"changing_requires_can_manage_at_least=memberships,max_participants"`
+	// Cannot be set to true when max_participants is null
+	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` // nolint:lll
+
+	// enum: none,view,edit
+	// Cannot be changed to 'edit'
+	RequirePersonalInfoAccessApproval  string         `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,require_personal_info_access_approval,oneof=none view edit"` // nolint:lll
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                           // nolint:lll
+	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                           // nolint:lll
+	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                   // nolint:lll
 
 	// Nullable
-	Organizer *string `json:"organizer"`
+	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	AddressLine1 *string `json:"address_line1"`
+	AddressLine1 *string `json:"address_line1" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	AddressLine2 *string `json:"address_line2"`
+	AddressLine2 *string `json:"address_line2" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	AddressPostcode *string `json:"address_postcode"`
+	AddressPostcode *string `json:"address_postcode" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	AddressCity *string `json:"address_city"`
+	AddressCity *string `json:"address_city" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	AddressCountry *string `json:"address_country"`
+	AddressCountry *string `json:"address_country" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Nullable
-	ExpectedStart *time.Time `json:"expected_start"`
-}
+	ExpectedStart *database.Time `json:"expected_start" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
-type currentGroupDataType struct {
-	IsPublic          bool
-	RootActivityID    *int64
-	IsOfficialSession bool
-	FrozenMembership  bool
+	CanManageValue int `json:"-"`
 }
 
 // swagger:operation PUT /groups/{group_id} groups groupUpdate
@@ -76,6 +80,11 @@ type currentGroupDataType struct {
 // description: Updates group information.
 //
 //   Requires the user to be a manager of the group, otherwise the 'forbidden' error is returned.
+//
+//
+//   The user should have `can_manage` >= 'memberships' in order to modify `code_expires_at`, `code_lifetime`,
+//   `frozen_membership`, `max_participants`, or `enforce_max_participants`, otherwise the "bad request" error is returned.
+//   In order to modify values of other fields, the user should have `can_manage` >= 'memberships_and_group'.
 //
 //
 //   If the `root_activity_id` item is provided and is not null, the item should not be a skill and
@@ -91,7 +100,14 @@ type currentGroupDataType struct {
 //
 //
 //   Setting `is_official_session` to true while keeping `root_activity_id` not set or setting `root_activity_id` to null for
-//   an official session, will cause the "bad request" error.
+//   an official session will cause the "bad request" error.
+//
+//
+//   Setting `enforce_max_participants` to true while keeping `max_participants` null or setting `max_participants` to null
+//   while keeping `enforce_max_participants` = true will cause the "bad request" error.
+//
+//
+//   Changing `require_personal_info_access_approval` to 'edit' will cause the "bad request" error.
 // parameters:
 // - name: group_id
 //   in: path
@@ -126,11 +142,20 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
 		groupStore := s.Groups()
 
-		var currentGroupData currentGroupDataType
+		var currentGroupData groupUpdateInput
 
 		err = groupStore.ManagedBy(user).
-			Select("groups.is_public, groups.root_activity_id, groups.is_official_session, groups.frozen_membership").WithWriteLock().
-			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error()
+			Select(`
+				groups.name, groups.grade, groups.description, groups.is_open, groups.is_public,
+				groups.code_lifetime, groups.code_expires_at, groups.root_activity_id, groups.root_skill_id,
+				groups.is_official_session, groups.open_activity_when_joining, groups.require_members_to_join_parent,
+				groups.frozen_membership, groups.organizer, groups.address_line1, groups.address_line2,
+				groups.address_postcode, groups.address_city, groups.address_country, groups.expected_start,
+				groups.max_participants, groups.enforce_max_participants, groups.require_personal_info_access_approval,
+				groups.require_lock_membership_approval_until, groups.require_watch_approval,
+				groups.require_members_to_join_parent,
+				MAX(can_manage_value) AS can_manage_value`).WithWriteLock().
+			Where("groups.id = ?", groupID).Group("groups.id").Scan(&currentGroupData).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
@@ -138,8 +163,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(err)
 
 		var formData *formdata.FormData
-		var input *groupUpdateInput
-		formData, input, err = validateUpdateGroupInput(r, &currentGroupData)
+		formData, err = validateUpdateGroupInput(r, &currentGroupData, s)
 		if err != nil {
 			apiErr = service.ErrInvalidRequest(err)
 			return apiErr.Error // rollback
@@ -151,7 +175,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
-		apiErr = validateRootSkillID(s, user, input.RootSkillID)
+		apiErr = validateRootSkillID(s, user, currentGroupData.RootSkillID, dbMap)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
@@ -223,9 +247,12 @@ func validateRootActivityID(store *database.DataStore, user *database.User, root
 	return service.NoError
 }
 
-func validateRootSkillID(store *database.DataStore, user *database.User, rootSkillIDToCheck *int64) service.APIError {
-	if rootSkillIDToCheck != nil {
-		found, errorInTransaction := store.Items().ByID(*rootSkillIDToCheck).Where("type = 'Skill'").WithWriteLock().
+func validateRootSkillID(store *database.DataStore, user *database.User, oldRootSkillID *int64,
+	dbMap map[string]interface{}) service.APIError {
+	rootSkillID, rootSkillIDSet := dbMap["root_skill_id"]
+	rootSkillIDChanged := rootSkillIDSet && !int64PtrEqualValues(oldRootSkillID, rootSkillID.(*int64))
+	if rootSkillIDChanged && rootSkillID != nil {
+		found, errorInTransaction := store.Items().ByID(*rootSkillID.(*int64)).Where("type = 'Skill'").WithWriteLock().
 			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
 		service.MustNotBeError(errorInTransaction)
 		if !found {
@@ -278,20 +305,28 @@ func refuseSentGroupRequestsIfNeeded(
 }
 
 func validateUpdateGroupInput(
-	r *http.Request, currentGroupData *currentGroupDataType) (*formdata.FormData, *groupUpdateInput, error) {
+	r *http.Request, currentGroupData *groupUpdateInput, store *database.DataStore) (*formdata.FormData, error) {
 	input := &groupUpdateInput{}
 	formData := formdata.NewFormData(input)
-	formData.RegisterValidation("frozen_membership", func(fl validator.FieldLevel) bool {
-		if !formData.IsSet("frozen_membership") || fl.Field().Bool() == currentGroupData.FrozenMembership ||
-			!currentGroupData.FrozenMembership {
-			return true
-		}
-		// frozen_membership is going to be changed from true to false
-		return false
-	})
+	formData.SetOldValues(currentGroupData)
+	formData.RegisterValidation("frozen_membership", constructFrozenMembershipValidator(formData))
 	formData.RegisterTranslation("frozen_membership", "can only be changed from false to true")
+
+	formData.RegisterValidation("changing_requires_can_manage_at_least",
+		constructChangingRequiresCanManageAtLeastValidator(formData, store, currentGroupData))
+	formData.RegisterTranslation("changing_requires_can_manage_at_least", "only managers with 'can_manage' >= '%[3]s' can modify this field")
+
+	formData.RegisterValidation("require_personal_info_access_approval", constructRequirePersonalInfoAccessApprovalValidator(formData))
+	formData.RegisterTranslation("require_personal_info_access_approval", "cannot be changed to 'edit'")
+
+	formData.RegisterValidation("max_participants", constructMaxParticipantsValidator(formData, currentGroupData))
+	formData.RegisterTranslation("max_participants", "cannot be set to null when 'enforce_max_participants' is true")
+
+	formData.RegisterValidation("enforce_max_participants", constructEnforceMaxParticipantsValidator(formData, currentGroupData))
+	formData.RegisterTranslation("enforce_max_participants", "cannot be set to true when 'max_participants' is null")
+
 	err := formData.ParseJSONRequestData(r)
-	return formData, input, err
+	return formData, err
 }
 
 func int64PtrEqualValues(a, b *int64) bool {
@@ -303,4 +338,54 @@ func isTryingToChangeOfficialSessionActivity(dbMap map[string]interface{}, oldIs
 	isOfficialSessionChanged := isOfficialSessionSet && oldIsOfficialSession != isOfficialSession.(bool)
 	return isOfficialSessionChanged && isOfficialSession.(bool) ||
 		!isOfficialSessionChanged && oldIsOfficialSession && rootActivityIDChanged
+}
+
+func constructFrozenMembershipValidator(formData *formdata.FormData) validator.Func {
+	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
+		// return false if frozen_membership is going to be changed from true to false
+		return fl.Field().Bool()
+	})
+}
+
+func constructChangingRequiresCanManageAtLeastValidator(formData *formdata.FormData, store *database.DataStore,
+	currentGroupData *groupUpdateInput) validator.Func {
+	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
+		return currentGroupData.CanManageValue >= store.GroupManagers().CanManageIndexByName(fl.Param())
+	})
+}
+
+func constructRequirePersonalInfoAccessApprovalValidator(formData *formdata.FormData) validator.Func {
+	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
+		return fl.Field().Interface() != "edit"
+	})
+}
+
+func constructMaxParticipantsValidator(formData *formdata.FormData, currentGroupData *groupUpdateInput) validator.Func {
+	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
+		if fl.Field().Kind() == reflect.Ptr {
+			enforceMaxParticipants := currentGroupData.EnforceMaxParticipants
+			if formData.IsSet("enforce_max_participants") {
+				enforceMaxParticipants = fl.Top().Elem().FieldByName("EnforceMaxParticipants").Interface().(bool)
+			}
+			if enforceMaxParticipants {
+				return false
+			}
+		}
+		return true
+	})
+}
+
+func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, currentGroupData *groupUpdateInput) validator.Func {
+	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
+		if fl.Field().Interface().(bool) {
+			maxParticipants := currentGroupData.MaxParticipants
+			if formData.IsSet("max_participants") {
+				maxParticipants = fl.Top().Elem().FieldByName("MaxParticipants").Interface().(*int)
+			}
+			if maxParticipants == nil {
+				return false
+			}
+		}
+		return true
+	})
 }
