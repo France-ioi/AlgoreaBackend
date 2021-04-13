@@ -12,13 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/France-ioi/validator"
 	english "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/mapstructure"
+	"github.com/France-ioi/validator"
 	"github.com/France-ioi/validator/translations/en"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 // FormData can parse JSON, validate it and construct a map for updating DB
@@ -188,6 +190,7 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 		Result: f.definitionStructure,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeHookFunc(time.RFC3339),
+			stringToDatabaseTimeUTCHookFunc(time.RFC3339),
 			toAnythingHookFunc(),
 			stringToInt64HookFunc(),
 		),
@@ -391,5 +394,21 @@ func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 			return data, nil
 		}
 		return strconv.ParseInt(data.(string), 10, 64)
+	}
+}
+
+// stringToDatabaseTimeUTCHookFunc returns a DecodeHookFunc that converts strings to database.Time in UTC
+func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc {
+	timeDecodeFunc := mapstructure.StringToTimeHookFunc(layout)
+
+	return func(
+		f reflect.Type,
+		t reflect.Type,
+		data interface{}) (interface{}, error) {
+		if f.Kind() != reflect.String || t.Name() != "Time" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/database" {
+			return data, nil
+		}
+		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, f, reflect.TypeOf((*time.Time)(nil)).Elem(), data)
+		return database.Time(converted.(time.Time).UTC()), err
 	}
 }

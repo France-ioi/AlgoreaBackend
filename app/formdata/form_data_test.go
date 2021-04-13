@@ -2,11 +2,16 @@ package formdata
 
 import (
 	"errors"
+	"reflect"
 	"testing"
+	"time"
 
+	"github.com/France-ioi/mapstructure"
 	"github.com/France-ioi/validator"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 func TestFormData_IsSet(t *testing.T) {
@@ -54,4 +59,50 @@ func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T
 	assert.Equal(t, err, FieldErrors{
 		"ID": []string{"failed for field ID with parameter value (tag=test)"},
 	})
+}
+
+func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
+	tests := []struct {
+		name     string
+		typeFrom reflect.Type
+		typeTo   reflect.Type
+		data     interface{}
+		want     interface{}
+		wantErr  error
+	}{
+		{
+			name:     "string to database.Time (parse)",
+			typeFrom: reflect.TypeOf("string"),
+			typeTo:   reflect.TypeOf((*database.Time)(nil)).Elem(),
+			data:     "2019-05-30T14:00:00+03:00",
+			want:     database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)),
+		},
+		{
+			name:     "invalid string to database.Time (error)",
+			typeFrom: reflect.TypeOf("string"),
+			typeTo:   reflect.TypeOf((*database.Time)(nil)).Elem(),
+			data:     "2019-05-30T14:00:00ZZ",
+			want:     database.Time(time.Time{}),
+			wantErr: &time.ParseError{
+				Layout:     "2006-01-02T15:04:05Z07:00",
+				Value:      "2019-05-30T14:00:00ZZ",
+				LayoutElem: "",
+				ValueElem:  "Z",
+				Message:    ": extra text: Z",
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			hook := stringToDatabaseTimeUTCHookFunc(time.RFC3339)
+			converted, err := mapstructure.DecodeHookExec(hook, tt.typeFrom, tt.typeTo, tt.data)
+			if tt.wantErr == nil {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, converted)
+			} else {
+				assert.Equal(t, tt.wantErr, err)
+			}
+		})
+	}
 }
