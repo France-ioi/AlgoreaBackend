@@ -1,0 +1,65 @@
+name: Deployment
+
+on:
+- push
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.13'
+    - run: go version
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: go-${{ hashFiles('**/go.sum') }}
+        restore-keys: go-
+
+    - run: make linux-build
+    - run: mkdir -p lambda-archive/conf
+    - run: cp bin/AlgoreaBackend-linux lambda-archive/
+    - shell: bash
+      env:
+        TOKEN_PUBLIC_KEY: ${{ secrets.TOKEN_PUBLIC_KEY }}
+      run: echo "$TOKEN_PUBLIC_KEY" > lambda-archive/public_key.pem
+    - shell: bash
+      env:
+        TOKEN_PRIVATE_KEY: ${{ secrets.TOKEN_PRIVATE_KEY }}
+      run: echo "$TOKEN_PRIVATE_KEY" > lambda-archive/private_key.pem
+    - shell: bash
+      env:
+        ALL: ${{ secrets.ALL_USERS_GROUP }}
+        TMP: ${{ secrets.TMP_USERS_GROUP }}
+      run: sed "s/ALLUSERS/$ALL/" .github/conf/config.lambda.yaml | sed -e "s/TMPUSERS/$TMP/" > lambda-archive/conf/config.yaml
+    - run: cd lambda-archive; zip -r ../lambda.zip .; cd ..
+
+    - name: Configure AWS credential
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+    - run: aws s3 sync ./ s3://algorea-lambda-upload/lambda-code/ --exclude "*" --include lambda.zip
+    - run: aws lambda update-function-code --function-name AlgoreaBackend --s3-bucket algorea-lambda-upload --s3-key lambda-code/lambda.zip --query 'LastUpdateStatus'
+    - shell: bash
+      env:
+        APIPATH: ${{ secrets.APIPATH }} # APIPATH format: "/api/"
+        DBNAME: ${{ secrets.DBNAME }}
+      run: |
+        CONFIG=`aws lambda get-function-configuration --function-name AlgoreaBackend --output json --query 'Environment'`
+        APIPATH=${APIPATH/\//\\\/}
+        CONFIG=`echo $CONFIG | sed "s#\"ALGOREA_SERVER__ROOTPATH\": \"[\/a-z]*\"#\"ALGOREA_SERVER__ROOTPATH\": \"$APIPATH\"#" | sed "s/\"ALGOREA_DATABASE__DBNAME\": \"[_a-z]*\"/\"ALGOREA_DATABASE__DBNAME\": \"$DBNAME\"/"`
+        aws lambda update-function-configuration --function-name AlgoreaBackend --environment "${CONFIG}" --query 'LastUpdateStatus'
+    - shell: bash
+      env:
+        TAG: ${{ secrets.LAMBDA_TAG }}
+      run: |
+        VER=`aws lambda publish-version --function-name AlgoreaBackend --query 'Version'`
+        VER=${VER//\"/}
+        aws lambda update-alias --function-name AlgoreaBackend --name $TAG --function-version $VER
