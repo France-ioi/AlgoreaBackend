@@ -19,10 +19,10 @@ func (t *Time) Scan(src interface{}) (err error) {
 	return t.ScanString(string(src.([]byte)))
 }
 
+const timeFormat = "2006-01-02 15:04:05.999999"
+
 // ScanString assigns a value from string with a database driver value
 func (t *Time) ScanString(str string) (err error) {
-	const timeFormat = "2006-01-02 15:04:05.999999"
-
 	// Based on go-sql-driver/mysql.parseDateTime (see https://github.com/go-sql-driver/mysql/blob/master/utils.go#L109)
 	base := "0000-00-00 00:00:00.0000000"
 	switch len(str) {
@@ -44,7 +44,10 @@ func (t *Time) ScanString(str string) (err error) {
 
 // Value returns a database driver Value (*time.Time)
 func (t *Time) Value() (driver.Value, error) {
-	return (*time.Time)(t), nil
+	if t == nil {
+		return nil, nil
+	}
+	return (*time.Time)(t).UTC().Format(timeFormat), nil
 }
 
 // MarshalJSON returns the JSON encoding of t

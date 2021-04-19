@@ -2,6 +2,7 @@ package formdata
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,13 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/France-ioi/validator"
 	english "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/mapstructure"
+	"github.com/France-ioi/validator"
 	"github.com/France-ioi/validator/translations/en"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 // FormData can parse JSON, validate it and construct a map for updating DB
@@ -27,12 +30,14 @@ type FormData struct {
 	metadata            mapstructure.Metadata
 	usedKeys            map[string]bool
 	decodeErrors        map[string]bool
+	oldValues           interface{}
 
 	validate *validator.Validate
 	trans    ut.Translator
 }
 
 const set = "set"
+const null = "null"
 const squash = "squash"
 
 // NewFormData creates a new FormData object for given definitions
@@ -76,10 +81,14 @@ func NewFormData(definitionStructure interface{}) *FormData {
 	})
 	formData.RegisterTranslation(set, "missing field")
 
-	formData.RegisterValidation("duration", validator.Func(validateDuration))
+	// This one is needed to check if the field is null
+	formData.RegisterValidation(null, formData.ValidatorSkippingUnsetFields(validateNull))
+	formData.RegisterTranslation(null, "should be null")
+
+	formData.RegisterValidation("duration", validateDuration)
 	formData.RegisterTranslation("duration", "invalid duration")
 
-	formData.RegisterValidation("dmy-date", validator.Func(validateDMYDate))
+	formData.RegisterValidation("dmy-date", validateDMYDate)
 	formData.RegisterTranslation("dmy-date", "should be dd-mm-yyyy")
 
 	return formData
@@ -94,11 +103,19 @@ func (f *FormData) RegisterValidation(tag string, fn validator.Func) {
 func (f *FormData) RegisterTranslation(tag, text string) {
 	_ = f.validate.RegisterTranslation(tag, f.trans,
 		func(ut ut.Translator) (err error) {
-			return ut.Add(tag, text, false)
-		}, func(ut ut.Translator, fe validator.FieldError) string {
-			t, _ := ut.T(fe.Tag(), fe.Field())
-			return t
+			err = ut.Add(tag, text, false)
+			if err != nil {
+				panic(err)
+			}
+			return err
+		}, func(_ ut.Translator, fe validator.FieldError) string {
+			return fmt.Sprintf("%.0[1]s"+text, fe.Tag(), fe.Field(), fe.Param()) // %.0[1]s is needed to suppress the EXTRA suffix
 		})
+}
+
+// SetOldValues sets the internal pointer to the structure containing old values for validation
+func (f *FormData) SetOldValues(oldValues interface{}) {
+	f.oldValues = oldValues
 }
 
 // ParseJSONRequestData parses and validates JSON from the request according to the structure definition
@@ -160,6 +177,32 @@ func (f *FormData) IsValid(key string) bool {
 	return len(f.fieldErrors[key]) == 0
 }
 
+// ValidatorSkippingUnsetFields constructs a validator checking only fields given by the user
+func (f *FormData) ValidatorSkippingUnsetFields(nestedValidator validator.Func) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		path := f.getUsedKeysPathFromValidatorPath(fl.Path())
+		if !f.IsSet(path) {
+			return true
+		}
+		return nestedValidator(fl)
+	}
+}
+
+// ValidatorSkippingUnchangedFields constructs a validator checking only fields with changed values.
+// You might want to call f.SetOldValues(oldValues) before in order to provide the form with previous field values.
+func (f *FormData) ValidatorSkippingUnchangedFields(nestedValidator validator.Func) validator.Func {
+	return f.ValidatorSkippingUnsetFields(func(fl validator.FieldLevel) bool {
+		structPath := fl.StructPath()
+		structPath = structPath[strings.IndexRune(structPath, '.')+1:]
+		oldValue := getFieldValueByStructPath(reflect.ValueOf(f.oldValues), structPath)
+		newValue := getFieldValueByStructPath(fl.Field(), "")
+		if newValue == oldValue {
+			return true
+		}
+		return nestedValidator(fl)
+	})
+}
+
 var mapstructTypeErrorRegexp = regexp.MustCompile(`^'([^']*)'\s+(.*)$`)
 var mapstructDecodingErrorRegexp = regexp.MustCompile(`^error decoding '([^']*)':\s+(.*)$`)
 
@@ -178,12 +221,14 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 	f.fieldErrors = make(FieldErrors)
 	f.usedKeys = make(map[string]bool)
 	f.decodeErrors = make(map[string]bool)
+	f.metadata = mapstructure.Metadata{}
 
 	var decoder *mapstructure.Decoder
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result: f.definitionStructure,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeHookFunc(time.RFC3339),
+			stringToDatabaseTimeUTCHookFunc(time.RFC3339),
 			toAnythingHookFunc(),
 			stringToInt64HookFunc(),
 		),
@@ -357,6 +402,33 @@ func getJSONSquash(structField *reflect.StructField) bool {
 	return false
 }
 
+func getFieldValueByStructPath(value reflect.Value, structPath string) interface{} {
+	if !value.IsValid() {
+		return nil
+	}
+	for value.Kind() == reflect.Ptr {
+		if value.IsNil() {
+			return nil
+		}
+		value = value.Elem()
+	}
+	if structPath == "" {
+		return value.Interface()
+	}
+
+	var fieldName string
+	nameLength := strings.IndexRune(structPath, '.')
+	if nameLength >= 0 {
+		fieldName = structPath[0:nameLength]
+		structPath = structPath[nameLength+1:]
+	} else {
+		fieldName = structPath
+		structPath = ""
+	}
+
+	return getFieldValueByStructPath(value.FieldByName(fieldName), structPath)
+}
+
 // toAnythingHookFunc returns a DecodeHookFunc that converts
 // any value to payloads.Anything.
 func toAnythingHookFunc() mapstructure.DecodeHookFunc {
@@ -387,5 +459,21 @@ func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 			return data, nil
 		}
 		return strconv.ParseInt(data.(string), 10, 64)
+	}
+}
+
+// stringToDatabaseTimeUTCHookFunc returns a DecodeHookFunc that converts strings to database.Time in UTC
+func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc {
+	timeDecodeFunc := mapstructure.StringToTimeHookFunc(layout)
+
+	return func(
+		f reflect.Type,
+		t reflect.Type,
+		data interface{}) (interface{}, error) {
+		if f.Kind() != reflect.String || t.Name() != "Time" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/database" {
+			return data, nil
+		}
+		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, f, reflect.TypeOf((*time.Time)(nil)).Elem(), data)
+		return database.Time(converted.(time.Time).UTC()), err
 	}
 }

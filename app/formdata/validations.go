@@ -9,6 +9,14 @@ import (
 	"github.com/France-ioi/validator"
 )
 
+func validateNull(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	if !field.IsValid() || field.Kind() == reflect.Ptr && field.IsNil() {
+		return true
+	}
+	return false
+}
+
 func validateDuration(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	if field.Kind() != reflect.String {

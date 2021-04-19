@@ -261,6 +261,35 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			},
 		},
 		{
+			"null validator ignores fields that are not given",
+			&struct {
+				ID *int64 `json:"id" validate:"null"`
+			}{},
+			`{}`,
+			"",
+			nil,
+		},
+		{
+			"null validator requires fields to be null",
+			&struct {
+				ID *int64 `json:"id" validate:"null"`
+			}{},
+			`{"id":1234}`,
+			"invalid input data",
+			formdata.FieldErrors{
+				"id": {"should be null"},
+			},
+		},
+		{
+			"null accepts null values",
+			&struct {
+				ID *int64 `json:"id" validate:"null"`
+			}{},
+			`{"id":null}`,
+			"",
+			nil,
+		},
+		{
 			"named structure",
 			&NamedStruct{},
 			`{"id":0,"name":""}`,

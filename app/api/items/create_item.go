@@ -422,7 +422,8 @@ type parentItemInfo struct {
 
 func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User,
 	parentInfo *parentItemInfo, childrenInfoMap *map[int64]permissionAndType) { // nolint:gocritic
-	formData.RegisterValidation("parent_item_id", constructParentItemIDValidator(store, user, parentInfo))
+	formData.RegisterValidation("parent_item_id",
+		formData.ValidatorSkippingUnsetFields(constructParentItemIDValidator(store, user, parentInfo)))
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should be able to manage its children")
 	formData.RegisterValidation("parent_item_type", constructParentItemTypeValidator(parentInfo))

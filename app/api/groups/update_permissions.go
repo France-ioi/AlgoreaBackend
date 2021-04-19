@@ -188,12 +188,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 }
 
 func registerOptionalValidator(data *formdata.FormData, tag string, validatorFunc func(fl validator.FieldLevel) bool) {
-	data.RegisterValidation(tag, func(fl validator.FieldLevel) bool {
-		if !data.IsSet(tag) {
-			return true
-		}
-		return validatorFunc(fl)
-	})
+	data.RegisterValidation(tag, data.ValidatorSkippingUnsetFields(validatorFunc))
 	data.RegisterTranslation(tag, "the value is not permitted")
 }
 
