@@ -28,7 +28,7 @@ type rawRootItem struct {
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title       *string
-	LanguageTag *string
+	LanguageTag string
 
 	// results
 	AttemptID        *int64

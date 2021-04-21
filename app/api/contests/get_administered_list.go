@@ -12,9 +12,8 @@ type parentTitle struct {
 	// Nullable
 	// required: true
 	Title *string `json:"title"`
-	// Nullable
 	// required: true
-	LanguageTag *string `json:"language_tag"`
+	LanguageTag string `json:"language_tag"`
 }
 
 // swagger:model
@@ -24,9 +23,8 @@ type contestAdminListRow struct {
 	// Nullable
 	// required: true
 	Title *string `gorm:"column:title_translation" json:"title"`
-	// Nullable
 	// required: true
-	LanguageTag *string `gorm:"column:title_language_tag" json:"language_tag"`
+	LanguageTag string `gorm:"column:title_language_tag" json:"language_tag"`
 	// required: true
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type"`
@@ -125,7 +123,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		var parents []struct {
 			ChildID           int64
 			ParentTitle       *string
-			ParentLanguageTag *string
+			ParentLanguageTag string
 		}
 		service.MustNotBeError(srv.Store.Items().
 			Joins("JOIN items_items ON items_items.parent_item_id = items.id AND items_items.child_item_id IN (?)", itemIDs).

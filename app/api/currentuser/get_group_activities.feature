@@ -158,6 +158,9 @@ Feature: Get root activities for a participant group
       | 210     | fr           | Chapitre A  |
       | 230     | fr           | Chapitre C  |
       | 211     | fr           | Tâche 1     |
+      | 250     | en           | null        |
+      | 270     | en           | null        |
+      | 290     | en           | null        |
     And the database has the following table 'attempts':
       | id | participant_id | created_at          | root_item_id | parent_attempt_id | ended_at            |
       | 0  | 11             | 2019-01-30 08:26:41 | null         | null              | null                |
@@ -414,7 +417,7 @@ Feature: Get root activities for a participant group
           "requires_explicit_entry": false,
           "results": [],
           "string": {
-            "language_tag": null,
+            "language_tag": "en",
             "title": null
           },
           "type": "Task"
@@ -440,7 +443,7 @@ Feature: Get root activities for a participant group
           "requires_explicit_entry": false,
           "results": [],
           "string": {
-            "language_tag": null,
+            "language_tag": "en",
             "title": null
           },
           "type": "Task"
@@ -466,7 +469,7 @@ Feature: Get root activities for a participant group
           "requires_explicit_entry": false,
           "results": [],
           "string": {
-            "language_tag": null,
+            "language_tag": "en",
             "title": null
           },
           "type": "Task"

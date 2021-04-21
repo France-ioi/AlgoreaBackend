@@ -39,9 +39,12 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | item_id | language_tag | title      |
       | 10      | en           | Chapter    |
       | 10      | fr           | Chapitre   |
+      | 50      | fr           | null       |
       | 60      | en           | Contest    |
       | 70      | en           | Contest 2  |
       | 70      | fr           | Concours 2 |
+      | 80      | sl           | null       |
+      | 90      | sl           | null       |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 21       | 40      | solution                 | enter                    | result              |
@@ -73,7 +76,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     And the response body should be, in JSON:
     """
     [
-      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": null},
+      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": "fr"},
       {"id": "70", "allows_multiple_attempts": false, "entry_participant_type": "User", "parents": [{"title": "Contest", "language_tag": "en"}],
        "title": "Concours 2", "language_tag": "fr"},
       {"id": "60", "allows_multiple_attempts": true, "entry_participant_type": "User", "parents": [], "title": "Contest", "language_tag": "en"}
@@ -87,7 +90,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     And the response body should be, in JSON:
     """
     [
-      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": null},
+      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": "fr"},
       {"id": "60", "allows_multiple_attempts": true, "entry_participant_type": "User", "parents": [], "title": "Contest", "language_tag": "en"},
       {"id": "70", "allows_multiple_attempts": false, "entry_participant_type": "User", "parents": [{"title": "Contest", "language_tag": "en"}],
        "title": "Contest 2", "language_tag": "en"}
@@ -101,7 +104,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     And the response body should be, in JSON:
     """
     [
-      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": null},
+      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": "fr"},
       {"id": "70", "allows_multiple_attempts": false, "entry_participant_type": "User",
        "parents": [{"title": "Chapitre", "language_tag": "fr"}, {"title": "Contest", "language_tag": "en"}],
        "title": "Concours 2", "language_tag": "fr"},
@@ -117,7 +120,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     And the response body should be, in JSON:
     """
     [
-      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": null},
+      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": "fr"},
       {"id": "60", "allows_multiple_attempts": true, "entry_participant_type": "User", "parents": [{"title": "Chapter", "language_tag": "en"}],
        "title": "Contest", "language_tag": "en"},
       {"id": "70", "allows_multiple_attempts": false, "entry_participant_type": "User",
@@ -143,7 +146,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     And the response body should be, in JSON:
     """
     [
-      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": null}
+      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": "fr"}
     ]
     """
 
@@ -171,7 +174,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
        "title": "Contest 2", "language_tag": "en"},
       {"id": "60", "allows_multiple_attempts": true, "entry_participant_type": "User", "parents": [{"title": "Chapter", "language_tag": "en"}],
        "title": "Contest", "language_tag": "en"},
-      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": null}
+      {"id": "50", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [], "title": null, "language_tag": "fr"}
     ]
     """
 
@@ -182,8 +185,8 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     And the response body should be, in JSON:
     """
     [
-      {"id": "80", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [{"language_tag": null, "title": null}],
-       "title": null, "language_tag": null},
-      {"id": "90", "allows_multiple_attempts": false, "entry_participant_type": "User", "parents": [], "title": null, "language_tag": null}
+      {"id": "80", "allows_multiple_attempts": false, "entry_participant_type": "Team", "parents": [{"language_tag": "sl", "title": null}],
+       "title": null, "language_tag": "sl"},
+      {"id": "90", "allows_multiple_attempts": false, "entry_participant_type": "User", "parents": [], "title": null, "language_tag": "sl"}
     ]
     """
