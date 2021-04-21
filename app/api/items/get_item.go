@@ -63,9 +63,9 @@ type commonItemFields struct {
 	// required: true
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type"`
+	// Nullable
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	// Nullable
 	// required: true
 	Duration *string `json:"duration"`
 	// required: true
