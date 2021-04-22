@@ -157,7 +157,7 @@ Feature: Get navigation data (groupNavigationView)
           "name": "Joined By Ancestor",
           "type": "Class",
           "current_user_membership": "descendant",
-          "current_user_managership": "descendant"
+          "current_user_managership": "none"
         },
         {
           "id": "7",
@@ -271,7 +271,7 @@ Feature: Get navigation data (groupNavigationView)
           "name": "Joined By Ancestor",
           "type": "Class",
           "current_user_membership": "descendant",
-          "current_user_managership": "descendant"
+          "current_user_managership": "none"
         }
       ]
     }
@@ -306,7 +306,7 @@ Feature: Get navigation data (groupNavigationView)
           "id": "18",
           "name": "Ancestor",
           "type": "Class",
-          "current_user_managership": "descendant",
+          "current_user_managership": "none",
           "current_user_membership": "descendant"
         }
       ]

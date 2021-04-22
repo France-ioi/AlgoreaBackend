@@ -138,7 +138,7 @@ Feature: Get root groups (groupRootsView)
         "name": "Joined By Ancestor",
         "type": "Class",
         "current_user_membership": "descendant",
-        "current_user_managership": "descendant"
+        "current_user_managership": "none"
       },
       {
         "id": "7",
