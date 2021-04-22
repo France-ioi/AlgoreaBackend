@@ -39,6 +39,26 @@ type childItem struct {
 	// required: true
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	Category string `json:"category"`
+	// `items_items.score_weight`
+	// required: true
+	ScoreWeight int8 `json:"score_weight"`
+	// `items_items.content_view_propagation`
+	// required: true
+	// enum: none,as_info,as_content
+	ContentViewPropagation string `json:"content_view_propagation"`
+	// `items_items.upper_view_levels_propagation`
+	// required: true
+	// enum: use_content_view_propagation,as_content_with_descendants,as_is
+	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation"`
+	// `items_items.grant_view_propagation`
+	// required: true
+	GrantViewPropagation bool `json:"grant_view_propagation"`
+	// `items_items.watch_propagation`
+	// required: true
+	WatchPropagation bool `json:"watch_propagation"`
+	// `items_items.edit_propagation`
+	// required: true
+	EditPropagation bool `json:"edit_propagation"`
 
 	// max among all attempts of the user (or of the team given in `{as_team_id}`)
 	// required: true
@@ -49,7 +69,8 @@ type childItem struct {
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 }
 
-type rawListItem struct {
+// RawListItem contains raw fields common for itemChildrenView & itemParentsView
+type RawListItem struct {
 	*RawCommonItemFields
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
@@ -66,6 +87,18 @@ type rawListItem struct {
 
 	*RawItemResultFields
 	*RawWatchedGroupStatFields
+}
+
+type rawListChildItem struct {
+	*RawListItem
+
+	// items_items
+	ScoreWeight                int8
+	ContentViewPropagation     string
+	UpperViewLevelsPropagation string
+	GrantViewPropagation       bool
+	WatchPropagation           bool
+	EditPropagation            bool
 }
 
 // swagger:operation GET /items/{item_id}/children items itemChildrenView
@@ -139,10 +172,12 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		return service.InsufficientAccessRightsError
 	}
 
-	var rawData []rawListItem
+	var rawData []rawListChildItem
 	service.MustNotBeError(
 		constructItemChildrenQuery(srv.Store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID,
-			`items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
+			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
+				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation,
+				items.id, items.type, items.default_language_tag,
 				validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
 				can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
 				IFNULL(
@@ -185,7 +220,7 @@ func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, gro
 }
 
 func (srv *Service) childItemsFromRawData(
-	rawData []rawListItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []childItem {
+	rawData []rawListChildItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []childItem {
 	result := make([]childItem, 0, len(rawData))
 	var currentChild *childItem
 	for index := range rawData {
@@ -198,8 +233,14 @@ func (srv *Service) childItemsFromRawData(
 					LanguageTag: rawData[index].StringLanguageTag,
 					Title:       rawData[index].StringTitle,
 				},
-				Category: rawData[index].Category,
-				Order:    rawData[index].Order,
+				Category:                   rawData[index].Category,
+				ScoreWeight:                rawData[index].ScoreWeight,
+				ContentViewPropagation:     rawData[index].ContentViewPropagation,
+				UpperViewLevelsPropagation: rawData[index].UpperViewLevelsPropagation,
+				GrantViewPropagation:       rawData[index].GrantViewPropagation,
+				WatchPropagation:           rawData[index].WatchPropagation,
+				EditPropagation:            rawData[index].EditPropagation,
+				Order:                      rawData[index].Order,
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}

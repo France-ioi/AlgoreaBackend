@@ -102,7 +102,7 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 		return service.InsufficientAccessRightsError
 	}
 
-	var rawData []rawListItem
+	var rawData []RawListItem
 	service.MustNotBeError(
 		constructItemParentsQuery(srv.Store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID).
 			JoinsUserAndDefaultItemStrings(user).
@@ -166,7 +166,7 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 }
 
 func (srv *Service) parentItemsFromRawData(
-	rawData []rawListItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []parentItem {
+	rawData []RawListItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []parentItem {
 	result := make([]parentItem, 0, len(rawData))
 	for index := range rawData {
 		item := parentItem{
