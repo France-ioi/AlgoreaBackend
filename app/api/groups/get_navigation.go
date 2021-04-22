@@ -103,7 +103,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 		Order("name")
 	query = service.NewQueryLimiter().Apply(r, query)
 
-	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, query, user).Scan(&result.Children).Error())
+	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, query, user, "").Scan(&result.Children).Error())
 
 	render.Respond(w, r, result)
 	return service.NoError
