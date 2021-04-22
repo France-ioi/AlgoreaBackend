@@ -27,8 +27,9 @@ type ItemString struct {
 	// [Nullable] title (from `items_strings`) in the user’s default language or (if not available) default language of the item
 	// required: true
 	Title *string `json:"title"`
-	// [Nullable] language_tag (from `items_strings`) to which the title is related
-	LanguageTag *string `json:"language_tag"`
+	// language_tag (from `items_strings`) to which the title is related
+	// required: true
+	LanguageTag string `json:"language_tag"`
 }
 
 // ItemCommonFields represents item fields common for different services (id, type, string, permissions)
