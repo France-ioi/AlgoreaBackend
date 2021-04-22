@@ -5,8 +5,8 @@ Feature: Create a group (groupCreate)
       | id | name  | type |
       | 21 | owner | User |
     And the database has the following table 'users':
-      | login | temp_user | group_id | first_name  | last_name | allow_subgroups |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 1               |
+      | login | temp_user | group_id | first_name  | last_name |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  |
     And the groups ancestors are computed
 
   Scenario Outline: Create a group

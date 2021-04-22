@@ -8,8 +8,8 @@ Feature: Remove a direct parent-child relation between two groups
       | 21 | Self    | User  |
       | 22 | Group   | Class |
     And the database has the following table 'users':
-      | login | group_id | first_name  | last_name | allow_subgroups |
-      | owner | 21       | Jean-Michel | Blanquer  | 1               |
+      | login | group_id | first_name  | last_name |
+      | owner | 21       | Jean-Michel | Blanquer  |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |

@@ -22,7 +22,6 @@ import (
 //     * the authenticated user should be a manager of both `parent_group_id` and `child_group_id,
 //     * the authenticated user should have `can_manage` >= 'memberships' on the `parent_group_id`,
 //     * the authenticated user should have `can_manage` = 'memberships_and_group' on the `child_group_id`,
-//     * the authenticated user should have `users.allow_subgroups` set to 1,
 //     * the parent group should not be of type "User" or "Team",
 //     * the child group should not be of types "Base" or "User"
 //       (since users should join groups only by code or by invitation/request),
@@ -64,10 +63,6 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 	}
 
 	user := srv.GetUser(r)
-	if !user.AllowSubgroups {
-		return service.InsufficientAccessRightsError
-	}
-
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {

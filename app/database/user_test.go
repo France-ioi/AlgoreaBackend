@@ -12,8 +12,7 @@ func TestUser_Clone(t *testing.T) {
 	ts := time.Now()
 	user := &User{
 		Login: "login", LoginID: ptrInt64(5), DefaultLanguage: "fr",
-		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: ptrInt64(4),
-		AllowSubgroups: true, NotificationsReadAt: (*Time)(&ts)}
+		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: ptrInt64(4), NotificationsReadAt: (*Time)(&ts)}
 	userClone := user.Clone()
 	assert.False(t, userClone == user)
 	assert.False(t, user.NotificationsReadAt == userClone.NotificationsReadAt)
@@ -40,8 +39,7 @@ func (u *User) LoadByID(dataStore *DataStore, userID int64) error {
 	err := dataStore.Users().ByID(userID).
 		Select(`
 						users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id,
-						users.temp_user, users.allow_subgroups, users.notifications_read_at,
-						users.default_language`).
+						users.temp_user, users.notifications_read_at, users.default_language`).
 		Take(&u).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		u.GroupID = userID

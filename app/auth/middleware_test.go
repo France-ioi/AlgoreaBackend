@@ -157,7 +157,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody: `User:{"GroupID":890123,"Login":"login","LoginID":12345,"DefaultLanguage":"fr",` +
-				`"IsAdmin":true,"IsTempUser":true,"AccessGroupID":23456,"AllowSubgroups":true,"NotificationsReadAt":"2019-05-30T11:00:00Z"}`,
+				`"IsAdmin":true,"IsTempUser":true,"AccessGroupID":23456,"NotificationsReadAt":"2019-05-30T11:00:00Z"}`,
 		},
 		{
 			name:                     "sets cookie attributes when there is no cookie",
@@ -235,7 +235,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, c
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
 				"SELECT users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id, "+
-					"users.temp_user, users.allow_subgroups, users.notifications_read_at, users.default_language "+
+					"users.temp_user, users.notifications_read_at, users.default_language "+
 					"FROM `sessions` "+
 					"JOIN users ON users.group_id = sessions.user_id "+
 					"WHERE (access_token = ?) AND (expires_at > NOW()) LIMIT 1") +
@@ -244,9 +244,9 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, c
 			expectation.WillReturnError(dbError)
 		} else {
 			neededRows := mock.NewRows([]string{"group_id", "login", "login_id", "is_admin", "access_group_id", "temp_user",
-				"allow_subgroups", "notifications_read_at", "default_language"})
+				"notifications_read_at", "default_language"})
 			if userID != 0 {
-				neededRows = neededRows.AddRow(userID, "login", "12345", int64(1), int64(23456), int64(1), int64(1),
+				neededRows = neededRows.AddRow(userID, "login", "12345", int64(1), int64(23456), int64(1),
 					[]byte("2019-05-30 11:00:00"), "fr")
 			}
 			expectation.WillReturnRows(neededRows)
