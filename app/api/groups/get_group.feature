@@ -65,11 +65,14 @@ Feature: Get group by groupID (groupView)
       "code_lifetime": "01:00:00",
       "code_expires_at": "2017-10-14T05:39:48Z",
       "open_activity_when_joining": true,
-      "current_user_is_manager": true,
+      "current_user_managership": "direct",
       "current_user_can_manage": "none",
       "current_user_can_grant_group_access": false,
       "current_user_can_watch_members": false,
-      "current_user_is_member": false
+      "current_user_membership": "none",
+      "descendants_current_user_is_member_of": [],
+      "ancestors_current_user_is_manager_of": [],
+      "descendants_current_user_is_manager_of": [{"id": "11", "name": "Group A"}]
     }
     """
 
@@ -94,11 +97,14 @@ Feature: Get group by groupID (groupView)
       "code_lifetime": "01:00:00",
       "code_expires_at": "2017-10-13T05:39:48Z",
       "open_activity_when_joining": true,
-      "current_user_is_manager": true,
+      "current_user_managership": "ancestor",
       "current_user_can_manage": "memberships_and_group",
       "current_user_can_grant_group_access": true,
       "current_user_can_watch_members": true,
-      "current_user_is_member": false
+      "current_user_membership": "none",
+      "descendants_current_user_is_member_of": [],
+      "ancestors_current_user_is_manager_of": [{"id": "13", "name": "Group B"}, {"id": "15", "name": "Group D"}],
+      "descendants_current_user_is_manager_of": []
     }
     """
 
@@ -120,8 +126,11 @@ Feature: Get group by groupID (groupView)
       "is_open": true,
       "is_public": false,
       "open_activity_when_joining": true,
-      "current_user_is_manager": false,
-      "current_user_is_member": false
+      "current_user_managership": "descendant",
+      "current_user_membership": "none",
+      "descendants_current_user_is_member_of": [],
+      "ancestors_current_user_is_manager_of": [],
+      "descendants_current_user_is_manager_of": [{"id": "16", "name": "Group E"}]
     }
     """
 
@@ -143,8 +152,11 @@ Feature: Get group by groupID (groupView)
       "is_open": false,
       "is_public": false,
       "open_activity_when_joining": false,
-      "current_user_is_manager": false,
-      "current_user_is_member": false
+      "current_user_managership": "none",
+      "current_user_membership": "descendant",
+      "descendants_current_user_is_member_of": [{"id": "9", "name": "Club"}],
+      "ancestors_current_user_is_manager_of": [],
+      "descendants_current_user_is_manager_of": []
     }
     """
 
@@ -166,8 +178,11 @@ Feature: Get group by groupID (groupView)
       "is_open": true,
       "is_public": false,
       "open_activity_when_joining": true,
-      "current_user_is_manager": false,
-      "current_user_is_member": false
+      "current_user_managership": "none",
+      "current_user_membership": "descendant",
+      "descendants_current_user_is_member_of": [{"id": "11", "name": "Group A"}],
+      "ancestors_current_user_is_manager_of": [],
+      "descendants_current_user_is_manager_of": []
     }
     """
 
@@ -189,8 +204,11 @@ Feature: Get group by groupID (groupView)
       "is_open": true,
       "is_public": false,
       "open_activity_when_joining": true,
-      "current_user_is_manager": false,
-      "current_user_is_member": true
+      "current_user_managership": "none",
+      "current_user_membership": "direct",
+      "descendants_current_user_is_member_of": [],
+      "ancestors_current_user_is_manager_of": [],
+      "descendants_current_user_is_manager_of": []
     }
     """
   Examples:
@@ -218,7 +236,10 @@ Feature: Get group by groupID (groupView)
       "is_open": false,
       "is_public": true,
       "open_activity_when_joining": false,
-      "current_user_is_manager": false,
-      "current_user_is_member": false
+      "current_user_managership": "none",
+      "current_user_membership": "none",
+      "descendants_current_user_is_member_of": [],
+      "ancestors_current_user_is_manager_of": [],
+      "descendants_current_user_is_manager_of": []
     }
     """

@@ -36,13 +36,17 @@ type ManagerPermissionsPart struct {
 	CurrentUserCanWatchMembers bool `json:"current_user_can_watch_members"`
 }
 
-// swagger:model groupGetResponse
-type groupGetResponse struct {
+// GroupShortInfo contains group id & name
+type GroupShortInfo struct {
 	// group's `id`
 	// required:true
 	ID int64 `json:"id,string"`
 	// required:true
 	Name string `json:"name"`
+}
+
+// swagger:model groupGetResponse
+type groupGetResponse struct {
 	// required:true
 	Grade int32 `json:"grade"`
 	// Nullable
@@ -66,12 +70,27 @@ type groupGetResponse struct {
 	IsPublic bool `json:"is_public"`
 	// required:true
 	OpenActivityWhenJoining bool `json:"open_activity_when_joining"`
+	// whether the user is a member of this group or one of its descendants
 	// required:true
-	CurrentUserIsManager bool `json:"current_user_is_manager"`
-	// `True` when there is an active group->user relation in `groups_groups`
+	// enum: none,direct,descendant
+	CurrentUserMembership string `json:"current_user_membership"`
+	// whether the user (or its ancestor) is a manager of this group,
+	// or a manager of one of this group's ancestors (so is implicitly manager of this group) or,
+	// a manager of one of this group's non-user descendants, or none of above
+	// required: true
+	// enum: none,direct,ancestor,descendant
+	CurrentUserManagership string `json:"current_user_managership"`
+	// list of descendant (excluding the group itself) groups that the current user is member of
 	// required:true
-	CurrentUserIsMember bool `json:"current_user_is_member"`
+	DescendantsCurrentUserIsMemberOf []GroupShortInfo `json:"descendants_current_user_is_member_of"`
+	// list of ancestor (excluding the group itself) groups that the current user (or his ancestor groups) is manager of
+	// required:true
+	AncestorsCurrentUserIsManagerOf []GroupShortInfo `json:"ancestors_current_user_is_manager_of"`
+	// list of descendant (excluding the group itself) non-user groups that the current user (or his ancestor groups) is manager of
+	// required:true
+	DescendantsCurrentUserIsManagerOf []GroupShortInfo `json:"descendants_current_user_is_manager_of"`
 
+	*GroupShortInfo
 	*GroupGetResponseCodePart
 	*ManagerPermissionsPart
 }
@@ -129,33 +148,29 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 					groups_ancestors.child_group_id`).
 				Where("groups_ancestors.child_group_id = ?", groupID).
 				Group("groups_ancestors.child_group_id").SubQuery()).
-		Joins(`
-			LEFT JOIN groups_groups_active
-				ON groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
 		Where("groups.id = ?", groupID).
 		Where("groups.type != 'User'").
-		Select(
-			`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
-			groups.type, groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
-			IF(manager_access.found, groups.code, NULL) AS code,
-			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
-			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
-			groups.open_activity_when_joining,
-			manager_access.found AS current_user_is_manager,
-			IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
-			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
-			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
-			groups_groups_active.parent_group_id IS NOT NULL AS current_user_is_member`).
 		Limit(1)
 
 	var result groupGetResponse
-	err = query.Scan(&result).Error()
+	err = selectGroupsDataForMenu(srv.Store, query, user,
+		`groups.grade, groups.description, groups.created_at,
+		groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
+		IF(manager_access.found, groups.code, NULL) AS code,
+		IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
+		IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
+		groups.open_activity_when_joining,
+		IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
+		IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
+		IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members`).
+		Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	if !result.CurrentUserIsManager {
+	isManager := map[string]bool{"direct": true, "ancestor": true}[result.CurrentUserManagership]
+	if !isManager {
 		result.GroupGetResponseCodePart = nil
 		result.ManagerPermissionsPart = nil
 	} else {
@@ -163,6 +178,56 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			srv.Store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
 	}
 
+	if result.CurrentUserMembership != "none" {
+		service.MustNotBeError(srv.Store.Groups().
+			Joins(`
+				JOIN groups_ancestors_active
+					ON groups_ancestors_active.child_group_id = groups.id AND
+					   NOT groups_ancestors_active.is_self AND
+					   groups_ancestors_active.ancestor_group_id = ?`, groupID).
+			Joins(`
+				JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id AND
+					   groups_groups_active.child_group_id = ?`, user.GroupID).
+			Order("groups.name").
+			Group("groups.id").
+			Select("groups.id, groups.name").
+			Scan(&result.DescendantsCurrentUserIsMemberOf).Error())
+	}
+	if result.DescendantsCurrentUserIsMemberOf == nil {
+		result.DescendantsCurrentUserIsMemberOf = make([]GroupShortInfo, 0)
+	}
+	if isManager {
+		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
+			Joins(`
+				JOIN groups_ancestors_active AS groups_ancestors
+					ON groups_ancestors.ancestor_group_id = groups.id AND
+					   NOT groups_ancestors.is_self AND
+					   groups_ancestors.child_group_id = ?`, groupID).
+			Group("groups.id").
+			Order("groups.name").
+			Select("groups.id, groups.name").
+			Scan(&result.AncestorsCurrentUserIsManagerOf).Error())
+	}
+	if result.AncestorsCurrentUserIsManagerOf == nil {
+		result.AncestorsCurrentUserIsManagerOf = make([]GroupShortInfo, 0)
+	}
+	if result.CurrentUserManagership != none {
+		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
+			Joins(`
+				JOIN groups_ancestors_active AS groups_ancestors
+					ON groups_ancestors.child_group_id = groups.id AND
+					   NOT groups_ancestors.is_self AND
+					   groups_ancestors.ancestor_group_id = ?`, groupID).
+			Where("groups.type != 'User'").
+			Group("groups.id").
+			Order("groups.name").
+			Select("groups.id, groups.name").
+			Scan(&result.DescendantsCurrentUserIsManagerOf).Error())
+	}
+	if result.DescendantsCurrentUserIsManagerOf == nil {
+		result.DescendantsCurrentUserIsManagerOf = make([]GroupShortInfo, 0)
+	}
 	render.Respond(w, r, result)
 
 	return service.NoError

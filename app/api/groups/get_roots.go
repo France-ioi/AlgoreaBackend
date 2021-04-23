@@ -24,7 +24,7 @@ type groupRootsViewResponseRow struct {
 	CurrentUserMembership string `json:"current_user_membership"`
 	// whether the user (or its ancestor) is a manager of this group,
 	// or a manager of one of this group's ancestors (so is implicitly manager of this group) or,
-	// a manager of one of this group's descendants, or none of above
+	// a manager of one of this group's non-user descendants, or none of above
 	// required: true
 	// enum: none,direct,ancestor,descendant
 	CurrentUserManagership string `json:"current_user_managership"`
@@ -66,15 +66,19 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 		Order("groups.name")
 
 	var result []groupRootsViewResponseRow
-	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, innerQuery, user).Scan(&result).Error())
+	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, innerQuery, user, "").Scan(&result).Error())
 
 	render.Respond(w, r, result)
 	return service.NoError
 }
 
-func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *database.User) *database.DB {
+func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *database.User, otherColumns string) *database.DB {
 	usersAncestorsQuery := store.ActiveGroupAncestors().
 		Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
+
+	if otherColumns != "" {
+		otherColumns = ", " + otherColumns
+	}
 
 	db = db.Select(`
 		groups.id as id, groups.name, groups.type,
@@ -120,15 +124,18 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 						JOIN group_managers ON group_managers.manager_id = user_ancestors.ancestor_group_id
 						JOIN groups_ancestors_active AS managed_groups
 							ON managed_groups.ancestor_group_id = group_managers.group_id
+						JOIN `+"`groups`"+` AS managed_descendant
+							ON managed_descendant.id = managed_groups.child_group_id AND
+						     managed_descendant.type != 'User'
 						JOIN groups_ancestors_active AS group_descendants
 							ON group_descendants.ancestor_group_id = groups.id AND
-							   group_descendants.child_group_id = managed_groups.child_group_id
+							   group_descendants.child_group_id = managed_descendant.id
 					),
 					'descendant',
 					'none'
 				)
 			)
-		) AS 'current_user_managership'`, user.GroupID, user.GroupID)
+		) AS 'current_user_managership'`+otherColumns, user.GroupID, user.GroupID)
 
 	return store.Raw("WITH user_ancestors AS ? ?", usersAncestorsQuery.SubQuery(), db.QueryExpr())
 }

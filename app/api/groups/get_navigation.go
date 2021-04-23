@@ -24,7 +24,7 @@ type groupNavigationViewResponseChild struct {
 	CurrentUserMembership string `json:"current_user_membership"`
 	// whether the user (or its ancestor) is a manager of this group,
 	// or a manager of one of this group's ancestors (so is implicitly manager of this group) or,
-	// a manager of one of this group's descendants, or none of above
+	// a manager of one of this group's non-user descendants, or none of above
 	// required: true
 	// enum: none,direct,ancestor,descendant
 	CurrentUserManagership string `json:"current_user_managership"`
@@ -103,7 +103,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 		Order("name")
 	query = service.NewQueryLimiter().Apply(r, query)
 
-	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, query, user).Scan(&result.Children).Error())
+	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, query, user, "").Scan(&result.Children).Error())
 
 	render.Respond(w, r, result)
 	return service.NoError
