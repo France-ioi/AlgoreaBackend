@@ -1,7 +1,9 @@
 name: Apply DB migrations
 
 on:
-- push
+- push:
+    branches:
+      - master
 
 jobs:
   db-migration:
