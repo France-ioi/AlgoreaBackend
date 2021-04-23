@@ -15,10 +15,10 @@ Feature: Add a parent-child relation between two groups - robustness
       | 78 | Group D  | Class |
       | 79 | Group E  | Class |
     And the database has the following table 'users':
-      | login   | group_id | first_name  | last_name | allow_subgroups |
-      | owner   | 21       | Jean-Michel | Blanquer  | 0               |
-      | student | 25       | Jane        | Doe       | 1               |
-      | admin   | 27       | John        | Doe       | 1               |
+      | login   | group_id | first_name  | last_name |
+      | owner   | 21       | Jean-Michel | Blanquer  |
+      | student | 25       | Jane        | Doe       |
+      | admin   | 27       | John        | Doe       |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 11       | 21         | memberships_and_group |
@@ -49,14 +49,6 @@ Feature: Add a parent-child relation between two groups - robustness
     When I send a POST request to "/groups/13/relations/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for child_group_id (should be int64)"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
-  Scenario: User is a manager of the two groups, but is not allowed to create subgroups
-    Given I am the user with id "21"
-    When I send a POST request to "/groups/13/relations/11"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 

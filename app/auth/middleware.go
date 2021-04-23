@@ -51,8 +51,7 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 				err := sessionStore.
 					Select(`
 						users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id,
-						users.temp_user, users.allow_subgroups, users.notifications_read_at,
-						users.default_language`).
+						users.temp_user, users.notifications_read_at, users.default_language`).
 					Joins("JOIN users ON users.group_id = sessions.user_id").
 					Where("access_token = ?", accessToken).
 					Where("expires_at > NOW()").Take(&user).

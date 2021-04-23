@@ -73,7 +73,7 @@ Feature: Export the short version of the current user's data
     """
     {
       "current_user": {
-        "group_id": "11", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
+        "group_id": "11", "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
         "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
         "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
         "access_group_id": null, "login_id": null,
@@ -162,7 +162,7 @@ Feature: Export the short version of the current user's data
     """
     {
       "current_user": {
-        "group_id": "31", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
+        "group_id": "31", "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
         "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0, "creator_id": null,
         "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "access_group_id": null,
         "login_id": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,

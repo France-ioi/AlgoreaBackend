@@ -9,7 +9,6 @@ type User struct {
 	IsAdmin             bool
 	IsTempUser          bool `sql:"column:temp_user"`
 	AccessGroupID       *int64
-	AllowSubgroups      bool
 	NotificationsReadAt *Time
 }
 

@@ -8,8 +8,8 @@ Feature: Add a parent-child relation between two groups
       | 14 | Group C | Class |
       | 21 | Self    | User  |
     And the database has the following table 'users':
-      | login | temp_user | group_id | first_name  | last_name | allow_subgroups |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 1               |
+      | login | temp_user | group_id | first_name  | last_name |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 11       | 21         | memberships_and_group |
