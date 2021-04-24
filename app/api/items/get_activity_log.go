@@ -312,7 +312,7 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 			Select("child_group_id AS id")
 	}
 
-	visibleItemDescendants := srv.Store.Permissions().MatchingGroupAncestors(user.GroupID).
+	visibleItemDescendants := srv.Store.Permissions().MatchingUserAncestors(user).
 		Select("item_id AS id").
 		Group("item_id").
 		HavingMaxPermissionAtLeast("view", "info")
