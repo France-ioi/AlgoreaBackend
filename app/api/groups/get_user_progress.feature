@@ -4,6 +4,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | id | type    | name           |
       | 1  | Base    | Root 1         |
       | 3  | Base    | Root 2         |
+      | 4  | Club    | Parent         |
       | 11 | Class   | Our Class      |
       | 12 | Class   | Other Class    |
       | 13 | Class   | Special Class  |
@@ -39,15 +40,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | janed | 67       |
       | janee | 69       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 1        | 21         |
-      | 19       | 21         |
-      | 51       | 21         |
+      | group_id | manager_id | can_watch_members |
+      | 1        | 21         | true              |
+      | 19       | 4          | true              |
+      | 51       | 4          | true              |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
       | 1               | 67             |
       | 3               | 13             |
+      | 4               | 21             |
       | 11              | 14             |
       | 11              | 17             |
       | 11              | 18             |
@@ -157,43 +159,48 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 21       | 211     | info                     |
-      | 20       | 212     | content                  |
-      | 21       | 213     | content_with_descendants |
-      | 20       | 214     | info                     |
-      | 21       | 215     | content                  |
-      | 20       | 216     | none                     |
-      | 21       | 217     | none                     |
-      | 20       | 218     | none                     |
-      | 21       | 219     | none                     |
-      | 20       | 221     | info                     |
-      | 21       | 222     | content                  |
-      | 20       | 223     | content_with_descendants |
-      | 21       | 224     | info                     |
-      | 20       | 225     | content                  |
-      | 21       | 226     | none                     |
-      | 20       | 227     | none                     |
-      | 21       | 228     | none                     |
-      | 20       | 229     | none                     |
-      | 21       | 311     | info                     |
-      | 20       | 312     | content                  |
-      | 21       | 313     | content_with_descendants |
-      | 20       | 314     | info                     |
-      | 21       | 315     | content                  |
-      | 20       | 316     | none                     |
-      | 21       | 317     | none                     |
-      | 20       | 318     | none                     |
-      | 21       | 319     | none                     |
-      | 20       | 411     | info                     |
-      | 21       | 412     | content                  |
-      | 20       | 413     | content_with_descendants |
-      | 21       | 414     | info                     |
-      | 20       | 415     | content                  |
-      | 21       | 416     | none                     |
-      | 20       | 417     | none                     |
-      | 21       | 418     | none                     |
-      | 20       | 419     | none                     |
+      | group_id | item_id | can_view_generated       | can_watch_generated |
+      | 21       | 210     | none                     | result              |
+      | 21       | 211     | info                     | none                |
+      | 20       | 212     | content                  | none                |
+      | 21       | 213     | content_with_descendants | none                |
+      | 20       | 214     | info                     | none                |
+      | 21       | 215     | content                  | none                |
+      | 20       | 216     | none                     | none                |
+      | 21       | 217     | none                     | none                |
+      | 20       | 218     | none                     | none                |
+      | 21       | 219     | none                     | none                |
+      | 20       | 220     | none                     | answer              |
+      | 20       | 221     | info                     | none                |
+      | 21       | 222     | content                  | none                |
+      | 20       | 223     | content_with_descendants | none                |
+      | 21       | 224     | info                     | none                |
+      | 20       | 225     | content                  | none                |
+      | 21       | 226     | none                     | none                |
+      | 20       | 227     | none                     | none                |
+      | 21       | 228     | none                     | none                |
+      | 20       | 229     | none                     | none                |
+      | 4        | 310     | none                     | none                |
+      | 20       | 310     | none                     | result              |
+      | 21       | 311     | info                     | none                |
+      | 20       | 312     | content                  | none                |
+      | 21       | 313     | content_with_descendants | none                |
+      | 20       | 314     | info                     | none                |
+      | 21       | 315     | content                  | none                |
+      | 20       | 316     | none                     | none                |
+      | 21       | 317     | none                     | none                |
+      | 20       | 318     | none                     | none                |
+      | 21       | 319     | none                     | none                |
+      | 20       | 411     | info                     | none                |
+      | 21       | 412     | content                  | none                |
+      | 20       | 413     | content_with_descendants | none                |
+      | 21       | 414     | info                     | none                |
+      | 20       | 415     | content                  | none                |
+      | 21       | 416     | none                     | none                |
+      | 20       | 417     | none                     | none                |
+      | 21       | 418     | none                     | none                |
+      | 20       | 419     | none                     | none                |
+      | 4        | 1010    | none                     | answer_with_grant   |
     And the database has the following table 'attempts':
       | id | participant_id | created_at          |
       | 0  | 14             | 2017-05-29 06:38:38 |

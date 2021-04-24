@@ -51,11 +51,23 @@ type groupTeamProgressResponseRow struct {
 // swagger:operation GET /groups/{group_id}/team-progress groups groupTeamProgress
 // ---
 // summary: Get group progress for teams
-// description: Return the current progress of teams on a subset of items.
+// description: >
+//              Returns the current progress of teams on a subset of items.
 //
 //
-//              For all children of items from the parent_item_id list,
-//              display the result of each team among the descendants of the group.
+//              For all visible children of items from the `{parent_item_id}` list,
+//              displays the result of each team among the descendants of the group.
+//
+//
+//              Restrictions:
+//
+//              * The current user should be a manager of the group (or of one of its ancestors)
+//              with `can_watch_members` set to true,
+//
+//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//
+//
+//              otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -106,13 +118,13 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
+	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	// Preselect IDs of end member for that we will calculate the stats.
@@ -122,7 +134,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
-	teamIDQuery, apiError := service.ApplySortingAndPaging(r, teamIDQuery, map[string]*service.FieldSortingParams{
+	teamIDQuery, apiError = service.ApplySortingAndPaging(r, teamIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},
 		"id":   {ColumnName: "groups.id", FieldType: "int64"},

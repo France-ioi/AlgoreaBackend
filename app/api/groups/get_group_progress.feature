@@ -4,6 +4,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | id | type    | name           |
       | 1  | Base    | Root 1         |
       | 3  | Base    | Root 2         |
+      | 4  | Club    | Parent         |
       | 11 | Class   | Our Class      |
       | 12 | Class   | Other Class    |
       | 13 | Class   | Special Class  |
@@ -38,9 +39,9 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | janed | 67       |
       | janee | 69       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 1        | 21         |
-      | 3        | 21         |
+      | group_id | manager_id | can_watch_members |
+      | 1        | 4          | true              |
+      | 3        | 21         | true              |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
@@ -48,6 +49,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 1               | 17             |
       | 1               | 51             | # direct child of group_id with type = 'User' (ignored)
       | 3               | 13             |
+      | 4               | 21             |
       | 11              | 14             |
       | 11              | 17             |
       | 11              | 18             |
@@ -69,50 +71,51 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 20              | 21             |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id  | type    | default_language_tag |
-      | 200 | Chapter | fr                   |
-      | 210 | Chapter | fr                   |
-      | 211 | Task    | fr                   |
-      | 212 | Task    | fr                   |
-      | 213 | Task    | fr                   |
-      | 214 | Task    | fr                   |
-      | 215 | Task    | fr                   |
-      | 216 | Task    | fr                   |
-      | 217 | Task    | fr                   |
-      | 218 | Task    | fr                   |
-      | 219 | Task    | fr                   |
-      | 220 | Chapter | fr                   |
-      | 221 | Task    | fr                   |
-      | 222 | Task    | fr                   |
-      | 223 | Task    | fr                   |
-      | 224 | Task    | fr                   |
-      | 225 | Task    | fr                   |
-      | 226 | Task    | fr                   |
-      | 227 | Task    | fr                   |
-      | 228 | Task    | fr                   |
-      | 229 | Task    | fr                   |
-      | 300 | Chapter | fr                   |
-      | 310 | Chapter | fr                   |
-      | 311 | Task    | fr                   |
-      | 312 | Task    | fr                   |
-      | 313 | Task    | fr                   |
-      | 314 | Task    | fr                   |
-      | 315 | Task    | fr                   |
-      | 316 | Task    | fr                   |
-      | 317 | Task    | fr                   |
-      | 318 | Task    | fr                   |
-      | 319 | Task    | fr                   |
-      | 400 | Course  | fr                   |
-      | 410 | Chapter | fr                   |
-      | 411 | Task    | fr                   |
-      | 412 | Task    | fr                   |
-      | 413 | Task    | fr                   |
-      | 414 | Task    | fr                   |
-      | 415 | Task    | fr                   |
-      | 416 | Task    | fr                   |
-      | 417 | Task    | fr                   |
-      | 418 | Task    | fr                   |
-      | 419 | Task    | fr                   |
+      | id   | type    | default_language_tag |
+      | 200  | Chapter | fr                   |
+      | 210  | Chapter | fr                   |
+      | 211  | Task    | fr                   |
+      | 212  | Task    | fr                   |
+      | 213  | Task    | fr                   |
+      | 214  | Task    | fr                   |
+      | 215  | Task    | fr                   |
+      | 216  | Task    | fr                   |
+      | 217  | Task    | fr                   |
+      | 218  | Task    | fr                   |
+      | 219  | Task    | fr                   |
+      | 220  | Chapter | fr                   |
+      | 221  | Task    | fr                   |
+      | 222  | Task    | fr                   |
+      | 223  | Task    | fr                   |
+      | 224  | Task    | fr                   |
+      | 225  | Task    | fr                   |
+      | 226  | Task    | fr                   |
+      | 227  | Task    | fr                   |
+      | 228  | Task    | fr                   |
+      | 229  | Task    | fr                   |
+      | 300  | Chapter | fr                   |
+      | 310  | Chapter | fr                   |
+      | 311  | Task    | fr                   |
+      | 312  | Task    | fr                   |
+      | 313  | Task    | fr                   |
+      | 314  | Task    | fr                   |
+      | 315  | Task    | fr                   |
+      | 316  | Task    | fr                   |
+      | 317  | Task    | fr                   |
+      | 318  | Task    | fr                   |
+      | 319  | Task    | fr                   |
+      | 400  | Course  | fr                   |
+      | 410  | Chapter | fr                   |
+      | 411  | Task    | fr                   |
+      | 412  | Task    | fr                   |
+      | 413  | Task    | fr                   |
+      | 414  | Task    | fr                   |
+      | 415  | Task    | fr                   |
+      | 416  | Task    | fr                   |
+      | 417  | Task    | fr                   |
+      | 418  | Task    | fr                   |
+      | 419  | Task    | fr                   |
+      | 1010 | Task    | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
@@ -156,43 +159,48 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 21       | 211     | info                     |
-      | 20       | 212     | content                  |
-      | 21       | 213     | content_with_descendants |
-      | 20       | 214     | info                     |
-      | 21       | 215     | content                  |
-      | 20       | 216     | none                     |
-      | 21       | 217     | none                     |
-      | 20       | 218     | none                     |
-      | 21       | 219     | none                     |
-      | 20       | 221     | info                     |
-      | 21       | 222     | content                  |
-      | 20       | 223     | content_with_descendants |
-      | 21       | 224     | info                     |
-      | 20       | 225     | content                  |
-      | 21       | 226     | none                     |
-      | 20       | 227     | none                     |
-      | 21       | 228     | none                     |
-      | 20       | 229     | none                     |
-      | 21       | 311     | info                     |
-      | 20       | 312     | content                  |
-      | 21       | 313     | content_with_descendants |
-      | 20       | 314     | info                     |
-      | 21       | 315     | content                  |
-      | 20       | 316     | none                     |
-      | 21       | 317     | none                     |
-      | 20       | 318     | none                     |
-      | 21       | 319     | none                     |
-      | 20       | 411     | info                     |
-      | 21       | 412     | content                  |
-      | 20       | 413     | content_with_descendants |
-      | 21       | 414     | info                     |
-      | 20       | 415     | content                  |
-      | 21       | 416     | none                     |
-      | 20       | 417     | none                     |
-      | 21       | 418     | none                     |
-      | 20       | 419     | none                     |
+      | group_id | item_id | can_view_generated       | can_watch_generated |
+      | 21       | 210     | none                     | result              |
+      | 21       | 211     | info                     | none                |
+      | 20       | 212     | content                  | none                |
+      | 21       | 213     | content_with_descendants | none                |
+      | 20       | 214     | info                     | none                |
+      | 21       | 215     | content                  | none                |
+      | 20       | 216     | none                     | none                |
+      | 21       | 217     | none                     | none                |
+      | 20       | 218     | none                     | none                |
+      | 21       | 219     | none                     | none                |
+      | 20       | 220     | none                     | answer              |
+      | 20       | 221     | info                     | none                |
+      | 21       | 222     | content                  | none                |
+      | 20       | 223     | content_with_descendants | none                |
+      | 21       | 224     | info                     | none                |
+      | 20       | 225     | content                  | none                |
+      | 21       | 226     | none                     | none                |
+      | 20       | 227     | none                     | none                |
+      | 21       | 228     | none                     | none                |
+      | 20       | 229     | none                     | none                |
+      | 4        | 310     | none                     | none                |
+      | 20       | 310     | none                     | result              |
+      | 21       | 311     | info                     | none                |
+      | 20       | 312     | content                  | none                |
+      | 21       | 313     | content_with_descendants | none                |
+      | 20       | 314     | info                     | none                |
+      | 21       | 315     | content                  | none                |
+      | 20       | 316     | none                     | none                |
+      | 21       | 317     | none                     | none                |
+      | 20       | 318     | none                     | none                |
+      | 21       | 319     | none                     | none                |
+      | 20       | 411     | info                     | none                |
+      | 21       | 412     | content                  | none                |
+      | 20       | 413     | content_with_descendants | none                |
+      | 21       | 414     | info                     | none                |
+      | 20       | 415     | content                  | none                |
+      | 21       | 416     | none                     | none                |
+      | 20       | 417     | none                     | none                |
+      | 21       | 418     | none                     | none                |
+      | 20       | 419     | none                     | none                |
+      | 4        | 1010    | none                     | answer_with_grant   |
     And the database has the following table 'attempts':
       | id | participant_id | created_at          |
       | 0  | 14             | 2017-05-29 06:38:38 |
