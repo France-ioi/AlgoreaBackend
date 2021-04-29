@@ -26,8 +26,8 @@ Feature: Update the local user info cache
         "logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
         "origin_instance_id":null,"creator_client_id":null,"nationality":"GB",
         "primary_email":"janedoe@gmail.com","secondary_email":"jane.doe@gmail.com",
-        "primary_email_verified":1,"secondary_email_verified":null,"has_picture":false,
-        "badges":[],"client_id":1,"verification":[]
+        "primary_email_verified":1,"secondary_email_verified":null,"has_picture":true,
+        "badges":[],"client_id":1,"verification":[],"subscription_news":true, "real_name_visible": true
       }
       """
     And the template constant "profile_with_null_fields" is:
@@ -50,9 +50,9 @@ Feature: Update the local user info cache
       }
       """
     And the database has the following users:
-      | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
-      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
-      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
+      | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     | time_zone | notify_news | photo_autoload | public_first_name | public_last_name |
+      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 | null      | false       | false          | false             | false            |
+      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 | null      | false       | false          | false             | false            |
     And the database has the following table 'sessions':
       | expires_at          | user_id | issuer       | issued_at           | access_token |
       | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | accesstoken  |
@@ -72,9 +72,9 @@ Feature: Update the local user info cache
       """
     And the table "users" should stay unchanged but the row with group_id "11"
     And the table "users" at group_id "11" should be:
-      | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip     |
-      | 11       | 2019-06-16 21:01:25 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 192.168.0.1 |
+      | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip     | time_zone   | notify_news   | photo_autoload   | public_first_name   | public_last_name    |
+      | 11       | 2019-06-16 21:01:25 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 192.168.0.1 | <time_zone> | <notify_news> | <photo_autoload> | <real_name_visible> | <real_name_visible> |
   Examples:
-    | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | default_language | free_text    | web_site                  | sex    | email_verified |
-    | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | en               | I'm Jane Doe | http://jane.freepages.com | Female | true           |
-    | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | fr               | null         | null                      | null   | false          |
+    | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | default_language | free_text    | web_site                  | sex    | email_verified | time_zone     | notify_news | photo_autoload | real_name_visible |
+    | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | en               | I'm Jane Doe | http://jane.freepages.com | Female | true           | Europe/London | true        | true           | true              |
+    | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | fr               | null         | null                      | null   | false          | null          | false       | false          | false             |

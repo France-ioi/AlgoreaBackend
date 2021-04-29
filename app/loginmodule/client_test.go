@@ -82,15 +82,17 @@ func TestClient_GetUserProfile(t *testing.T) {
 					"logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
 					"origin_instance_id":null,"creator_client_id":null,"nationality":"GB",
 					"primary_email":"janedoe@gmail.com","secondary_email":"jane.doe@gmail.com",
-					"primary_email_verified":1,"secondary_email_verified":null,"has_picture":false,
-					"badges":[],"client_id":1,"verification":[]
+					"primary_email_verified":1,"secondary_email_verified":null,"has_picture":true,
+					"badges":[],"client_id":1,"verification":[],"subscription_news":true
 				}`,
 			expectedProfile: map[string]interface{}{
 				"login_id": int64(100000001), "sex": "Female", "land_line_number": nil, "city": nil, "default_language": "en",
 				"free_text": "I'm Jane Doe", "graduation_year": int64(2021), "country_code": "gb", "email": "janedoe@gmail.com",
 				"student_id": "456789012", "cell_phone_number": nil, "web_site": "http://jane.freepages.com", "grade": int64(0),
 				"last_name": "Doe", "birth_date": "2001-08-03", "first_name": "Jane", "zipcode": nil, "address": nil,
-				"login": "jane", "email_verified": true},
+				"login": "jane", "email_verified": true, "time_zone": "Europe/London",
+				"notify_news": true, "photo_autoload": true, "public_first_name": false, "public_last_name": false,
+			},
 		},
 		{
 			name:         "null fields",
@@ -110,14 +112,16 @@ func TestClient_GetUserProfile(t *testing.T) {
 					"origin_instance_id":null,"creator_client_id":null,"nationality":null,
 					"primary_email":null,"secondary_email":null,
 					"primary_email_verified":null,"secondary_email_verified":null,"has_picture":false,
-					"badges":null,"client_id":null,"verification":null
+					"badges":null,"client_id":null,"verification":null,"subscription_news":null
 				}`,
 			expectedProfile: map[string]interface{}{
 				"graduation_year": int64(0), "address": nil, "sex": nil, "web_site": nil, "last_name": nil,
 				"student_id": nil, "cell_phone_number": nil, "country_code": "", "default_language": nil,
 				"email_verified": false, "birth_date": nil, "grade": nil, "city": nil, "first_name": nil,
 				"login_id": int64(100000001), "email": nil, "login": "jane", "zipcode": nil, "land_line_number": nil,
-				"free_text": nil},
+				"free_text": nil, "time_zone": nil, "notify_news": false, "photo_autoload": false,
+				"public_first_name": false, "public_last_name": false,
+			},
 		},
 		{
 			name:         "wrong response code",
@@ -180,7 +184,7 @@ func Test_convertUserProfile(t *testing.T) {
 			source: map[string]interface{}{
 				"id": int64(100000001), "login": "jane", "login_updated_at": "2019-07-16 01:56:25", "login_fixed": int64(0),
 				"login_revalidate_required": int64(0), "login_change_required": int64(0), "language": "en", "first_name": "Jane",
-				"last_name": "Doe", "real_name_visible": false, "timezone": "Europe/London", "country_code": "GB",
+				"last_name": "Doe", "real_name_visible": true, "timezone": "Europe/London", "country_code": "GB",
 				"address": nil, "city": nil, "zipcode": nil, "primary_phone": nil, "secondary_phone": nil,
 				"role": "student", "school_grade": nil, "student_id": "456789012", "ministry_of_education": nil,
 				"ministry_of_education_fr": false, "birthday": "2001-08-03", "presentation": "I'm Jane Doe",
@@ -190,7 +194,7 @@ func Test_convertUserProfile(t *testing.T) {
 				"logout_config": nil, "last_password_recovery_at": nil, "merge_group_id": nil,
 				"origin_instance_id": nil, "creator_client_id": nil, "nationality": "GB",
 				"primary_email": "janedoe@gmail.com", "secondary_email": "jane.doe@gmail.com",
-				"primary_email_verified": int64(1), "secondary_email_verified": nil, "has_picture": false,
+				"primary_email_verified": int64(1), "secondary_email_verified": nil, "has_picture": true,
 				"badges": []interface{}(nil), "client_id": int64(1), "verification": []interface{}(nil),
 			},
 			expected: map[string]interface{}{
@@ -198,7 +202,8 @@ func Test_convertUserProfile(t *testing.T) {
 				"web_site": "http://jane.freepages.com", "email_verified": true, "land_line_number": nil, "last_name": "Doe",
 				"zipcode": nil, "sex": "Female", "login_id": int64(100000001), "country_code": "gb", "first_name": "Jane",
 				"cell_phone_number": nil, "login": "jane", "address": nil, "birth_date": "2001-08-03", "graduation_year": int64(2021),
-				"default_language": "en", "city": nil, "student_id": "456789012",
+				"default_language": "en", "city": nil, "student_id": "456789012", "time_zone": "Europe/London",
+				"notify_news": false, "public_first_name": true, "public_last_name": true, "photo_autoload": true,
 			},
 		},
 		{
@@ -217,13 +222,16 @@ func Test_convertUserProfile(t *testing.T) {
 				"origin_instance_id": nil, "creator_client_id": nil, "nationality": nil,
 				"primary_email": nil, "secondary_email": nil,
 				"primary_email_verified": nil, "secondary_email_verified": nil, "has_picture": false,
-				"badges": nil, "client_id": nil, "verification": nil,
+				"badges": nil, "client_id": nil, "verification": nil, "public_first_name": false, "public_last_name": false,
+				"subscription_news": nil,
 			},
 			expected: map[string]interface{}{
 				"land_line_number": nil, "login_id": int64(100000001), "login": "jane", "free_text": nil, "sex": nil,
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "",
+				"time_zone": nil, "notify_news": false, "photo_autoload": false,
+				"public_first_name": false, "public_last_name": false,
 			},
 		},
 		{
@@ -234,6 +242,8 @@ func Test_convertUserProfile(t *testing.T) {
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "",
+				"time_zone": nil, "notify_news": false, "photo_autoload": false,
+				"public_first_name": false, "public_last_name": false,
 			},
 		},
 		{
@@ -244,6 +254,8 @@ func Test_convertUserProfile(t *testing.T) {
 				"student_id": nil, "email_verified": true, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "",
+				"time_zone": nil, "notify_news": false, "photo_autoload": false,
+				"public_first_name": false, "public_last_name": false,
 			},
 		},
 		{
@@ -254,6 +266,8 @@ func Test_convertUserProfile(t *testing.T) {
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "us",
+				"time_zone": nil, "notify_news": false, "photo_autoload": false,
+				"public_first_name": false, "public_last_name": false,
 			},
 		},
 		{

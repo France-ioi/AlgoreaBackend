@@ -223,6 +223,15 @@ func Encode(data []byte, clientKey string) string {
 
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {
 	dest := make(map[string]interface{}, len(source)+2)
+	/*
+	 We ignore fields: badges, birthday_year, client_id, created_at, creator_client_id,
+	 school_grade, graduation_grade_expire_at, ip, last_password_recovery_at, last_login,
+	 login_change_required, login_fixed, login_revalidate_required, login_updated_at,
+	 logout_config, merge_group_id, ministry_of_education, ministry_of_education_fr,
+	 nationality (capitalized country code), origin_instance_id, picture (URL),
+	 role, secondary_email, secondary_email_verified, subscription_results (bool), verification
+	*/
+
 	mapping := map[string]string{
 		"login_id":          "id", // unsigned int
 		"login":             "login",
@@ -242,7 +251,10 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 		"default_language":  "language",
 		"free_text":         "presentation",
 		"web_site":          "website",
+		"time_zone":         "timezone",
 		"email_verified":    "primary_email_verified",
+		"photo_autoload":    "has_picture",
+		"notify_news":       "subscription_news",
 	}
 	for destKey, sourceKey := range mapping {
 		dest[destKey] = source[sourceKey]
@@ -250,14 +262,10 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 			dest[destKey], _ = number.Int64()
 		}
 	}
-	dest["sex"] = nil
-	switch source["gender"] {
-	case "m":
-		dest["sex"] = "Male"
-	case "f":
-		dest["sex"] = "Female"
-	}
-	dest["email_verified"] = (dest["email_verified"] == true) || (dest["email_verified"] == int64(1))
+
+	convertUserGender(source, dest)
+	normalizeUserProfileBooleanFields(dest)
+
 	if countryCode, ok := dest["country_code"].(string); ok {
 		dest["country_code"] = strings.ToLower(countryCode)
 	} else {
@@ -276,7 +284,30 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 		dest["graduation_year"] = int64(0)
 	}
 
+	var realNameVisible bool
+	if value, ok := source["real_name_visible"]; ok && value == true {
+		realNameVisible = true
+	}
+	dest["public_first_name"] = realNameVisible
+	dest["public_last_name"] = realNameVisible
+
 	return dest, nil
+}
+
+func normalizeUserProfileBooleanFields(dest map[string]interface{}) {
+	for _, fieldName := range [...]string{"email_verified", "notify_news", "photo_autoload"} {
+		dest[fieldName] = (dest[fieldName] == true) || (dest[fieldName] == int64(1))
+	}
+}
+
+func convertUserGender(source, dest map[string]interface{}) {
+	dest["sex"] = nil
+	switch source["gender"] {
+	case "m":
+		dest["sex"] = "Male"
+	case "f":
+		dest["sex"] = "Female"
+	}
 }
 
 func mustNotBeError(err error) {
