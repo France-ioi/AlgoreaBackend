@@ -51,16 +51,29 @@ type groupUserProgressResponseRow struct {
 // swagger:operation GET /groups/{group_id}/user-progress groups groupUserProgress
 // ---
 // summary: Get group progress for users
-// description: Return the current progress of users on a subset of items.
+// description: >
+//              Returns the current progress of users on a subset of items.
 //
 //
-//              For all children of items from the parent_item_id list,
-//              display the result of all user self-groups among the descendants of the given group
+//              For all visible children of items from the `{parent_item_id}` list,
+//              displays the result of all user self-groups among the descendants of the given group
 //              (including those in teams).
 //
+//
 //              For each user, only the result corresponding to his best score counts
-//              (across all his teams and his own results), disregarding whether or not
+//              (across all his teams and his own results) disregarding whether or not
 //              the score was done in a team which is descendant of the input group.
+//
+//
+//              Restrictions:
+//
+//              * The current user should be a manager of the group (or of one of its ancestors)
+//              with `can_watch_members` set to true,
+//
+//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//
+//
+//              otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -111,13 +124,13 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
+	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	// Preselect IDs of end member for that we will calculate the stats.
@@ -128,7 +141,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN `groups` ON groups.id = groups_groups_active.child_group_id AND groups.type = 'User'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Group("groups.id")
-	userIDQuery, apiError := service.ApplySortingAndPaging(r, userIDQuery, map[string]*service.FieldSortingParams{
+	userIDQuery, apiError = service.ApplySortingAndPaging(r, userIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},
 		"id":   {ColumnName: "groups.id", FieldType: "int64"},

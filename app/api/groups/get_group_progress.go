@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -54,11 +55,23 @@ type groupGroupProgressResponseRow struct {
 // swagger:operation GET /groups/{group_id}/group-progress groups groupGroupProgress
 // ---
 // summary: Get group progress
-// description: Return the current progress of a group on a subset of items.
+// description: >
+//              Returns the current progress of a group on a subset of items.
 //
 //
-//              For all children of items from the parent_item_id list, display the result
+//              For all visible children of items from the `{parent_item_id}` list, displays the result
 //              of each direct child of the given `group_id` whose type is not in (Team, User).
+//
+//
+//              Restrictions:
+//
+//              * The current user should be a manager of the group (or of one of its ancestors)
+//              with `can_watch_members` set to true,
+//
+//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//
+//
+//              otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -115,13 +128,13 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
+	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
@@ -151,7 +164,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
 			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'User')`)
-	ancestorGroupIDQuery, apiError := service.ApplySortingAndPaging(r, ancestorGroupIDQuery, map[string]*service.FieldSortingParams{
+	ancestorGroupIDQuery, apiError = service.ApplySortingAndPaging(r, ancestorGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "group_child.name", FieldType: "string"},
 		"id":   {ColumnName: "group_child.id", FieldType: "int64"},
@@ -233,4 +246,34 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 
 	render.Respond(w, r, result)
 	return service.NoError
+}
+
+func (srv *Service) resolveAndCheckParentIDs(r *http.Request, user *database.User) ([]int64, service.APIError) {
+	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
+	if err != nil {
+		return nil, service.ErrInvalidRequest(err)
+	}
+	itemParentIDs = uniqueIDs(itemParentIDs)
+	if len(itemParentIDs) > 0 {
+		var cnt int
+		service.MustNotBeError(srv.Store.Permissions().MatchingUserAncestors(user).
+			WherePermissionIsAtLeast("watch", "result").Where("item_id IN(?)", itemParentIDs).
+			PluckFirst("COUNT(DISTINCT item_id)", &cnt).Error())
+		if cnt != len(itemParentIDs) {
+			return nil, service.InsufficientAccessRightsError
+		}
+	}
+	return itemParentIDs, service.NoError
+}
+
+func uniqueIDs(ids []int64) []int64 {
+	idsMap := make(map[int64]bool, len(ids))
+	for _, id := range ids {
+		idsMap[id] = true
+	}
+	ids = make([]int64, 0, len(idsMap))
+	for id := range idsMap {
+		ids = append(ids, id)
+	}
+	return ids
 }

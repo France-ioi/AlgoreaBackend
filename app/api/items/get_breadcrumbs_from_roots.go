@@ -109,7 +109,7 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("groups.id, root_activity_id, root_skill_id")
 
-	visibleItems := store.Permissions().MatchingGroupAncestors(user.GroupID).
+	visibleItems := store.Permissions().MatchingUserAncestors(user).
 		Where("permissions.can_view_generated_value >= ?", store.PermissionsGranted().ViewIndexByName("info")).
 		Joins("JOIN items ON items.id = permissions.item_id").
 		Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
