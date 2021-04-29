@@ -100,6 +100,7 @@ Feature: Get item view information
       "no_score": true,
       "text_id": "Task_30c",
       "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
       "prompt_to_join_group_by_code": true,
 
       "title_bar_visible": true,
@@ -154,6 +155,7 @@ Feature: Get item view information
       "no_score": true,
       "text_id": null,
       "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
       "prompt_to_join_group_by_code": true,
 
       "title_bar_visible": true,
@@ -205,6 +207,7 @@ Feature: Get item view information
       "no_score": true,
       "text_id": null,
       "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
       "prompt_to_join_group_by_code": true,
 
       "title_bar_visible": true,
@@ -255,6 +258,7 @@ Feature: Get item view information
       "no_score": true,
       "text_id": "Task_30c",
       "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
       "prompt_to_join_group_by_code": true,
 
       "title_bar_visible": true,
@@ -309,6 +313,7 @@ Feature: Get item view information
       "no_score": true,
       "text_id": "Task_30c",
       "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
       "prompt_to_join_group_by_code": true,
 
       "title_bar_visible": true,
@@ -363,6 +368,7 @@ Feature: Get item view information
       "no_score": true,
       "text_id": null,
       "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
       "prompt_to_join_group_by_code": true,
 
       "title_bar_visible": true,
@@ -384,6 +390,61 @@ Feature: Get item view information
         "can_view": "info",
         "can_watch": "none",
         "is_owner": false
+      }
+    }
+    """
+
+  Scenario: Full access on the item (as user), language_tag is given
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200?language_tag=fr"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "200",
+      "type": "Course",
+      "display_details_in_parent": true,
+      "validation_type": "All",
+      "requires_explicit_entry": true,
+      "entry_min_admitted_members_ratio": "All",
+      "entry_frozen_teams": false,
+      "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
+      "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
+      "duration": "10:20:30",
+      "no_score": true,
+      "text_id": "Task_30c",
+      "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
+      "prompt_to_join_group_by_code": true,
+
+      "title_bar_visible": true,
+      "read_only": true,
+      "full_screen": "forceYes",
+      "show_user_infos": true,
+      "url": "http://someurl",
+      "uses_api": true,
+      "hints_allowed": true,
+
+      "best_score": 0,
+
+      "string": {
+        "language_tag": "fr",
+        "title": "Catégorie 1",
+        "image_url": "http://example.com/mf0.jpg",
+        "subtitle": "Sous-titre 0",
+        "description": "texte 0",
+        "edu_comment": "Un commentaire"
+      },
+
+      "permissions": {
+        "can_edit": "children",
+        "can_grant_view": "enter",
+        "can_view": "solution",
+        "can_watch": "result",
+        "is_owner": true
       }
     }
     """
