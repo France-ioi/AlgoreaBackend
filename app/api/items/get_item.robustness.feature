@@ -73,3 +73,9 @@ Background:
     When I send a GET request to "/items/200?as_team_id=11"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
+
+  Scenario: Should fail when language_tag is given, but there is no items_strings row for the item
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200?language_tag=jp"
+    Then the response code should be 404
+    And the response error message should contain "Insufficient access rights on the given item id or the item doesn't exist"

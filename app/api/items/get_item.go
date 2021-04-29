@@ -3,6 +3,7 @@ package items
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/render"
@@ -116,6 +117,9 @@ type itemResponse struct {
 	// required: true
 	EnteringTimeMax time.Time `json:"entering_time_max"`
 
+	// required: true
+	SupportedLanguageTags []string `json:"supported_language_tags"`
+
 	// max among all attempts of the user (or of the team given in `{as_team_id}`)
 	// required: true
 	BestScore float32 `json:"best_score"`
@@ -130,12 +134,15 @@ type itemResponse struct {
 // ---
 // summary: Get an item
 // description: Returns data related to the specified item,
-//              and the current user's (or the team's given in `as_team_id`) permissions on it
+//              and the current user's (or the team's given in `{as_team_id}`) permissions on it
 //              (from tables `items`, `items_string`, `permissions_generated`).
 //
 //
 //              * If the specified item is not visible by the current user (or the team given in `as_team_id`),
 //                the 'not found' response is returned.
+//
+//              * If `{language_tag}` is given, but there is no items_strings row for the `{item_id}` and `{language_tag}`,
+//                the 'not found' response is returned as well.
 //
 //              * If `as_team_id` is given, it should be a user's parent team group,
 //                otherwise the "forbidden" error is returned.
@@ -148,6 +155,9 @@ type itemResponse struct {
 // - name: as_team_id
 //   in: query
 //   type: integer
+// - name: language_tag
+//   in: query
+//   type: string
 // responses:
 //   "200":
 //     description: OK. Success response with item data
@@ -172,9 +182,16 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	rawData := getRawItemData(srv.Store.Items(), itemID, participantID, user)
+	var languageTag string
+	var languageTagSet bool
+	if len(httpReq.URL.Query()["language_tag"]) != 0 {
+		languageTag = httpReq.URL.Query().Get("language_tag")
+		languageTagSet = true
+	}
+
+	rawData := getRawItemData(srv.Store.Items(), itemID, participantID, languageTag, languageTagSet, user)
 	if rawData == nil {
-		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
+		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
 	permissionGrantedStore := srv.Store.PermissionsGranted()
@@ -203,6 +220,9 @@ type rawItem struct {
 	HintsAllowed                 bool    // only if not a chapter
 	BestScore                    float32
 
+	// items_strings
+	SupportedLanguageTags string
+
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `sql:"column:language_tag"`
 	StringTitle       *string `sql:"column:title"`
@@ -213,48 +233,62 @@ type rawItem struct {
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
-func getRawItemData(s *database.ItemStore, rootID, groupID int64, user *database.User) *rawItem {
+func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User) *rawItem {
 	var result rawItem
 
 	query := s.ByID(rootID).
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info").
-		JoinsUserAndDefaultItemStrings(user).
-		Select(`
-			items.id AS id,
-			items.type,
-			items.display_details_in_parent,
-			items.validation_type,
-			items.entry_min_admitted_members_ratio,
-			items.entry_frozen_teams,
-			items.entry_max_team_size,
-			items.entering_time_min,
-			items.entering_time_max,
-			items.allows_multiple_attempts,
-			items.entry_participant_type,
-			items.duration,
-			items.no_score,
-			items.text_id,
-			items.default_language_tag,
-			items.prompt_to_join_group_by_code,
-			items.title_bar_visible,
-			items.read_only,
-			items.full_screen,
-			items.show_user_infos,
-			items.url,
-			items.requires_explicit_entry,
-			IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
-			IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info")
+
+	var itemStringsColumns string
+	if languageTagSet {
+		query = query.Joins("JOIN items_strings ON items_strings.item_id = items.id AND items_strings.language_tag = ?", languageTag)
+		itemStringsColumns = `
+			items_strings.language_tag, items_strings.title, items_strings.image_url, items_strings.subtitle,
+			items_strings.description, items_strings.edu_comment`
+	} else {
+		query = query.JoinsUserAndDefaultItemStrings(user)
+		itemStringsColumns = `
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			IF(user_strings.language_tag IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 			IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
 			IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description,
-			IF(user_strings.language_tag IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
-			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
-			IFNULL(
-					(SELECT MAX(results.score_computed) AS best_score
-					FROM results
-					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score`, groupID)
+			IF(user_strings.language_tag IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment`
+	}
+
+	// nolint:gosec
+	query = query.Select(`
+		items.id AS id,
+		items.type,
+		items.display_details_in_parent,
+		items.validation_type,
+		items.entry_min_admitted_members_ratio,
+		items.entry_frozen_teams,
+		items.entry_max_team_size,
+		items.entering_time_min,
+		items.entering_time_max,
+		items.allows_multiple_attempts,
+		items.entry_participant_type,
+		items.duration,
+		items.no_score,
+		items.text_id,
+		items.default_language_tag,
+		IFNULL((SELECT GROUP_CONCAT(language_tag ORDER BY language_tag)
+		        FROM items_strings WHERE item_id = items.id), '') AS supported_language_tags,
+		items.prompt_to_join_group_by_code,
+		items.title_bar_visible,
+		items.read_only,
+		items.full_screen,
+		items.show_user_infos,
+		items.url,
+		items.requires_explicit_entry,
+		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
+		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
+		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
+		IFNULL(
+			(SELECT MAX(results.score_computed) AS best_score
+			 FROM results
+			 WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score, `+itemStringsColumns, groupID)
 
 	err := query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -282,6 +316,7 @@ func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *d
 		EnteringTimeMin:              time.Time(rawData.EnteringTimeMin),
 		EnteringTimeMax:              time.Time(rawData.EnteringTimeMax),
 		BestScore:                    rawData.BestScore,
+		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
 	}
 	result.String.itemStringNotInfo = constructStringNotInfo(rawData, permissionGrantedStore)
 
