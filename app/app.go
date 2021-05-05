@@ -80,7 +80,7 @@ func (app *Application) Reset(config *viper.Viper) error {
 	router.Use(middleware.Recoverer)          // must be before logger so that it an log panics
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
-	router.Use(domain.Middleware(domainsConfig))
+	router.Use(domain.Middleware(domainsConfig, serverConfig.GetString("domainOverride")))
 
 	if appenv.IsEnvDev() {
 		router.Mount("/debug", middleware.Profiler())

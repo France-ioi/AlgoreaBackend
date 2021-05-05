@@ -9,7 +9,7 @@ import (
 )
 
 // Middleware is a middleware setting domain-specific configuration into the request context
-func Middleware(domains []ConfigItem) func(next http.Handler) http.Handler {
+func Middleware(domains []ConfigItem, domainOverride string) func(next http.Handler) http.Handler {
 
 	var defaultConfig *CtxConfig // the config that will be used (if defined) if no domain match
 
@@ -27,7 +27,10 @@ func Middleware(domains []ConfigItem) func(next http.Handler) http.Handler {
 	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			domain := strings.SplitN(r.Host, ":", 2)[0]
+			domain := domainOverride
+			if domain == "" {
+				domain = strings.SplitN(r.Host, ":", 2)[0]
+			}
 			configuration := domainsMap[domain]
 			if configuration == nil {
 				configuration = defaultConfig // if no match, set the default one (that can be nil as well)

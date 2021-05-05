@@ -13,6 +13,7 @@ func TestMiddleware(t *testing.T) {
 	tests := []struct {
 		name               string
 		domains            []ConfigItem
+		domainOverride     string
 		expectedConfig     *CtxConfig
 		expectedDomain     string
 		expectedStatusCode int
@@ -54,6 +55,24 @@ func TestMiddleware(t *testing.T) {
 			shouldEnterService: true,
 		},
 		{
+			name: "domain override",
+			domains: []ConfigItem{
+				{
+					Domains:       []string{"france-ioi.org", "www.france-ioi.org"},
+					AllUsersGroup: 6, TempUsersGroup: 7,
+				},
+				{
+					Domains:       []string{"default"},
+					AllUsersGroup: 2, TempUsersGroup: 4,
+				},
+			},
+			domainOverride:     "www.france-ioi.org",
+			expectedDomain:     "www.france-ioi.org",
+			expectedConfig:     &CtxConfig{AllUsersGroupID: 6, TempUsersGroupID: 7},
+			expectedStatusCode: http.StatusOK,
+			shouldEnterService: true,
+		},
+		{
 			name: "wrong domain",
 			domains: []ConfigItem{
 				{
@@ -73,15 +92,16 @@ func TestMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			assertMiddleware(t, tt.domains, tt.shouldEnterService, tt.expectedStatusCode, tt.expectedBody, tt.expectedConfig, tt.expectedDomain)
+			assertMiddleware(t, tt.domains, tt.domainOverride, tt.shouldEnterService,
+				tt.expectedStatusCode, tt.expectedBody, tt.expectedConfig, tt.expectedDomain)
 		})
 	}
 }
 
-func assertMiddleware(t *testing.T, domains []ConfigItem, shouldEnterService bool,
+func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string, shouldEnterService bool,
 	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig, expectedDomain string) {
 	// dummy server using the middleware
-	middleware := Middleware(domains)
+	middleware := Middleware(domains, domainOverride)
 	enteredService := false // used to log if the service has been reached
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service

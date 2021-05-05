@@ -2,6 +2,7 @@ server:
   port: 8080
   rootPath: "/" # the path at which the router is mounted
   compress: false # whether compression is enabled by default
+  # domainOverride: dev.algorea.org # use this domain name for cookies and per-domain configuration choosing
 auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"
