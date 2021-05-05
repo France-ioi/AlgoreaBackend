@@ -11,9 +11,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /current-user/refresh users userDataUpdate
+// swagger:operation PUT /current-user/refresh users userDataRefresh
 // ---
-// summary: Update the local user info cache
+// summary: Refresh the local user info cache
 // description: Gets the user info from the login module and updates the local user info cache stored in the `users` table
 // responses:
 //   "200":
