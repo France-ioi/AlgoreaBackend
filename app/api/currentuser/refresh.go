@@ -30,9 +30,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 	service.MustNotBeError(err)
 
 	userProfile["latest_activity_at"] = database.Now()
-	if defaultLanguage, ok := userProfile["default_language"]; ok && defaultLanguage == nil {
-		userProfile["default_language"] = database.Default()
-	}
+	delete(userProfile, "default_language")
 	service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).UpdateColumn(userProfile).Error())
 
 	response := service.UpdateSuccess(nil)
