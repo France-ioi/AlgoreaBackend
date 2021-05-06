@@ -96,29 +96,3 @@ type invitationsViewResponseRow struct {
 		Type string `json:"type"`
 	} `json:"group"`
 }
-
-// swagger:model membershipsViewResponseRow
-type membershipsViewResponseRow struct {
-	// `MAX(group_membership_changes.at); Nullable`
-	// required: true
-	MemberSince *time.Time `json:"member_since"`
-	// `group_membership_changes.action` of the latest change
-	// required: true
-	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
-	Action string `json:"action"`
-
-	// required: true
-	Group struct {
-		// `groups.id`
-		// required: true
-		ID int64 `json:"id"`
-		// required: true
-		Name string `json:"name"`
-		// Nullable
-		// required: true
-		Description *string `json:"description"`
-		// required: true
-		// enum: Class,Team,Club,Friends,Other,Base
-		Type string `json:"type"`
-	} `json:"group"`
-}

@@ -1,5 +1,7 @@
 package database
 
+import "github.com/jinzhu/gorm"
+
 // GroupStore implements database operations on groups
 type GroupStore struct {
 	*DataStore
@@ -84,14 +86,30 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 // still allows submissions and is not ended.
 // Entry conditions are defined by items.entry_min_admitted_members_ratio & items.entry_max_team_size
 // (for more info see description of the itemGetEntryState service).
-// The isAddition parameter specifies if we are going to add or remove a user.
+// The isAdding parameter specifies if we are going to add or remove a user.
 func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
-	teamGroupID, userID int64, isAddition, withLock bool) (bool, error) {
+	teamGroupID, userID int64, isAdding, withLock bool) (bool, error) {
+	found, err := s.GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+		gorm.Expr("?", teamGroupID), userID, isAdding, withLock).HasRows()
+	return !found, err
+}
+
+// GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations generates an SQL query
+// checking whether adding/removal of a user
+// specified by userID would break any of entry conditions for any of active participations of teamGroupID.
+// If at least one entry condition becomes broken for at least one active participation, the query returns a row with 1.
+// An active participation is one that is started (`results.started_at` is not null for the `root_item_id`),
+// still allows submissions and is not ended.
+// Entry conditions are defined by items.entry_min_admitted_members_ratio & items.entry_max_team_size
+// (for more info see description of the itemGetEntryState service).
+// The isAdding parameter specifies if we are going to add or remove a user.
+func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+	teamGroupIDExpr *gorm.SqlExpr, userID int64, isAdding, withLock bool) *DB {
 	activeTeamParticipationsQuery := s.Attempts().
 		Joins(`
 			JOIN results ON results.participant_id = attempts.participant_id AND results.attempt_id = attempts.id AND
 				results.item_id = attempts.root_item_id`).
-		Where("attempts.participant_id = ?", teamGroupID).
+		Where("attempts.participant_id = ?", teamGroupIDExpr).
 		Where("root_item_id IS NOT NULL").
 		Where("started_at IS NOT NULL").
 		Where("NOW() < allows_submissions_until").
@@ -99,7 +117,7 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 		Select("item_id, MIN(started_at) AS started_at").
 		Group("attempts.root_item_id")
 
-	updatedMemberIDsQuery := s.ActiveGroupGroups().Where("parent_group_id = ?", teamGroupID).
+	updatedMemberIDsQuery := s.ActiveGroupGroups().Where("parent_group_id = ?", teamGroupIDExpr).
 		Select("child_group_id")
 
 	if withLock {
@@ -107,7 +125,7 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 		updatedMemberIDsQuery = updatedMemberIDsQuery.WithWriteLock()
 	}
 
-	if isAddition {
+	if isAdding {
 		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID).QueryExpr())
 	} else {
 		updatedMemberIDsQuery = updatedMemberIDsQuery.Where("child_group_id != ?", userID)
@@ -134,7 +152,7 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 		membersPreconditionsQuery = membersPreconditionsQuery.WithWriteLock()
 	}
 
-	found, err := s.Raw(`
+	return s.Raw(`
 		SELECT 1 FROM (?) members_preconditions
 		GROUP BY item_id
 		HAVING NOT (
@@ -142,8 +160,7 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 			MIN(entry_min_admitted_members_ratio) = 'All' AND SUM(can_enter) = COUNT(*) OR
 			MIN(entry_min_admitted_members_ratio) = 'Half' AND COUNT(*) <= SUM(can_enter) * 2 OR
 			MIN(entry_min_admitted_members_ratio) = 'One' AND SUM(can_enter) >= 1
-		) OR MIN(entry_max_team_size) < COUNT(*)`, membersPreconditionsQuery.QueryExpr()).HasRows()
-	return !found, err
+		) OR MIN(entry_max_team_size) < COUNT(*)`, membersPreconditionsQuery.QueryExpr()).Limit(1)
 }
 
 // DeleteGroup deletes a group and emerging orphaned groups
