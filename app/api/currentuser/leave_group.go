@@ -17,11 +17,13 @@ import (
 //   It also refreshes the access rights.
 //
 //   * There should be a row in `groups_groups` with the `group_id` as a parent
-//     and the authenticated user’s selfGroup’s `id` as a child.
+//     and the authenticated user’s `id` as a child.
 //     Otherwise the "not found" error is returned.
 //
 //   * The user cannot leave the group if `NOW()` < `groups.require_lock_membership_approval_until` and
-//     `groups_groups.lock_membership_approved` is set or if the group membership is frozen.
+//     `groups_groups.lock_membership_approved` is set or if the group membership is frozen or
+//     if the group is a 'Base' group.
+//     Otherwise the "forbidden" error is returned.
 //
 //   * If the group is a team and leaving breaks entry conditions of at least one of the team's participations
 //     (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
