@@ -24,6 +24,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 
 	router.Get("/current-user", service.AppHandler(srv.getInfo).ServeHTTP)
+	router.Put("/current-user", service.AppHandler(srv.update).ServeHTTP)
 	router.Delete("/current-user", service.AppHandler(srv.delete).ServeHTTP)
 
 	router.Get("/current-user/available-groups", service.AppHandler(srv.searchForAvailableGroups).ServeHTTP)

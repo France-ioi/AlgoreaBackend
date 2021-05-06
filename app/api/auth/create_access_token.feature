@@ -188,8 +188,8 @@ Feature: Create an access token
     And the response header "Set-Cookie" should be "[NULL]"
     And the table "users" should stay unchanged but the row with group_id "11"
     And the table "users" at group_id "11" should be:
-      | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip   | time_zone   | notify_news   | photo_autoload   | public_first_name   | public_last_name    |
-      | 11       | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 | <time_zone> | <notify_news> | <photo_autoload> | <real_name_visible> | <real_name_visible> |
+      | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text   | web_site   | sex   | email_verified   | last_ip   | time_zone   | notify_news   | photo_autoload   | public_first_name   | public_last_name    |
+      | 11       | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | en               | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 | <time_zone> | <notify_news> | <photo_autoload> | <real_name_visible> | <real_name_visible> |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
@@ -205,9 +205,9 @@ Feature: Create an access token
       | 11      | {{refresh_token_from_oauth}} |
       | 13      | previousrefreshtoken2        |
   Examples:
-    | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | default_language | free_text    | web_site                  | sex    | email_verified | time_zone     | notify_news | photo_autoload | real_name_visible |
-    | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | en               | I'm Jane Doe | http://jane.freepages.com | Female | true           | Europe/London | true        | true           | true              |
-    | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | fr               | null         | null                      | null   | false          | null          | false       | false          | false             |
+    | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | free_text    | web_site                  | sex    | email_verified | time_zone     | notify_news | photo_autoload | real_name_visible |
+    | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | I'm Jane Doe | http://jane.freepages.com | Female | true           | Europe/London | true        | true           | true              |
+    | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | null         | null                      | null   | false          | null          | false       | false          | false             |
 
   Scenario: Creates relations with domain root groups on first login of an existing user
     Given the time now is "2019-07-16T22:02:29Z"

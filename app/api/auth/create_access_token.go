@@ -354,6 +354,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 
 	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
+	delete(userData, "default_language")
 	service.MustNotBeError(s.ByID(groupID).UpdateColumn(userData).Error())
 	return groupID
 }
