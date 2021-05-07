@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"bou.ke/monkey"
-	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -204,4 +204,13 @@ func TestItemItemStore_ContentViewPropagationIndexByName_Load(t *testing.T) {
 	defer ClearAllDBEnums()
 
 	assert.Equal(t, 3, itemItemStore.ContentViewPropagationIndexByName("as_content"))
+}
+
+func TestItemItemStore_WithItemsRelationsLock(t *testing.T) {
+	assertNamedLockMethod(t, "items_items", int(itemsRelationsLockTimeout.Seconds()), "items_items",
+		func(store *DataStore) func(func(store *DataStore) error) error {
+			return func(txFunc func(store *DataStore) error) error {
+				return store.ItemItems().WithItemsRelationsLock(txFunc)
+			}
+		})
 }
