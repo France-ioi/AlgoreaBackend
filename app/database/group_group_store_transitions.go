@@ -327,7 +327,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	results = make(map[int64]GroupGroupTransitionResult, len(childGroupIDs))
 	approvalsToRequest = make(map[int64]GroupApprovals, len(childGroupIDs))
 
-	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(dataStore *DataStore) error {
+	mustNotBeError(s.WithGroupsRelationsLock(func(dataStore *DataStore) error {
 		var oldActions []stateInfo
 		var groupRequiredApprovalsAndLimits requiredApprovalsAndLimits
 

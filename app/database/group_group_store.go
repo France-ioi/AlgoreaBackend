@@ -42,7 +42,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(s *DataStore) (err error) {
+	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
 		mustNotBeError(s.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
 		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
@@ -80,7 +80,7 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(s *DataStore) (err error) {
+	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
 		groupGroupStore := s.GroupGroups()
 		mustNotBeError(s.InsertMaps(relations))
 		groupGroupStore.createNewAncestors()
@@ -94,7 +94,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(s *DataStore) error {
+	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) error {
 		// check if parent_group_id is the only parent of child_group_id
 		var shouldDeleteChildGroup bool
 		shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithWriteLock().
@@ -203,4 +203,10 @@ func (s *GroupGroupStore) After() (err error) {
 
 	s.createNewAncestors()
 	return nil
+}
+
+// WithGroupsRelationsLock wraps the given function in GET_LOCK/RELEASE_LOCK
+// specific for modifying relations between groups
+func (s *GroupGroupStore) WithGroupsRelationsLock(txFunc func(*DataStore) error) error {
+	return s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, txFunc)
 }
