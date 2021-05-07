@@ -34,6 +34,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/items", service.AppHandler(srv.createItem).ServeHTTP)
 	routerWithParticipant.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)
 	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
+	router.Delete("/items/{item_id}", service.AppHandler(srv.deleteItem).ServeHTTP)
 
 	routerWithParticipant.Get("/items/{item_id}/children", service.AppHandler(srv.getItemChildren).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/parents", service.AppHandler(srv.getItemParents).ServeHTTP)
