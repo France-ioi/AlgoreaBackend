@@ -1,4 +1,4 @@
-Feature: Get user info the current user
+Feature: Get user info for the current user
   Background:
     Given the database has the following users:
       | group_id | temp_user | login | registered_at       | email          | first_name | last_name | student_id | country_code | time_zone | birth_date | graduation_year | grade | sex  | address          | zipcode | city          | land_line_number | cell_phone_number | default_language | public_first_name | public_last_name | notify_news | notify  | free_text | web_site   | photo_autoload | lang_prog | basic_editor_mode | spaces_for_tab | step_level_in_site | is_admin | no_ranking |
