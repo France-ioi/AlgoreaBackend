@@ -10,6 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/api/currentuser"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/api/items"
+	"github.com/France-ioi/AlgoreaBackend/app/api/users"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -41,6 +42,7 @@ func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig
 	r.Group((&groups.Service{Base: srv}).SetRoutes)
 	r.Group((&answers.Service{Base: srv}).SetRoutes)
 	r.Group((&currentuser.Service{Base: srv}).SetRoutes)
+	r.Group((&users.Service{Base: srv}).SetRoutes)
 	r.Get("/status", ctx.status)
 	r.NotFound(service.NotFound)
 
