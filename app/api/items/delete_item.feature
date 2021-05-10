@@ -84,6 +84,8 @@ Feature: Delete an item
       | 3  | 11         | Bug  | null    |
     And the database has the following table 'languages':
       | tag |
+      | fr  |
+      | en  |
       | sl  |
 
   Scenario: Delete an item

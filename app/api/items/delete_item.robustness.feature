@@ -85,6 +85,8 @@ Feature: Delete an item - robustness
       | 3  | 11         | Bug  | null    |
     And the database has the following table 'languages':
       | tag |
+      | fr  |
+      | en  |
       | sl  |
 
   Scenario: Invalid item_id
