@@ -94,7 +94,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 						 groups_groups_active.child_group_id = ?`, user.GroupID).
 				Where(`
 					(groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until) OR
-					groups.frozen_membership`).HasRows()
+					groups.frozen_membership OR groups.type = 'Base'`).HasRows()
 			service.MustNotBeError(err)
 			if found {
 				apiError = service.ErrForbidden(errors.New("user deletion is locked for this group"))

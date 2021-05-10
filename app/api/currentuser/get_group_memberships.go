@@ -4,9 +4,44 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// swagger:model membershipsViewResponseRow
+type membershipsViewResponseRow struct {
+	// MAX(`group_membership_changes.at`); Nullable
+	// required: true
+	MemberSince *database.Time `json:"member_since"`
+	// `group_membership_changes.action` of the latest change
+	// required: true
+	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
+	Action string `json:"action"`
+
+	// required: true
+	Group struct {
+		// `groups.id`
+		// required: true
+		ID int64 `json:"id,string"`
+		// required: true
+		Name string `json:"name"`
+		// Nullable
+		// required: true
+		Description *string `json:"description"`
+		// required: true
+		// enum: Class,Team,Club,Friends,Other,Base
+		Type string `json:"type"`
+	} `json:"group" gorm:"embedded;embedded_prefix:group__"`
+
+	// required: true
+	IsMembershipLocked bool `json:"is_membership_locked"`
+
+	// Only for teams
+	// enum: frozen_membership,would_break_entry_conditions,free_to_leave
+	CanLeaveTeam string `json:"can_leave_team,omitempty"`
+}
 
 // swagger:operation GET /current-user/group-memberships group-memberships membershipsView
 // ---
@@ -62,7 +97,20 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 			groups.id AS group__id,
 			groups.name AS group__name,
 			groups.description AS group__description,
-			groups.type AS group__type`).
+			groups.type AS group__type,
+			groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until AS is_membership_locked,
+			IF(groups.type = 'Team',
+				IF(groups.frozen_membership,
+					'frozen_membership',
+					IF(?,
+						'would_break_entry_conditions',
+						'free_to_leave'
+					)
+				),
+				NULL
+			) AS can_leave_team`,
+			srv.Store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+				gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
 		Joins("JOIN `groups` ON `groups`.id = groups_groups_active.parent_group_id").
 		Joins(`
 			LEFT JOIN LATERAL (
@@ -83,10 +131,9 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []membershipsViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }
