@@ -99,9 +99,12 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	defer func() { mustNotBeError(stmtUpdatePermissionsGenerated.Close()) }()
 
 	// marking 'self' permissions_propagate (so all of them) as 'children'
+	// (although all existing rows in permissions_propagate have propagate_to='self' at this moment,
+	//  we still need to use WHERE clause in order for MySQL to use indexes,
+	//  otherwise the query can take minutes to execute)
 	const queryMarkSelfAsChildren = `
 		UPDATE permissions_propagate
-		SET propagate_to = 'children'`
+		SET propagate_to = 'children' WHERE propagate_to='self'`
 	stmtMarkSelfAsChildren, err = s.db.CommonDB().Prepare(queryMarkSelfAsChildren)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkSelfAsChildren.Close()) }()
