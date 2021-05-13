@@ -1114,3 +1114,27 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 		})
 	}
 }
+
+func Test_ItemStore_DeleteItem(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		languages: [{tag: fr}]
+		items: [{id: 1234, default_language_tag: fr},{id: 1235, default_language_tag: fr}]
+		items_items: [{parent_item_id: 1234, child_item_id: 1235, child_order: 1}]
+		items_strings: [{item_id: 1234, language_tag: fr}, {item_id: 1235, language_tag: fr}]
+	`)
+	defer func() { _ = db.Close() }()
+	store := database.NewDataStore(db)
+	assert.NoError(t, store.InTransaction(func(store *database.DataStore) error {
+		return store.Items().DeleteItem(1235)
+	}))
+	var ids []int64
+	assert.NoError(t, store.Items().Pluck("id", &ids).Error())
+	assert.Equal(t, []int64{1234}, ids)
+	assert.NoError(t, store.ItemStrings().Pluck("item_id", &ids).Error())
+	assert.Equal(t, []int64{1234}, ids)
+	assert.NoError(t, store.Table("items_propagate").
+		Where("ancestors_computation_state != 'done'").Pluck("id", &ids).Error())
+	assert.Empty(t, ids)
+	assert.NoError(t, store.Table("permissions_propagate").Pluck("item_id", &ids).Error())
+	assert.Empty(t, ids)
+}

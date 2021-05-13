@@ -3,7 +3,6 @@ package items
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/render"
 	"github.com/go-sql-driver/mysql"
@@ -217,7 +216,7 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.DataStore, itemID int64,
 	input *updateItemRequest, childrenPermissionMap map[int64]permissionAndType) (apiError service.APIError, err error) {
 	if formData.IsSet("children") {
-		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
+		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			deleteStatement := lockedStore.ItemItems().DB
 			newChildrenIDs := input.childrenIDs()
 			if len(newChildrenIDs) > 0 {

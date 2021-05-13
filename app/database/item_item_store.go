@@ -1,9 +1,13 @@
 package database
 
+import "time"
+
 // ItemItemStore implements database operations on `items_items`
 type ItemItemStore struct {
 	*DataStore
 }
+
+const itemsRelationsLockTimeout = 3 * time.Second
 
 // ChildrenOf returns a composable query for selecting children of the given item
 func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
@@ -51,4 +55,10 @@ func (s *ItemItemStore) UpperViewLevelsPropagationNameByIndex(index int) string 
 func (s *ItemItemStore) UpperViewLevelsPropagationIndexByName(name string) int {
 	getterFunc := func() interface{} { return requireDBEnumIndexByName("items_items.upper_view_levels_propagation", name) }
 	return s.DB.getFromEnumUnderLock(getterFunc).(int)
+}
+
+// WithItemsRelationsLock wraps the given function in GET_LOCK/RELEASE_LOCK
+// specific for modifying relations between items
+func (s *ItemItemStore) WithItemsRelationsLock(txFunc func(*DataStore) error) error {
+	return s.WithNamedLock(s.tableName, itemsRelationsLockTimeout, txFunc)
 }

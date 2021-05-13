@@ -288,3 +288,17 @@ func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 		WherePermissionIsAtLeast("grant_view", "enter").
 		WherePermissionIsAtLeast("watch", "result")
 }
+
+// DeleteItem deletes an item. Note the method fails if the item has children.
+func (s *ItemStore) DeleteItem(itemID int64) (err error) {
+	s.mustBeInTransaction()
+
+	return s.ItemItems().WithItemsRelationsLock(func(s *DataStore) error {
+		mustNotBeError(s.WithForeignKeyChecksDisabled(func(s *DataStore) error {
+			return s.ItemStrings().Where("item_id = ?", itemID).Delete().Error()
+		}))
+		mustNotBeError(s.Items().ByID(itemID).Delete().Error())
+		mustNotBeError(s.ItemItems().After())
+		return nil
+	})
+}

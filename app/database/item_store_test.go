@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,4 +36,33 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 		PluckFirst("items.id", &id).Error()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(123), id)
+}
+
+func TestItemStore_DeleteItem_MustBeRunInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	itemStore := NewDataStore(db).Items()
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		_ = itemStore.DeleteItem(1)
+	})
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestItemStore_DeleteItem_ShouldUseNamedLock(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs("items_items", 3).
+		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(0)))
+	mock.ExpectRollback()
+
+	store := NewDataStore(db)
+	_ = store.InTransaction(func(store *DataStore) error {
+		return store.Items().DeleteItem(1)
+	})
+
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

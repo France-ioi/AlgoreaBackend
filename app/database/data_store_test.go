@@ -268,24 +268,33 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorWithoutTransaction(t *tes
 }
 
 func TestDataStore_WithNamedLock(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
 	lockName := "some lock name"
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+	assertNamedLockMethod(t, lockName, expectedTimeout, "tableName",
+		func(store *DataStore) func(func(store *DataStore) error) error {
+			return func(txFunc func(store *DataStore) error) error {
+				return store.WithNamedLock(lockName, timeout, txFunc)
+			}
+		})
+}
+
+func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeout int, expectedTableName string,
+	funcToTestGenerator func(store *DataStore) func(func(store *DataStore) error) error) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
 
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs(lockName, expectedTimeout).
+		WithArgs(expectedLockName, expectedTimeout).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	dbMock.ExpectQuery("SELECT 1 AS id").
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(1)))
 	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+		WithArgs(expectedLockName).WillReturnResult(sqlmock.NewResult(-1, -1))
 
 	store := NewDataStoreWithTable(db, "tableName")
-	err := store.WithNamedLock(lockName, timeout, func(s *DataStore) error {
-		assert.Equal(t, store.tableName, s.tableName)
+	err := funcToTestGenerator(store)(func(s *DataStore) error {
+		assert.Equal(t, expectedTableName, s.tableName)
 		assert.NotEqual(t, store, s)
 		assert.Equal(t, store.db.DB(), s.db.DB())
 		var result []interface{}

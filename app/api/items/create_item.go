@@ -218,7 +218,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 			return err // rollback
 		}
 
-		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
+		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			if formData.IsSet("parent") && !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
 				return apiError.Error
