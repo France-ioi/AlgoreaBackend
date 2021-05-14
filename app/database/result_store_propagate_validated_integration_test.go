@@ -14,11 +14,11 @@ import (
 )
 
 type validatedResultRow struct {
-	ParticipantID          int64
-	AttemptID              int64
-	ItemID                 int64
-	Validated              bool
-	ResultPropagationState string
+	ParticipantID int64
+	AttemptID     int64
+	ItemID        int64
+	Validated     bool
+	State         string
 }
 
 func (r validatedResultRow) LessThan(other validatedResultRow) bool {
@@ -47,8 +47,7 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 	assert.NoError(t, err)
 
 	var result []validatedResultRow
-	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, validated, result_propagation_state").
-		Order("participant_id, attempt_id, item_id").Scan(&result).Error())
+	queryResultsAndStatesForTests(t, resultStore, &result, "validated")
 	assert.Equal(t, expectedResults, result)
 }
 
@@ -258,7 +257,7 @@ func buildExpectedValidatedResultRows(validatedMap map[string]bool) []validatedR
 		_, _ = fmt.Sscanf(id, "%d_%d_%d", &participantID, &attemptID, &itemID)
 		result = append(result, validatedResultRow{
 			ParticipantID: participantID, AttemptID: attemptID, ItemID: itemID,
-			Validated: validated, ResultPropagationState: "done",
+			Validated: validated, State: "done",
 		})
 		if participantID == 102 && attemptID == 1 && itemID == 2 {
 			addResultForAnotherUser = false
@@ -268,7 +267,7 @@ func buildExpectedValidatedResultRows(validatedMap map[string]bool) []validatedR
 	// another user
 	if addResultForAnotherUser {
 		result = append(result, validatedResultRow{
-			ParticipantID: 102, AttemptID: 1, ItemID: 2, Validated: false, ResultPropagationState: "done",
+			ParticipantID: 102, AttemptID: 1, ItemID: 2, Validated: false, State: "done",
 		})
 	}
 

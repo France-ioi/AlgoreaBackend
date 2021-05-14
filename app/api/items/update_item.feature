@@ -44,10 +44,10 @@ Background:
     | id | participant_id |
     | 0  | 11             |
   And the database has the following table 'results':
-    | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-    | 0          | 11             | 21      | 0              | done                     |
-    | 0          | 11             | 50      | 10             | done                     |
-    | 0          | 11             | 70      | 20             | done                     |
+    | attempt_id | participant_id | item_id | score_computed |
+    | 0          | 11             | 21      | 0              |
+    | 0          | 11             | 50      | 10             |
+    | 0          | 11             | 70      | 20             |
   And the database has the following table 'languages':
     | tag |
     | en  |
@@ -92,9 +92,9 @@ Background:
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
     And the database table 'results' has also the following rows:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 112     | 50             | done                     |
-      | 0          | 11             | 134     | 60             | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 112     | 50             |
+      | 0          | 11             | 134     | 60             |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -172,8 +172,9 @@ Background:
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged but the row with item_id "50"
     And the table "results" at item_id "50" should be:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 50      | 56.666668      | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 50      | 56.666668      |
+    And the table "results_propagate" should be empty
 
   Scenario: Valid (with skill items)
     Given I am the user with id "11"
@@ -193,9 +194,9 @@ Background:
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
     And the database table 'results' has also the following rows:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 112     | 50             | done                     |
-      | 0          | 11             | 134     | 60             | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 112     | 50             |
+      | 0          | 11             | 134     | 60             |
     When I send a PUT request to "/items/70" with the following body:
       """
       {
@@ -243,8 +244,9 @@ Background:
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged but the row with item_id "70"
     And the table "results" at item_id "70" should be:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 70      | 56.666668      | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 70      | 56.666668      |
+    And the table "results_propagate" should be empty
 
   Scenario: Should set content_view_propagation to 'none' by default if can_grant_view = 'none' for the parent item
     Given I am the user with id "11"
@@ -295,8 +297,9 @@ Background:
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged but the row with item_id "50"
     And the table "results" at item_id "50" should be:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 50      | 0              | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 50      | 0              |
+    And the table "results_propagate" should be empty
 
   Scenario: Valid without any fields
     Given I am the user with id "11"
@@ -335,8 +338,9 @@ Background:
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged but the row with item_id "50"
     And the table "results" at item_id "50" should be:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 50      | 0              | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 50      | 0              |
+    And the table "results_propagate" should be empty
 
   Scenario: Keep existing contest participants group
     Given I am the user with id "11"
@@ -391,8 +395,9 @@ Background:
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged but the row with item_id "50"
     And the table "results" at item_id "50" should be:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 50      | 0              | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 50      | 0              |
+    And the table "results_propagate" should be empty
 
   Scenario: Recomputes results if validation_type is given
     Given I am the user with id "11"
@@ -415,8 +420,9 @@ Background:
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged but the row with item_id "50"
     And the table "results" at item_id "50" should be:
-      | attempt_id | participant_id | item_id | score_computed | result_propagation_state |
-      | 0          | 11             | 50      | 0              | done                     |
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 50      | 0              |
+    And the table "results_propagate" should be empty
 
   Scenario Outline: Sets default values of items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly for each can_grant_view
     Given I am the user with id "11"

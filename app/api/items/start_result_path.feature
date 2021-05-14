@@ -50,12 +50,12 @@ Feature: Start results for an item path
       | 2  | 102            | 10           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | 9999-12-31 23:59:59      |
       | 3  | 102            | 10           | 2019-05-30 11:00:00 | null                | 2019-05-30 11:00:00      |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | result_propagation_state |
-      | 1          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 2          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 2          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 3          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 3          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
+      | 1          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 2          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 2          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 3          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 3          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
 
   Scenario Outline: User is able to start a result for his self group
     Given I am the user with id "111"
@@ -73,13 +73,14 @@ Feature: Start results for an item path
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id   | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 0          | 111            | <item_id> | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
-      | 1          | 102            | 10        | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 10        | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 60        | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 10        | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 60        | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
+      | attempt_id | participant_id | item_id   | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 0          | 111            | <item_id> | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 1          | 102            | 10        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 10        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 60        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 10        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 60        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+    And the table "results_propagate" should be empty
   Examples:
     | item_id |
     | 50      |
@@ -101,15 +102,16 @@ Feature: Start results for an item path
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 0          | 102            | 10      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | null                                              |
-      | 0          | 102            | 60      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
-      | 0          | 102            | 70      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
-      | 1          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 0          | 102            | 10      | 0              | 0           | 1                                                         | null                 | null              | null         | null                                              |
+      | 0          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 0          | 102            | 70      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+    And the table "results_propagate" should be empty
     When I send a POST request to "/items/60/70/start-result-path?as_team_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -124,21 +126,22 @@ Feature: Start results for an item path
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 0          | 102            | 10      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | null                                              |
-      | 0          | 102            | 60      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
-      | 0          | 102            | 70      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
-      | 1          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 0          | 102            | 10      | 0              | 0           | 1                                                         | null                 | null              | null         | null                                              |
+      | 0          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 0          | 102            | 70      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+    And the table "results_propagate" should be empty
 
   Scenario: Keeps the previous started_at value
     Given I am the user with id "101"
     And the database table 'results' has also the following rows:
-      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | result_propagation_state |
-      | 1          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
+      | 1          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
     When I send a POST request to "/items/10/60/start-result-path?as_team_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -153,13 +156,14 @@ Feature: Start results for an item path
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 1          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 1          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 1          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+    And the table "results_propagate" should be empty
 
   Scenario: Can create new results for all the path
     Given I am the user with id "101"
@@ -177,12 +181,13 @@ Feature: Start results for an item path
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 0          | 102            | 10      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | null                                              |
-      | 0          | 102            | 60      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
-      | 0          | 102            | 70      | 0              | 0           | done                     | 1                                                         | null                 | null              | null         | 1                                                 |
-      | 1          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 2          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 10      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
-      | 3          | 102            | 60      | 0              | 0           | done                     | 0                                                         | null                 | null              | null         | 0                                                 |
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 0          | 102            | 10      | 0              | 0           | 1                                                         | null                 | null              | null         | null                                              |
+      | 0          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 0          | 102            | 70      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+    And the table "results_propagate" should be empty

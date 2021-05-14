@@ -46,8 +46,8 @@ Feature: Accept group requests
       | id | participant_id |
       | 0  | 31             |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 31             | 30      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 31             | 30      |
 
   Scenario: Accept requests
     Given I am the user with id "21"

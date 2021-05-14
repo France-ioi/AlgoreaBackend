@@ -74,10 +74,10 @@ Feature: Delete an item - robustness
       | 22      | en           |
       | 22      | fr           |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 10             | 21      | done                     |
-      | 0          | 10             | 22      | done                     |
-      | 1          | 10             | 21      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 10             | 21      |
+      | 0          | 10             | 22      |
+      | 1          | 10             | 21      |
     And the database has the following table 'threads':
       | id | creator_id | type | item_id |
       | 1  | 10         | Help | 21      |

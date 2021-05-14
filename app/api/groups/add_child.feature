@@ -1,5 +1,4 @@
 Feature: Add a parent-child relation between two groups
-
   Background:
     Given the database has the following table 'groups':
       | id | name    | type  |
@@ -60,9 +59,10 @@ Feature: Add a parent-child relation between two groups
       | 21                | 21             | 1       |
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 11             | 20      | done                     |
-      | 0          | 11             | 30      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 11             | 20      |
+      | 0          | 11             | 30      |
+    And the table "results_propagate" should be empty
     When I send a POST request to "/groups/13/relations/14"
     Then the response code should be 201
     And the response body should be, in JSON:

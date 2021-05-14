@@ -32,3 +32,10 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 		Scan(&hintsInfo).Error())
 	return &hintsInfo, nil
 }
+
+// MarkAsToBePropagated marks a given result as 'to_be_propagated'
+func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int64) error {
+	return s.Exec(`
+		INSERT IGNORE INTO results_propagate (participant_id, attempt_id, item_id, state)
+		VALUES(?, ?, ?, 'to_be_propagated')`, participantID, attemptID, itemID).Error()
+}

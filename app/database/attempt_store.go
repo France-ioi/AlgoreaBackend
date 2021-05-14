@@ -25,7 +25,8 @@ func (s *AttemptStore) CreateNew(participantID, parentAttemptID, itemID, creator
 
 	mustNotBeError(s.Results().InsertMap(map[string]interface{}{
 		"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID,
-		"started_at": Now(), "latest_activity_at": Now(), "result_propagation_state": "to_be_propagated",
+		"started_at": Now(), "latest_activity_at": Now(),
 	}))
+	mustNotBeError(s.Results().MarkAsToBePropagated(participantID, attemptID, itemID))
 	return attemptID, nil
 }

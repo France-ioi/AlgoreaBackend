@@ -83,13 +83,13 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      | null                |
       | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      | null                |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          | result_propagation_state |
-      | 1          | 13             | 50      | 3018-05-29 06:38:38 | done                     |
-      | 1          | 13             | 70      | 3018-05-29 06:38:38 | done                     |
-      | 1          | 14             | 50      | 3019-05-29 06:38:38 | done                     |
-      | 1          | 15             | 70      | 2018-10-31 23:59:59 | done                     |
-      | 1          | 16             | 70      | 3019-10-31 23:59:59 | done                     |
-      | 1          | 31             | 70      | 3017-05-29 06:38:38 | done                     |
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 13             | 50      | 3018-05-29 06:38:38 |
+      | 1          | 13             | 70      | 3018-05-29 06:38:38 |
+      | 1          | 14             | 50      | 3019-05-29 06:38:38 |
+      | 1          | 15             | 70      | 2018-10-31 23:59:59 |
+      | 1          | 16             | 70      | 3019-10-31 23:59:59 |
+      | 1          | 31             | 70      | 3017-05-29 06:38:38 |
 
   Scenario: Updates an existing row
     Given I am the user with id "21"

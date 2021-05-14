@@ -1514,4 +1514,30 @@ func Test_EscapeLikeString(t *testing.T) {
 	}
 }
 
+func TestDB_InsertIgnoreMaps_WithEmptyArray(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	var dataRows []map[string]interface{}
+	assert.NoError(t, db.InsertIgnoreMaps("myTable", dataRows))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_InsertIgnoreMaps(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRows := []map[string]interface{}{
+		{"a": int64(1), "b": "value"},
+		{"c": int64(2), "d": "another value"},
+	}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT IGNORE INTO `myTable` (`a`, `b`) VALUES (?, ?), (?, ?)")).
+		WithArgs(int64(1), "value", nil, nil).
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, db.InsertIgnoreMaps("myTable", dataRows))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func ptrString(s string) *string { return &s }

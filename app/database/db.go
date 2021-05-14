@@ -468,11 +468,22 @@ func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) 
 	if len(dataMaps) == 0 {
 		return nil
 	}
-	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, false)
 	return conn.db.Exec(query, values...).Error
 }
 
-func (conn *DB) constructInsertMapsStatement(dataMaps []map[string]interface{}, tableName string) (query string, values []interface{}) {
+// InsertIgnoreMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
+// into the given table ignoring errors (such as duplicates)
+func (conn *DB) InsertIgnoreMaps(tableName string, dataMaps []map[string]interface{}) error {
+	if len(dataMaps) == 0 {
+		return nil
+	}
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, true)
+	return conn.db.Exec(query, values...).Error
+}
+
+func (conn *DB) constructInsertMapsStatement(
+	dataMaps []map[string]interface{}, tableName string, ignore bool) (query string, values []interface{}) {
 	// data for the building the SQL request
 	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...), ...", values...
 	values = make([]interface{}, 0, len(dataMaps)*len(dataMaps[0]))
@@ -486,8 +497,12 @@ func (conn *DB) constructInsertMapsStatement(dataMaps []map[string]interface{}, 
 		escapedKeys = append(escapedKeys, QuoteName(key))
 	}
 	var builder strings.Builder
+	var ignoreString string
+	if ignore {
+		ignoreString = "IGNORE "
+	}
 	// nolint:gosec
-	_, _ = builder.WriteString(fmt.Sprintf("INSERT INTO `%s` (%s) VALUES ", tableName, strings.Join(escapedKeys, ", ")))
+	_, _ = builder.WriteString(fmt.Sprintf("INSERT %sINTO `%s` (%s) VALUES ", ignoreString, tableName, strings.Join(escapedKeys, ", ")))
 	for index, dataMap := range dataMaps {
 		_, _ = builder.WriteRune('(')
 		for keyIndex, key := range keys {
@@ -513,7 +528,7 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 	if len(dataMaps) == 0 {
 		return nil
 	}
-	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, false)
 
 	var builder strings.Builder
 	_, _ = builder.WriteString(query)

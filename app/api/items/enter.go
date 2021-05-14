@@ -130,7 +130,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 
 		service.MustNotBeError(store.Results().InsertMap(map[string]interface{}{
 			"attempt_id": attemptID, "participant_id": entryState.groupID,
-			"item_id": entryState.itemID, "started_at": itemInfo.Now, "result_propagation_state": "done",
+			"item_id": entryState.itemID, "started_at": itemInfo.Now,
 		}))
 
 		if itemInfo.ParticipantsGroupID != nil {
