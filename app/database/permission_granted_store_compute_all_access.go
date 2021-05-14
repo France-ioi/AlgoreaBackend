@@ -34,14 +34,14 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 		JOIN permissions_generated AS parents
 			ON parents.item_id = items_items.parent_item_id
 		JOIN permissions_propagate AS parents_propagate
-			ON parents_propagate.group_id = parents.group_id AND parents_propagate.item_id = parents.item_id AND
-				 parents_propagate.propagate_to = 'children'
+			ON parents_propagate.group_id = parents.group_id AND parents_propagate.item_id = parents.item_id
+		WHERE parents_propagate.propagate_to = 'children'
 		ON DUPLICATE KEY UPDATE propagate_to='self'`
 	stmtMarkChildrenOfChildrenAsSelf, err = s.db.CommonDB().Prepare(queryMarkChildrenOfChildrenAsSelf)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkChildrenOfChildrenAsSelf.Close()) }()
 
-	// deleting 'children' groups_items_propagate
+	// deleting 'children' permissions_propagate
 	const queryDeleteProcessedChildren = `DELETE FROM permissions_propagate WHERE propagate_to = 'children'`
 	stmtDeleteProcessedChildren, err = s.db.CommonDB().Prepare(queryDeleteProcessedChildren)
 	mustNotBeError(err)
