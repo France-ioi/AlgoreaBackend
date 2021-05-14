@@ -4,6 +4,7 @@ server:
   rootpath: "/"
   port: 8080
   compress: false
+  domainOverride: ""
 auth:
   loginModuleURL: ""
   clientID: ""
