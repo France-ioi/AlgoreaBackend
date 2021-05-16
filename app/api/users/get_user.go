@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // UserViewResponsePersonalInfo contains first_name and last_name
@@ -16,6 +17,17 @@ type UserViewResponsePersonalInfo struct {
 	FirstName *string `json:"first_name"`
 	// Nullable
 	LastName *string `json:"last_name"`
+}
+
+// ManagerPermissionsPart contains fields related to permissions for managing the user.
+// These fields are only displayed if the current user is a manager of the user.
+// swagger:ignore
+type ManagerPermissionsPart struct {
+	CurrentUserIsManager bool `json:"-"`
+	// returned only if the current user is a manager
+	CurrentUserCanGrantUserAccess bool `json:"current_user_can_grant_user_access"`
+	// returned only if the current user is a manager
+	CurrentUserCanWatchUser bool `json:"current_user_can_watch_user"`
 }
 
 // swagger:model
@@ -34,8 +46,16 @@ type userViewResponse struct {
 	WebSite *string `json:"web_site"`
 
 	*UserViewResponsePersonalInfo
-
 	ShowPersonalInfo bool `json:"-"`
+
+	// list of ancestor (excluding the user himself) groups that the current user (or his ancestor groups) is manager of
+	// required:true
+	AncestorsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"ancestors_current_user_is_manager_of"`
+
+	*ManagerPermissionsPart
+
+	// required: true
+	IsCurrentUser bool `json:"is_current_user"`
 }
 
 // swagger:operation GET /users/{user_id} users userView
@@ -44,7 +64,7 @@ type userViewResponse struct {
 // description: Returns data from the `users` table for the given `{user_id}`
 //              (`first_name` and `last_name` are only shown for the authenticated user or
 //               if the user approved access to their personal info for some group
-//               managed by the authenticated user).
+//               managed by the authenticated user) along with some permissions if the current user is a manager.
 // parameters:
 // - name: user_id
 //   in: path
@@ -78,9 +98,23 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 			group_id, temp_user, login, free_text, web_site,
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name`,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name,
+			manager_access.found AS current_user_is_manager,
+			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_user_access,
+			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_user`,
 			user.GroupID, user.GroupID, user.GroupID).
 		WithPersonalInfoViewApprovals(user).
+		Joins(`
+			LEFT JOIN ? AS manager_access ON child_group_id = users.group_id`,
+			srv.Store.GroupAncestors().ManagedByUser(user).
+				Select(`
+					1 AS found,
+					MAX(can_manage_value) AS can_manage_value,
+					MAX(can_grant_group_access) AS can_grant_group_access,
+					MAX(can_watch_members) AS can_watch_members,
+					groups_ancestors.child_group_id`).
+				Where("groups_ancestors.child_group_id = ?", userID).
+				Group("groups_ancestors.child_group_id").SubQuery()).
 		Scan(&userInfo).Error()
 
 	if err == gorm.ErrRecordNotFound {
@@ -91,6 +125,24 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	if !userInfo.ShowPersonalInfo {
 		userInfo.UserViewResponsePersonalInfo = nil
 	}
+
+	if userInfo.CurrentUserIsManager {
+		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
+			Joins(`
+				JOIN groups_ancestors_active AS groups_ancestors
+					ON groups_ancestors.ancestor_group_id = groups.id AND
+						 NOT groups_ancestors.is_self AND
+						 groups_ancestors.child_group_id = ?`, userID).
+			Group("groups.id").
+			Order("groups.name").
+			Select("groups.id, groups.name").
+			Scan(&userInfo.AncestorsCurrentUserIsManagerOf).Error())
+	} else {
+		userInfo.ManagerPermissionsPart = nil
+		userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
+	}
+
+	userInfo.IsCurrentUser = userID == user.GroupID
 
 	render.Respond(w, r, &userInfo)
 	return service.NoError
