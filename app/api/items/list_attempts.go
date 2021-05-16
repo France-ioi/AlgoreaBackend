@@ -8,6 +8,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:model attemptsListResponseRow
@@ -33,12 +34,10 @@ type attemptsListResponseRow struct {
 	UserCreator      *struct {
 		// required: true
 		Login string `json:"login"`
-		// Nullable
-		// required: true
-		FirstName *string `json:"first_name"`
-		// Nullable
-		// required: true
-		LastName *string `json:"last_name"`
+
+		*structures.UserPersonalInfo
+		ShowPersonalInfo bool `json:"-"`
+
 		// required: true
 		GroupID *int64 `json:"group_id,string"`
 	} `json:"user_creator" gorm:"embedded;embedded_prefix:user_creator__"`
@@ -131,9 +130,10 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 			attempts.id, attempts.created_at, attempts.allows_submissions_until,
 			results.score_computed, results.validated, attempts.ended_at,
 			results.started_at, results.latest_activity_at, users.login AS user_creator__login,
+			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
-			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID)
+			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError = service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
 		"id": {ColumnName: "results.attempt_id", FieldType: "int64"},
@@ -147,6 +147,8 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 	for index := range result {
 		if result[index].UserCreator.GroupID == nil {
 			result[index].UserCreator = nil
+		} else if !result[index].UserCreator.ShowPersonalInfo {
+			result[index].UserCreator.UserPersonalInfo = nil
 		}
 	}
 

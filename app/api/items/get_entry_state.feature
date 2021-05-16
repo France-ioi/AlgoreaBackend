@@ -862,9 +862,7 @@ Feature: Get entry state (itemGetEntryState)
         {
           "can_enter": false,
           "attempts_restriction_violated": false,
-          "first_name": null,
           "group_id": "61",
-          "last_name": null,
           "login": "mark"
         }
       ],

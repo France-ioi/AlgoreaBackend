@@ -80,8 +80,6 @@ Feature: List attempts for current user and item_id
         "latest_activity_at": "2018-05-29T06:38:39Z",
         "user_creator": {
           "group_id": "21",
-          "first_name": null,
-          "last_name": null,
           "login": "other"
         },
         "validated": true
@@ -127,8 +125,6 @@ Feature: List attempts for current user and item_id
         "latest_activity_at": "2018-05-29T06:38:39Z",
         "user_creator": {
           "group_id": "21",
-          "first_name": null,
-          "last_name": null,
           "login": "other"
         },
         "validated": true
@@ -185,8 +181,6 @@ Feature: List attempts for current user and item_id
         "latest_activity_at": "2019-05-29T06:38:39Z",
         "user_creator": {
           "group_id": "11",
-          "first_name": null,
-          "last_name": null,
           "login": "jdoe"
         },
         "validated": true
@@ -227,8 +221,6 @@ Feature: List attempts for current user and item_id
         "latest_activity_at": "2018-05-29T06:38:39Z",
         "user_creator": {
           "group_id": "21",
-          "first_name": null,
-          "last_name": null,
           "login": "other"
         },
         "validated": true

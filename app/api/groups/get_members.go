@@ -7,6 +7,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:model groupsMembersViewResponseRow
@@ -29,12 +30,10 @@ type groupsMembersViewResponseRow struct {
 		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
-		// required: true
-		FirstName *string `json:"first_name"`
-		// Nullable
-		// required: true
-		LastName *string `json:"last_name"`
+
+		*structures.UserPersonalInfo
+		ShowPersonalInfo bool `json:"-"`
+
 		// Nullable
 		// required: true
 		Grade *int32 `json:"grade"`
@@ -126,9 +125,10 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			latest_change.action,
 			users.group_id AS user__group_id,
 			users.login AS user__login,
+			users.group_id = ? OR personal_info_view_approvals.approved AS user__show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
-			users.grade AS user__grade`, user.GroupID, user.GroupID).
+			users.grade AS user__grade`, user.GroupID, user.GroupID, user.GroupID).
 		Joins("LEFT JOIN users ON users.group_id = groups_groups.child_group_id").
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
@@ -160,6 +160,8 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 	for index := range result {
 		if result[index].User.GroupID == nil {
 			result[index].User = nil
+		} else if !result[index].User.ShowPersonalInfo {
+			result[index].User.UserPersonalInfo = nil
 		}
 	}
 

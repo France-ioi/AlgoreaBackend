@@ -489,10 +489,8 @@ Feature: Get pending requests for managed groups
           "name": "Friends"
         },
         "user": {
-          "first_name": null,
           "grade": 3,
           "group_id": "21",
-          "last_name": null,
           "login": "owner"
         },
         "at": "2017-05-27T06:38:38Z",
@@ -514,10 +512,8 @@ Feature: Get pending requests for managed groups
           "name": "Class"
         },
         "user": {
-          "first_name": null,
           "grade": 1,
           "group_id": "11",
-          "last_name": null,
           "login": "user"
         },
         "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}",
@@ -569,10 +565,8 @@ Feature: Get pending requests for managed groups
           "name": "Class"
         },
         "user": {
-          "first_name": null,
           "grade": 1,
           "group_id": "11",
-          "last_name": null,
           "login": "user"
         },
         "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}",

@@ -141,9 +141,7 @@ Background:
         "created_at": "2017-05-29T06:39:38Z",
         "type": "Submission",
         "user": {
-          "login": "jane",
-          "first_name": null,
-          "last_name": null
+          "login": "jane"
         }
       }
     ]

@@ -95,9 +95,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
             "group_id": 65
           },
           {
-            "first_name": null,
             "grade": -2,
-            "last_name": null,
             "login": "janed",
             "group_id": 67
           }
@@ -115,23 +113,17 @@ Feature: List team descendants of the group (groupTeamDescendantView)
         "id": "14",
         "members": [
           {
-            "first_name": null,
             "grade": 1,
-            "last_name": null,
             "login": "johna",
             "group_id": 51
           },
           {
-            "first_name": null,
             "grade": 2,
-            "last_name": null,
             "login": "johnb",
             "group_id": 53
           },
           {
-            "first_name": null,
             "grade": 3,
-            "last_name": null,
             "login": "johnc",
             "group_id": 55
           }
@@ -173,9 +165,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
             "group_id": 65
           },
           {
-            "first_name": null,
             "grade": -2,
-            "last_name": null,
             "login": "janed",
             "group_id": 67
           }
@@ -203,23 +193,17 @@ Feature: List team descendants of the group (groupTeamDescendantView)
         "id": "14",
         "members": [
           {
-            "first_name": null,
             "grade": 1,
-            "last_name": null,
             "login": "johna",
             "group_id": 51
           },
           {
-            "first_name": null,
             "grade": 2,
-            "last_name": null,
             "login": "johnb",
             "group_id": 53
           },
           {
-            "first_name": null,
             "grade": 3,
-            "last_name": null,
             "login": "johnc",
             "group_id": 55
           }

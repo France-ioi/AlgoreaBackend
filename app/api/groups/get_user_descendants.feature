@@ -69,7 +69,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "57",
         "name": "jackd",
         "parents": [{"id": "18", "name": "Our Club"}],
-        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "jackd"}
+        "user": {"grade": 3, "login": "jackd"}
       },
       {
         "id": "51",
@@ -87,7 +87,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "55",
         "name": "johnc",
         "parents": [{"id": "16", "name": "First Team"}],
-        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "johnc"}
+        "user": {"grade": 3, "login": "johnc"}
       },
       {
         "id": "21",
@@ -106,7 +106,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "57",
         "name": "jackd",
         "parents": [{"id": "18", "name": "Our Club"}],
-        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "jackd"}
+        "user": {"grade": 3, "login": "jackd"}
       }
     ]
     """
@@ -125,7 +125,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "55",
         "name": "johnc",
         "parents": [{"id": "16", "name": "First Team"}],
-        "user": {"first_name": null, "grade": 3, "last_name": null, "login": "johnc"}
+        "user": {"grade": 3, "login": "johnc"}
       },
       {
         "id": "21",
@@ -205,7 +205,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "id": "51",
         "name": "johna",
         "parents": [{"id": "11", "name": "Our Class"}, {"id": "14", "name": "Super Team"}],
-        "user": {"first_name": null, "grade": 1, "last_name": null, "login": "johna"}
+        "user": {"grade": 1, "login": "johna"}
       }
     ]
     """
