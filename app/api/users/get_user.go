@@ -8,15 +8,8 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
-
-// UserViewResponsePersonalInfo contains first_name and last_name
-type UserViewResponsePersonalInfo struct {
-	// Nullable
-	FirstName *string `json:"first_name"`
-	// Nullable
-	LastName *string `json:"last_name"`
-}
 
 // swagger:model
 type userViewResponse struct {
@@ -33,8 +26,7 @@ type userViewResponse struct {
 	// required: true
 	WebSite *string `json:"web_site"`
 
-	*UserViewResponsePersonalInfo
-
+	*structures.UserPersonalInfo
 	ShowPersonalInfo bool `json:"-"`
 }
 
@@ -89,7 +81,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	service.MustNotBeError(err)
 
 	if !userInfo.ShowPersonalInfo {
-		userInfo.UserViewResponsePersonalInfo = nil
+		userInfo.UserPersonalInfo = nil
 	}
 
 	render.Respond(w, r, &userInfo)

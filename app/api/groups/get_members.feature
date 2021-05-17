@@ -84,9 +84,7 @@ Feature: Get members of group_id
       {
         "id": "91",
         "user": {
-          "first_name": null,
           "group_id": "91",
-          "last_name": null,
           "login": "lp",
           "grade": 6
         },
@@ -106,9 +104,7 @@ Feature: Get members of group_id
       {
         "id": "51",
         "user": {
-          "first_name": null,
           "group_id": "51",
-          "last_name": null,
           "login": "billg",
           "grade": 5
         },
@@ -164,9 +160,7 @@ Feature: Get members of group_id
       {
         "id": "91",
         "user": {
-          "first_name": null,
           "group_id": "91",
-          "last_name": null,
           "login": "lp",
           "grade": 6
         },
@@ -210,9 +204,7 @@ Feature: Get members of group_id
       {
         "id": "91",
         "user": {
-          "first_name": null,
           "group_id": "91",
-          "last_name": null,
           "login": "lp",
           "grade": 6
         },

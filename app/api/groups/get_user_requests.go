@@ -9,6 +9,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:model groupUserRequestsViewResponseRow
@@ -35,14 +36,10 @@ type groupUserRequestsViewResponseRow struct {
 		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
-		// required: true
-		FirstName *string `json:"first_name"`
-		// Nullable
-		// required: true
-		LastName *string `json:"last_name"`
-		// Nullable
-		// required: true
+
+		*structures.UserPersonalInfo
+		ShowPersonalInfo bool `json:"-"`
+
 		Grade *int32 `json:"grade"`
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
 }
@@ -60,7 +57,7 @@ type groupUserRequestsViewResponseRow struct {
 //   (`can_manage` >= 'memberships') (if `{group_id}` is not given).
 //
 //
-//   `first_name` and `last_name` are nulls for users whose personal info is not visible to the current user.
+//   `first_name` and `last_name` are only shown for users whose personal info is visible to the current user.
 //   A user can see personal info of his own and of those members/candidates of his managed groups
 //   who have provided view access to their personal data.
 //
@@ -155,6 +152,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 			group.name AS group__name,
 			user.group_id AS user__group_id,
 			user.login AS user__login,
+			users_with_approval.group_id IS NOT NULL AS user__show_personal_info,
 			IF(users_with_approval.group_id IS NOT NULL, user.first_name, NULL) AS user__first_name,
 			IF(users_with_approval.group_id IS NOT NULL, user.last_name, NULL) AS user__last_name,
 			user.grade AS user__grade`).
@@ -195,6 +193,12 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 	query = attachUsersWithApproval(query, user)
 	var result []groupUserRequestsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
+
+	for index := range result {
+		if !result[index].User.ShowPersonalInfo {
+			result[index].User.UserPersonalInfo = nil
+		}
+	}
 
 	render.Respond(w, r, result)
 	return service.NoError

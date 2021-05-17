@@ -7,6 +7,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:model groupRequestsViewResponseRow
@@ -29,12 +30,10 @@ type groupRequestsViewResponseRow struct {
 		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
-		// required: true
-		FirstName *string `json:"first_name"`
-		// Nullable
-		// required: true
-		LastName *string `json:"last_name"`
+
+		*structures.UserPersonalInfo
+		ShowPersonalInfo bool `json:"-"`
+
 		// Nullable
 		// required: true
 		Grade *int32 `json:"grade"`
@@ -74,7 +73,7 @@ type groupRequestsViewResponseRow struct {
 //   Otherwise all rejected invitations/requests are shown.
 //
 //
-//   `first_name` and `last_name` are nulls for joining users whose personal info is not visible to the current user.
+//   `first_name` and `last_name` are only shown for joining users whose personal info is visible to the current user.
 //   A user can see personal info of his own and of those members/candidates of his managed groups
 //   who have provided view access to their personal data.
 //
@@ -163,6 +162,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			action,
 			joining_user.group_id AS joining_user__group_id,
 			joining_user.login AS joining_user__login,
+			joining_user_with_approval.group_id IS NOT NULL AS joining_user__show_personal_info,
 			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.first_name) AS joining_user__first_name,
 			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.last_name) AS joining_user__last_name,
 			joining_user.grade AS joining_user__grade,
@@ -219,6 +219,9 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	for index := range result {
 		if result[index].InvitingUser.GroupID == nil {
 			result[index].InvitingUser = nil
+		}
+		if !result[index].JoiningUser.ShowPersonalInfo {
+			result[index].JoiningUser.UserPersonalInfo = nil
 		}
 	}
 

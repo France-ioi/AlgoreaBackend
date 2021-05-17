@@ -68,3 +68,11 @@ type ItemResult struct {
 	// attempts.allows_submissions_until
 	AttemptAllowsSubmissionsUntil time.Time `json:"attempt_allows_submissions_until"`
 }
+
+// UserPersonalInfo contains first_name and last_name
+type UserPersonalInfo struct {
+	// Nullable
+	FirstName *string `json:"first_name"`
+	// Nullable
+	LastName *string `json:"last_name"`
+}

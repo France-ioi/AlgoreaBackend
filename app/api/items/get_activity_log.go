@@ -9,6 +9,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:model itemActivityLogResponseRow
@@ -41,12 +42,9 @@ type itemActivityLogResponseRow struct {
 		ID *int64 `json:"id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
-		// required: true
-		FirstName *string `json:"first_name"`
-		// Nullable
-		// required: true
-		LastName *string `json:"last_name"`
+
+		*structures.UserPersonalInfo
+		ShowPersonalInfo bool `json:"-"`
 	} `json:"user,omitempty" gorm:"embedded;embedded_prefix:user__"`
 	// required: true
 	Item struct {
@@ -290,6 +288,8 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		fromAnswerID = result[index].FromAnswerID
 		if result[index].User.ID == nil {
 			result[index].User = nil
+		} else if !result[index].User.ShowPersonalInfo {
+			result[index].User.UserPersonalInfo = nil
 		}
 	}
 
@@ -446,10 +446,11 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 			groups.type AS participant__type,
 			users.login AS user__login,
 			users.group_id AS user__id,
+			users.group_id = ? OR personal_info_view_approvals.approved AS user__show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
-		FROM ? AS activities`, visibleItemDescendants.SubQuery(), participantsQuery.SubQuery(), user.GroupID, user.GroupID,
+		FROM ? AS activities`, visibleItemDescendants.SubQuery(), participantsQuery.SubQuery(), user.GroupID, user.GroupID, user.GroupID,
 		unionQuery.SubQuery()).
 		Joins("JOIN items ON items.id = item_id").
 		Joins("JOIN `groups` ON groups.id = participant_id").
