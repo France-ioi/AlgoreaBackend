@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:operation GET /groups/{group_id}/team-descendants group-memberships groupTeamDescendantView
@@ -125,10 +126,11 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		Select(`
 			member_links.parent_group_id AS linked_group_id,
 			users.group_id,
+			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name,
 			users.login, users.grade`,
-			user.GroupID, user.GroupID).
+			user.GroupID, user.GroupID, user.GroupID).
 		Joins(`
 			JOIN groups_groups_active AS member_links ON
 				member_links.child_group_id = users.group_id AND
@@ -138,6 +140,9 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		Scan(&membersResult).Error())
 
 	for _, membersRow := range membersResult {
+		if !membersRow.ShowPersonalInfo {
+			membersRow.UserPersonalInfo = nil
+		}
 		resultMap[membersRow.LinkedGroupID].Members = append(resultMap[membersRow.LinkedGroupID].Members, membersRow)
 	}
 
@@ -148,12 +153,10 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 type teamDescendantMember struct {
 	// required:true
 	GroupID int64 `json:"group_id"`
-	// Nullable
-	// required:true
-	FirstName *string `json:"first_name"`
-	// Nullable
-	// required:true
-	LastName *string `json:"last_name"`
+
+	*structures.UserPersonalInfo
+	ShowPersonalInfo bool `json:"-"`
+
 	// required:true
 	Login string `json:"login"`
 	// Nullable

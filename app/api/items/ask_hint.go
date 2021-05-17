@@ -129,19 +129,22 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		hintsGivenCountString := strconv.Itoa(len(hintsRequestedParsed))
 		requestData.TaskToken.HintsGivenCount = &hintsGivenCountString
 
+		resultStore := store.Results()
 		// Update results with the hint request
-		service.MustNotBeError(store.Results().
+		service.MustNotBeError(resultStore.
 			Where("participant_id = ?", requestData.TaskToken.Converted.ParticipantID).
 			Where("attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
 			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID).
 			UpdateColumn(map[string]interface{}{
-				"tasks_with_help":          1,
-				"result_propagation_state": "to_be_propagated",
-				"latest_activity_at":       database.Now(),
-				"latest_hint_at":           database.Now(),
-				"hints_requested":          hintsRequestedNew,
-				"hints_cached":             len(hintsRequestedParsed),
+				"tasks_with_help":    1,
+				"latest_activity_at": database.Now(),
+				"latest_hint_at":     database.Now(),
+				"hints_requested":    hintsRequestedNew,
+				"hints_cached":       len(hintsRequestedParsed),
 			}).Error())
+		service.MustNotBeError(resultStore.MarkAsToBePropagated(
+			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+			requestData.TaskToken.Converted.LocalItemID))
 
 		service.MustNotBeError(store.Results().Propagate())
 

@@ -11,14 +11,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
-// UserViewResponsePersonalInfo contains first_name and last_name
-type UserViewResponsePersonalInfo struct {
-	// Nullable
-	FirstName *string `json:"first_name"`
-	// Nullable
-	LastName *string `json:"last_name"`
-}
-
 // ManagerPermissionsPart contains fields related to permissions for managing the user.
 // These fields are only displayed if the current user is a manager of the user.
 // swagger:ignore
@@ -45,7 +37,7 @@ type userViewResponse struct {
 	// required: true
 	WebSite *string `json:"web_site"`
 
-	*UserViewResponsePersonalInfo
+	*structures.UserPersonalInfo
 	ShowPersonalInfo bool `json:"-"`
 
 	// list of ancestor (excluding the user himself) groups that the current user (or his ancestor groups) is manager of
@@ -123,7 +115,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	service.MustNotBeError(err)
 
 	if !userInfo.ShowPersonalInfo {
-		userInfo.UserViewResponsePersonalInfo = nil
+		userInfo.UserPersonalInfo = nil
 	}
 
 	if userInfo.CurrentUserIsManager {

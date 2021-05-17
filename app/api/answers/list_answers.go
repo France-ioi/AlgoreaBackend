@@ -8,6 +8,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:operation GET /items/{item_id}/answers answers answersList
@@ -101,9 +102,10 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 		Select(`
 			answers.id, answers.type, answers.created_at, gradings.score,
 			users.login,
+			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name`,
-			user.GroupID, user.GroupID).
+			user.GroupID, user.GroupID, user.GroupID).
 		Where("answers.item_id = ?", itemID).
 		WithPersonalInfoViewApprovals(user)
 
@@ -148,24 +150,20 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 
 // swagger:ignore
 type rawAnswersData struct {
-	ID            int64
-	Type          string
-	CreatedAt     database.Time
-	Score         *float32
-	UserLogin     string  `sql:"column:login"`
-	UserFirstName *string `sql:"column:first_name"`
-	UserLastName  *string `sql:"column:last_name"`
+	ID               int64
+	Type             string
+	CreatedAt        database.Time
+	Score            *float32
+	UserLogin        string  `sql:"column:login"`
+	UserFirstName    *string `sql:"column:first_name"`
+	UserLastName     *string `sql:"column:last_name"`
+	ShowPersonalInfo bool
 }
 
 type answersResponseAnswerUser struct {
 	// required: true
 	Login string `json:"login"`
-	// Nullable
-	// required: true
-	FirstName *string `json:"first_name"`
-	// Nullable
-	// required: true
-	LastName *string `json:"last_name"`
+	*structures.UserPersonalInfo
 }
 
 // swagger:model
@@ -189,17 +187,22 @@ type answersResponseAnswer struct {
 func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response *[]answersResponseAnswer) {
 	responseData := make([]answersResponseAnswer, 0, len(rawData))
 	for _, row := range rawData {
-		responseData = append(responseData, answersResponseAnswer{
+		responseDataRow := answersResponseAnswer{
 			ID:        row.ID,
 			Type:      row.Type,
 			CreatedAt: row.CreatedAt,
 			Score:     row.Score,
 			User: answersResponseAnswerUser{
-				Login:     row.UserLogin,
+				Login: row.UserLogin,
+			},
+		}
+		if row.ShowPersonalInfo {
+			responseDataRow.User.UserPersonalInfo = &structures.UserPersonalInfo{
 				FirstName: row.UserFirstName,
 				LastName:  row.UserLastName,
-			},
-		})
+			}
+		}
+		responseData = append(responseData, responseDataRow)
 	}
 	return &responseData
 }

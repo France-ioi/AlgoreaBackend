@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // swagger:operation GET /groups/{group_id}/user-descendants group-memberships groupUserDescendantView
@@ -77,9 +78,10 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 	query := srv.Store.Groups().
 		Select(`
 			groups.id, groups.name,
+			users.group_id = ? OR MAX(personal_info_view_approvals.approved) AS show_personal_info,
 			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.first_name, NULL) AS first_name,
 			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name,
-			users.login, users.grade`, user.GroupID, user.GroupID).
+			users.login, users.grade`, user.GroupID, user.GroupID, user.GroupID).
 		Joins("JOIN groups_groups_active ON groups_groups_active.child_group_id = groups.id").
 		Joins(`
 			JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id AND
@@ -104,6 +106,9 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 	resultMap := make(map[int64]*userDescendant, len(result))
 	for index, groupRow := range result {
 		groupIDs = append(groupIDs, groupRow.ID)
+		if !result[index].User.ShowPersonalInfo {
+			result[index].User.UserPersonalInfo = nil
+		}
 		resultMap[groupRow.ID] = &result[index]
 	}
 
@@ -128,12 +133,9 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 }
 
 type userDescendantUser struct {
-	// Nullable
-	// required:true
-	FirstName *string `json:"first_name"`
-	// Nullable
-	// required:true
-	LastName *string `json:"last_name"`
+	*structures.UserPersonalInfo
+	ShowPersonalInfo bool `json:"-"`
+
 	// required:true
 	Login string `json:"login"`
 	// Nullable

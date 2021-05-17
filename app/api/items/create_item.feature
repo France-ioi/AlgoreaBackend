@@ -21,8 +21,8 @@ Feature: Create item
       | id | participant_id |
       | 0  | 11             |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 11             | 21      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 11             | 21      |
     And the database has the following table 'languages':
       | tag |
       | sl  |
@@ -206,8 +206,8 @@ Feature: Create item
       | 11       | 12      | content_with_descendants | solution            | answer            | all            | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 34      | solution                 | solution_with_grant | answer_with_grant | all_with_grant | 0        | 11              | 2019-05-30 11:00:00 |
     And the database table 'results' has also the following rows:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 11             | 12      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 11             | 12      |
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -309,9 +309,10 @@ Feature: Create item
       | 8674665223082153551 | 5577006791947779410 | content            | none                                              | none                | none               | 0                  |
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id             | result_propagation_state |
-      | 0          | 11             | 12                  | done                     |
-      | 0          | 11             | 21                  | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 11             | 12      |
+      | 0          | 11             | 21      |
+    And the table "results_propagate" should be empty
   Examples:
     | grant_view_propagation | watch_propagation | edit_propagation |
     | true                   | false             | true             |

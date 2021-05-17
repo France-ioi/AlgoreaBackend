@@ -250,8 +250,10 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 		})
 	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
 		// results data of the task will be zeroed
-		service.MustNotBeError(store.Results().Where("item_id = ?", itemID).
-			UpdateColumn("result_propagation_state", "to_be_recomputed").Error())
+		service.MustNotBeError(
+			store.Exec("INSERT INTO results_propagate ? ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'",
+				store.Results().Where("item_id = ?", itemID).
+					Select("participant_id, attempt_id, item_id, 'to_be_recomputed' AS state").QueryExpr()).Error())
 		service.MustNotBeError(store.Results().Propagate())
 	}
 	return apiError, err

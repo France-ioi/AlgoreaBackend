@@ -30,8 +30,8 @@ Feature: User sends a request to join a group
       | id | participant_id |
       | 0  | 21             |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 21             | 30      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 21             | 30      |
 
   Scenario: Successfully send a request
     Given I am the user with id "21"
@@ -105,6 +105,7 @@ Feature: User sends a request to join a group
       | 21                | 21             | 1       |
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 21             | 20      | done                     |
-      | 0          | 21             | 30      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 21             | 20      |
+      | 0          | 21             | 30      |
+    And the table "results_propagate" should be empty

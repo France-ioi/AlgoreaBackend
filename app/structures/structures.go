@@ -77,3 +77,11 @@ type GroupShortInfo struct {
 	// required:true
 	Name string `json:"name"`
 }
+
+// UserPersonalInfo contains first_name and last_name
+type UserPersonalInfo struct {
+	// Nullable
+	FirstName *string `json:"first_name"`
+	// Nullable
+	LastName *string `json:"last_name"`
+}

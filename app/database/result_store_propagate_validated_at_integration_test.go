@@ -13,23 +13,23 @@ import (
 )
 
 type validationDateResultRow struct {
-	ParticipantID          int64
-	AttemptID              int64
-	ItemID                 int64
-	ValidatedAt            *database.Time
-	ResultPropagationState string
+	ParticipantID int64
+	AttemptID     int64
+	ItemID        int64
+	ValidatedAt   *database.Time
+	State         string
 }
 
 func constructExpectedResultsForValidatedAtTests(t11, t12, t13, t14, t23, t24 *time.Time) []validationDateResultRow {
 	return []validationDateResultRow{
-		{ParticipantID: 101, AttemptID: 1, ItemID: 1, ValidatedAt: (*database.Time)(t11), ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 1, ItemID: 2, ValidatedAt: (*database.Time)(t12), ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 1, ItemID: 3, ValidatedAt: (*database.Time)(t13), ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 1, ItemID: 4, ValidatedAt: (*database.Time)(t14), ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 2, ItemID: 3, ValidatedAt: (*database.Time)(t23), ResultPropagationState: "done"},
-		{ParticipantID: 101, AttemptID: 2, ItemID: 4, ValidatedAt: (*database.Time)(t24), ResultPropagationState: "done"},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 1, ValidatedAt: (*database.Time)(t11), State: "done"},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 2, ValidatedAt: (*database.Time)(t12), State: "done"},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 3, ValidatedAt: (*database.Time)(t13), State: "done"},
+		{ParticipantID: 101, AttemptID: 1, ItemID: 4, ValidatedAt: (*database.Time)(t14), State: "done"},
+		{ParticipantID: 101, AttemptID: 2, ItemID: 3, ValidatedAt: (*database.Time)(t23), State: "done"},
+		{ParticipantID: 101, AttemptID: 2, ItemID: 4, ValidatedAt: (*database.Time)(t24), State: "done"},
 		// another user
-		{ParticipantID: 102, AttemptID: 1, ItemID: 2, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ParticipantID: 102, AttemptID: 1, ItemID: 2, ValidatedAt: nil, State: "done"},
 	}
 }
 func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
@@ -64,8 +64,7 @@ func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValid
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, validated_at, result_propagation_state").
-		Scan(&result).Error())
+	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&skippedDate, &oldestForItem4AndWinner, &oldestForItem3,
 			&oldestForItem4AndWinner, &skippedInItem3, &skippedInItem4), result)
@@ -95,8 +94,7 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, validated_at, result_propagation_state").
-		Scan(&result).Error())
+	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&expectedDate, nil, &oldDate, nil, nil, nil), result)
 }
@@ -127,8 +125,7 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, validated_at, result_propagation_state").
-		Scan(&result).Error())
+	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&expectedDate, nil, &oldDate, nil, nil, nil), result)
 }
@@ -164,8 +161,7 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, validated_at, result_propagation_state").
-		Scan(&result).Error())
+	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&oldDate, &expectedDate, &oldDate, nil, nil, &expectedDate), result)
 }
@@ -207,8 +203,7 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, validated_at, result_propagation_state").
-		Scan(&result).Error())
+	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&expectedDate, &expectedDate, &oldDate, &oldDate, &oldDatePlusOneDay, nil), result)
 }

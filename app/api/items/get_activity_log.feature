@@ -144,7 +144,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       },
       {
@@ -174,7 +174,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "user": {"id": "31", "login": "jane"},
         "from_answer_id": "16"
       },
       {
@@ -203,7 +203,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "user": {"id": "31", "login": "jane"},
         "from_answer_id": "17"
       },
       {
@@ -243,7 +243,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "user": {"id": "31", "login": "jane"},
         "from_answer_id": "7"
       },
       {
@@ -318,7 +318,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-        "user": {"id": "31", "first_name": null, "last_name": null, "login": "jane"},
+        "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       },
       {
@@ -502,7 +502,7 @@ Feature: Get activity log
 				"from_answer_id": "18",
 				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
 				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+				"user": {"id": "31", "login": "jane"}
 			},
 			{
 				"activity_type": "submission",
@@ -532,7 +532,7 @@ Feature: Get activity log
 				"from_answer_id": "28",
 				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
 				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+				"user": {"id": "31", "login": "jane"}
 			},
 			{
 				"activity_type": "submission",
@@ -552,7 +552,7 @@ Feature: Get activity log
 				"from_answer_id": "16",
 				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
 				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+				"user": {"id": "31", "login": "jane"}
 			},
 			{
 				"activity_type": "result_validated",
@@ -581,7 +581,7 @@ Feature: Get activity log
 				"from_answer_id": "17",
 				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
 				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+				"user": {"id": "31", "login": "jane"}
 			},
 			{
 				"activity_type": "result_started",
@@ -621,7 +621,7 @@ Feature: Get activity log
 				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
 				"participant": {"id": "11", "name": "user", "type": "User"},
 				"score": 98,
-				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+				"user": {"id": "31", "login": "jane"}
 			},
 			{
 				"activity_type": "submission",
@@ -641,7 +641,7 @@ Feature: Get activity log
 				"from_answer_id": "26",
 				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
 				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+				"user": {"id": "31", "login": "jane"}
 			},
 			{
 				"activity_type": "submission",
@@ -661,7 +661,7 @@ Feature: Get activity log
 				"from_answer_id": "27",
 				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
 				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": null, "id": "31", "last_name": null, "login": "jane"}
+				"user": {"id": "31", "login": "jane"}
 			},
 			{
 				"activity_type": "result_started",

@@ -8,16 +8,13 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 type itemGetEntryStateOtherMember struct {
-	// Nullable
-	// required: true
-	FirstName *string `json:"first_name"`
-	// Nullable
-	// required: true
-	LastName *string `json:"last_name"`
-	// required: true
+	*structures.UserPersonalInfo
+	ShowPersonalInfo bool `json:"-"` // required: true
+
 	Login string `json:"login"`
 	// required: true
 	GroupID int64 `json:"group_id,string"`
@@ -289,6 +286,7 @@ func (srv *Service) getEntryStateInfo(groupID, itemID int64, user *database.User
 			Group("groups_groups_active.child_group_id").
 			Order("groups_groups_active.child_group_id").
 			Select(`
+				MAX(personal_info_view_approvals.approved) AS show_personal_info,
 				IF(MAX(personal_info_view_approvals.approved), users.first_name, NULL) AS first_name,
 				IF(MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name,
         users.group_id AS group_id, users.login,
@@ -333,6 +331,7 @@ func (srv *Service) getEntryStateInfo(groupID, itemID int64, user *database.User
 			if otherMembers[index].CanEnter {
 				admittedMembersCount++
 			}
+			nilOtherMemberPersonalInfoIfNeeded(&otherMembers[index])
 		}
 
 		// remove the current user from the members list
@@ -363,6 +362,12 @@ func (srv *Service) getEntryStateInfo(groupID, itemID int64, user *database.User
 	}
 
 	return membersCount, otherMembers, teamCanEnter, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound
+}
+
+func nilOtherMemberPersonalInfoIfNeeded(otherMember *itemGetEntryStateOtherMember) {
+	if !otherMember.ShowPersonalInfo {
+		otherMember.UserPersonalInfo = nil
+	}
 }
 
 func discoverIfTeamCanEnter(groupID, itemID int64, store *database.DataStore, lock bool) (teamCanEnter bool) {

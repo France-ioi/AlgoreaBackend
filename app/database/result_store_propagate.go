@@ -9,7 +9,7 @@ const propagateLockName = "listener_propagate"
 const propagateLockTimeout = 10 * time.Second
 
 // Propagate recomputes fields of results
-// For results marked with result_propagation_state = 'to_be_propagated'/'to_be_recomputed':
+// For results marked as 'to_be_propagated'/'to_be_recomputed':
 // 1. We mark all their ancestors in results as 'to_be_recomputed'
 //  (we consider a row in results as an ancestor if
 //    a) it has the same value in group_id
@@ -28,7 +28,7 @@ func (s *ResultStore) Propagate() (err error) {
 	var groupsUnlocked int64
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(ds *DataStore) error {
+	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
 		// We mark as 'to_be_recomputed' results of all ancestors of items marked as 'to_be_recomputed'/'to_be_propagated'
 		// with appropriate attempt_id.
 		// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
@@ -36,15 +36,26 @@ func (s *ResultStore) Propagate() (err error) {
 		// to solve the descendant items. Chapters requiring explicit entry or placed outside of the scope
 		// of the attempts' root item are skipped).
 		// (This query can take more than 30 seconds to run when executed for the first time after the db migration)
-		mustNotBeError(ds.Exec(`
-			INSERT INTO results (participant_id, attempt_id, item_id, latest_activity_at, result_propagation_state)
-			WITH RECURSIVE results_to_insert (participant_id, attempt_id, item_id, result_exists, result_propagation_state) AS (
+		mustNotBeError(s.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
+		mustNotBeError(s.Exec(`
+			CREATE TEMPORARY TABLE results_to_mark (
+				participant_id BIGINT(20) NOT NULL,
+				attempt_id BIGINT(20) NOT NULL,
+				item_id BIGINT(20) NOT NULL,
+				result_exists TINYINT(1) NOT NULL,
+				KEY result_exists (result_exists)
+			)`).Error())
+		defer func() { mustNotBeError(s.Exec("DROP TEMPORARY TABLE results_to_mark").Error()) }()
+
+		mustNotBeError(s.Exec(`
+			INSERT INTO results_to_mark (participant_id, attempt_id, item_id, result_exists)
+			WITH RECURSIVE results_to_insert (participant_id, attempt_id, item_id, result_exists) AS (
 					SELECT results.participant_id,
 								 IF(attempts.root_item_id = results.item_id, attempts.parent_attempt_id, results.attempt_id) AS attempt_id,
 								 items_items.parent_item_id AS item_id,
-								 existing.participant_id IS NOT NULL AS result_exists,
-								 existing.result_propagation_state
+								 existing.participant_id IS NOT NULL AS result_exists
 					FROM results
+					JOIN results_propagate USING(participant_id, attempt_id, item_id)
 					JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id
 					JOIN items_items ON items_items.child_item_id = results.item_id
 					JOIN items ON items.id = items_items.parent_item_id
@@ -52,15 +63,16 @@ func (s *ResultStore) Propagate() (err error) {
 						ON existing.participant_id = results.participant_id AND
 							 existing.attempt_id = IF(attempts.root_item_id = results.item_id, attempts.parent_attempt_id, results.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
+					LEFT JOIN results_propagate AS existing_propagate
+						ON existing_propagate.participant_id = existing.participant_id AND existing_propagate.attempt_id = existing.attempt_id AND
+               existing_propagate.item_id = existing.item_id
 					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.participant_id IS NULL OR existing.result_propagation_state != 'to_be_recomputed') AND
-								(results.result_propagation_state = 'to_be_recomputed' OR results.result_propagation_state = 'to_be_propagated')
+								(existing.participant_id IS NULL OR existing_propagate.state IS NULL OR existing_propagate.state != 'to_be_recomputed')
 				UNION
 					SELECT results_to_insert.participant_id,
 								 IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AS attempt_id,
 								 items_items.parent_item_id AS item_id,
-								 existing.participant_id IS NOT NULL AS result_exists,
-								 existing.result_propagation_state
+								 existing.participant_id IS NOT NULL AS result_exists
 					FROM results_to_insert
 					JOIN attempts ON attempts.participant_id = results_to_insert.participant_id AND attempts.id = results_to_insert.attempt_id
 					JOIN items_items ON items_items.child_item_id = results_to_insert.item_id
@@ -70,18 +82,23 @@ func (s *ResultStore) Propagate() (err error) {
 							 existing.attempt_id =
 						     IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
+					LEFT JOIN results_propagate AS existing_propagate
+						ON existing_propagate.participant_id = existing.participant_id AND existing_propagate.attempt_id = existing.attempt_id AND
+               existing_propagate.item_id = existing.item_id
 					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.participant_id IS NULL OR existing.result_propagation_state != 'to_be_recomputed')
+								(existing.participant_id IS NULL OR existing_propagate.state IS NULL OR existing_propagate.state != 'to_be_recomputed')
 			)
 			SELECT
-				results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id, '1000-01-01 00:00:00', 'to_be_recomputed'
+				results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id,
+        MAX(results_to_insert.result_exists) AS result_exists
 			FROM results_to_insert
 			JOIN attempts ON attempts.participant_id = results_to_insert.participant_id AND attempts.id = results_to_insert.attempt_id
 			LEFT JOIN items_ancestors AS root_item_descendant
 				ON root_item_descendant.ancestor_item_id = attempts.root_item_id AND root_item_descendant.child_item_id = results_to_insert.item_id
 			WHERE result_exists OR ((
 				EXISTS(
-					SELECT 1 FROM permissions_generated
+					SELECT 1
+					FROM permissions_generated
 					JOIN groups_ancestors_active
 						ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id
 					WHERE
@@ -89,7 +106,8 @@ func (s *ResultStore) Propagate() (err error) {
 						permissions_generated.can_view_generated != 'none' AND
 						groups_ancestors_active.child_group_id = results_to_insert.participant_id
 				) OR EXISTS(
-					SELECT 1 FROM permissions_generated
+					SELECT 1
+					FROM permissions_generated
 					JOIN groups_ancestors_active
 						ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id
 					WHERE
@@ -103,8 +121,21 @@ func (s *ResultStore) Propagate() (err error) {
 				attempts.root_item_id IS NULL OR attempts.root_item_id = results_to_insert.item_id OR
 				root_item_descendant.ancestor_item_id IS NOT NULL))
 			GROUP BY results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id
-			ON DUPLICATE KEY UPDATE result_propagation_state = 'to_be_recomputed'
 		`).Error())
+
+		mustNotBeError(s.Exec(`
+			INSERT IGNORE INTO results (participant_id, attempt_id, item_id, latest_activity_at)
+			SELECT
+				results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, '1000-01-01 00:00:00'
+			FROM results_to_mark
+			WHERE NOT result_exists`).Error())
+
+		mustNotBeError(s.Exec(`
+			INSERT INTO results_propagate (participant_id, attempt_id, item_id, state)
+			SELECT
+				results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
+			FROM results_to_mark
+			ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
 
 		hasChanges := true
 
@@ -123,9 +154,41 @@ func (s *ResultStore) Propagate() (err error) {
 			//    (an item should have at least one validated child to become validated itself by the propagation)
 			if updateStatement == nil {
 				const updateQuery = `
-					UPDATE results AS target_results
+					UPDATE results_propagate AS target_propagate ` +
+					// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
+					`JOIN (
+						SELECT *
+						FROM (
+							WITH marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
+							SELECT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
+							FROM marked_to_be_recomputed AS inner_parent
+							WHERE
+								NOT EXISTS (
+									SELECT 1
+									FROM items_items
+									JOIN marked_to_be_recomputed AS children
+										ON children.participant_id = inner_parent.participant_id AND
+										   children.attempt_id = inner_parent.attempt_id AND
+										   children.item_id = items_items.child_item_id
+									WHERE items_items.parent_item_id = inner_parent.item_id
+								) AND NOT EXISTS (
+									SELECT 1
+									FROM items_items
+									JOIN attempts
+										ON attempts.participant_id = inner_parent.participant_id AND
+										   attempts.parent_attempt_id = inner_parent.attempt_id AND
+										   attempts.root_item_id = items_items.child_item_id
+									JOIN marked_to_be_recomputed AS children
+										ON children.participant_id = inner_parent.participant_id AND
+											 children.attempt_id = attempts.id AND
+										   children.item_id = items_items.child_item_id
+									WHERE items_items.parent_item_id = inner_parent.item_id
+								)
+						) AS tmp2
+					) AS tmp USING(participant_id, attempt_id, item_id)
+					JOIN results AS target_results USING(participant_id, attempt_id, item_id)
 					JOIN items
-						ON target_results.item_id = items.id
+						ON items.id = target_propagate.item_id
 					LEFT JOIN LATERAL (
 						SELECT
 							target_results.participant_id,
@@ -196,40 +259,8 @@ func (s *ResultStore) Propagate() (err error) {
 								WHEN 'diff' THEN children_stats.average_score + target_results.score_edit_value
 								ELSE children_stats.average_score
 							END, 0), 100)), 0),
-						target_results.result_propagation_state = 'to_be_propagated'` +
-					// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
-					`WHERE (target_results.participant_id, target_results.attempt_id, target_results.item_id) IN (
-						SELECT *
-						FROM (
-							SELECT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
-							FROM results AS inner_parent
-							WHERE result_propagation_state = 'to_be_recomputed' AND
-								NOT EXISTS (
-									SELECT 1
-									FROM items_items
-									JOIN results AS children
-										ON children.participant_id = inner_parent.participant_id AND
-										   children.attempt_id = inner_parent.attempt_id AND
-										   children.item_id = items_items.child_item_id
-									WHERE items_items.parent_item_id = inner_parent.item_id AND
-										    children.result_propagation_state = 'to_be_recomputed'
-								) AND NOT EXISTS (
-									SELECT 1
-									FROM items_items
-									JOIN attempts
-										ON attempts.participant_id = inner_parent.participant_id AND
-										   attempts.parent_attempt_id = inner_parent.attempt_id AND
-										   attempts.root_item_id = items_items.child_item_id
-									JOIN results AS children
-										ON children.participant_id = inner_parent.participant_id AND
-										   children.item_id = items_items.child_item_id AND
-											 children.attempt_id = attempts.id
-									WHERE items_items.parent_item_id = inner_parent.item_id AND
-										children.result_propagation_state = 'to_be_recomputed'
-								)
-						) AS tmp2
-					)`
-				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
+						target_propagate.state = 'to_be_propagated'`
+				updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(updateStatement.Close()) }()
 			}
@@ -242,8 +273,8 @@ func (s *ResultStore) Propagate() (err error) {
 			hasChanges = rowsAffected > 0
 		}
 
-		canViewContentIndex := ds.PermissionsGranted().ViewIndexByName("content")
-		result := ds.db.Exec(`
+		canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
+		result := s.db.Exec(`
 			INSERT INTO permissions_granted
 				(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
 				SELECT
@@ -254,12 +285,13 @@ func (s *ResultStore) Propagate() (err error) {
 					IF(items.requires_explicit_entry, 'none', 'content'),
 					IF(items.requires_explicit_entry, NOW(), '9999-12-31 23:59:59'),
 					NOW()
-				FROM results
+				FROM results_propagate
+				JOIN results USING(participant_id, attempt_id, item_id)
 				JOIN item_dependencies ON item_dependencies.item_id = results.item_id AND
 					item_dependencies.score <= results.score_computed AND item_dependencies.grant_content_view
 				JOIN `+"`groups`"+` ON groups.id = results.participant_id
 				JOIN items ON items.id = item_dependencies.dependent_item_id
-				WHERE results.result_propagation_state = 'to_be_propagated'
+				WHERE results_propagate.state = 'to_be_propagated'
 			ON DUPLICATE KEY UPDATE
 				latest_update_at = IF(
 					VALUES(can_view) = 'content' AND can_view_value < ? OR
@@ -277,9 +309,7 @@ func (s *ResultStore) Propagate() (err error) {
 		mustNotBeError(result.Error)
 		groupsUnlocked += result.RowsAffected
 
-		return ds.db.Exec(`
-			UPDATE results SET result_propagation_state = 'done'
-				WHERE result_propagation_state = 'to_be_propagated'`).Error
+		return s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
 	}))
 
 	// If items have been unlocked, need to recompute access

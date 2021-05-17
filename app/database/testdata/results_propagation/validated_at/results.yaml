@@ -1,4 +1,4 @@
-- {attempt_id: 1, item_id: 3, participant_id: 101, result_propagation_state: done}
-- {attempt_id: 1, item_id: 4, participant_id: 101, result_propagation_state: done}
-- {attempt_id: 2, item_id: 3, participant_id: 101, result_propagation_state: done}
-- {attempt_id: 2, item_id: 4, participant_id: 101, result_propagation_state: done}
+- {attempt_id: 1, item_id: 3, participant_id: 101}
+- {attempt_id: 1, item_id: 4, participant_id: 101}
+- {attempt_id: 2, item_id: 3, participant_id: 101}
+- {attempt_id: 2, item_id: 4, participant_id: 101}

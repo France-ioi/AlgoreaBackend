@@ -24,9 +24,9 @@ Feature: Submit a new answer
       | id | participant_id |
       | 1  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | started_at          | result_propagation_state |
-      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | started_at          |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
 
   Scenario: User is able to submit a new answer
     Given I am the user with id "101"
@@ -75,9 +75,10 @@ Feature: Submit a new answer
       | author_id | participant_id | attempt_id | item_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 101            | 1          | 50      | Submission | print 1 | 1                                                 |
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
-      | 1          | 101            | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |
-      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 1                                                         | null                                                        |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           |
+    And the table "results_propagate" should be empty
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with id "101"
@@ -130,6 +131,7 @@ Feature: Submit a new answer
       | author_id | participant_id | attempt_id | item_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 101            | 1          | 50      | Submission | print(2) | 1                                                 |
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | result_propagation_state |
-      | 1          | 101            | 10      | null                            | 0            | 0           | 1                                                         | null                                                        | done                     |
-      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           | done                     |
+      | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 |
+      | 1          | 101            | 10      | null                            | 0            | 0           | 1                                                         | null                                                        |
+      | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         | 1                                                           |
+    And the table "results_propagate" should be empty
