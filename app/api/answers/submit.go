@@ -96,15 +96,18 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			requestData.TaskToken.Converted.LocalItemID, *requestData.Answer)
 		service.MustNotBeError(err)
 
-		service.MustNotBeError(store.Results().
+		resultStore := store.Results()
+		service.MustNotBeError(resultStore.
 			ByID(requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 				requestData.TaskToken.Converted.LocalItemID).
 			UpdateColumn(map[string]interface{}{
-				"submissions":              gorm.Expr("submissions + 1"),
-				"latest_submission_at":     database.Now(),
-				"latest_activity_at":       database.Now(),
-				"result_propagation_state": "to_be_propagated",
+				"submissions":          gorm.Expr("submissions + 1"),
+				"latest_submission_at": database.Now(),
+				"latest_activity_at":   database.Now(),
 			}).Error())
+		service.MustNotBeError(resultStore.MarkAsToBePropagated(
+			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+			requestData.TaskToken.Converted.LocalItemID))
 		return store.Results().Propagate()
 	})
 

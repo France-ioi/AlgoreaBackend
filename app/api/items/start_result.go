@@ -90,17 +90,18 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		result := store.Exec(`
-			INSERT INTO results (participant_id, attempt_id, item_id, started_at, latest_activity_at, result_propagation_state)
-			VALUES (?, ?, ?, NOW(), NOW(), 'to_be_propagated')
+			INSERT INTO results (participant_id, attempt_id, item_id, started_at, latest_activity_at)
+			VALUES (?, ?, ?, NOW(), NOW())
 			ON DUPLICATE KEY UPDATE
 				latest_activity_at = IF(started_at IS NULL, NOW(), latest_activity_at),
-				result_propagation_state = IF(started_at IS NULL, 'to_be_propagated', result_propagation_state),
 				started_at = IFNULL(started_at, NOW())`,
 			participantID, attemptID, itemID)
 		service.MustNotBeError(result.Error())
 
 		if result.RowsAffected() != 0 {
-			service.MustNotBeError(store.Results().Propagate())
+			resultStore := store.Results()
+			service.MustNotBeError(resultStore.MarkAsToBePropagated(participantID, attemptID, itemID))
+			service.MustNotBeError(resultStore.Propagate())
 		}
 		return nil
 	})

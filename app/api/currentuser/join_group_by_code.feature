@@ -46,10 +46,10 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 1  | 16             | 30           |
       | 1  | 21             | 30           |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | result_propagation_state | started_at          |
-      | 0          | 17             | 30      | done                     | 2019-05-30 11:00:00 |
-      | 0          | 21             | 30      | done                     | 2019-05-30 11:00:00 |
-      | 1          | 16             | 30      | done                     | 2019-05-30 11:00:00 |
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | 17             | 30      | 2019-05-30 11:00:00 |
+      | 0          | 21             | 30      | 2019-05-30 11:00:00 |
+      | 1          | 16             | 30      | 2019-05-30 11:00:00 |
 
   Scenario: Successfully join a team
     Given I am the user with id "21"
@@ -111,11 +111,12 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 21                | 21             | 9999-12-31 23:59:59 |
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state | started_at          |
-      | 0          | 17             | 30      | done                     | 2019-05-30 11:00:00 |
-      | 0          | 21             | 20      | done                     | null                |
-      | 0          | 21             | 30      | done                     | 2019-05-30 11:00:00 |
-      | 1          | 16             | 30      | done                     | 2019-05-30 11:00:00 |
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | 17             | 30      | 2019-05-30 11:00:00 |
+      | 0          | 21             | 20      | null                |
+      | 0          | 21             | 30      | 2019-05-30 11:00:00 |
+      | 1          | 16             | 30      | 2019-05-30 11:00:00 |
+    And the table "results_propagate" should be empty
 
   Scenario: Updates the code_expires_at
     Given I am the user with id "21"

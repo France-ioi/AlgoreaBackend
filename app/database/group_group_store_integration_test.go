@@ -287,30 +287,30 @@ const groupGroupMarksResultsAsChangedFixture = `
 		- {id: 1, participant_id: 107}
 		- {id: 1, participant_id: 108}
 	results:
-		- {attempt_id: 1, participant_id: 101, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 102, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 103, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 104, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 105, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 106, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 107, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 108, item_id: 1, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 101, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 102, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 103, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 104, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 105, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 106, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 107, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 108, item_id: 2, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 101, item_id: 3, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 102, item_id: 3, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 103, item_id: 3, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 104, item_id: 3, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 105, item_id: 3, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 106, item_id: 3, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 107, item_id: 3, result_propagation_state: done}
-		- {attempt_id: 1, participant_id: 108, item_id: 3, result_propagation_state: done}`
+		- {attempt_id: 1, participant_id: 101, item_id: 1}
+		- {attempt_id: 1, participant_id: 102, item_id: 1}
+		- {attempt_id: 1, participant_id: 103, item_id: 1}
+		- {attempt_id: 1, participant_id: 104, item_id: 1}
+		- {attempt_id: 1, participant_id: 105, item_id: 1}
+		- {attempt_id: 1, participant_id: 106, item_id: 1}
+		- {attempt_id: 1, participant_id: 107, item_id: 1}
+		- {attempt_id: 1, participant_id: 108, item_id: 1}
+		- {attempt_id: 1, participant_id: 101, item_id: 2}
+		- {attempt_id: 1, participant_id: 102, item_id: 2}
+		- {attempt_id: 1, participant_id: 103, item_id: 2}
+		- {attempt_id: 1, participant_id: 104, item_id: 2}
+		- {attempt_id: 1, participant_id: 105, item_id: 2}
+		- {attempt_id: 1, participant_id: 106, item_id: 2}
+		- {attempt_id: 1, participant_id: 107, item_id: 2}
+		- {attempt_id: 1, participant_id: 108, item_id: 2}
+		- {attempt_id: 1, participant_id: 101, item_id: 3}
+		- {attempt_id: 1, participant_id: 102, item_id: 3}
+		- {attempt_id: 1, participant_id: 103, item_id: 3}
+		- {attempt_id: 1, participant_id: 104, item_id: 3}
+		- {attempt_id: 1, participant_id: 105, item_id: 3}
+		- {attempt_id: 1, participant_id: 106, item_id: 3}
+		- {attempt_id: 1, participant_id: 107, item_id: 3}
+		- {attempt_id: 1, participant_id: 108, item_id: 3}`
 
 func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {
@@ -497,14 +497,13 @@ type resultPrimaryKey struct {
 
 func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, expectedChanged []resultPrimaryKey) {
 	type resultRow struct {
-		ParticipantID          int64
-		AttemptID              int64
-		ItemID                 int64
-		ResultPropagationState string
+		ParticipantID int64
+		AttemptID     int64
+		ItemID        int64
+		State         string
 	}
 	var results []resultRow
-	assert.NoError(t, dataStore.Results().Select("participant_id, attempt_id, item_id, result_propagation_state").
-		Order("participant_id, attempt_id, item_id").Scan(&results).Error())
+	queryResultsAndStatesForTests(t, dataStore.Results(), &results, "")
 
 	expectedChangedResultsMap := make(map[resultPrimaryKey]bool, len(expectedChanged))
 	for _, result := range expectedChanged {
@@ -517,7 +516,7 @@ func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, e
 		}] {
 			expectedState = "to_be_propagated"
 		}
-		assert.Equal(t, expectedState, dbResult.ResultPropagationState,
+		assert.Equal(t, expectedState, dbResult.State,
 			"Wrong result propagation state for result with participant_id=%d, attempt_id=%d, item_id=%d",
 			dbResult.ParticipantID, dbResult.AttemptID, dbResult.ItemID)
 		delete(expectedChangedResultsMap,
@@ -525,4 +524,18 @@ func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, e
 	}
 	assert.Empty(t, expectedChangedResultsMap,
 		"Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
+}
+
+func queryResultsAndStatesForTests(t *testing.T, s *database.ResultStore, result interface{}, customColumns string) {
+	columns := "participant_id, attempt_id, item_id, IFNULL(state, 'done') AS state"
+	if customColumns != "" {
+		columns += "," + customColumns
+	}
+	resultStore := s.Results()
+	assert.NoError(t,
+		resultStore.Select(columns).
+			Joins("LEFT JOIN results_propagate USING(participant_id, attempt_id, item_id)").
+			Union(resultStore.Select(columns).
+				Joins("RIGHT JOIN results_propagate USING(participant_id, attempt_id, item_id)").SubQuery()).
+			Order("participant_id, attempt_id, item_id").Scan(result).Error())
 }

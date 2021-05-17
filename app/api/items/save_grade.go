@@ -147,7 +147,6 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		"tasks_tried",
 		"score_obtained_at",
 		"score_computed",
-		"result_propagation_state",
 	}
 	newScoreExpression := gorm.Expr(`
 			LEAST(GREATEST(
@@ -171,7 +170,6 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 				ELSE score_obtained_at
 			END`, newScoreExpression, newScoreExpression), // score_obtained_at
 		newScoreExpression, // score_computed
-		"to_be_propagated", // result_propagation_state
 	}
 	if validated {
 		// Item was validated
@@ -187,7 +185,11 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+ // nolint:gosec
 			updateExpr+" WHERE results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", values...).
 			Error()) // nolint:gosec
-	service.MustNotBeError(store.Results().Propagate())
+	resultStore := store.Results()
+	service.MustNotBeError(resultStore.MarkAsToBePropagated(
+		requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+		requestData.TaskToken.Converted.LocalItemID))
+	service.MustNotBeError(resultStore.Propagate())
 	return validated, true
 }
 

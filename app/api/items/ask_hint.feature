@@ -31,9 +31,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested        | hints_cached | started_at          | result_propagation_state |
-      | 0          | 101            | 50      | [0,  1, "hint" , null] | 4            | 2019-05-30 11:00:00 | done                     |
-      | 0          | 101            | 10      | null                   | 0            | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | hints_requested        | hints_cached | started_at          |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 4            | 2019-05-30 11:00:00 |
+      | 0          | 101            | 10      | null                   | 0            | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -84,9 +84,10 @@ Feature: Ask for a hint
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 0          | 101            | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
-      | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null                               | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | 1                                                         | 1                                                     |
+    And the table "results_propagate" should be empty
 
   Scenario: User is able to ask for a hint with a minimal hint token
     Given I am the user with id "101"
@@ -94,9 +95,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested        | started_at          | result_propagation_state |
-      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 | done                     |
-      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | hints_requested        | started_at          |
+      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -147,9 +148,10 @@ Feature: Ask for a hint
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 0          | 101            | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
-      | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null                               | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | 1                                                         | 1                                                     |
+    And the table "results_propagate" should be empty
 
   Scenario: User is able to ask for an already given hint
     Given I am the user with id "101"
@@ -157,9 +159,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested        | started_at          | result_propagation_state |
-      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 | done                     |
-      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | hints_requested        | started_at          |
+      | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
+      | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -210,9 +212,10 @@ Feature: Ask for a hint
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested   | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 0          | 101            | 10      | 1               | 0            | null              | done                     | 1                                                         | null                                                  |
-      | 0          | 101            | 50      | 1               | 4            | [0,1,"hint",null] | done                     | 1                                                         | 1                                                     |
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested   | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null              | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 4            | [0,1,"hint",null] | 1                                                         | 1                                                     |
+    And the table "results_propagate" should be empty
 
   Scenario: Can't parse hints_requested
     Given I am the user with id "101"
@@ -220,9 +223,9 @@ Feature: Ask for a hint
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | hints_requested | started_at          | result_propagation_state |
-      | 0          | 101            | 50      | not an array    | 2019-05-30 11:00:00 | done                     |
-      | 0          | 101            | 10      | null            | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | hints_requested | started_at          |
+      | 0          | 101            | 50      | not an array    | 2019-05-30 11:00:00 |
+      | 0          | 101            | 10      | null            | 2019-05-30 11:00:00 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -273,9 +276,10 @@ Feature: Ask for a hint
       """
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 0          | 101            | 10      | 1               | 0            | null               | done                     | 1                                                         | null                                                  |
-      | 0          | 101            | 50      | 1               | 1            | [{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
+      | attempt_id | participant_id | item_id | tasks_with_help | hints_cached | hints_requested    | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 0          | 101            | 10      | 1               | 0            | null               | 1                                                         | null                                                  |
+      | 0          | 101            | 50      | 1               | 1            | [{"rotorIndex":1}] | 1                                                         | 1                                                     |
+    And the table "results_propagate" should be empty
     And logs should contain:
       """
       Unable to parse hints_requested ({"idAttempt":"101/0","idItemLocal":"50","idUser":"101"}) having value "not an array": invalid character 'o' in literal null (expecting 'u')

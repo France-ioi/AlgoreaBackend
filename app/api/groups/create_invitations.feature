@@ -37,8 +37,8 @@ Feature: Invite users
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 101            | 30      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 101            | 30      |
 
   Scenario: Successfully invite users
     Given I am the user with id "21"
@@ -204,6 +204,7 @@ Feature: Invite users
       | 555               | 555            | 1       |
     And the table "attempts" should stay unchanged
     And the table "results" should be:
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 101            | 20      | done                     |
-      | 0          | 101            | 30      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 101            | 20      |
+      | 0          | 101            | 30      |
+    And the table "results_propagate" should be empty

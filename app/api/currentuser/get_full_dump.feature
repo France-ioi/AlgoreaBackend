@@ -59,10 +59,10 @@ Feature: Export the current user's data
       | 0  | 2              | 2019-05-28 11:00:00 |
       | 0  | 1              | 2019-05-28 11:00:00 |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | latest_activity_at  | result_propagation_state |
-      | 0          | 11             | 404     | 2019-05-30 11:00:00 | done                     |
-      | 0          | 2              | 404     | 2019-05-29 11:00:00 | done                     |
-      | 0          | 1              | 405     | 2019-05-28 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | latest_activity_at  |
+      | 0          | 11             | 404     | 2019-05-30 11:00:00 |
+      | 0          | 2              | 404     | 2019-05-29 11:00:00 |
+      | 0          | 1              | 405     | 2019-05-28 11:00:00 |
     And the database has the following table 'answers':
       | id | author_id | participant_id | attempt_id | item_id | created_at          |
       | 1  | 11        | 11             | 0          | 404     | 2019-07-09 21:02:28 |
@@ -108,8 +108,7 @@ Feature: Export the current user's data
           "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
           "participant_id": "2", "item_id": "404",
           "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "result_propagation_state": "done",
-          "score_obtained_at": null, "hints_requested": null,
+          "tasks_with_help": 0, "score_obtained_at": null, "hints_requested": null,
           "latest_activity_at": "2019-05-29T11:00:00Z", "latest_submission_at": null,
           "latest_hint_at": null, "score_edit_comment": null,
           "started_at": null, "validated_at": null
@@ -119,8 +118,7 @@ Feature: Export the current user's data
           "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
           "participant_id": "11", "item_id": "404",
           "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "result_propagation_state": "done",
-          "score_obtained_at": null, "hints_requested": null,
+          "tasks_with_help": 0, "score_obtained_at": null, "hints_requested": null,
           "latest_activity_at": "2019-05-30T11:00:00Z", "latest_submission_at": null,
           "latest_hint_at": null, "score_edit_comment": null,
           "started_at": null, "validated_at": null

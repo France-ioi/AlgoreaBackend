@@ -33,8 +33,8 @@ Feature: Check if the group code is valid
       | 2  | 14             | 1234         |
       | 2  | 18             | 1234         |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | result_propagation_state |
-      | 0          | 21             | 30      | done                     |
+      | attempt_id | participant_id | item_id |
+      | 0          | 21             | 30      |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 11       | 21         |

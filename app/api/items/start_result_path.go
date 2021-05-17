@@ -97,24 +97,30 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 
 		data := result[0]
 		rowsToInsert := make([]map[string]interface{}, 0, len(data))
+		rowsToInsertPropagate := make([]map[string]interface{}, 0, len(data))
 		for index, itemID := range ids {
 			attemptID = data[fmt.Sprintf("attempt_id%d", index)].(int64)
 			if data[fmt.Sprintf("has_started_result%d", index)].(int64) == 1 {
 				continue
 			}
 			rowsToInsert = append(rowsToInsert, map[string]interface{}{
-				"item_id":                  itemID,
-				"participant_id":           participantID,
-				"attempt_id":               attemptID,
-				"started_at":               database.Now(),
-				"latest_activity_at":       database.Now(),
-				"result_propagation_state": "to_be_propagated",
+				"item_id":            itemID,
+				"participant_id":     participantID,
+				"attempt_id":         attemptID,
+				"started_at":         database.Now(),
+				"latest_activity_at": database.Now(),
+			})
+			rowsToInsertPropagate = append(rowsToInsertPropagate, map[string]interface{}{
+				"item_id":        itemID,
+				"participant_id": participantID,
+				"attempt_id":     attemptID,
+				"state":          "to_be_propagated",
 			})
 		}
 		if len(rowsToInsert) > 0 {
 			resultStore := store.Results()
-			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert,
-				[]string{"started_at", "latest_activity_at", "result_propagation_state"}))
+			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert, []string{"started_at", "latest_activity_at"}))
+			service.MustNotBeError(resultStore.InsertIgnoreMaps("results_propagate", rowsToInsertPropagate))
 			service.MustNotBeError(resultStore.Propagate())
 		}
 

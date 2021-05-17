@@ -12,11 +12,11 @@ import (
 )
 
 type existingResultsRow struct {
-	ParticipantID          int64
-	AttemptID              int64
-	ItemID                 int64
-	LatestActivityAt       string
-	ResultPropagationState string
+	ParticipantID    int64
+	AttemptID        int64
+	ItemID           int64
+	LatestActivityAt string
+	State            string
 }
 
 type resultStorePropagateCreatesNewTestCase struct {
@@ -60,7 +60,9 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 		attempts:
 			- {participant_id: 3, id: 1}
 		results:
-			- {participant_id: 3, attempt_id: 1, item_id: 333, latest_activity_at: "2019-05-30 11:00:00", result_propagation_state: to_be_propagated}
+			- {participant_id: 3, attempt_id: 1, item_id: 333, latest_activity_at: "2019-05-30 11:00:00"}
+		results_propagate:
+			- {participant_id: 3, attempt_id: 1, item_id: 333, state: to_be_propagated}
 	`)
 	mergedFixtures = append(mergedFixtures, testCase.fixtures...)
 	db := testhelpers.SetupDBWithFixtureString(mergedFixtures...)
@@ -78,14 +80,13 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 
 	const expectedDate = "2019-05-30 11:00:00"
 	for i := range testCase.expectedNewResults {
-		testCase.expectedNewResults[i].ResultPropagationState = "done"
+		testCase.expectedNewResults[i].State = "done"
 		testCase.expectedNewResults[i].LatestActivityAt = expectedDate
 	}
 	testCase.expectedNewResults = append(testCase.expectedNewResults,
-		existingResultsRow{ParticipantID: 3, AttemptID: 1, ItemID: 333, LatestActivityAt: expectedDate, ResultPropagationState: "done"})
+		existingResultsRow{ParticipantID: 3, AttemptID: 1, ItemID: 333, LatestActivityAt: expectedDate, State: "done"})
 	var result []existingResultsRow
-	assert.NoError(t, resultStore.Select("participant_id, attempt_id, item_id, latest_activity_at, result_propagation_state").
-		Order("participant_id, attempt_id, item_id").Scan(&result).Error())
+	queryResultsAndStatesForTests(t, resultStore, &result, "latest_activity_at")
 	assert.Equal(t, testCase.expectedNewResults, result)
 }
 

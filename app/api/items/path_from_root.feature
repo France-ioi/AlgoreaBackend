@@ -50,12 +50,12 @@ Feature: Find an item path
       | 2  | 102            | 10           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | 9999-12-31 23:59:59      |
       | 3  | 102            | 10           | 2019-05-30 11:00:00 | null                | 2019-05-30 11:00:00      |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | result_propagation_state |
-      | 1          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 2          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 2          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 3          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
-      | 3          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
+      | 1          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 2          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 2          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 3          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+      | 3          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
 
   Scenario Outline: Find a path as a user
     Given I am the user with id "111"
@@ -86,8 +86,8 @@ Feature: Find an item path
   Scenario: Finds a path with started result
     Given I am the user with id "101"
     And the database table 'results' has also the following rows:
-      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | result_propagation_state |
-      | 1          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 | done                     |
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
+      | 1          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
     When I send a GET request to "/items/60/path-from-root?as_team_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
