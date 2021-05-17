@@ -8,6 +8,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
 // GroupGetResponseCodePart contains fields related to the group's code.
@@ -34,15 +35,6 @@ type ManagerPermissionsPart struct {
 	CurrentUserCanGrantGroupAccess bool `json:"current_user_can_grant_group_access"`
 	// returned only if the current user is a manager
 	CurrentUserCanWatchMembers bool `json:"current_user_can_watch_members"`
-}
-
-// GroupShortInfo contains group id & name
-type GroupShortInfo struct {
-	// group's `id`
-	// required:true
-	ID int64 `json:"id,string"`
-	// required:true
-	Name string `json:"name"`
 }
 
 // swagger:model groupGetResponse
@@ -82,15 +74,15 @@ type groupGetResponse struct {
 	CurrentUserManagership string `json:"current_user_managership"`
 	// list of descendant (excluding the group itself) groups that the current user is member of
 	// required:true
-	DescendantsCurrentUserIsMemberOf []GroupShortInfo `json:"descendants_current_user_is_member_of"`
+	DescendantsCurrentUserIsMemberOf []structures.GroupShortInfo `json:"descendants_current_user_is_member_of"`
 	// list of ancestor (excluding the group itself) groups that the current user (or his ancestor groups) is manager of
 	// required:true
-	AncestorsCurrentUserIsManagerOf []GroupShortInfo `json:"ancestors_current_user_is_manager_of"`
+	AncestorsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"ancestors_current_user_is_manager_of"`
 	// list of descendant (excluding the group itself) non-user groups that the current user (or his ancestor groups) is manager of
 	// required:true
-	DescendantsCurrentUserIsManagerOf []GroupShortInfo `json:"descendants_current_user_is_manager_of"`
+	DescendantsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"descendants_current_user_is_manager_of"`
 
-	*GroupShortInfo
+	*structures.GroupShortInfo
 	*GroupGetResponseCodePart
 	*ManagerPermissionsPart
 }
@@ -195,7 +187,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			Scan(&result.DescendantsCurrentUserIsMemberOf).Error())
 	}
 	if result.DescendantsCurrentUserIsMemberOf == nil {
-		result.DescendantsCurrentUserIsMemberOf = make([]GroupShortInfo, 0)
+		result.DescendantsCurrentUserIsMemberOf = make([]structures.GroupShortInfo, 0)
 	}
 	if isManager {
 		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
@@ -210,7 +202,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			Scan(&result.AncestorsCurrentUserIsManagerOf).Error())
 	}
 	if result.AncestorsCurrentUserIsManagerOf == nil {
-		result.AncestorsCurrentUserIsManagerOf = make([]GroupShortInfo, 0)
+		result.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
 	}
 	if result.CurrentUserManagership != none {
 		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
@@ -226,7 +218,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			Scan(&result.DescendantsCurrentUserIsManagerOf).Error())
 	}
 	if result.DescendantsCurrentUserIsManagerOf == nil {
-		result.DescendantsCurrentUserIsManagerOf = make([]GroupShortInfo, 0)
+		result.DescendantsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
 	}
 	render.Respond(w, r, result)
 

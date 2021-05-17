@@ -69,6 +69,15 @@ type ItemResult struct {
 	AttemptAllowsSubmissionsUntil time.Time `json:"attempt_allows_submissions_until"`
 }
 
+// GroupShortInfo contains group id & name
+type GroupShortInfo struct {
+	// group's `id`
+	// required:true
+	ID int64 `json:"id,string"`
+	// required:true
+	Name string `json:"name"`
+}
+
 // UserPersonalInfo contains first_name and last_name
 type UserPersonalInfo struct {
 	// Nullable
