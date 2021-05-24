@@ -16,7 +16,7 @@ type groupNavigationViewResponseChild struct {
 	// required:true
 	Name string `json:"name"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,User,Session,Base
+	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
 	// whether the user is a member of this group or one of its descendants
 	// required:true
@@ -37,7 +37,7 @@ type groupNavigationViewResponse struct {
 	// required:true
 	Name string `json:"name"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,User,Session,Base
+	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
 	// required:true
 	Children []groupNavigationViewResponseChild `json:"children"`
@@ -90,6 +90,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 
 	var result groupNavigationViewResponse
 	err = pickVisibleGroups(srv.Store.Groups().ByID(groupID), user).
+		Where("groups.type != 'User'").
 		Select("id, name, type").Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
@@ -100,6 +101,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).
+		Where("groups.type != 'User'").
 		Order("name")
 	query = service.NewQueryLimiter().Apply(r, query)
 
