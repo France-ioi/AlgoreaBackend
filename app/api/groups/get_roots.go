@@ -72,7 +72,8 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	return service.NoError
 }
 
-func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *database.User, otherColumns string) *database.DB {
+func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *database.User,
+	otherColumns string, otherColumnValues ...interface{}) *database.DB {
 	usersAncestorsQuery := store.ActiveGroupAncestors().
 		Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
 
@@ -135,7 +136,7 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 					'none'
 				)
 			)
-		) AS 'current_user_managership'`+otherColumns, user.GroupID, user.GroupID)
+		) AS 'current_user_managership'`+otherColumns, user.GroupID, user.GroupID, otherColumnValues)
 
 	return store.Raw("WITH user_ancestors AS ? ?", usersAncestorsQuery.SubQuery(), db.QueryExpr())
 }

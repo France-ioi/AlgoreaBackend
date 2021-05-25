@@ -85,6 +85,12 @@ type groupGetResponse struct {
 	*structures.GroupShortInfo
 	*GroupGetResponseCodePart
 	*ManagerPermissionsPart
+
+	// required: true
+	IsMembershipLocked bool `json:"is_membership_locked"`
+	// Only for joined teams
+	// enum: frozen_membership,would_break_entry_conditions,free_to_leave
+	CanLeaveTeam string `json:"can_leave_team,omitempty"`
 }
 
 // swagger:operation GET /groups/{group_id} groups groupGet
@@ -140,6 +146,9 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 					groups_ancestors.child_group_id`).
 				Where("groups_ancestors.child_group_id = ?", groupID).
 				Group("groups_ancestors.child_group_id").SubQuery()).
+		Joins(`
+			LEFT JOIN groups_groups_active
+				ON groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
 		Where("groups.id = ?", groupID).
 		Where("groups.type != 'User'").
 		Limit(1)
@@ -154,7 +163,20 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		groups.open_activity_when_joining,
 		IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
 		IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
-		IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members`).
+		IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
+		groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until AS is_membership_locked,
+		IF(parent_group_id IS NOT NULL AND groups.type = 'Team',
+			IF(groups.frozen_membership,
+				'frozen_membership',
+				IF(?,
+					'would_break_entry_conditions',
+					'free_to_leave'
+				)
+			),
+			NULL
+		) AS can_leave_team`,
+		srv.Store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+			gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
 		Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
