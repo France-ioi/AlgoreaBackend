@@ -261,7 +261,7 @@ func (srv *Service) getRootItemsFromDB(
 		itemsWithResultsQuery = itemsWithResultsQuery.Joins("JOIN items ON items.id = groups.root_skill_id")
 	}
 	itemsWithResultsSubquery := itemsWithResultsQuery.
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info").
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(watcherID, "view", "info").
 		Joins("LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id", groupID).
 		Joins("LEFT JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Select(`
@@ -279,10 +279,6 @@ func (srv *Service) getRootItemsFromDB(
 			results.score_computed, results.validated, results.started_at, results.latest_activity_at,
 			attempts.ended_at`, groupID, hasVisibleChildrenQuery).
 		Group("groups.id, results.participant_id, results.attempt_id")
-
-	if watchedGroupIDSet {
-		itemsWithResultsSubquery = itemsWithResultsSubquery.WhereItemsAreVisible(watcherID)
-	}
 
 	query := srv.Store.Raw(`
 		SELECT items.*, items.id AS item_id, COALESCE(user_strings.title, default_strings.title) AS title,
