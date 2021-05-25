@@ -33,3 +33,9 @@ Feature: Get navigation data (groupNavigationView) - robustness
     When I send a GET request to "/groups/404/navigation"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: The group_id is a user
+    Given I am the user with id "41"
+    When I send a GET request to "/groups/41/navigation"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"

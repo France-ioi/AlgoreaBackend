@@ -226,22 +226,14 @@ Feature: Get navigation data (groupNavigationView)
     }
     """
 
-  Scenario: Displays members of a managed team
+  Scenario: Doesn't display users
     Given I am the user with id "41"
     When I send a GET request to "/groups/6/navigation"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
-      "children": [
-        {
-          "id": "41",
-          "name": "owner",
-          "type": "User",
-          "current_user_managership": "ancestor",
-          "current_user_membership": "none"
-        }
-      ],
+      "children": [],
       "id": "6",
       "name": "Joined Team",
       "type": "Team"
