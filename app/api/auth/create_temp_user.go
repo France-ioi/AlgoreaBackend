@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -27,6 +28,10 @@ import (
 //
 //   * When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
 // parameters:
+// - name: default_language
+//   in: query
+//   type: string
+//   maxLength: 3
 // - name: use_cookie
 //   in: query
 //   description: If 1, set a cookie instead of returning the OAuth2 code in the data
@@ -65,6 +70,14 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(errors.New("the 'Authorization' header must not be present"))
 	}
 
+	defaultLanguage := database.Default()
+	if len(r.URL.Query()["default_language"]) != 0 {
+		defaultLanguage = r.URL.Query().Get("default_language")
+		if utf8.RuneCountInString(defaultLanguage.(string)) > 3 {
+			return service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
+		}
+	}
+
 	var token string
 	var expiresIn int32
 
@@ -84,12 +97,13 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		service.MustNotBeError(store.RetryOnDuplicateKeyError("login", "login", func(retryLoginStore *database.DataStore) error {
 			login = fmt.Sprintf("tmp-%d", rand.Int31n(99999999-10000000+1)+10000000)
 			return retryLoginStore.Users().InsertMap(map[string]interface{}{
-				"login_id":      0,
-				"login":         login,
-				"temp_user":     true,
-				"registered_at": database.Now(),
-				"group_id":      userID,
-				"last_ip":       strings.SplitN(r.RemoteAddr, ":", 2)[0],
+				"login_id":         0,
+				"login":            login,
+				"temp_user":        true,
+				"registered_at":    database.Now(),
+				"group_id":         userID,
+				"default_language": defaultLanguage,
+				"last_ip":          strings.SplitN(r.RemoteAddr, ":", 2)[0],
 			})
 		}))
 
