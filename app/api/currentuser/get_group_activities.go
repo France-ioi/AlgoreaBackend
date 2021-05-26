@@ -92,8 +92,10 @@ type rootItem struct {
 // description:
 //   If `{watched_group_id}` is not given, the service returns the list of root activities of the groups the current user
 //   (or `{as_team_id}`) belongs to.
-//   Otherwise, the service returns the list of root activities of all ancestor groups of the watched group which are also
+//   Otherwise, the service returns the list of root activities (visible to the current user or `{as_team_id}`)
+//   of all ancestor groups of the watched group which are also
 //   ancestors or descendants of at least one group that the current user manages.
+//   Permissions returned for activities are related to the current user (or `{as_team_id}`).
 //   Only one of `{as_team_id}` and `{watched_group_id}` can be given.
 //
 //
