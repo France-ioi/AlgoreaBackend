@@ -116,17 +116,6 @@ Feature: Get root skills for a participant group
       | 19       | 200     | content                  | none                     | none                | none               | false              |
       | 19       | 210     | content                  | none                     | none                | none               | false              |
       | 19       | 211     | content                  | none                     | none                | none               | false              |
-      | 26       | 200     | content                  | none                     | none                | none               | false              |
-      | 26       | 210     | content                  | none                     | none                | none               | false              |
-      | 26       | 220     | content                  | none                     | none                | none               | false              |
-      | 26       | 230     | content                  | none                     | none                | none               | false              |
-      | 26       | 240     | content                  | none                     | none                | none               | false              |
-      | 26       | 250     | content                  | none                     | none                | none               | false              |
-      | 26       | 260     | content                  | none                     | none                | none               | false              |
-      | 26       | 270     | content                  | none                     | none                | none               | false              |
-      | 26       | 280     | content                  | none                     | none                | none               | false              |
-      | 26       | 290     | content                  | none                     | none                | none               | false              |
-      | 26       | 300     | content                  | none                     | none                | none               | false              |
       | 30       | 210     | content_with_descendants | none                     | none                | none               | false              |
       | 29       | 220     | content_with_descendants | none                     | none                | none               | false              |
       | 30       | 230     | content_with_descendants | none                     | none                | none               | false              |
@@ -417,7 +406,7 @@ Feature: Get root skills for a participant group
           "permissions": {
             "can_edit": "none",
             "can_grant_view": "none",
-            "can_view": "content",
+            "can_view": "content_with_descendants",
             "can_watch": "none",
             "is_owner": false
           },
@@ -443,7 +432,7 @@ Feature: Get root skills for a participant group
           "permissions": {
             "can_edit": "none",
             "can_grant_view": "none",
-            "can_view": "content",
+            "can_view": "content_with_descendants",
             "can_watch": "none",
             "is_owner": false
           },
@@ -469,7 +458,7 @@ Feature: Get root skills for a participant group
           "permissions": {
             "can_edit": "none",
             "can_grant_view": "none",
-            "can_view": "content",
+            "can_view": "content_with_descendants",
             "can_watch": "none",
             "is_owner": false
           },
