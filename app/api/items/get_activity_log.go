@@ -327,7 +327,6 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
 	}
 
-	// the number of started results is much smaller than the number of answers, so we start from results
 	answersQuery := srv.Store.Answers().
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
