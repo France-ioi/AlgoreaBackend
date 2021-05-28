@@ -94,7 +94,7 @@ type rootItem struct {
 //   (or `{as_team_id}`) belongs to.
 //   Otherwise, the service returns the list of root activities (visible to the current user or `{as_team_id}`)
 //   of all ancestor groups of the watched group which are also
-//   ancestors or descendants of at least one group that the current user manages.
+//   ancestors or descendants of at least one group that the current user manages explicitly.
 //   Permissions returned for activities are related to the current user (or `{as_team_id}`).
 //   Only one of `{as_team_id}` and `{watched_group_id}` can be given.
 //
@@ -102,7 +102,7 @@ type rootItem struct {
 //   If `{as_team_id}` is given, it should be a user's parent team group, otherwise the "forbidden" error is returned.
 //
 //
-//   If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//   If `{watched_group_id}` is given, the user should ba a manager (implicitly) of the group with the 'can_watch_members' permission,
 //   otherwise the "forbidden" error is returned.
 // parameters:
 // - name: as_team_id
