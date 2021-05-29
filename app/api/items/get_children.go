@@ -67,6 +67,10 @@ type childItem struct {
 	Results []structures.ItemResult `json:"results"`
 
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
+
+	// whether solving this item grants access to other items (visible or not)
+	// required: true
+	GrantsAccessToOtherItems bool `json:"grants_access_to_other_items"`
 }
 
 // RawListItem contains raw fields common for itemChildrenView & itemParentsView
@@ -99,6 +103,9 @@ type rawListChildItem struct {
 	GrantViewPropagation       bool
 	WatchPropagation           bool
 	EditPropagation            bool
+
+	// item_dependencies
+	GrantsAccessToOtherItems bool
 }
 
 // swagger:operation GET /items/{item_id}/children items itemChildrenView
@@ -184,7 +191,8 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 					(SELECT MAX(results.score_computed) AS best_score
 					FROM results
 					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
-				child_order`,
+				child_order,
+				EXISTS(SELECT 1 FROM item_dependencies WHERE item_id = items.id AND grant_content_view) AS grants_access_to_other_items`,
 			[]interface{}{participantID},
 			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
@@ -240,6 +248,7 @@ func (srv *Service) childItemsFromRawData(
 				GrantViewPropagation:       rawData[index].GrantViewPropagation,
 				WatchPropagation:           rawData[index].WatchPropagation,
 				EditPropagation:            rawData[index].EditPropagation,
+				GrantsAccessToOtherItems:   rawData[index].GrantsAccessToOtherItems,
 				Order:                      rawData[index].Order,
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {

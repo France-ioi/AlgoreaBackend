@@ -45,6 +45,11 @@ Feature: Get item children
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 200            | 210           | 2           | Discovery | 1            | none                     | use_content_view_propagation  | true                   | false             | true             |
       | 200            | 220           | 1           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            |
+    And the database has the following table 'item_dependencies':
+      | item_id | dependent_item_id | grant_content_view |
+      | 210     | 200               | false              |
+      | 210     | 210               | true               |
+      | 200     | 220               | false              |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
       | 11       | 200     | solution                 | enter                    | children           | result              | true               |
@@ -121,6 +126,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "requires_explicit_entry": false,
         "best_score": 13.3,
+        "grants_access_to_other_items": false,
         "string": {
           "language_tag": "en",
           "title": "Chapter B",
@@ -165,6 +171,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "requires_explicit_entry": false,
         "best_score": 22.2,
+        "grants_access_to_other_items": true,
         "string": {
           "language_tag": "en",
           "title": "Chapter A",
@@ -219,6 +226,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "requires_explicit_entry": false,
         "best_score": 0,
+        "grants_access_to_other_items": false,
         "permissions": {
           "can_edit": "none",
           "can_grant_view": "none",
@@ -253,6 +261,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "requires_explicit_entry": false,
         "best_score": 20,
+        "grants_access_to_other_items": true,
         "permissions": {
           "can_edit": "none",
           "can_grant_view": "none",
@@ -306,6 +315,7 @@ Feature: Get item children
         "no_score": true,
         "default_language_tag": "en",
         "best_score": 0,
+        "grants_access_to_other_items": false,
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -339,6 +349,7 @@ Feature: Get item children
         "no_score": true,
         "default_language_tag": "en",
         "best_score": 0,
+        "grants_access_to_other_items": true,
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -383,6 +394,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "requires_explicit_entry": false,
         "best_score": 15.5,
+        "grants_access_to_other_items": false,
         "string": {
           "language_tag": "en",
           "title": "Chapter B",
@@ -427,6 +439,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "requires_explicit_entry": false,
         "best_score": 24.4,
+        "grants_access_to_other_items": true,
         "string": {
           "language_tag": "en",
           "title": "Chapter A",
@@ -481,6 +494,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "requires_explicit_entry": false,
         "best_score": 0,
+        "grants_access_to_other_items": false,
         "string": {
           "language_tag": "en",
           "title": "Chapter B"
@@ -513,6 +527,7 @@ Feature: Get item children
         "no_score": true,
         "default_language_tag": "en",
         "best_score": 0,
+        "grants_access_to_other_items": true,
         "string": {
           "language_tag": "en",
           "title": "Chapter A"
@@ -556,6 +571,7 @@ Feature: Get item children
         "no_score": true,
         "default_language_tag": "en",
         "best_score": 0,
+        "grants_access_to_other_items": false,
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -592,6 +608,7 @@ Feature: Get item children
         "no_score": true,
         "default_language_tag": "en",
         "best_score": 0,
+        "grants_access_to_other_items": true,
         "requires_explicit_entry": false,
         "results": [],
         "string": {
