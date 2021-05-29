@@ -63,7 +63,8 @@ type groupManagersViewResponseRow struct {
 //   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
 //
 //
-//   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of the `group_id` group or a member of the group or of its descendant,
+//   otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -129,8 +130,13 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		}
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
-		return apiError
+	found, err := srv.Store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found",
+		srv.Store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).QueryExpr(),
+		ancestorsOfJoinedGroups(srv.Store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
+	).Having("found").HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return service.InsufficientAccessRightsError
 	}
 
 	query := srv.Store.GroupManagers().
