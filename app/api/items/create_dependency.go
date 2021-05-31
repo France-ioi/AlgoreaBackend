@@ -16,6 +16,7 @@ import (
 type itemDependencyCreateRequest struct {
 	// minimum: 0
 	// maximum: 100
+	// default: 100
 	Score int32 `json:"score" validate:"min=0,max=100"`
 	// required: true
 	GrantContentView bool `json:"grant_content_view"`
