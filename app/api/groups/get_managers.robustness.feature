@@ -10,6 +10,9 @@ Feature: Get managers of group_id - robustness
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id | expires_at          |
+      | 13              | 11             | 2019-05-30 11:00:00 |
     And the groups ancestors are computed
 
   Scenario: User is not a manager of the group

@@ -10,6 +10,8 @@ import (
 
 // GroupManagersViewResponseRowUser contains names of a manager
 type GroupManagersViewResponseRowUser struct {
+	// Displayed only for users
+	Login string `json:"login"`
 	// Nullable; displayed only for users
 	FirstName *string `json:"first_name"`
 	// Nullable; displayed only for users
@@ -63,7 +65,8 @@ type groupManagersViewResponseRow struct {
 //   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
 //
 //
-//   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of the `group_id` group or a member of the group or of its descendant,
+//   otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -129,8 +132,13 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		}
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
-		return apiError
+	found, err := srv.Store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found",
+		srv.Store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).QueryExpr(),
+		ancestorsOfJoinedGroups(srv.Store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
+	).Having("found").HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return service.InsufficientAccessRightsError
 	}
 
 	query := srv.Store.GroupManagers().
@@ -141,7 +149,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		query = query.
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = group_managers.group_id").
 			Where("groups_ancestors_active.child_group_id = ?", groupID).
-			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
+			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name, users.login,
 			        MAX(IF(groups_ancestors_active.is_self, can_manage_value, 1)) AS can_manage_value,
 			        MAX(IF(groups_ancestors_active.is_self, can_grant_group_access, 0)) AS can_grant_group_access,
 			        MAX(IF(groups_ancestors_active.is_self, can_watch_members, 0)) AS can_watch_members,
@@ -151,7 +159,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 			Group("groups.id")
 	} else {
 		query = query.Where("group_managers.group_id = ?", groupID).
-			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name,
+			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name, users.login,
               can_manage_value, can_grant_group_access, can_watch_members`)
 	}
 
