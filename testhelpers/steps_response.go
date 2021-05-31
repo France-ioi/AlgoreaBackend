@@ -169,7 +169,7 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
 	var expectedCode int
 	switch kind {
-	case "updated":
+	case "updated", "deleted":
 		expectedCode = 200
 	case "created":
 		expectedCode = 201
