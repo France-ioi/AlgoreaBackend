@@ -105,9 +105,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 				can_view = IF(VALUES(can_view) = 'content' AND can_view_value < ?, 'content', can_view),
 				can_enter_from = IF(
 					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_from > VALUES(can_enter_from),
-					VALUES(can_enter_from), can_enter_from),
-				can_enter_until = IF(
-					VALUES(can_enter_from) <> '9999-12-31 23:59:59', '9999-12-31 23:59:59', can_enter_until)`,
+					VALUES(can_enter_from), can_enter_from)`,
 			prerequisiteItemID, dependentItemID, canViewContentIndex, canViewContentIndex)
 
 		service.MustNotBeError(result.Error())

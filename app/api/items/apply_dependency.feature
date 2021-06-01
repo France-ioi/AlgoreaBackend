@@ -136,7 +136,7 @@ Feature: Apply an item dependency
     And the table "permissions_granted" should be:
       | group_id | item_id | source_group_id | origin         | latest_update_at    | can_view                 | can_enter_from      | can_enter_until     | can_grant_view | can_watch | can_edit | can_make_session_official | is_owner |
       | 11       | 200     | 11              | item_unlocking | 2020-05-30 11:00:00 | none                     | 2020-05-30 11:00:00 | 9999-12-31 23:59:59 | none           | none      | none     | false                     | false    |
-      | 22       | 200     | 22              | item_unlocking | 2020-05-30 11:00:00 | info                     | 2020-05-30 11:00:00 | 9999-12-31 23:59:59 | none           | none      | none     | false                     | false    |
+      | 22       | 200     | 22              | item_unlocking | 2020-05-30 11:00:00 | info                     | 2020-05-30 11:00:00 | 2020-01-31 23:59:59 | none           | none      | none     | false                     | false    |
       | 22       | 210     | 22              | item_unlocking | 2019-05-30 11:00:00 | info                     | 2019-12-31 23:59:59 | 2020-01-31 23:59:59 | none           | none      | none     | false                     | false    |
       | 26       | 210     | 26              | item_unlocking | 2019-05-30 11:00:00 | content_with_descendants | 2019-12-31 23:59:59 | 2020-01-31 23:59:59 | none           | none      | none     | false                     | false    |
     And the table "permissions_generated" should stay unchanged but the rows with group_id "11,22"
