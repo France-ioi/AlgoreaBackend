@@ -41,6 +41,12 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithParticipant.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/prerequisites", service.AppHandler(srv.getItemPrerequisites).ServeHTTP)
+	routerWithParticipant.Post("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}",
+		service.AppHandler(srv.createDependency).ServeHTTP)
+	routerWithParticipant.Delete("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}",
+		service.AppHandler(srv.deleteDependency).ServeHTTP)
+	routerWithParticipant.Post("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}/apply",
+		service.AppHandler(srv.applyDependency).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/dependencies", service.AppHandler(srv.getItemDependencies).ServeHTTP)
 	router.Get("/items/search", service.AppHandler(srv.searchForItems).ServeHTTP)
 

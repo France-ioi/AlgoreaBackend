@@ -69,7 +69,7 @@ Feature: Start a result for an item
       | attempt_id | participant_id | item_id   | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 0          | 111            | <item_id> | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
       | 1          | 102            | 10        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
-    And the table "result_propagate" should be emptry
+    And the table "results_propagate" should be empty
   Examples:
     | item_id |
     | 50      |

@@ -146,43 +146,6 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 	testExplicitEntryUnlocks(db, t)
 }
 
-func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterUntilIsNotAtMax(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
-	defer func() { _ = db.Close() }()
-	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
-	oldTs := time.Now().UTC().Add(-time.Minute).Format("2006-01-02 15:04:05")
-	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow("1001", "none", oldTs, "9999-12-31 23:59:58", oldTs),
-		generateGrantedPermissionsRow("1002", "none", oldTs, "9999-12-31 23:59:58", oldTs),
-		generateGrantedPermissionsRow("2001", "none", oldTs, "9999-12-31 23:59:58", oldTs),
-		generateGrantedPermissionsRow("2002", "none", oldTs, "9999-12-31 23:59:58", oldTs),
-		generateGrantedPermissionsRow("4001", "none", oldTs, "9999-12-31 23:59:58", oldTs),
-		generateGrantedPermissionsRow("4002", "none", oldTs, "9999-12-31 23:59:58", oldTs),
-	}
-	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
-
-	prepareDependencies(db, t)
-	dataStore := database.NewDataStore(db)
-	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
-	assert.NoError(t, err)
-
-	for i := range grantedPermissions {
-		grantedPermissions[i]["can_enter_until"] = "9999-12-31 23:59:59"
-		delete(grantedPermissions[i], "latest_update_at")
-		grantedPermissions[i]["updated"] = "1"
-	}
-	var result []map[string]interface{}
-	assert.NoError(t, dataStore.PermissionsGranted().
-		Select(`
-			group_id, item_id, can_view, can_enter_from, can_enter_until, source_group_id, origin,
-			ABS(TIMESTAMPDIFF(SECOND, latest_update_at, NOW())) <= 1 AS updated`).
-		Order("group_id, item_id").
-		ScanIntoSliceOfMaps(&result).Error())
-	assert.Equal(t, grantedPermissions, result)
-}
-
 var maxTime = database.Time(time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC))
 
 func testRegularUnlocks(db *database.DB, t *testing.T) {

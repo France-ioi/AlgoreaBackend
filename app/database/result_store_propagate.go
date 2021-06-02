@@ -278,9 +278,9 @@ func (s *ResultStore) Propagate() (err error) {
 			INSERT INTO permissions_granted
 				(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
 				SELECT
-					groups.id AS group_id,
+					results.participant_id,
 					item_dependencies.dependent_item_id AS item_id,
-					groups.id,
+					results.participant_id,
 					'item_unlocking',
 					IF(items.requires_explicit_entry, 'none', 'content'),
 					IF(items.requires_explicit_entry, NOW(), '9999-12-31 23:59:59'),
@@ -289,7 +289,6 @@ func (s *ResultStore) Propagate() (err error) {
 				JOIN results USING(participant_id, attempt_id, item_id)
 				JOIN item_dependencies ON item_dependencies.item_id = results.item_id AND
 					item_dependencies.score <= results.score_computed AND item_dependencies.grant_content_view
-				JOIN `+"`groups`"+` ON groups.id = results.participant_id
 				JOIN items ON items.id = item_dependencies.dependent_item_id
 				WHERE results_propagate.state = 'to_be_propagated'
 			ON DUPLICATE KEY UPDATE
@@ -301,10 +300,8 @@ func (s *ResultStore) Propagate() (err error) {
 				can_view = IF(VALUES(can_view) = 'content' AND can_view_value < ?, 'content', can_view),
 				can_enter_from = IF(
 					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_from > VALUES(can_enter_from),
-					VALUES(can_enter_from), can_enter_from),
-				can_enter_until = IF(
-					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_until <> '9999-12-31 23:59:59',
-					'9999-12-31 23:59:59', can_enter_until)`, canViewContentIndex, canViewContentIndex)
+					VALUES(can_enter_from), can_enter_from)`,
+			canViewContentIndex, canViewContentIndex)
 
 		mustNotBeError(result.Error)
 		groupsUnlocked += result.RowsAffected
