@@ -158,27 +158,18 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.NoError
 	}
 
-	// Preselect item IDs (there should not be many of them)
-	var itemIDs []interface{}
-	service.MustNotBeError(srv.Store.Permissions().
+	itemIDQuery := srv.Store.Permissions().
 		MatchingUserAncestors(user).
 		WherePermissionIsAtLeast("view", "info").
+		Select("DISTINCT items_items.child_item_id AS id").
 		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
 		Where("parent_item_id IN (?)", itemParentIDs).
-		Order("items_items.child_item_id").
-		Pluck("DISTINCT items_items.child_item_id", &itemIDs).Error())
-	if len(itemIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
-	}
-	itemsUnion := srv.Store.Raw("SELECT ? AS id", itemIDs[0])
-	for i := 1; i < len(itemIDs); i++ {
-		itemsUnion = itemsUnion.UnionAll(srv.Store.Raw("SELECT ? AS id", itemIDs[i]).QueryExpr())
-	}
+		Order("items_items.child_item_id")
 
 	var result []groupUserProgressResponseRow
-	service.MustNotBeError(srv.Store.Users().
-		Select(`
+	service.MustNotBeError(srv.Store.Raw("WITH visible_items AS ? ?",
+		itemIDQuery.SubQuery(),
+		srv.Store.Users().Select(`
 			items.id AS item_id,
 			users.group_id AS group_id,
 			IFNULL(MAX(result_with_best_score.score_computed), 0) AS score,
@@ -193,155 +184,153 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 					TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), NOW())
 				), 0)
 			) AS time_spent`).
-		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
-		Joins(`
-			LEFT JOIN groups_groups_active AS team_links
-			ON team_links.child_group_id = users.group_id`).
-		Joins(`
-			LEFT JOIN `+"`groups`"+` AS teams
-			ON teams.type = 'Team' AND
-				teams.id = team_links.parent_group_id`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, score_computed, score_obtained_at
-				FROM results
-				WHERE participant_id = users.group_id AND item_id = items.id
-				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
-				LIMIT 1
-			) AS result_with_best_score_for_user ON 1`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, score_computed, score_obtained_at
-				FROM results
-				WHERE participant_id = teams.id AND item_id = items.id
-				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
-				LIMIT 1
-			) AS result_with_best_score_for_team ON 1`).
-		Joins(`
-			LEFT JOIN results AS result_with_best_score
-			ON result_with_best_score.participant_id = IF(result_with_best_score_for_team.score_computed IS NOT NULL AND
-				result_with_best_score_for_user.score_computed IS NOT NULL AND (
-				result_with_best_score_for_team.score_computed > result_with_best_score_for_user.score_computed OR
+			Joins("JOIN visible_items AS items").
+			Joins(`
+				LEFT JOIN groups_groups_active AS team_links
+				ON team_links.child_group_id = users.group_id`).
+			Joins(`
+				LEFT JOIN `+"`groups`"+` AS teams
+				ON teams.type = 'Team' AND
+					teams.id = team_links.parent_group_id`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, score_computed, score_obtained_at
+					FROM results
+					WHERE participant_id = users.group_id AND item_id = items.id
+					ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
+					LIMIT 1
+				) AS result_with_best_score_for_user ON 1`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, score_computed, score_obtained_at
+					FROM results
+					WHERE participant_id = teams.id AND item_id = items.id
+					ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
+					LIMIT 1
+				) AS result_with_best_score_for_team ON 1`).
+			Joins(`
+				LEFT JOIN results AS result_with_best_score
+				ON result_with_best_score.participant_id = IF(result_with_best_score_for_team.score_computed IS NOT NULL AND
+					result_with_best_score_for_user.score_computed IS NOT NULL AND (
+					result_with_best_score_for_team.score_computed > result_with_best_score_for_user.score_computed OR
+						(
+							result_with_best_score_for_team.score_computed = result_with_best_score_for_user.score_computed AND
+							result_with_best_score_for_team.score_obtained_at < result_with_best_score_for_user.score_obtained_at
+						)
+					) OR result_with_best_score_for_user.score_computed IS NULL,
+					result_with_best_score_for_team.participant_id,
+					result_with_best_score_for_user.participant_id
+				) AND result_with_best_score.attempt_id = IF(result_with_best_score_for_team.score_computed IS NOT NULL AND
+					result_with_best_score_for_user.score_computed IS NOT NULL AND (
+					result_with_best_score_for_team.score_computed > result_with_best_score_for_user.score_computed OR
+						(
+							result_with_best_score_for_team.score_computed = result_with_best_score_for_user.score_computed AND
+							result_with_best_score_for_team.score_obtained_at < result_with_best_score_for_user.score_obtained_at
+						)
+					) OR result_with_best_score_for_user.score_computed IS NULL,
+					result_with_best_score_for_team.attempt_id,
+					result_with_best_score_for_user.attempt_id
+				) AND result_with_best_score.item_id = items.id`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, latest_activity_at FROM results
+					WHERE participant_id = users.group_id AND item_id = items.id AND latest_activity_at IS NOT NULL
+					ORDER BY latest_activity_at DESC LIMIT 1
+				) AS last_result_of_user ON 1`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, latest_activity_at FROM results
+					WHERE participant_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
+					ORDER BY latest_activity_at DESC LIMIT 1
+				) AS last_result_of_team ON 1`).
+			Joins(`
+				LEFT JOIN results AS last_result
+				ON last_result.participant_id = IF(
 					(
-						result_with_best_score_for_team.score_computed = result_with_best_score_for_user.score_computed AND
-						result_with_best_score_for_team.score_obtained_at < result_with_best_score_for_user.score_obtained_at
-					)
-				) OR result_with_best_score_for_user.score_computed IS NULL,
-				result_with_best_score_for_team.participant_id,
-				result_with_best_score_for_user.participant_id
-			) AND result_with_best_score.attempt_id = IF(result_with_best_score_for_team.score_computed IS NOT NULL AND
-				result_with_best_score_for_user.score_computed IS NOT NULL AND (
-				result_with_best_score_for_team.score_computed > result_with_best_score_for_user.score_computed OR
+						last_result_of_team.participant_id IS NOT NULL AND
+						last_result_of_user.participant_id IS NOT NULL AND
+						last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
+					) OR last_result_of_user.participant_id IS NULL,
+					last_result_of_team.participant_id,
+					last_result_of_user.participant_id
+				) AND last_result.attempt_id = IF(
 					(
-						result_with_best_score_for_team.score_computed = result_with_best_score_for_user.score_computed AND
-						result_with_best_score_for_team.score_obtained_at < result_with_best_score_for_user.score_obtained_at
-					)
-				) OR result_with_best_score_for_user.score_computed IS NULL,
-				result_with_best_score_for_team.attempt_id,
-				result_with_best_score_for_user.attempt_id
-			) AND result_with_best_score.item_id = items.id`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, latest_activity_at FROM results
-				WHERE participant_id = users.group_id AND item_id = items.id AND latest_activity_at IS NOT NULL
-				ORDER BY latest_activity_at DESC LIMIT 1
-			) AS last_result_of_user ON 1`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, latest_activity_at FROM results
-				WHERE participant_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
-				ORDER BY latest_activity_at DESC LIMIT 1
-			) AS last_result_of_team ON 1`).
-		Joins(`
-			LEFT JOIN results AS last_result
-			ON last_result.participant_id = IF(
-				(
-					last_result_of_team.participant_id IS NOT NULL AND
-					last_result_of_user.participant_id IS NOT NULL AND
-					last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
-				) OR last_result_of_user.participant_id IS NULL,
-				last_result_of_team.participant_id,
-				last_result_of_user.participant_id
-			) AND last_result.attempt_id = IF(
-				(
-					last_result_of_team.participant_id IS NOT NULL AND
-					last_result_of_user.participant_id IS NOT NULL AND
-					last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
-				) OR last_result_of_user.participant_id IS NULL,
-				last_result_of_team.attempt_id,
-				last_result_of_user.attempt_id
-			) AND last_result.item_id = items.id`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, started_at FROM results
-				WHERE participant_id = users.group_id AND item_id = items.id AND started_at IS NOT NULL
-				ORDER BY started_at LIMIT 1
-			) AS first_result_of_user ON 1`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, started_at FROM results
-				WHERE participant_id = teams.id AND item_id = items.id AND started_at IS NOT NULL
-				ORDER BY started_at LIMIT 1
-			) AS first_result_of_team ON 1`).
-		Joins(`
-			LEFT JOIN results AS first_result
-			ON first_result.participant_id = IF(
-				(
-					first_result_of_team.participant_id IS NOT NULL AND
-					first_result_of_user.participant_id IS NOT NULL AND
-					first_result_of_team.started_at < first_result_of_user.started_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_result_of_team.participant_id,
-				first_result_of_user.participant_id
-			) AND first_result.attempt_id = IF(
-				(
-					first_result_of_team.participant_id IS NOT NULL AND
-					first_result_of_user.participant_id IS NOT NULL AND
-					first_result_of_team.started_at < first_result_of_user.started_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_result_of_team.attempt_id,
-				first_result_of_user.attempt_id
-			) AND first_result.item_id = items.id`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, validated_at FROM results
-				WHERE participant_id = users.group_id AND item_id = items.id AND validated_at IS NOT NULL
-				ORDER BY validated_at LIMIT 1
-			) AS first_validated_result_of_user ON 1`).
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, validated_at FROM results
-				WHERE participant_id = teams.id AND item_id = items.id AND validated_at IS NOT NULL
-				ORDER BY validated_at LIMIT 1
-			) AS first_validated_result_of_team ON 1`).
-		Joins(`
-			LEFT JOIN results AS first_validated_result
-			ON first_validated_result.participant_id = IF(
-				(
-					first_validated_result_of_team.participant_id IS NOT NULL AND
-					first_validated_result_of_user.participant_id IS NOT NULL AND
-					first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_validated_result_of_team.participant_id,
-				first_validated_result_of_user.participant_id
-			) AND first_validated_result.attempt_id = IF(
-				(
-					first_validated_result_of_team.participant_id IS NOT NULL AND
-					first_validated_result_of_user.participant_id IS NOT NULL AND
-					first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_validated_result_of_team.attempt_id,
-				first_validated_result_of_user.attempt_id
-			) AND first_validated_result.item_id = items.id`).
-		Where("users.group_id IN (?)", userIDs).
-		Group("users.group_id, items.id").
-		Order(gorm.Expr(
-			"FIELD(users.group_id"+strings.Repeat(", ?", len(userIDs))+")",
-			userIDs...)).
-		Order(gorm.Expr(
-			"FIELD(items.id"+strings.Repeat(", ?", len(itemIDs))+")",
-			itemIDs...)).
-		Order("MIN(result_with_best_score.score_computed), MAX(result_with_best_score.score_obtained_at)").
+						last_result_of_team.participant_id IS NOT NULL AND
+						last_result_of_user.participant_id IS NOT NULL AND
+						last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
+					) OR last_result_of_user.participant_id IS NULL,
+					last_result_of_team.attempt_id,
+					last_result_of_user.attempt_id
+				) AND last_result.item_id = items.id`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, started_at FROM results
+					WHERE participant_id = users.group_id AND item_id = items.id AND started_at IS NOT NULL
+					ORDER BY started_at LIMIT 1
+				) AS first_result_of_user ON 1`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, started_at FROM results
+					WHERE participant_id = teams.id AND item_id = items.id AND started_at IS NOT NULL
+					ORDER BY started_at LIMIT 1
+				) AS first_result_of_team ON 1`).
+			Joins(`
+				LEFT JOIN results AS first_result
+				ON first_result.participant_id = IF(
+					(
+						first_result_of_team.participant_id IS NOT NULL AND
+						first_result_of_user.participant_id IS NOT NULL AND
+						first_result_of_team.started_at < first_result_of_user.started_at
+					) OR first_result_of_user.participant_id IS NULL,
+					first_result_of_team.participant_id,
+					first_result_of_user.participant_id
+				) AND first_result.attempt_id = IF(
+					(
+						first_result_of_team.participant_id IS NOT NULL AND
+						first_result_of_user.participant_id IS NOT NULL AND
+						first_result_of_team.started_at < first_result_of_user.started_at
+					) OR first_result_of_user.participant_id IS NULL,
+					first_result_of_team.attempt_id,
+					first_result_of_user.attempt_id
+				) AND first_result.item_id = items.id`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, validated_at FROM results
+					WHERE participant_id = users.group_id AND item_id = items.id AND validated_at IS NOT NULL
+					ORDER BY validated_at LIMIT 1
+				) AS first_validated_result_of_user ON 1`).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT participant_id, attempt_id, validated_at FROM results
+					WHERE participant_id = teams.id AND item_id = items.id AND validated_at IS NOT NULL
+					ORDER BY validated_at LIMIT 1
+				) AS first_validated_result_of_team ON 1`).
+			Joins(`
+				LEFT JOIN results AS first_validated_result
+				ON first_validated_result.participant_id = IF(
+					(
+						first_validated_result_of_team.participant_id IS NOT NULL AND
+						first_validated_result_of_user.participant_id IS NOT NULL AND
+						first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
+					) OR first_result_of_user.participant_id IS NULL,
+					first_validated_result_of_team.participant_id,
+					first_validated_result_of_user.participant_id
+				) AND first_validated_result.attempt_id = IF(
+					(
+						first_validated_result_of_team.participant_id IS NOT NULL AND
+						first_validated_result_of_user.participant_id IS NOT NULL AND
+						first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
+					) OR first_result_of_user.participant_id IS NULL,
+					first_validated_result_of_team.attempt_id,
+					first_validated_result_of_user.attempt_id
+				) AND first_validated_result.item_id = items.id`).
+			Where("users.group_id IN (?)", userIDs).
+			Group("users.group_id, items.id").
+			Order(gorm.Expr(
+				"FIELD(users.group_id"+strings.Repeat(", ?", len(userIDs))+")",
+				userIDs...)).
+			Order("items.id").
+			Order("MIN(result_with_best_score.score_computed), MAX(result_with_best_score.score_obtained_at)").QueryExpr()).
 		Scan(&result).Error())
 
 	render.Respond(w, r, result)
