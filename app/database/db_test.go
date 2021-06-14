@@ -1145,14 +1145,14 @@ func TestDB_Set(t *testing.T) {
 }
 
 func TestOpenRawDBConnection(t *testing.T) {
-	db, err := OpenRawDBConnection("mydsn")
+	db, err := OpenRawDBConnection("/db")
 	assert.NoError(t, err)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
 	assertRawDBIsOK(t, db)
 }
 
 func TestOpen_DSN(t *testing.T) {
-	db, err := Open("mydsn")
+	db, err := Open("/db")
 	assert.Error(t, err) // we want an error since dsn is wrong, but other things should be ok
 	assert.NotNil(t, db)
 	assert.NotNil(t, db.db)
@@ -1178,9 +1178,8 @@ func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 }
 
 func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
-	assert.Equal(t, "instrumentedsql.wrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
-	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.MySQLDriver)")
-	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "dsn:\"mydsn\"")
+	assert.Equal(t, "*instrumentedsql.WrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
+	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.connector)")
 }
 
 func TestDB_isInTransaction_ReturnsTrue(t *testing.T) {
