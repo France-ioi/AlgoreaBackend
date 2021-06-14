@@ -160,7 +160,7 @@ func (s *ResultStore) Propagate() (err error) {
 						SELECT *
 						FROM (
 							WITH marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
-							SELECT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
+							SELECT DISTINCT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
 							FROM marked_to_be_recomputed AS inner_parent
 							WHERE
 								NOT EXISTS (
