@@ -111,7 +111,7 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 				results.item_id = attempts.root_item_id`).
 		Where("attempts.participant_id = ?", teamGroupIDExpr).
 		Where("root_item_id IS NOT NULL").
-		Where("started_at IS NOT NULL").
+		Where("started").
 		Where("NOW() < allows_submissions_until").
 		Where("ended_at IS NULL").
 		Select("item_id, MIN(started_at) AS started_at").

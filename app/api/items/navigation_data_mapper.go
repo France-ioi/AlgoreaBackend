@@ -54,7 +54,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 				NULL AS allows_submissions_until, NULL AS ended_at`).
 		Joins(`
 			JOIN results ON results.participant_id = ? AND results.attempt_id = ? AND
-				results.item_id = items.id AND results.started_at IS NOT NULL`, groupID, attemptID)
+				results.item_id = items.id AND results.started`, groupID, attemptID)
 	service.MustNotBeError(itemsQuery.Error())
 
 	hasVisibleChildrenQuery := dataStore.Permissions().MatchingGroupAncestors(groupID).

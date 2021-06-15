@@ -172,7 +172,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", participantID).
 		Where("permissions.item_id = ?", itemID).
 		Where("results.attempt_id = ?", attemptID).
-		Where("results.started_at IS NOT NULL").
+		Where("results.started").
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {

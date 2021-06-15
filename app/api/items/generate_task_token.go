@@ -137,7 +137,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 			Select("hints_requested, hints_cached").
 			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 			Where("NOW() < attempts.allows_submissions_until").
-			Where("results.started_at IS NOT NULL").
+			Where("results.started").
 			Take(&resultInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
