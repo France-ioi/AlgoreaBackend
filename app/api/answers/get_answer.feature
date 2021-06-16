@@ -58,7 +58,7 @@ Background:
     }
     """
 
-  Scenario: User has access to the item and the user is a team member of attempts.group_id
+  Scenario: User has access to the item and the user is a team member of attempts.participant_id
     Given I am the user with id "21"
     When I send a GET request to "/answers/102"
     Then the response code should be 200

@@ -5,13 +5,14 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // swagger:operation GET /answers/{answer_id} answers answerGet
 // ---
 // summary: Get an answer
-// description: Return the answer identified by the given `answer_id`.
+// description: Return the answer identified by the given `{answer_id}`.
 //
 //   * The user should have at least 'content' access rights to the `attempts.item_id` item for
 //     `answers.attempt_id`.
@@ -19,11 +20,15 @@ import (
 //   * The user should be able to see answers related to his group's attempts so
 //     the user should be a member of the `answers.participant_id` team or
 //     `answers.participant_id` should be equal to the user's self group.
+//
+//
+//   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:
 // - name: answer_id
 //   in: path
 //   type: integer
 //   required: true
+//   format: int64
 // responses:
 //   "200":
 //     "$ref": "#/responses/itemAnswerGetResponse"
@@ -43,12 +48,8 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
-	err = srv.Store.Answers().Visible(user).
-		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
+	err = visibleAnswersWithGradings(srv.Store, user).
 		Where("answers.id = ?", answerID).
-		Select(`answers.id, answers.author_id, answers.item_id, answers.attempt_id, answers.participant_id,
-			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
-			gradings.graded_at`).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {
@@ -58,4 +59,12 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 
 	render.Respond(rw, httpReq, convertedResult)
 	return service.NoError
+}
+
+func visibleAnswersWithGradings(store *database.DataStore, user *database.User) *database.DB {
+	return store.Answers().Visible(user).
+		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
+		Select(`answers.id, answers.author_id, answers.item_id, answers.attempt_id, answers.participant_id,
+			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
+			gradings.graded_at`)
 }
