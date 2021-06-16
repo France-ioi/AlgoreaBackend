@@ -135,7 +135,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
-	var userIDs []interface{}
+	var userIDs []string
 	userIDQuery := srv.Store.ActiveGroupAncestors().
 		Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id").
 		Joins("JOIN `groups` ON groups.id = groups_groups_active.child_group_id AND groups.type = 'User'").
@@ -158,32 +158,38 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.NoError
 	}
 
-	itemIDQuery := srv.Store.Permissions().
-		MatchingUserAncestors(user).
-		WherePermissionIsAtLeast("view", "info").
-		Select("DISTINCT items_items.child_item_id AS id").
-		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
+	itemIDQuery := srv.Store.ItemItems().
+		Select("items_items.child_item_id AS id").
 		Where("parent_item_id IN (?)", itemParentIDs).
+		Joins("JOIN ? AS permissions ON permissions.item_id = items_items.child_item_id",
+			srv.Store.Permissions().MatchingUserAncestors(user).
+				Select("item_id").
+				WherePermissionIsAtLeast("view", "info").SubQuery()).
+		Group("items_items.child_item_id").
 		Order("items_items.child_item_id")
 
+	userIDsList := strings.Join(userIDs, ", ")
 	var result []groupUserProgressResponseRow
 	service.MustNotBeError(srv.Store.Raw("WITH visible_items AS ? ?",
 		itemIDQuery.SubQuery(),
-		srv.Store.Users().Select(`
-			items.id AS item_id,
-			users.group_id AS group_id,
-			IFNULL(MAX(result_with_best_score.score_computed), 0) AS score,
-			IFNULL(MAX(result_with_best_score.validated), 0) AS validated,
-			MAX(last_result.latest_activity_at) AS latest_activity_at,
-			IFNULL(MAX(result_with_best_score.hints_cached), 0) AS hints_requested,
-			IFNULL(MAX(result_with_best_score.submissions), 0) AS submissions,
-			IF(MAX(result_with_best_score.participant_id) IS NULL,
-				0,
-				GREATEST(IF(MAX(result_with_best_score.validated),
-					TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), MIN(first_validated_result.validated_at)),
-					TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), NOW())
-				), 0)
-			) AS time_spent`).
+		// nolint:gosec
+		srv.Store.Raw(`
+			SELECT STRAIGHT_JOIN
+				items.id AS item_id,
+				users.group_id AS group_id,
+				IFNULL(MAX(result_with_best_score.score_computed), 0) AS score,
+				IFNULL(MAX(result_with_best_score.validated), 0) AS validated,
+				MAX(last_result.latest_activity_at) AS latest_activity_at,
+				IFNULL(MAX(result_with_best_score.hints_cached), 0) AS hints_requested,
+				IFNULL(MAX(result_with_best_score.submissions), 0) AS submissions,
+				IF(MAX(result_with_best_score.participant_id) IS NULL,
+					0,
+					GREATEST(IF(MAX(result_with_best_score.validated),
+						TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), MIN(first_validated_result.validated_at)),
+						TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), NOW())
+					), 0)
+				) AS time_spent
+			FROM JSON_TABLE('[`+userIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS users`).
 			Joins("JOIN visible_items AS items").
 			Joins(`
 				LEFT JOIN groups_groups_active AS team_links
@@ -195,7 +201,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			Joins(`
 				LEFT JOIN LATERAL (
 					SELECT participant_id, attempt_id, score_computed, score_obtained_at
-					FROM results
+					FROM results AS result_with_best_score_for_user
 					WHERE participant_id = users.group_id AND item_id = items.id
 					ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 					LIMIT 1
@@ -203,7 +209,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			Joins(`
 				LEFT JOIN LATERAL (
 					SELECT participant_id, attempt_id, score_computed, score_obtained_at
-					FROM results
+					FROM results AS result_with_best_score_for_team
 					WHERE participant_id = teams.id AND item_id = items.id
 					ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 					LIMIT 1
@@ -233,15 +239,15 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				) AND result_with_best_score.item_id = items.id`).
 			Joins(`
 				LEFT JOIN LATERAL (
-					SELECT participant_id, attempt_id, latest_activity_at FROM results
+					SELECT participant_id, attempt_id, latest_activity_at FROM results AS last_result_of_user
 					WHERE participant_id = users.group_id AND item_id = items.id AND latest_activity_at IS NOT NULL
-					ORDER BY latest_activity_at DESC LIMIT 1
+					ORDER BY participant_id, item_id, latest_activity_at DESC LIMIT 1
 				) AS last_result_of_user ON 1`).
 			Joins(`
 				LEFT JOIN LATERAL (
-					SELECT participant_id, attempt_id, latest_activity_at FROM results
+					SELECT participant_id, attempt_id, latest_activity_at FROM results AS last_result_of_team
 					WHERE participant_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
-					ORDER BY latest_activity_at DESC LIMIT 1
+					ORDER BY participant_id, item_id, latest_activity_at DESC LIMIT 1
 				) AS last_result_of_team ON 1`).
 			Joins(`
 				LEFT JOIN results AS last_result
@@ -264,15 +270,15 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				) AND last_result.item_id = items.id`).
 			Joins(`
 				LEFT JOIN LATERAL (
-					SELECT participant_id, attempt_id, started_at FROM results
-					WHERE participant_id = users.group_id AND item_id = items.id AND started_at IS NOT NULL
-					ORDER BY started_at LIMIT 1
+					SELECT participant_id, attempt_id, started_at FROM results AS first_result_of_user
+					WHERE participant_id = users.group_id AND item_id = items.id AND started = 1
+					ORDER BY participant_id, item_id, started, started_at LIMIT 1
 				) AS first_result_of_user ON 1`).
 			Joins(`
 				LEFT JOIN LATERAL (
-					SELECT participant_id, attempt_id, started_at FROM results
-					WHERE participant_id = teams.id AND item_id = items.id AND started_at IS NOT NULL
-					ORDER BY started_at LIMIT 1
+					SELECT participant_id, attempt_id, started_at FROM results AS first_result_of_team
+					WHERE participant_id = teams.id AND item_id = items.id AND started = 1
+					ORDER BY participant_id, item_id, started, started_at LIMIT 1
 				) AS first_result_of_team ON 1`).
 			Joins(`
 				LEFT JOIN results AS first_result
@@ -295,15 +301,15 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				) AND first_result.item_id = items.id`).
 			Joins(`
 				LEFT JOIN LATERAL (
-					SELECT participant_id, attempt_id, validated_at FROM results
-					WHERE participant_id = users.group_id AND item_id = items.id AND validated_at IS NOT NULL
-					ORDER BY validated_at LIMIT 1
+					SELECT participant_id, attempt_id, validated_at FROM results AS first_validated_result_of_user
+					WHERE participant_id = users.group_id AND item_id = items.id AND validated = 1
+					ORDER BY participant_id, item_id, validated, validated_at LIMIT 1
 				) AS first_validated_result_of_user ON 1`).
 			Joins(`
 				LEFT JOIN LATERAL (
-					SELECT participant_id, attempt_id, validated_at FROM results
-					WHERE participant_id = teams.id AND item_id = items.id AND validated_at IS NOT NULL
-					ORDER BY validated_at LIMIT 1
+					SELECT participant_id, attempt_id, validated_at FROM results AS first_validated_result_of_team
+					WHERE participant_id = teams.id AND item_id = items.id AND validated = 1
+					ORDER BY participant_id, item_id, validated, validated_at LIMIT 1
 				) AS first_validated_result_of_team ON 1`).
 			Joins(`
 				LEFT JOIN results AS first_validated_result
@@ -324,13 +330,11 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 					first_validated_result_of_team.attempt_id,
 					first_validated_result_of_user.attempt_id
 				) AND first_validated_result.item_id = items.id`).
-			Where("users.group_id IN (?)", userIDs).
 			Group("users.group_id, items.id").
 			Order(gorm.Expr(
-				"FIELD(users.group_id"+strings.Repeat(", ?", len(userIDs))+")",
-				userIDs...)).
+				"FIELD(users.group_id, "+userIDsList+")")).
 			Order("items.id").
-			Order("MIN(result_with_best_score.score_computed), MAX(result_with_best_score.score_obtained_at)").QueryExpr()).
+			QueryExpr()).
 		Scan(&result).Error())
 
 	render.Respond(w, r, result)

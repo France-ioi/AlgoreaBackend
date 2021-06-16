@@ -182,7 +182,7 @@ func (srv *Service) resolveAttemptIDForNavigationData(httpReq *http.Request, gro
 
 	if !attemptIDSet {
 		err := srv.Store.Table("results AS child_result").
-			Where("child_result.participant_id = ? AND child_result.attempt_id = ? AND child_result.started_at IS NOT NULL",
+			Where("child_result.participant_id = ? AND child_result.attempt_id = ? AND child_result.started",
 				groupID, childAttemptID).
 			Joins(`
 				JOIN attempts AS child_attempt ON child_attempt.participant_id = child_result.participant_id AND
