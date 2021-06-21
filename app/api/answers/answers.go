@@ -17,11 +17,9 @@ type Service struct {
 // swagger:model
 type answerData struct {
 	// required: true
-	// minLength: 1
-	Answer string `json:"answer" validate:"set,min=1"`
+	Answer string `json:"answer" validate:"set"`
 	// required: true
-	// minLength: 1
-	State string `json:"state" validate:"set,min=1"`
+	State string `json:"state" validate:"set"`
 }
 
 // SetRoutes defines the routes for this package in a route answers
