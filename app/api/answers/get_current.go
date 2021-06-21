@@ -11,7 +11,7 @@ import (
 // swagger:operation GET /items/{item_id}/current-answer answers currentAnswerGet
 // ---
 // summary: Get a current answer
-// description: Returns the latest auto-saved ('Current') answer for the given `{item_id}`.
+// description: Returns the latest auto-saved ('Current') answer for the given `{item_id}` and `{attempt_id}`.
 //
 //   * The user should have at least 'content' access rights to the `item_id` item.
 //
@@ -26,6 +26,11 @@ import (
 // parameters:
 // - name: item_id
 //   in: path
+//   type: integer
+//   format: int64
+//   required: true
+// - name: attempt_id
+//   in: query
 //   type: integer
 //   format: int64
 //   required: true
@@ -49,14 +54,19 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
+	attemptID, err := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
 	err = visibleAnswersWithGradings(srv.Store, user).
-		Where("type = 'Current'").
-		Where("item_id = ?", itemID).
 		Where("participant_id = ?", participantID).
+		Where("attempt_id = ?", attemptID).
+		Where("item_id = ?", itemID).
+		Where("type = 'Current'").
 		Order("created_at DESC").
 		Limit(1).
 		ScanIntoSliceOfMaps(&result).Error()

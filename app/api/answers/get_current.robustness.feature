@@ -28,6 +28,7 @@ Feature: Get a current answer - robustness
       | 101 | 11        | 11             | 1          | 200     | Current    | Current | print(1) | 2017-05-29 06:38:38 |
       | 102 | 11        | 11             | 1          | 200     | Current    | Current | print(1) | 2017-05-29 06:38:38 |
       | 103 | 11        | 11             | 1          | 210     | Submission | Current | print(1) | 2017-05-29 06:38:38 |
+      | 104 | 11        | 11             | 2          | 210     | Current    | Current | print(1) | 2017-05-29 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | score | graded_at           |
       | 101       | 100   | 2018-05-29 06:38:38 |
@@ -35,31 +36,36 @@ Feature: Get a current answer - robustness
 
   Scenario: Invalid item_id
     Given I am the user with id "11"
-    When I send a GET request to "/items/1111111111111111111111111111/current-answer"
+    When I send a GET request to "/items/1111111111111111111111111111/current-answer?attempt_id=1"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
+  Scenario: Invalid attempt_id
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/current-answer?attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for attempt_id (should be int64)"
+
   Scenario: Invalid as_team_id
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/current-answer?as_team_id=abc"
+    When I send a GET request to "/items/200/current-answer?as_team_id=abc&attempt_id=1"
     Then the response code should be 400
     And the response error message should contain "Wrong value for as_team_id (should be int64)"
-    And the table "answers" should stay unchanged
 
   Scenario: User doesn't have sufficient access rights to the item
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/current-answer"
+    When I send a GET request to "/items/200/current-answer?attempt_id=1"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: No current answer for the item
+  Scenario: No current answer for the item and the attempt
     Given I am the user with id "11"
-    When I send a GET request to "/items/210/current-answer"
+    When I send a GET request to "/items/210/current-answer?attempt_id=1"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: User is not a member of the team
     Given I am the user with id "11"
-    When I send a GET request to "/items/210/current-answer?as_team_id=13"
+    When I send a GET request to "/items/210/current-answer?as_team_id=13&attempt_id=1"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"

@@ -49,6 +49,7 @@ Background:
     | 204 | 11        | 13             | 1          | 210     | Submission | Current | print(4) | 2017-05-29 06:38:38 |
     | 205 | 11        | 13             | 1          | 210     | Saved      | Current | print(5) | 2017-05-29 06:38:38 |
     | 206 | 11        | 13             | 2          | 210     | Current    | Current | print(6) | 2017-05-29 06:38:38 |
+    | 207 | 11        | 11             | 2          | 200     | Current    | Current | print(7) | 2018-05-29 06:38:37 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
     | 101       | 91    | 2018-05-29 06:38:31 |
@@ -60,7 +61,7 @@ Background:
 
   Scenario: User has access to the item and the answers.participant_id = authenticated user's self group
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/current-answer"
+    When I send a GET request to "/items/200/current-answer?attempt_id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -81,7 +82,7 @@ Background:
 
   Scenario: User has access to the item and the user is a team member of attempts.participant_id
     Given I am the user with id "21"
-    When I send a GET request to "/items/210/current-answer?as_team_id=13"
+    When I send a GET request to "/items/210/current-answer?as_team_id=13&attempt_id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
