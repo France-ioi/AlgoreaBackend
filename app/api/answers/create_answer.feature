@@ -71,3 +71,25 @@ Feature: Create a 'saved' answer
       | author_id | attempt_id | participant_id | item_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 1          | 13             | 50      | Saved      | print 1 | some state | 1                                                 |
       | 101       | 1          | 101            | 50      | Submission | null    | null       | 0                                                 |
+
+  Scenario: User is able to save an answer with empty fields
+    Given I am the user with id "101"
+    When I send a POST request to "/items/50/attempts/1/answers" with the following body:
+      """
+      {
+        "answer": "",
+        "state": ""
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "answers" should be:
+      | author_id | attempt_id | participant_id | item_id | type       | answer | state | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 1          | 101            | 50      | Submission | null   | null  | 0                                                 |
+      | 101       | 1          | 101            | 50      | Saved      |        |       | 1                                                 |
