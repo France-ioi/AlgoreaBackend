@@ -119,7 +119,7 @@ Background:
         "prompt_to_join_group_by_code": false,
         "default_language_tag": "sl",
         "children": [
-          {"item_id": "112", "category": "Discovery", "score_weight": 1},
+          {"item_id": "112", "order": 0, "category": "Discovery", "score_weight": 1},
           {"item_id": "134", "order": 1, "category": "Application", "score_weight": 2}
         ]
       }

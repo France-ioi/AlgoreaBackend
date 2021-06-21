@@ -113,8 +113,8 @@ type permissionAndType struct {
 type itemChild struct {
 	// required: true
 	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set"`
-	// default: 0
-	Order int32 `json:"order" sql:"column:child_order"`
+	// required: true
+	Order int32 `json:"order" sql:"column:child_order" validate:"set"`
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// default: Undefined
 	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`

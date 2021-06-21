@@ -568,6 +568,37 @@ Feature: Create item - robustness
       | Task   |
       | Course |
 
+  Scenario: Child order is missing
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Chapter",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent": {"item_id": "21"},
+        "children": [{"item_id": 24}]
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "children[0].order": ["missing field"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
   Scenario Outline: Wrong optional field value in the array of children
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
@@ -579,6 +610,7 @@ Feature: Create item - robustness
         "parent": {"item_id": "21"},
         "children": [{
           "item_id": 24,
+          "order": 0,
           "<field>": <value>
         }]
       }
