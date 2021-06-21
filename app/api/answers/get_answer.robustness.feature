@@ -1,4 +1,4 @@
-Feature: Feature: Get user's answer by user_answer_id
+Feature: Get user's answer by id
   Background:
     Given the database has the following table 'groups':
       | id | name | type |

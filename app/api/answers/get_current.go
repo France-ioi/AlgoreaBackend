@@ -5,29 +5,38 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /answers/{answer_id} answers answerGet
+// swagger:operation GET /items/{item_id}/current-answer answers currentAnswerGet
 // ---
-// summary: Get an answer
-// description: Return the answer identified by the given `{answer_id}`.
+// summary: Get a current answer
+// description: Returns the latest auto-saved ('Current') answer for the given `{item_id}` and `{attempt_id}`.
 //
-//   * The user should have at least 'content' access rights to the `attempts.item_id` item for
-//     `answers.attempt_id`.
+//   * The user should have at least 'content' access rights to the `item_id` item.
 //
 //   * The user should be able to see answers related to his group's attempts so
 //     the user should be a member of the `answers.participant_id` team or
 //     `answers.participant_id` should be equal to the user's self group.
 //
+//   * `{as_team_id}` (if given) should be the user's team.
+//
 //
 //   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:
-// - name: answer_id
+// - name: item_id
 //   in: path
 //   type: integer
+//   format: int64
 //   required: true
+// - name: attempt_id
+//   in: query
+//   type: integer
+//   format: int64
+//   required: true
+// - name: as_team_id
+//   in: query
+//   type: integer
 //   format: int64
 // responses:
 //   "200":
@@ -40,16 +49,26 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	answerID, err := service.ResolveURLQueryPathInt64Field(httpReq, "answer_id")
+func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
+	attemptID, err := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
 	err = visibleAnswersWithGradings(srv.Store, user).
-		Where("answers.id = ?", answerID).
+		Where("participant_id = ?", participantID).
+		Where("attempt_id = ?", attemptID).
+		Where("item_id = ?", itemID).
+		Where("type = 'Current'").
+		Order("created_at DESC").
+		Limit(1).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {
@@ -59,12 +78,4 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 
 	render.Respond(rw, httpReq, convertedResult)
 	return service.NoError
-}
-
-func visibleAnswersWithGradings(store *database.DataStore, user *database.User) *database.DB {
-	return store.Answers().Visible(user).
-		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
-		Select(`answers.id, answers.author_id, answers.item_id, answers.attempt_id, answers.participant_id,
-			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
-			gradings.graded_at`)
 }
