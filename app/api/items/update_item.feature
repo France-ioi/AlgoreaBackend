@@ -609,3 +609,28 @@ Background:
       | grant_view_propagation        | true                         | true                         |
       | watch_propagation             | true                         | true                         |
       | edit_propagation              | true                         | true                         |
+
+  Scenario: Allows keeping old values in items_items
+    Given I am the user with id "11"
+    And the database table 'items' has also the following rows:
+      | id  | default_language_tag |
+      | 112 | fr                   |
+    And the database table 'items_items' has also the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
+      | 21             | 112           | 1           | Challenge | 2            | as_content               | as_is                         | true                   | true              | true             |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_view_generated |
+      | 11       | 112     | info               |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [{
+          "item_id": 112,
+          "order": 1
+        }]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_items" at parent_item_id "21" should be:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
+      | 21             | 112           | 1           | Challenge | 2            | as_content               | as_is                         | true                   | true              | true             |

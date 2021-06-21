@@ -229,14 +229,15 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 				return apiError.Error // rollback
 			}
 
-			var oldPropagationLevels []propagationLevels
+			var oldRelations []itemsRelationData
 			service.MustNotBeError(store.ItemItems().ChildrenOf(itemID).WithWriteLock().
-				Select(`child_item_id AS item_id, content_view_propagation_value, upper_view_levels_propagation_value,
-						  grant_view_propagation, watch_propagation, edit_propagation`).
-				Scan(&oldPropagationLevels).Error())
-			oldPropagationLevelsMap := make(map[int64]*propagationLevels, len(oldPropagationLevels))
-			for index := range oldPropagationLevels {
-				oldPropagationLevelsMap[oldPropagationLevels[index].ItemID] = &oldPropagationLevels[index]
+				Select(`child_item_id AS item_id, category, score_weight,
+				        content_view_propagation_value, upper_view_levels_propagation_value,
+						    grant_view_propagation, watch_propagation, edit_propagation`).
+				Scan(&oldRelations).Error())
+			oldPropagationLevelsMap := make(map[int64]*itemsRelationData, len(oldRelations))
+			for index := range oldRelations {
+				oldPropagationLevelsMap[oldRelations[index].ItemID] = &oldRelations[index]
 			}
 
 			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissionMap, input.Children, formData, oldPropagationLevelsMap, lockedStore)
