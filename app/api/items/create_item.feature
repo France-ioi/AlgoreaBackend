@@ -250,7 +250,7 @@ Feature: Create item
           "edit_propagation": <edit_propagation>
         },
         "children": [
-          {"item_id": "12"},
+          {"item_id": "12", "order": 0},
           {"item_id": "34", "order": 1, "category": "Application", "score_weight": 2}
         ]
       }

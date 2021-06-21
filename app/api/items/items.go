@@ -113,8 +113,8 @@ type permissionAndType struct {
 type itemChild struct {
 	// required: true
 	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set"`
-	// default: 0
-	Order int32 `json:"order" sql:"column:child_order"`
+	// required: true
+	Order int32 `json:"order" sql:"column:child_order" validate:"set"`
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// default: Undefined
 	Category string `json:"category" validate:"oneof=Undefined Discovery Application Validation Challenge"`
@@ -206,8 +206,10 @@ func defaultUpperViewLevelsPropagationForNewItemItems(canGrantViewGeneratedValue
 	return useContentViewPropagation
 }
 
-type propagationLevels struct {
+type itemsRelationData struct {
 	ItemID                          int64
+	Category                        string
+	ScoreWeight                     int8
 	ContentViewPropagationValue     int
 	UpperViewLevelsPropagationValue int
 	GrantViewPropagation            bool
@@ -216,44 +218,41 @@ type propagationLevels struct {
 }
 
 func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permissionAndType, children []itemChild,
-	formData *formdata.FormData, oldPropagationLevelsMap map[int64]*propagationLevels, store *database.DataStore) service.APIError {
+	formData *formdata.FormData, oldRelationsMap map[int64]*itemsRelationData, store *database.DataStore) service.APIError {
 	for index := range children {
+		childRelation := childrenInfoMap[children[index].ItemID]
+		oldChildRelation := oldRelationsMap[children[index].ItemID]
 		prefix := fmt.Sprintf("children[%d].", index)
-		if !formData.IsSet(prefix + "category") {
-			children[index].Category = undefined
-		}
-		if !formData.IsSet(prefix + "score_weight") {
-			children[index].ScoreWeight = 1
-		}
 
-		childPermissions := childrenInfoMap[children[index].ItemID]
-		oldPropagationLevels := oldPropagationLevelsMap[children[index].ItemID]
+		applyCategoryDefaultValue(formData, prefix, &children[index], oldChildRelation)
+		applyScoreWeightDefaultValue(formData, prefix, &children[index], oldChildRelation)
+
 		apiError := validateChildContentViewPropagationAndApplyDefaultValue(
-			formData, prefix, &children[index], childPermissions.Permission, oldPropagationLevels, store)
+			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
 		apiError = validateChildUpperViewLevelsPropagationAndApplyDefaultValue(
-			formData, prefix, &children[index], childPermissions.Permission, oldPropagationLevels, store)
+			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
 		apiError = validateChildGrantViewPropagationAndApplyDefaultValue(
-			formData, prefix, &children[index], childPermissions.Permission, oldPropagationLevels, store)
+			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
 		apiError = validateChildWatchPropagationAndApplyDefaultValue(
-			formData, prefix, &children[index], childPermissions.Permission, oldPropagationLevels, store)
+			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
 		if apiError != service.NoError {
 			return apiError
 		}
 
 		apiError = validateChildEditPropagationAndApplyDefaultValue(
-			formData, prefix, &children[index], childPermissions.Permission, oldPropagationLevels, store)
+			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
 		if apiError != service.NoError {
 			return apiError
 		}
@@ -261,9 +260,30 @@ func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permission
 	return service.NoError
 }
 
+func applyCategoryDefaultValue(formData *formdata.FormData, prefix string, child *itemChild, oldRelationData *itemsRelationData) {
+	if !formData.IsSet(prefix + "category") {
+		if oldRelationData != nil {
+			child.Category = oldRelationData.Category
+		} else {
+			child.Category = undefined
+		}
+	}
+}
+
+func applyScoreWeightDefaultValue(formData *formdata.FormData, prefix string, child *itemChild, oldRelationData *itemsRelationData) {
+	if !formData.IsSet(prefix + "score_weight") {
+		if oldRelationData != nil {
+			child.ScoreWeight = oldRelationData.ScoreWeight
+		} else {
+			child.ScoreWeight = 1
+		}
+	}
+}
+
 func validateChildBooleanPropagationAndApplyDefaultValue(formData *formdata.FormData, fieldName, prefix string,
 	propagationValue, oldPropagationValue *bool, permissionValue, requiredPermissionValue int) service.APIError {
-	if formData.IsSet(prefix + fieldName) {
+	switch {
+	case formData.IsSet(prefix + fieldName):
 		// allow setting the propagation to the same or a lower value
 		if oldPropagationValue != nil && (!*propagationValue || *oldPropagationValue) {
 			return service.NoError
@@ -271,17 +291,19 @@ func validateChildBooleanPropagationAndApplyDefaultValue(formData *formdata.Form
 		if *propagationValue && permissionValue < requiredPermissionValue {
 			return service.ErrForbidden(fmt.Errorf("not enough permissions for setting %s", fieldName))
 		}
-	} else {
+	case oldPropagationValue != nil:
+		*propagationValue = *oldPropagationValue
+	default:
 		*propagationValue = permissionValue >= requiredPermissionValue
 	}
 	return service.NoError
 }
 
 func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
-	childPermissions *Permission, oldPropagationLevels *propagationLevels, store *database.DataStore) service.APIError {
+	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore) service.APIError {
 	var oldPropagationValue *bool
-	if oldPropagationLevels != nil {
-		oldPropagationValue = &oldPropagationLevels.EditPropagation
+	if oldRelationData != nil {
+		oldPropagationValue = &oldRelationData.EditPropagation
 	}
 	return validateChildBooleanPropagationAndApplyDefaultValue(formData, "edit_propagation", prefix,
 		&child.EditPropagation, oldPropagationValue,
@@ -289,10 +311,10 @@ func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormDat
 }
 
 func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
-	childPermissions *Permission, oldPropagationLevels *propagationLevels, store *database.DataStore) service.APIError {
+	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore) service.APIError {
 	var oldPropagationValue *bool
-	if oldPropagationLevels != nil {
-		oldPropagationValue = &oldPropagationLevels.WatchPropagation
+	if oldRelationData != nil {
+		oldPropagationValue = &oldRelationData.WatchPropagation
 	}
 	return validateChildBooleanPropagationAndApplyDefaultValue(formData, "watch_propagation", prefix,
 		&child.WatchPropagation, oldPropagationValue,
@@ -300,10 +322,10 @@ func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormDa
 }
 
 func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
-	childPermissions *Permission, oldPropagationLevels *propagationLevels, store *database.DataStore) service.APIError {
+	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore) service.APIError {
 	var oldPropagationValue *bool
-	if oldPropagationLevels != nil {
-		oldPropagationValue = &oldPropagationLevels.GrantViewPropagation
+	if oldRelationData != nil {
+		oldPropagationValue = &oldRelationData.GrantViewPropagation
 	}
 	return validateChildBooleanPropagationAndApplyDefaultValue(formData, "grant_view_propagation", prefix,
 		&child.GrantViewPropagation, oldPropagationValue,
@@ -312,11 +334,12 @@ func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.Fo
 
 // nolint:dupl
 func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
-	child *itemChild, childPermissions *Permission, oldPropagationLevels *propagationLevels, store *database.DataStore) service.APIError {
-	if formData.IsSet(prefix + "upper_view_levels_propagation") {
-		if oldPropagationLevels != nil &&
+	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore) service.APIError {
+	switch {
+	case formData.IsSet(prefix + "upper_view_levels_propagation"):
+		if oldRelationData != nil &&
 			store.ItemItems().UpperViewLevelsPropagationIndexByName(child.UpperViewLevelsPropagation) <=
-				oldPropagationLevels.UpperViewLevelsPropagationValue {
+				oldRelationData.UpperViewLevelsPropagationValue {
 			return service.NoError
 		}
 		var failed bool
@@ -331,7 +354,10 @@ func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formd
 		if failed {
 			return service.ErrForbidden(errors.New("not enough permissions for setting upper_view_levels_propagation"))
 		}
-	} else {
+	case oldRelationData != nil:
+		child.UpperViewLevelsPropagation =
+			store.ItemItems().UpperViewLevelsPropagationNameByIndex(oldRelationData.UpperViewLevelsPropagationValue)
+	default:
 		child.UpperViewLevelsPropagation =
 			defaultUpperViewLevelsPropagationForNewItemItems(childPermissions.CanGrantViewGeneratedValue, store)
 	}
@@ -340,10 +366,11 @@ func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formd
 
 // nolint:dupl
 func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
-	child *itemChild, childPermissions *Permission, oldPropagationLevels *propagationLevels, store *database.DataStore) service.APIError {
-	if formData.IsSet(prefix + "content_view_propagation") {
-		if oldPropagationLevels != nil &&
-			store.ItemItems().ContentViewPropagationIndexByName(child.ContentViewPropagation) <= oldPropagationLevels.ContentViewPropagationValue {
+	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore) service.APIError {
+	switch {
+	case formData.IsSet(prefix + "content_view_propagation"):
+		if oldRelationData != nil &&
+			store.ItemItems().ContentViewPropagationIndexByName(child.ContentViewPropagation) <= oldRelationData.ContentViewPropagationValue {
 			return service.NoError
 		}
 		var failed bool
@@ -357,7 +384,9 @@ func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.
 		if failed {
 			return service.ErrForbidden(errors.New("not enough permissions for setting content_view_propagation"))
 		}
-	} else {
+	case oldRelationData != nil:
+		child.ContentViewPropagation = store.ItemItems().ContentViewPropagationNameByIndex(oldRelationData.ContentViewPropagationValue)
+	default:
 		child.ContentViewPropagation =
 			defaultContentViewPropagationForNewItemItems(childPermissions.CanGrantViewGeneratedValue, store)
 	}
