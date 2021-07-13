@@ -27,7 +27,7 @@ type groupUserRequestsViewResponseRow struct {
 		ID int64 `json:"id,string"`
 		// required: true
 		Name string `json:"name"`
-	} `json:"group" gorm:"embedded;embedded_prefix:group__"`
+	} `json:"group" gorm:"embedded;embeddedPrefix:group__"`
 
 	// required: true
 	User struct {
@@ -41,7 +41,7 @@ type groupUserRequestsViewResponseRow struct {
 		ShowPersonalInfo bool `json:"-"`
 
 		Grade *int32 `json:"grade"`
-	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
+	} `json:"user" gorm:"embedded;embeddedPrefix:user__"`
 }
 
 // swagger:operation GET /groups/user-requests group-memberships groupUserRequestsView
@@ -170,7 +170,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 			tieBreakerFieldNames = []string{"user.group_id"}
 		}
 	} else {
-		query = query.Where("group_pending_requests.group_id IN ?",
+		query = query.Where("group_pending_requests.group_id IN (?)",
 			srv.Store.ActiveGroupAncestors().ManagedByUser(user).Where("can_manage != 'none'").
 				Select("groups_ancestors_active.child_group_id").SubQuery())
 	}

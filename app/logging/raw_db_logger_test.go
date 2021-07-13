@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"testing"
 
+	"github.com/sirupsen/logrus" //nolint:depguard
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -15,12 +16,14 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 	config := viper.New()
 	config.Set("Format", "text")
 	config.Set("LogRawSQLQueries", true)
-	logger := &Logger{nulllogger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
+	ourLogger := &Logger{nulllogger, config}
+	ourLogger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
+	ourLogger.Configure(ourLogger.config)
+	rawLogMode := ourLogger.GetRawSQLLogMode()
 
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	rawLogger := NewRawDBLogger(nulllogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
-	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
+	assert.Contains(t, hook.GetAllStructuredLogs(), "msg=\"some message\" err=\"<nil>\" type=rawsql")
 }
 
 func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
@@ -29,8 +32,9 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	config.Set("Format", "text")
 	config.Set("LogRawSQLQueries", false)
 	logger := &Logger{nulllogger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	logger.Configure(logger.config)
+	rawLogMode := logger.GetRawSQLLogMode()
+	rawLogger := NewRawDBLogger(nulllogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }
@@ -41,11 +45,27 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	config.Set("Format", "json")
 	config.Set("LogRawSQLQueries", true)
 	logger := &Logger{nulllogger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	rawLogMode := logger.GetRawSQLLogMode()
+	rawLogger := NewRawDBLogger(nulllogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
-	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
-	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
+	assert.Contains(t, hook.GetAllStructuredLogs(), `"msg":"some message"`)
+	assert.Contains(t, hook.GetAllStructuredLogs(), `"err":null`)
+}
+
+func TestNewRawDBLogger_TextLog_WithQuery(t *testing.T) {
+	nulllogger, hook := loggingtest.NewNullLogger()
+	config := viper.New()
+	config.Set("Format", "text")
+	config.Set("LogRawSQLQueries", true)
+	ourLogger := &Logger{nulllogger, config}
+	ourLogger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
+	ourLogger.Configure(ourLogger.config)
+	rawLogMode := ourLogger.GetRawSQLLogMode()
+
+	rawLogger := NewRawDBLogger(nulllogger, rawLogMode)
+	rawLogger.Log(nil, "some message", "err", nil, "query", "SELECT 1") //lint:ignore SA1012 sql often uses nil context
+	assert.Contains(t, hook.GetAllStructuredLogs(), "msg=\"some message\\nSELECT 1\\n\" err=\"<nil>\" type=rawsql")
 }
 
 func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
@@ -54,8 +74,8 @@ func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
 	config.Set("Format", "json")
 	config.Set("LogRawSQLQueries", true)
 	logger := &Logger{nulllogger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	rawLogMode := logger.GetRawSQLLogMode()
+	rawLogger := NewRawDBLogger(nulllogger, rawLogMode)
 	rawLogger.Log(nil, "sql-stmt-exec", "err", driver.ErrSkip) //lint:ignore SA1012 we check the nil context here
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }

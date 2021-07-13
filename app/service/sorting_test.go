@@ -210,7 +210,7 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
+				"WHERE (name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?) " +
 				"ORDER BY name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
 			wantAPIError:     NoError},
@@ -225,7 +225,7 @@ func TestApplySorting(t *testing.T) {
 				defaultRules:         "-name,id,flag",
 				tieBreakerFieldNames: []string{"id"},
 			},
-			wantSQL:          "SELECT id FROM `users` WHERE ((id > ?)) ORDER BY id ASC",
+			wantSQL:          "SELECT id FROM `users` WHERE (id > ?) ORDER BY id ASC",
 			wantSQLArguments: []driver.Value{1},
 			wantAPIError:     NoError},
 		{name: "sorting + paging by a nullable field",
@@ -240,7 +240,7 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
+				"WHERE (name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?) " +
 				"ORDER BY name IS NOT NULL, name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
 			wantAPIError:     NoError},
@@ -256,7 +256,7 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"WHERE (((name < ? OR name IS NULL)) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
+				"WHERE ((name < ? OR name IS NULL)) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?) " +
 				"ORDER BY name IS NULL, name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
 			wantAPIError:     NoError},
@@ -272,7 +272,7 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"WHERE ((bFlag > ?) OR (bFlag = ? AND (name < ? OR name IS NULL)) OR (bFlag = ? AND name = ? AND id > ?)) " +
+				"WHERE (bFlag > ?) OR (bFlag = ? AND (name < ? OR name IS NULL)) OR (bFlag = ? AND name = ? AND id > ?) " +
 				"ORDER BY bFlag ASC, name IS NULL, name DESC, id ASC",
 			wantSQLArguments: []driver.Value{true, true, "Joe", true, "Joe", 1},
 			wantAPIError:     NoError},
@@ -288,7 +288,7 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"WHERE ((name IS NOT NULL) OR (name IS NULL AND id > ?) OR (name IS NULL AND id = ? AND bFlag > ?)) " +
+				"WHERE (name IS NOT NULL) OR (name IS NULL AND id > ?) OR (name IS NULL AND id = ? AND bFlag > ?) " +
 				"ORDER BY name IS NOT NULL, name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{1, 1, true},
 			wantAPIError:     NoError},
@@ -304,7 +304,7 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"WHERE ((name IS NULL AND id > ?) OR (name IS NULL AND id = ? AND bFlag > ?)) " +
+				"WHERE (name IS NULL AND id > ?) OR (name IS NULL AND id = ? AND bFlag > ?) " +
 				"ORDER BY name IS NULL, name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{1, 1, true},
 			wantAPIError:     NoError},
@@ -320,7 +320,7 @@ func TestApplySorting(t *testing.T) {
 				tieBreakerFieldNames: []string{"id"},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"WHERE ((id > ?) OR (id = ? AND bFlag > ?) OR (id = ? AND bFlag = ? AND name IS NULL)) " +
+				"WHERE (id > ?) OR (id = ? AND bFlag > ?) OR (id = ? AND bFlag = ? AND name IS NULL) " +
 				"ORDER BY id ASC, bFlag ASC, name IS NULL, name ASC",
 			wantSQLArguments: []driver.Value{1, 1, true},
 			wantAPIError:     NoError},
@@ -379,7 +379,7 @@ func TestApplySorting(t *testing.T) {
 				defaultRules:         "submitted_at,id",
 				tieBreakerFieldNames: []string{"id"},
 			},
-			wantSQL: "SELECT id FROM `users`  WHERE ((submitted_at > ?) OR (submitted_at = ? AND id > ?)) " +
+			wantSQL: "SELECT id FROM `users`  WHERE (submitted_at > ?) OR (submitted_at = ? AND id > ?) " +
 				"ORDER BY submitted_at ASC, id ASC",
 			wantSQLArguments: []driver.Value{
 				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},

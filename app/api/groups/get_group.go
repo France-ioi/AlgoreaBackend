@@ -1,10 +1,11 @@
 package groups
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -74,13 +75,13 @@ type groupGetResponse struct {
 	CurrentUserManagership string `json:"current_user_managership"`
 	// list of descendant (excluding the group itself) groups that the current user is member of
 	// required:true
-	DescendantsCurrentUserIsMemberOf []structures.GroupShortInfo `json:"descendants_current_user_is_member_of"`
+	DescendantsCurrentUserIsMemberOf []structures.GroupShortInfo `json:"descendants_current_user_is_member_of" gorm:"-"`
 	// list of ancestor (excluding the group itself) groups that the current user (or his ancestor groups) is manager of
 	// required:true
-	AncestorsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"ancestors_current_user_is_manager_of"`
+	AncestorsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"ancestors_current_user_is_manager_of" gorm:"-"`
 	// list of descendant (excluding the group itself) non-user groups that the current user (or his ancestor groups) is manager of
 	// required:true
-	DescendantsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"descendants_current_user_is_manager_of"`
+	DescendantsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"descendants_current_user_is_manager_of" gorm:"-"`
 
 	*structures.GroupShortInfo
 	*GroupGetResponseCodePart
@@ -136,7 +137,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	query := pickVisibleGroups(srv.Store.Groups().DB, user).
 		Joins(`
-			LEFT JOIN ? AS manager_access ON child_group_id = groups.id`,
+			LEFT JOIN (?) AS manager_access ON child_group_id = groups.id`,
 			srv.Store.GroupAncestors().ManagedByUser(user).
 				Select(`
 					1 AS found,
@@ -168,7 +169,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		IF(parent_group_id IS NOT NULL AND groups.type = 'Team',
 			IF(groups.frozen_membership,
 				'frozen_membership',
-				IF(?,
+				IF((?),
 					'would_break_entry_conditions',
 					'free_to_leave'
 				)
@@ -177,8 +178,8 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		) AS can_leave_team`,
 		srv.Store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
 			gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
-		Scan(&result).Error()
-	if gorm.IsRecordNotFoundError(err) {
+		Take(&result).Error()
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)

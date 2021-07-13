@@ -1,10 +1,11 @@
 package items
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -174,7 +175,7 @@ func (srv *Service) getItemInfoAndEntryState(itemID, groupID int64, user *databa
 			items.allows_multiple_attempts, items.entry_participant_type = 'Team' AS is_team_item,
 			items.entry_max_team_size, items.entry_min_admitted_members_ratio, items.entry_frozen_teams`).
 		Take(&itemInfo).Error()
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
@@ -187,7 +188,7 @@ func (srv *Service) getItemInfoAndEntryState(itemID, groupID int64, user *databa
 	if groupID != user.GroupID {
 		err = store.Groups().TeamGroupForUser(groupID, user).
 			PluckFirst("frozen_membership", &currentTeamHasFrozenMembership).Error()
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, service.InsufficientAccessRightsError
 		}
 		service.MustNotBeError(err)

@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"

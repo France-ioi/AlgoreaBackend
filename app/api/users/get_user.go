@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
@@ -42,7 +42,7 @@ type userViewResponse struct {
 
 	// list of ancestor (excluding the user himself) groups that the current user (or his ancestor groups) is manager of
 	// required:true
-	AncestorsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"ancestors_current_user_is_manager_of"`
+	AncestorsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"ancestors_current_user_is_manager_of" gorm:"-"`
 
 	*ManagerPermissionsPart
 
@@ -97,7 +97,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 			user.GroupID, user.GroupID, user.GroupID).
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
-			LEFT JOIN ? AS manager_access ON child_group_id = users.group_id`,
+			LEFT JOIN (?) AS manager_access ON child_group_id = users.group_id`,
 			srv.Store.GroupAncestors().ManagedByUser(user).
 				Select(`
 					1 AS found,
@@ -107,9 +107,9 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 					groups_ancestors.child_group_id`).
 				Where("groups_ancestors.child_group_id = ?", userID).
 				Group("groups_ancestors.child_group_id").SubQuery()).
-		Scan(&userInfo).Error()
+		Take(&userInfo).Error()
 
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return service.ErrNotFound(errors.New("no such user"))
 	}
 	service.MustNotBeError(err)

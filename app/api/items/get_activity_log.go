@@ -36,7 +36,7 @@ type itemActivityLogResponseRow struct {
 		// required: true
 		// enum: Team,User
 		Type string `json:"type"`
-	} `json:"participant" gorm:"embedded;embedded_prefix:participant__"`
+	} `json:"participant" gorm:"embedded;embeddedPrefix:participant__"`
 	User *struct {
 		// required: true
 		ID *int64 `json:"id,string"`
@@ -45,7 +45,7 @@ type itemActivityLogResponseRow struct {
 
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
-	} `json:"user,omitempty" gorm:"embedded;embedded_prefix:user__"`
+	} `json:"user,omitempty" gorm:"embedded;embeddedPrefix:user__"`
 	// required: true
 	Item struct {
 		// required: true
@@ -58,8 +58,8 @@ type itemActivityLogResponseRow struct {
 			// Nullable
 			// required: true
 			Title *string `json:"title"`
-		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
-	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
+		} `json:"string" gorm:"embedded;embeddedPrefix:string__"`
+	} `json:"item" gorm:"embedded;embeddedPrefix:item__"`
 }
 
 // swagger:operation GET /items/{item_id}/log items itemActivityLogForItem
@@ -320,7 +320,7 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 	if itemID != nil {
 		itemDescendants := srv.Store.ItemAncestors().DescendantsOf(*itemID).Select("child_item_id")
 		visibleItemDescendants = visibleItemDescendants.
-			Where("item_id = ? OR item_id IN ?", *itemID, itemDescendants.SubQuery())
+			Where("item_id = ? OR item_id IN (?)", *itemID, itemDescendants.SubQuery())
 	}
 
 	if watchedGroupIDSet {
@@ -359,7 +359,9 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 		return nil, apiError
 	}
 
-	answersQuery = srv.Store.Raw("SELECT limited_answers.*, gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
+	answersQuery = srv.Store.
+		Table("(?) AS limited_answers", answersQuery.SubQuery()).
+		Select("limited_answers.*, gradings.score").
 		Joins("LEFT JOIN gradings ON gradings.answer_id = limited_answers.answer_id")
 
 	startedResultsQuery := srv.Store.Table("results AS started_results").
@@ -411,14 +413,7 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 		},
 		"-at,item_id,participant_id,-attempt_id,-activity_type,answer_id", []string{"participant_id", "attempt_id", "item_id"}, true)
 
-	// There is a bug in Gorm. They assume that queries constructed with Raw() already contain WHERE.
-	// It is easier to add a workaround here than to patch Gorm because many programs depend on this behavior.
-	unionQueryString := "SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un"
-	if len(r.URL.Query()["from.answer_id"]) > 0 {
-		unionQueryString += " WHERE "
-	}
-
-	unionQuery := srv.Store.Raw(unionQueryString,
+	unionQuery := srv.Store.Table("((?) UNION ALL (?) UNION ALL (?)) AS un",
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery = service.NewQueryLimiter().Apply(r, unionQuery)
 	unionQuery, _ = service.ApplySortingAndPaging(r, unionQuery,
@@ -436,9 +431,11 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 		"-at,item_id,participant_id,-attempt_id,-activity_type,answer_id",
 		[]string{"participant_id", "attempt_id", "item_id", "activity_type", "answer_id"}, true)
 
-	query := srv.Store.Raw(`
-		WITH items_to_show AS ?, participants AS ?
-		SELECT STRAIGHT_JOIN activity_type, at, answer_id, attempt_id, participant_id, score,
+	query := srv.Store.
+		With("items_to_show AS (?), participants AS (?)", visibleItemDescendants.SubQuery(), participantsQuery.SubQuery()).
+		Table("(?) AS activities", unionQuery.SubQuery()).
+		Select(`STRAIGHT_JOIN
+			activity_type, at, answer_id, attempt_id, participant_id, score,
 			items.id AS item__id, items.type AS item__type,
 			groups.id AS participant__id,
 			groups.name AS participant__name,
@@ -448,9 +445,8 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 			users.group_id = ? OR personal_info_view_approvals.approved AS user__show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
-			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
-		FROM ? AS activities`, visibleItemDescendants.SubQuery(), participantsQuery.SubQuery(), user.GroupID, user.GroupID, user.GroupID,
-		unionQuery.SubQuery()).
+			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title`,
+			user.GroupID, user.GroupID, user.GroupID).
 		Joins("JOIN items ON items.id = item_id").
 		Joins("JOIN `groups` ON groups.id = participant_id").
 		Joins("LEFT JOIN users ON users.group_id = user_id").

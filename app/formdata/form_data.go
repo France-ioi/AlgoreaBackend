@@ -14,7 +14,7 @@ import (
 
 	english "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm/schema"
 
 	"github.com/France-ioi/mapstructure"
 	"github.com/France-ioi/validator"
@@ -317,7 +317,7 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 			return false
 		}
 
-		dbName := gorm.ToColumnName(structField.Name)
+		dbName := schema.NamingStrategy{}.ColumnName("", structField.Name)
 
 		for _, str := range []string{structField.Tag.Get("sql"), structField.Tag.Get("gorm")} {
 			tags := strings.Split(str, ";")

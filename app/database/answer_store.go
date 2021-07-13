@@ -64,8 +64,8 @@ func (s *AnswerStore) Visible(user *User) *DB {
 
 	return s.
 		// the user should have at least 'content' access to the answers.item_id
-		Joins("JOIN ? AS permissions USING(item_id)", perms.SubQuery()).
+		Joins("JOIN (?) AS permissions USING(item_id)", perms.SubQuery()).
 		// attempts.group_id should be one of the authorized user's groups or the user's self group
-		Where("answers.participant_id = ? OR answers.participant_id IN ?",
+		Where("answers.participant_id = ? OR answers.participant_id IN (?)",
 			user.GroupID, usersGroupsQuery.SubQuery())
 }

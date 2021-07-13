@@ -8,8 +8,6 @@ exclude github.com/thingful/httpmock v0.0.2
 
 exclude github.com/thingful/httpmock v0.0.1
 
-replace github.com/jinzhu/gorm v1.9.6 => github.com/France-ioi/gorm v0.0.0-20200829222212-0373d329b88b
-
 require (
 	bou.ke/monkey v1.0.1
 	github.com/BurntSushi/toml v0.3.1 // indirect
@@ -31,11 +29,12 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gobuffalo/packr v1.21.0 // indirect
 	github.com/goware/urlx v0.2.0 // indirect
-	github.com/jinzhu/gorm v1.9.6
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
+	github.com/lib/pq v1.10.2 // indirect
 	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/rubenv/sql-migrate v0.0.0-20181213081019-5a8808c14925
 	github.com/sirupsen/logrus v1.2.0
@@ -46,8 +45,9 @@ require (
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v2 v2.2.8
+	gorm.io/driver/mysql v1.1.1
+	gorm.io/gorm v1.21.11
 )

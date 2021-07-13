@@ -138,7 +138,7 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 			)
 		) AS 'current_user_managership'`+otherColumns, user.GroupID, user.GroupID, otherColumnValues)
 
-	return store.Raw("WITH user_ancestors AS ? ?", usersAncestorsQuery.SubQuery(), db.QueryExpr())
+	return store.Raw("WITH user_ancestors AS (?) ?", usersAncestorsQuery.SubQuery(), db.QueryExpr())
 }
 
 func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *database.DB {

@@ -5,15 +5,15 @@ package database
 func (conn *DB) WherePermissionIsAtLeast(permissionKind, permissionName string) *DB {
 	return newDB(conn.db.
 		Where(permissionColumnByKind(permissionKind)+" >= ?",
-			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
+			NewDataStore(conn.New()).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
 }
 
 // HavingMaxPermissionAtLeast returns a composable query filtered by `MAX(can_*_generated_value)` >= indexOf(`permissionName`)
 // depending on the given permission kind
 func (conn *DB) HavingMaxPermissionAtLeast(permissionKind, permissionName string) *DB {
-	return newDB(conn.db.
+	return conn.
 		Having("MAX("+permissionColumnByKind(permissionKind)+") >= ?",
-			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
+			NewDataStore(conn.New()).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName))
 }
 
 // JoinsPermissionsForGroupToItemsWherePermissionAtLeast returns a composable query with access rights (as *_generated_value)
@@ -24,7 +24,7 @@ func (conn *DB) JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID in
 		Where("permissions.item_id = items.id") // This condition is needed to filter by item_id before aggregating
 	// The JOIN LATERAL allows us to filter permissions on both group_id & item_id here
 	// instead of calculating permissions for all the items before joining
-	return conn.Joins("JOIN LATERAL ? AS permissions ON permissions.item_id = items.id", permissionsQuery.SubQuery())
+	return conn.Joins("JOIN LATERAL (?) AS permissions ON permissions.item_id = items.id", permissionsQuery.SubQuery())
 }
 
 func permissionColumnByKind(permissionKind string) string {

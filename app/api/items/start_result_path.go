@@ -144,7 +144,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	participantSkills := participantAncestors.Select("groups.root_skill_id").WithWriteLock()
 
 	subQuery := store.Table("visible_items as items0").WithWriteLock().Where("items0.id = ?", ids[0]).
-		Where("items0.id IN ? OR items0.id IN ?",
+		Where("items0.id IN (?) OR items0.id IN (?)",
 			participantActivities.SubQuery(), participantSkills.SubQuery())
 
 	var score string
@@ -195,7 +195,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 
 	var result []map[string]interface{}
 	service.MustNotBeError(
-		store.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.SubQuery()).
+		store.Raw("WITH visible_items AS (?) ?", visibleItems.SubQuery(), subQuery.SubQuery()).
 			ScanIntoSliceOfMaps(&result).Error())
 	return result
 }

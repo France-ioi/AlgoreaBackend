@@ -6,12 +6,12 @@ import (
 	"math"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
 	"github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
@@ -192,8 +192,8 @@ func (srv *Service) checkCreateUserBatchRequestParameters(user *database.User, i
 			`user_batch_prefixes.allow_new AND user_batch_prefixes.group_prefix = ?`, input.GroupPrefix).
 		Where("group_managers.can_manage != 'none'").
 		Select("user_batch_prefixes.group_id, user_batch_prefixes.max_users").
-		Scan(&prefixInfo).Error()
-	if gorm.IsRecordNotFoundError(err) {
+		Take(&prefixInfo).Error()
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, nil, service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
@@ -219,7 +219,9 @@ func (srv *Service) checkCreateUserBatchRequestParameters(user *database.User, i
 			require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
 			IFNULL(require_lock_membership_approval_until > NOW(), 0) AS require_lock_membership_approval,
 			require_watch_approval`).
-		Order(gorm.Expr("FIELD(groups.id"+strings.Repeat(", ?", len(subgroupIDs))+")", subgroupIDs...)).
+		Clauses(clause.OrderBy{
+			Expression: clause.Expr{SQL: "FIELD(groups.id, ?)", Vars: []interface{}{subgroupIDs}, WithoutParentheses: true},
+		}).
 		Scan(&subgroupsApprovals).Error())
 	if len(subgroupsApprovals) != len(subgroupIDs) {
 		return 0, nil, service.InsufficientAccessRightsError

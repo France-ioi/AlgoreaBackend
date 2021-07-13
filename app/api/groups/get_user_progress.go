@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -161,7 +161,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	itemIDQuery := srv.Store.ItemItems().
 		Select("items_items.child_item_id AS id").
 		Where("parent_item_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS permissions ON permissions.item_id = items_items.child_item_id",
+		Joins("JOIN (?) AS permissions ON permissions.item_id = items_items.child_item_id",
 			srv.Store.Permissions().MatchingUserAncestors(user).
 				Select("item_id").
 				WherePermissionIsAtLeast("view", "info").SubQuery()).
@@ -170,26 +170,27 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 
 	userIDsList := strings.Join(userIDs, ", ")
 	var result []groupUserProgressResponseRow
-	service.MustNotBeError(srv.Store.Raw("WITH visible_items AS ? ?",
+	service.MustNotBeError(srv.Store.Raw("WITH visible_items AS (?) ?",
 		itemIDQuery.SubQuery(),
 		// nolint:gosec
-		srv.Store.Raw(`
-			SELECT STRAIGHT_JOIN
-				items.id AS item_id,
-				users.group_id AS group_id,
-				IFNULL(MAX(result_with_best_score.score_computed), 0) AS score,
-				IFNULL(MAX(result_with_best_score.validated), 0) AS validated,
-				MAX(last_result.latest_activity_at) AS latest_activity_at,
-				IFNULL(MAX(result_with_best_score.hints_cached), 0) AS hints_requested,
-				IFNULL(MAX(result_with_best_score.submissions), 0) AS submissions,
-				IF(MAX(result_with_best_score.participant_id) IS NULL,
-					0,
-					GREATEST(IF(MAX(result_with_best_score.validated),
-						TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), MIN(first_validated_result.validated_at)),
-						TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), NOW())
-					), 0)
-				) AS time_spent
-			FROM JSON_TABLE('[`+userIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS users`).
+		srv.Store.
+			Table(`JSON_TABLE('[`+userIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS users`).
+			Select(`
+				STRAIGHT_JOIN
+					items.id AS item_id,
+					users.group_id AS group_id,
+					IFNULL(MAX(result_with_best_score.score_computed), 0) AS score,
+					IFNULL(MAX(result_with_best_score.validated), 0) AS validated,
+					MAX(last_result.latest_activity_at) AS latest_activity_at,
+					IFNULL(MAX(result_with_best_score.hints_cached), 0) AS hints_requested,
+					IFNULL(MAX(result_with_best_score.submissions), 0) AS submissions,
+					IF(MAX(result_with_best_score.participant_id) IS NULL,
+						0,
+						GREATEST(IF(MAX(result_with_best_score.validated),
+							TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), MIN(first_validated_result.validated_at)),
+							TIMESTAMPDIFF(SECOND, MIN(first_result.started_at), NOW())
+						), 0)
+					) AS time_spent`).
 			Joins("JOIN visible_items AS items").
 			Joins(`
 				LEFT JOIN groups_groups_active AS team_links
@@ -331,9 +332,9 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 					first_validated_result_of_user.attempt_id
 				) AND first_validated_result.item_id = items.id`).
 			Group("users.group_id, items.id").
-			Order(gorm.Expr(
-				"FIELD(users.group_id, "+userIDsList+")")).
-			Order("items.id").
+			Clauses(clause.OrderBy{
+				Expression: clause.Expr{SQL: "FIELD(users.group_id, ?), items.id", Vars: []interface{}{userIDs}, WithoutParentheses: true},
+			}).
 			QueryExpr()).
 		Scan(&result).Error())
 

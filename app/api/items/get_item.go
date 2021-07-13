@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -224,12 +224,12 @@ type rawItem struct {
 	SupportedLanguageTags string
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
-	StringLanguageTag string  `sql:"column:language_tag"`
-	StringTitle       *string `sql:"column:title"`
-	StringImageURL    *string `sql:"column:image_url"`
-	StringSubtitle    *string `sql:"column:subtitle"`
-	StringDescription *string `sql:"column:description"`
-	StringEduComment  *string `sql:"column:edu_comment"`
+	StringLanguageTag string  `gorm:"column:language_tag"`
+	StringTitle       *string `gorm:"column:title"`
+	StringImageURL    *string `gorm:"column:image_url"`
+	StringSubtitle    *string `gorm:"column:subtitle"`
+	StringDescription *string `gorm:"column:description"`
+	StringEduComment  *string `gorm:"column:edu_comment"`
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
@@ -290,8 +290,8 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 			 FROM results
 			 WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score, `+itemStringsColumns, groupID)
 
-	err := query.Scan(&result).Error()
-	if gorm.IsRecordNotFoundError(err) {
+	err := query.Take(&result).Error()
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil
 	}
 	service.MustNotBeError(err)

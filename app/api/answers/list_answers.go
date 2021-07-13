@@ -154,9 +154,9 @@ type rawAnswersData struct {
 	Type             string
 	CreatedAt        database.Time
 	Score            *float32
-	UserLogin        string  `sql:"column:login"`
-	UserFirstName    *string `sql:"column:first_name"`
-	UserLastName     *string `sql:"column:last_name"`
+	UserLogin        string  `gorm:"column:login"`
+	UserFirstName    *string `gorm:"column:first_name"`
+	UserLastName     *string `gorm:"column:last_name"`
 	ShowPersonalInfo bool
 }
 
@@ -213,7 +213,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	service.MustNotBeError(srv.Store.Attempts().ByID(attemptID).
-		Where("(attempts.participant_id IN ?) OR (attempts.participant_id IN ?) OR attempts.participant_id = ?",
+		Where("(attempts.participant_id IN (?)) OR (attempts.participant_id IN (?)) OR attempts.participant_id = ?",
 			groupsManagedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
 			user.GroupID).
@@ -226,7 +226,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 
 func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(authorID int64, user *database.User) service.APIError {
 	if authorID != user.GroupID {
-		count := 0
+		count := int64(0)
 		err := srv.Store.GroupAncestors().ManagedByUser(user).
 			Where("groups_ancestors.child_group_id=?", authorID).
 			Count(&count).Error()

@@ -20,7 +20,7 @@ import (
 // description: >
 //
 //   Creates a new code using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
-//   Makes sure it doesn’t correspond to any existing group code. Saves it for the given group and returns it.
+//   Makes sure it doesn't correspond to any existing group code. Saves it for the given group and returns it.
 //
 //
 //   The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
@@ -73,7 +73,7 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.A
 			newCode, err = GenerateGroupCode()
 			service.MustNotBeError(err)
 
-			err = store.Groups().Where("id = ?", groupID).Updates(map[string]interface{}{"code": newCode}).Error()
+			err = store.Groups().Where("id = ?", groupID).UpdateColumn("code", newCode).Error()
 			if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
 				continue
 			}

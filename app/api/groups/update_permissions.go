@@ -1,11 +1,12 @@
 package groups
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/validator"
 
@@ -145,7 +146,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 				IFNULL(MAX(is_owner), 0) AS is_owner`).
 			Scan(&currentPermissions).Error()
 
-		if !gorm.IsRecordNotFoundError(err) {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			service.MustNotBeError(err)
 		}
 

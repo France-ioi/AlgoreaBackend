@@ -132,10 +132,10 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		}
 	}
 
-	found, err := srv.Store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found",
-		srv.Store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).QueryExpr(),
-		ancestorsOfJoinedGroups(srv.Store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
-	).Having("found").HasRows()
+	found, err := srv.Store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found HAVING found",
+		srv.Store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).SubQuery(),
+		ancestorsOfJoinedGroups(srv.Store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).SubQuery(),
+	).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError

@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/validator"
 
@@ -155,8 +155,8 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 				groups.require_lock_membership_approval_until, groups.require_watch_approval,
 				groups.require_members_to_join_parent,
 				MAX(can_manage_value) AS can_manage_value`).WithWriteLock().
-			Where("groups.id = ?", groupID).Group("groups.id").Scan(&currentGroupData).Error()
-		if gorm.IsRecordNotFoundError(err) {
+			Where("groups.id = ?", groupID).Group("groups.id").Take(&currentGroupData).Error()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
 		}

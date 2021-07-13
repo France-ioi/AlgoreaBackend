@@ -1,10 +1,11 @@
 package contests
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -94,7 +95,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	}
 
 	participantType, err := srv.getParticipantTypeForContestManagedByUser(itemID, user)
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)

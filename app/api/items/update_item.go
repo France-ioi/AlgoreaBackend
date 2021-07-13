@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/validator"
 
@@ -141,9 +141,9 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 				items.participants_group_id, items.type, MAX(can_edit_generated_value) AS can_edit_generated_value,
 				items.duration, items.requires_explicit_entry`).
 			Group("item_id").
-			Scan(&itemInfo).Error()
+			Take(&itemInfo).Error()
 
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			apiError = service.ErrForbidden(errors.New("no access rights to edit the item"))
 			return apiError.Error // rollback
 		}
@@ -201,7 +201,7 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 		itemData["participants_group_id"] = createdParticipantsGroupID
 	}
 
-	err := store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
+	err := store.Items().Where("id = ?", itemID).UpdateColumns(itemData).Error()
 	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails
 	// (no items_strings for the new default_language_tag)
 	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1452 {

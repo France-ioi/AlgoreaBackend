@@ -13,8 +13,8 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/cucumber/messages-go/v10"
-	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"

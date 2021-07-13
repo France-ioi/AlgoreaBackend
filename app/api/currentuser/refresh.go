@@ -31,7 +31,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 
 	userProfile["latest_activity_at"] = database.Now()
 	delete(userProfile, "default_language")
-	service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).UpdateColumn(userProfile).Error())
+	service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).UpdateColumns(userProfile).Error())
 
 	response := service.UpdateSuccess(nil)
 	render.Respond(w, r, &response)
