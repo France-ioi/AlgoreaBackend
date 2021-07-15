@@ -421,6 +421,15 @@ func TestDB_QueryConstructors(t *testing.T) {
 			},
 			expectedQuery: "SELECT id FROM `myTable`",
 		},
+		{
+			name: "Select + AddSelect",
+			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
+				db1 := db.Select("id")
+				dbs = append(dbs, db1)
+				return db1.AddSelect("name"), dbs
+			},
+			expectedQuery: "SELECT id,name FROM `myTable`",
+		},
 	}
 	for _, testCase := range tests {
 		testCase := testCase

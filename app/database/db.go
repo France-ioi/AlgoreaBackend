@@ -30,7 +30,7 @@ import (
 //      https://github.com/go-gorm/gorm/issues/4534
 //    are fixed
 // 2) make everything work,
-// 3) implement Select() chaining (appending columns to the list) and take full advantage of it
+// 3) take full advantage of AddSelect() chaining (appending columns to the list)
 
 // DB contains information for current db connection (wraps *gorm.DB).
 type DB struct {
@@ -266,6 +266,15 @@ func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
 		newGormDB.Statement.Clauses["SELECT"] = newSelectClause
 	}
 	return newDB(newGormDB)
+}
+
+// AddSelect appends fields that you want to retrieve from database when querying
+func (conn *DB) AddSelect(query interface{}, args ...interface{}) *DB {
+	previousSelects := conn.db.Statement.Selects
+	newDB := conn.Select(query, args...)
+	previousSelects = append(previousSelects, newDB.db.Statement.Selects...)
+	newDB.db.Statement.Selects = previousSelects
+	return newDB
 }
 
 // With adds a CTE
