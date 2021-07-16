@@ -2,11 +2,11 @@ Feature: Update a group (groupEdit)
   Background:
     Given the database has the following table 'groups':
       | id | name    | grade | description     | created_at          | type    | root_activity_id    | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | is_official_session | require_members_to_join_parent | organizer | address_line1 | address_line2 | address_postcode | address_city | address_country | expected_start      | frozen_membership | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class   | 1672978871462145361 | null          | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class   | 1672978871462145461 | null          | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | 5                | true                     |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class   | 1672978871462145361 | null          | true    | true      | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class   | 1672978871462145461 | null          | true    | true      | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | 5                | true                     |
       | 14 | Group C | -4    | Group C         | 2019-04-06 09:26:40 | Club    | null                | null          | true    | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 15 | Group D | -4    | Group D         | 2019-04-06 09:26:40 | Session | null                | null          | true    | false     | null       | null          | null                | false                      | true                | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
-      | 16 | Group E | -3    | Group E is here | 2018-04-06 09:26:40 | Session | 1672978871462145461 | 4567          | true    | false     | babbxnlyoy | 02:03:04      | 2018-10-14 05:39:48 | true                       | true                | false                          | Organizer | Address1      | Address2      | Postcode         | City         | Country         | 2019-05-30 11:00:00 | true              | edit                                  | 2019-05-30 11:00:00                    | true                   | 10               | true                     |
+      | 16 | Group E | -3    | Group E is here | 2018-04-06 09:26:40 | Session | 1672978871462145461 | 4567          | true    | false     | babbxnlyoy | 7384          | 2018-10-14 05:39:48 | true                       | true                | false                          | Organizer | Address1      | Address2      | Postcode         | City         | Country         | 2019-05-30 11:00:00 | true              | edit                                  | 2019-05-30 11:00:00                    | true                   | 10               | true                     |
       | 17 | Group F | -2    | null            | 2017-04-06 09:26:40 | Session | null                | null          | false   | true      | null       | null          | null                | false                      | false               | true                           | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 18 | Group G | -2    | null            | 2017-04-06 09:26:40 | Session | null                | null          | false   | true      | null       | null          | null                | false                      | false               | true                           | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
@@ -71,7 +71,7 @@ Feature: Update a group (groupEdit)
       "grade": 10,
       "description": "Team B is here",
       "is_open": false,
-      "code_lifetime": "99:59:59",
+      "code_lifetime": 2147483647,
       "code_expires_at": "2019-12-31T23:59:59Z",
       "open_activity_when_joining": false,
       "root_activity_id": "<root_activity_id>",
@@ -98,7 +98,7 @@ Feature: Update a group (groupEdit)
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
       | id | name   | grade | description    | created_at          | type  | root_activity_id   | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_members_to_join_parent | organizer              | address_line1               | address_line2        | address_postcode | address_city | address_country | expected_start      | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
-      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | <root_activity_id> | 4567          | false   | false     | ybabbxnlyo | 99:59:59      | 2019-12-31 23:59:59 | false                      | true                           | Association France-ioi | Chez Jacques-Henri Jourdan, | 42, rue de Cronstadt | 75015            | Paris        | France          | 2019-05-03 11:00:00 | view                                  | 2018-05-30 11:00:00                    | true                   | 8                | true                     |
+      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | <root_activity_id> | 4567          | false   | false     | ybabbxnlyo | 2147483647    | 2019-12-31 23:59:59 | false                      | true                           | Association France-ioi | Chez Jacques-Henri Jourdan, | 42, rue de Cronstadt | 75015            | Paris        | France          | 2019-05-03 11:00:00 | view                                  | 2018-05-30 11:00:00                    | true                   | 8                | true                     |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should be:
       | group_id | member_id | type          |
@@ -293,7 +293,7 @@ Feature: Update a group (groupEdit)
       "grade": -3,
       "description": "Group E is here",
       "is_open": true,
-      "code_lifetime": "02:03:04",
+      "code_lifetime": 7384,
       "code_expires_at": "2018-10-14T05:39:48Z",
       "open_activity_when_joining": true,
       "root_activity_id": "1672978871462145461",
@@ -368,7 +368,7 @@ Feature: Update a group (groupEdit)
     When I send a PUT request to "/groups/18" with the following body:
     """
     {
-      "code_lifetime": "01:02:03",
+      "code_lifetime": 3723,
       "code_expires_at": "2030-05-30T11:00:00Z",
       "frozen_membership": true,
       "max_participants": 15,
@@ -379,7 +379,7 @@ Feature: Update a group (groupEdit)
     And the table "groups" should stay unchanged but the row with id "18"
     And the table "groups" at id "18" should be:
       | code_lifetime | code_expires_at     | frozen_membership | max_participants | enforce_max_participants |
-      | 01:02:03      | 2030-05-30 11:00:00 | true              | 15               | true                     |
+      | 3723          | 2030-05-30 11:00:00 | true              | 15               | true                     |
     And the table "groups_groups" should stay unchanged
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged

@@ -25,11 +25,9 @@ type groupUpdateInput struct {
 	IsOpen      bool    `json:"is_open" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// If changed from true to false, is automatically switches all requests to join this group from requestSent to requestRefused
 	IsPublic bool `json:"is_public" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Duration after the first use of the code when it will expire
+	// Duration after the first use of the code when it will expire (in seconds)
 	// Nullable
-	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
-	// example: 838:59:59
-	CodeLifetime *string `json:"code_lifetime" validate:"changing_requires_can_manage_at_least=memberships,null|duration"`
+	CodeLifetime *int32 `json:"code_lifetime" validate:"changing_requires_can_manage_at_least=memberships,null|gte=0"`
 	// Nullable
 	CodeExpiresAt *database.Time `json:"code_expires_at" validate:"changing_requires_can_manage_at_least=memberships"`
 	// Nullable
@@ -324,6 +322,8 @@ func validateUpdateGroupInput(
 
 	formData.RegisterValidation("enforce_max_participants", constructEnforceMaxParticipantsValidator(formData, currentGroupData))
 	formData.RegisterTranslation("enforce_max_participants", "cannot be set to true when 'max_participants' is null")
+
+	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
 
 	err := formData.ParseJSONRequestData(r)
 	return formData, err

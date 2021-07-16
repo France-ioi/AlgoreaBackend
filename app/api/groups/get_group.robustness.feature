@@ -5,8 +5,8 @@ Feature: Get group by groupID (groupView) - robustness
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'groups':
       | id | name    | grade | description     | created_at          | type  | root_activity_id    | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true                       |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | true    | false     | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | true    | true      | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | true    | false     | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       |
       | 21 | owner   | -2    | owner           | 2019-03-06 09:26:40 | User  | null                | false   | true      | null       | null          | null                | false                      |
 
   Scenario: Should fail when group_id is invalid
