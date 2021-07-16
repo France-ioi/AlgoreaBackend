@@ -18,7 +18,7 @@ type GroupGetResponseCodePart struct {
 	// Nullable; returned only if the current user is a manager
 	Code *string `json:"code"`
 	// Nullable; returned only if the current user is a manager
-	CodeLifetime *string `json:"code_lifetime"`
+	CodeLifetime *int32 `json:"code_lifetime"`
 	// Nullable; returned only if the current user is a manager
 	CodeExpiresAt *database.Time `json:"code_expires_at"`
 }
