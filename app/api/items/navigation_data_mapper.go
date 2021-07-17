@@ -63,7 +63,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		Where("items_items.parent_item_id = items.id").
 		Select("1").Limit(1).SubQuery()
 
-	childrenQuery := constructItemChildrenQuery(dataStore, rootID, groupID, attemptID, watchedGroupIDSet, watchedGroupID,
+	childrenQuery := constructItemChildrenQuery(dataStore, rootID, groupID, "info", attemptID, watchedGroupIDSet, watchedGroupID,
 		commonAttributes+
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
 			 IFNULL(?, 0) AS has_visible_children, child_order`,
@@ -102,7 +102,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 	return result
 }
 
-func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID int64,
+func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
 	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc func(*database.DB) *database.DB) *database.DB {
 	watchedGroupCanViewQuery := interface{}(gorm.Expr("NULL"))
@@ -140,9 +140,11 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 		watchedGroupParticipantsQuery,
 		joinItemRelationsToItemsFunc(
 			dataStore.Items().
-				Joins("JOIN ? AS permissions ON items.id = permissions.item_id",
+				Joins("LEFT JOIN ? AS permissions ON items.id = permissions.item_id",
 					joinItemRelationsToPermissionsFunc(
-						dataStore.Permissions().AggregatedPermissionsForItemsVisibleToGroup(groupID)).SubQuery())).
+						dataStore.Permissions().
+							AggregatedPermissionsForItemsOnWhichGroupHasViewPermission(groupID, requiredViewPermissionOnItems)).SubQuery()).
+				WherePermissionIsAtLeast("view", requiredViewPermissionOnItems)).
 			Select(
 				columnList+`,
 				? AS watched_group_can_view,
@@ -156,13 +158,13 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 	return itemsWithoutResultsQuery
 }
 
-func constructItemListQuery(dataStore *database.DataStore, groupID int64,
+func constructItemListQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
 	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	externalColumnList string,
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB) *database.DB {
 
-	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, watchedGroupIDSet, watchedGroupID,
-		columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
+	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, requiredViewPermissionOnItems,
+		watchedGroupIDSet, watchedGroupID, columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
 
 	if externalColumnList != "" {
 		externalColumnList += ", "

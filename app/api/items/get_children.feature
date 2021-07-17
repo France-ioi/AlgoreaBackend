@@ -1,5 +1,4 @@
 Feature: Get item children
-
   Background:
     Given the database has the following table 'groups':
       | id | name       | text_id | grade | type  |
@@ -21,11 +20,13 @@ Feature: Get item children
       | 200 | Course  | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://someurl | true     | true          |
       | 210 | Chapter | en                   | true     | true                      | All             | false                   | true                     | User                   | 10:20:31 | true              | true      | forceYes    | true            | null           | true     | true          |
       | 220 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null           | true     | true          |
+      | 230 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null           | true     | true          |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
       | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
       | 210     | en           | Chapter A   | http://example.com/my1.jpg | Subtitle 1   | Description 1 | Some comment   |
       | 220     | en           | Chapter B   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   |
+      | 230     | en           | Chapter C   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   |
       | 200     | fr           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
       | 210     | fr           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire |
       | 220     | fr           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire |
@@ -45,6 +46,7 @@ Feature: Get item children
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 200            | 210           | 2           | Discovery | 1            | none                     | use_content_view_propagation  | true                   | false             | true             |
       | 200            | 220           | 1           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            |
+      | 200            | 230           | 3           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            |
     And the database has the following table 'item_dependencies':
       | item_id | dependent_item_id | grant_content_view |
       | 210     | 200               | false              |
@@ -626,6 +628,113 @@ Feature: Get item children
           "can_view": "content_with_descendants",
           "all_validated": false,
           "avg_score": 10
+        }
+      }
+    ]
+    """
+
+  Scenario: Info access on children (as user) with watched_group_id, show invisible items
+    Given I am the user with id "22"
+    When I send a GET request to "/items/200/children?attempt_id=0&watched_group_id=15&show_invisible_items=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "220",
+        "order": 1,
+        "category": "Discovery",
+        "score_weight": 2,
+        "content_view_propagation": "as_info",
+        "upper_view_levels_propagation": "as_content_with_descendants",
+        "grant_view_propagation": false,
+        "watch_propagation": true,
+        "edit_propagation": false,
+        "type": "Chapter",
+        "display_details_in_parent": true,
+        "validation_type": "All",
+        "allows_multiple_attempts": true,
+        "entry_participant_type": "Team",
+        "duration": "10:20:32",
+        "no_score": true,
+        "default_language_tag": "en",
+        "best_score": 0,
+        "grants_access_to_items": false,
+        "requires_explicit_entry": false,
+        "results": [],
+        "string": {
+          "language_tag": "en",
+          "title": "Chapter B"
+        },
+        "permissions": {
+          "can_edit": "none",
+          "can_grant_view": "none",
+          "can_view": "info",
+          "can_watch": "none",
+          "is_owner": false
+        },
+        "watched_group": {
+          "can_view": "none"
+        }
+      },
+      {
+        "id": "210",
+        "order": 2,
+        "category": "Discovery",
+        "score_weight": 1,
+        "content_view_propagation": "none",
+        "upper_view_levels_propagation": "use_content_view_propagation",
+        "grant_view_propagation": true,
+        "watch_propagation": false,
+        "edit_propagation": true,
+        "type": "Chapter",
+        "display_details_in_parent": true,
+        "validation_type": "All",
+        "allows_multiple_attempts": true,
+        "entry_participant_type": "User",
+        "duration": "10:20:31",
+        "no_score": true,
+        "default_language_tag": "en",
+        "best_score": 0,
+        "grants_access_to_items": true,
+        "requires_explicit_entry": false,
+        "results": [],
+        "string": {
+          "language_tag": "en",
+          "title": "Chapter A"
+        },
+        "permissions": {
+          "can_edit": "none",
+          "can_grant_view": "none",
+          "can_view": "info",
+          "can_watch": "result",
+          "is_owner": false
+        },
+        "watched_group": {
+          "can_view": "content_with_descendants",
+          "all_validated": false,
+          "avg_score": 10
+        }
+      },
+      {
+        "category": "Discovery",
+        "content_view_propagation": "as_info",
+        "edit_propagation": false,
+        "grant_view_propagation": false,
+        "id": "230",
+        "order": 3,
+        "permissions": {
+          "can_edit": "none",
+          "can_grant_view": "none",
+          "can_view": "none",
+          "can_watch": "none",
+          "is_owner": false
+        },
+        "score_weight": 2,
+        "upper_view_levels_propagation": "as_content_with_descendants",
+        "watch_propagation": true,
+        "watched_group": {
+          "can_view": "none"
         }
       }
     ]

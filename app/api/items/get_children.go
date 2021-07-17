@@ -25,12 +25,55 @@ type listItemString struct {
 	*listItemStringNotInfo
 }
 
+// only for visible items
+type visibleChildItemString struct {
+	*listItemString
+}
+
+type visibleChildItemFields struct {
+	String visibleChildItemString `json:"string"`
+	// only for visible items
+	DefaultLanguageTag string `json:"default_language_tag"`
+
+	// max among all attempts of the user (or of the team given in `{as_team_id}`)
+	// (only for visible items)
+	BestScore float32 `json:"best_score"`
+	// only for visible items
+	Results []structures.ItemResult `json:"results"`
+
+	// items
+
+	// only for visible items
+	// enum: Chapter,Task,Course,Skill
+	Type string `json:"type"`
+	// only for visible items
+	DisplayDetailsInParent bool `json:"display_details_in_parent"`
+	// only for visible items
+	// enum: None,All,AllButOne,Categories,One,Manual
+	ValidationType string `json:"validation_type"`
+	// only for visible items
+	RequiresExplicitEntry bool `json:"requires_explicit_entry"`
+	// only for visible items
+	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
+	// only for visible items
+	// enum: User,Team
+	EntryParticipantType string `json:"entry_participant_type"`
+	// Nullable, only for visible items
+	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
+	// example: 838:59:59
+	Duration *string `json:"duration"`
+	// only for visible items
+	NoScore bool `json:"no_score"`
+
+	// whether solving this item grants access to some items (visible or not)
+	// (only for visible items)
+	GrantsAccessToItems bool `json:"grants_access_to_items"`
+}
+
 // swagger:model childItem
 type childItem struct {
-	*commonItemFields
-
 	// required: true
-	String listItemString `json:"string"`
+	ID int64 `json:"id,string"`
 
 	// `items_items.order`
 	// required: true
@@ -60,17 +103,12 @@ type childItem struct {
 	// required: true
 	EditPropagation bool `json:"edit_propagation"`
 
-	// max among all attempts of the user (or of the team given in `{as_team_id}`)
 	// required: true
-	BestScore float32 `json:"best_score"`
-	// required:true
-	Results []structures.ItemResult `json:"results"`
+	Permissions structures.ItemPermissions `json:"permissions"`
 
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 
-	// whether solving this item grants access to some items (visible or not)
-	// required: true
-	GrantsAccessToItems bool `json:"grants_access_to_items"`
+	*visibleChildItemFields
 }
 
 // RawListItem contains raw fields common for itemChildrenView & itemParentsView
@@ -116,6 +154,8 @@ type rawListChildItem struct {
 //              (from tables `items`, `items_items`, `items_string`, `results`, `permissions_generated`)
 //              within the context of the given `{attempt_id}`.
 //              Only items visible to the current user (or to the `{as_team_id}` team) are shown.
+//              If `{show_invisible_items}` = 1, items invisible to the current user (or to the `{as_team_id}` team) are shown too,
+//              but with a limited set of fields.
 //              If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
 //
 //
@@ -138,6 +178,12 @@ type rawListChildItem struct {
 //   in: query
 //   type: integer
 //   required: true
+// - name: show_invisible_items
+//   in: query
+//   description: If 1, show invisible items as well
+//   type: integer
+//   enum: [0,1]
+//   default: 0
 // - name: as_team_id
 //   in: query
 //   type: integer
@@ -166,6 +212,17 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		return apiError
 	}
 
+	requiredViewPermissionOnItems := "info"
+	if len(httpReq.URL.Query()["show_invisible_items"]) > 0 {
+		showInvisibleItems, err := service.ResolveURLQueryGetBoolField(httpReq, "show_invisible_items")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
+		if showInvisibleItems {
+			requiredViewPermissionOnItems = "none"
+		}
+	}
+
 	found, err := srv.Store.Permissions().
 		MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "content").
@@ -181,12 +238,16 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 
 	var rawData []rawListChildItem
 	service.MustNotBeError(
-		constructItemChildrenQuery(srv.Store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID,
+		constructItemChildrenQuery(srv.Store, itemID, participantID, requiredViewPermissionOnItems, attemptID, watchedGroupIDSet, watchedGroupID,
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation,
 				items.id, items.type, items.default_language_tag,
 				validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
-				can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
+				IFNULL(can_view_generated_value, 1) AS can_view_generated_value,
+				IFNULL(can_grant_view_generated_value, 1) AS can_grant_view_generated_value,
+				IFNULL(can_watch_generated_value, 1) AS can_watch_generated_value,
+				IFNULL(can_edit_generated_value, 1) AS can_edit_generated_value,
+				IFNULL(is_owner_generated, 0) is_owner_generated,
 				IFNULL(
 					(SELECT MAX(results.score_computed) AS best_score
 					FROM results
@@ -206,11 +267,11 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 	return service.NoError
 }
 
-func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, groupID, attemptID int64,
-	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, groupID int64, requiredViewPermissionOnItems string,
+	attemptID int64, watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	externalColumnList string) *database.DB {
 	return constructItemListQuery(
-		dataStore, groupID, watchedGroupIDSet, watchedGroupID, columnList, columnListValues,
+		dataStore, groupID, requiredViewPermissionOnItems, watchedGroupIDSet, watchedGroupID, columnList, columnListValues,
 		externalColumnList,
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", parentItemID)
@@ -234,13 +295,8 @@ func (srv *Service) childItemsFromRawData(
 	for index := range rawData {
 		if index == 0 || rawData[index].ID != rawData[index-1].ID {
 			child := childItem{
-				commonItemFields: rawData[index].RawCommonItemFields.asItemCommonFields(permissionGrantedStore),
-				BestScore:        rawData[index].BestScore,
-				Results:          make([]structures.ItemResult, 0, 1),
-				String: listItemString{
-					LanguageTag: rawData[index].StringLanguageTag,
-					Title:       rawData[index].StringTitle,
-				},
+				ID:                         rawData[index].ID,
+				Order:                      rawData[index].Order,
 				Category:                   rawData[index].Category,
 				ScoreWeight:                rawData[index].ScoreWeight,
 				ContentViewPropagation:     rawData[index].ContentViewPropagation,
@@ -248,8 +304,27 @@ func (srv *Service) childItemsFromRawData(
 				GrantViewPropagation:       rawData[index].GrantViewPropagation,
 				WatchPropagation:           rawData[index].WatchPropagation,
 				EditPropagation:            rawData[index].EditPropagation,
-				GrantsAccessToItems:        rawData[index].GrantsAccessToItems,
-				Order:                      rawData[index].Order,
+				Permissions:                *rawData[index].AsItemPermissions(permissionGrantedStore),
+			}
+			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("info") {
+				child.visibleChildItemFields = &visibleChildItemFields{
+					String: visibleChildItemString{&listItemString{
+						LanguageTag: rawData[index].StringLanguageTag,
+						Title:       rawData[index].StringTitle,
+					}},
+					DefaultLanguageTag:     rawData[index].DefaultLanguageTag,
+					BestScore:              rawData[index].BestScore,
+					Results:                make([]structures.ItemResult, 0, 1),
+					Type:                   rawData[index].Type,
+					DisplayDetailsInParent: rawData[index].DisplayDetailsInParent,
+					ValidationType:         rawData[index].ValidationType,
+					RequiresExplicitEntry:  rawData[index].RequiresExplicitEntry,
+					AllowsMultipleAttempts: rawData[index].AllowsMultipleAttempts,
+					EntryParticipantType:   rawData[index].EntryParticipantType,
+					Duration:               rawData[index].Duration,
+					NoScore:                rawData[index].NoScore,
+					GrantsAccessToItems:    rawData[index].GrantsAccessToItems,
+				}
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
