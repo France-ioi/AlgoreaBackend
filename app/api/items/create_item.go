@@ -349,7 +349,8 @@ func constructCannotBeSetForSkillsValidator() validator.Func {
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
 func constructChildrenValidator(store *database.DataStore, user *database.User,
-	childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+	childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	itemID *int64) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
 
@@ -367,21 +368,67 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 			return false
 		}
 
-		var childrenInfo []permissionAndType
-		service.MustNotBeError(store.Items().
-			JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
-			Where("items.id IN (?)", ids).
-			WithWriteLock().
-			Select("permissions.*, items.type").
-			Scan(&childrenInfo).Error())
+		(*childrenInfoMap) = generateChildrenInfoMap(store, user, ids)
 
-		*childrenInfoMap = make(map[int64]permissionAndType, len(childrenInfo))
-		for index := range childrenInfo {
-			(*childrenInfoMap)[childrenInfo[index].ItemID] = childrenInfo[index]
+		if oldPropagationLevelsMap != nil || itemID != nil {
+			(*oldPropagationLevelsMap) = generateOldPropagationLevelsMap(store, itemID)
 		}
 
-		return len(*childrenInfoMap) == len(ids)
+		for _, id := range ids {
+			if _, ok := (*childrenInfoMap)[id]; !ok {
+				// the child item candidate is not visible and there are no existing items_items
+				if oldPropagationLevelsMap == nil {
+					return false
+				}
+				// the child item candidate is not visible and it is not a child item
+				if _, ok = (*oldPropagationLevelsMap)[id]; !ok {
+					return false
+				}
+				// the child item candidate is not visible, but it is a child item already:
+				// stub the permissions with nones
+				(*childrenInfoMap)[id] = permissionAndType{
+					Permission: &Permission{
+						ItemID:                     id,
+						CanViewGeneratedValue:      1,
+						CanGrantViewGeneratedValue: 1,
+						CanWatchGeneratedValue:     1,
+						CanEditGeneratedValue:      1,
+					},
+				}
+			}
+		}
+		return true
 	})
+}
+
+func generateOldPropagationLevelsMap(store *database.DataStore, itemID *int64) map[int64]*itemsRelationData {
+	var oldRelations []itemsRelationData
+	service.MustNotBeError(store.ItemItems().ChildrenOf(*itemID).WithWriteLock().
+		Select(`child_item_id AS item_id, category, score_weight,
+				        content_view_propagation_value, upper_view_levels_propagation_value,
+						    grant_view_propagation, watch_propagation, edit_propagation`).
+		Scan(&oldRelations).Error())
+	oldPropagationLevelsMap := make(map[int64]*itemsRelationData, len(oldRelations))
+	for index := range oldRelations {
+		oldPropagationLevelsMap[oldRelations[index].ItemID] = &oldRelations[index]
+	}
+	return oldPropagationLevelsMap
+}
+
+func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids []int64) map[int64]permissionAndType {
+	var childrenInfo []permissionAndType
+	service.MustNotBeError(store.Items().
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
+		Where("items.id IN (?)", ids).
+		WithWriteLock().
+		Select("permissions.*, items.type").
+		Scan(&childrenInfo).Error())
+
+	childrenInfoMap := make(map[int64]permissionAndType, len(childrenInfo))
+	for index := range childrenInfo {
+		(childrenInfoMap)[childrenInfo[index].ItemID] = childrenInfo[index]
+	}
+	return childrenInfoMap
 }
 
 // constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task or a Course).
@@ -439,7 +486,7 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	formData.RegisterTranslation("duration_requires_explicit_entry", "requires_explicit_entry should be true when the duration is not null")
 	formData.RegisterValidation("cannot_be_set_for_skills", constructCannotBeSetForSkillsValidator())
 	formData.RegisterTranslation("cannot_be_set_for_skills", "cannot be set for skill items")
-	registerChildrenValidator(formData, store, user, "", childrenInfoMap)
+	registerChildrenValidator(formData, store, user, "", childrenInfoMap, nil, nil)
 	formData.RegisterValidation("child_type_non_skill", constructChildTypeNonSkillValidator(childrenInfoMap))
 	formData.RegisterTranslation("child_type_non_skill", "a skill cannot be a child of a non-skill item")
 }
@@ -450,8 +497,9 @@ func registerLanguageTagValidator(formData *formdata.FormData, store *database.D
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	itemType string, childrenInfoMap *map[int64]permissionAndType) { // nolint:gocritic
-	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenInfoMap))
+	itemType string, childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	itemID *int64) {
+	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenInfoMap, oldPropagationLevelsMap, itemID))
 	formData.RegisterTranslation("children",
 		"children IDs should be unique and each should be visible to the user")
 

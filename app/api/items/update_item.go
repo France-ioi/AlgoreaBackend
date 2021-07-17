@@ -150,7 +150,9 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		service.MustNotBeError(err)
 
 		var childrenInfoMap map[int64]permissionAndType
-		registerChildrenValidator(formData, store, user, itemInfo.Type, &childrenInfoMap)
+		var oldPropagationLevelsMap map[int64]*itemsRelationData
+
+		registerChildrenValidator(formData, store, user, itemInfo.Type, &childrenInfoMap, &oldPropagationLevelsMap, &itemID)
 		formData.RegisterValidation("child_type_non_skill", constructUpdateItemChildTypeNonSkillValidator(itemInfo.Type, &childrenInfoMap))
 		formData.RegisterTranslation("child_type_non_skill", "a skill cannot be a child of a non-skill item")
 		formData.RegisterValidation("cannot_be_set_for_skills", constructUpdateItemCannotBeSetForSkillsValidator(itemInfo.Type))
@@ -181,7 +183,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return apiError.Error // rollback
 		}
 
-		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenInfoMap)
+		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenInfoMap, oldPropagationLevelsMap)
 		return err
 	})
 
@@ -214,7 +216,8 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 }
 
 func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.DataStore, itemID int64,
-	input *updateItemRequest, childrenPermissionMap map[int64]permissionAndType) (apiError service.APIError, err error) {
+	input *updateItemRequest, childrenPermissionMap map[int64]permissionAndType,
+	oldPropagationLevelsMap map[int64]*itemsRelationData) (apiError service.APIError, err error) {
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			deleteStatement := lockedStore.ItemItems().DB
@@ -227,17 +230,6 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 			if !input.checkItemsRelationsCycles(lockedStore, itemID) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
 				return apiError.Error // rollback
-			}
-
-			var oldRelations []itemsRelationData
-			service.MustNotBeError(store.ItemItems().ChildrenOf(itemID).WithWriteLock().
-				Select(`child_item_id AS item_id, category, score_weight,
-				        content_view_propagation_value, upper_view_levels_propagation_value,
-						    grant_view_propagation, watch_propagation, edit_propagation`).
-				Scan(&oldRelations).Error())
-			oldPropagationLevelsMap := make(map[int64]*itemsRelationData, len(oldRelations))
-			for index := range oldRelations {
-				oldPropagationLevelsMap[oldRelations[index].ItemID] = &oldRelations[index]
 			}
 
 			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissionMap, input.Children, formData, oldPropagationLevelsMap, lockedStore)
