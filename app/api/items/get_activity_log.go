@@ -370,8 +370,12 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 			-1 AS answer_id,
 			attempt_id, participant_id, item_id, participant_id AS user_id,
 			NULL AS score`).
+		Where("item_id <= (SELECT MAX(id) FROM items_to_show)").
+		Where("item_id >= (SELECT MIN(id) FROM items_to_show)").
 		Where("item_id IN (SELECT id FROM items_to_show)").
 		Where("started_at <= NOW()").
+		Where("participant_id <= (SELECT MAX(id) FROM participants)").
+		Where("participant_id >= (SELECT MIN(id) FROM participants)").
 		Where("participant_id IN (SELECT id FROM participants)")
 
 	startedResultsQuery = service.NewQueryLimiter().Apply(r, startedResultsQuery)
