@@ -4,7 +4,7 @@ package database
 // depending on the given permission kind
 func (conn *DB) WherePermissionIsAtLeast(permissionKind, permissionName string) *DB {
 	return newDB(conn.db.
-		Where(permissionColumnByKind(permissionKind)+" >= ?",
+		Where("IFNULL("+permissionColumnByKind(permissionKind)+", 1) >= ?",
 			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
 }
 

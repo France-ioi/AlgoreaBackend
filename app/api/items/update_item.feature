@@ -618,9 +618,6 @@ Background:
     And the database table 'items_items' has also the following rows:
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 112           | 1           | Challenge | 2            | as_content               | as_is                         | true                   | true              | true             |
-    And the database table 'permissions_generated' has also the following row:
-      | group_id | item_id | can_view_generated |
-      | 11       | 112     | info               |
     When I send a PUT request to "/items/21" with the following body:
       """
       {

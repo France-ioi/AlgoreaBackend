@@ -61,6 +61,12 @@ Background:
     Then the response code should be 400
     And the response error message should contain "Wrong value for attempt_id (should be int64)"
 
+  Scenario: Should fail when show_invisible_items is invalid
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?show_invisible_items=abc&attempt_id=0"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for show_invisible_items (should have a boolean value (0 or 1))"
+
   Scenario: Should fail when as_team_id is invalid
     Given I am the user with id "11"
     When I send a GET request to "/items/200/children?as_team_id=abc&attempt_id=0"

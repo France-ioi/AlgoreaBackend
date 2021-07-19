@@ -28,8 +28,8 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 		"GROUP BY permissions.item_id "+
 		"HAVING (MAX(can_view_generated_value) >= ?)"+
 		") AS permissions ON permissions.item_id = items.id "+
-		"WHERE (items.id = ?) AND (items.duration IS NOT NULL) AND (can_grant_view_generated_value >= ?) AND "+
-		"(can_watch_generated_value >= ?) LIMIT 1")+"$").
+		"WHERE (items.id = ?) AND (items.duration IS NOT NULL) AND (IFNULL(can_grant_view_generated_value, 1) >= ?) AND "+
+		"(IFNULL(can_watch_generated_value, 1) >= ?) LIMIT 1")+"$").
 		WithArgs(int64(2), 3, int64(123), 2, 2).WillReturnRows(dbMock.NewRows([]string{"id"}).AddRow(123))
 	var id int64
 	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{GroupID: 2}).
