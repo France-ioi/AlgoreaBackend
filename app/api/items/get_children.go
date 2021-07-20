@@ -335,7 +335,7 @@ func (srv *Service) childItemsFromRawData(
 		}
 
 		itemResult := rawData[index].asItemResult()
-		if itemResult != nil {
+		if currentChild.visibleChildItemFields != nil && itemResult != nil {
 			currentChild.Results = append(currentChild.Results, *itemResult)
 		}
 	}
