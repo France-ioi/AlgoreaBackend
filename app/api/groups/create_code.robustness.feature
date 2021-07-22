@@ -3,8 +3,8 @@ Feature: Create a new code for the given group - robustness
   Background:
     Given the database has the following table 'groups':
       | id | name    | grade | description     | created_at          | type  | code       | code_lifetime | code_expires_at     |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 3456789abc | 01:00:00      | 2017-10-14 05:39:48 |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 3456789abc | 3600          | 2017-10-14 05:39:48 |
       | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null       | null          | null                |
       | 31 | jane    | -4    | jane            | 2019-04-06 09:26:40 | User  | null       | null          | null                |
       | 41 | user    | -4    | user            | 2019-04-06 09:26:40 | User  | null       | null          | null                |
@@ -64,7 +64,7 @@ Feature: Create a new code for the given group - robustness
     And the table "groups" should stay unchanged but the row with id "13"
     And the table "groups" at id "13" should be:
       | id | name    | grade | description     | created_at          | type  | code        | code_lifetime | code_expires_at     |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | newpassword | 01:00:00      | 2017-10-14 05:39:48 |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | newpassword | 3600          | 2017-10-14 05:39:48 |
 
   Scenario: User is a manager of the group, but the generated code is not unique 3 times in a row
     Given I am the user with id "21"

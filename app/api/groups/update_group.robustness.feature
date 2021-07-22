@@ -2,8 +2,8 @@ Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'groups':
       | id | name    | grade | description     | created_at          | type  | root_activity_id    | is_official_session | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | false               | true    | true      | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true                       | 0                 | none                                  | null                                   | false                  | null             | false                    |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | false               | true    | true      | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true                       | 1                 | none                                  | null                                   | false                  | 5                | true                     |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | false               | true    | true      | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       | 0                 | none                                  | null                                   | false                  | null             | false                    |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | false               | true    | true      | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       | 1                 | none                                  | null                                   | false                  | 5                | true                     |
       | 14 | Group C | -2    | Group C is here | 2019-03-06 09:26:40 | Class | null                | false               | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 | none                                  | null                                   | false                  | null             | false                    |
       | 15 | Group D | -2    | Group D is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 | none                                  | null                                   | false                  | null             | false                    |
       | 16 | Group E | -2    | Group E is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 | edit                                  | 2019-05-30 11:00:00                    | true                   | 10               | true                     |
@@ -79,7 +79,7 @@ Feature: Update a group (groupEdit) - robustness
       "grade": "grade",
       "description": 14.5,
       "is_open": "true",
-      "code_lifetime": 1234,
+      "code_lifetime": -1,
       "code_expires_at": "the end",
       "open_activity_when_joining": 12,
 
@@ -113,7 +113,7 @@ Feature: Update a group (groupEdit) - robustness
         "open_activity_when_joining": ["expected type 'bool', got unconvertible type 'float64'"],
         "is_open": ["expected type 'bool', got unconvertible type 'string'"],
         "code_expires_at": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
-        "code_lifetime": ["expected type 'string', got unconvertible type 'float64'"],
+        "code_lifetime": ["can be null or an integer between 0 and 2147483647 inclusively"],
         "root_activity_id": ["decoding error: strconv.ParseInt: parsing \"abc\": invalid syntax"],
         "is_official_session": ["expected type 'bool', got unconvertible type 'string'"],
         "require_members_to_join_parent": ["expected type 'bool', got unconvertible type 'string'"],
@@ -450,7 +450,7 @@ Feature: Update a group (groupEdit) - robustness
       "address_city": "Paris",
       "address_country": "France",
 
-      "code_lifetime": "99:59:59",
+      "code_lifetime": 359999,
       "code_expires_at": "2019-12-31T23:59:59Z",
       "frozen_membership": true,
       "max_participants": 8,
@@ -517,7 +517,7 @@ Feature: Update a group (groupEdit) - robustness
       "address_city": "Paris",
       "address_country": "France",
 
-      "code_lifetime": "99:59:59",
+      "code_lifetime": 359999,
       "code_expires_at": "2019-12-31T23:59:59Z",
       "frozen_membership": true,
       "max_participants": 8,

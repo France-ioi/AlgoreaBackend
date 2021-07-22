@@ -107,7 +107,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 
 		if info.CodeExpiresAtIsNull && !info.CodeLifetimeIsNull {
 			service.MustNotBeError(store.Groups().ByID(info.GroupID).
-				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
+				UpdateColumn("code_expires_at", gorm.Expr("DATE_ADD(NOW(), INTERVAL code_lifetime SECOND)")).Error())
 		}
 
 		var approvals database.GroupApprovals
