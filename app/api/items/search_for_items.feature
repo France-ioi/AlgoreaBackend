@@ -111,22 +111,26 @@ Feature: Search for items
       {
         "id": "2",
         "title": "(the) Our Task ___",
-        "type": "Task"
+        "type": "Task",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "4",
         "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill"
+        "type": "Skill",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "7",
         "title": "Another %%%Task",
-        "type": "Task"
+        "type": "Task",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "8",
         "title": "Another %%%Course",
-        "type": "Course"
+        "type": "Course",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -141,12 +145,14 @@ Feature: Search for items
       {
         "id": "2",
         "title": "(the) Our Task ___",
-        "type": "Task"
+        "type": "Task",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "4",
         "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill"
+        "type": "Skill",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -161,12 +167,14 @@ Feature: Search for items
       {
         "id": "7",
         "title": "Another %%%Task",
-        "type": "Task"
+        "type": "Task",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "8",
         "title": "Another %%%Course",
-        "type": "Course"
+        "type": "Course",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -181,7 +189,8 @@ Feature: Search for items
       {
         "id": "2",
         "title": "(the) Our Task ___",
-        "type": "Task"
+        "type": "Task",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -196,7 +205,8 @@ Feature: Search for items
       {
         "id": "4",
         "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill"
+        "type": "Skill",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -211,7 +221,8 @@ Feature: Search for items
       {
         "id": "4",
         "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill"
+        "type": "Skill",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -226,12 +237,14 @@ Feature: Search for items
       {
         "id": "2",
         "title": "(the) Our Task ___",
-        "type": "Task"
+        "type": "Task",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "7",
         "title": "Another %%%Task",
-        "type": "Task"
+        "type": "Task",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -246,7 +259,8 @@ Feature: Search for items
       {
         "id": "4",
         "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill"
+        "type": "Skill",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -261,7 +275,8 @@ Feature: Search for items
       {
         "id": "4",
         "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill"
+        "type": "Skill",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -273,25 +288,45 @@ Feature: Search for items
     And the response body should be, in JSON:
     """
     [
-      {"id": "11", "title": "chapter", "type": "Chapter"},
-      {"id": "12", "title": "chapter", "type": "Chapter"},
-      {"id": "13", "title": "chapter", "type": "Chapter"},
-      {"id": "14", "title": "chapter", "type": "Chapter"},
-      {"id": "15", "title": "chapter", "type": "Chapter"},
-      {"id": "16", "title": "chapter", "type": "Chapter"},
-      {"id": "17", "title": "chapter", "type": "Chapter"},
-      {"id": "18", "title": "chapter", "type": "Chapter"},
-      {"id": "19", "title": "chapter", "type": "Chapter"},
-      {"id": "20", "title": "chapter", "type": "Chapter"},
-      {"id": "21", "title": "chapter", "type": "Chapter"},
-      {"id": "22", "title": "chapter", "type": "Chapter"},
-      {"id": "23", "title": "chapter", "type": "Chapter"},
-      {"id": "24", "title": "chapter", "type": "Chapter"},
-      {"id": "25", "title": "chapter", "type": "Chapter"},
-      {"id": "26", "title": "chapter", "type": "Chapter"},
-      {"id": "27", "title": "chapter", "type": "Chapter"},
-      {"id": "28", "title": "chapter", "type": "Chapter"},
-      {"id": "29", "title": "chapter", "type": "Chapter"},
-      {"id": "30", "title": "chapter", "type": "Chapter"}
+      {"id": "11", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "12", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "13", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "14", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "15", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "16", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "17", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "18", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "19", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "20", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "21", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "22", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "23", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "24", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "25", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "26", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "27", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "28", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "29", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}},
+      {"id": "30", "title": "chapter", "type": "Chapter",
+       "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}}
     ]
     """
