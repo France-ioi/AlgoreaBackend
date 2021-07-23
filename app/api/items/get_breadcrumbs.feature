@@ -63,9 +63,9 @@ Scenario: Full access on all the breadcrumbs (as a user)
   And the response body should be, in JSON:
   """
   [
-    { "item_id": "21", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
-    { "item_id": "22", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 2 },
-    { "item_id": "23", "language_tag": "en", "title": "Reduce Graph", "attempt_id": "1", "attempt_order": 1 }
+    { "item_id": "21", "type": "Course", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
+    { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 2 },
+    { "item_id": "23", "type": "Chapter", "language_tag": "en", "title": "Reduce Graph", "attempt_id": "1", "attempt_order": 1 }
   ]
   """
 
@@ -97,9 +97,9 @@ Scenario: 'Content' access on all the breadcrumbs (as a team)
   And the response body should be, in JSON:
     """
     [
-      { "item_id": "21", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
-      { "item_id": "22", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 1 },
-      { "item_id": "23", "language_tag": "en", "title": "Reduce Graph", "attempt_id": "1", "attempt_order": 2 }
+      { "item_id": "21", "type": "Course", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
+      { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 1 },
+      { "item_id": "23", "type": "Chapter", "language_tag": "en", "title": "Reduce Graph", "attempt_id": "1", "attempt_order": 2 }
     ]
     """
 
@@ -127,9 +127,9 @@ Scenario: Content access to all items except for last for which we have info acc
   And the response body should be, in JSON:
     """
     [
-      { "item_id": "21", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
-      { "item_id": "22", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 1 },
-      { "item_id": "23", "language_tag": "en", "title": "Reduce Graph" }
+      { "item_id": "21", "type": "Course", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
+      { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 1 },
+      { "item_id": "23", "type": "Chapter", "language_tag": "en", "title": "Reduce Graph" }
     ]
     """
 
@@ -143,7 +143,7 @@ Scenario: Content access to all items except for last for which we have info acc
     And the response body should be, in JSON:
     """
     [
-      { "item_id": "23", "language_tag": "en", "title": "Reduce Graph" }
+      { "item_id": "23", "type": "Chapter", "language_tag": "en", "title": "Reduce Graph" }
     ]
     """
 
@@ -157,7 +157,7 @@ Scenario: Content access to all items except for last for which we have info acc
     And the response body should be, in JSON:
     """
     [
-      { "item_id": "25", "language_tag": "en", "title": "BFS" }
+      { "item_id": "25", "type": "Chapter", "language_tag": "en", "title": "BFS" }
     ]
     """
 

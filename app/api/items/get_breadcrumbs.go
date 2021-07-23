@@ -62,6 +62,9 @@ import (
 //           item_id:
 //             type: string
 //             format: int64
+//           type:
+//             type: string
+//             enum: [Chapter,Task,Course,Skill]
 //           title:
 //             type: string
 //           language_tag:
@@ -78,7 +81,7 @@ import (
 //                          skipped for the last item if `parent_attempt_id` is used)
 //             type: string
 //             format: int64
-//         required: [item_id, title, language_tag]
+//         required: [item_id, type, title, language_tag]
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -114,6 +117,7 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	var result []map[string]interface{}
 	service.MustNotBeError(srv.Store.Items().Select(`
 			items.id AS item_id,
+			items.type,
 			COALESCE(user_strings.title, default_strings.title) AS title,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag`).
 		JoinsUserAndDefaultItemStrings(user).
