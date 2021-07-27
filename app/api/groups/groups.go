@@ -114,6 +114,11 @@ const (
 	deleteRelation createOrDeleteRelation = false
 )
 
+const (
+	groupTypeTeam = "Team"
+	groupTypeUser = "User"
+)
+
 func checkThatUserHasRightsForDirectRelation(
 	store *database.DataStore, user *database.User,
 	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation) service.APIError {
