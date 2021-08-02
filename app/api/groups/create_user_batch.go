@@ -282,7 +282,7 @@ func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.R
 				return retryIDStore.Groups().InsertMap(map[string]interface{}{
 					"id":          userGroupID,
 					"name":        createdUser.Login,
-					"type":        "User",
+					"type":        groupTypeUser,
 					"description": createdUser.Login,
 					"created_at":  database.Now(),
 					"is_open":     false,

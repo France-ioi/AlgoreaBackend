@@ -55,6 +55,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/group-progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/team-progress", service.AppHandler(srv.getTeamProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/user-progress", service.AppHandler(srv.getUserProgress).ServeHTTP)
+	router.With(service.ParticipantMiddleware(srv.Store)).
+		Get("/items/{item_id}/participant-progress", service.AppHandler(srv.getParticipantProgress).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/join-requests/accept", service.AppHandler(srv.acceptJoinRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/join-requests/reject", service.AppHandler(srv.rejectJoinRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/leave-requests/accept", service.AppHandler(srv.acceptLeaveRequests).ServeHTTP)
@@ -112,6 +114,11 @@ type createOrDeleteRelation bool
 const (
 	createRelation createOrDeleteRelation = true
 	deleteRelation createOrDeleteRelation = false
+)
+
+const (
+	groupTypeTeam = "Team"
+	groupTypeUser = "User"
 )
 
 func checkThatUserHasRightsForDirectRelation(

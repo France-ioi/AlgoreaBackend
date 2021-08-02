@@ -179,7 +179,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 
 	for index := range result {
 		result[index].CanManage = srv.Store.GroupManagers().CanManageNameByIndex(result[index].CanManageValue)
-		if result[index].Type != "User" {
+		if result[index].Type != groupTypeUser {
 			result[index].GroupManagersViewResponseRowUser = nil
 		}
 		if !includeManagersOfAncestorGroups {
