@@ -24,7 +24,7 @@ type groupParticipantProgressResponseRow struct {
 	String structures.ItemString `json:"string"`
 
 	// required: true
-	CurrentUserPermissions *structures.ItemPermissions `json:"permissions"`
+	CurrentUserPermissions *structures.ItemPermissions `json:"current_user_permissions"`
 
 	// The best score across all participant's or participant teams' results. If there are no results, the score is 0.
 	// required:true

@@ -264,7 +264,7 @@ Feature: Display the current progress of a participant on children of an item (g
         "no_score": false,
         "type": "Task",
         "string": {"language_tag": "en", "title": "Task 15"},
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "latest_activity_at": "2018-11-01T00:00:00Z",
         "score": 0,
         "submissions": 0,
@@ -277,7 +277,7 @@ Feature: Display the current progress of a participant on children of an item (g
         "no_score": false,
         "type": "Task",
         "string": {"language_tag": "fr", "title": "Tâche 14"},
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
         "latest_activity_at": "2017-05-30T06:38:48Z",
         "score": 15,
         "submissions": 11,
@@ -290,7 +290,7 @@ Feature: Display the current progress of a participant on children of an item (g
         "no_score": false,
         "type": "Task",
         "string": {"language_tag": "", "title": null},
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
         "latest_activity_at": "2018-11-01T00:00:00Z",
         "score": 0,
         "submissions": 0,
@@ -303,7 +303,7 @@ Feature: Display the current progress of a participant on children of an item (g
         "no_score": false,
         "type": "Task",
         "string": {"language_tag": "", "title": null},
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "latest_activity_at": "2019-07-01T00:00:00Z",
         "score": 20,
         "submissions": 2,
@@ -314,7 +314,7 @@ Feature: Display the current progress of a participant on children of an item (g
         "item_id": "211",
         "no_score": false,
         "type": "Task",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "latest_activity_at": null,
         "score": 0,
@@ -337,7 +337,7 @@ Feature: Display the current progress of a participant on children of an item (g
     [
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "fr", "title": "Tâche 15"},
         "type": "Task",
         "hints_requested": 100,
@@ -350,7 +350,7 @@ Feature: Display the current progress of a participant on children of an item (g
       },
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "fr", "title": "Tâche 14"},
         "type": "Task",
         "hints_requested": 0,
@@ -363,7 +363,7 @@ Feature: Display the current progress of a participant on children of an item (g
       },
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",
         "hints_requested": 0,
@@ -376,7 +376,7 @@ Feature: Display the current progress of a participant on children of an item (g
       },
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",
         "hints_requested": 1,
@@ -390,7 +390,7 @@ Feature: Display the current progress of a participant on children of an item (g
       {
         "item_id": "211",
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",
         "latest_activity_at": "2018-05-30T06:38:48Z",
@@ -414,7 +414,7 @@ Feature: Display the current progress of a participant on children of an item (g
     [
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "fr", "title": "Tâche 15"},
         "type": "Task",
         "hints_requested": 100,
@@ -427,7 +427,7 @@ Feature: Display the current progress of a participant on children of an item (g
       },
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "fr", "title": "Tâche 14"},
         "type": "Task",
         "hints_requested": 0,
@@ -440,7 +440,7 @@ Feature: Display the current progress of a participant on children of an item (g
       },
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",
         "hints_requested": 0,
@@ -453,7 +453,7 @@ Feature: Display the current progress of a participant on children of an item (g
       },
       {
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",
         "hints_requested": 1,
@@ -467,7 +467,7 @@ Feature: Display the current progress of a participant on children of an item (g
       {
         "item_id": "211",
         "no_score": false,
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",
         "latest_activity_at": "2018-05-30T06:38:48Z",
