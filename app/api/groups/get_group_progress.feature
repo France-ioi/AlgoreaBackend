@@ -965,6 +965,16 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     ]
     """
 
+  Scenario: No parent item ids given
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/1/group-progress?parent_item_ids="
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+    ]
+    """
+
   Scenario: No groups
     Given I am the user with id "21"
     # here we fixate avg_time_spent even if it depends on NOW()
