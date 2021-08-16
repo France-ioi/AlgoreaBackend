@@ -321,6 +321,22 @@ func scanAndBuildProgressResults(
 	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
 	reflDecodedTableCell := reflect.New(reflTableCellType).Elem()
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		// will convert strings with time in DB format to database.Time
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+				if f.Kind() != reflect.String {
+					return data, nil
+				}
+				if t != reflect.TypeOf(database.Time{}) {
+					return data, nil
+				}
+
+				// Convert it by parsing
+				result := &database.Time{}
+				err := result.ScanString(data.(string))
+				return *result, err
+			},
+		),
 		Result:           reflDecodedTableCell.Addr().Interface(),
 		TagName:          "json",
 		ZeroFields:       true, // this marks keys with null values as used
