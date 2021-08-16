@@ -216,6 +216,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 5  | 14             | 2017-05-29 06:38:38 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
+      | 0          | 14             | 210     | 2017-05-29 05:38:38 | 50             | 2017-05-29 06:38:38 | 115          | 127         | null                | 2019-05-29 06:38:38 |
       | 0          | 14             | 211     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
       | 1          | 14             | 211     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | 2017-05-29 06:38:58 | 2018-05-29 06:38:38 | # min(validated_at) for 51, 211 comes from this line (from a team)
       | 2          | 14             | 211     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-31 06:58:38 | 2018-05-28 06:38:38 | # hints_cached & submissions for 51, 211 come from this line (the best attempt is made by a team)
@@ -242,6 +243,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     And the response body should be, in JSON:
     """
     [
+      {
+        "group_id": "67",
+        "hints_requested": 0,
+        "item_id": "210",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
       {
         "group_id": "67",
         "item_id": "211",
@@ -293,6 +304,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "validated": false
       },
 
+      {
+        "group_id": "51",
+        "hints_requested": 115,
+        "item_id": "210",
+        "latest_activity_at": "2019-05-29T06:38:38Z",
+        "score": 50,
+        "submissions": 127,
+        "time_spent": 65889627,
+        "validated": false
+      },
       {
         "group_id": "51",
         "item_id": "211",
@@ -358,6 +379,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     [
       {
         "group_id": "63",
+        "hints_requested": 0,
+        "item_id": "210",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "63",
         "item_id": "211",
         "latest_activity_at": null,
         "score": 0,
@@ -409,6 +440,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       {
         "group_id": "63",
         "hints_requested": 0,
+        "item_id": "220",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "63",
+        "hints_requested": 0,
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
@@ -450,6 +491,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "225",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "63",
+        "hints_requested": 0,
+        "item_id": "310",
         "latest_activity_at": null,
         "score": 0,
         "submissions": 0,
@@ -519,13 +570,83 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     ]
     """
 
-  Scenario: No visible items
+  Scenario: No visible child items
     Given I am the user with id "21"
     When I send a GET request to "/groups/1/user-progress?parent_item_ids=1010"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
+      {
+        "group_id": "63",
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "65",
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "67",
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "51",
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "53",
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "55",
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "59",
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      }
     ]
     """
 
@@ -541,6 +662,8 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
 
   Scenario: The input group_id is a team
     Given I am the user with id "21"
+    # here we fixate time_spent even if it depends on NOW()
+    And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/14/user-progress?parent_item_ids=210"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -548,6 +671,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     [
       {
         "group_id": "51",
+        "hints_requested": 115,
+        "item_id": "210",
+        "latest_activity_at": "2019-05-29T06:38:38Z",
+        "score": 50,
+        "submissions": 127,
+        "time_spent": 65889627,
+        "validated": false
+      },
+      {
+        "group_id": "51",
         "hints_requested": 3,
         "item_id": "211",
         "latest_activity_at": "2018-05-30T06:38:38Z",
@@ -596,6 +729,17 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "time_spent": 0,
         "validated": false
       },
+
+      {
+        "group_id": "53",
+        "hints_requested": 115,
+        "item_id": "210",
+        "latest_activity_at": "2019-05-29T06:38:38Z",
+        "score": 50,
+        "submissions": 127,
+        "time_spent": 65889627,
+        "validated": false
+      },
       {
         "group_id": "53",
         "hints_requested": 3,
@@ -644,6 +788,17 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "score": 0,
         "submissions": 0,
         "time_spent": 0,
+        "validated": false
+      },
+
+      {
+        "group_id": "55",
+        "hints_requested": 115,
+        "item_id": "210",
+        "latest_activity_at": "2019-05-29T06:38:38Z",
+        "score": 50,
+        "submissions": 127,
+        "time_spent": 65889627,
         "validated": false
       },
       {
@@ -708,6 +863,16 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     [
       {
         "group_id": "69",
+        "hints_requested": 0,
+        "item_id": "210",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "69",
         "item_id": "211",
         "latest_activity_at": null,
         "score": 0,
@@ -756,5 +921,15 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "time_spent": 0,
         "validated": false
       }
+    ]
+    """
+
+  Scenario: No parent item ids given
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/1/user-progress?parent_item_ids="
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
     ]
     """

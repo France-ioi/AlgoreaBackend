@@ -11,8 +11,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model groupUserProgressResponseRow
-type groupUserProgressResponseRow struct {
+// swagger:model groupUserProgressResponseTableCell
+type groupUserProgressResponseTableCell struct {
 	// The user’s self `group_id`
 	// required:true
 	GroupID int64 `json:"group_id,string"`
@@ -55,7 +55,7 @@ type groupUserProgressResponseRow struct {
 //              Returns the current progress of users on a subset of items.
 //
 //
-//              For all visible children of items from the `{parent_item_id}` list,
+//              For each item from `{parent_item_id}` and its visible children,
 //              displays the result of all user self-groups among the descendants of the given group
 //              (including those in teams).
 //
@@ -107,7 +107,7 @@ type groupUserProgressResponseRow struct {
 //     schema:
 //       type: array
 //       items:
-//         "$ref": "#/definitions/groupUserProgressResponseRow"
+//         "$ref": "#/definitions/groupUserProgressResponseTableCell"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -132,6 +132,13 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	if apiError != service.NoError {
 		return apiError
 	}
+	if len(itemParentIDs) == 0 {
+		render.Respond(w, r, []map[string]interface{}{})
+		return service.NoError
+	}
+
+	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
+	orderedItemIDListWithDuplicates, uniqueItemsCount, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
@@ -158,20 +165,9 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.NoError
 	}
 
-	itemIDQuery := srv.Store.ItemItems().
-		Select("items_items.child_item_id AS id").
-		Where("parent_item_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS permissions ON permissions.item_id = items_items.child_item_id",
-			srv.Store.Permissions().MatchingUserAncestors(user).
-				Select("item_id").
-				WherePermissionIsAtLeast("view", "info").SubQuery()).
-		Group("items_items.child_item_id").
-		Order("items_items.child_item_id")
-
 	userIDsList := strings.Join(userIDs, ", ")
-	var result []groupUserProgressResponseRow
-	service.MustNotBeError(srv.Store.Raw("WITH visible_items AS ? ?",
-		itemIDQuery.SubQuery(),
+	var result []*groupUserProgressResponseTableCell
+	scanAndBuildProgressResults(
 		// nolint:gosec
 		joinUserProgressResults(
 			srv.Store.Raw(`
@@ -179,13 +175,13 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 					items.id AS item_id,
 					users.group_id AS group_id, `+userProgressFields+`
 				FROM JSON_TABLE('[`+userIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS users`).
-				Joins("JOIN visible_items AS items"), gorm.Expr("users.group_id"),
+				Joins("JOIN ? AS items", itemsSubQuery),
+			gorm.Expr("users.group_id"),
 		).
 			Group("users.group_id, items.id").
-			Order(gorm.Expr("FIELD(users.group_id, "+userIDsList+")")).
-			Order("items.id").
-			QueryExpr()).
-		Scan(&result).Error())
+			Order(gorm.Expr("FIELD(users.group_id, "+userIDsList+")")),
+		orderedItemIDListWithDuplicates, uniqueItemsCount, &result,
+	)
 
 	render.Respond(w, r, result)
 	return service.NoError
