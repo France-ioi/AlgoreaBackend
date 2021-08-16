@@ -13,8 +13,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model groupGroupProgressResponseRow
-type groupGroupProgressResponseRow struct {
+// swagger:model groupGroupProgressResponseTableCell
+type groupGroupProgressResponseTableCell struct {
 	// The child’s `group_id`
 	// required:true
 	GroupID int64 `json:"group_id,string"`
@@ -113,7 +113,7 @@ type groupGroupProgressResponseRow struct {
 //     schema:
 //       type: array
 //       items:
-//         "$ref": "#/definitions/groupGroupProgressResponseRow"
+//         "$ref": "#/definitions/groupGroupProgressResponseTableCell"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -145,7 +145,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
 	// There should not be many of them
-	orderedItemIDListWithDuplicates, itemIDs, itemsUnion := srv.preselectVisibleChildItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, itemIDs, itemsUnion := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
 
 	// Preselect IDs of groups for that we will calculate the final stats.
 	// All the "end members" are descendants of these groups.
@@ -213,7 +213,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				LIMIT 1
 			) AS result_with_best_score ON 1`)
 
-	var result []*groupGroupProgressResponseRow
+	var result []*groupGroupProgressResponseTableCell
 	// It still takes more than 2 minutes to complete on large data sets
 	scanAndBuildProgressResults(
 		srv.Store.ActiveGroupAncestors().
@@ -238,7 +238,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	return service.NoError
 }
 
-func (srv *Service) preselectVisibleChildItems(itemParentIDs []int64, user *database.User) (
+func (srv *Service) preselectIDsOfVisibleItems(itemParentIDs []int64, user *database.User) (
 	orderedItemIDListWithDuplicates, itemIDs []interface{}, itemsUnion *database.DB) {
 	itemParentIDsAsIntSlice := make([]interface{}, len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
@@ -264,9 +264,13 @@ func (srv *Service) preselectVisibleChildItems(itemParentIDs []int64, user *data
 		Select("items_items.parent_item_id, items_items.child_item_id").
 		Scan(&parentChildPairs).Error())
 
+	// parent1_id, child1_1_id, ..., parent2_id, child2_1_id, ...
 	orderedItemIDListWithDuplicates = make([]interface{}, 0, len(itemParentIDs)+len(parentChildPairs))
 	currentParentIDIndex := 0
+
+	// child_id -> true, will be used to construct a list of unique item ids
 	childItemIDMap := make(map[int64]bool, len(parentChildPairs))
+
 	orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, itemParentIDs[0])
 	for i := range parentChildPairs {
 		for itemParentIDs[currentParentIDIndex] != parentChildPairs[i].ParentItemID {
@@ -276,6 +280,9 @@ func (srv *Service) preselectVisibleChildItems(itemParentIDs []int64, user *data
 		orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, parentChildPairs[i].ChildItemID)
 		childItemIDMap[parentChildPairs[i].ChildItemID] = true
 	}
+
+	// Create an unordered list of all the unique item ids (parents and children).
+	// Note: itemParentIDs slice doesn't contain duplicates because resolveAndCheckParentIDs() guarantees that.
 	itemIDs = make([]interface{}, len(itemParentIDs), len(childItemIDMap)+len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
 		itemIDs[i] = parentID
@@ -291,54 +298,64 @@ func (srv *Service) preselectVisibleChildItems(itemParentIDs []int64, user *data
 	return orderedItemIDListWithDuplicates, itemIDs, itemsUnion
 }
 
-func processResultTableRow(orderedItemIDListWithDuplicates []interface{}, reflResultRowMap reflect.Value, resultPtr interface{}) {
-	// *[]*rowType
-	reflRowType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
-	reflRow := reflect.MakeSlice(
-		reflect.SliceOf(reflect.PtrTo(reflRowType)), len(orderedItemIDListWithDuplicates), len(orderedItemIDListWithDuplicates))
+func appendTableRowToResult(orderedItemIDListWithDuplicates []interface{}, reflResultRowMap reflect.Value, resultPtr interface{}) {
+	// resultPtr is *[]*tableCellType
+	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
+	// []*tableCellType
+	reflTableRow := reflect.MakeSlice(
+		reflect.SliceOf(reflect.PtrTo(reflTableCellType)), len(orderedItemIDListWithDuplicates), len(orderedItemIDListWithDuplicates))
 
+	// Here we fill the table row with cells. As an item can be a child of multiple parents, the row may contain duplicates.
 	for index, itemID := range orderedItemIDListWithDuplicates {
-		reflRow.Index(index).Set(reflResultRowMap.MapIndex(reflect.ValueOf(itemID)))
+		reflTableRow.Index(index).Set(reflResultRowMap.MapIndex(reflect.ValueOf(itemID)))
 	}
 	reflResultPtr := reflect.ValueOf(resultPtr)
-	reflResultPtr.Elem().Set(reflect.AppendSlice(reflResultPtr.Elem(), reflRow))
+	// this means: *resultPtr = append(*resultPtr, tableRow)
+	reflResultPtr.Elem().Set(reflect.AppendSlice(reflResultPtr.Elem(), reflTableRow))
 }
 
+// resultPtr should be a pointer to a slice of pointers to table cells
 func scanAndBuildProgressResults(
 	query *database.DB, orderedItemIDListWithDuplicates []interface{}, uniqueItemsCount int, resultPtr interface{}) {
-	// *[]*rowType
-	reflRowType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
-	reflDecodedRow := reflect.New(reflRowType).Elem()
+	// resultPtr is *[]*tableCellType
+	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
+	reflDecodedTableCell := reflect.New(reflTableCellType).Elem()
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:           reflDecodedRow.Addr().Interface(),
-		ErrorUnused:      false,
-		Metadata:         &mapstructure.Metadata{},
+		Result:           reflDecodedTableCell.Addr().Interface(),
 		TagName:          "json",
 		ZeroFields:       true, // this marks keys with null values as used
 		WeaklyTypedInput: true,
 	})
 	service.MustNotBeError(err)
 
+	// here we will store results for each item: map[int64]*tableCellType
 	reflResultRowMap := reflect.MakeMapWithSize(
-		reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PtrTo(reflRowType)), uniqueItemsCount)
+		reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PtrTo(reflTableCellType)), uniqueItemsCount)
 	previousGroupID := int64(-1)
 	service.MustNotBeError(query.ScanAndHandleMaps(func(cell map[string]interface{}) error {
+		// convert map[string]interface{} into tableCellType and store the result in reflDecodedTableCell
 		service.MustNotBeError(decoder.Decode(cell))
-		groupID := reflDecodedRow.FieldByName("GroupID").Interface().(int64)
+
+		groupID := reflDecodedTableCell.FieldByName("GroupID").Interface().(int64)
 		if groupID != previousGroupID {
 			if previousGroupID != -1 {
-				processResultTableRow(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
-				reflResultRowMap = reflect.MakeMapWithSize(reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PtrTo(reflRowType)), uniqueItemsCount)
+				// Moving to a next row of the results table, so we should insert cells from the map into the results slice
+				appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
+				// and initialize a new map for cells
+				reflResultRowMap = reflect.MakeMapWithSize(reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PtrTo(reflTableCellType)), uniqueItemsCount)
 			}
 			previousGroupID = groupID
 		}
-		reflDecodedRowCopy := reflect.New(reflRowType).Elem()
-		reflDecodedRowCopy.Set(reflDecodedRow)
-		reflResultRowMap.SetMapIndex(reflDecodedRow.FieldByName("ItemID"), reflDecodedRowCopy.Addr())
+
+		// as reflDecodedTableCell will be reused on the next step of the loop, we should create a copy
+		reflDecodedRowCopy := reflect.New(reflTableCellType).Elem()
+		reflDecodedRowCopy.Set(reflDecodedTableCell)
+		reflResultRowMap.SetMapIndex(reflDecodedTableCell.FieldByName("ItemID"), reflDecodedRowCopy.Addr())
 		return nil
 	}).Error())
 
-	processResultTableRow(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
+	// store the last row of the table
+	appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 }
 
 func (srv *Service) resolveAndCheckParentIDs(r *http.Request, user *database.User) ([]int64, service.APIError) {
