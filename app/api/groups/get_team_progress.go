@@ -132,7 +132,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, itemIDs, itemsUnion := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemsCount, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
@@ -179,7 +179,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 					WHERE participant_id = groups.id AND item_id = items.id
 				)
 			) AS time_spent`).
-		Joins(`JOIN items ON items.id IN ?`, itemsUnion.SubQuery()).
+		Joins(`JOIN items ON items.id IN (SELECT id FROM ? AS item_ids)`, itemsSubQuery).
 		Joins(`
 			LEFT JOIN LATERAL (
 				SELECT score_computed, validated, hints_cached, submissions, participant_id
@@ -192,7 +192,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Order(gorm.Expr(
 			"FIELD(groups.id"+strings.Repeat(", ?", len(teamIDs))+")",
 			teamIDs...)),
-		orderedItemIDListWithDuplicates, len(itemIDs), &result,
+		orderedItemIDListWithDuplicates, uniqueItemsCount, &result,
 	)
 
 	render.Respond(w, r, result)

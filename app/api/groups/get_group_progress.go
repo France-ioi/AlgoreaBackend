@@ -3,6 +3,7 @@ package groups
 import (
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/France-ioi/mapstructure"
@@ -145,7 +146,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
 	// There should not be many of them
-	orderedItemIDListWithDuplicates, itemIDs, itemsUnion := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemsCount, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
 
 	// Preselect IDs of groups for that we will calculate the final stats.
 	// All the "end members" are descendants of these groups.
@@ -203,7 +204,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				)
 			) AS time_spent
 		FROM ? AS end_members`, endMembers.SubQuery()).
-		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
+		Joins("JOIN ? AS items", itemsSubQuery).
 		Joins(`
 			LEFT JOIN LATERAL (
 				SELECT score_computed AS score, validated, hints_cached, submissions, participant_id
@@ -231,7 +232,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			Order(gorm.Expr(
 				"FIELD(groups_ancestors_active.ancestor_group_id"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
 				ancestorGroupIDs...)),
-		orderedItemIDListWithDuplicates, len(itemIDs), &result,
+		orderedItemIDListWithDuplicates, uniqueItemsCount, &result,
 	)
 
 	render.Respond(w, r, result)
@@ -239,7 +240,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 }
 
 func (srv *Service) preselectIDsOfVisibleItems(itemParentIDs []int64, user *database.User) (
-	orderedItemIDListWithDuplicates, itemIDs []interface{}, itemsUnion *database.DB) {
+	orderedItemIDListWithDuplicates []interface{}, uniqueItemsCount int, itemsSubQuery interface{}) {
 	itemParentIDsAsIntSlice := make([]interface{}, len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
 		itemParentIDsAsIntSlice[i] = parentID
@@ -283,19 +284,16 @@ func (srv *Service) preselectIDsOfVisibleItems(itemParentIDs []int64, user *data
 
 	// Create an unordered list of all the unique item ids (parents and children).
 	// Note: itemParentIDs slice doesn't contain duplicates because resolveAndCheckParentIDs() guarantees that.
-	itemIDs = make([]interface{}, len(itemParentIDs), len(childItemIDMap)+len(itemParentIDs))
+	itemIDs := make([]string, len(itemParentIDs), len(childItemIDMap)+len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
-		itemIDs[i] = parentID
+		itemIDs[i] = strconv.FormatInt(parentID, 10)
 	}
 	for itemID := range childItemIDMap {
-		itemIDs = append(itemIDs, itemID)
+		itemIDs = append(itemIDs, strconv.FormatInt(itemID, 10))
 	}
 
-	itemsUnion = srv.Store.Raw("SELECT ? AS id", itemIDs[0])
-	for i := 1; i < len(itemIDs); i++ {
-		itemsUnion = itemsUnion.UnionAll(srv.Store.Raw("SELECT ? AS id", itemIDs[i]).QueryExpr())
-	}
-	return orderedItemIDListWithDuplicates, itemIDs, itemsUnion
+	itemsSubQuery = gorm.Expr(`JSON_TABLE('[` + strings.Join(itemIDs, ", ") + `]', "$[*]" COLUMNS(id BIGINT PATH "$"))`)
+	return orderedItemIDListWithDuplicates, len(itemIDs), itemsSubQuery
 }
 
 func appendTableRowToResult(orderedItemIDListWithDuplicates []interface{}, reflResultRowMap reflect.Value, resultPtr interface{}) {
