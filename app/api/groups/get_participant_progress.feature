@@ -300,7 +300,7 @@ Feature: Display the current progress of a participant on children of an item (g
       {
         "hints_requested": 1,
         "item_id": "212",
-        "no_score": false,
+        "no_score": true,
         "type": "Task",
         "string": {"language_tag": "", "title": null},
         "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
@@ -375,7 +375,7 @@ Feature: Display the current progress of a participant on children of an item (g
         "validated": false
       },
       {
-        "no_score": false,
+        "no_score": true,
         "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",
@@ -452,7 +452,7 @@ Feature: Display the current progress of a participant on children of an item (g
         "validated": false
       },
       {
-        "no_score": false,
+        "no_score": true,
         "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
         "string": {"language_tag": "", "title": null},
         "type": "Task",

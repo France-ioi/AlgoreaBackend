@@ -149,7 +149,7 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 	user := srv.GetUser(r)
 	itemIDQuery := srv.Store.ItemItems().
 		Select(`
-			items.id, items.type, child_order, default_language_tag,
+			items.id, items.type, items.no_score, child_order, default_language_tag,
 			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value,
 			can_edit_generated_value, is_owner_generated`).
 		Joins("JOIN items ON items.id = items_items.child_item_id").
@@ -159,7 +159,7 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 	var fieldVariables []interface{}
 	var participantProgressQuery *database.DB
 	fields := `
-		items.id, items.type, items.default_language_tag,
+		items.id, items.type, items.no_score, items.default_language_tag,
 		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value,
 		can_edit_generated_value, is_owner_generated`
 	if participantType == groupTypeUser {
