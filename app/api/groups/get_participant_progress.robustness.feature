@@ -24,9 +24,11 @@ Feature: Display the current progress of a participant on children of an item (g
       | 211 | Task    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       | can_watch_generated |
-      | 11       | 210     | info                     | result              |
+      | 11       | 210     | content                  | result              |
+      | 14       | 200     | info                     | answer              |
       | 20       | 210     | none                     | answer              |
-      | 21       | 210     | none                     | answer_with_grant   |
+      | 21       | 200     | content                  | answer              |
+      | 21       | 210     | content                  | answer_with_grant   |
       | 21       | 211     | info                     | none                |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
@@ -41,7 +43,7 @@ Feature: Display the current progress of a participant on children of an item (g
     And the response error message should contain "No rights to watch for watched_group_id"
 
   Scenario: watched_group_id is incorrect
-    Given I am the user with id "21"
+    Given I am the user with id "11"
     When I send a GET request to "/items/210/participant-progress?watched_group_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for watched_group_id (should be int64)"
@@ -67,6 +69,18 @@ Feature: Display the current progress of a participant on children of an item (g
   Scenario: Not enough permissions to watch results on item_id
     Given I am the user with id "21"
     When I send a GET request to "/items/211/participant-progress?watched_group_id=14"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: can_view < content on item_id for a user
+    Given I am the user with id "21"
+    When I send a GET request to "/items/211/participant-progress"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: can_view < content on item_id for a team
+    Given I am the user with id "21"
+    When I send a GET request to "/items/200/participant-progress?as_team_id=14"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 

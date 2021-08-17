@@ -141,7 +141,7 @@ type rawParticipantProgressRow struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, participantID, participantType, apiError := srv.parseParticipantProgressParameters(r)
+	itemID, participantID, checkPermissionsForGroupID, participantType, apiError := srv.parseParticipantProgressParameters(r)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -150,11 +150,18 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 	itemIDQuery := srv.Store.ItemItems().
 		Select(`
 			items.id, items.type, items.no_score, child_order, default_language_tag,
-			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value,
-			can_edit_generated_value, is_owner_generated`).
+			IFNULL(user_permissions.can_view_generated_value, 1) AS can_view_generated_value,
+			IFNULL(user_permissions.can_grant_view_generated_value, 1) AS can_grant_view_generated_value,
+			IFNULL(user_permissions.can_watch_generated_value, 1) AS can_watch_generated_value,
+			IFNULL(user_permissions.can_edit_generated_value, 1) AS can_edit_generated_value,
+			IFNULL(user_permissions.is_owner_generated, 0) AS is_owner_generated`).
 		Joins("JOIN items ON items.id = items_items.child_item_id").
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
-		Where("parent_item_id = ?", itemID)
+		Where("parent_item_id = ?", itemID).
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(checkPermissionsForGroupID, "view", "info").
+		Joins(
+			"LEFT JOIN LATERAL ? AS user_permissions ON user_permissions.item_id = items.id",
+			srv.Store.Permissions().AggregatedPermissionsForItems(user.GroupID).
+				Where("permissions.item_id = items.id").SubQuery())
 
 	var fieldVariables []interface{}
 	var participantProgressQuery *database.DB
@@ -239,10 +246,10 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 }
 
 func (srv *Service) parseParticipantProgressParameters(r *http.Request) (
-	itemID, participantID int64, participantType string, apiError service.APIError) {
+	itemID, participantID, checkPermissionsForGroupID int64, participantType string, apiError service.APIError) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
-		return 0, 0, "", service.ErrInvalidRequest(err)
+		return 0, 0, 0, "", service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(r)
@@ -251,29 +258,41 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request) (
 	if participantID != user.GroupID {
 		participantType = groupTypeTeam
 	}
+	checkPermissionsForGroupID = participantID
+
 	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
-		return 0, 0, "", apiError
+		return 0, 0, 0, "", apiError
 	}
 
 	if watchedGroupIDSet {
 		if len(r.URL.Query()["as_team_id"]) != 0 {
-			return 0, 0, "", service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
+			return 0, 0, 0, "", service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
 
 		participantID = watchedGroupID
-		found, err := srv.Store.Permissions().MatchingUserAncestors(user).
+		var found bool
+		found, err = srv.Store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("watch", "result").
 			Where("item_id = ?", itemID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return 0, 0, "", service.InsufficientAccessRightsError
+			return 0, 0, 0, "", service.InsufficientAccessRightsError
 		}
 
 		service.MustNotBeError(srv.Store.Groups().ByID(watchedGroupID).PluckFirst("type", &participantType).Error())
 		if participantType != groupTypeUser && participantType != groupTypeTeam {
-			return 0, 0, "", service.ErrForbidden(errors.New("watched group should be a user or a team"))
+			return 0, 0, 0, "", service.ErrForbidden(errors.New("watched group should be a user or a team"))
 		}
 	}
-	return itemID, participantID, participantType, service.NoError
+
+	found, err := srv.Store.Permissions().MatchingGroupAncestors(checkPermissionsForGroupID).
+		WherePermissionIsAtLeast("view", "content").
+		Where("item_id = ?", itemID).HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return 0, 0, 0, "", service.InsufficientAccessRightsError
+	}
+
+	return itemID, participantID, checkPermissionsForGroupID, participantType, service.NoError
 }
