@@ -11,8 +11,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model groupTeamProgressResponseRow
-type groupTeamProgressResponseRow struct {
+// swagger:model groupTeamProgressResponseTableCell
+type groupTeamProgressResponseTableCell struct {
 	// The team’s `group_id`
 	// required:true
 	GroupID int64 `json:"group_id,string"`
@@ -55,7 +55,7 @@ type groupTeamProgressResponseRow struct {
 //              Returns the current progress of teams on a subset of items.
 //
 //
-//              For all visible children of items from the `{parent_item_id}` list,
+//              For each item from `{parent_item_id}` and its visible children,
 //              displays the result of each team among the descendants of the group.
 //
 //
@@ -101,7 +101,7 @@ type groupTeamProgressResponseRow struct {
 //     schema:
 //       type: array
 //       items:
-//         "$ref": "#/definitions/groupTeamProgressResponseRow"
+//         "$ref": "#/definitions/groupTeamProgressResponseTableCell"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -126,6 +126,13 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	if apiError != service.NoError {
 		return apiError
 	}
+	if len(itemParentIDs) == 0 {
+		render.Respond(w, r, []map[string]interface{}{})
+		return service.NoError
+	}
+
+	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
+	orderedItemIDListWithDuplicates, uniqueItemsCount, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
@@ -151,14 +158,8 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.NoError
 	}
 
-	itemsQuery := srv.Store.Permissions().MatchingUserAncestors(user).
-		WherePermissionIsAtLeast("view", "info").
-		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
-		Where("items_items.parent_item_id IN (?)", itemParentIDs).
-		Select("DISTINCT items_items.child_item_id")
-
-	var result []groupTeamProgressResponseRow
-	service.MustNotBeError(srv.Store.Groups().
+	var result []*groupTeamProgressResponseTableCell
+	scanAndBuildProgressResults(srv.Store.Groups().
 		Select(`
 			items.id AS item_id,
 			groups.id AS group_id,
@@ -178,7 +179,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 					WHERE participant_id = groups.id AND item_id = items.id
 				)
 			) AS time_spent`).
-		Joins(`JOIN items ON items.id IN ?`, itemsQuery.SubQuery()).
+		Joins(`JOIN items ON items.id IN (SELECT id FROM ? AS item_ids)`, itemsSubQuery).
 		Joins(`
 			LEFT JOIN LATERAL (
 				SELECT score_computed, validated, hints_cached, submissions, participant_id
@@ -190,9 +191,9 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Where("groups.id IN (?)", teamIDs).
 		Order(gorm.Expr(
 			"FIELD(groups.id"+strings.Repeat(", ?", len(teamIDs))+")",
-			teamIDs...)).
-		Order("items.id").
-		Scan(&result).Error())
+			teamIDs...)),
+		orderedItemIDListWithDuplicates, uniqueItemsCount, &result,
+	)
 
 	render.Respond(w, r, result)
 	return service.NoError

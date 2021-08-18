@@ -11,20 +11,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
-// swagger:model groupParticipantProgressResponseRow
-type groupParticipantProgressResponseRow struct {
+type groupParticipantProgressResponseCommon struct {
 	// required: true
 	ItemID int64 `json:"item_id,string"`
-	// required: true
-	NoScore bool `json:"no_score"`
-	// required: true
-	// enum: Chapter,Task,Course,Skill
-	Type string `json:"type"`
-
-	String structures.ItemString `json:"string"`
-
-	// required: true
-	CurrentUserPermissions *structures.ItemPermissions `json:"current_user_permissions"`
 
 	// The best score across all participant's or participant teams' results. If there are no results, the score is 0.
 	// required:true
@@ -56,7 +45,31 @@ type groupParticipantProgressResponseRow struct {
 	TimeSpent int32 `json:"time_spent"`
 }
 
-type rawParticipantProgressRow struct {
+type groupParticipantProgressResponseChild struct {
+	*groupParticipantProgressResponseCommon
+
+	// required: true
+	NoScore bool `json:"no_score"`
+	// required: true
+	// enum: Chapter,Task,Course,Skill
+	Type string `json:"type"`
+
+	// required: true
+	String structures.ItemString `json:"string"`
+
+	// required: true
+	CurrentUserPermissions *structures.ItemPermissions `json:"current_user_permissions"`
+}
+
+// swagger:model groupParticipantProgressResponse
+type groupParticipantProgressResponse struct {
+	// required: true
+	Item groupParticipantProgressResponseCommon `json:"item"`
+	// required: true
+	Children []groupParticipantProgressResponseChild `json:"children"`
+}
+
+type rawParticipantProgressRaw struct {
 	// items
 	ItemID  int64 `gorm:"column:id"`
 	Type    string
@@ -74,6 +87,8 @@ type rawParticipantProgressRow struct {
 	HintsRequested   int32
 	Submissions      int32
 	TimeSpent        int32
+
+	IsParent bool
 }
 
 // swagger:operation GET /items/{item_id}/participant-progress groups groupParticipantProgress
@@ -83,7 +98,7 @@ type rawParticipantProgressRow struct {
 //              Returns the current progress of a participant on a given item.
 //
 //
-//              For all visible children of `{item_id}`,
+//              For `{item_id}` and all its visible children,
 //              displays the results of the given participant
 //              (current user or `as_team_id` (if given) or `watched_group_id` (if given)).
 //              Only one of `as_team_id` and `watched_group_id` can be given.
@@ -100,7 +115,7 @@ type rawParticipantProgressRow struct {
 //              * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on `{item_id}`,
 //                otherwise the 'forbidden' response is returned.
 //
-//              * If `as_team_id` is given, it should be a user's parent team group,
+//              * If `{as_team_id}` is given, it should be a user's parent team group,
 //                otherwise the "forbidden" error is returned.
 //
 //              * If `{watched_group_id}` is given, the user should be a manager of the group with the 'can_watch_members' permission,
@@ -129,9 +144,7 @@ type rawParticipantProgressRow struct {
 //   "200":
 //     description: OK. Success response with the participant's progress on item's children
 //     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupParticipantProgressResponseRow"
+//       "$ref": "#/definitions/groupParticipantProgressResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -141,25 +154,35 @@ type rawParticipantProgressRow struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, participantID, participantType, apiError := srv.parseParticipantProgressParameters(r)
+	itemID, participantID, checkPermissionsForGroupID, participantType, apiError := srv.parseParticipantProgressParameters(r)
 	if apiError != service.NoError {
 		return apiError
 	}
 
 	user := srv.GetUser(r)
-	itemIDQuery := srv.Store.ItemItems().
+	itemIDQuery := srv.Store.Items().
 		Select(`
-			items.id, items.type, child_order, default_language_tag,
-			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value,
-			can_edit_generated_value, is_owner_generated`).
-		Joins("JOIN items ON items.id = items_items.child_item_id").
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
-		Where("parent_item_id = ?", itemID)
+			items.id, items.type, items.no_score, MAX(child_order) AS child_order, default_language_tag,
+			IFNULL(user_permissions.can_view_generated_value, 1) AS can_view_generated_value,
+			IFNULL(user_permissions.can_grant_view_generated_value, 1) AS can_grant_view_generated_value,
+			IFNULL(user_permissions.can_watch_generated_value, 1) AS can_watch_generated_value,
+			IFNULL(user_permissions.can_edit_generated_value, 1) AS can_edit_generated_value,
+			IFNULL(user_permissions.is_owner_generated, 0) AS is_owner_generated,
+			MAX(is_parent) AS is_parent`).
+		Joins("JOIN ? AS items_items ON items_items.child_item_id = items.id",
+			srv.Store.ItemItems().ChildrenOf(itemID).Select("child_item_id, child_order, 0 AS is_parent").
+				UnionAll(srv.Store.Raw("SELECT ?, NULL AS child_order, 1 AS is_parent", itemID).QueryExpr()).SubQuery()).
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(checkPermissionsForGroupID, "view", "info").
+		Joins(
+			"LEFT JOIN LATERAL ? AS user_permissions ON user_permissions.item_id = items.id",
+			srv.Store.Permissions().AggregatedPermissionsForItems(user.GroupID).
+				Where("permissions.item_id = items.id").SubQuery()).
+		Group("items.id")
 
 	var fieldVariables []interface{}
 	var participantProgressQuery *database.DB
 	fields := `
-		items.id, items.type, items.default_language_tag,
+		items.id, items.type, items.no_score, items.default_language_tag,
 		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value,
 		can_edit_generated_value, is_owner_generated`
 	if participantType == groupTypeUser {
@@ -168,17 +191,17 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 			// nolint:gosec
 			joinUserProgressResults(
 				srv.Store.Raw(`
-					SELECT STRAIGHT_JOIN`+fields+", "+userProgressFields+`
+					SELECT STRAIGHT_JOIN`+fields+", MAX(items.is_parent) AS is_parent, "+userProgressFields+`
 					FROM visible_items AS items`, fieldVariables...), participantID).
 				Group("items.id").
-				Order("MAX(items.child_order)").
+				Order("MAX(items.is_parent) DESC, MAX(items.child_order)").
 				QueryExpr())
 	} else {
 		participantProgressQuery = srv.Store.Raw("WITH visible_items AS ? ?",
 			itemIDQuery.SubQuery(),
 			srv.Store.Table("visible_items AS items").
 				Select(
-					fields+", "+`
+					fields+", is_parent, "+`
 					IFNULL(result_with_best_score.score_computed, 0) AS score,
 					IFNULL(result_with_best_score.validated, 0) AS validated,
 					(SELECT MAX(latest_activity_at) FROM results WHERE participant_id = ? AND item_id = items.id) AS latest_activity_at,
@@ -203,46 +226,54 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 						ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 						LIMIT 1
 					) AS result_with_best_score ON 1`, participantID).QueryExpr()).
-			Order("items.child_order")
+			Order("items.is_parent DESC, items.child_order")
 	}
 
-	var result []rawParticipantProgressRow
+	var rows []rawParticipantProgressRaw
 	service.MustNotBeError(srv.Store.Raw(`
 		SELECT items.*,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title
-		FROM (?) AS items`, participantProgressQuery.SubQuery()).
+		FROM ? AS items`, participantProgressQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Scan(&result).Error())
+		Scan(&rows).Error())
 
-	converted := make([]groupParticipantProgressResponseRow, 0, len(result))
-	for i := range result {
-		converted = append(converted, groupParticipantProgressResponseRow{
-			ItemID:  result[i].ItemID,
-			NoScore: result[i].NoScore,
-			Type:    result[i].Type,
-			String: structures.ItemString{
-				Title:       result[i].StringTitle,
-				LanguageTag: result[i].StringLanguageTag,
-			},
-			CurrentUserPermissions: result[i].AsItemPermissions(srv.Store.PermissionsGranted()),
-			Score:                  result[i].Score,
-			Validated:              result[i].Validated,
-			LatestActivityAt:       result[i].LatestActivityAt,
-			HintsRequested:         result[i].HintsRequested,
-			Submissions:            result[i].Submissions,
-			TimeSpent:              result[i].TimeSpent,
-		})
+	result := &groupParticipantProgressResponse{}
+	result.Children = make([]groupParticipantProgressResponseChild, 0, len(rows)-1)
+	for i := range rows {
+		commonFields := groupParticipantProgressResponseCommon{
+			ItemID:           rows[i].ItemID,
+			Score:            rows[i].Score,
+			Validated:        rows[i].Validated,
+			LatestActivityAt: rows[i].LatestActivityAt,
+			HintsRequested:   rows[i].HintsRequested,
+			Submissions:      rows[i].Submissions,
+			TimeSpent:        rows[i].TimeSpent,
+		}
+		if rows[i].IsParent {
+			result.Item = commonFields
+		} else {
+			result.Children = append(result.Children, groupParticipantProgressResponseChild{
+				groupParticipantProgressResponseCommon: &commonFields,
+				NoScore:                                rows[i].NoScore,
+				Type:                                   rows[i].Type,
+				String: structures.ItemString{
+					Title:       rows[i].StringTitle,
+					LanguageTag: rows[i].StringLanguageTag,
+				},
+				CurrentUserPermissions: rows[i].AsItemPermissions(srv.Store.PermissionsGranted()),
+			})
+		}
 	}
-	render.Respond(w, r, converted)
+	render.Respond(w, r, result)
 	return service.NoError
 }
 
 func (srv *Service) parseParticipantProgressParameters(r *http.Request) (
-	itemID, participantID int64, participantType string, apiError service.APIError) {
+	itemID, participantID, checkPermissionsForGroupID int64, participantType string, apiError service.APIError) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
-		return 0, 0, "", service.ErrInvalidRequest(err)
+		return 0, 0, 0, "", service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(r)
@@ -251,29 +282,41 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request) (
 	if participantID != user.GroupID {
 		participantType = groupTypeTeam
 	}
+	checkPermissionsForGroupID = participantID
+
 	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
-		return 0, 0, "", apiError
+		return 0, 0, 0, "", apiError
 	}
 
 	if watchedGroupIDSet {
 		if len(r.URL.Query()["as_team_id"]) != 0 {
-			return 0, 0, "", service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
+			return 0, 0, 0, "", service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
 
 		participantID = watchedGroupID
-		found, err := srv.Store.Permissions().MatchingUserAncestors(user).
+		var found bool
+		found, err = srv.Store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("watch", "result").
 			Where("item_id = ?", itemID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return 0, 0, "", service.InsufficientAccessRightsError
+			return 0, 0, 0, "", service.InsufficientAccessRightsError
 		}
 
 		service.MustNotBeError(srv.Store.Groups().ByID(watchedGroupID).PluckFirst("type", &participantType).Error())
 		if participantType != groupTypeUser && participantType != groupTypeTeam {
-			return 0, 0, "", service.ErrForbidden(errors.New("watched group should be a user or a team"))
+			return 0, 0, 0, "", service.ErrForbidden(errors.New("watched group should be a user or a team"))
 		}
 	}
-	return itemID, participantID, participantType, service.NoError
+
+	found, err := srv.Store.Permissions().MatchingGroupAncestors(checkPermissionsForGroupID).
+		WherePermissionIsAtLeast("view", "content").
+		Where("item_id = ?", itemID).HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return 0, 0, 0, "", service.InsufficientAccessRightsError
+	}
+
+	return itemID, participantID, checkPermissionsForGroupID, participantType, service.NoError
 }

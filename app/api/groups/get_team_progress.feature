@@ -207,6 +207,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 5  | 14             | 2017-05-29 06:38:38 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
+      | 0          | 14             | 210     | 2017-05-29 05:38:38 | 50             | 2017-05-29 06:38:38 | 115          | 127         | null                | 2019-05-29 06:38:38 |
       | 0          | 14             | 211     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | null                | 2018-05-30 06:38:38 |
       | 1          | 14             | 211     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | null                | 2018-05-29 06:38:38 |
       | 2          | 14             | 211     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-30 06:38:38 | 2018-05-28 06:38:38 | # hints_cached & submissions for 14,211 come from this line
@@ -229,6 +230,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
     And the response body should be, in JSON:
     """
     [
+      {
+        "group_id": "16",
+        "hints_requested": 0,
+        "item_id": "210",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
       {
         "group_id": "16",
         "item_id": "211",
@@ -282,6 +293,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       {
         "group_id": "16",
         "hints_requested": 0,
+        "item_id": "220",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "16",
+        "hints_requested": 0,
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
@@ -323,6 +344,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "group_id": "16",
         "hints_requested": 0,
         "item_id": "225",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "16",
+        "hints_requested": 0,
+        "item_id": "310",
         "latest_activity_at": null,
         "score": 0,
         "submissions": 0,
@@ -383,6 +414,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
 
       {
         "group_id": "14",
+        "hints_requested": 115,
+        "item_id": "210",
+        "latest_activity_at": "2019-05-29T06:38:38Z",
+        "score": 50,
+        "submissions": 127,
+        "time_spent": 65889627,
+        "validated": false
+      },
+      {
+        "group_id": "14",
         "item_id": "211",
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
@@ -434,6 +475,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       {
         "group_id": "14",
         "hints_requested": 0,
+        "item_id": "220",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "14",
+        "hints_requested": 0,
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
@@ -475,6 +526,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "group_id": "14",
         "hints_requested": 0,
         "item_id": "225",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "14",
+        "hints_requested": 0,
+        "item_id": "310",
         "latest_activity_at": null,
         "score": 0,
         "submissions": 0,
@@ -545,6 +606,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
     [
       {
         "group_id": "16",
+        "hints_requested": 0,
+        "item_id": "210",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "16",
         "item_id": "211",
         "latest_activity_at": null,
         "score": 0,
@@ -596,6 +667,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       {
         "group_id": "16",
         "hints_requested": 0,
+        "item_id": "220",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "16",
+        "hints_requested": 0,
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
@@ -637,6 +718,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "group_id": "16",
         "hints_requested": 0,
         "item_id": "225",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "16",
+        "hints_requested": 0,
+        "item_id": "310",
         "latest_activity_at": null,
         "score": 0,
         "submissions": 0,
@@ -707,6 +798,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
     [
       {
         "group_id": "14",
+        "hints_requested": 115,
+        "item_id": "210",
+        "latest_activity_at": "2019-05-29T06:38:38Z",
+        "score": 50,
+        "submissions": 127,
+        "time_spent": 65889627,
+        "validated": false
+      },
+      {
+        "group_id": "14",
         "item_id": "211",
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
@@ -749,6 +850,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "group_id": "14",
         "hints_requested": 0,
         "item_id": "215",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "14",
+        "hints_requested": 0,
+        "item_id": "220",
         "latest_activity_at": null,
         "score": 0,
         "submissions": 0,
@@ -808,6 +919,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       {
         "group_id": "14",
         "hints_requested": 0,
+        "item_id": "310",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "14",
+        "hints_requested": 0,
         "item_id": "311",
         "latest_activity_at": null,
         "score": 0,
@@ -855,6 +976,16 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "time_spent": 0,
         "validated": false
       }
+    ]
+    """
+
+  Scenario: No parent item ids given
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/1/team-progress?parent_item_ids="
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
     ]
     """
 

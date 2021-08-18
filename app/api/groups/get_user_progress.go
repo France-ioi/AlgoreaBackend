@@ -11,8 +11,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model groupUserProgressResponseRow
-type groupUserProgressResponseRow struct {
+// swagger:model groupUserProgressResponseTableCell
+type groupUserProgressResponseTableCell struct {
 	// The user’s self `group_id`
 	// required:true
 	GroupID int64 `json:"group_id,string"`
@@ -55,7 +55,7 @@ type groupUserProgressResponseRow struct {
 //              Returns the current progress of users on a subset of items.
 //
 //
-//              For all visible children of items from the `{parent_item_id}` list,
+//              For each item from `{parent_item_id}` and its visible children,
 //              displays the result of all user self-groups among the descendants of the given group
 //              (including those in teams).
 //
@@ -107,7 +107,7 @@ type groupUserProgressResponseRow struct {
 //     schema:
 //       type: array
 //       items:
-//         "$ref": "#/definitions/groupUserProgressResponseRow"
+//         "$ref": "#/definitions/groupUserProgressResponseTableCell"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -132,6 +132,13 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	if apiError != service.NoError {
 		return apiError
 	}
+	if len(itemParentIDs) == 0 {
+		render.Respond(w, r, []map[string]interface{}{})
+		return service.NoError
+	}
+
+	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
+	orderedItemIDListWithDuplicates, uniqueItemsCount, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
@@ -158,20 +165,9 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.NoError
 	}
 
-	itemIDQuery := srv.Store.ItemItems().
-		Select("items_items.child_item_id AS id").
-		Where("parent_item_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS permissions ON permissions.item_id = items_items.child_item_id",
-			srv.Store.Permissions().MatchingUserAncestors(user).
-				Select("item_id").
-				WherePermissionIsAtLeast("view", "info").SubQuery()).
-		Group("items_items.child_item_id").
-		Order("items_items.child_item_id")
-
 	userIDsList := strings.Join(userIDs, ", ")
-	var result []groupUserProgressResponseRow
-	service.MustNotBeError(srv.Store.Raw("WITH visible_items AS ? ?",
-		itemIDQuery.SubQuery(),
+	var result []*groupUserProgressResponseTableCell
+	scanAndBuildProgressResults(
 		// nolint:gosec
 		joinUserProgressResults(
 			srv.Store.Raw(`
@@ -179,13 +175,13 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 					items.id AS item_id,
 					users.group_id AS group_id, `+userProgressFields+`
 				FROM JSON_TABLE('[`+userIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS users`).
-				Joins("JOIN visible_items AS items"), gorm.Expr("users.group_id"),
+				Joins("JOIN ? AS items", itemsSubQuery),
+			gorm.Expr("users.group_id"),
 		).
 			Group("users.group_id, items.id").
-			Order(gorm.Expr("FIELD(users.group_id, "+userIDsList+")")).
-			Order("items.id").
-			QueryExpr()).
-		Scan(&result).Error())
+			Order(gorm.Expr("FIELD(users.group_id, "+userIDsList+")")),
+		orderedItemIDListWithDuplicates, uniqueItemsCount, &result,
+	)
 
 	render.Respond(w, r, result)
 	return service.NoError
@@ -208,12 +204,12 @@ const userProgressFields = `
 func joinUserProgressResults(db *database.DB, userID interface{}) *database.DB {
 	return db.
 		Joins(`
-			LEFT JOIN groups_groups_active AS team_links
-			ON team_links.child_group_id = ?`, userID).
-		Joins(`
-			LEFT JOIN `+"`groups`"+` AS teams
-			ON teams.type = 'Team' AND
-				teams.id = team_links.parent_group_id`).
+			LEFT JOIN LATERAL (
+				SELECT STRAIGHT_JOIN groups.id
+				FROM groups_groups_active
+				JOIN `+"`groups`"+` ON groups.id = groups_groups_active.parent_group_id
+				WHERE groups.type = 'Team' AND groups_groups_active.child_group_id = ?
+			) teams ON 1`, userID).
 		Joins(`
 			LEFT JOIN LATERAL (
 				SELECT participant_id, attempt_id, score_computed, score_obtained_at
@@ -255,95 +251,83 @@ func joinUserProgressResults(db *database.DB, userID interface{}) *database.DB {
 			) AND result_with_best_score.item_id = items.id`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, latest_activity_at FROM results AS last_result_of_user
+				SELECT participant_id, attempt_id, latest_activity_at
+				FROM results AS last_result_of_user USE INDEX (participant_id_item_id_latest_activity_at_desc)
 				WHERE participant_id = ? AND item_id = items.id AND latest_activity_at IS NOT NULL
 				ORDER BY participant_id, item_id, latest_activity_at DESC LIMIT 1
 			) AS last_result_of_user ON 1`, userID).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, latest_activity_at FROM results AS last_result_of_team
+				SELECT participant_id, attempt_id, latest_activity_at
+				FROM results AS last_result_of_team USE INDEX (participant_id_item_id_latest_activity_at_desc)
 				WHERE participant_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
 				ORDER BY participant_id, item_id, latest_activity_at DESC LIMIT 1
 			) AS last_result_of_team ON 1`).
 		Joins(`
-			LEFT JOIN results AS last_result
-			ON last_result.participant_id = IF(
-				(
-					last_result_of_team.participant_id IS NOT NULL AND
-					last_result_of_user.participant_id IS NOT NULL AND
-					last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
-				) OR last_result_of_user.participant_id IS NULL,
-				last_result_of_team.participant_id,
-				last_result_of_user.participant_id
-			) AND last_result.attempt_id = IF(
-				(
-					last_result_of_team.participant_id IS NOT NULL AND
-					last_result_of_user.participant_id IS NOT NULL AND
-					last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
-				) OR last_result_of_user.participant_id IS NULL,
-				last_result_of_team.attempt_id,
-				last_result_of_user.attempt_id
-			) AND last_result.item_id = items.id`).
+			JOIN LATERAL (
+				SELECT
+					IF(
+						(
+							last_result_of_team.participant_id IS NOT NULL AND
+							last_result_of_user.participant_id IS NOT NULL AND
+							last_result_of_team.latest_activity_at > last_result_of_user.latest_activity_at
+						) OR last_result_of_user.participant_id IS NULL,
+						last_result_of_team.latest_activity_at,
+						last_result_of_user.latest_activity_at
+					) AS latest_activity_at
+				)  AS last_result ON 1`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, started_at FROM results AS first_result_of_user
+				SELECT participant_id, attempt_id, started_at
+				FROM results AS first_result_of_user USE INDEX (participant_id_item_id_started_started_at)
 				WHERE participant_id = ? AND item_id = items.id AND started = 1
 				ORDER BY participant_id, item_id, started, started_at LIMIT 1
 			) AS first_result_of_user ON 1`, userID).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, started_at FROM results AS first_result_of_team
+				SELECT participant_id, attempt_id, started_at
+				FROM results AS first_result_of_team USE INDEX (participant_id_item_id_started_started_at)
 				WHERE participant_id = teams.id AND item_id = items.id AND started = 1
 				ORDER BY participant_id, item_id, started, started_at LIMIT 1
 			) AS first_result_of_team ON 1`).
 		Joins(`
-			LEFT JOIN results AS first_result
-			ON first_result.participant_id = IF(
-				(
-					first_result_of_team.participant_id IS NOT NULL AND
-					first_result_of_user.participant_id IS NOT NULL AND
-					first_result_of_team.started_at < first_result_of_user.started_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_result_of_team.participant_id,
-				first_result_of_user.participant_id
-			) AND first_result.attempt_id = IF(
-				(
-					first_result_of_team.participant_id IS NOT NULL AND
-					first_result_of_user.participant_id IS NOT NULL AND
-					first_result_of_team.started_at < first_result_of_user.started_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_result_of_team.attempt_id,
-				first_result_of_user.attempt_id
-			) AND first_result.item_id = items.id`).
+			JOIN LATERAL (
+				SELECT
+					IF(
+						(
+							first_result_of_team.participant_id IS NOT NULL AND
+							first_result_of_user.participant_id IS NOT NULL AND
+							first_result_of_team.started_at < first_result_of_user.started_at
+						) OR first_result_of_user.participant_id IS NULL,
+						first_result_of_team.started_at,
+						first_result_of_user.started_at
+					) AS started_at
+			) AS first_result ON 1`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, validated_at FROM results AS first_validated_result_of_user
+				SELECT participant_id, attempt_id, validated_at
+				FROM results AS first_validated_result_of_user USE INDEX (participant_id_item_id_validated_validated_at)
 				WHERE participant_id = ? AND item_id = items.id AND validated = 1
 				ORDER BY participant_id, item_id, validated, validated_at LIMIT 1
 			) AS first_validated_result_of_user ON 1`, userID).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT participant_id, attempt_id, validated_at FROM results AS first_validated_result_of_team
+				SELECT participant_id, attempt_id, validated_at
+				FROM results AS first_validated_result_of_team USE INDEX (participant_id_item_id_validated_validated_at)
 				WHERE participant_id = teams.id AND item_id = items.id AND validated = 1
 				ORDER BY participant_id, item_id, validated, validated_at LIMIT 1
 			) AS first_validated_result_of_team ON 1`).
 		Joins(`
-			LEFT JOIN results AS first_validated_result
-			ON first_validated_result.participant_id = IF(
-				(
-					first_validated_result_of_team.participant_id IS NOT NULL AND
-					first_validated_result_of_user.participant_id IS NOT NULL AND
-					first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_validated_result_of_team.participant_id,
-				first_validated_result_of_user.participant_id
-			) AND first_validated_result.attempt_id = IF(
-				(
-					first_validated_result_of_team.participant_id IS NOT NULL AND
-					first_validated_result_of_user.participant_id IS NOT NULL AND
-					first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
-				) OR first_result_of_user.participant_id IS NULL,
-				first_validated_result_of_team.attempt_id,
-				first_validated_result_of_user.attempt_id
-			) AND first_validated_result.item_id = items.id`)
+			JOIN LATERAL (
+				SELECT
+					IF(
+						(
+							first_validated_result_of_team.participant_id IS NOT NULL AND
+							first_validated_result_of_user.participant_id IS NOT NULL AND
+							first_validated_result_of_team.validated_at < first_validated_result_of_user.validated_at
+						) OR first_result_of_user.participant_id IS NULL,
+						first_validated_result_of_team.validated_at,
+						first_validated_result_of_user.validated_at
+					) AS validated_at
+				) AS first_validated_result ON 1`)
 }

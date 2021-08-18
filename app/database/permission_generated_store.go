@@ -29,6 +29,13 @@ func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasV
 // for all the items on that the given group has 'permissionKind' >= `neededPermission`.
 func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasPermission(
 	groupID int64, permissionKind, neededPermission string) *DB {
+	return s.AggregatedPermissionsForItems(groupID).
+		HavingMaxPermissionAtLeast(permissionKind, neededPermission)
+}
+
+// AggregatedPermissionsForItems returns a composable query for getting access rights of the given group
+// (as *_generated_value) and item ids (as item_id) for all items.
+func (s *PermissionGeneratedStore) AggregatedPermissionsForItems(groupID int64) *DB {
 	return s.
 		Select(`
 			permissions.item_id,
@@ -39,7 +46,6 @@ func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasP
 			MAX(is_owner_generated) AS is_owner_generated`).
 		Joins("JOIN groups_ancestors_active AS ancestors ON ancestors.ancestor_group_id = permissions.group_id").
 		Where("ancestors.child_group_id = ?", groupID).
-		HavingMaxPermissionAtLeast(permissionKind, neededPermission).
 		Group("permissions.item_id")
 }
 

@@ -223,6 +223,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 8  | 15             | 2017-03-29 06:38:38 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        |
+      | 0          | 14             | 210     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 125          | 127         | null                |
       | 0          | 14             | 211     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | null                |
       | 1          | 14             | 211     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | null                |
       | 2          | 14             | 211     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-30 06:38:38 | # hints_cached & submissions for 14,211 come from this line
@@ -259,6 +260,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     And the response body should be, in JSON:
     """
     [
+      {
+        "average_score": 25,
+        "avg_hints_requested": 62.5,
+        "avg_submissions": 63.5,
+        "avg_time_spent": 31603814,
+        "group_id": "17",
+        "item_id": "210",
+        "validation_rate": 0
+      },
       {
         "average_score": 25,
         "avg_hints_requested": 1.5,
@@ -310,6 +320,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
+        "item_id": "220",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
         "item_id": "221",
         "validation_rate": 0
       },
@@ -347,6 +366,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "225",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "310",
         "validation_rate": 0
       },
       {
@@ -398,6 +426,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
 
       {
         "average_score": 25,
+        "avg_hints_requested": 62.5,
+        "avg_submissions": 63.5,
+        "avg_time_spent": 31603814,
+        "group_id": "11",
+        "item_id": "210",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 25,
         "avg_hints_requested": 1.5,
         "avg_submissions": 2,
         "avg_time_spent": 43200,
@@ -447,6 +484,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
+        "item_id": "220",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
         "item_id": "221",
         "validation_rate": 0
       },
@@ -484,6 +530,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "225",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "310",
         "validation_rate": 0
       },
       {
@@ -545,6 +600,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     [
       {
         "average_score": 25,
+        "avg_hints_requested": 62.5,
+        "avg_submissions": 63.5,
+        "avg_time_spent": 31603814,
+        "group_id": "17",
+        "item_id": "210",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 25,
         "avg_hints_requested": 1.5,
         "avg_submissions": 2,
         "avg_time_spent": 43200,
@@ -594,6 +658,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
+        "item_id": "220",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
         "item_id": "221",
         "validation_rate": 0
       },
@@ -631,6 +704,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "225",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "310",
         "validation_rate": 0
       },
       {
@@ -692,6 +774,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     [
       {
         "average_score": 25,
+        "avg_hints_requested": 62.5,
+        "avg_submissions": 63.5,
+        "avg_time_spent": 31603814,
+        "group_id": "11",
+        "item_id": "210",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 25,
         "avg_hints_requested": 1.5,
         "avg_submissions": 2,
         "avg_time_spent": 43200,
@@ -733,6 +824,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "215",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "220",
         "validation_rate": 0
       },
       {
@@ -786,6 +886,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
+        "item_id": "310",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
         "item_id": "311",
         "validation_rate": 0
       },
@@ -828,9 +937,37 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     ]
     """
 
-  Scenario: No visible items
+  Scenario: No visible child items
     Given I am the user with id "21"
     When I send a GET request to "/groups/1/group-progress?parent_item_ids=1010"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "1010",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "1010",
+        "validation_rate": 0
+      }
+    ]
+    """
+
+  Scenario: No parent item ids given
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/1/group-progress?parent_item_ids="
     Then the response code should be 200
     And the response body should be, in JSON:
     """

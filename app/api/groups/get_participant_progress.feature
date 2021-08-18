@@ -72,50 +72,51 @@ Feature: Display the current progress of a participant on children of an item (g
       | 20              | 21             |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id  | type    | default_language_tag | no_score |
-      | 200 | Chapter | fr                   | false    |
-      | 210 | Chapter | fr                   | false    |
-      | 211 | Task    | fr                   | false    |
-      | 212 | Task    | fr                   | true     |
-      | 213 | Task    | fr                   | false    |
-      | 214 | Task    | fr                   | false    |
-      | 215 | Task    | fr                   | false    |
-      | 216 | Task    | fr                   | false    |
-      | 217 | Task    | fr                   | false    |
-      | 218 | Task    | fr                   | false    |
-      | 219 | Task    | fr                   | false    |
-      | 220 | Chapter | fr                   | false    |
-      | 221 | Task    | fr                   | false    |
-      | 222 | Task    | fr                   | false    |
-      | 223 | Task    | fr                   | false    |
-      | 224 | Task    | fr                   | false    |
-      | 225 | Task    | fr                   | false    |
-      | 226 | Task    | fr                   | false    |
-      | 227 | Task    | fr                   | false    |
-      | 228 | Task    | fr                   | false    |
-      | 229 | Task    | fr                   | false    |
-      | 300 | Course  | fr                   | false    |
-      | 310 | Chapter | fr                   | false    |
-      | 311 | Task    | fr                   | false    |
-      | 312 | Task    | fr                   | false    |
-      | 313 | Task    | fr                   | false    |
-      | 314 | Task    | fr                   | false    |
-      | 315 | Task    | fr                   | false    |
-      | 316 | Task    | fr                   | false    |
-      | 317 | Task    | fr                   | false    |
-      | 318 | Task    | fr                   | false    |
-      | 319 | Task    | fr                   | false    |
-      | 400 | Chapter | fr                   | false    |
-      | 410 | Chapter | fr                   | false    |
-      | 411 | Task    | fr                   | false    |
-      | 412 | Task    | fr                   | false    |
-      | 413 | Task    | fr                   | false    |
-      | 414 | Task    | fr                   | false    |
-      | 415 | Task    | fr                   | false    |
-      | 416 | Task    | fr                   | false    |
-      | 417 | Task    | fr                   | false    |
-      | 418 | Task    | fr                   | false    |
-      | 419 | Task    | fr                   | false    |
+      | id   | type    | default_language_tag | no_score |
+      | 200  | Chapter | fr                   | false    |
+      | 210  | Chapter | fr                   | false    |
+      | 211  | Task    | fr                   | false    |
+      | 212  | Task    | fr                   | true     |
+      | 213  | Task    | fr                   | false    |
+      | 214  | Task    | fr                   | false    |
+      | 215  | Task    | fr                   | false    |
+      | 216  | Task    | fr                   | false    |
+      | 217  | Task    | fr                   | false    |
+      | 218  | Task    | fr                   | false    |
+      | 219  | Task    | fr                   | false    |
+      | 220  | Chapter | fr                   | false    |
+      | 221  | Task    | fr                   | false    |
+      | 222  | Task    | fr                   | false    |
+      | 223  | Task    | fr                   | false    |
+      | 224  | Task    | fr                   | false    |
+      | 225  | Task    | fr                   | false    |
+      | 226  | Task    | fr                   | false    |
+      | 227  | Task    | fr                   | false    |
+      | 228  | Task    | fr                   | false    |
+      | 229  | Task    | fr                   | false    |
+      | 300  | Course  | fr                   | false    |
+      | 310  | Chapter | fr                   | false    |
+      | 311  | Task    | fr                   | false    |
+      | 312  | Task    | fr                   | false    |
+      | 313  | Task    | fr                   | false    |
+      | 314  | Task    | fr                   | false    |
+      | 315  | Task    | fr                   | false    |
+      | 316  | Task    | fr                   | false    |
+      | 317  | Task    | fr                   | false    |
+      | 318  | Task    | fr                   | false    |
+      | 319  | Task    | fr                   | false    |
+      | 400  | Chapter | fr                   | false    |
+      | 410  | Chapter | fr                   | false    |
+      | 411  | Task    | fr                   | false    |
+      | 412  | Task    | fr                   | false    |
+      | 413  | Task    | fr                   | false    |
+      | 414  | Task    | fr                   | false    |
+      | 415  | Task    | fr                   | false    |
+      | 416  | Task    | fr                   | false    |
+      | 417  | Task    | fr                   | false    |
+      | 418  | Task    | fr                   | false    |
+      | 419  | Task    | fr                   | false    |
+      | 1010 | Chapter | fr                   | false    |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title    |
       | 214     | fr           | Tâche 14 |
@@ -165,6 +166,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 410            | 419           | 8           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       | can_watch_generated |
+      | 4        | 210     | content                  | none                |
       | 21       | 210     | none                     | result              |
       | 21       | 211     | info                     | none                |
       | 20       | 212     | content                  | none                |
@@ -205,8 +207,13 @@ Feature: Display the current progress of a participant on children of an item (g
       | 20       | 417     | none                     | none                |
       | 21       | 418     | none                     | none                |
       | 20       | 419     | none                     | none                |
-      | 4        | 1010    | none                     | answer_with_grant   |
-      | 51       | 210     | none                     | result              |
+      | 14       | 210     | content_with_descendants | none                |
+      | 14       | 211     | info                     | none                |
+      | 14       | 212     | info                     | none                |
+      | 14       | 213     | info                     | none                |
+      | 14       | 215     | info                     | none                |
+      | 14       | 1010    | content                  | none                |
+      | 51       | 210     | content                  | result              |
       | 51       | 211     | info                     | none                |
       | 51       | 212     | content                  | none                |
       | 51       | 213     | content_with_descendants | none                |
@@ -257,73 +264,84 @@ Feature: Display the current progress of a participant on children of an item (g
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
+    {
+      "item": {
         "hints_requested": 0,
-        "item_id": "215",
-        "no_score": false,
-        "type": "Task",
-        "string": {"language_tag": "en", "title": "Task 15"},
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-        "latest_activity_at": "2018-11-01T00:00:00Z",
-        "score": 0,
-        "submissions": 0,
-        "time_spent": 0,
-        "validated": false
-      },
-      {
-        "hints_requested": 10,
-        "item_id": "214",
-        "no_score": false,
-        "type": "Task",
-        "string": {"language_tag": "fr", "title": "Tâche 14"},
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
-        "latest_activity_at": "2017-05-30T06:38:48Z",
-        "score": 15,
-        "submissions": 11,
-        "time_spent": 10,
-        "validated": true
-      },
-      {
-        "hints_requested": 0,
-        "item_id": "213",
-        "no_score": false,
-        "type": "Task",
-        "string": {"language_tag": "", "title": null},
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
-        "latest_activity_at": "2018-11-01T00:00:00Z",
-        "score": 0,
-        "submissions": 0,
-        "time_spent": 20895545,
-        "validated": false
-      },
-      {
-        "hints_requested": 1,
-        "item_id": "212",
-        "no_score": false,
-        "type": "Task",
-        "string": {"language_tag": "", "title": null},
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-        "latest_activity_at": "2019-07-01T00:00:00Z",
-        "score": 20,
-        "submissions": 2,
-        "time_spent": 18303545,
-        "validated": false
-      },
-      {
-        "item_id": "211",
-        "no_score": false,
-        "type": "Task",
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "", "title": null},
+        "item_id": "210",
         "latest_activity_at": null,
         "score": 0,
-        "hints_requested": 0,
         "submissions": 0,
         "time_spent": 0,
         "validated": false
-      }
-    ]
+      },
+      "children": [
+        {
+          "hints_requested": 0,
+          "item_id": "215",
+          "no_score": false,
+          "type": "Task",
+          "string": {"language_tag": "en", "title": "Task 15"},
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "latest_activity_at": "2018-11-01T00:00:00Z",
+          "score": 0,
+          "submissions": 0,
+          "time_spent": 0,
+          "validated": false
+        },
+        {
+          "hints_requested": 10,
+          "item_id": "214",
+          "no_score": false,
+          "type": "Task",
+          "string": {"language_tag": "fr", "title": "Tâche 14"},
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+          "latest_activity_at": "2017-05-30T06:38:48Z",
+          "score": 15,
+          "submissions": 11,
+          "time_spent": 10,
+          "validated": true
+        },
+        {
+          "hints_requested": 0,
+          "item_id": "213",
+          "no_score": false,
+          "type": "Task",
+          "string": {"language_tag": "", "title": null},
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
+          "latest_activity_at": "2018-11-01T00:00:00Z",
+          "score": 0,
+          "submissions": 0,
+          "time_spent": 20895545,
+          "validated": false
+        },
+        {
+          "hints_requested": 1,
+          "item_id": "212",
+          "no_score": true,
+          "type": "Task",
+          "string": {"language_tag": "", "title": null},
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "latest_activity_at": "2019-07-01T00:00:00Z",
+          "score": 20,
+          "submissions": 2,
+          "time_spent": 18303545,
+          "validated": false
+        },
+        {
+          "item_id": "211",
+          "no_score": false,
+          "type": "Task",
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "", "title": null},
+          "latest_activity_at": null,
+          "score": 0,
+          "hints_requested": 0,
+          "submissions": 0,
+          "time_spent": 0,
+          "validated": false
+        }
+      ]
+    }
     """
 
   Scenario: Get progress of a current user
@@ -334,73 +352,84 @@ Feature: Display the current progress of a participant on children of an item (g
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "fr", "title": "Tâche 15"},
-        "type": "Task",
-        "hints_requested": 100,
-        "item_id": "215",
-        "latest_activity_at": "2018-05-30T06:38:58Z",
-        "score": 0,
-        "submissions": 100,
-        "time_spent": 86400,
-        "validated": true
-      },
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "fr", "title": "Tâche 14"},
-        "type": "Task",
+    {
+      "item": {
         "hints_requested": 0,
-        "item_id": "214",
+        "item_id": "210",
         "latest_activity_at": null,
         "score": 0,
         "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "", "title": null},
-        "type": "Task",
-        "hints_requested": 0,
-        "item_id": "213",
-        "latest_activity_at": "2030-05-29T06:38:38Z",
-        "score": 0,
-        "submissions": 0,
-        "time_spent": 0,
-        "validated": false
-      },
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "", "title": null},
-        "type": "Task",
-        "hints_requested": 1,
-        "item_id": "212",
-        "latest_activity_at": "2018-05-30T06:38:58Z",
-        "score": 0,
-        "submissions": 2,
-        "time_spent": 65886027,
-        "validated": false
-      },
-      {
-        "item_id": "211",
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "", "title": null},
-        "type": "Task",
-        "latest_activity_at": "2018-05-30T06:38:48Z",
-        "score": 50,
-        "hints_requested": 3,
-        "submissions": 4,
-        "time_spent": 20,
-        "validated": true
-      }
-    ]
+      "children": [
+        {
+          "no_score": false,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "fr", "title": "Tâche 15"},
+          "type": "Task",
+          "hints_requested": 100,
+          "item_id": "215",
+          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "score": 0,
+          "submissions": 100,
+          "time_spent": 86400,
+          "validated": true
+        },
+        {
+          "no_score": false,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "fr", "title": "Tâche 14"},
+          "type": "Task",
+          "hints_requested": 0,
+          "item_id": "214",
+          "latest_activity_at": null,
+          "score": 0,
+          "submissions": 0,
+          "time_spent": 0,
+          "validated": false
+        },
+        {
+          "no_score": false,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "", "title": null},
+          "type": "Task",
+          "hints_requested": 0,
+          "item_id": "213",
+          "latest_activity_at": "2030-05-29T06:38:38Z",
+          "score": 0,
+          "submissions": 0,
+          "time_spent": 0,
+          "validated": false
+        },
+        {
+          "no_score": true,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "", "title": null},
+          "type": "Task",
+          "hints_requested": 1,
+          "item_id": "212",
+          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "score": 0,
+          "submissions": 2,
+          "time_spent": 65886027,
+          "validated": false
+        },
+        {
+          "item_id": "211",
+          "no_score": false,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "", "title": null},
+          "type": "Task",
+          "latest_activity_at": "2018-05-30T06:38:48Z",
+          "score": 50,
+          "hints_requested": 3,
+          "submissions": 4,
+          "time_spent": 20,
+          "validated": true
+        }
+      ]
+    }
     """
 
   Scenario: Get progress of a current user's team
@@ -411,81 +440,89 @@ Feature: Display the current progress of a participant on children of an item (g
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "fr", "title": "Tâche 15"},
-        "type": "Task",
-        "hints_requested": 100,
-        "item_id": "215",
-        "latest_activity_at": "2018-05-30T06:38:58Z",
-        "score": 0,
-        "submissions": 100,
-        "time_spent": 86400,
-        "validated": true
-      },
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "fr", "title": "Tâche 14"},
-        "type": "Task",
+    {
+      "item": {
         "hints_requested": 0,
-        "item_id": "214",
+        "item_id": "210",
         "latest_activity_at": null,
         "score": 0,
         "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "", "title": null},
-        "type": "Task",
-        "hints_requested": 0,
-        "item_id": "213",
-        "latest_activity_at": "2030-05-29T06:38:38Z",
-        "score": 0,
-        "submissions": 0,
-        "time_spent": 0,
-        "validated": false
-      },
-      {
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "", "title": null},
-        "type": "Task",
-        "hints_requested": 1,
-        "item_id": "212",
-        "latest_activity_at": "2018-05-30T06:38:58Z",
-        "score": 0,
-        "submissions": 2,
-        "time_spent": 65886027,
-        "validated": false
-      },
-      {
-        "item_id": "211",
-        "no_score": false,
-        "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
-        "string": {"language_tag": "", "title": null},
-        "type": "Task",
-        "latest_activity_at": "2018-05-30T06:38:48Z",
-        "score": 50,
-        "hints_requested": 3,
-        "submissions": 4,
-        "time_spent": 20,
-        "validated": true
-      }
-    ]
+      "children": [
+        {
+          "no_score": false,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "fr", "title": "Tâche 15"},
+          "type": "Task",
+          "hints_requested": 100,
+          "item_id": "215",
+          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "score": 0,
+          "submissions": 100,
+          "time_spent": 86400,
+          "validated": true
+        },
+        {
+          "no_score": false,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "", "title": null},
+          "type": "Task",
+          "hints_requested": 0,
+          "item_id": "213",
+          "latest_activity_at": "2030-05-29T06:38:38Z",
+          "score": 0,
+          "submissions": 0,
+          "time_spent": 0,
+          "validated": false
+        },
+        {
+          "no_score": true,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "", "title": null},
+          "type": "Task",
+          "hints_requested": 1,
+          "item_id": "212",
+          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "score": 0,
+          "submissions": 2,
+          "time_spent": 65886027,
+          "validated": false
+        },
+        {
+          "item_id": "211",
+          "no_score": false,
+          "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+          "string": {"language_tag": "", "title": null},
+          "type": "Task",
+          "latest_activity_at": "2018-05-30T06:38:48Z",
+          "score": 50,
+          "hints_requested": 3,
+          "submissions": 4,
+          "time_spent": 20,
+          "validated": true
+        }
+      ]
+    }
     """
 
-  Scenario: No visible items
+  Scenario: No visible child items
     Given I am the user with id "51"
     When I send a GET request to "/items/1010/participant-progress?as_team_id=14"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-    ]
+    {
+      "item": {
+        "hints_requested": 0,
+        "item_id": "1010",
+        "latest_activity_at": null,
+        "score": 0,
+        "submissions": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      "children": []
+    }
     """
