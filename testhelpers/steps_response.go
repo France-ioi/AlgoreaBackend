@@ -92,6 +92,14 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	return compareStrings(string(expected), string(actual))
 }
 
+func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+	expectedBody, err := ctx.preprocessString(body.Content)
+	if err != nil {
+		return err
+	}
+	return compareStrings(expectedBody, ctx.lastResponseBody)
+}
+
 func compareStrings(expected, actual string) error {
 	if expected != actual {
 		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{ // nolint: gosec
@@ -105,7 +113,7 @@ func compareStrings(expected, actual string) error {
 		})
 
 		return fmt.Errorf(
-			"expected JSON does not match actual.\n     Diff:\n%s",
+			"expected string does not match actual.\n     Diff:\n%s",
 			diff,
 		)
 	}

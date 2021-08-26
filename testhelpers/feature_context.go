@@ -33,6 +33,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.ISendrequestToWithBody)
 	s.Step(`^the response code should be (\d+)$`, ctx.TheResponseCodeShouldBe)
 	s.Step(`^the response body should be, in JSON:$`, ctx.TheResponseBodyShouldBeJSON)
+	s.Step(`^the response body should be:$`, ctx.TheResponseBodyShouldBe)
 	s.Step(`^the response body decoded as "([^"]+)" should be, in JSON:$`, ctx.TheResponseDecodedBodyShouldBeJSON)
 	s.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, ctx.TheResponseHeaderShouldBe)
 	s.Step(`^the response headers? "([^"]*)" should be:`, ctx.TheResponseHeadersShouldBe)
