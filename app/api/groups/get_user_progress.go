@@ -138,7 +138,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, uniqueItemsCount, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, _, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
@@ -180,7 +180,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		).
 			Group("users.group_id, items.id").
 			Order(gorm.Expr("FIELD(users.group_id, "+userIDsList+")")),
-		orderedItemIDListWithDuplicates, uniqueItemsCount, &result,
+		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 
 	render.Respond(w, r, result)
