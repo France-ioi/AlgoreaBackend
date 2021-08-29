@@ -32,6 +32,8 @@ type navigationItemChild struct {
 	EntryParticipantType string `json:"entry_participant_type"`
 	// required: true
 	NoScore bool `json:"no_score"`
+	// whether the item has children visible to the user and, at the same time,
+	// the user has can_view >= 'content' permission on the item
 	// required: true
 	HasVisibleChildren bool `json:"has_visible_children"`
 	// max among all attempts of the user (or of the team given in `{as_team_id}`)
@@ -221,6 +223,9 @@ func (srv *Service) fillNavigationWithChildren(
 				HasVisibleChildren:    rawData[index].HasVisibleChildren,
 				BestScore:             rawData[index].BestScore,
 				Results:               make([]structures.ItemResult, 0, 1),
+			}
+			if rawData[index].CanViewGeneratedValue < srv.Store.PermissionsGranted().ViewIndexByName("content") {
+				child.HasVisibleChildren = false
 			}
 			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
 			*target = append(*target, child)
