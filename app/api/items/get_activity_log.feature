@@ -70,6 +70,7 @@ Feature: Get activity log
       | 36 | 31        | 11             | 1          | 203     | Submission | Current | 2017-05-29 06:38:38 |
       | 37 | 31        | 11             | 0          | 203     | Submission | Current | 2017-05-29 06:38:38 |
       | 38 | 31        | 11             | 1          | 203     | Submission | Current | 2017-05-30 06:38:38 |
+      | 39 | 31        | 11             | 1          | 204     | Submission | Current | 2017-05-30 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | graded_at           | score |
       | 2         | 2017-05-29 06:38:38 | 100   |
@@ -86,6 +87,7 @@ Feature: Get activity log
       | 201 | Chapter | false    | fr                   |
       | 202 | Chapter | false    | fr                   |
       | 203 | Chapter | false    | fr                   |
+      | 204 | Task    | false    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_watch_generated |
       | 20       | 200     | none               | result              |
@@ -93,6 +95,7 @@ Feature: Get activity log
       | 21       | 201     | info               | result              |
       | 21       | 202     | info               | result              |
       | 21       | 203     | none               | result              |
+      | 21       | 204     | content            | none                |
       | 30       | 200     | content            | answer              |
       | 31       | 200     | content            | answer              |
       | 31       | 201     | content            | answer              |
@@ -102,6 +105,7 @@ Feature: Get activity log
       | ancestor_item_id | child_item_id |
       | 200              | 201           |
       | 200              | 203           |
+      | 200              | 204           |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title      | image_url                  | subtitle     | description   | edu_comment    |
       | 200     | en           | Course 1   | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
