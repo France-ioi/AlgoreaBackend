@@ -80,7 +80,7 @@ Feature: Get navigation for an item
       | 16       | 231     | content_with_descendants | none                     | none                | none               | false              |
       | 16       | 232     | content_with_descendants | none                     | none                | none               | false              |
       | 18       | 200     | content                  | none                     | none                | none               | false              |
-      | 18       | 210     | content                  | none                     | none                | none               | false              |
+      | 18       | 210     | info                     | none                     | none                | none               | false              |
       | 18       | 220     | content                  | none                     | none                | none               | false              |
       | 18       | 230     | content                  | none                     | none                | none               | false              |
       | 18       | 211     | content                  | none                     | none                | none               | false              |
@@ -393,12 +393,12 @@ Feature: Get navigation for an item
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
-            "has_visible_children": true,
+            "has_visible_children": false,
             "type": "Chapter",
             "string": {"title": "Chapitre A", "language_tag": "fr"},
             "best_score": 0,
             "permissions": {
-              "can_view": "content", "can_grant_view": "none", "can_watch": "none", "can_edit": "none", "is_owner": false
+              "can_view": "info", "can_grant_view": "none", "can_watch": "none", "can_edit": "none", "is_owner": false
             },
             "results": []
           }
