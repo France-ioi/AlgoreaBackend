@@ -304,18 +304,21 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 		return nil, apiError
 	}
 	participantsQuery := srv.Store.Raw("SELECT ? AS id", participantID)
-	if watchedGroupIDSet {
-		if len(r.URL.Query()["as_team_id"]) != 0 {
-			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
-		}
-		participantsQuery = srv.Store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
-			Select("child_group_id AS id")
-	}
 
 	visibleItemDescendants := srv.Store.Permissions().MatchingUserAncestors(user).
 		Select("item_id AS id").
 		Group("item_id").
 		HavingMaxPermissionAtLeast("view", "info")
+
+	if watchedGroupIDSet {
+		if len(r.URL.Query()["as_team_id"]) != 0 {
+			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
+		}
+		srv.Store.Permissions().MatchingUserAncestors(user).Where("item_id = ?")
+		participantsQuery = srv.Store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
+			Select("child_group_id AS id")
+		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
+	}
 
 	if itemID != nil {
 		itemDescendants := srv.Store.ItemAncestors().DescendantsOf(*itemID).Select("child_item_id")
