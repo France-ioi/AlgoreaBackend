@@ -1,6 +1,7 @@
 package items
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"strings"
@@ -87,6 +88,16 @@ type itemRootNodeNotChapterFields struct {
 	HintsAllowed bool `json:"hints_allowed"`
 }
 
+// only if watched_group_id is given
+type itemResponseWatchedGroupItemInfo struct {
+	Permissions *structures.ItemPermissions `json:"permissions,omitempty"`
+	// Average score of all "end-members" within the watched group
+	// (or of the watched group itself if it is a user or a team).
+	// The score of an "end-member" is the max of his `results.score` or 0 if no results.
+	// The field is only shown when the current user has 'can_watch' > 'none' permission on the item.
+	AverageScore *float32 `json:"average_score,omitempty"`
+}
+
 // swagger:model itemResponse
 type itemResponse struct {
 	*commonItemFields
@@ -128,6 +139,8 @@ type itemResponse struct {
 	String itemStringRoot `json:"string"`
 
 	*itemRootNodeNotChapterFields
+
+	WatchedGroup *itemResponseWatchedGroupItemInfo `json:"watched_group,omitempty"`
 }
 
 // swagger:operation GET /items/{item_id} items itemView
@@ -146,6 +159,10 @@ type itemResponse struct {
 //
 //              * If `as_team_id` is given, it should be a user's parent team group,
 //                otherwise the "forbidden" error is returned.
+//
+//              * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//                otherwise the "forbidden" error is returned. Permissions of the watched group are only shown if the current user
+//                can watch the item or grant permissions to both the watched group and the item.
 // parameters:
 // - name: item_id
 //   in: path
@@ -155,6 +172,11 @@ type itemResponse struct {
 // - name: as_team_id
 //   in: query
 //   type: integer
+//   format: int64
+// - name: watched_group_id
+//   in: query
+//   type: integer
+//   format: int64
 // - name: language_tag
 //   in: query
 //   type: string
@@ -182,6 +204,11 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
+	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(httpReq)
+	if apiError != service.NoError {
+		return apiError
+	}
+
 	var languageTag string
 	var languageTagSet bool
 	if len(httpReq.URL.Query()["language_tag"]) != 0 {
@@ -189,13 +216,13 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		languageTagSet = true
 	}
 
-	rawData := getRawItemData(srv.Store.Items(), itemID, participantID, languageTag, languageTagSet, user)
+	rawData := getRawItemData(srv.Store.Items(), itemID, participantID, languageTag, languageTagSet, user, watchedGroupID, watchedGroupIDSet)
 	if rawData == nil {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
 	permissionGrantedStore := srv.Store.PermissionsGranted()
-	response := constructItemResponseFromDBData(rawData, permissionGrantedStore)
+	response := constructItemResponseFromDBData(rawData, permissionGrantedStore, watchedGroupIDSet)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -230,34 +257,19 @@ type rawItem struct {
 	StringSubtitle    *string `sql:"column:subtitle"`
 	StringDescription *string `sql:"column:description"`
 	StringEduComment  *string `sql:"column:edu_comment"`
+
+	WatchedGroupPermissions        *database.RawGeneratedPermissionFields `gorm:"embedded;embedded_prefix:watched_group_permissions_"`
+	CanViewWatchedGroupPermissions bool
+	WatchedGroupAverageScore       float32
+	CanWatchForGroupResults        bool
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
-func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User) *rawItem {
+func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User,
+	watchedGroupID int64, watchedGroupIDSet bool) *rawItem {
 	var result rawItem
 
-	query := s.ByID(rootID).
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info")
-
-	var itemStringsColumns string
-	if languageTagSet {
-		query = query.Joins("JOIN items_strings ON items_strings.item_id = items.id AND items_strings.language_tag = ?", languageTag)
-		itemStringsColumns = `
-			items_strings.language_tag, items_strings.title, items_strings.image_url, items_strings.subtitle,
-			items_strings.description, items_strings.edu_comment`
-	} else {
-		query = query.JoinsUserAndDefaultItemStrings(user)
-		itemStringsColumns = `
-			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
-			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
-			IF(user_strings.language_tag IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
-			IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
-			IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description,
-			IF(user_strings.language_tag IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment`
-	}
-
-	// nolint:gosec
-	query = query.Select(`
+	columnsBuffer := bytes.NewBufferString(`
 		items.id AS id,
 		items.type,
 		items.display_details_in_parent,
@@ -284,11 +296,107 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 		items.requires_explicit_entry,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
-		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
+		permissions.can_view_generated_value, permissions.can_grant_view_generated_value, permissions.can_watch_generated_value,
+		permissions.can_edit_generated_value, permissions.is_owner_generated,
 		IFNULL(
 			(SELECT MAX(results.score_computed) AS best_score
 			 FROM results
-			 WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score, `+itemStringsColumns, groupID)
+			 WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score`)
+
+	columnValues := []interface{}{groupID}
+	query := s.ByID(rootID).
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info")
+
+	if watchedGroupIDSet {
+		watchedGroupPermissionsQuery := database.NewDataStore(s.New()).Permissions().
+			AggregatedPermissionsForItems(watchedGroupID).
+			Where("permissions.item_id = items.id")
+		query = query.Joins(
+			"LEFT JOIN LATERAL ? AS watched_group_permissions ON watched_group_permissions.item_id = items.id",
+			watchedGroupPermissionsQuery.SubQuery())
+
+		currentUserCanGrantAccessToTheWatchedGroupQuery :=
+			s.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", watchedGroupID).
+				Where("can_grant_group_access").Select("1").Limit(1)
+
+		_, err := columnsBuffer.WriteString(`,
+			IFNULL(watched_group_permissions.can_view_generated_value, 1) AS watched_group_permissions_can_view_generated_value,
+			IFNULL(watched_group_permissions.can_grant_view_generated_value, 1) AS watched_group_permissions_can_grant_view_generated_value,
+			IFNULL(watched_group_permissions.can_watch_generated_value, 1) AS watched_group_permissions_can_watch_generated_value,
+			IFNULL(watched_group_permissions.can_edit_generated_value, 1) AS watched_group_permissions_can_edit_generated_value,
+			IFNULL(watched_group_permissions.is_owner_generated, 0) watched_group_permissions_is_owner_generated`)
+		service.MustNotBeError(err)
+
+		if user.GroupID != groupID {
+			// as_team_id is given, so `permissions` are related to the team,
+			// and we need to join permissions of the current user explicitly to determine
+			// if the current user is able to view the average score and permissions of the watched group
+			currentUserPermissionsQuery := database.NewDataStore(s.New()).Permissions().
+				AggregatedPermissionsForItems(user.GroupID).
+				Where("permissions.item_id = items.id")
+			query = query.Joins(
+				"LEFT JOIN LATERAL ? AS user_permissions ON user_permissions.item_id = items.id",
+				currentUserPermissionsQuery.SubQuery())
+			_, err = columnsBuffer.WriteString(`,
+				user_permissions.can_watch_generated_value > ? OR (
+					user_permissions.can_grant_view_generated_value > ? AND ?
+				) AS can_view_watched_group_permissions,
+				user_permissions.can_watch_generated_value > ? AS can_watch_for_group_results`)
+			service.MustNotBeError(err)
+		} else {
+			_, err = columnsBuffer.WriteString(`,
+				permissions.can_watch_generated_value > ? OR (
+					permissions.can_grant_view_generated_value > ? AND ?
+				) AS can_view_watched_group_permissions,
+				permissions.can_watch_generated_value > ? AS can_watch_for_group_results`)
+			service.MustNotBeError(err)
+		}
+		permissionsGrantedStore := s.PermissionsGranted()
+		columnValues = append(columnValues,
+			permissionsGrantedStore.WatchIndexByName("none"),
+			permissionsGrantedStore.GrantViewIndexByName("none"),
+			currentUserCanGrantAccessToTheWatchedGroupQuery.SubQuery(),
+			permissionsGrantedStore.WatchIndexByName("none"))
+
+		_, err = columnsBuffer.WriteString(`,
+			(SELECT IFNULL(AVG(score), 0) AS avg_score FROM ? AS stats) AS watched_group_average_score`)
+		service.MustNotBeError(err)
+		columnValues = append(columnValues,
+			s.ActiveGroupAncestors().
+				Select("participant.id").
+				Joins(`
+					JOIN `+"`groups`"+` AS participant
+						ON participant.id = groups_ancestors_active.child_group_id AND participant.type IN ('User', 'Team')`).
+				Where("groups_ancestors_active.ancestor_group_id = ?", watchedGroupID).
+				Joins(`
+					LEFT JOIN (
+						SELECT participant_id, score_computed FROM results
+						WHERE results.item_id = items.id
+					) AS results ON results.participant_id = participant.id`).
+				Select("MAX(IFNULL(results.score_computed, 0)) AS score").
+				Group("participant.id").SubQuery())
+	}
+
+	if languageTagSet {
+		query = query.Joins("JOIN items_strings ON items_strings.item_id = items.id AND items_strings.language_tag = ?", languageTag)
+		_, err := columnsBuffer.WriteString(`,
+			items_strings.language_tag, items_strings.title, items_strings.image_url, items_strings.subtitle,
+			items_strings.description, items_strings.edu_comment`)
+		service.MustNotBeError(err)
+	} else {
+		query = query.JoinsUserAndDefaultItemStrings(user)
+		_, err := columnsBuffer.WriteString(`,
+			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
+			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
+			IF(user_strings.language_tag IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
+			IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
+			IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description,
+			IF(user_strings.language_tag IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment`)
+		service.MustNotBeError(err)
+	}
+
+	// nolint:gosec
+	query = query.Select(columnsBuffer.String(), columnValues...)
 
 	err := query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -298,7 +406,8 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 	return &result
 }
 
-func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemResponse {
+func constructItemResponseFromDBData(
+	rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore, watchedGroupIDSet bool) *itemResponse {
 	result := &itemResponse{
 		commonItemFields: rawData.asItemCommonFields(permissionGrantedStore),
 		String: itemStringRoot{
@@ -330,6 +439,15 @@ func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *d
 			URL:          rawData.URL,
 			UsesAPI:      rawData.UsesAPI,
 			HintsAllowed: rawData.HintsAllowed,
+		}
+	}
+	if watchedGroupIDSet {
+		result.WatchedGroup = &itemResponseWatchedGroupItemInfo{}
+		if rawData.CanWatchForGroupResults {
+			result.WatchedGroup.AverageScore = &rawData.WatchedGroupAverageScore
+		}
+		if rawData.CanViewWatchedGroupPermissions {
+			result.WatchedGroup.Permissions = rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore)
 		}
 	}
 

@@ -79,3 +79,9 @@ Background:
     When I send a GET request to "/items/200?language_tag=jp"
     Then the response code should be 404
     And the response error message should contain "Insufficient access rights on the given item id or the item doesn't exist"
+
+  Scenario: Should fail when the current user cannot watch the watched_group_id
+    Given I am the user with id "14"
+    When I send a GET request to "/items/200?watched_group_id=11"
+    Then the response code should be 403
+    And the response error message should contain "No rights to watch for watched_group_id"
