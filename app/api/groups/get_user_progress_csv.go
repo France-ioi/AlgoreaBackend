@@ -149,9 +149,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 			batchBoundary = len(userIDs)
 		}
 		userIDsList := strings.Join(userIDs[startFromUser:batchBoundary], ", ")
-		currentRowNumber := 0
-		var rowArray []string
-		cellsMap := make(map[int64]string, len(orderedItemIDListWithDuplicates))
+		userNumber := startFromUser
 		service.MustNotBeError(
 			// nolint:gosec
 			joinUserProgressResultsForCSV(
@@ -167,10 +165,10 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 				Order(gorm.Expr("FIELD(users.group_id, " + userIDsList + ")")).
 				ScanAndHandleMaps(
 					processCSVResultRow(
-						orderedItemIDListWithDuplicates, &currentRowNumber, len(uniqueItemIDs), startFromUser,
-						func(userNumber int) []string {
+						orderedItemIDListWithDuplicates, len(uniqueItemIDs), &userNumber,
+						func(_ int64) []string {
 							return []string{users[userNumber].Login, users[userNumber].LastName, users[userNumber].FirstName}
-						}, &rowArray, &cellsMap, csvWriter)).Error())
+						}, csvWriter)).Error())
 	}
 
 	return service.NoError
@@ -207,21 +205,14 @@ func (srv *Service) printTableHeader(
 
 func processCSVResultRow(
 	orderedItemIDListWithDuplicates []interface{},
-	currentRowNumber *int,
-	uniqueItemsCount, startFromGroup int,
-	generateGroupNamesFunc func(rowNumber int) []string,
-	rowArray *[]string, // nolint:gocritic
-	cellsMap *map[int64]string,
+	uniqueItemsCount int,
+	groupNumber *int,
+	generateGroupNamesFunc func(groupID int64) []string,
 	csvWriter *csv.Writer) func(m map[string]interface{}) error {
+	var rowArray []string
+	var cellsMap map[int64]string
+	currentRowNumber := 0
 	return func(m map[string]interface{}) error {
-		if (*currentRowNumber)%uniqueItemsCount == 0 {
-			groupNumber := (*currentRowNumber)/len(orderedItemIDListWithDuplicates) + startFromGroup
-			groupNames := generateGroupNamesFunc(groupNumber)
-			*rowArray = make([]string, 0, len(orderedItemIDListWithDuplicates)+len(groupNames))
-			*cellsMap = make(map[int64]string, len(orderedItemIDListWithDuplicates))
-			*rowArray = append(*rowArray, groupNames...)
-		}
-
 		var score string
 		switch v := m["score"].(type) {
 		case string:
@@ -232,26 +223,41 @@ func processCSVResultRow(
 			score = ""
 		}
 
-		var itemID int64
-		var err error
-		switch v := m["item_id"].(type) {
-		case string:
-			itemID, err = strconv.ParseInt(v, 10, 64)
-			service.MustNotBeError(err)
-		case int64:
-			itemID = v
-		}
-		(*cellsMap)[itemID] = score
+		itemID := convertToInt64(m["item_id"])
+		groupID := convertToInt64(m["group_id"])
 
-		if (*currentRowNumber)%uniqueItemsCount == uniqueItemsCount-1 {
-			for _, id := range orderedItemIDListWithDuplicates {
-				*rowArray = append(*rowArray, (*cellsMap)[id.(int64)])
-			}
-			service.MustNotBeError(csvWriter.Write(*rowArray))
+		if currentRowNumber%uniqueItemsCount == 0 {
+			groupNames := generateGroupNamesFunc(groupID)
+			rowArray = make([]string, 0, len(orderedItemIDListWithDuplicates)+len(groupNames))
+			cellsMap = make(map[int64]string, len(orderedItemIDListWithDuplicates))
+			rowArray = append(rowArray, groupNames...)
+			*groupNumber++
 		}
-		*currentRowNumber++
+
+		cellsMap[itemID] = score
+
+		if currentRowNumber%uniqueItemsCount == uniqueItemsCount-1 {
+			for _, id := range orderedItemIDListWithDuplicates {
+				rowArray = append(rowArray, cellsMap[id.(int64)])
+			}
+			service.MustNotBeError(csvWriter.Write(rowArray))
+		}
+		currentRowNumber++
 		return nil
 	}
+}
+
+func convertToInt64(value interface{}) int64 {
+	var err error
+	var result int64
+	switch v := value.(type) {
+	case string:
+		result, err = strconv.ParseInt(v, 10, 64)
+		service.MustNotBeError(err)
+	case int64:
+		result = v
+	}
+	return result
 }
 
 func joinUserProgressResultsForCSV(db *database.DB, userID interface{}) *database.DB {
