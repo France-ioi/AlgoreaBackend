@@ -3,16 +3,19 @@
 package testhelpers
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
 
 	"bou.ke/monkey"
 	"github.com/cucumber/messages-go/v10"
+	"github.com/go-chi/chi"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 
@@ -154,5 +157,22 @@ func (ctx *TestContext) TheApplicationConfigIs(body *messages.PickleStepArgument
 		ctx.application.ReplaceDomainsConfig(config)
 	}
 
+	return nil
+}
+
+func (ctx *TestContext) TheContextVariableIs(variableName, value string) error { // nolint
+	preprocessed, err := ctx.preprocessString(value)
+	if err != nil {
+		return err
+	}
+
+	oldHTTPHandler := ctx.application.HTTPHandler
+	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			// nolint: golint
+			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
+		})
+	}).(*chi.Mux)
+	ctx.application.HTTPHandler.Mount("/", oldHTTPHandler)
 	return nil
 }

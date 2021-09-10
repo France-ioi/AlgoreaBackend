@@ -12,6 +12,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
+const itemActivityLogStraightJoinBoundary = 10000
+
 // swagger:model itemActivityLogResponseRow
 type itemActivityLogResponseRow struct {
 	// required: true
@@ -330,22 +332,41 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
 	}
 
-	answersQuery := srv.Store.Answers().
-		Select(`
-			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
+	participantsQuerySubQuery := participantsQuery.SubQuery()
+	visibleItemDescendantsSubQuery := visibleItemDescendants.SubQuery()
+
+	var cnt struct {
+		Cnt int
+	}
+	service.MustNotBeError(srv.Store.Raw(`
+		WITH items_to_show AS ?, participants AS ?
+		SELECT COUNT(*) AS cnt FROM answers
+		WHERE type='Submission' AND (answers.item_id IN (SELECT id FROM items_to_show)) AND
+			(answers.participant_id IN (SELECT id FROM participants))`,
+		visibleItemDescendantsSubQuery, participantsQuerySubQuery).Scan(&cnt).Error())
+
+	answersQuerySelect := `
 			'submission' AS activity_type,
 			answers.created_at AS at,
 			answers.id AS answer_id,
 			answers.attempt_id, answers.participant_id,
-			answers.item_id, author_id AS user_id`).
+			answers.item_id, author_id AS user_id`
+	answersQuery := srv.Store.Answers().
 		Where("answers.type = 'Submission'").
-		Where("answers.created_at <= NOW()").
-		Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
-		Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
 		Where("answers.participant_id IN (SELECT id FROM participants)").
-		Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
-		Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)").
 		Where("answers.item_id IN (SELECT id FROM items_to_show)")
+
+	if cnt.Cnt > itemActivityLogStraightJoinBoundary || r.Context().Value("forceStraightJoinInItemActivityLog") == "force" {
+		// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
+		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQuerySelect
+		answersQuery = answersQuery.
+			Where("answers.created_at <= NOW()").
+			Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
+			Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
+			Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
+			Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
+	}
+	answersQuery = answersQuery.Select(answersQuerySelect)
 
 	answersQuery = service.NewQueryLimiter().Apply(r, answersQuery)
 	answersQuery, apiError = service.ApplySortingAndPaging(r, answersQuery,
@@ -456,7 +477,7 @@ func (srv *Service) constructActivityLogQuery(r *http.Request, itemID *int64, us
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
-		FROM ? AS activities`, visibleItemDescendants.SubQuery(), participantsQuery.SubQuery(), user.GroupID, user.GroupID, user.GroupID,
+		FROM ? AS activities`, visibleItemDescendantsSubQuery, participantsQuerySubQuery, user.GroupID, user.GroupID, user.GroupID,
 		unionQuery.SubQuery()).
 		Joins("JOIN items ON items.id = item_id").
 		Joins("JOIN `groups` ON groups.id = participant_id").

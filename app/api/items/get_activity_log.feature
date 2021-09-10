@@ -120,13 +120,14 @@ Feature: Get activity log
       | tag |
       | fr  |
 
-  Scenario: User is a manager of the group and there are visible descendants of the item
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item
     This spec also checks:
       1) that answers having type != "Submission" are filtered out,
       2) activities ordering,
       3) filtering by users groups,
       4) that a user cannot see names of other users without approval
     Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -288,9 +289,14 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: User is a manager of the group and there are visible descendants of the item; request the first row
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the first row
     Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -307,9 +313,14 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
     Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_validated&from.at=2017-05-30T12:00:00Z&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=-1&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -337,9 +348,14 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: User is a manager of the group and there are visible descendants of the item; request the sixth and the seventh rows
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the sixth and the seventh rows
     Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=submission&from.at=2017-05-29T06:38:38Z&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=16&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -366,9 +382,14 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: User is a manager of the group and there are visible descendants of the item; request the eleventh row
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the eleventh row
     Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.at=2017-05-29T06:38:38Z&from.participant_id=11&from.attempt_id=0&from.item_id=200&from.answer_id=17&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -385,9 +406,14 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: User is a manager of the group and there are visible descendants of the item; request the last rows
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the last rows
     Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.at=2017-05-29T06:38:00Z&from.participant_id=11&from.attempt_id=0&from.item_id=201&from.answer_id=7"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -413,6 +439,10 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
   Scenario: User can see their own name
     Given I am the user with id "31"
@@ -459,13 +489,14 @@ Feature: Get activity log
     ]
     """
 
-  Scenario: Get activity for all visible items, the user is a manager of the watched group
+  Scenario Outline: Get activity for all visible items, the user is a manager of the watched group
   This spec also checks:
   1) that answers having type != "Submission" are filtered out,
   2) activities ordering,
   3) filtering by users groups,
   4) that a user cannot see names of other users without approval
     Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/log?watched_group_id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -723,9 +754,14 @@ Feature: Get activity log
 			}
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: Get activity of the current user for all visible items
+  Scenario Outline: Get activity of the current user for all visible items
     Given I am the user with id "31"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/log"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -751,9 +787,14 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: Get activity of the current user for all visible items (only the first row)
+  Scenario Outline: Get activity of the current user for all visible items (only the first row)
     Given I am the user with id "31"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/log?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -770,9 +811,14 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
 
-  Scenario: Get activity of the current user for all visible items (start from the second row)
+  Scenario Outline: Get activity of the current user for all visible items (start from the second row)
     Given I am the user with id "31"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/log?from.activity_type=result_validated&from.at=2017-05-30T12:00:00Z&from.participant_id=31&from.attempt_id=1&from.item_id=200&from.answer_id=-1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -789,3 +835,7 @@ Feature: Get activity log
       }
     ]
     """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
