@@ -217,8 +217,6 @@ func processCSVResultRow(
 		switch v := m["score"].(type) {
 		case string:
 			score = v
-		case float64:
-			score = fmt.Sprintf("%g", v)
 		case nil:
 			score = ""
 		}

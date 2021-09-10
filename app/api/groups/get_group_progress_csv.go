@@ -153,13 +153,13 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		SELECT
 			end_members.id,
 			items.id AS item_id,
-			IFNULL((
+			(
 				SELECT score_computed AS score
 				FROM results
 				WHERE participant_id = end_members.id AND item_id = items.id
 				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
-			), 0) AS score
+			) AS score
 		FROM ? AS end_members`, endMembers.SubQuery()).
 			Joins("JOIN ? AS items", itemsSubQuery)
 
@@ -168,7 +168,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 			Select(`
 				groups_ancestors_active.ancestor_group_id AS group_id,
 				member_stats.item_id,
-				AVG(member_stats.score) AS score`).
+				IF(MAX(member_stats.score IS NOT NULL), AVG(IFNULL(member_stats.score, 0)), '') AS score`).
 			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors_active.child_group_id", endMembersStats.SubQuery()).
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorsInBatch).
 			Group("groups_ancestors_active.ancestor_group_id, member_stats.item_id").

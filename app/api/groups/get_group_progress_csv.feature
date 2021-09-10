@@ -311,9 +311,9 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
     And the response body should be:
     """
     Group name;Chapitre 210;1. Item 211;2. Item 212;3. Item 213;4. Item 214;5. Item 215;Chapter 220;1. Item 221;2. Item 222;3. Item 223;4. Item 224;5. Item 225;Chapitre 310;1. Item 311;2. Item 312;3. Item 313;4. Item 314;5. Item 315
-    A custom group;25;25;5;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+    A custom group;25;25;5;;0;;;;;;;;;;;;;
     Club;;;;;;;;;;;;;;;;;;
-    Our Class;46.666666666666664;16.666666666666668;3.3333333333333335;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+    Our Class;46.666666666666664;16.666666666666668;3.3333333333333335;;0;;;;;;;;;;;;;
     Zero Class;;;;;;;;;;;;;;;;;;
 
     """
@@ -327,9 +327,9 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
     And the response body should be:
     """
     Group name;Chapitre 1010
-    A custom group;0
+    A custom group;
     Club;
-    Our Class;0
+    Our Class;
     Zero Class;
 
     """
