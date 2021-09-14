@@ -131,9 +131,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 			batchBoundary = len(teamIDs)
 		}
 		teamIDsList := strings.Join(teamIDs[startFromTeam:batchBoundary], ", ")
-		currentRowNumber := 0
-		var rowArray []string
-		cellsMap := make(map[int64]string, len(orderedItemIDListWithDuplicates))
+		teamNumber := startFromTeam
 		// nolint:gosec
 		service.MustNotBeError(srv.Store.Raw(`
 				SELECT
@@ -154,10 +152,10 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 				"FIELD(groups.id, " + teamIDsList + ")")).
 			ScanAndHandleMaps(
 				processCSVResultRow(
-					orderedItemIDListWithDuplicates, &currentRowNumber, len(uniqueItemIDs), startFromTeam,
-					func(teamNumber int) []string {
+					orderedItemIDListWithDuplicates, len(uniqueItemIDs), &teamNumber,
+					func(_ int64) []string {
 						return []string{teams[teamNumber].Name}
-					}, &rowArray, &cellsMap, csvWriter)).Error())
+					}, csvWriter)).Error())
 	}
 
 	return service.NoError

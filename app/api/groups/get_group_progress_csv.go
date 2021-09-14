@@ -14,6 +14,11 @@ import (
 
 const csvExportGroupProgressBatchSize = 20
 
+type idName struct {
+	ID   int64
+	Name string
+}
+
 // swagger:operation GET /groups/{group_id}/group-progress-csv groups groupGroupProgressCSV
 // ---
 // summary: Get group progress as a CSV file
@@ -108,11 +113,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 
 	// Preselect groups for that we will calculate the stats.
 	// All the "end members" are descendants of these groups.
-	var groups []struct {
-		ID   int64
-		Name string
-	}
-
+	var groups []idName
 	service.MustNotBeError(srv.Store.ActiveGroupGroups().
 		Where("groups_groups_active.parent_group_id = ?", groupID).
 		Joins(`
@@ -138,9 +139,6 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		}
 		ancestorsInBatch := ancestorGroupIDs[startFromGroup:batchBoundary]
 		ancestorsInBatchIDsList := strings.Join(ancestorsInBatch, ", ")
-		currentRowNumber := 0
-		var rowArray []string
-		cellsMap := make(map[int64]string, len(orderedItemIDListWithDuplicates))
 
 		endMembers := srv.Store.Groups().
 			Select("groups.id").
@@ -155,31 +153,54 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		SELECT
 			end_members.id,
 			items.id AS item_id,
-			IFNULL((
+			(
 				SELECT score_computed AS score
 				FROM results
 				WHERE participant_id = end_members.id AND item_id = items.id
 				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
-			), 0) AS score
+			) AS score
 		FROM ? AS end_members`, endMembers.SubQuery()).
 			Joins("JOIN ? AS items", itemsSubQuery)
 
+		groupNumber := startFromGroup
 		service.MustNotBeError(srv.Store.ActiveGroupAncestors().
 			Select(`
 				groups_ancestors_active.ancestor_group_id AS group_id,
 				member_stats.item_id,
-				AVG(member_stats.score) AS score`).
+				IF(MAX(member_stats.score IS NOT NULL), AVG(IFNULL(member_stats.score, 0)), '') AS score`).
 			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors_active.child_group_id", endMembersStats.SubQuery()).
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorsInBatch).
 			Group("groups_ancestors_active.ancestor_group_id, member_stats.item_id").
 			Order(gorm.Expr(
 				"FIELD(groups_ancestors_active.ancestor_group_id, " + ancestorsInBatchIDsList + ")")).
-			ScanAndHandleMaps(processCSVResultRow(orderedItemIDListWithDuplicates, &currentRowNumber, len(uniqueItemIDs), startFromGroup,
-				func(groupNumber int) []string {
-					return []string{groups[groupNumber].Name}
-				}, &rowArray, &cellsMap, csvWriter)).Error())
+			ScanAndHandleMaps(processCSVResultRow(orderedItemIDListWithDuplicates, len(uniqueItemIDs), &groupNumber,
+				generateGroupNameAndWriteEmptyRowsForSkippedGroups(&groupNumber, groups, len(orderedItemIDListWithDuplicates), csvWriter),
+				csvWriter)).Error())
+		writeEmptyRowsForSkippedGroupsAtTheEnd(groupNumber, batchBoundary, groups, len(orderedItemIDListWithDuplicates), csvWriter)
 	}
 
 	return service.NoError
+}
+
+func generateGroupNameAndWriteEmptyRowsForSkippedGroups(
+	groupNumber *int, groups []idName, numberOfItems int, csvWriter *csv.Writer) func(groupID int64) []string {
+	return func(groupID int64) []string {
+		for ; groups[*groupNumber].ID != groupID; *groupNumber++ {
+			writeEmptyGroupProgressResultRow(csvWriter, groups[*groupNumber].Name, numberOfItems)
+		}
+		return []string{groups[*groupNumber].Name}
+	}
+}
+
+func writeEmptyRowsForSkippedGroupsAtTheEnd(groupNumber, batchBoundary int, groups []idName, numberOfItems int, csvWriter *csv.Writer) {
+	for ; groupNumber < batchBoundary; groupNumber++ {
+		writeEmptyGroupProgressResultRow(csvWriter, groups[groupNumber].Name, numberOfItems)
+	}
+}
+
+func writeEmptyGroupProgressResultRow(csvWriter *csv.Writer, groupName string, numberOfItems int) {
+	service.MustNotBeError(
+		csvWriter.Write(
+			append([]string{groupName}, make([]string, numberOfItems)...)))
 }

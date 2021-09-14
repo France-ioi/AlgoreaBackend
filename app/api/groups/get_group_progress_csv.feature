@@ -6,13 +6,13 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 3  | Base    | Root 2         |
       | 4  | Club    | Parent         |
       | 11 | Class   | Our Class      |
-      | 12 | Class   | Other Class    |
+      | 12 | Class   | Zero Class     |
       | 13 | Class   | Special Class  |
       | 14 | Team    | Super Team     |
       | 15 | Team    | Our Team       |
       | 16 | Team    | First Team     |
       | 17 | Other   | A custom group |
-      | 18 | Club    | Our Club       |
+      | 18 | Club    | Club           |
       | 20 | Friends | My Friends     |
       | 21 | User    | owner          |
       | 51 | User    | johna          |
@@ -45,14 +45,17 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
+      | 1               | 12             |
       | 1               | 14             | # direct child of group_id with type = 'Team' (ignored)
       | 1               | 17             |
+      | 1               | 18             |
       | 1               | 51             | # direct child of group_id with type = 'User' (ignored)
       | 3               | 13             |
       | 4               | 21             |
       | 11              | 14             |
       | 11              | 17             |
       | 11              | 18             |
+      | 11              | 53             |
       | 11              | 59             |
       | 13              | 15             |
       | 13              | 69             |
@@ -277,6 +280,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 3          | 14             | 211     | 2017-05-29 06:38:38 | 50             | 2017-05-30 06:38:38 | 10           | 20          | null                |
       | 0          | 15             | 211     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                |
       | 0          | 15             | 212     | 2017-03-29 06:38:38 | 0              | null                | 0            | 0           | null                |
+      | 0          | 53             | 210     | 2019-01-01 00:00:00 | 90             | null                | 0            | 0           | null                |
       | 0          | 59             | 212     | 2019-01-01 00:00:00 | 10             | null                | 0            | 0           | null                |
       | 0          | 59             | 214     | 3019-01-01 00:00:00 | 0              | null                | 0            | 0           | null                |
       | 4          | 14             | 211     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                |
@@ -307,8 +311,10 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
     And the response body should be:
     """
     Group name;Chapitre 210;1. Item 211;2. Item 212;3. Item 213;4. Item 214;5. Item 215;Chapter 220;1. Item 221;2. Item 222;3. Item 223;4. Item 224;5. Item 225;Chapitre 310;1. Item 311;2. Item 312;3. Item 313;4. Item 314;5. Item 315
-    A custom group;25;25;5;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-    Our Class;25;25;5;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+    A custom group;25;25;5;;0;;;;;;;;;;;;;
+    Club;;;;;;;;;;;;;;;;;;
+    Our Class;46.666666666666664;16.666666666666668;3.3333333333333335;;0;;;;;;;;;;;;;
+    Zero Class;;;;;;;;;;;;;;;;;;
 
     """
 
@@ -321,8 +327,10 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
     And the response body should be:
     """
     Group name;Chapitre 1010
-    A custom group;0
-    Our Class;0
+    A custom group;
+    Club;
+    Our Class;
+    Zero Class;
 
     """
 
