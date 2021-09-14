@@ -27,6 +27,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the generated auth key is "([^"]*)"$`, ctx.TheGeneratedAuthKeyIs)
 	s.Step(`^the generated auth keys are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedAuthKeysAre)
 	s.Step(`^the application config is:$`, ctx.TheApplicationConfigIs)
+	s.Step(`^the context variable "([^"]*)" is "([^"]*)"$`, ctx.TheContextVariableIs)
 
 	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
