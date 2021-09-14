@@ -10,6 +10,8 @@ Feature: Get item view information
       | 17 | fr         |         | -2    | User  |
       | 22 | info       |         | -2    | User  |
       | 26 | team       |         | -2    | Team  |
+      | 27 | Group D    |         | -2    | Class |
+      | 28 | Group E    |         | -2    | Class |
     And the database has the following table 'users':
       | login      | temp_user | group_id | default_language |
       | jdoe       | 0         | 11       |                  |
@@ -34,8 +36,11 @@ Feature: Get item view information
       | 13              | 11             |
       | 13              | 17             |
       | 15              | 14             |
+      | 15              | 26             |
       | 26              | 11             |
       | 26              | 22             |
+      | 27              | 11             |
+      | 28              | 15             |
     And the groups ancestors are computed
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
@@ -45,7 +50,6 @@ Feature: Get item view information
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
       | 11       | 200     | solution                 | enter                    | children           | result              | true               |
       | 11       | 210     | solution                 | none                     | none               | none                | false              |
-      | 11       | 220     | solution                 | none                     | none               | none                | false              |
       | 13       | 200     | solution                 | none                     | none               | none                | false              |
       | 13       | 210     | solution                 | none                     | none               | none                | false              |
       | 13       | 220     | solution                 | none                     | none               | none                | false              |
@@ -59,6 +63,7 @@ Feature: Get item view information
       | 26       | 200     | solution                 | none                     | none               | none                | false              |
       | 26       | 210     | info                     | none                     | none               | none                | false              |
       | 26       | 220     | info                     | none                     | none               | none                | false              |
+      | 28       | 220     | content_with_descendants | solution_with_grant      | all                | answer              | true               |
     And the database has the following table 'languages':
       | tag |
       | fr  |
@@ -76,6 +81,9 @@ Feature: Get item view information
       | 0          | 13             | 210     | 2019-05-30 11:00:00 | 0              |
       | 0          | 13             | 220     | null                | 0              |
       | 1          | 13             | 200     | 2019-05-30 11:00:00 | 2              |
+      | 0          | 14             | 220     | 2019-05-30 11:00:00 | 2              |
+      | 1          | 14             | 220     | 2019-05-30 11:00:00 | 10             |
+      | 0          | 26             | 220     | 2019-05-30 11:00:00 | 2              |
 
   Scenario: Full access on the item (as user)
     Given I am the user with id "11"
@@ -448,3 +456,173 @@ Feature: Get item view information
       }
     }
     """
+
+  Scenario Outline: With watched_group_id
+    Given I am the user with id "11"
+    And the database table 'group_managers' has also the following row:
+      | manager_id | group_id | can_watch_members | can_grant_group_access            |
+      | 11         | 15       | false             | <can_grant_group_access>          |
+      | 27         | 28       | true              | <can_grant_group_access_ancestor> |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
+      | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
+      | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
+    And the template constant "permissions" is:
+    """
+      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true}
+    """
+    And the template constant "average_score" is:
+    """
+      "average_score": 6
+    """
+    And the template constant "watched_group_permissions" is:
+    """
+    , "watched_group": { {{permissions}} }
+    """
+    And the template constant "watched_group_average_score_and_permissions" is:
+    """
+    , "watched_group": { {{average_score}}, {{permissions}} }
+    """
+    When I send a GET request to "/items/220?watched_group_id=15"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "220",
+      "type": "Chapter",
+      "display_details_in_parent": true,
+      "validation_type": "All",
+      "requires_explicit_entry": false,
+      "entry_min_admitted_members_ratio": "All",
+      "entry_frozen_teams": false,
+      "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
+      "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
+      "duration": "10:20:32",
+      "no_score": true,
+      "text_id": "Task_30e",
+      "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
+      "prompt_to_join_group_by_code": true,
+
+      "title_bar_visible": true,
+      "read_only": true,
+      "full_screen": "forceYes",
+      "show_user_infos": true,
+
+      "best_score": 0,
+
+      "string": {
+        "language_tag": "en",
+        "title": "Chapter B",
+        "image_url": "http://example.com/my2.jpg",
+        "subtitle": "Subtitle 2",
+        "description": "Description 2",
+        "edu_comment": "Some comment"
+      },
+
+      "permissions": {
+        "can_edit": "none",
+        "can_grant_view": "<expected_can_grant_view>",
+        "can_view": "solution",
+        "can_watch": "<can_watch_generated>",
+        "is_owner": false
+      }
+      <expected_watched_group_part>
+    }
+    """
+  Examples:
+    | can_watch_generated | can_grant_view_generated | can_grant_view_generated_ancestor | expected_can_grant_view | can_grant_group_access | can_grant_group_access_ancestor | expected_watched_group_part                     |
+    | none                | none                     | none                              | none                    | true                   | false                           | , "watched_group": {}                           |
+    | none                | enter                    | none                              | enter                   | false                  | false                           | , "watched_group": {}                           |
+    | none                | enter                    | none                              | enter                   | true                   | false                           | {{watched_group_permissions}}                   |
+    | none                | enter                    | none                              | enter                   | false                  | true                            | {{watched_group_permissions}}                   |
+    | none                | none                     | content                           | content                 | false                  | true                            | {{watched_group_permissions}}                   |
+    | result              | none                     | none                              | none                    | false                  | false                           | {{watched_group_average_score_and_permissions}} |
+
+  Scenario Outline: With watched_group_id and as_team_id
+    Given I am the user with id "11"
+    And the database table 'group_managers' has also the following row:
+      | manager_id | group_id | can_watch_members | can_grant_group_access            |
+      | 11         | 15       | false             | <can_grant_group_access>          |
+      | 27         | 28       | true              | <can_grant_group_access_ancestor> |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
+      | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
+      | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
+    And the template constant "permissions" is:
+    """
+      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true}
+    """
+    And the template constant "average_score" is:
+    """
+      "average_score": 6
+    """
+    And the template constant "watched_group_permissions" is:
+    """
+    , "watched_group": { {{permissions}} }
+    """
+    And the template constant "watched_group_average_score_and_permissions" is:
+    """
+    , "watched_group": { {{average_score}}, {{permissions}} }
+    """
+    When I send a GET request to "/items/220?watched_group_id=15&as_team_id=13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "220",
+      "type": "Chapter",
+      "display_details_in_parent": true,
+      "validation_type": "All",
+      "requires_explicit_entry": false,
+      "entry_min_admitted_members_ratio": "All",
+      "entry_frozen_teams": false,
+      "entry_max_team_size": 10,
+      "entering_time_max": "9999-12-31T23:59:59Z",
+      "entering_time_min": "1000-01-01T00:00:00Z",
+      "allows_multiple_attempts": true,
+      "entry_participant_type": "Team",
+      "duration": "10:20:32",
+      "no_score": true,
+      "text_id": "Task_30e",
+      "default_language_tag": "en",
+      "supported_language_tags": ["en", "fr"],
+      "prompt_to_join_group_by_code": true,
+
+      "title_bar_visible": true,
+      "read_only": true,
+      "full_screen": "forceYes",
+      "show_user_infos": true,
+
+      "best_score": 0,
+
+      "string": {
+        "language_tag": "en",
+        "title": "Chapter B",
+        "image_url": "http://example.com/my2.jpg",
+        "subtitle": "Subtitle 2",
+        "description": "Description 2",
+        "edu_comment": "Some comment"
+      },
+
+      "permissions": {
+        "can_edit": "none",
+        "can_grant_view": "none",
+        "can_view": "solution",
+        "can_watch": "none",
+        "is_owner": false
+      }
+      <expected_watched_group_part>
+    }
+    """
+  Examples:
+    | can_watch_generated | can_grant_view_generated | can_grant_view_generated_ancestor | can_grant_group_access | can_grant_group_access_ancestor | expected_watched_group_part                     |
+    | none                | none                     | none                              | true                   | false                           | , "watched_group": {}                           |
+    | none                | enter                    | none                              | false                  | false                           | , "watched_group": {}                           |
+    | none                | enter                    | none                              | true                   | false                           | {{watched_group_permissions}}                   |
+    | none                | enter                    | none                              | false                  | true                            | {{watched_group_permissions}}                   |
+    | none                | none                     | content                           | false                  | true                            | {{watched_group_permissions}}                   |
+    | result              | none                     | none                              | false                  | false                           | {{watched_group_average_score_and_permissions}} |

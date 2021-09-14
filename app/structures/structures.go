@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// ItemPermissions represents all the permissions that a user can have on an item
+// ItemPermissions represents all the permissions that a group can have on an item
 type ItemPermissions struct {
 	// required: true
 	// enum: none,info,content,content_with_descendants,solution
