@@ -55,7 +55,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
 	routerWithParticipant.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}/log", service.AppHandler(srv.getActivityLogForItem).ServeHTTP)
+	routerWithParticipant.Get("/items/{ancestor_item_id}/log", service.AppHandler(srv.getActivityLogForItem).ServeHTTP)
 	routerWithParticipant.Get("/items/log", service.AppHandler(srv.getActivityLogForAllItems).ServeHTTP)
 	router.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
 	router.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)

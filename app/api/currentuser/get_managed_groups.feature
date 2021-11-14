@@ -121,7 +121,7 @@ Feature: List groups managed by the current user
 
   Scenario: Start from the second row
     Given I am the user with id "21"
-    When I send a GET request to "/current-user/managed-groups?from.type=Class&from.name=Our%20Class&from.id=13"
+    When I send a GET request to "/current-user/managed-groups?from.id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

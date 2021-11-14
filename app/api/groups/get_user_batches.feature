@@ -93,26 +93,26 @@ Feature: List user batches (userBatchesView)
     [
       {"creator_id": null, "custom_prefix": "custom", "group_prefix": "test", "size": 100},
       {"creator_id": "13", "custom_prefix": "custom1", "group_prefix": "test", "size": 200},
-      {"creator_id": "21", "custom_prefix": "cust", "group_prefix": "test1", "size": 300},
       {"creator_id": "21", "custom_prefix": "cus", "group_prefix": "test2", "size": 300},
-      {"creator_id": null, "custom_prefix": "cust1", "group_prefix": "test1", "size": 400},
+      {"creator_id": "21", "custom_prefix": "cust", "group_prefix": "test1", "size": 300},
       {"creator_id": null, "custom_prefix": "cus1", "group_prefix": "test2", "size": 400},
+      {"creator_id": null, "custom_prefix": "cust1", "group_prefix": "test1", "size": 400},
       {"creator_id": null, "custom_prefix": "pref", "group_prefix": "test3", "size": 500}
     ]
     """
 
   Scenario: List user batches (sorted by size, start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/21?sort=size&from.size=200&from.group_prefix=test&from.custom_prefix=custom"
+    When I send a GET request to "/user-batches/by-group/21?sort=size&from.group_prefix=test&from.custom_prefix=custom"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {"creator_id": "13", "custom_prefix": "custom1", "group_prefix": "test", "size": 200},
-      {"creator_id": "21", "custom_prefix": "cust", "group_prefix": "test1", "size": 300},
       {"creator_id": "21", "custom_prefix": "cus", "group_prefix": "test2", "size": 300},
-      {"creator_id": null, "custom_prefix": "cust1", "group_prefix": "test1", "size": 400},
+      {"creator_id": "21", "custom_prefix": "cust", "group_prefix": "test1", "size": 300},
       {"creator_id": null, "custom_prefix": "cus1", "group_prefix": "test2", "size": 400},
+      {"creator_id": null, "custom_prefix": "cust1", "group_prefix": "test1", "size": 400},
       {"creator_id": null, "custom_prefix": "pref", "group_prefix": "test3", "size": 500}
     ]
     """

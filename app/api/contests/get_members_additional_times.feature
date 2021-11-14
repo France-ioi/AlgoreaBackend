@@ -192,7 +192,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Team-only contest (start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/11/members/additional-times?from.name=Group%20B&from.id=13"
+    When I send a GET request to "/contests/60/groups/11/members/additional-times?from.id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

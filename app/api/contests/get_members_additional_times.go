@@ -44,14 +44,8 @@ import (
 //   in: path
 //   type: integer
 //   required: true
-// - name: from.name
-//   description: Start the page from the group next to the group with `name` = `from.name` and `id` = `from.id`
-//                (`from.id` is required when `from.name` is present)
-//   in: query
-//   type: string
 // - name: from.id
-//   description: Start the page from the group next to the group with `name` = `from.name` and `id`=`from.id`
-//                (`from.name` is required when from.id is present)
+//   description: Start the page from the group next to the group with `id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: sort
@@ -141,11 +135,16 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 			srv.Store.PermissionsGranted().ViewIndexByName("info"))
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"name": {ColumnName: "found_group.name", FieldType: "string"},
-			"id":   {ColumnName: "found_group.id", FieldType: "int64"}},
-		"name,id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"name": {ColumnName: "found_group.name"},
+				"id":   {ColumnName: "found_group.id"},
+			},
+			DefaultRules: "name,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

@@ -13,8 +13,8 @@ Feature: List groups managed by the current user - robustness
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "description""
 
-  Scenario: Missing from
+  Scenario: Wrong from
     Given I am the user with id "21"
     When I send a GET request to "/current-user/managed-groups?from.type=Class"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.type, from.name, from.id) or none of them must be present"
+    And the response error message should contain "Unallowed paging parameters (from.type)"

@@ -142,6 +142,20 @@ Feature: Get managers of group_id
     ]
     """
 
+  Scenario: Request the second row
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/13/managers?from.id=51&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "91", "name": "lp", "login": "lp", "first_name": null, "last_name": null,
+        "can_manage": "none", "can_grant_group_access": true, "can_watch_members": false
+      }
+    ]
+    """
+
   Scenario: Default sort (by name) including managers of ancestor groups
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/managers?include_managers_of_ancestor_groups=1"

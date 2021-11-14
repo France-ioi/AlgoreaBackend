@@ -56,16 +56,8 @@ type membershipsViewResponseRow struct {
 //   items:
 //     type: string
 //     enum: [member_since,-member_since,id,-id]
-// - name: from.member_since
-//   description: Start the page from the membership next to one with `member_since` = `from.member_since`
-//                and `groups.id` = `from.id`
-//                (`from.id` is required when `from.member_since` is present)
-//   in: query
-//   type: string
 // - name: from.id
-//   description: Start the page from the membership next to one with `member_since`=`from.member_since`
-//                and `groups.id`=`from.id`
-//                (`from.member_since` is required when from.id is present)
+//   description: Start the page from the membership next to one with `groups.id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: limit
@@ -122,11 +114,16 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 		Where("groups_groups_active.child_group_id = ?", user.GroupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"member_since": {ColumnName: "member_since", FieldType: "time"},
-			"id":           {ColumnName: "groups.id", FieldType: "int64"}},
-		"-member_since,id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"member_since": {ColumnName: "latest_change.at"},
+				"id":           {ColumnName: "groups.id"},
+			},
+			DefaultRules: "-member_since,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

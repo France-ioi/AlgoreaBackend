@@ -321,7 +321,7 @@ Feature: Get activity log
   Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
-    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_validated&from.at=2017-05-30T12:00:00Z&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=-1&limit=2"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_validated&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=-1&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -356,7 +356,7 @@ Feature: Get activity log
   Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the sixth and the seventh rows
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
-    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=submission&from.at=2017-05-29T06:38:38Z&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=16&limit=2"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=submission&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=16&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -390,7 +390,7 @@ Feature: Get activity log
   Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the eleventh row
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
-    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.at=2017-05-29T06:38:38Z&from.participant_id=11&from.attempt_id=0&from.item_id=200&from.answer_id=17&limit=1"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.participant_id=11&from.attempt_id=0&from.item_id=200&from.answer_id=17&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -414,7 +414,7 @@ Feature: Get activity log
   Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the last rows
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
-    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.at=2017-05-29T06:38:00Z&from.participant_id=11&from.attempt_id=0&from.item_id=201&from.answer_id=7"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.participant_id=11&from.attempt_id=0&from.item_id=201&from.answer_id=7"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -819,7 +819,7 @@ Feature: Get activity log
   Scenario Outline: Get activity of the current user for all visible items (start from the second row)
     Given I am the user with id "31"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
-    When I send a GET request to "/items/log?from.activity_type=result_validated&from.at=2017-05-30T12:00:00Z&from.participant_id=31&from.attempt_id=1&from.item_id=200&from.answer_id=-1"
+    When I send a GET request to "/items/log?from.activity_type=result_validated&from.participant_id=31&from.attempt_id=1&from.item_id=200&from.answer_id=-1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

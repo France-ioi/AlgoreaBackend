@@ -261,7 +261,7 @@ Feature: Get group children (groupChildrenView)
 
   Scenario: User is a manager of the parent group, paging applied, User is skipped
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/children?from.name=Our%20Team&from.id=25&types_exclude=User"
+    When I send a GET request to "/groups/13/children?from.id=25&types_exclude=User"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -323,7 +323,7 @@ Feature: Get group children (groupChildrenView)
 
   Scenario: User is a member of some descendant groups (start from the second row)
     Given I am the user with id "53"
-    When I send a GET request to "/groups/13/children?from.name=Our%20Friends&from.id=27"
+    When I send a GET request to "/groups/13/children?from.id=27"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

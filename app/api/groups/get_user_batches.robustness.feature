@@ -31,6 +31,6 @@ Feature: List user batches (userBatchesView) - robustness
 
   Scenario: A tie-breaker field is missing
     Given I am the user with id "21"
-    When I send a GET request to "/user-batches/by-group/13?sort=size&from.size=200"
+    When I send a GET request to "/user-batches/by-group/13?sort=size&from.group_prefix=abc"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.size, from.group_prefix, from.custom_prefix) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.custom_prefix, from.group_prefix) or none of them must be present"

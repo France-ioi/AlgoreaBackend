@@ -96,6 +96,22 @@ Feature: Search for possible subgroups
     ]
     """
 
+  Scenario: Search for groups with "the", get the third row
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/possible-subgroups?search=the&limit=1&from.id=2"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "4",
+        "name": "(the) |||Our Friends \\\\\\%\\\\%\\ :)",
+        "description": "Group for our friends",
+        "type": "Friends"
+      }
+    ]
+    """
+
   Scenario: Search for groups with percent signs ("%%%")
     Given I am the user with id "21"
     When I send a GET request to "/groups/possible-subgroups?search=%25%25%25"

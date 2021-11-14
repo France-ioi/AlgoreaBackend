@@ -25,14 +25,8 @@ import (
 //   in: path
 //   required: true
 //   type: integer
-// - name: from.name
-//   description: Start the page from the user next to the user with self group's `name` = `from.name` and `id` = `from.id`
-//                (`from.id` is required when `from.name` is present)
-//   in: query
-//   type: string
 // - name: from.id
-//   description: Start the page from the user next to the user with self group's `name`=`from.name` and `id`=`from.id`
-//                (`from.name` is required when from.id is present)
+//   description: Start the page from the user next to the user with `group_id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: sort
@@ -90,11 +84,16 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		Group("groups.id").
 		WithPersonalInfoViewApprovals(user)
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"name": {ColumnName: "groups.name", FieldType: "string"},
-			"id":   {ColumnName: "groups.id", FieldType: "int64"}},
-		"name,id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"name": {ColumnName: "groups.name"},
+				"id":   {ColumnName: "groups.id"},
+			},
+			DefaultRules: "name,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

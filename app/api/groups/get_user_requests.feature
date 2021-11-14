@@ -328,7 +328,7 @@ Feature: Get pending requests for managed groups
 
   Scenario: group_id is given, include descendant groups (sort by group name desc & login, start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/user-requests?group_id=1&include_descendant_groups=1&sort=-group.name,user.login&from.group.name=Friends&from.user.login=owner&from.group.id=14&from.user.group_id=21"
+    When I send a GET request to "/groups/user-requests?group_id=1&include_descendant_groups=1&sort=-group.name,user.login&from.group.id=14&from.user.group_id=21"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -423,7 +423,7 @@ Feature: Get pending requests for managed groups
 
   Scenario: group_id is not given (sort by group name desc & login, start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/user-requests?sort=-group.name,user.login&from.group.name=Friends&from.user.login=owner&from.group.id=14&from.user.group_id=21"
+    When I send a GET request to "/groups/user-requests?sort=-group.name,user.login&from.group.id=14&from.user.group_id=21"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

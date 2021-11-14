@@ -41,7 +41,7 @@ const minSearchStringLength = 3
 //     type: string
 //     enum: [id,-id]
 // - name: from.id
-//   description: Start the page from the group next to one with `groups.id`=`from.id`
+//   description: Start the page from the group next to one with `groups.id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: limit
@@ -120,10 +120,13 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"id": {ColumnName: "groups.id", FieldType: "int64"}},
-		"id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields:       service.SortingAndPagingFields{"id": {ColumnName: "groups.id"}},
+			DefaultRules: "id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

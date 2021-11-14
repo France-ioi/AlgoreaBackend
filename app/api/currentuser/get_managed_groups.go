@@ -45,19 +45,8 @@ type managedGroupsGetResponseRow struct {
 //   items:
 //     type: string
 //     enum: [type,-type,name,-name,id,-id]
-// - name: from.type
-//   description: Start the page from the group next to one with `type` = `{from.type}`
-//                (depending on the `sort` parameter, some other `{from.*}` parameters may be required)
-//   in: query
-//   type: string
-// - name: from.name
-//   description: Start the page from the group next to one with `name` = `{from.name}`
-//                (depending on the `sort` parameter, some other `{from.*}` parameters may be required)
-//   in: query
-//   type: string
 // - name: from.id
 //   description: Start the page from the group next to one with `id`=`{from.id}`
-//                (depending on the `sort` parameter, some other `{from.*}` parameters may be required)
 //   in: query
 //   type: integer
 //   format: int64
@@ -97,12 +86,17 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 		Group("groups.id")
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"type": {ColumnName: "groups.type", FieldType: "string"},
-			"name": {ColumnName: "groups.name", FieldType: "string"},
-			"id":   {ColumnName: "groups.id", FieldType: "int64"}},
-		"type,name,id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"type": {ColumnName: "groups.type"},
+				"name": {ColumnName: "groups.name"},
+				"id":   {ColumnName: "groups.id"},
+			},
+			DefaultRules: "type,name,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

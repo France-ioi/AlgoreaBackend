@@ -27,15 +27,15 @@ import (
 //     type: string
 //     enum: [at,-at,group_id,-group_id]
 // - name: from.at
-//   description: Start the page from the request/invitation next to one with `at` = `from.at`
-//                and `group_membership_changes.group_id` = `from.group_id`
-//                (`from.group_id` is required when `from.at` is present)
+//   description: Start the page from the request/invitation next to one with `at` = `{from.at}`
+//                and `group_membership_changes.group_id` = `{from.group_id}`
+//                (`{from.group_id}` is required when `{from.at}` is present)
 //   in: query
 //   type: string
 // - name: from.group_id
-//   description: Start the page from the request/invitation next to one with `at`=`from.at`
-//                and `group_id`=`from.group_id`
-//                (`from.at` is required when from.group_id is present)
+//   description: Start the page from the request/invitation next to one with `at`=`{from.at}`
+//                and `group_id`=`{from.group_id}`
+//                (`{from.at}` is required when `{from.group_id}` is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -98,11 +98,19 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"at":       {ColumnName: "group_membership_changes.at", FieldType: "time"},
-			"group_id": {ColumnName: "group_membership_changes.group_id", FieldType: "int64"}},
-		"-at,group_id", []string{"group_id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"at":       {ColumnName: "group_membership_changes.at"},
+				"group_id": {ColumnName: "group_membership_changes.group_id"},
+			},
+			DefaultRules: "-at,group_id",
+			TieBreakers: service.SortingAndPagingTieBreakers{
+				"group_id": service.FieldTypeInt64,
+				"at":       service.FieldTypeTime,
+			},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

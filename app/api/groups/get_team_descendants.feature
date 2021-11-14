@@ -183,7 +183,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
 
   Scenario: Get teams skipping the first one
     Given I am the user with id "21"
-    When I send a GET request to "/groups/1/team-descendants?from.name=First%20Team&from.id=16"
+    When I send a GET request to "/groups/1/team-descendants?from.id=16"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
