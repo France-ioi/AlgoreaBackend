@@ -6,6 +6,7 @@ Feature: Change item access rights for a group - robustness
       | 23 | user          | User  |
       | 25 | some class    | Class |
       | 26 | another class | Class |
+      | 27 | third class   | Class |
       | 31 | admin         | User  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
@@ -190,7 +191,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The user is not a manager of the source_group_id
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/21/permissions/21/102" with the following body:
+    When I send a PUT request to "/groups/27/permissions/27/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -214,9 +215,22 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: source_group_id is not a parent of group_id
-    Given I am the user with id "21"
-    When I send a PUT request to "/groups/25/permissions/21/102" with the following body:
+  Scenario: source_group_id is not an ancestor of group_id
+    Given I am the user with id "31"
+    When I send a PUT request to "/groups/25/permissions/26/102" with the following body:
+    """
+    {
+      "can_view": "solution"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: source_group_id is a user group
+    Given I am the user with id "31"
+    When I send a PUT request to "/groups/31/permissions/31/102" with the following body:
     """
     {
       "can_view": "solution"
