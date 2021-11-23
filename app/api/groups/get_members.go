@@ -65,24 +65,8 @@ type groupsMembersViewResponseRow struct {
 //   items:
 //     type: string
 //     enum: [member_since,-member_since,user.login,-user.login,user.grade,-user.grade,id,-id]
-// - name: from.member_since
-//   description: Start the page from the member next to the member with `groups_groups.member_since` = `from.member_since`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: string
-// - name: from.user.login
-//   description: Start the page from the member next to the member with `users.login` = `from.user.login`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: string
-// - name: from.user.grade
-//   description: Start the page from the member next to the member with `users.grade` = `from.user.grade`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: integer
 // - name: from.id
-//   description: Start the page from the member next to the member with `groups.id`=`from.id`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//   description: Start the page from the member next to the member with `groups.id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: limit
@@ -143,13 +127,18 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 		Where("groups_groups.parent_group_id = ?", groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"user.login":   {ColumnName: "users.login"},
-			"user.grade":   {ColumnName: "users.grade"},
-			"member_since": {ColumnName: "member_since", FieldType: "time"},
-			"id":           {ColumnName: "groups_groups.child_group_id", FieldType: "int64"}},
-		"-member_since,id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"user.login":   {ColumnName: "users.login"},
+				"user.grade":   {ColumnName: "users.grade"},
+				"member_since": {ColumnName: "latest_change.at"},
+				"id":           {ColumnName: "groups_groups.child_group_id"},
+			},
+			DefaultRules: "-member_since,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 
 	if apiError != service.NoError {
 		return apiError

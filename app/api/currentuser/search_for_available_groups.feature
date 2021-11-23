@@ -64,6 +64,34 @@ Feature: Search for groups available to the current user
     ]
     """
 
+  Scenario: Search for groups with "the", start from the second row
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/available-groups?search=the&from.id=2"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "4",
+        "name": "(the) |||Our Friends \\\\\\%\\\\%\\ :)",
+        "description": "Group for our friends",
+        "type": "Friends"
+      },
+      {
+        "id": "7",
+        "name": "Another %%%Team",
+        "description": "Another team group",
+        "type": "Team"
+      },
+      {
+        "id": "8",
+        "name": "Another %%%Club",
+        "description": "Another club group",
+        "type": "Club"
+      }
+    ]
+    """
+
   Scenario: Search for groups with "the" (limit=2)
     Given I am the user with id "21"
     When I send a GET request to "/current-user/available-groups?search=the&limit=2"

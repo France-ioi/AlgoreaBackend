@@ -152,7 +152,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is English  (parents are visible), start from the second row, limit=1
     Given I am the user with id "51"
-    When I send a GET request to "/contests/administered?from.title&from.id=50&limit=1"
+    When I send a GET request to "/contests/administered?from.id=50&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

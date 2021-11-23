@@ -62,11 +62,11 @@ Feature: Get activity log - robustness
     Then the response code should be 400
     And the response error message should contain "Only one of as_team_id and watched_group_id can be given"
 
-  Scenario: Wrong item
+  Scenario: Wrong ancestor item
     Given I am the user with id "23"
     When I send a GET request to "/items/abc/log?watched_group_id=13"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for item_id (should be int64)"
+    And the response error message should contain "Wrong value for ancestor_item_id (should be int64)"
 
   Scenario: Should fail when user cannot watch group members of watched_group_id
     Given I am the user with id "21"
@@ -93,7 +93,7 @@ Feature: Get activity log - robustness
     Given I am the user with id "23"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.answer_id=1"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.at, from.item_id, from.participant_id, from.attempt_id, from.activity_type, from.answer_id) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.activity_type, from.answer_id, from.attempt_id, from.item_id, from.participant_id) or none of them must be present"
 
   Scenario: Should fail when some of from.activity_type is invalid
     Given I am the user with id "23"
@@ -144,7 +144,7 @@ Feature: Get activity log - robustness
     Given I am the user with id "23"
     When I send a GET request to "/items/log?watched_group_id=13&from.answer_id=1"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.at, from.item_id, from.participant_id, from.attempt_id, from.activity_type, from.answer_id) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.activity_type, from.answer_id, from.attempt_id, from.item_id, from.participant_id) or none of them must be present"
 
   Scenario: Should fail when some of from.activity_type is invalid (without item_id)
     Given I am the user with id "23"

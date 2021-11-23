@@ -212,7 +212,7 @@ Background:
 
   Scenario: Start from the second row
     Given I am the user with id "21"
-    When I send a GET request to "/items/200/answers?author_id=11&from.created_at=2017-05-29T06:38:38Z&from.id=2"
+    When I send a GET request to "/items/200/answers?author_id=11&from.id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

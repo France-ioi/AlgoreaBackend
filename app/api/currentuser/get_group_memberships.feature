@@ -138,3 +138,23 @@ Feature: Get group memberships for the current user
     ]
     """
 
+  Scenario: Request the second row
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/group-memberships?limit=1&from.id=6"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "group": {
+          "id": "5",
+          "name": "Other people",
+          "description": "Group for other people",
+          "type": "Other"
+        },
+        "member_since": "2017-06-29T06:38:38Z",
+        "action": "invitation_accepted",
+        "is_membership_locked": false
+      }
+    ]
+    """

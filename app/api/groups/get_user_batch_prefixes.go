@@ -46,7 +46,7 @@ type userBatchPrefix struct {
 //     type: string
 //     enum: [group_prefix,-group_prefix]
 // - name: from.group_prefix
-//   description: Start the page from the prefix next to the prefix with `user_batch_prefixes.group_prefix` = `from.group_prefix`
+//   description: Start the page from the prefix next to the prefix with `user_batch_prefixes.group_prefix` = `{from.group_prefix}`
 //   in: query
 //   type: string
 // - name: limit
@@ -98,9 +98,15 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 			(SELECT COUNT(*) FROM user_batches
 			 WHERE user_batches.group_prefix = user_batch_prefixes.group_prefix) AS total_size`)
 
-	query, apiErr := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"group_prefix": {ColumnName: "group_prefix", FieldType: "string", Unique: true},
-	}, "group_prefix", []string{"group_prefix"}, false)
+	query, apiErr := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"group_prefix": {ColumnName: "group_prefix"},
+			},
+			DefaultRules: "group_prefix",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"group_prefix": service.FieldTypeString},
+		})
 	if apiErr != service.NoError {
 		return apiErr
 	}

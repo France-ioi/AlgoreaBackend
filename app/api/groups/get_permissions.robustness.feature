@@ -6,6 +6,7 @@ Feature: Get permissions for a group - robustness
       | 23 | user          | User  |
       | 25 | some class    | Class |
       | 26 | another class | Class |
+      | 27 | third class   | Class |
       | 31 | admin         | User  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
@@ -45,14 +46,14 @@ Feature: Get permissions for a group - robustness
       | 101              | 103           |
       | 102              | 103           |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
-      | 21       | 100     | solution           | solution_with_grant      | 1                  |
-      | 21       | 101     | none               | none                     | 0                  |
-      | 21       | 102     | none               | solution                 | 0                  |
-      | 21       | 103     | none               | solution                 | 0                  |
-      | 25       | 100     | content            | none                     | 0                  |
-      | 25       | 101     | info               | none                     | 0                  |
-      | 31       | 102     | none               | content_with_descendants | 0                  |
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 21       | 100     | solution           | solution_with_grant      | none                | none               | true               |
+      | 21       | 101     | none               | none                     | none                | none               | false              |
+      | 21       | 102     | none               | solution                 | none                | none               | false              |
+      | 21       | 103     | none               | solution                 | none                | none               | false              |
+      | 25       | 100     | content            | none                     | none                | none               | false              |
+      | 25       | 101     | info               | none                     | answer              | all                | false              |
+      | 31       | 102     | none               | content_with_descendants | none                | none               | false              |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | can_grant_view           | can_enter_until     | is_owner | source_group_id | latest_update_at    |
       | 21       | 100     | none     | none                     | 9999-12-31 23:59:59 | 1        | 23              | 2019-05-30 11:00:00 |
@@ -94,7 +95,7 @@ Feature: Get permissions for a group - robustness
 
   Scenario: The user is not a manager of the source_group_id
     Given I am the user with id "21"
-    When I send a GET request to "/groups/21/permissions/21/102"
+    When I send a GET request to "/groups/27/permissions/27/102"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -104,9 +105,15 @@ Feature: Get permissions for a group - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: source_group_id is not a parent of group_id
-    Given I am the user with id "21"
-    When I send a GET request to "/groups/25/permissions/21/102"
+  Scenario: source_group_id is not an ancestor of group_id
+    Given I am the user with id "31"
+    When I send a GET request to "/groups/25/permissions/26/102"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: source_group_id is a user group
+    Given I am the user with id "31"
+    When I send a GET request to "/groups/31/permissions/31/102"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -122,7 +129,7 @@ Feature: Get permissions for a group - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: can_grant_view = none for the current user
+  Scenario: can_grant_view = none and can_watch < answer_with_grant and can_edit < all_with_grant for the current user
     Given I am the user with id "31"
     When I send a GET request to "/groups/26/permissions/23/101"
     Then the response code should be 403

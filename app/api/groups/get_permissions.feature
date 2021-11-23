@@ -859,3 +859,16 @@ Feature: Get permissions for a group
         }
       }
     """
+
+  Scenario Outline: Access rights for the current user
+    Given I am the user with id "21"
+    And the database table 'permissions_generated' has also the following rows:
+      | group_id | item_id | can_view_generated | can_grant_view_generated   | can_watch_generated   | can_edit_generated   | is_owner_generated |
+      | 21       | 102     | none               | <can_grant_view_generated> | <can_watch_generated> | <can_edit_generated> | false              |
+    When I send a GET request to "/groups/25/permissions/23/102"
+    Then the response code should be 200
+  Examples:
+    | can_grant_view_generated | can_watch_generated | can_edit_generated |
+    | enter                    | none                | none               |
+    | none                     | answer_with_grant   | none               |
+    | none                     | none                | all_with_grant     |

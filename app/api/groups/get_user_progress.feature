@@ -238,7 +238,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     Given I am the user with id "21"
     # here we fixate time_spent even if it depends on NOW()
     And the DB time now is "2019-06-30 20:19:05"
-    When I send a GET request to "/groups/1/user-progress?parent_item_ids=210&from.name=janec&from.id=65&limit=2"
+    When I send a GET request to "/groups/1/user-progress?parent_item_ids=210&from.id=65&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

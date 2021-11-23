@@ -201,7 +201,7 @@ Feature: List official sessions for item_id
 
   Scenario: User has access to the item (default sort, start from the second row)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/official-sessions?from.expected_start=2019-05-30T12:00:00Z&from.name=Session%20200.3&from.group_id=53"
+    When I send a GET request to "/items/200/official-sessions?from.group_id=53"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -236,7 +236,7 @@ Feature: List official sessions for item_id
 
   Scenario: User has access to the item (sort=expected_start, start from the second row)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/official-sessions?sort=expected_start&from.expected_start=[NULL]&from.group_id=50"
+    When I send a GET request to "/items/200/official-sessions?sort=expected_start&from.group_id=50"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

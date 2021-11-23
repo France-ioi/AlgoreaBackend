@@ -85,14 +85,8 @@ type groupUserProgressResponseTableCell struct {
 //   type: array
 //   items:
 //     type: integer
-// - name: from.name
-//   description: Start the page from the user next to the user with `groups.name` = `from.name` and `groups.id` = `from.id`
-//                (`from.id` is required when `from.name` is present)
-//   in: query
-//   type: string
 // - name: from.id
-//   description: Start the page from the user next to the user with `groups.name`=`from.name` and `groups.id`=`from.id`
-//                (`from.name` is required when from.id is present)
+//   description: Start the page from the user next to the user with `groups.id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: limit
@@ -148,11 +142,16 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN `groups` ON groups.id = groups_groups_active.child_group_id AND groups.type = 'User'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Group("groups.id")
-	userIDQuery, apiError = service.ApplySortingAndPaging(r, userIDQuery, map[string]*service.FieldSortingParams{
-		// Note that we require the 'from.name' request parameter although the service does not return group names
-		"name": {ColumnName: "groups.name", FieldType: "string"},
-		"id":   {ColumnName: "groups.id", FieldType: "int64"},
-	}, "name,id", []string{"id"}, false)
+	userIDQuery, apiError = service.ApplySortingAndPaging(
+		r, userIDQuery,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"name": {ColumnName: "groups.name"},
+				"id":   {ColumnName: "groups.id"},
+			},
+			DefaultRules: "name,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

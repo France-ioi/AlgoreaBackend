@@ -70,7 +70,7 @@ type managerGeneratedPermissions struct {
 // description: Let a manager of a group give/withdraw permissions on an item to a group.
 //
 //   * The user giving the access must be a manager (with `can_grant_group_access` permission)
-//     of `{source_group_id}` which should be a parent of the `{group_id}`.
+//     of `{source_group_id}` which should be an ancestor of the `{group_id}`.
 //
 //   * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
 //     for the item.
@@ -359,7 +359,7 @@ const (
 
 func checkIfUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *database.DataStore, user *database.User,
 	sourceGroupID, groupID, itemID int64) service.APIError {
-	apiError := checkIfUserIsManagerAllowedToGrantPermissions(s, user, sourceGroupID, groupID)
+	apiError := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(s, user, sourceGroupID, groupID)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -367,14 +367,15 @@ func checkIfUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *dat
 	return checkIfItemOrOneOfItsParentsIsVisibleToGroup(s, groupID, itemID)
 }
 
-func checkIfUserIsManagerAllowedToGrantPermissions(
+func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
 	s *database.DataStore, user *database.User, sourceGroupID, groupID int64) service.APIError {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
-	// the 'sourceGroupID' should be a parent of 'groupID'
+	// the 'sourceGroupID' should be an ancestor of 'groupID'
 	found, err := s.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
+		Where("groups.type != 'User'").
 		Joins(`
-				JOIN groups_groups_active AS children
-					ON children.parent_group_id = groups.id AND children.child_group_id = ?`, groupID).
+				JOIN groups_ancestors_active AS descendants
+					ON descendants.ancestor_group_id = groups.id AND descendants.child_group_id = ?`, groupID).
 		Where("group_managers.can_grant_group_access").
 		HasRows()
 	service.MustNotBeError(err)
