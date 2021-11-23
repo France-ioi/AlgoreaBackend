@@ -132,21 +132,10 @@ type rawOfficialSession struct {
 //     type: string
 //     enum: [group_id,-group_id,expected_start,-expected_start,expected_start$,-expected_start$,name,-name]
 // - name: from.group_id
-//   description: Start the page from the official session next to the official session with `groups.id` = `from.group_id`
-//                (some other 'from.*' parameters may be required depending on the `{sort}`)
+//   description: Start the page from the official session next to the official session with `groups.id` = `{from.group_id}`
 //   in: query
 //   type: integer
 //   format: int64
-// - name: from.expected_start
-//   description: Start the page from the official session next to the official session with `groups.expected_start` = `from.expected_start`
-//                (may be '[NULL]', some other 'from.*' parameters may be required depending on the `{sort}`)
-//   in: query
-//   type: string
-// - name: from.name
-//   description: Start the page from the official session next to the official session with `groups.name` = `from.name`
-//                (some other 'from.*' parameters may be required depending on the `{sort}`)
-//   in: query
-//   type: string
 // - name: limit
 //   description: Display first N official sessions
 //   in: query
@@ -188,11 +177,17 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 		Where("is_public").
 		Where("root_activity_id = ?", itemID)
 	idsQuery = service.NewQueryLimiter().Apply(r, idsQuery)
-	idsQuery, apiError := service.ApplySortingAndPaging(r, idsQuery, map[string]*service.FieldSortingParams{
-		"group_id":       {ColumnName: "groups.id", FieldType: "int64", Unique: true},
-		"expected_start": {ColumnName: "groups.expected_start", FieldType: "time", Nullable: true},
-		"name":           {ColumnName: "groups.name", FieldType: "string"},
-	}, "expected_start$,name,group_id", []string{"group_id"}, false)
+	idsQuery, apiError := service.ApplySortingAndPaging(
+		r, idsQuery,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"group_id":       {ColumnName: "groups.id"},
+				"expected_start": {ColumnName: "groups.expected_start", Nullable: true},
+				"name":           {ColumnName: "groups.name"},
+			},
+			DefaultRules: "expected_start$,name,group_id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"group_id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

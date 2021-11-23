@@ -767,7 +767,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     Given I am the user with id "21"
     # here we fixate avg_time_spent even if it depends on NOW()
     And the DB time now is "2019-05-30 20:19:05"
-    When I send a GET request to "/groups/1/group-progress?parent_item_ids=210,220,310&from.name=A%20custom%20group&from.id=17"
+    When I send a GET request to "/groups/1/group-progress?parent_item_ids=210,220,310&from.id=17"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

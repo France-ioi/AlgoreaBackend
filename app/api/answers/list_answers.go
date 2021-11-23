@@ -48,16 +48,8 @@ import (
 //   items:
 //     type: string
 //     enum: [created_at,-created_at,id,-id]
-// - name: from.created_at
-//   description: Start the page from the answer next to the answer with `created_at` = `from.created_at`
-//                and `answers.id` = `from.id`
-//                (`from.id` is required when `from.created_at` is present)
-//   in: query
-//   type: string
 // - name: from.id
-//   description: Start the page from the answer next to the answer with `created_at`=`from.created_at`
-//                and `answers.id`=`from.id`
-//                (`from.created_at` is required when from.id is present)
+//   description: Start the page from the answer next to the answer with `answers.id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: limit
@@ -130,10 +122,16 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 		dataQuery = dataQuery.Where("author_id = ?", authorID)
 	}
 
-	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
-		"created_at": {ColumnName: "answers.created_at", FieldType: "time"},
-		"id":         {ColumnName: "answers.id", FieldType: "int64"},
-	}, "-created_at,id", []string{"id"}, false)
+	dataQuery, apiError := service.ApplySortingAndPaging(
+		httpReq, dataQuery,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"created_at": {ColumnName: "answers.created_at"},
+				"id":         {ColumnName: "answers.id"},
+			},
+			DefaultRules: "-created_at,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

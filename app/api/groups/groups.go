@@ -29,6 +29,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Delete("/groups/{group_id}", service.AppHandler(srv.deleteGroup).ServeHTTP)
 	router.Get("/groups/{source_group_id}/permissions/{group_id}/{item_id}",
 		service.AppHandler(srv.getPermissions).ServeHTTP)
+	router.Get("/groups/{group_id}/granted_permissions",
+		service.AppHandler(srv.getGrantedPermissions).ServeHTTP)
 	router.Put("/groups/{source_group_id}/permissions/{group_id}/{item_id}",
 		service.AppHandler(srv.updatePermissions).ServeHTTP)
 

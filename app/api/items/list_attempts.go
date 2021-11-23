@@ -88,7 +88,7 @@ type attemptsListResponseRow struct {
 //     type: string
 //     enum: [id,-id]
 // - name: from.id
-//   description: Start the page from the attempt next to the attempt with `results.attempt_id` = `from.id`
+//   description: Start the page from the attempt next to the attempt with `results.attempt_id` = `{from.id}`
 //   in: query
 //   type: integer
 //   format: int64
@@ -135,9 +135,15 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
 			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError = service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"id": {ColumnName: "results.attempt_id", FieldType: "int64"},
-	}, "id", []string{"id"}, false)
+	query, apiError = service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"id": {ColumnName: "results.attempt_id"},
+			},
+			DefaultRules: "id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

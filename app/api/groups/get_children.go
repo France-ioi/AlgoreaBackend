@@ -74,27 +74,8 @@ type groupChildrenViewResponseRow struct {
 //   items:
 //     type: string
 //     enum: [Class,Team,Club,Friends,Other,User,Session,Base]
-// - name: from.name
-//   description: Start the page from the sub-group next to the sub-group with `name` = `from.name` and `id` = `from.id`
-//                (`from.id` is required when `from.name` is present,
-//                some other 'from.*' parameters may be required too depending on the `sort`)
-//   in: query
-//   type: string
-// - name: from.type
-//   description: Start the page from the sub-group next to the sub-group with `type` = `from.type` and `id` = `from.id`
-//                (`from.id` is required when `from.type` is present,
-//                some other 'from.*' parameters may be required too depending on the `sort`)
-//   in: query
-//   type: string
-// - name: from.grade
-//   description: Start the page from the sub-group next to the sub-group with `grade` = `from.grade` and `id` = `from.id`
-//                (`from.id` is required when `from.grade` is present,
-//                some other 'from.*' parameters may be required too depending on the `sort`)
-//   in: query
-//   type: string
 // - name: from.id
-//   description: Start the page from the sub-group next to the sub-group with `id`=`from.id`
-//                (if at least one of other 'from.*' parameters is present, `sort.id` is required)
+//   description: Start the page from the sub-group next to the sub-group with `id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: sort
@@ -178,13 +159,18 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"name":  {ColumnName: "groups.name", FieldType: "string"},
-			"type":  {ColumnName: "groups.type", FieldType: "string"},
-			"grade": {ColumnName: "groups.grade", FieldType: "int64"},
-			"id":    {ColumnName: "groups.id", FieldType: "int64"}},
-		"name,id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"name":  {ColumnName: "groups.name"},
+				"type":  {ColumnName: "groups.type"},
+				"grade": {ColumnName: "groups.grade"},
+				"id":    {ColumnName: "groups.id"},
+			},
+			DefaultRules: "name,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

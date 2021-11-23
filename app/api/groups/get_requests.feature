@@ -290,7 +290,8 @@ Feature: Get requests for group_id
 
   Scenario: User is a manager of the group (sort by joining user's login, start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/requests?sort=joining_user.login&from.joining_user.login=jane&from.member_id=31"
+    And the template constant "from_at" is "{{timeToRFC(db("group_membership_changes[3][at]"))}}"
+    When I send a GET request to "/groups/13/requests?sort=joining_user.login&from.member_id=31&from.at={{from_at}}"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -335,7 +336,8 @@ Feature: Get requests for group_id
 
   Scenario: User is a manager of the group (sort by action, start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/requests?sort=action&from.action=invitation_created&from.member_id=21"
+    And the template constant "from_at" is "{{timeToRFC(db("group_membership_changes[1][at]"))}}"
+    When I send a GET request to "/groups/13/requests?sort=action&from.at={{from_at}}&from.member_id=21"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

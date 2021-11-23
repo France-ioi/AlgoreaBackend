@@ -248,6 +248,28 @@ Feature: Get members of group_id
     ]
     """
 
+  Scenario: User is a manager of the group; request the second row
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/13/members?limit=1&from.id=51"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "61",
+        "user": {
+          "first_name": "Mark",
+          "group_id": "61",
+          "last_name": "Zuckerberg",
+          "login": "zuck",
+          "grade": 9
+        },
+        "member_since": "2017-06-29T06:38:38Z",
+        "action": "join_request_accepted"
+      }
+    ]
+    """
+
   Scenario: The member is not a user
     Given I am the user with id "21"
     When I send a GET request to "/groups/22/members?limit=1"

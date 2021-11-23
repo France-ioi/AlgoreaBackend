@@ -49,14 +49,8 @@ type contestAdminListRow struct {
 //                Each title is returned in the user's default language if exists,
 //                otherwise the item's default language is used.
 // parameters:
-// - name: from.title
-//   description: Start the page from the contest next to the contest with `title` = `from.title` and `id` = `from.id`
-//                (`from.id` is required when `from.title` is present)
-//   in: query
-//   type: string
 // - name: from.id
-//   description: Start the page from the contest next to the contest with `title` = `from.title` and `id`=`from.id`
-//                (`from.title` is required when from.id is present)
+//   description: Start the page from the contest next to the contest with `id`=`{from.id}`
 //   in: query
 //   type: integer
 // - name: sort
@@ -100,14 +94,16 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		Where("items.duration IS NOT NULL").
 		Where("items.requires_explicit_entry")
 
-	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"title": {
-			ColumnName:            "IFNULL(COALESCE(user_strings.title, default_strings.title), '')",
-			ColumnNameForOrdering: "IFNULL(COALESCE(user_strings.title, default_strings.title), '')",
-			FieldType:             "string",
-		},
-		"id": {ColumnName: "items.id", FieldType: "int64"},
-	}, "title,id", []string{"id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"title": {ColumnName: "IFNULL(COALESCE(user_strings.title, default_strings.title), '')"},
+				"id":    {ColumnName: "items.id"},
+			},
+			DefaultRules: "title,id",
+			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
+		})
 	if apiError != service.NoError {
 		return apiError
 	}

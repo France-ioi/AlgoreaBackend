@@ -100,26 +100,14 @@ type groupRequestsViewResponseRow struct {
 //     enum: [at,-at,joining_user.login,-joining_user.login,action,-action,member_id,-member_id]
 // - name: from.at
 //   description: Start the page from the request/invitation next to the request/invitation with
-//                `group_membership_changes.at` = `from.at`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: string
-// - name: from.joining_user.login
-//   description: Start the page from the request/invitation next to the request/invitation
-//                whose joining user's login is `from.joining_user.login`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: string
-// - name: from.action
-//   description: Start the page from the request/invitation next to the request/invitation with
-//                `group_membership_changes.action` = `from.action`, sorted numerically.
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//                `group_membership_changes.at` = `{from.at}`
+//                (`{from.member_id}` is also required if `{from.at}` is given)
 //   in: query
 //   type: string
 // - name: from.member_id
 //   description: Start the page from the request/invitation next to the request/invitation with
-//                `group_membership_changes.member_id`=`from.member_id`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//                `group_membership_changes.member_id`=`{from.member_id}`
+//                (`{from.at}` is also required if `{from.member_id}` is given)
 //   in: query
 //   type: integer
 // - name: limit
@@ -159,7 +147,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		Select(`
 			group_membership_changes.member_id,
 			group_membership_changes.at,
-			action,
+			group_membership_changes.action,
 			joining_user.group_id AS joining_user__group_id,
 			joining_user.login AS joining_user__login,
 			joining_user_with_approval.group_id IS NOT NULL AS joining_user__show_personal_info,
@@ -172,9 +160,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			inviting_user.last_name AS inviting_user__last_name`).
 		Joins(`
 			LEFT JOIN users AS inviting_user
-				ON inviting_user.group_id = initiator_id AND action = 'invitation_created'`).
+				ON inviting_user.group_id = initiator_id AND group_membership_changes.action = 'invitation_created'`).
 		Joins(`JOIN users AS joining_user ON joining_user.group_id = member_id`).
-		Joins(`LEFT JOIN users_with_approval AS joining_user_with_approval ON joining_user_with_approval.group_id = joining_user.group_id`).
 		Joins(`
 			LEFT JOIN group_pending_requests
 				ON group_pending_requests.group_id = group_membership_changes.group_id AND
@@ -185,8 +172,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 					 WHERE latest_change.group_id = group_pending_requests.group_id AND
 						latest_change.member_id = group_pending_requests.member_id AND
 						latest_change.action = group_membership_changes.action) = group_membership_changes.at`).
-		Where("action IN ('join_request_refused', 'invitation_refused') OR group_pending_requests.group_id IS NOT NULL").
-		Where("action IN ('invitation_created', 'join_request_created', 'invitation_refused', 'join_request_refused')").
+		Where("group_membership_changes.action IN ('join_request_refused', 'invitation_refused') OR group_pending_requests.group_id IS NOT NULL").
+		Where("group_membership_changes.action IN ('invitation_created', 'join_request_created', 'invitation_refused', 'join_request_refused')").
 		Where("group_membership_changes.group_id = ?", groupID)
 
 	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
@@ -200,19 +187,30 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"action":             {ColumnName: "group_membership_changes.action", FieldType: "string"},
-			"joining_user.login": {ColumnName: "joining_user.login", FieldType: "string"},
-			"at":                 {ColumnName: "group_membership_changes.at", FieldType: "time"},
-			"member_id":          {ColumnName: "group_membership_changes.member_id", FieldType: "int64"}},
-		"-at,member_id", []string{"member_id"}, false)
+	query, apiError := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"action":             {ColumnName: "group_membership_changes.action"},
+				"joining_user.login": {ColumnName: "joining_user.login"},
+				"at":                 {ColumnName: "group_membership_changes.at"},
+				"member_id":          {ColumnName: "group_membership_changes.member_id"},
+			},
+			DefaultRules: "-at,member_id",
+			TieBreakers: service.SortingAndPagingTieBreakers{
+				"at":        service.FieldTypeTime,
+				"member_id": service.FieldTypeInt64,
+			},
+		})
 
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	query = attachUsersWithApproval(query, user)
+	query = attachUsersWithApproval(
+		query.Joins(
+			`LEFT JOIN users_with_approval AS joining_user_with_approval ON joining_user_with_approval.group_id = joining_user.group_id`),
+		user)
 
 	var result []groupRequestsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())

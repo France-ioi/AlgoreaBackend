@@ -43,20 +43,15 @@ type userBatch struct {
 //     type: string
 //     enum: [group_prefix,-group_prefix,custom_prefix,-custom_prefix,size,-size]
 // - name: from.group_prefix
-//   description: Start the page from the batch next to the batch with `user_batches.group_prefix` = `from.group_prefix`
-//                (`from.custom_prefix` is required when `from.group_prefix` is given)
+//   description: Start the page from the batch next to the batch with `user_batches.group_prefix` = `{from.group_prefix}`
+//                (`{from.custom_prefix}` is required when `{from.group_prefix}` is given)
 //   in: query
 //   type: string
 // - name: from.custom_prefix
-//   description: Start the page from the batch next to the batch with `user_batches.custom_prefix` = `from.custom_prefix`
-//                (`from.group_prefix` is required when `from.custom_prefix` is given)
+//   description: Start the page from the batch next to the batch with `user_batches.custom_prefix` = `{from.custom_prefix}`
+//                (`{from.group_prefix}` is required when `{from.custom_prefix}` is given)
 //   in: query
 //   type: string
-// - name: from.size
-//   description: Start the page from the batch next to the batch with `user_batches.size` = `from.size`
-//                (`from.group_prefix` & `from.custom_prefix` are required when `from.size` is given)
-//   in: query
-//   type: integer
 // - name: limit
 //   description: Display the first N user batches
 //   in: query
@@ -95,13 +90,22 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 		Joins("JOIN user_batch_prefixes USING(group_prefix)").
 		Where(`user_batch_prefixes.group_id IN(?)`, managedByUser.QueryExpr()).
 		Where(`user_batch_prefixes.group_id IN(?)`, prefixAncestors.QueryExpr()).
-		Select("group_prefix, custom_prefix, size, creator_id")
+		Select("user_batches.group_prefix, user_batches.custom_prefix, user_batches.size, user_batches.creator_id")
 
-	query, apiErr := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"group_prefix":  {ColumnName: "group_prefix", FieldType: "string"},
-		"custom_prefix": {ColumnName: "custom_prefix", FieldType: "string"},
-		"size":          {ColumnName: "size", FieldType: "int64"},
-	}, "group_prefix,custom_prefix", []string{"group_prefix", "custom_prefix"}, false)
+	query, apiErr := service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"group_prefix":  {ColumnName: "user_batches.group_prefix"},
+				"custom_prefix": {ColumnName: "user_batches.custom_prefix"},
+				"size":          {ColumnName: "user_batches.size"},
+			},
+			DefaultRules: "group_prefix,custom_prefix",
+			TieBreakers: service.SortingAndPagingTieBreakers{
+				"group_prefix":  service.FieldTypeString,
+				"custom_prefix": service.FieldTypeString,
+			},
+		})
 	if apiErr != service.NoError {
 		return apiErr
 	}

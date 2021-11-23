@@ -110,7 +110,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       }
     ]
     """
-    When I send a GET request to "/groups/1/user-descendants?from.name=johna&from.id=51"
+    When I send a GET request to "/groups/1/user-descendants?from.id=51"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

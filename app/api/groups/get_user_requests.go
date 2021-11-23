@@ -87,33 +87,17 @@ type groupUserRequestsViewResponseRow struct {
 //   items:
 //     type: string
 //     enum: [at,-at,user.login,-user.login,group.name,-group.name,user.group_id,-user.group_id,group.id,-group.id]
-// - name: from.at
-//   description: Start the page from the request next to the request with
-//                `group_pending_requests.at` = `from.at`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: string
-// - name: from.user.login
-//   description: Start the page from the request next to the request
-//                whose user's login is `from.user.login`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: string
-// - name: from.group.name
-//   description: Start the page from the request next to request with name = `from.user.login`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
-//   in: query
-//   type: string
 // - name: from.group.id
 //   description: Start the page from the request next to the request with
-//                `group_pending_requests.group_id`=`from.group.id`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//                `group_pending_requests.group_id`=`{from.group.id}`
+//                (only if `{group_id}` is not given; `{from.user.group_id}` is also required when `{from.group.id}` is given)
 //   in: query
 //   type: integer
 // - name: from.user.group_id
 //   description: Start the page from the request next to the request with
-//                `group_pending_requests.member_id`=`from.user.group_id`
-//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//                `group_pending_requests.member_id`=`{from.user.group_id}`
+//                (`{from.group.id}` is also required if `{from.user.group_id}` is given and
+//                 either `{group_id}` is not given or descendants are included)
 //   in: query
 //   type: integer
 // - name: limit
@@ -160,14 +144,17 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 		Joins(`LEFT JOIN users AS user ON user.group_id = member_id`).
 		Joins(`LEFT JOIN users_with_approval ON users_with_approval.group_id = user.group_id`).
 		Where("group_pending_requests.type IN (?)", types)
-	tieBreakerFieldNames := []string{"group.id", "user.group_id"}
+	tieBreakers := service.SortingAndPagingTieBreakers{
+		"group.id":      service.FieldTypeInt64,
+		"user.group_id": service.FieldTypeInt64,
+	}
 	if groupIDSet {
 		if includeDescendantGroups {
 			query = query.Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = group_pending_requests.group_id").
 				Where("groups_ancestors_active.ancestor_group_id = ?", groupID)
 		} else {
 			query = query.Where("group_pending_requests.group_id = ?", groupID)
-			tieBreakerFieldNames = []string{"user.group_id"}
+			tieBreakers = service.SortingAndPagingTieBreakers{"user.group_id": service.FieldTypeInt64}
 		}
 	} else {
 		query = query.Where("group_pending_requests.group_id IN ?",
@@ -176,15 +163,19 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError = service.ApplySortingAndPaging(r, query,
-		map[string]*service.FieldSortingParams{
-			"user.login":    {ColumnName: "user.login", FieldType: "string"},
-			"user.group_id": {ColumnName: "group_pending_requests.member_id", FieldType: "int64"},
-			"at":            {ColumnName: "group_pending_requests.at", FieldType: "time"},
-			"group.name":    {ColumnName: "group.name", FieldType: "string"},
-			"group.id":      {ColumnName: "group_pending_requests.group_id", FieldType: "int64"}},
-		"group.id,-at,user.group_id",
-		tieBreakerFieldNames, false)
+	query, apiError = service.ApplySortingAndPaging(
+		r, query,
+		&service.SortingAndPagingParameters{
+			Fields: service.SortingAndPagingFields{
+				"user.login":    {ColumnName: "user.login"},
+				"user.group_id": {ColumnName: "group_pending_requests.member_id"},
+				"at":            {ColumnName: "group_pending_requests.at"},
+				"group.name":    {ColumnName: "group.name"},
+				"group.id":      {ColumnName: "group_pending_requests.group_id"},
+			},
+			DefaultRules: "group.id,-at,user.group_id",
+			TieBreakers:  tieBreakers,
+		})
 
 	if apiError != service.NoError {
 		return apiError
