@@ -129,11 +129,12 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, parameters *Sort
 // chooseSortingRules chooses which sorting rules to use.
 // If urlQuery["sort"] is not present, the default sorting rules are used.
 func chooseSortingRules(r *http.Request, defaultRules string, ignoreSortParameter bool) (sortingRules string) {
-	urlQuery := r.URL.Query()
-	if !ignoreSortParameter && len(urlQuery["sort"]) > 0 {
-		sortingRules = urlQuery["sort"][0]
-	} else {
-		sortingRules = defaultRules
+	sortingRules = defaultRules
+	if !ignoreSortParameter {
+		urlQuery := r.URL.Query()
+		if len(urlQuery["sort"]) > 0 {
+			sortingRules = urlQuery["sort"][0]
+		}
 	}
 	return sortingRules
 }
