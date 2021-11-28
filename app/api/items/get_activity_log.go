@@ -19,7 +19,7 @@ type itemActivityLogResponseRow struct {
 	// required: true
 	At *database.Time `json:"at"`
 	// required: true
-	// enum: result_started,submission,result_validated
+	// enum: result_started,submission,result_validated,saved_answer,current_answer
 	ActivityType string `json:"activity_type"`
 	// required: true
 	AttemptID int64 `json:"attempt_id,string"`
@@ -68,7 +68,7 @@ type itemActivityLogResponseRow struct {
 // ---
 // summary: Activity log on an item
 // description: >
-//   Returns rows from `answers` having `type` = "Submission" and started/validated `results`
+//   Returns rows from `answers` and started/validated `results`
 //   with additional info on users and items for the participant or the `{watched_group_id}` group
 //   (only one of `{as_team_id}` and `{watched_group_id}` can be given).
 //
@@ -127,7 +127,7 @@ type itemActivityLogResponseRow struct {
 //                (all other `{from.*}` parameters are required when `{from.activity_type}` is present)
 //   in: query
 //   type: string
-//   enum: [result_started,submission,result_validated]
+//   enum: [result_started,submission,result_validated,saved_answer,current_answer]
 // - name: limit
 //   description: Display the first N rows
 //   in: query
@@ -162,7 +162,7 @@ func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request
 // ---
 // summary: Activity log for all visible items
 // description: >
-//   Returns rows from `answers` having `type` = "Submission" and started/validated `results`
+//   Returns rows from `answers` and started/validated `results`
 //   with additional info on users and items for the participant or the `{watched_group_id}` group
 //   (only one of `{as_team_id}` and `{watched_group_id}` can be given).
 //
@@ -215,7 +215,7 @@ func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request
 //                (all other `{from.*}` parameters are required when `{from.activity_type}` is present)
 //   in: query
 //   type: string
-//   enum: [result_started,submission,result_validated]
+//   enum: [result_started,submission,result_validated,saved_answer,current_answer]
 // - name: limit
 //   description: Display the first N rows
 //   in: query
@@ -250,9 +250,12 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		stringValue := r.URL.Query().Get("from.activity_type")
 		var intValue int
 		var ok bool
-		if intValue, ok = map[string]int{"result_started": 1, "submission": 2, "result_validated": 3}[stringValue]; !ok {
+		if intValue, ok = map[string]int{
+			"result_started": 1, "submission": 2, "result_validated": 3, "saved_answer": 4, "current_answer": 5,
+		}[stringValue]; !ok {
 			return service.ErrInvalidRequest(
-				errors.New("wrong value for from.activity_type (should be one of (result_started, submission, result_validated))"))
+				errors.New(
+					"wrong value for from.activity_type (should be one of (result_started, submission, result_validated, saved_answer, current_answer))"))
 		}
 		urlParams["from.activity_type"] = []string{strconv.Itoa(intValue)}
 		r.URL.RawQuery = urlParams.Encode()
@@ -345,18 +348,21 @@ func (srv *Service) constructActivityLogQuery(
 	service.MustNotBeError(srv.Store.Raw(`
 		WITH items_to_show AS ?, participants AS ?
 		SELECT COUNT(*) AS cnt FROM answers
-		WHERE type='Submission' AND (answers.item_id IN (SELECT id FROM items_to_show)) AND
+		WHERE (answers.item_id IN (SELECT id FROM items_to_show)) AND
 			(answers.participant_id IN (SELECT id FROM participants))`,
 		visibleItemDescendantsSubQuery, participantsQuerySubQuery).Scan(&cnt).Error())
 
 	answersQuerySelect := `
-			'submission' AS activity_type,
+			CASE answers.type
+				WHEN 'Submission' THEN 2
+				WHEN 'Saved' THEN 4
+				WHEN 'Current' THEN 5
+			END AS activity_type_int,
 			answers.created_at AS at,
 			answers.id AS answer_id,
 			answers.attempt_id, answers.participant_id,
 			answers.item_id, author_id AS user_id`
 	answersQuery := srv.Store.Answers().
-		Where("answers.type = 'Submission'").
 		Where("answers.participant_id IN (SELECT id FROM participants)").
 		Where("answers.item_id IN (SELECT id FROM items_to_show)")
 
@@ -375,7 +381,7 @@ func (srv *Service) constructActivityLogQuery(
 	startedResultsQuery := srv.Store.Table("results AS started_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
-			'result_started' AS activity_type,
+			1 AS activity_type_int,
 			started_at AS at,
 			-1 AS answer_id,
 			started_results.attempt_id, started_results.participant_id, started_results.item_id, started_results.participant_id AS user_id,
@@ -391,7 +397,7 @@ func (srv *Service) constructActivityLogQuery(
 	validatedResultsQuery := srv.Store.Table("results AS validated_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
-			'result_validated' AS activity_type,
+			3 AS activity_type_int,
 			validated_results.validated_at AS at,
 			-1 AS answer_id,
 			validated_results.attempt_id, validated_results.participant_id,
@@ -414,9 +420,17 @@ func (srv *Service) constructActivityLogQuery(
 				"item_id":        {ColumnName: "answers.item_id"},
 				"participant_id": {ColumnName: "answers.participant_id"},
 				"attempt_id":     {ColumnName: "answers.attempt_id"},
-				"answer_id":      {ColumnName: "answers.id"},
+				"activity_type_int": {
+					ColumnName: `
+						CASE answers.type
+							WHEN 'Submission' THEN 2
+							WHEN 'Saved' THEN 4
+							WHEN 'Current' THEN 5
+						END`,
+				},
+				"answer_id": {ColumnName: "answers.id"},
 			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,answer_id",
+			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type_int,answer_id",
 			IgnoreSortParameter:  true,
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
@@ -461,26 +475,32 @@ func (srv *Service) constructActivityLogQuery(
 	unionQuery := srv.Store.Table("un")
 	unionQuery = service.NewQueryLimiter().Apply(r, unionQuery)
 	unionQuery, _ = service.ApplySortingAndPaging(
-		r, unionQuery,
+		nil, unionQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"at":             {ColumnName: "un.at"},
-				"participant_id": {ColumnName: "un.participant_id"},
-				"attempt_id":     {ColumnName: "un.attempt_id"},
-				"item_id":        {ColumnName: "un.item_id"},
-				"activity_type": {
-					ColumnName: "CASE un.activity_type WHEN 'result_started' THEN 1 WHEN 'submission' THEN 2 WHEN 'result_validated' THEN 3 END",
-				},
-				"answer_id": {ColumnName: "un.answer_id"},
+				"at":                {ColumnName: "un.at"},
+				"participant_id":    {ColumnName: "un.participant_id"},
+				"attempt_id":        {ColumnName: "un.attempt_id"},
+				"item_id":           {ColumnName: "un.item_id"},
+				"activity_type_int": {ColumnName: "un.activity_type_int"},
+				"answer_id":         {ColumnName: "un.answer_id"},
 			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type,answer_id",
+			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type_int,answer_id",
 			IgnoreSortParameter:  true,
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
 
 	query := srv.Store.Raw(`
 		WITH items_to_show AS ?, participants AS ?, start_from_row AS ?, un AS ?
-		SELECT STRAIGHT_JOIN activity_type, at, answer_id, attempt_id, participant_id, score,
+		SELECT STRAIGHT_JOIN
+			CASE activity_type_int
+				WHEN 1 THEN 'result_started'
+				WHEN 2 THEN 'submission'
+				WHEN 3 THEN 'result_validated'
+				WHEN 4 THEN 'saved_answer'
+				WHEN 5 THEN 'current_answer'
+			END AS activity_type,
+			at, answer_id, attempt_id, participant_id, score,
 			items.id AS item__id, items.type AS item__type,
 			groups.id AS participant__id,
 			groups.name AS participant__name,
@@ -513,7 +533,7 @@ func (srv *Service) generateSubQueriesForPagination(
 			Where("started_results.participant_id = ?", fromValues["participant_id"]).
 			Where("started_results.attempt_id = ?", fromValues["attempt_id"]).
 			Where("started_results.item_id = ?", fromValues["item_id"])
-	case "2": // submission
+	case "2", "4", "5": // submission/saved_answer/current_answer
 		startFromRowQuery = answersQuery.Where("answers.id = ?", fromValues["answer_id"])
 	case "3": // result_validated
 		startFromRowQuery = validatedResultsQuery.

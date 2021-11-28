@@ -121,11 +121,10 @@ Feature: Get activity log
       | fr  |
 
   Scenario Outline: User is a manager of the group and there are visible descendants of the item
-    This spec also checks:
-      1) that answers having type != "Submission" are filtered out,
-      2) activities ordering,
-      3) filtering by users groups,
-      4) that a user cannot see names of other users without approval
+      This spec also checks:
+      1) activities ordering,
+      2) filtering by users groups,
+      3) that a user cannot see names of other users without approval
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13"
@@ -141,6 +140,26 @@ Feature: Get activity log
         "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "current_answer",
+        "answer_id": "15",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "15",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "saved_answer",
+        "answer_id": "14",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "14",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
       {
         "activity_type": "submission",
@@ -161,6 +180,28 @@ Feature: Get activity log
         "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "13"
+      },
+      {
+        "activity_type": "current_answer",
+        "answer_id": "5",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "5",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "score": 100,
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "saved_answer",
+        "answer_id": "4",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "4",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "score": 100,
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
       {
         "activity_type": "submission",
@@ -318,10 +359,80 @@ Feature: Get activity log
     | force                              |
     | no                                 |
 
-  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request two rows right after a row with activity_type="result_validated"
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_validated&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=-1&limit=2"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "current_answer",
+        "answer_id": "15",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "15",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "saved_answer",
+        "answer_id": "14",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "14",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      }
+    ]
+    """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
+
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request two rows right after a row with activity_type="current_answer"
+    Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=current_answer&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=15&limit=2"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "saved_answer",
+        "answer_id": "14",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "14",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-30T06:38:38Z",
+        "answer_id": "18",
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "attempt_id": "1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "user": {"id": "31", "login": "jane"},
+        "from_answer_id": "18"
+      }
+    ]
+    """
+  Examples:
+    | forceStraightJoinInItemActivityLog |
+    | force                              |
+    | no                                 |
+
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request two rows right after a row with activity_type="saved_answer"
+    Given I am the user with id "21"
+    And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
+    When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=saved_answer&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=14&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -353,7 +464,7 @@ Feature: Get activity log
     | force                              |
     | no                                 |
 
-  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the sixth and the seventh rows
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request two rows right after a row with activity_type="submission"
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=submission&from.participant_id=11&from.attempt_id=1&from.item_id=200&from.answer_id=16&limit=2"
@@ -387,7 +498,7 @@ Feature: Get activity log
     | force                              |
     | no                                 |
 
-  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request the eleventh row
+  Scenario Outline: User is a manager of the group and there are visible descendants of the item; request a row right after a row with activity_type="result_started"
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13&from.activity_type=result_started&from.participant_id=11&from.attempt_id=0&from.item_id=200&from.answer_id=17&limit=1"
@@ -490,11 +601,10 @@ Feature: Get activity log
     """
 
   Scenario Outline: Get activity for all visible items, the user is a manager of the watched group
-  This spec also checks:
-  1) that answers having type != "Submission" are filtered out,
-  2) activities ordering,
-  3) filtering by users groups,
-  4) that a user cannot see names of other users without approval
+      This spec also checks:
+      1) activities ordering,
+      2) filtering by users groups,
+      3) that a user cannot see names of other users without approval
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/log?watched_group_id=13"
@@ -502,256 +612,318 @@ Feature: Get activity log
     And the response body should be, in JSON:
     """
     [
-			{
-				"activity_type": "result_validated",
-				"at": "2017-05-30T12:00:00Z",
-				"attempt_id": "1",
-				"from_answer_id": "-1",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "result_validated",
-				"at": "2017-05-30T12:00:00Z",
-				"attempt_id": "1",
-				"from_answer_id": "-1",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "result_validated",
-				"at": "2017-05-30T12:00:00Z",
-				"attempt_id": "0",
-				"from_answer_id": "-1",
-				"item": {"id": "202", "string": { "title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "18",
-				"at": "2017-05-30T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "18",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"id": "31", "login": "jane"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "13",
-				"at": "2017-05-30T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "13",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "41", "name": "paul", "type": "User"},
-				"user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "23",
-				"at": "2017-05-30T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "23",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "28",
-				"at": "2017-05-30T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "28",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"id": "31", "login": "jane"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "12",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "12",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "16",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "16",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"id": "31", "login": "jane"}
-			},
-			{
-				"activity_type": "result_validated",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "16",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "11",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "11",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "17",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "17",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"id": "31", "login": "jane"}
-			},
-			{
-				"activity_type": "result_started",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "17",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "result_validated",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "17",
-				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "1",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "1",
-				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"score": 99,
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "7",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "7",
-				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"score": 98,
-				"user": {"id": "31", "login": "jane"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "22",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "22",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "26",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "1",
-				"from_answer_id": "26",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"id": "31", "login": "jane"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "21",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "21",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "submission",
-				"answer_id": "27",
-				"at": "2017-05-29T06:38:38Z",
-				"attempt_id": "0",
-				"from_answer_id": "27",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"id": "31", "login": "jane"}
-			},
-			{
-				"activity_type": "result_started",
-				"at": "2017-05-29T06:38:00Z",
-				"attempt_id": "1",
-				"from_answer_id": "27",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "result_started",
-				"at": "2017-05-29T06:38:00Z",
-				"attempt_id": "0",
-				"from_answer_id": "27",
-				"item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "result_started",
-				"at": "2017-05-29T06:38:00Z",
-				"attempt_id": "1",
-				"from_answer_id": "27",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "result_started",
-				"at": "2017-05-29T06:38:00Z",
-				"attempt_id": "0",
-				"from_answer_id": "27",
-				"item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-				"participant": {"id": "11", "name": "user", "type": "User"},
-				"user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
-			},
-			{
-				"activity_type": "result_validated",
-				"at": "2016-05-30T12:00:00Z",
-				"attempt_id": "1",
-				"from_answer_id": "27",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "41", "name": "paul", "type": "User"},
-				"user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
-			},
-			{
-				"activity_type": "result_started",
-				"at": "2016-05-29T06:38:00Z",
-				"attempt_id": "1",
-				"from_answer_id": "27",
-				"item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
-				"participant": {"id": "41", "name": "paul", "type": "User"},
-				"user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
-			}
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "attempt_id": "1",
+        "from_answer_id": "-1",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "attempt_id": "1",
+        "from_answer_id": "-1",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "attempt_id": "0",
+        "from_answer_id": "-1",
+        "item": {"id": "202", "string": { "title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "current_answer",
+        "answer_id": "15",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "15",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "saved_answer",
+        "answer_id": "14",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "14",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "18",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "18",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"id": "31", "login": "jane"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "13",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "13",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
+      },
+      {
+        "activity_type": "current_answer",
+        "answer_id": "5",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "5",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "score": 100,
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "saved_answer",
+        "answer_id": "4",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "4",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "score": 100,
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "current_answer",
+        "answer_id": "25",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "25",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "saved_answer",
+        "answer_id": "24",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "24",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "23",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "23",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "28",
+        "at": "2017-05-30T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "28",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"id": "31", "login": "jane"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "12",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "12",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "16",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "16",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"id": "31", "login": "jane"}
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "16",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "11",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "11",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "17",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "17",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"id": "31", "login": "jane"}
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "17",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "17",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "1",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "1",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "score": 99,
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "7",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "7",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "score": 98,
+        "user": {"id": "31", "login": "jane"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "22",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "22",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "26",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "1",
+        "from_answer_id": "26",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"id": "31", "login": "jane"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "21",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "21",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "submission",
+        "answer_id": "27",
+        "at": "2017-05-29T06:38:38Z",
+        "attempt_id": "0",
+        "from_answer_id": "27",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"id": "31", "login": "jane"}
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "attempt_id": "1",
+        "from_answer_id": "27",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "attempt_id": "0",
+        "from_answer_id": "27",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "attempt_id": "1",
+        "from_answer_id": "27",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "attempt_id": "0",
+        "from_answer_id": "27",
+        "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
+        "participant": {"id": "11", "name": "user", "type": "User"},
+        "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2016-05-30T12:00:00Z",
+        "attempt_id": "1",
+        "from_answer_id": "27",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2016-05-29T06:38:00Z",
+        "attempt_id": "1",
+        "from_answer_id": "27",
+        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "participant": {"id": "41", "name": "paul", "type": "User"},
+        "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
+      }
     ]
     """
   Examples:
