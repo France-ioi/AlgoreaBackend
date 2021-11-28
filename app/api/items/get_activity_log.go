@@ -3,7 +3,6 @@ package items
 import (
 	"errors"
 	"net/http"
-	"net/url"
 	"strconv"
 
 	"github.com/go-chi/render"
@@ -408,8 +407,7 @@ func (srv *Service) constructActivityLogQuery(
 	answersQuery = service.NewQueryLimiter().Apply(r, answersQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
 	answersQuery, _ = service.ApplySortingAndPaging(
-		fakeRequestParametersForPagination(r, []string{"from.answer_id"}),
-		answersQuery,
+		nil, answersQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"at":             {ColumnName: "answers.created_at"},
@@ -429,8 +427,7 @@ func (srv *Service) constructActivityLogQuery(
 	startedResultsQuery = service.NewQueryLimiter().Apply(r, startedResultsQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
 	startedResultsQuery, _ = service.ApplySortingAndPaging(
-		fakeRequestParametersForPagination(r, []string{"from.participant_id", "from.attempt_id", "from.item_id"}),
-		startedResultsQuery,
+		nil, startedResultsQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"at":             {ColumnName: "started_results.started_at"},
@@ -446,8 +443,7 @@ func (srv *Service) constructActivityLogQuery(
 	validatedResultsQuery = service.NewQueryLimiter().Apply(r, validatedResultsQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
 	validatedResultsQuery, _ = service.ApplySortingAndPaging(
-		fakeRequestParametersForPagination(r, []string{"from.participant_id", "from.attempt_id", "from.item_id"}),
-		validatedResultsQuery,
+		nil, validatedResultsQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"at":             {ColumnName: "validated_results.validated_at"},
@@ -529,17 +525,4 @@ func (srv *Service) generateSubQueriesForPagination(
 		startFromRowSubQuery = service.FromFirstRow
 	}
 	return startFromRowSubQuery, startFromRowQuery.Limit(1).SubQuery()
-}
-
-func fakeRequestParametersForPagination(r *http.Request, fieldsToCopy []string) *http.Request {
-	cleanRequest := &http.Request{URL: &url.URL{}}
-	query := r.URL.Query()
-	newQuery := url.Values(make(map[string][]string, len(fieldsToCopy)))
-	for _, key := range fieldsToCopy {
-		if value, ok := query[key]; ok {
-			newQuery[key] = value
-		}
-	}
-	cleanRequest.URL.RawQuery = newQuery.Encode()
-	return cleanRequest
 }
