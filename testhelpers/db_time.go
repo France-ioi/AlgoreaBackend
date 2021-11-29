@@ -207,7 +207,7 @@ func patchDatabaseDBMethodsWithStringQueryAndArgs(timeStr string) {
 
 func patchDatabaseDBMethodsWithIntQueryAndArgs(timeStr string) {
 	standardDBMethods := [...]string{
-		"Where", "Or", "Select", "Having",
+		"Where", "Select", "Having",
 	}
 	standardDBGuards := make(map[string]*monkey.PatchGuard, len(standardDBMethods))
 	for _, methodName := range standardDBMethods {

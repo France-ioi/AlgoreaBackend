@@ -354,13 +354,6 @@ func TestDB_QueryConstructors(t *testing.T) {
 			expectedQuery: "SELECT * FROM `myTable` LIMIT 1",
 		},
 		{
-			name:              "Or",
-			funcToPrepare:     func(db *DB) *DB { return db.Where("id = ?", 1) },
-			funcToCall:        func(db *DB) (*DB, []*DB) { return db.Or("otherID = ?", 2), nil },
-			expectedQuery:     "SELECT * FROM `myTable` WHERE (id = ?) OR (otherID = ?)",
-			expectedQueryArgs: []driver.Value{1, 2},
-		},
-		{
 			name:          "Order",
 			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Order("id"), nil },
 			expectedQuery: "SELECT * FROM `myTable` ORDER BY `id`",
