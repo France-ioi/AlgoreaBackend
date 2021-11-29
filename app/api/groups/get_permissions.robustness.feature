@@ -50,8 +50,8 @@ Feature: Get permissions for a group - robustness
       | 21       | 100     | solution           | solution_with_grant      | none                | none               | true               |
       | 21       | 101     | none               | none                     | none                | none               | false              |
       | 21       | 102     | none               | solution                 | none                | none               | false              |
-      | 21       | 103     | none               | solution                 | none                | none               | false              |
-      | 25       | 100     | content            | none                     | none                | none               | false              |
+      | 21       | 103     | none               | solution                 | none                | all_with_grant     | false              |
+      | 25       | 100     | content            | none                     | answer_with_grant   | none               | false              |
       | 25       | 101     | info               | none                     | answer              | all                | false              |
       | 31       | 102     | none               | content_with_descendants | none                | none               | false              |
     And the database has the following table 'permissions_granted':
