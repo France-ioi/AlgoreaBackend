@@ -7,14 +7,12 @@ Feature: Get user's answer by id
       | 14 | jane | User |
       | 15 | bill | User |
       | 16 | jeff | User |
-      | 17 | elon | User |
     And the database has the following table 'users':
       | login | group_id |
       | jdoe  | 11       |
       | jane  | 14       |
       | bill  | 15       |
       | jeff  | 16       |
-      | elon  | 17       |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 14             |
@@ -101,12 +99,6 @@ Feature: Get user's answer by id
   Scenario: No access rights to the answer (the user is an observer with can_watch_members, but with can_watch<answer)
     Given I am the user with id "16"
     When I send a GET request to "/answers/103"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
-  Scenario: No access rights to the answer (the user is an observer with can_watch>=answer and can_watch_members, but the participant is a user)
-    Given I am the user with id "17"
-    When I send a GET request to "/answers/101"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
