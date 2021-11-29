@@ -145,9 +145,8 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	}
 
 	itemsQuery := srv.Store.Permissions().MatchingUserAncestors(user).
-		WherePermissionIsAtLeast("grant_view", "enter").
-		Or("can_watch_generated = 'answer_with_grant'").
-		Or("can_edit_generated = 'all_with_grant'").
+		Where("? OR can_watch_generated = 'answer_with_grant' OR can_edit_generated = 'all_with_grant'",
+			srv.Store.PermissionsGranted().PermissionIsAtLeastSqlExpr("grant_view", "enter")).
 		Select("DISTINCT item_id AS id")
 
 	managedGroupsQuery := srv.Store.ActiveGroupAncestors().ManagedByUser(user).

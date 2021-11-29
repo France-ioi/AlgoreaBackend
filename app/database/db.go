@@ -195,11 +195,6 @@ func (conn *DB) Joins(query string, args ...interface{}) *DB {
 	return newDB(conn.db.Joins(query, args...))
 }
 
-// Or filters records that match before conditions or this one, similar to `Where`
-func (conn *DB) Or(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.db.Or(query, args...))
-}
-
 // Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
 // When creating/updating, specify fields that you want to save to database
 func (conn *DB) Select(query interface{}, args ...interface{}) *DB {

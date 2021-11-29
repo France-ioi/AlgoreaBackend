@@ -3,9 +3,8 @@ package database
 // WherePermissionIsAtLeast returns a composable query filtered by `can_*_generated_value` >= indexOf(`permissionName`)
 // depending on the given permission kind
 func (conn *DB) WherePermissionIsAtLeast(permissionKind, permissionName string) *DB {
-	return newDB(conn.db.
-		Where("IFNULL("+permissionColumnByKind(permissionKind)+", 1) >= ?",
-			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
+	return newDB(conn.db.Where("?",
+		NewDataStore(conn).PermissionsGranted().PermissionIsAtLeastSqlExpr(permissionKind, permissionName)))
 }
 
 // HavingMaxPermissionAtLeast returns a composable query filtered by `MAX(can_*_generated_value)` >= indexOf(`permissionName`)

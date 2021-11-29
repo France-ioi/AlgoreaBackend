@@ -1,5 +1,7 @@
 package database
 
+import "github.com/jinzhu/gorm"
+
 // PermissionGrantedStore implements database operations on `permissions_granted`
 type PermissionGrantedStore struct {
 	*DataStore
@@ -18,6 +20,13 @@ func (s *PermissionGrantedStore) After() (err error) {
 func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string) int {
 	getterFunc := func() interface{} { return requireDBEnumIndexByName("permissions_granted.can_"+kind, name) }
 	return s.DB.getFromEnumUnderLock(getterFunc).(int)
+}
+
+// PermissionIsAtLeastSqlExpr returns a gorm.SqlExpr for filtering by `can_*_generated_value` >= indexOf(`permissionName`)
+// depending on the given permission kind
+func (s *PermissionGrantedStore) PermissionIsAtLeastSqlExpr(permissionKind, permissionName string) *gorm.SqlExpr { // nolint:golint
+	return gorm.Expr("IFNULL("+permissionColumnByKind(permissionKind)+", 1) >= ?",
+		s.PermissionIndexByKindAndName(permissionKind, permissionName))
 }
 
 // ViewIndexByName returns the index of the given view kind in the 'can_view' enum
