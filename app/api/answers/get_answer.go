@@ -5,22 +5,23 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // swagger:operation GET /answers/{answer_id} answers answerGet
 // ---
 // summary: Get an answer
-// description: Return the answer identified by the given `{answer_id}`.
+// description: >
+//   Returns the answer identified by the given `{answer_id}`.
 //
-//   * The user should have at least 'content' access rights to the `attempts.item_id` item for
-//     `answers.attempt_id`.
+//   - If the user is a participant
+//     - (s)he should have at least 'content' access rights to the `answers.item_id` and
+//     - be a member of the `answers.participant_id` team or
+//       `answers.participant_id` should be equal to the user's self group.
 //
-//   * The user should be able to see answers related to his group's attempts so
-//     the user should be a member of the `answers.participant_id` team or
-//     `answers.participant_id` should be equal to the user's self group.
-//
+//   - If the user is an observer
+//     - (s)he should have `can_watch` >= 'answer' permission on the `answers.item_id` and
+//     - be a manager with `can_watch_members` of an ancestor of `answers.participant_id` group.
 //
 //   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:
@@ -48,8 +49,35 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
-	err = visibleAnswersWithGradings(srv.Store, user).
-		Where("answers.id = ?", answerID).
+
+	usersGroupsQuery := srv.Store.ActiveGroupGroups().WhereUserIsMember(user).Select("parent_group_id")
+
+	// a participant should have at least 'content' access to the answers.item_id
+	participantItemPerms := srv.Store.Permissions().MatchingUserAncestors(user).
+		WherePermissionIsAtLeast("view", "content").
+		Where("permissions.item_id = answers.item_id").
+		Select("1").Limit(1)
+	// an observer should have 'can_watch'>='answer' permission on the answers.item_id
+	observerItemPerms := srv.Store.Permissions().MatchingUserAncestors(user).
+		WherePermissionIsAtLeast("watch", "answer").
+		Where("permissions.item_id = answers.item_id").
+		Select("1").Limit(1)
+	// an observer should be able to watch the participant
+	observerParticipantPerms := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+		Where("groups.type != 'User'").
+		Where("groups_ancestors_active.child_group_id = answers.participant_id").
+		Where("can_watch_members").
+		Select("1").Limit(1)
+
+	err = withGradings(srv.Store.Answers().ByID(answerID).
+		// 1) the user is the participant or a member of the participant group able to view the item,
+		// 2) or an observer with required permissions
+		Where(`
+			(? AND (answers.participant_id = ? OR answers.participant_id IN ?)) OR
+			(? AND ?)`,
+			participantItemPerms.SubQuery(), user.GroupID, usersGroupsQuery.SubQuery(),
+			observerItemPerms.SubQuery(), observerParticipantPerms.SubQuery())).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {
@@ -59,12 +87,4 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 
 	render.Respond(rw, httpReq, convertedResult)
 	return service.NoError
-}
-
-func visibleAnswersWithGradings(store *database.DataStore, user *database.User) *database.DB {
-	return store.Answers().Visible(user).
-		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
-		Select(`answers.id, answers.author_id, answers.item_id, answers.attempt_id, answers.participant_id,
-			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
-			gradings.graded_at`)
 }
