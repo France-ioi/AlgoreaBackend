@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -79,12 +78,4 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 
 	render.Respond(rw, httpReq, convertedResult)
 	return service.NoError
-}
-
-func withGradings(answersQuery *database.DB) *database.DB {
-	return answersQuery.
-		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
-		Select(`answers.id, answers.author_id, answers.item_id, answers.attempt_id, answers.participant_id,
-			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
-			gradings.graded_at`)
 }
