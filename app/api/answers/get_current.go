@@ -63,7 +63,7 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
-	err = visibleAnswersWithGradings(srv.Store, user).
+	err = withGradings(srv.Store.Answers().Visible(user)).
 		Where("participant_id = ?", participantID).
 		Where("attempt_id = ?", attemptID).
 		Where("item_id = ?", itemID).
@@ -79,10 +79,6 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 
 	render.Respond(rw, httpReq, convertedResult)
 	return service.NoError
-}
-
-func visibleAnswersWithGradings(store *database.DataStore, user *database.User) *database.DB {
-	return withGradings(store.Answers().Visible(user))
 }
 
 func withGradings(answersQuery *database.DB) *database.DB {
