@@ -65,7 +65,6 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 	// an observer should be able to watch the participant
 	observerParticipantPerms := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-		Where("groups.type != 'User'").
 		Where("groups_ancestors_active.child_group_id = answers.participant_id").
 		Where("can_watch_members").
 		Select("1").Limit(1)
