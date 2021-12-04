@@ -45,12 +45,12 @@ Feature: List attempts for current user and item_id
       | 0  | 23             | 2019-05-29 05:38:38 | 11         | null              | null         | null                |
       | 1  | 23             | 2019-05-29 05:38:38 | 24         | 0                 | 210          | null                |
     And the database has the following table 'results':
-      | attempt_id | participant_id | item_id | score_computed | validated_at        | started_at          | latest_activity_at  |
-      | 0          | 11             | 200     | 99             | null                | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 |
-      | 0          | 23             | 210     | 99             | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 2019-05-29 06:38:39 |
-      | 1          | 23             | 210     | 99             | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 2019-05-29 06:38:39 |
-      | 1          | 11             | 200     | 100            | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 |
-      | 2          | 11             | 200     | 100            | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 |
+      | attempt_id | participant_id | item_id | score_computed | validated_at        | started_at          | latest_activity_at  | help_requested |
+      | 0          | 11             | 200     | 99             | null                | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 | false          |
+      | 0          | 23             | 210     | 99             | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 2019-05-29 06:38:39 | true           |
+      | 1          | 23             | 210     | 99             | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 2019-05-29 06:38:39 | false          |
+      | 1          | 11             | 200     | 100            | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 | true           |
+      | 2          | 11             | 200     | 100            | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 | false          |
 
   Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id
     Given I am the user with id "11"
@@ -68,7 +68,8 @@ Feature: List attempts for current user and item_id
         "ended_at": null,
         "latest_activity_at": "2018-05-29T06:38:39Z",
         "user_creator": null,
-        "validated": false
+        "validated": false,
+        "help_requested": false
       },
       {
         "id": "1",
@@ -82,7 +83,8 @@ Feature: List attempts for current user and item_id
           "group_id": "21",
           "login": "other"
         },
-        "validated": true
+        "validated": true,
+        "help_requested": true
       }
     ]
     """
@@ -103,7 +105,8 @@ Feature: List attempts for current user and item_id
         "ended_at": null,
         "latest_activity_at": "2018-05-29T06:38:39Z",
         "user_creator": null,
-        "validated": false
+        "validated": false,
+        "help_requested": false
       }
     ]
     """
@@ -127,7 +130,8 @@ Feature: List attempts for current user and item_id
           "group_id": "21",
           "login": "other"
         },
-        "validated": true
+        "validated": true,
+        "help_requested": true
       },
       {
         "id": "0",
@@ -138,7 +142,8 @@ Feature: List attempts for current user and item_id
         "ended_at": null,
         "latest_activity_at": "2018-05-29T06:38:39Z",
         "user_creator": null,
-        "validated": false
+        "validated": false,
+        "help_requested": false
       }
     ]
     """
@@ -159,7 +164,8 @@ Feature: List attempts for current user and item_id
         "ended_at": null,
         "latest_activity_at": "2018-05-29T06:38:39Z",
         "user_creator": null,
-        "validated": false
+        "validated": false,
+        "help_requested": false
       }
     ]
     """
@@ -183,7 +189,8 @@ Feature: List attempts for current user and item_id
           "group_id": "11",
           "login": "jdoe"
         },
-        "validated": true
+        "validated": true,
+        "help_requested": true
       },
       {
         "id": "1",
@@ -199,7 +206,8 @@ Feature: List attempts for current user and item_id
           "last_name": "Joe",
           "login": "jane"
         },
-        "validated": true
+        "validated": true,
+        "help_requested": false
       }
     ]
     """
@@ -223,7 +231,8 @@ Feature: List attempts for current user and item_id
           "group_id": "21",
           "login": "other"
         },
-        "validated": true
+        "validated": true,
+        "help_requested": true
       },
       {
         "id": "2",
@@ -239,7 +248,8 @@ Feature: List attempts for current user and item_id
           "last_name": "Doe",
           "login": "jdoe"
         },
-        "validated": true
+        "validated": true,
+        "help_requested": false
       }
     ]
     """
