@@ -40,6 +40,8 @@ type groupUserRequestsViewResponseRow struct {
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
+		// Nullable
+		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
 }
