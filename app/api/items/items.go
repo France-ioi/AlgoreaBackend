@@ -53,6 +53,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/generate-task-token",
 		service.AppHandler(srv.generateTaskToken).ServeHTTP)
 	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
+	routerWithParticipant.Put("/items/{item_id}/attempts/{attempt_id}", service.AppHandler(srv.updateResult).ServeHTTP)
 	routerWithParticipant.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
 	routerWithParticipant.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
 	routerWithParticipant.Get("/items/{ancestor_item_id}/log", service.AppHandler(srv.getActivityLogForItem).ServeHTTP)

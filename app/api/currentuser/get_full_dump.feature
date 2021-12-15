@@ -111,7 +111,7 @@ Feature: Export the current user's data
           "tasks_with_help": 0, "score_obtained_at": null, "hints_requested": null,
           "latest_activity_at": "2019-05-29T11:00:00Z", "latest_submission_at": null,
           "latest_hint_at": null, "score_edit_comment": null,
-          "started": 0, "started_at": null, "validated_at": null
+          "started": 0, "started_at": null, "validated_at": null, "help_requested": 0
         },
         {
           "attempt_id": "0", "validated": 0,
@@ -121,7 +121,7 @@ Feature: Export the current user's data
           "tasks_with_help": 0, "score_obtained_at": null, "hints_requested": null,
           "latest_activity_at": "2019-05-30T11:00:00Z", "latest_submission_at": null,
           "latest_hint_at": null, "score_edit_comment": null,
-          "started": 0, "started_at": null, "validated_at": null
+          "started": 0, "started_at": null, "validated_at": null, "help_requested": 0
         }
       ],
       "groups_groups": [

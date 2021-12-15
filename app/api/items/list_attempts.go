@@ -31,7 +31,9 @@ type attemptsListResponseRow struct {
 	AllowsSubmissionsUntil database.Time `json:"allows_submissions_until"`
 	// required: true
 	LatestActivityAt database.Time `json:"latest_activity_at"`
-	UserCreator      *struct {
+	// required: true
+	HelpRequested bool `json:"help_requested"`
+	UserCreator   *struct {
 		// required: true
 		Login string `json:"login"`
 
@@ -129,7 +131,8 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 		Select(`
 			attempts.id, attempts.created_at, attempts.allows_submissions_until,
 			results.score_computed, results.validated, attempts.ended_at,
-			results.started_at, results.latest_activity_at, users.login AS user_creator__login,
+			results.started_at, results.latest_activity_at, results.help_requested,
+			users.login AS user_creator__login,
 			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
