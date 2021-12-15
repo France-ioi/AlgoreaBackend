@@ -14,20 +14,16 @@ import (
 type groupsMembersViewResponseRow struct {
 	// `groups.id`
 	// required: true
-	ID int64 `json:"id,string"`
-	// Nullable
-	// required: true
-	MemberSince *database.Time `json:"member_since"`
+	ID          int64          `json:"id,string"`
+	MemberSince *database.Time `json:"member_since,omitempty"`
 	// the latest `group_membership_changes.action`
 	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
+	Action *string `json:"action,omitempty"`
 	// required: true
-	Action string `json:"action"`
-	// Nullable
-	// required: true
-	User *struct {
+	User struct {
 		// `users.group_id`
 		// required: true
-		GroupID *int64 `json:"group_id,string"`
+		GroupID int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
 
@@ -45,14 +41,13 @@ type groupsMembersViewResponseRow struct {
 // summary: List group members
 // description: >
 //
-//   Returns a list of group members
-//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and NOW() < `groups_groups.expires_at`).
-//   Rows related to users contain basic user info (`first_name` and `last_name` are only shown
+//   Returns a list of users that are members of the group.
+//   The output contains basic user info (`first_name` and `last_name` are only shown
 //   for the authenticated user or if the user approved access to their personal info for some group
 //   managed by the authenticated user).
 //
 //
-//   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of `{group_id}`, otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -113,7 +108,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
 			users.grade AS user__grade`, user.GroupID, user.GroupID, user.GroupID).
-		Joins("LEFT JOIN users ON users.group_id = groups_groups.child_group_id").
+		Joins("JOIN users ON users.group_id = groups_groups.child_group_id").
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
 			LEFT JOIN LATERAL (
@@ -147,9 +142,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 	var result []groupsMembersViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 	for index := range result {
-		if result[index].User.GroupID == nil {
-			result[index].User = nil
-		} else if !result[index].User.ShowPersonalInfo {
+		if !result[index].User.ShowPersonalInfo {
 			result[index].User.UserPersonalInfo = nil
 		}
 	}

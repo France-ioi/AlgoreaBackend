@@ -270,18 +270,22 @@ Feature: Get members of group_id
     ]
     """
 
-  Scenario: The member is not a user
+  Scenario: Non-user members are not listed
     Given I am the user with id "21"
-    When I send a GET request to "/groups/22/members?limit=1"
+    When I send a GET request to "/groups/22/members"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "13",
-        "user": null,
-        "member_since": "2016-10-29T06:38:38Z",
-        "action": "added_directly"
+        "id": "51",
+        "user": {
+          "first_name": "Bill",
+          "grade": 5,
+          "group_id": "51",
+          "last_name": "Gates",
+          "login": "billg"
+        }
       }
     ]
     """
