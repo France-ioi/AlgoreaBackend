@@ -374,6 +374,13 @@ func scanAndBuildProgressResults(
 		return nil
 	}).Error())
 
+	// If no end members, return an empty result
+	if previousGroupID == -1 {
+		reflResultPtr := reflect.ValueOf(resultPtr)
+		reflResultPtr.Elem().Set(reflect.MakeSlice(reflect.SliceOf(reflResultPtr.Elem().Type().Elem()), 0, 0))
+		return
+	}
+
 	// store the last row of the table
 	appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 }

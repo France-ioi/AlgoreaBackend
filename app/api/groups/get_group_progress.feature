@@ -13,6 +13,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 16 | Team    | First Team     |
       | 17 | Other   | A custom group |
       | 18 | Club    | Our Club       |
+      | 19 | Class   | Class of Club  |
       | 20 | Friends | My Friends     |
       | 21 | User    | owner          |
       | 51 | User    | johna          |
@@ -68,6 +69,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 17              | 14             |
       | 17              | 18             |
       | 17              | 59             |
+      | 18              | 19             |
       | 20              | 21             |
     And the groups ancestors are computed
     And the database has the following table 'items':
@@ -980,6 +982,18 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     # here we fixate avg_time_spent even if it depends on NOW()
     And the DB time now is "2019-05-30 20:19:05"
     When I send a GET request to "/groups/13/group-progress?parent_item_ids=210,220,310"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+    ]
+    """
+
+  Scenario: No end members
+    Given I am the user with id "21"
+    # here we fixate avg_time_spent even if it depends on NOW()
+    And the DB time now is "2019-05-30 20:19:05"
+    When I send a GET request to "/groups/18/group-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
