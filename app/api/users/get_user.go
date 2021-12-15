@@ -4,9 +4,11 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
@@ -50,9 +52,9 @@ type userViewResponse struct {
 	IsCurrentUser bool `json:"is_current_user"`
 }
 
-// swagger:operation GET /users/{user_id} users userView
+// swagger:operation GET /users/{user_id} users userViewByID
 // ---
-// summary: Get profile info for a user
+// summary: Get profile info for a user by ID
 // description: Returns data from the `users` table for the given `{user_id}`
 //              (`first_name` and `last_name` are only shown for the authenticated user or
 //               if the user approved access to their personal info for some group
@@ -76,16 +78,48 @@ type userViewResponse struct {
 //     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
+
+// swagger:operation GET /users/by-login/{login} users userViewByLogin
+// ---
+// summary: Get profile info for a user by login
+// description: Returns data from the `users` table for the given `{login}`
+//              (`first_name` and `last_name` are only shown for the authenticated user or
+//               if the user approved access to their personal info for some group
+//               managed by the authenticated user) along with some permissions if the current user is a manager.
+// parameters:
+// - name: login
+//   in: path
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: OK. Success response with user's data
+//     schema:
+//       "$ref": "#/definitions/userViewResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	userID, err := service.ResolveURLQueryPathInt64Field(r, "user_id")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
+	var scope *database.DB
+	if userLogin := chi.URLParam(r, "login"); userLogin != "" {
+		scope = srv.Store.Users().Where("login = ?", userLogin)
+	} else {
+		userID, err := service.ResolveURLQueryPathInt64Field(r, "user_id")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
+		scope = srv.Store.Users().ByID(userID)
 	}
 
 	var userInfo userViewResponse
-	err = srv.Store.Users().ByID(userID).
+	err := scope.
 		Select(`
 			group_id, temp_user, login, free_text, web_site,
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
@@ -97,7 +131,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 			user.GroupID, user.GroupID, user.GroupID).
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
-			LEFT JOIN ? AS manager_access ON child_group_id = users.group_id`,
+			LEFT JOIN LATERAL ? AS manager_access ON 1`,
 			srv.Store.GroupAncestors().ManagedByUser(user).
 				Select(`
 					1 AS found,
@@ -105,7 +139,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 					MAX(can_grant_group_access) AS can_grant_group_access,
 					MAX(can_watch_members) AS can_watch_members,
 					groups_ancestors.child_group_id`).
-				Where("groups_ancestors.child_group_id = ?", userID).
+				Where("groups_ancestors.child_group_id = users.group_id").
 				Group("groups_ancestors.child_group_id").SubQuery()).
 		Scan(&userInfo).Error()
 
@@ -124,7 +158,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 				JOIN groups_ancestors_active AS groups_ancestors
 					ON groups_ancestors.ancestor_group_id = groups.id AND
 						 NOT groups_ancestors.is_self AND
-						 groups_ancestors.child_group_id = ?`, userID).
+						 groups_ancestors.child_group_id = ?`, userInfo.GroupID).
 			Group("groups.id").
 			Order("groups.name").
 			Select("groups.id, groups.name").
@@ -134,7 +168,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 		userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
 	}
 
-	userInfo.IsCurrentUser = userID == user.GroupID
+	userInfo.IsCurrentUser = userInfo.GroupID == user.GroupID
 
 	render.Respond(w, r, &userInfo)
 	return service.NoError
