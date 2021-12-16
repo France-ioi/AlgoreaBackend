@@ -31,7 +31,7 @@ type membershipsViewResponseRow struct {
 		// required: true
 		Description *string `json:"description"`
 		// required: true
-		// enum: Class,Team,Club,Friends,Other,Base
+		// enum: Class,Team,Club,Friends,Other,Session,Base
 		Type string `json:"type"`
 	} `json:"group" gorm:"embedded;embedded_prefix:group__"`
 
@@ -47,7 +47,7 @@ type membershipsViewResponseRow struct {
 // ---
 // summary: List current user's groups
 // description:
-//   Returns the list of groups memberships of the current user.
+//   Returns the list of groups memberships of the current user. Groups with `type`='ContestParticipants' are not displayed.
 // parameters:
 // - name: sort
 //   in: query
@@ -111,7 +111,8 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 				ORDER BY at DESC
 				LIMIT 1
 			) AS latest_change ON 1`).
-		Where("groups_groups_active.child_group_id = ?", user.GroupID)
+		Where("groups_groups_active.child_group_id = ?", user.GroupID).
+		Where("groups.type != 'ContestParticipants'")
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(

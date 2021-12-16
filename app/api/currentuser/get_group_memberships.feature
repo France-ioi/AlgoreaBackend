@@ -1,20 +1,21 @@
 Feature: Get group memberships for the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type    | name                       | description                | frozen_membership | require_lock_membership_approval_until |
-      | 1  | Class   | Our Class                  | Our class group            | false             | null                                   |
-      | 2  | Team    | Our Team                   | Our team group             | false             | null                                   |
-      | 3  | Club    | Our Club                   | Our club group             | false             | null                                   |
-      | 4  | Friends | Our Friends                | Group for our friends      | false             | null                                   |
-      | 5  | Other   | Other people               | Group for other people     | false             | 2020-05-30 11:00:00                    |
-      | 6  | Class   | Another Class              | Another class group        | false             | 3020-05-30 11:00:00                    |
-      | 7  | Team    | Another Team               | Another team group         | false             | null                                   |
-      | 8  | Club    | Another Club               | Another club group         | false             | null                                   |
-      | 9  | Friends | Some other friends         | Another friends group      | false             | null                                   |
-      | 11 | User    | user self                  |                            | false             | null                                   |
-      | 21 | User    | owner self                 |                            | false             | null                                   |
-      | 30 | Team    | Frozen Team                | Frozen Team                | true              | null                                   |
-      | 31 | Team    | Team With Entry Conditions | Team With Entry Conditions | false             | null                                   |
+      | id | type                | name                       | description                | frozen_membership | require_lock_membership_approval_until |
+      | 1  | Class               | Our Class                  | Our class group            | false             | null                                   |
+      | 2  | Team                | Our Team                   | Our team group             | false             | null                                   |
+      | 3  | Club                | Our Club                   | Our club group             | false             | null                                   |
+      | 4  | Friends             | Our Friends                | Group for our friends      | false             | null                                   |
+      | 5  | Other               | Other people               | Group for other people     | false             | 2020-05-30 11:00:00                    |
+      | 6  | Class               | Another Class              | Another class group        | false             | 3020-05-30 11:00:00                    |
+      | 7  | Team                | Another Team               | Another team group         | false             | null                                   |
+      | 8  | Club                | Another Club               | Another club group         | false             | null                                   |
+      | 9  | Friends             | Some other friends         | Another friends group      | false             | null                                   |
+      | 11 | User                | user self                  |                            | false             | null                                   |
+      | 21 | User                | owner self                 |                            | false             | null                                   |
+      | 30 | Team                | Frozen Team                | Frozen Team                | true              | null                                   |
+      | 31 | Team                | Team With Entry Conditions | Team With Entry Conditions | false             | null                                   |
+      | 32 | ContestParticipants |                            |                            | false             | null                                   |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | grade |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
@@ -28,6 +29,7 @@ Feature: Get group memberships for the current user
       | 30              | 21             | null                        |
       | 31              | 11             | null                        |
       | 31              | 21             | null                        |
+      | 32              | 21             | null                        |
     And the groups ancestors are computed
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                  |

@@ -16,7 +16,7 @@ type groupRootsViewResponseRow struct {
 	// required:true
 	Name string `json:"name"`
 	// required:true
-	// enum: Class,Team,Club,Friends,Other,User,Session
+	// enum: Class,Team,Club,Friends,Other,Session
 	Type string `json:"type"`
 	// whether the user is a member of this group or one of its descendants
 	// required:true
@@ -145,6 +145,8 @@ func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *da
 	return store.ActiveGroupGroups().
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id").
+		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = groups_ancestors_active.ancestor_group_id").
+		Where("ancestor_group.type != 'ContestParticipants'").
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
@@ -155,5 +157,7 @@ func ancestorsOfManagedGroups(store *database.DataStore, user *database.User) *d
 			JOIN groups_ancestors_active AS ancestors_of_managed
 				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id AND
 				   (groups.type != 'User' OR ancestors_of_managed.is_self)`).
+		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
+		Where("ancestor_group.type != 'ContestParticipants'").
 		Select("ancestors_of_managed.ancestor_group_id")
 }

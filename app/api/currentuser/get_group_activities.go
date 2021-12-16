@@ -55,7 +55,7 @@ type groupInfoForRootItem struct {
 	// required: true
 	Name string `json:"name"`
 	// required: true
-	// enum: Class,Team,Club,Friends,Other,User,Session,Base,ContestParticipants
+	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
 }
 
