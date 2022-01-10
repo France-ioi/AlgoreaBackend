@@ -382,6 +382,7 @@ Feature: Create item - robustness
       | type                             | Skill       | type can be equal to 'Skill' only if the parent item is a skill           |
       | validation_type                  | Wrong       | validation_type must be one of [None All AllButOne Categories One Manual] |
       | entry_min_admitted_members_ratio | Wrong       | entry_min_admitted_members_ratio must be one of [All Half One None]       |
+      | duration                         |             | invalid duration                                                          |
       | duration                         | 12:34       | invalid duration                                                          |
       | duration                         | -1:34:56    | invalid duration                                                          |
       | duration                         | 839:34:56   | invalid duration                                                          |
@@ -390,6 +391,7 @@ Feature: Create item - robustness
       | duration                         | 99:59:-1    | invalid duration                                                          |
       | duration                         | 99:59:60    | invalid duration                                                          |
       | entry_participant_type           | Class       | entry_participant_type must be one of [User Team]                         |
+      | options                          |             | options should be a valid JSON or null                                    |
 
   Scenario Outline: Wrong optional parent field value
     Given I am the user with id "11"

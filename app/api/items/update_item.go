@@ -160,6 +160,8 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		formData.RegisterValidation("duration_requires_explicit_entry",
 			constructUpdateItemDurationRequiresExplicitEntryValidator(formData, itemInfo.Duration, itemInfo.RequiresExplicitEntry))
 		formData.RegisterTranslation("duration_requires_explicit_entry", "requires_explicit_entry should be true when the duration is not null")
+		formData.RegisterValidation("options", constructItemOptionsValidator())
+		formData.RegisterTranslation("null|options", "options should be a valid JSON or null")
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
