@@ -161,3 +161,39 @@ func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 		})
 	}
 }
+
+func TestFormData_fieldPathInValidator(t *testing.T) {
+	type TestNestedNestedStruct struct {
+		Field *string `json:"field" validate:"custom|custom1"`
+	}
+	type TestNestedStruct struct {
+		TestNestedNestedStruct `json:"nested_nested,squash"`
+	}
+	type testStruct struct {
+		TestNestedStruct `json:"nested,squash"`
+	}
+
+	var path, path1 string
+	var usedKeysPath, usedKeysPath1 string
+	var isSet, isSet1 bool
+	formData := NewFormData(&testStruct{})
+	formData.RegisterValidation("custom", func(fl validator.FieldLevel) bool {
+		path = fl.Path()
+		usedKeysPath = formData.getUsedKeysPathFromValidatorPath(path)
+		isSet = formData.IsSet(usedKeysPath)
+		return false
+	})
+	formData.RegisterValidation("custom1", func(fl validator.FieldLevel) bool {
+		path1 = fl.Path()
+		usedKeysPath1 = formData.getUsedKeysPathFromValidatorPath(path)
+		isSet1 = formData.IsSet(usedKeysPath)
+		return true
+	})
+	_ = formData.ParseMapData(map[string]interface{}{"field": ""})
+	assert.Equal(t, "testStruct.<squash>.<squash>.field", path)
+	assert.Equal(t, "field", usedKeysPath)
+	assert.True(t, isSet)
+	assert.Equal(t, "testStruct.<squash>.<squash>.field", path1)
+	assert.Equal(t, "field", usedKeysPath1)
+	assert.True(t, isSet1)
+}
