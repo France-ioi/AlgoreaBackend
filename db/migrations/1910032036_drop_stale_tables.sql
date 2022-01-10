@@ -841,6 +841,7 @@ CREATE TABLE `history_items` (
   `history_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `id` bigint(20) NOT NULL,
   `url` varchar(200) DEFAULT NULL,
+  `options` TEXT NOT NULL,
   `platform_id` int(11) DEFAULT NULL,
   `text_id` varchar(200) DEFAULT NULL,
   `repository_path` text,

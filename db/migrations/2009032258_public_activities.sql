@@ -5,7 +5,7 @@ SET @old_fk_checks = @@SESSION.FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 0;
 INSERT INTO `items_strings` (`item_id`, `language_tag`, `title`)
     VALUES (@id, 'fr', 'Activités publiques'), (@id, 'en', 'Public activities');
-INSERT INTO `items` (`id`, `type`, `default_language_tag`) VALUES (@id, 'Chapter', 'fr');
+INSERT INTO `items` (`id`, `type`, `default_language_tag`, `options`) VALUES (@id, 'Chapter', 'fr', '{}');
 SET FOREIGN_KEY_CHECKS = @old_fk_checks;
 
 INSERT INTO `permissions_granted` (`group_id`, `item_id`, `source_group_id`, `origin`, `can_view`)

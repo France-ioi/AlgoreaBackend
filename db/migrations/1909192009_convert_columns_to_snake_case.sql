@@ -355,6 +355,7 @@ ALTER TABLE `history_items`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `sUrl` TO `url`,
+	RENAME COLUMN `sOptions` TO `options`,
 	RENAME COLUMN `idPlatform` TO `platform_id`,
 	RENAME COLUMN `sTextId` TO `text_id`,
 	RENAME COLUMN `sRepositoryPath` TO `repository_path`,
@@ -632,6 +633,7 @@ ALTER TABLE `history_users_threads`
 ALTER TABLE `items`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `sUrl` TO `url`,
+	RENAME COLUMN `sOptions` TO `options`,
 	RENAME COLUMN `idPlatform` TO `platform_id`,
 	RENAME COLUMN `sTextId` TO `text_id`,
 	RENAME COLUMN `sRepositoryPath` TO `repository_path`,
@@ -1658,6 +1660,7 @@ ALTER TABLE `history_items`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `url` TO `sUrl`,
+	RENAME COLUMN `options` TO `sOptions`,
 	RENAME COLUMN `platform_id` TO `idPlatform`,
 	RENAME COLUMN `text_id` TO `sTextId`,
 	RENAME COLUMN `repository_path` TO `sRepositoryPath`,
@@ -1935,6 +1938,7 @@ ALTER TABLE `history_users_threads`
 ALTER TABLE `items`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `url` TO `sUrl`,
+	RENAME COLUMN `options` TO `sOptions`,
 	RENAME COLUMN `platform_id` TO `idPlatform`,
 	RENAME COLUMN `text_id` TO `sTextId`,
 	RENAME COLUMN `repository_path` TO `sRepositoryPath`,

@@ -1202,6 +1202,7 @@ CREATE TABLE `history_items` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
   `sUrl` varchar(200) DEFAULT NULL,
+  `sOptions` TEXT NOT NULL,
   `idPlatform` int(11) DEFAULT NULL,
   `sTextId` varchar(200) DEFAULT NULL,
   `sRepositoryPath` text,
@@ -1682,6 +1683,7 @@ SET @saved_cs_client     = @@character_set_client;
 CREATE TABLE `items` (
   `ID` bigint(20) NOT NULL,
   `sUrl` varchar(200) DEFAULT NULL,
+  `sOptions` TEXT NOT NULL,
   `idPlatform` int(11) DEFAULT NULL,
   `sTextId` varchar(200) DEFAULT NULL,
   `sRepositoryPath` text,

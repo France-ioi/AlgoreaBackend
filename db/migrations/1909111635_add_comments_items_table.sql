@@ -2,6 +2,7 @@
 ALTER TABLE `items`
   COMMENT '',
   MODIFY COLUMN `sUrl` varchar(200) DEFAULT NULL COMMENT 'Url of the item, as will be loaded in the iframe',
+  MODIFY COLUMN `sOptions` TEXT NOT NULL COMMENT 'Options passed to the task, formatted as a JSON object',
   MODIFY COLUMN `idPlatform` int(11) DEFAULT NULL COMMENT 'Platform that hosts this item',
   MODIFY COLUMN `sTextId` varchar(200) DEFAULT NULL COMMENT 'Unique string identifying the item, independently of where it is hosted',
   MODIFY COLUMN `bTitleBarVisible` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT 'Whether the title bar should be visible initially when this item is loaded',
@@ -41,6 +42,7 @@ ALTER TABLE `items`
 ALTER TABLE `items`
   COMMENT '',
   MODIFY COLUMN `sUrl` varchar(200) DEFAULT NULL,
+  MODIFY COLUMN `sOptions` TEXT NOT NULL,
   MODIFY COLUMN `idPlatform` int(11) DEFAULT NULL,
   MODIFY COLUMN `sTextId` varchar(200) DEFAULT NULL,
   MODIFY COLUMN `bTitleBarVisible` tinyint(3) unsigned NOT NULL DEFAULT '1',
