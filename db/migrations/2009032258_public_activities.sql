@@ -50,6 +50,9 @@ DELETE `items_strings` FROM `groups`
 DELETE `items` FROM `groups`
     JOIN `items` ON `items`.`id` = `groups`.`root_activity_id`
     WHERE `groups`.`type` = 'Base' AND `groups`.`name` = 'AllUsers';
+SET @id = FLOOR(RAND(1234) * 1000000000) + FLOOR(RAND(5678) * 1000000000) * 1000000000;
+DELETE FROM `items_strings` WHERE `item_id`=@id;
+DELETE FROM `items` WHERE `id`=@id;
 SET FOREIGN_KEY_CHECKS = @old_fk_checks;
 
 UPDATE `groups` SET `root_activity_id` = NULL WHERE `type` = 'Base' AND `name` = 'AllUsers';
