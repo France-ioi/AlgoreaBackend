@@ -19,7 +19,7 @@ const minSearchStringLength = 3
 // summary: Search for groups to join
 // description: >
 //   Searches for groups that can be joined freely, based on a substring of their name.
-//   Returns groups with `is_public` = 1 and `type` != 'User', whose `name` has `search` as a substring,
+//   Returns groups with `is_public` = 1 and `type` != 'User'/'ContestParticipants', whose `name` has `{search}` as a substring,
 //   and for that the current user is not already a member and don’t have pending requests/invitations.
 //
 //
@@ -65,7 +65,7 @@ const minSearchStringLength = 3
 //             type: string
 //           type:
 //             type: string
-//             enum: [Class,Team,Club,Friends,Other,User,Base]
+//             enum: [Class,Team,Club,Friends,Other,Session,Base]
 //           description:
 //             description: Nullable
 //             type: string
@@ -114,7 +114,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 			groups.type,
 			groups.description`).
 		Where("groups.is_public").
-		Where("type != 'User'").
+		Where("type != 'User' AND type != 'ContestParticipants'").
 		Where("groups.id NOT IN ?", skipGroups).
 		Where("groups.id NOT IN ?", skipPending).
 		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)

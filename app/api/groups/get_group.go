@@ -104,7 +104,8 @@ type groupGetResponse struct {
 //   The `group_id` group should be visible to the current user, so it should be either
 //   an ancestor of a group he joined, or an ancestor of a non-user group he manages, or
 //   a descendant of a group he manages, or a public group,
-//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//   otherwise the 'forbidden' error is returned. If the group is a user or a contest participants group,
+//   the 'forbidden' error is returned as well.
 //
 //
 //   Note: `code*` and `current_user_can_*` fields are omitted when the user is not a manager of the group.
@@ -151,6 +152,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 				ON groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
 		Where("groups.id = ?", groupID).
 		Where("groups.type != 'User'").
+		Where("groups.type != 'ContestParticipants'").
 		Limit(1)
 
 	var result groupGetResponse
