@@ -47,16 +47,26 @@ func init() { // nolint:gochecknoinits
 			}
 
 			// migrate
-			var n int
-			n, err = migrate.Exec(db, "mysql", migrations, migrate.Up)
+			var applied int
+			for {
+				var n int
+				n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Up, 1)
+				if err != nil {
+					fmt.Println("\nUnable to apply migration:", err)
+					os.Exit(1)
+				}
+				applied += n
+				if n == 0 {
+					break
+				}
+				fmt.Print(".")
+			}
+			fmt.Print("\n")
 			switch {
-			case err != nil:
-				fmt.Println("Unable to apply migration:", err)
-				os.Exit(1)
-			case n == 0:
+			case applied == 0:
 				fmt.Println("No migrations to apply!")
 			default:
-				fmt.Printf("%d migration(s) applied successfully!\n", n)
+				fmt.Printf("%d migration(s) applied successfully!\n", applied)
 
 				var gormDB *database.DB
 				gormDB, err = database.Open(db)

@@ -1,6 +1,7 @@
 package items
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,6 +21,8 @@ import (
 type Item struct {
 	// Nullable
 	URL *string `json:"url"`
+	// Nullable
+	Options *string `json:"options" validate:"null|options"`
 	// default: false
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// default: false
@@ -345,6 +348,12 @@ func constructCannotBeSetForSkillsValidator() validator.Func {
 	})
 }
 
+func constructItemOptionsValidator() validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		return json.Valid([]byte(fl.Field().String()))
+	}
+}
+
 // constructChildrenValidator constructs a validator for the Children field.
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
@@ -489,6 +498,8 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	registerChildrenValidator(formData, store, user, "", childrenInfoMap, nil, nil)
 	formData.RegisterValidation("child_type_non_skill", constructChildTypeNonSkillValidator(childrenInfoMap))
 	formData.RegisterTranslation("child_type_non_skill", "a skill cannot be a child of a non-skill item")
+	formData.RegisterValidation("options", constructItemOptionsValidator())
+	formData.RegisterTranslation("null|options", "options should be a valid JSON or null")
 }
 
 func registerLanguageTagValidator(formData *formdata.FormData, store *database.DataStore) {

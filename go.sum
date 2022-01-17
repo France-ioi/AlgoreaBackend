@@ -13,8 +13,8 @@ github.com/France-ioi/gorm v0.0.0-20200829222212-0373d329b88b h1:oHUvv3VfWoZeeGE
 github.com/France-ioi/gorm v0.0.0-20200829222212-0373d329b88b/go.mod h1:G3LB3wezTOWM2ITLzPxEXgSkOXAntiLHS7UdBefADcs=
 github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003 h1:xWP0YlXTxXy/6cCYG52fFYHodOaAjmH5/09zTxPb42Q=
 github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003/go.mod h1:MUWZRkw6DRv0+CydtqmPpc6Dn2/scLBrgCx5S7XqiaE=
-github.com/France-ioi/validator v9.29.2-0.20200310080341-73300ddf6749+incompatible h1:6Fxu46eyPAlIrFQg82c9DCbvfFJgAMuo1PlyWPQwPlo=
-github.com/France-ioi/validator v9.29.2-0.20200310080341-73300ddf6749+incompatible/go.mod h1:E1tfbGctgL/lY9mtL8AemtTbTYzmy0XF+Mm54eLu43E=
+github.com/France-ioi/validator v9.29.2-0.20220110032854-1b7299b1a4db+incompatible h1:f5cCQN1Ky7J1627LCsU/YvHtDlYKb9gF1MKxpeD4jk0=
+github.com/France-ioi/validator v9.29.2-0.20220110032854-1b7299b1a4db+incompatible/go.mod h1:E1tfbGctgL/lY9mtL8AemtTbTYzmy0XF+Mm54eLu43E=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=

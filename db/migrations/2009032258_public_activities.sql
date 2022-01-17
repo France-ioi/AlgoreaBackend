@@ -5,7 +5,7 @@ SET @old_fk_checks = @@SESSION.FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 0;
 INSERT INTO `items_strings` (`item_id`, `language_tag`, `title`)
     VALUES (@id, 'fr', 'Activités publiques'), (@id, 'en', 'Public activities');
-INSERT INTO `items` (`id`, `type`, `default_language_tag`) VALUES (@id, 'Chapter', 'fr');
+INSERT INTO `items` (`id`, `type`, `default_language_tag`, `options`) VALUES (@id, 'Chapter', 'fr', '{}');
 SET FOREIGN_KEY_CHECKS = @old_fk_checks;
 
 INSERT INTO `permissions_granted` (`group_id`, `item_id`, `source_group_id`, `origin`, `can_view`)
@@ -50,6 +50,9 @@ DELETE `items_strings` FROM `groups`
 DELETE `items` FROM `groups`
     JOIN `items` ON `items`.`id` = `groups`.`root_activity_id`
     WHERE `groups`.`type` = 'Base' AND `groups`.`name` = 'AllUsers';
+SET @id = FLOOR(RAND(1234) * 1000000000) + FLOOR(RAND(5678) * 1000000000) * 1000000000;
+DELETE FROM `items_strings` WHERE `item_id`=@id;
+DELETE FROM `items` WHERE `id`=@id;
 SET FOREIGN_KEY_CHECKS = @old_fk_checks;
 
 UPDATE `groups` SET `root_activity_id` = NULL WHERE `type` = 'Base' AND `name` = 'AllUsers';

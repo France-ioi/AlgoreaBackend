@@ -37,8 +37,8 @@ ALTER TABLE `items`
         COMMENT 'Whether it is a chapter where users can add their own content. Access to this chapter will not be propagated to its children'
         AFTER `display_details_in_parent`;
 
-INSERT INTO `items` (`id`)
-    SELECT `item_id` AS `id` FROM `permissions_granted` WHERE `group_id` = @group_id
+INSERT INTO `items` (`id`, `options`)
+    SELECT `item_id` AS `id`, '{}' AS `options` FROM `permissions_granted` WHERE `group_id` = @group_id
 ON DUPLICATE KEY UPDATE `custom_chapter` = 1;
 
 DELETE FROM `groups_groups` WHERE `parent_group_id` = @group_id;

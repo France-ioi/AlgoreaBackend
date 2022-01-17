@@ -82,6 +82,8 @@ type commonItemFields struct {
 type itemRootNodeNotChapterFields struct {
 	// Nullable; only if not a chapter
 	URL *string `json:"url"`
+	// Nullable; only if not a chapter
+	Options *string `json:"options"`
 	// only if not a chapter
 	UsesAPI bool `json:"uses_api"`
 	// only if not a chapter
@@ -243,6 +245,7 @@ type rawItem struct {
 	PromptToJoinGroupByCode      bool
 	TextID                       *string
 	URL                          *string // only if not a chapter
+	Options                      *string // only if not a chapter
 	UsesAPI                      bool    // only if not a chapter
 	HintsAllowed                 bool    // only if not a chapter
 	BestScore                    float32
@@ -293,6 +296,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 		items.full_screen,
 		items.show_user_infos,
 		items.url,
+		items.options,
 		items.requires_explicit_entry,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
@@ -437,6 +441,7 @@ func constructItemResponseFromDBData(
 	if rawData.Type != "Chapter" {
 		result.itemRootNodeNotChapterFields = &itemRootNodeNotChapterFields{
 			URL:          rawData.URL,
+			Options:      rawData.Options,
 			UsesAPI:      rawData.UsesAPI,
 			HintsAllowed: rawData.HintsAllowed,
 		}

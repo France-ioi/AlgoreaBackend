@@ -85,6 +85,7 @@ Feature: Update item - robustness
     | full_screen                      | ""            | full_screen must be one of [forceYes forceNo default]                              |
     | validation_type                  | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]          |
     | entry_min_admitted_members_ratio | "Wrong"       | entry_min_admitted_members_ratio must be one of [All Half One None]                |
+    | duration                         | ""            | invalid duration                                                                   |
     | duration                         | "12:34"       | invalid duration                                                                   |
     | duration                         | "-1:34:56"    | invalid duration                                                                   |
     | duration                         | "839:34:56"   | invalid duration                                                                   |
@@ -93,6 +94,7 @@ Feature: Update item - robustness
     | duration                         | "99:59:-1"    | invalid duration                                                                   |
     | duration                         | "99:59:60"    | invalid duration                                                                   |
     | duration                         | "00:00:01"    | requires_explicit_entry should be true when the duration is not null               |
+    | options                          | ""            | options should be a valid JSON or null                                             |
 
   Scenario: Invalid item_id
     And I am the user with id "11"
