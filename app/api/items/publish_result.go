@@ -15,7 +15,7 @@ import (
 // ---
 // summary: Publish a result to LTI
 // description: >
-//   Publishes score obtained for the item within the attempt to LTI (via the login module).
+//   Publishes score (divided by 100) obtained for the item within the attempt to LTI (via the login module).
 //
 //
 //   Restrictions:
@@ -89,7 +89,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 		r.Context(),
 		srv.AuthConfig.GetString("clientID"),
 		srv.AuthConfig.GetString("clientSecret"),
-		*user.LoginID, itemID, score,
+		*user.LoginID, itemID, score/100.0,
 	)
 	service.MustNotBeError(err)
 

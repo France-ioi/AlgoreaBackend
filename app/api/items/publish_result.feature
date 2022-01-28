@@ -43,7 +43,7 @@ Feature: Publish a result to LTI
 
   Scenario: The user has a result on the item
     Given I am the user with id "21"
-    And the login module "lti_result/send" endpoint for user id "1234567", content id "123", score "15.6" returns 200 with encoded body:
+    And the login module "lti_result/send" endpoint for user id "1234567", content id "123", score "0.156" returns 200 with encoded body:
       """
       {"success":true}
       """
@@ -75,7 +75,7 @@ Feature: Publish a result to LTI
 
   Scenario: Login module fails
     Given I am the user with id "21"
-    And the login module "lti_result/send" endpoint for user id "1234567", content id "123", score "15.6" returns 200 with encoded body:
+    And the login module "lti_result/send" endpoint for user id "1234567", content id "123", score "0.156" returns 200 with encoded body:
       """
       {"success":false}
       """
