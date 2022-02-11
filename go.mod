@@ -12,15 +12,14 @@ replace github.com/jinzhu/gorm v1.9.6 => github.com/France-ioi/gorm v0.0.0-20200
 
 require (
 	bou.ke/monkey v1.0.1
-	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
 	github.com/CloudyKit/jet v2.1.3-0.20180809161101-62edd43e4f88+incompatible
 	github.com/DATA-DOG/go-sqlmock v1.3.2
 	github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003
 	github.com/France-ioi/validator v9.29.2-0.20220110032854-1b7299b1a4db+incompatible
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
-	github.com/akrylysov/algnhsa v0.0.0-20190203201208-70f315bb89bd
-	github.com/aws/aws-lambda-go v1.8.2
+	github.com/akrylysov/algnhsa v0.12.1
+	github.com/aws/aws-lambda-go v1.28.0
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/go-chi/chi v3.3.3+incompatible
@@ -41,7 +40,7 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.1
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
