@@ -103,4 +103,4 @@ $(SCHEMASPY):
 	curl -sfL -o $(SCHEMASPY) https://github.com/schemaspy/schemaspy/releases/download/v6.0.0/schemaspy-6.0.0.jar
 
 .FORCE: # force the rule using it to always re-run
-.PHONY: all build test test-unit test-bdd lint clean lambda-build lambda-archive lambda-upload db-restore db-migrate gen-keys dbdoc
+.PHONY: all build gen-keys db-restore db-migrate db-migrate-undo db-recompute test test-unit test-bdd lint dbdoc clean linux-build
