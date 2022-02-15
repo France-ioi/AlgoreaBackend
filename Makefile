@@ -21,6 +21,9 @@ MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
 
+VERSION_FETCHING_CMD=git describe --always --long --dirty
+GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
+
 # extract AWS_PROFILE if given
 ifdef AWS_PROFILE
 	AWS_PARAMS=--profile $(AWS_PROFILE)
@@ -51,7 +54,7 @@ __check_defined = \
 all: build
 build: $(BIN_PATH)
 $(BIN_PATH): .FORCE # let go decide what need to be rebuilt
-	$(GOBUILD) -o $(BIN_PATH) -v -tags=prod
+	$(GOBUILD) -o $(BIN_PATH) -v -tags=prod $(GOBUILD_VERSION_INJECTION)
 gen-keys:
 	openssl genpkey -algorithm RSA -out private_key.pem 2>/dev/null | openssl genrsa -out private_key.pem 1024
 	openssl rsa -pubout -in private_key.pem -out public_key.pem
@@ -87,7 +90,10 @@ clean:
 	rm -rf $(LOCAL_BIN_DIR)/*
 
 linux-build:
-	GOOS=linux $(GOBUILD) -o $(BIN_PATH)-linux
+	GOOS=linux $(GOBUILD) -o $(BIN_PATH)-linux $(GOBUILD_VERSION_INJECTION)
+
+version:
+	@echo $(shell $(VERSION_FETCHING_CMD))
 
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
@@ -103,4 +109,4 @@ $(SCHEMASPY):
 	curl -sfL -o $(SCHEMASPY) https://github.com/schemaspy/schemaspy/releases/download/v6.0.0/schemaspy-6.0.0.jar
 
 .FORCE: # force the rule using it to always re-run
-.PHONY: all build gen-keys db-restore db-migrate db-migrate-undo db-recompute test test-unit test-bdd lint dbdoc clean linux-build
+.PHONY: all build gen-keys db-restore db-migrate db-migrate-undo db-recompute test test-unit test-bdd lint dbdoc clean linux-build version
