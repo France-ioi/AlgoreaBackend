@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  aws-s3: circleci/aws-s3@1.0.0
+  aws-cli: circleci/aws-cli@2.1.0
 jobs:
   deps:
     docker:
@@ -148,6 +148,28 @@ jobs:
           at: ./
       - restore_cache: *CACHEKEYMOD
       - run: make lint
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_cache: *CACHEKEYMOD
+      - run: make linux-build
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - bin/AlgoreaBackend-linux
+  github-release:
+    docker:
+    - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -b "`awk '/##.*/{n++;next};n==1;n==2{exit}' CHANGELOG.md`" -delete ${CIRCLE_TAG} ./bin/AlgoreaBackend-linux
   swagger-gen:
     docker:
       - image: quay.io/goswagger/swagger:v0.22.0
@@ -168,10 +190,14 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - aws-s3/copy:
-          from: swagger.yaml
-          to: 's3://franceioi-algorea/spec/swagger.yaml'
-          arguments: '--acl public-read'
+      - run: echo "<html><body><redoc spec-url='//franceioi-algorea.s3.eu-west-3.amazonaws.com/spec/swagger-${CIRCLE_TAG}.yaml'></redoc><script src="//cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script></body></html>" > "spec.html"
+      - aws-cli/setup
+      - run: |
+          aws s3 cp ./swagger.yaml s3://franceioi-algorea/spec/swagger-${CIRCLE_TAG}.yaml --acl public-read
+          aws s3 cp ./spec.html s3://franceioi-algorea/spec/${CIRCLE_TAG}.html --acl public-read
+          for f in $(aws s3 ls s3://franceioi-algorea/spec/ | awk '{print $4}' | grep '.html' | grep -v 'index'); do echo "<li><a href=\"./$f\">${f::-5}</a></li>" >> list.html; done;
+          echo "<html><body><ul>`tac list.html`</ul></body></html>" > index.html
+          aws s3 cp ./index.html s3://franceioi-algorea/spec/index.html --acl public-read
   dbdoc-gen:
     docker:
       - image: circleci/golang:1.13-browsers
@@ -229,10 +255,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - aws-s3/copy:
-          from: db/doc
-          to: 's3://franceioi-algorea/dbdoc/'
-          arguments: '--acl public-read --recursive'
+      - aws-cli/setup
+      - run: aws s3 cp db/doc s3://franceioi-algorea/dbdoc/ --acl public-read --recursive
 
 workflows:
   version: 2
@@ -251,28 +275,47 @@ workflows:
       - migration-tests:
           requires:
           - deps
-  doc-gen:
+  release:
     jobs:
       - deps:
           filters:
+            tags:
+              only: /^v\d+\.\d+\..*/
             branches:
-              only: master
-      - swagger-gen
-      - swagger-deploy:
-          requires:
-            - swagger-gen
+              ignore: /.*/
+      - build:
           filters:
+            tags:
+              only: /^v\d+\.\d+\..*/
+          requires:
+          - deps
+      - github-release:
+          filters:
+            tags:
+              only: /^v\d+\.\d+\..*/
+          requires:
+          - build
+      - swagger-gen:
+          filters:
+            tags:
+              only: /^v\d+\.\d+\..*/
             branches:
-              only: master
+              ignore: /.*/
+      - swagger-deploy:
+          filters:
+            tags:
+              only: /^v\d+\.\d+\..*/
+          requires:
+          - swagger-gen
       - dbdoc-gen:
           filters:
-            branches:
-              only: master
+            tags:
+              only: /^v\d+\.\d+\..*/
           requires:
           - deps
       - dbdoc-deploy:
           filters:
-            branches:
-              only: master
+            tags:
+              only: /^v\d+\.\d+\..*/
           requires:
           - dbdoc-gen
