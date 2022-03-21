@@ -25,6 +25,9 @@ import (
 //
 //   * Then the service returns a task token with fresh data for the attempt for the given item.
 //
+//   * `bAccessSolutions` of the token is true if ether the participant has `can_view` >= 'solution' on the item or
+//     the item has been validated for the participant in the given attempt.
+//
 //
 //   Restrictions:
 //
@@ -104,6 +107,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 	var resultInfo struct {
 		HintsRequested   *string
 		HintsCachedCount int32 `gorm:"column:hints_cached"`
+		Validated        bool
 	}
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -134,7 +138,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 
 		// load the result data
 		err = resultScope.WithWriteLock().
-			Select("hints_requested, hints_cached").
+			Select("hints_requested, hints_cached, validated").
 			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 			Where("NOW() < attempts.allows_submissions_until").
 			Where("results.started").
@@ -160,8 +164,10 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 	fullAttemptID := fmt.Sprintf("%d/%d", participantID, attemptID)
 	randomSeed := crc64.Checksum([]byte(fullAttemptID), crc64.MakeTable(crc64.ECMA))
 
+	accessSolutions := itemInfo.AccessSolutions || resultInfo.Validated
+
 	taskToken := token.Task{
-		AccessSolutions:    &itemInfo.AccessSolutions,
+		AccessSolutions:    &accessSolutions,
 		SubmissionPossible: ptrBool(true),
 		HintsAllowed:       &itemInfo.HintsAllowed,
 		HintsRequested:     resultInfo.HintsRequested,
