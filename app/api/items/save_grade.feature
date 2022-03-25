@@ -91,7 +91,8 @@ Feature: Save grading result
             "idAttempt": "101/0",
             "randomSeed": "456",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
+            "platformName": "{{app().Config.GetString("token.platformName")}}",
+            "bAccessSolutions": true
           },
           "validated": true
         },
@@ -404,7 +405,8 @@ Feature: Save grading result
             "idAttempt": "101/0",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "randomSeed": "",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
+            "platformName": "{{app().Config.GetString("token.platformName")}}",
+            "bAccessSolutions": true
           },
           "validated": true
         },
@@ -481,6 +483,68 @@ Feature: Save grading result
       }
       """
 
+  Scenario: Should set bAccessSolutions=1 if the previous task task token had bAccessSolutions=1
+    Given I am the user with id "101"
+    And the database has the following table 'attempts':
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 0          | 101            | 50      | 2018-05-29 06:38:38 |
+    And the database has the following table 'answers':
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "bAccessSolutions": true,
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    And the following token "scoreToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "score": "10",
+        "idUserAnswer": "123"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 201
+    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+      """
+      {
+        "data": {
+          "task_token": {
+            "date": "{{currentTimeInFormat("02-01-2006")}}",
+            "idUser": "101",
+            "idItemLocal": "50",
+            "idAttempt": "101/0",
+            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+            "randomSeed": "",
+            "bAccessSolutions": true,
+            "platformName": "{{app().Config.GetString("token.platformName")}}"
+          },
+          "validated": false
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+
   Scenario: Platform doesn't support tokens
     Given I am the user with id "101"
     And the database has the following table 'attempts':
@@ -533,7 +597,8 @@ Feature: Save grading result
             "idAttempt": "101/1",
             "itemUrl": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
             "randomSeed": "",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
+            "platformName": "{{app().Config.GetString("token.platformName")}}",
+            "bAccessSolutions": true
           },
           "validated": true
         },
