@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## v1.1.0 - 2022-03-29
+## [v1.1.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.0.0...v1.1.0) - 2022-03-29
 
 - fix how bValidated is "computed" in task tokens
 
