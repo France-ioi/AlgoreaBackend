@@ -129,6 +129,7 @@ In order to create a release:
 - update the changelog (add a new section, with the date of today and listing the fix and new features)
 - commit this change as a commit "Release vx.y.z"
 - tag the current commit "vx.y.z" (`git tag -a -m "Release vx.y.z" vx.y.z`)
+- push everything (`git push origin master; git push origin vx.y.z`)
 - the rest (github release, doc generation and deployment) is done by the CI
 
 ## Software Walkthrough
