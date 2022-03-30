@@ -21,7 +21,7 @@ MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
 
-VERSION_FETCHING_CMD=git describe --always --long --dirty
+VERSION_FETCHING_CMD=git describe --always --dirty
 GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
 
 # extract AWS_PROFILE if given
