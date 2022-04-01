@@ -99,6 +99,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {id: 6, default_language_tag: fr}
 			- {id: 7, default_language_tag: fr, allows_multiple_attempts: 1}
 			- {id: 8, default_language_tag: fr, allows_multiple_attempts: 1}
+			- {id: 9, default_language_tag: fr}
 		items_items:
 			- {parent_item_id: 1, child_item_id: 3, child_order: 1}
 			- {parent_item_id: 3, child_item_id: 5, child_order: 1}
@@ -107,6 +108,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {parent_item_id: 2, child_item_id: 4, child_order: 1}
 			- {parent_item_id: 4, child_item_id: 6, child_order: 1}
 			- {parent_item_id: 6, child_item_id: 8, child_order: 1}
+			- {parent_item_id: 9, child_item_id: 6, child_order: 1}
 		groups:
 			- {id: 50, root_activity_id: 4}
 			- {id: 100, root_activity_id: 2}
@@ -131,9 +133,24 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {id: 119, root_activity_id: 1}
 			- {id: 120, root_skill_id: 4}
 			- {id: 121}
+			- {id: 122, root_activity_id: 9}
+			- {id: 123}
+			- {id: 124}
+			- {id: 125, root_skill_id: 9}
+			- {id: 126}
+			- {id: 127}
 		groups_groups:
 			- {parent_group_id: 50, child_group_id: 102}
 			- {parent_group_id: 120, child_group_id: 121}
+			- {parent_group_id: 123, child_group_id: 102}
+			- {parent_group_id: 124, child_group_id: 122}
+			- {parent_group_id: 126, child_group_id: 121}
+			- {parent_group_id: 127, child_group_id: 125}
+		group_managers:
+			- {manager_id: 101, group_id: 122}
+			- {manager_id: 123, group_id: 124}
+			- {manager_id: 120, group_id: 125}
+			- {manager_id: 126, group_id: 127}
 		permissions_generated:
 			- {group_id: 50, item_id: 4, can_view_generated: content}
 			- {group_id: 100, item_id: 2, can_view_generated: content}
@@ -141,7 +158,9 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {group_id: 101, item_id: 4, can_view_generated: content}
 			- {group_id: 101, item_id: 6, can_view_generated: content}
 			- {group_id: 101, item_id: 8, can_view_generated: content}
+			- {group_id: 101, item_id: 9, can_view_generated: content}
 			- {group_id: 102, item_id: 6, can_view_generated: content}
+			- {group_id: 102, item_id: 9, can_view_generated: content}
 			- {group_id: 103, item_id: 2, can_view_generated: content}
 			- {group_id: 103, item_id: 4, can_view_generated: info}
 			- {group_id: 104, item_id: 2, can_view_generated: content}
@@ -199,14 +218,19 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {group_id: 119, item_id: 7, can_view_generated: content}
 			- {group_id: 120, item_id: 4, can_view_generated: content}
 			- {group_id: 120, item_id: 6, can_view_generated: content}
+			- {group_id: 120, item_id: 9, can_view_generated: content}
 			- {group_id: 121, item_id: 4, can_view_generated: content}
 			- {group_id: 121, item_id: 6, can_view_generated: content}
+			- {group_id: 121, item_id: 9, can_view_generated: content}
 		attempts:
 			- {participant_id: 100, id: 0}
 			- {participant_id: 100, id: 200, root_item_id: 2, parent_attempt_id: 0}
 			- {participant_id: 101, id: 200, root_item_id: 4, allows_submissions_until: 3019-06-30 11:00:00}
 			- {participant_id: 101, id: 201, root_item_id: 6, parent_attempt_id: 200, allows_submissions_until: 3019-06-30 11:00:00}
+			- {participant_id: 101, id: 202, root_item_id: 9, allows_submissions_until: 3019-06-30 11:00:00}
+			- {participant_id: 101, id: 203, root_item_id: 6, parent_attempt_id: 202, allows_submissions_until: 3019-06-30 11:00:00}
 			- {participant_id: 102, id: 200, root_item_id: 4}
+			- {participant_id: 102, id: 201, root_item_id: 9}
 			- {participant_id: 103, id: 200, root_item_id: 2}
 			- {participant_id: 104, id: 200, root_item_id: 2}
 			- {participant_id: 105, id: 200, root_item_id: 2}
@@ -243,12 +267,17 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {participant_id: 119, id: 200, root_item_id: 5, parent_attempt_id: 0}
 			- {participant_id: 119, id: 250, parent_attempt_id: 0}
 			- {participant_id: 120, id: 200, root_item_id: 4}
+			- {participant_id: 120, id: 201, root_item_id: 9}
 			- {participant_id: 121, id: 200, root_item_id: 4}
+			- {participant_id: 121, id: 201, root_item_id: 9}
 		results:
 			- {participant_id: 100, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 101, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 101, attempt_id: 201, item_id: 6, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 101, attempt_id: 202, item_id: 9, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 101, attempt_id: 203, item_id: 6, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 102, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 102, attempt_id: 201, item_id: 9, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 103, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 104, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 105, attempt_id: 200, item_id: 2, started_at: 2019-05-30 11:00:00}
@@ -291,7 +320,9 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {participant_id: 119, attempt_id: 200, item_id: 5, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 250, item_id: 5, started_at: 2019-05-29 11:00:00}
 			- {participant_id: 120, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 120, attempt_id: 201, item_id: 9, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 121, attempt_id: 200, item_id: 4, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 121, attempt_id: 201, item_id: 9, started_at: 2019-05-30 11:00:00}
 	`)
 	defer func() { _ = db.Close() }()
 
@@ -345,7 +376,35 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name: "first item is not the group's activity/skill",
+			name:                 "first item is an activity of a group managed by the given group",
+			args:                 args{ids: []int64{9, 6}, groupID: 101, parentAttemptID: 202},
+			want:                 true,
+			wantAttemptIDMap:     map[int64]int64{9: 202},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
+			name:                 "first item is an activity of a descendant of a group managed by the given group",
+			args:                 args{ids: []int64{9, 6}, groupID: 102, parentAttemptID: 201},
+			want:                 true,
+			wantAttemptIDMap:     map[int64]int64{9: 201},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
+			name:                 "first item is a skill of a group managed by the given group",
+			args:                 args{ids: []int64{9, 6}, groupID: 120, parentAttemptID: 201},
+			want:                 true,
+			wantAttemptIDMap:     map[int64]int64{9: 201},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
+			name:                 "first item is a skill of a descendant of a group managed by the given group",
+			args:                 args{ids: []int64{9, 6}, groupID: 121, parentAttemptID: 201},
+			want:                 true,
+			wantAttemptIDMap:     map[int64]int64{9: 201},
+			wantAttemptNumberMap: map[int64]int{},
+		},
+		{
+			name: "first item is not the group's activity/skill nor an activity/skill of a group managed by the group",
 			args: args{ids: []int64{6, 8}, groupID: 101, parentAttemptID: 201},
 		},
 		{

@@ -91,7 +91,7 @@ type rootItem struct {
 // summary: List root activities
 // description:
 //   If `{watched_group_id}` is not given, the service returns the list of root activities of the groups the current user
-//   (or `{as_team_id}`) belongs to.
+//   (or `{as_team_id}`) belongs to or manages.
 //   Otherwise, the service returns the list of root activities (visible to the current user or `{as_team_id}`)
 //   of all ancestor groups of the watched group which are also
 //   ancestors or descendants of at least one group that the current user manages explicitly.
@@ -236,14 +236,19 @@ func (srv *Service) getRootItemsFromDB(
 	itemsWithResultsQuery := srv.Store.ActiveGroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
 	groupID := watcherID
-	if watchedGroupIDSet {
-		groupsManagedByUserQuery := srv.Store.GroupManagers().
-			Joins(`
+
+	groupsManagedByUserQuery := srv.Store.GroupManagers().
+		Joins(`
 				JOIN groups_ancestors_active ON
 					groups_ancestors_active.ancestor_group_id = group_managers.manager_id AND
 					groups_ancestors_active.child_group_id = ?`, user.GroupID).
-			Select("group_managers.group_id AS id")
+		Select("group_managers.group_id AS id")
 
+	if !watchedGroupIDSet {
+		itemsWithResultsQuery = itemsWithResultsQuery.
+			Where("groups_ancestors_active.child_group_id = ? OR groups_ancestors_active.child_group_id IN(?)",
+				groupID, groupsManagedByUserQuery.SubQuery())
+	} else {
 		groupsQuery := srv.Store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
 			groupsManagedByUserQuery.SubQuery(),
 			srv.Store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
@@ -253,9 +258,8 @@ func (srv *Service) getRootItemsFromDB(
 		itemsWithResultsQuery = itemsWithResultsQuery.
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", groupsQuery.QueryExpr())
 		groupID = watchedGroupID
+		itemsWithResultsQuery = itemsWithResultsQuery.Where("groups_ancestors_active.child_group_id = ?", groupID)
 	}
-
-	itemsWithResultsQuery = itemsWithResultsQuery.Where("groups_ancestors_active.child_group_id = ?", groupID)
 
 	if selectActivities {
 		itemsWithResultsQuery = itemsWithResultsQuery.Joins("JOIN items ON items.id = groups.root_activity_id")

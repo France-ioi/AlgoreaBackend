@@ -21,13 +21,15 @@ Background:
     | 23 | Chapter | en                   | 1                        |
     | 24 | Task    | fr                   | 0                        |
     | 25 | Chapter | en                   | 1                        |
+    | 26 | Chapter | en                   | 1                        |
   And the database has the following table 'items_strings':
     | item_id | language_tag | title            |
     | 21      | en           | Graph: Methods   |
+    | 21      | fr           | Graphe: Methodes |
     | 22      | en           | DFS              |
     | 23      | en           | Reduce Graph     |
     | 25      | en           | BFS              |
-    | 21      | fr           | Graphe: Methodes |
+    | 26      | en           | Trees            |
   And the database has the following table 'groups_groups':
     | parent_group_id | child_group_id |
     | 13              | 11             |
@@ -161,3 +163,94 @@ Scenario: Content access to all items except for last for which we have info acc
     ]
     """
 
+  Scenario: Allows the first item to be root_activity_id of a managed group
+    Given the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 14       | 26      | info               |
+    And the database has the following table 'group_managers':
+      | manager_id | group_id |
+      | 14         | 16       |
+    And the database table 'groups' has also the following row:
+      | id | name    | root_activity_id |
+      | 16 | Managed | 26               |
+    And the groups ancestors are computed
+    And I am the user with id "11"
+    When I send a GET request to "/items/26/breadcrumbs?parent_attempt_id=0&as_team_id=14"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      { "item_id": "26", "type": "Chapter", "language_tag": "en", "title": "Trees" }
+    ]
+    """
+
+  Scenario: Allows the first item to be root_skill_id of a managed group
+    Given the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 14       | 26      | info               |
+    And the database has the following table 'group_managers':
+      | manager_id | group_id |
+      | 14         | 16       |
+    And the database table 'groups' has also the following row:
+      | id | name    | root_skill_id |
+      | 16 | Managed | 26            |
+    And the groups ancestors are computed
+    And I am the user with id "11"
+    When I send a GET request to "/items/26/breadcrumbs?parent_attempt_id=0&as_team_id=14"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      { "item_id": "26", "type": "Chapter", "language_tag": "en", "title": "Trees" }
+    ]
+    """
+
+  Scenario: Allows the first item to be root_activity_id of a group managed by the participant's ancestor
+    Given the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 14       | 26      | info               |
+    And the database has the following table 'group_managers':
+      | manager_id | group_id |
+      | 15         | 16       |
+    And the database table 'groups' has also the following row:
+      | id | name     | root_activity_id |
+      | 16 | Ancestor | null             |
+      | 17 | Managed  | 26               |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 16              | 17             |
+    And the groups ancestors are computed
+    And I am the user with id "11"
+    When I send a GET request to "/items/26/breadcrumbs?parent_attempt_id=0&as_team_id=14"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      { "item_id": "26", "type": "Chapter", "language_tag": "en", "title": "Trees" }
+    ]
+    """
+
+  Scenario: Allows the first item to be root_skill_id of a group managed by the participant's ancestor
+    Given the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 14       | 26      | info               |
+    And the database has the following table 'group_managers':
+      | manager_id | group_id |
+      | 15         | 16       |
+    And the database table 'groups' has also the following row:
+      | id | name     | root_skill_id |
+      | 16 | Ancestor | null          |
+      | 17 | Managed  | 26            |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 16              | 17             |
+    And the groups ancestors are computed
+    And I am the user with id "11"
+    When I send a GET request to "/items/26/breadcrumbs?parent_attempt_id=0&as_team_id=14"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      { "item_id": "26", "type": "Chapter", "language_tag": "en", "title": "Trees" }
+    ]
+    """

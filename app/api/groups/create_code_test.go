@@ -42,9 +42,9 @@ func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 	response, _, logs, err := assertMockedChangeCodeRequest(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors` "+
 			"JOIN group_managers ON group_managers.group_id = `groups_ancestors`.ancestor_group_id "+
-			"JOIN groups_ancestors_active AS user_ancestors "+
-			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND "+
-			"user_ancestors.child_group_id = ? "+
+			"JOIN groups_ancestors_active AS group_ancestors "+
+			"ON group_ancestors.ancestor_group_id = group_managers.manager_id AND "+
+			"group_ancestors.child_group_id = ? "+
 			"JOIN `groups` ON groups.id = groups_ancestors.child_group_id "+
 			"WHERE (NOW() < `groups_ancestors`.expires_at) AND (groups_ancestors.child_group_id = ?) AND "+
 			"(group_managers.can_manage != 'none') AND (groups.type != 'User') "+

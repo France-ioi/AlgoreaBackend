@@ -16,8 +16,8 @@ func TestDB_WithPersonalInfoViewApprovals(t *testing.T) {
 			"SELECT 1 AS approved FROM `groups_ancestors_active` "+
 			"JOIN group_managers "+
 			"ON group_managers.group_id = `groups_ancestors_active`.ancestor_group_id "+
-			"JOIN groups_ancestors_active AS user_ancestors "+
-			"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND user_ancestors.child_group_id = ? "+
+			"JOIN groups_ancestors_active AS group_ancestors "+
+			"ON group_ancestors.ancestor_group_id = group_managers.manager_id AND group_ancestors.child_group_id = ? "+
 			"JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id AND "+
 			"groups_groups_active.personal_info_view_approved "+
 			"WHERE (groups_groups_active.child_group_id = users.group_id) "+

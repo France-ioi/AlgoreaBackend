@@ -86,6 +86,50 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			}},
 		},
 		{
+			name: "supports a root activity of a managed group as a first item",
+			fixture: `
+				groups: [{id: 102}, {id: 103, root_activity_id: 5, root_skill_id: 6}, {id: 104}, {id: 105}]
+				groups_groups: [{parent_group_id: 102, child_group_id: 103}, {parent_group_id: 104, child_group_id: 105}]
+				group_managers: [{manager_id: 104, group_id: 102}]
+				items:
+					- {id: 5, default_language_tag: fr}
+					- {id: 6, default_language_tag: fr}
+				items_items: [{parent_item_id: 5, child_item_id: 6, child_order: 1}]
+				permissions_generated:
+					- {group_id: 105, item_id: 5, can_view_generated: content}
+					- {group_id: 105, item_id: 6, can_view_generated: content}
+				attempts:
+					- {participant_id: 105, id: 0}
+			`,
+			args: args{participantID: 105, ids: []int64{5, 6}},
+			want: []map[string]interface{}{{
+				"attempt_id0": int64(0), "attempt_id1": int64(0),
+				"has_started_result0": int64(0), "has_started_result1": int64(0),
+			}},
+		},
+		{
+			name: "supports a root skill of a managed group as a first item",
+			fixture: `
+				groups: [{id: 102}, {id: 103, root_activity_id: 6, root_skill_id: 5}, {id: 104}, {id: 105}]
+				groups_groups: [{parent_group_id: 102, child_group_id: 103}, {parent_group_id: 104, child_group_id: 105}]
+				group_managers: [{manager_id: 104, group_id: 102}]
+				items:
+					- {id: 5, default_language_tag: fr}
+					- {id: 6, default_language_tag: fr}
+				items_items: [{parent_item_id: 5, child_item_id: 6, child_order: 1}]
+				permissions_generated:
+					- {group_id: 105, item_id: 5, can_view_generated: content}
+					- {group_id: 105, item_id: 6, can_view_generated: content}
+				attempts:
+					- {participant_id: 105, id: 0}
+			`,
+			args: args{participantID: 105, ids: []int64{5, 6}},
+			want: []map[string]interface{}{{
+				"attempt_id0": int64(0), "attempt_id1": int64(0),
+				"has_started_result0": int64(0), "has_started_result1": int64(0),
+			}},
+		},
+		{
 			name: "ignores results of other participants",
 			fixture: `
 				permissions_generated:

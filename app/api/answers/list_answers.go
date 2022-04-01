@@ -224,12 +224,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 
 func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(authorID int64, user *database.User) service.APIError {
 	if authorID != user.GroupID {
-		count := 0
-		err := srv.Store.GroupAncestors().ManagedByUser(user).
-			Where("groups_ancestors.child_group_id=?", authorID).
-			Count(&count).Error()
+		found, err := srv.Store.GroupAncestors().ManagedByUser(user).
+			Where("groups_ancestors.child_group_id=?", authorID).HasRows()
 		service.MustNotBeError(err)
-		if count == 0 {
+		if !found {
 			return service.InsufficientAccessRightsError
 		}
 	}

@@ -25,7 +25,7 @@ import (
 //
 //     * if `as_team_id` is given, it should be a user's parent team group,
 //     * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id)
-//       of a group the participant is a descendant of,
+//       of a group the participant is a descendant of or manages,
 //     * `{ids}` should be an ordered list of parent-child items,
 //     * the group creating the attempt should have at least 'content' access on each of the items in `{ids}`,
 //     * the participant should have a started, allowing submission, not ended result for each item but the last,
