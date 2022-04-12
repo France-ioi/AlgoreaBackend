@@ -188,6 +188,36 @@ Feature: Get root activities for a participant group
     """
     [
       {
+        "group_id": "19",
+        "name": "Team",
+        "type": "Team",
+        "activity": {
+          "best_score": 92,
+          "entry_participant_type": "User",
+          "has_visible_children": true,
+          "id": "210",
+          "no_score": false,
+          "permissions": {
+            "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
+            "can_watch": "answer_with_grant", "is_owner": false
+          },
+          "requires_explicit_entry": false,
+          "results": [
+            {
+              "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+              "attempt_id": "0",
+              "ended_at": null,
+              "latest_activity_at": "2019-01-30T09:36:42Z",
+              "score_computed": 92,
+              "started_at": "2019-01-30T09:26:42Z",
+              "validated": true
+            }
+          ],
+          "string": {"language_tag": "en", "title": "Chapter A"},
+          "type": "Chapter"
+        }
+      },
+      {
         "group_id": "1",
         "name": "all",
         "type": "Base",
@@ -253,6 +283,26 @@ Feature: Get root activities for a participant group
     """
     [
       {
+        "group_id": "19",
+        "name": "Team",
+        "type": "Team",
+        "activity": {
+          "best_score": 0,
+          "entry_participant_type": "User",
+          "has_visible_children": true,
+          "id": "210",
+          "no_score": false,
+          "permissions": {
+            "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
+            "can_watch": "answer_with_grant", "is_owner": false
+          },
+          "requires_explicit_entry": false,
+          "results": [],
+          "string": {"language_tag": "fr", "title": "Chapitre A"},
+          "type": "Chapter"
+        }
+      },
+      {
         "group_id": "1",
         "name": "all",
         "type": "Base",
@@ -306,6 +356,36 @@ Feature: Get root activities for a participant group
     And the response body should be, in JSON:
     """
     [
+      {
+        "group_id": "19",
+        "name": "Team",
+        "type": "Team",
+        "activity": {
+          "best_score": 56,
+          "entry_participant_type": "User",
+          "has_visible_children": true,
+          "id": "210",
+          "no_score": false,
+          "permissions": {
+            "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
+            "can_watch": "none", "is_owner": false
+          },
+          "requires_explicit_entry": false,
+          "results": [
+            {
+              "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+              "attempt_id": "0",
+              "ended_at": null,
+              "latest_activity_at": "2018-01-30T09:36:42Z",
+              "score_computed": 56,
+              "started_at": "2018-01-30T09:26:42Z",
+              "validated": true
+            }
+          ],
+          "string": {"language_tag": "en", "title": "Chapter A"},
+          "type": "Chapter"
+        }
+      },
       {
         "group_id": "13",
         "name": "Group B",

@@ -62,6 +62,68 @@ func Test_findItemPath(t *testing.T) {
 			want: []string{"3", "4"},
 		},
 		{
+			name: "supports a root activity of a managed group as a first item",
+			fixture: `
+				groups: [{id: 102}, {id: 103, root_activity_id: 1}]
+				group_managers:
+					- {manager_id: 102, group_id: 103}
+				permissions_generated:
+					- {group_id: 102, item_id: 1, can_view_generated: content}
+					- {group_id: 102, item_id: 2, can_view_generated: info}
+				attempts:
+					- {participant_id: 102, id: 0}
+			`,
+			args: args{participantID: 102, itemID: 2},
+			want: []string{"1", "2"},
+		},
+		{
+			name: "supports a root skill of a managed group as a first item",
+			fixture: `
+				groups: [{id: 102}, {id: 103, root_skill_id: 3}]
+				group_managers:
+					- {manager_id: 102, group_id: 103}
+				permissions_generated:
+					- {group_id: 102, item_id: 3, can_view_generated: content}
+					- {group_id: 102, item_id: 4, can_view_generated: info}
+				attempts:
+					- {participant_id: 102, id: 0}
+			`,
+			args: args{participantID: 102, itemID: 4},
+			want: []string{"3", "4"},
+		},
+		{
+			name: "supports a root activity of a group managed by an ancestor as a first item",
+			fixture: `
+				groups: [{id: 102}, {id: 103}, {id: 104}, {id: 105, root_activity_id: 1}]
+				groups_groups: [{parent_group_id: 102, child_group_id: 103}, {parent_group_id: 104, child_group_id: 105}]
+				group_managers:
+					- {manager_id: 102, group_id: 104}
+				permissions_generated:
+					- {group_id: 103, item_id: 1, can_view_generated: content}
+					- {group_id: 103, item_id: 2, can_view_generated: info}
+				attempts:
+					- {participant_id: 103, id: 0}
+			`,
+			args: args{participantID: 103, itemID: 2},
+			want: []string{"1", "2"},
+		},
+		{
+			name: "supports a root skill of a group managed by an ancestor as a first item",
+			fixture: `
+				groups: [{id: 102}, {id: 103}, {id: 104}, {id: 105, root_skill_id: 3}]
+				groups_groups: [{parent_group_id: 102, child_group_id: 103}, {parent_group_id: 104, child_group_id: 105}]
+				group_managers:
+					- {manager_id: 102, group_id: 104}
+				permissions_generated:
+					- {group_id: 103, item_id: 3, can_view_generated: content}
+					- {group_id: 103, item_id: 4, can_view_generated: info}
+				attempts:
+					- {participant_id: 103, id: 0}
+			`,
+			args: args{participantID: 103, itemID: 4},
+			want: []string{"3", "4"},
+		},
+		{
 			name: "supports permissions given directly",
 			fixture: `
 				permissions_generated:

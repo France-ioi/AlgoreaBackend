@@ -26,7 +26,7 @@ func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
 //  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
-//    of a group the `groupID` is a descendant of,
+//    of a group the `groupID` is a descendant of or manages,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids`,
 //  * the `groupID` group has a started, allowing submission, not ended result for each item but the last,
@@ -70,17 +70,22 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 	requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock bool) *DB {
 	participantAncestors := s.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
-	participantActivities := participantAncestors.Select("groups.root_activity_id")
-	participantSkills := participantAncestors.Select("groups.root_skill_id")
+	groupsManagedByParticipant := s.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Joins("JOIN group_managers ON group_managers.manager_id = groups_ancestors_active.ancestor_group_id").
+		Joins("JOIN groups_ancestors_active AS managed_descendants ON managed_descendants.ancestor_group_id = group_managers.group_id").
+		Joins("JOIN `groups` ON groups.id = managed_descendants.child_group_id")
+	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
+		groupsManagedByParticipant.Select("groups.root_activity_id").SubQuery())
+	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
+		groupsManagedByParticipant.Select("groups.root_skill_id").SubQuery())
 
 	if withWriteLock {
-		participantActivities = participantActivities.WithWriteLock()
-		participantSkills = participantSkills.WithWriteLock()
+		rootActivities = rootActivities.WithWriteLock()
+		rootSkills = rootSkills.WithWriteLock()
 	}
 
 	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).
-		Where("items0.id IN ? OR items0.id IN ?",
-			participantActivities.SubQuery(), participantSkills.SubQuery())
+		Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
 
 	for i := 1; i < len(ids); i++ {
 		subQuery = subQuery.Joins(fmt.Sprintf(`
@@ -120,7 +125,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 // for the given list of item ids (but the last item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
 //  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
-//    of a group the `groupID` is a descendant of,
+//    of a group the `groupID` is a descendant of or manages,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
 //    at least 'info' access on the last one,
@@ -152,7 +157,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 // for the given list of item ids if it is a valid participation hierarchy
 // for the given `attemptID` which means all the following statements are true:
 //  * the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
-//    the `groupID` is a descendant of,
+//    the `groupID` is a descendant of or manages,
 //  * `ids` is an ordered list of parent-child items,
 //  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
 //    at least 'info' access on the last one,

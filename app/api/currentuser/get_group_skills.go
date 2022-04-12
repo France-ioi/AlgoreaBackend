@@ -19,7 +19,7 @@ type skillsViewResponseRow struct {
 // summary: List root skills
 // description:
 //   If `{watched_group_id}` is not given, the service returns the list of root skills of the groups the current user
-//   (or `{as_team_id}`) belongs to.
+//   (or `{as_team_id}`) belongs to or manages.
 //   Otherwise, the service returns the list of root skills (visible to the current user or `{as_team_id}`)
 //   of all ancestor groups of the watched group which are also
 //   ancestors or descendants of at least one group that the current user manages explicitly.

@@ -30,7 +30,7 @@ import (
 //
 //     * if `as_team_id` is given, it should be a user's parent team group,
 //     * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id) of a group
-//       the participant is a descendant of,
+//       the participant is a descendant of or manages,
 //     * `{ids}` should be an ordered list of parent-child items,
 //     * the group starting results should have at least 'content' access on each of the items in `{ids}`,
 //
@@ -139,13 +139,18 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 
 func getDataForResultPathStart(store *database.DataStore, participantID int64, ids []int64) []map[string]interface{} {
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
-	participantActivities := participantAncestors.Select("groups.root_activity_id").WithWriteLock()
-	participantSkills := participantAncestors.Select("groups.root_skill_id").WithWriteLock()
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
+		Select("root_activity_id, root_skill_id")
+	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByGroup(participantID).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+		Select("root_activity_id, root_skill_id")
+	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
+		groupsManagedByParticipant.Select("groups.root_activity_id").SubQuery())
+	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
+		groupsManagedByParticipant.Select("groups.root_skill_id").SubQuery())
 
 	subQuery := store.Table("visible_items as items0").WithWriteLock().Where("items0.id = ?", ids[0]).
-		Where("items0.id IN ? OR items0.id IN ?",
-			participantActivities.SubQuery(), participantSkills.SubQuery())
+		Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
 
 	var score string
 	var columns string

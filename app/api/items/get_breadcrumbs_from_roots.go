@@ -26,7 +26,7 @@ type breadcrumbElement struct {
 // ---
 // summary: List all possible breadcrumbs for a started item
 // description: >
-//   Lists all paths from a root (`root_activity_id`|`root_skill_id` of groups the participant is descendant of)
+//   Lists all paths from a root (`root_activity_id`|`root_skill_id` of groups the participant is descendant of or manages)
 //   to the given item that the participant may have used to access this item,
 //   so path for which the participant has a started attempt (possibly ended/not-allowing-submissions) on every item.
 //
@@ -108,6 +108,10 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("groups.id, root_activity_id, root_skill_id")
+	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByUser(user).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+		Select("groups.id, root_activity_id, root_skill_id")
+	groupsWithRootItems := participantAncestors.Union(groupsManagedByParticipant.SubQuery())
 
 	visibleItems := store.Permissions().MatchingUserAncestors(user).
 		Where("permissions.can_view_generated_value >= ?", store.PermissionsGranted().ViewIndexByName("info")).
@@ -120,12 +124,12 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 	var pathStrings []string
 	service.MustNotBeError(store.Raw(`
 			WITH RECURSIVE paths (path, last_item_id, last_attempt_id) AS (
-				WITH participant_ancestors AS ?,
+				WITH groups_with_root_items AS ?,
 					visible_items AS ?,
 					root_items AS (
-						SELECT visible_items.id AS id FROM participant_ancestors JOIN visible_items ON visible_items.id = root_activity_id
+						SELECT visible_items.id AS id FROM groups_with_root_items JOIN visible_items ON visible_items.id = root_activity_id
 						UNION
-						SELECT visible_items.id FROM participant_ancestors JOIN visible_items ON visible_items.id = root_skill_id),
+						SELECT visible_items.id FROM groups_with_root_items JOIN visible_items ON visible_items.id = root_skill_id),
 					item_ancestors AS (
 						SELECT visible_items.id, requires_explicit_entry, can_view_generated_value
 						FROM items_ancestors
@@ -157,7 +161,7 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 				WHERE paths.last_item_id <> ? AND (item_ancestors.id = ? OR item_ancestors.can_view_generated_value >= ?) AND
 					(results.started_at IS NOT NULL)))
 			SELECT path FROM paths WHERE paths.last_item_id = ? GROUP BY path ORDER BY path`,
-		participantAncestors.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, itemID, canViewContentIndex,
+		groupsWithRootItems.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, itemID, canViewContentIndex,
 		participantID, itemID, itemID, canViewContentIndex, itemID).
 		ScanIntoSlices(&pathStrings).Error())
 
