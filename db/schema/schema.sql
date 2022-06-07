@@ -221,7 +221,10 @@ CREATE TABLE `groups` (
   `lockUserDeletionDate` date DEFAULT NULL,
   PRIMARY KEY (`ID`),
   KEY `iVersion` (`iVersion`),
-  KEY `bAncestorsComputed` (`sAncestorsComputationState`)
+  KEY `bAncestorsComputed` (`sAncestorsComputationState`),
+  KEY `sPassword` (`sPassword`),
+  KEY `sType` (`sType`),
+  KEY `sTextId` (`sTextId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 SET character_set_client = @saved_cs_client;
 
@@ -535,14 +538,15 @@ CREATE TABLE `groups_groups` (
   `iChildOrder` int(11) NOT NULL DEFAULT '0',
   `sType` enum('invitationSent','requestSent','invitationAccepted','requestAccepted','invitationRefused','requestRefused','removed','left','direct') NOT NULL DEFAULT 'direct',
   `sRole` enum('manager','owner','member','observer') NOT NULL DEFAULT 'member',
-  `idUserInviting` int(11) DEFAULT NULL,
+  `idUserInviting` int(20) DEFAULT NULL,
   `sStatusDate` datetime DEFAULT NULL,
   `iVersion` bigint(20) NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `parentchild` (`idGroupParent`,`idGroupChild`),
   KEY `iVersion` (`iVersion`),
   KEY `idGroupChild` (`idGroupChild`),
-  KEY `idGroupParent` (`idGroupParent`)
+  KEY `idGroupParent` (`idGroupParent`),
+  KEY `idUserInviting` (`idUserInviting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 SET character_set_client = @saved_cs_client;
 
@@ -775,6 +779,7 @@ SET @saved_cs_client     = @@character_set_client;
 CREATE TABLE `groups_login_prefixes` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idGroup` bigint(20) NOT NULL,
+  `idUserCreator` BIGINT(20) NOT NULL,
   `prefix` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `iVersion` bigint(20) NOT NULL,
   PRIMARY KEY (`ID`),
@@ -1097,6 +1102,9 @@ CREATE TABLE `history_groups_groups` (
   KEY `iVersion` (`iVersion`),
   KEY `ID` (`ID`),
   KEY `iNextVersion` (`iNextVersion`),
+  KEY `idGroupParent` (`idGroupParent`),
+  KEY `idGroupChild` (`idGroupChild`),
+  KEY `idUserInviting` (`idUserInviting`),
   KEY `bDeleted` (`bDeleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 SET character_set_client = @saved_cs_client;
@@ -1201,7 +1209,7 @@ SET @saved_cs_client     = @@character_set_client;
 CREATE TABLE `history_items` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
-  `sUrl` varchar(200) DEFAULT NULL,
+  `sUrl` varchar(500) DEFAULT NULL,
   `sOptions` TEXT NOT NULL,
   `idPlatform` int(11) DEFAULT NULL,
   `sTextId` varchar(200) DEFAULT NULL,
@@ -1682,7 +1690,7 @@ SET @saved_cs_client     = @@character_set_client;
  SET character_set_client = utf8mb4;
 CREATE TABLE `items` (
   `ID` bigint(20) NOT NULL,
-  `sUrl` varchar(200) DEFAULT NULL,
+  `sUrl` varchar(500) DEFAULT NULL,
   `sOptions` TEXT NOT NULL,
   `idPlatform` int(11) DEFAULT NULL,
   `sTextId` varchar(200) DEFAULT NULL,
@@ -1913,6 +1921,7 @@ CREATE TABLE `items_items` (
   `sCategory` enum('Undefined','Discovery','Application','Validation','Challenge') NOT NULL DEFAULT 'Undefined',
   `bAlwaysVisible` tinyint(1) NOT NULL DEFAULT '0',
   `bAccessRestricted` tinyint(1) NOT NULL DEFAULT '1',
+  `iWeight` INT NOT NULL DEFAULT '1',
   `iDifficulty` int(11) NOT NULL,
   `iVersion` bigint(20) NOT NULL,
   PRIMARY KEY (`ID`),
@@ -2709,6 +2718,7 @@ CREATE TABLE `users_items` (
   `bPlatformDataRemoved` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UserItem` (`idUser`,`idItem`),
+  KEY `UserAttempt` (`idUser`,`idAttemptActive`),
   KEY `iVersion` (`iVersion`),
   KEY `sAncestorsComputationState` (`sAncestorsComputationState`),
   KEY `idItem` (`idItem`),
