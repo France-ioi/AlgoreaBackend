@@ -1,8 +1,9 @@
 package database
 
 import (
-	"math/rand"
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
 // DataStore gather all stores for database operations on business data

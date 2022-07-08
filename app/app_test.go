@@ -1,6 +1,7 @@
 package app
 
 import (
+	crand "crypto/rand"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -77,6 +78,16 @@ func TestNew_DBErr(t *testing.T) {
 	assert.Equal(logrus.ErrorLevel, logMsg.Level)
 	assert.Equal("db opening error", logMsg.Message)
 	assert.Equal("database", logMsg.Data["module"])
+}
+
+func TestNew_RandSeedingFailed(t *testing.T) {
+	assert := assertlib.New(t)
+	expectedError := errors.New("some error")
+	patch := monkey.Patch(crand.Read, func([]byte) (int, error) {
+		return 1, expectedError
+	})
+	defer patch.Unpatch()
+	assert.PanicsWithValue("cannot seed the randomizer", func() { _, _ = New() })
 }
 
 func TestNew_DBConfigError(t *testing.T) {

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -22,6 +21,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
 type dbquery struct {

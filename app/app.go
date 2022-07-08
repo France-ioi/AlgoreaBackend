@@ -1,9 +1,9 @@
 package app
 
 import (
+	crand "crypto/rand"
+	"encoding/binary"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -15,6 +15,7 @@ import (
 	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
 // Application is the core state of the app
@@ -31,8 +32,13 @@ func New() (*Application, error) {
 	config := LoadConfig()
 	application := &Application{}
 
-	// Init the PRNG with current time
-	rand.Seed(time.Now().UTC().UnixNano())
+	var b [8]byte
+	_, err := crand.Read(b[:])
+	if err != nil {
+		panic("cannot seed the randomizer")
+	}
+	// Init the PRNG with a random value
+	rand.Seed(int64(binary.LittleEndian.Uint64(b[:])))
 
 	if err := application.Reset(config); err != nil {
 		return nil, err
