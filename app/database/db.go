@@ -5,7 +5,6 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"math/rand"
 	"reflect"
 	"runtime"
 	"sort"
@@ -18,6 +17,7 @@ import (
 	"github.com/luna-duclos/instrumentedsql"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
 // DB contains information for current db connection (wraps *gorm.DB)

@@ -3,7 +3,6 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
