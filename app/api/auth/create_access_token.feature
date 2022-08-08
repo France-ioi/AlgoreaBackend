@@ -94,7 +94,6 @@ Feature: Create an access token
       | parent_group_id     | child_group_id      |
       | 2                   | 5577006791947779410 |
       | 4037200794235010051 | 6129484611666145821 |
-      | 6129484611666145821 | 5577006791947779410 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
     And the table "groups_ancestors" should be:
@@ -116,7 +115,6 @@ Feature: Create an access token
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
       | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action         | initiator_id        |
-      | 6129484611666145821 | 5577006791947779410 | true                                      | joined_by_code | 5577006791947779410 |
       | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_code | 5577006791947779410 |
     And the table "sessions" should be:
       | expires_at          | user_id             | issuer       | issued_at           | access_token                |
@@ -646,7 +644,6 @@ Feature: Create an access token
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
       | 2                   | 5577006791947779410 |
-      | 6129484611666145821 | 5577006791947779410 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
     And the table "groups_ancestors" should be:
@@ -664,7 +661,6 @@ Feature: Create an access token
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
       | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action         | initiator_id        |
-      | 6129484611666145821 | 5577006791947779410 | true                                      | joined_by_code | 5577006791947779410 |
       | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_code | 5577006791947779410 |
     And the table "group_managers" should be empty
 

@@ -32,10 +32,10 @@ type Badge struct {
 // For each badge:
 // 1) if the badge's group exists and the user is already a member (or a manager if badge.Manager is true) of it: does nothing;
 // 2) if the badge's group exists and the user is not already member (or a manager if badge.Manager is true) of it:
-//    makes him a member of the group;
+//    makes him a member (or a manager) of the group;
 // 3) if the badge's group does not exist, creates a group with badge.BadgeInfo.Name as its name and type "Other" and
 //    adds it into the group identified by an url of the last element from badge.BadgeInfo.GroupPath. If this latter group does not exist,
-//    creates it (with the given name, and current user managership/membership) and puts it into the previous group from
+//    creates it (with the given name, and current user managership if `manager`=true) and puts it into the previous group from
 //    badge.BadgeInfo.GroupPath, etc.
 func (s *GroupStore) StoreBadges(badges []Badge, userID int64, newUser bool) (err error) {
 	s.mustBeInTransaction()
@@ -98,8 +98,6 @@ func (s *GroupStore) storeBadgeGroupPath(ancestorsCalculationNeeded *bool, badge
 		}
 		if ancestorBadge.Manager {
 			s.makeUserManagerOfBadgeGroup(badgeGroupID, userID)
-		} else {
-			*ancestorsCalculationNeeded = !s.makeUserMemberOfBadgeGroup(badgeGroupID, userID, badge.URL) && *ancestorsCalculationNeeded
 		}
 	}
 }

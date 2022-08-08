@@ -147,7 +147,6 @@ Feature: Update the local user info cache
       | parent_group_id     | child_group_id      |
       | 5577006791947779410 | 11                  |
       | 6129484611666145821 | 8674665223082153551 |
-      | 8674665223082153551 | 11                  |
       | 8674665223082153551 | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
@@ -165,7 +164,6 @@ Feature: Update the local user info cache
     And the table "group_membership_changes" should be:
       | group_id            | member_id | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action         | initiator_id |
       | 5577006791947779410 | 11        | true                                      | joined_by_code | 11           |
-      | 8674665223082153551 | 11        | true                                      | joined_by_code | 11           |
     And the table "group_managers" should be:
       | group_id            | manager_id | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
       | 6129484611666145821 | 11         | memberships | true                   | true              | false                  |

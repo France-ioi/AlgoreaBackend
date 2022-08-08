@@ -180,7 +180,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			userID:                          5,
 			existingGroups:                  []int64{1},
 			shouldCreateBadgeGroupsForURLs:  []string{"abc", "def"},
-			shouldMakeMemberOf:              []string{"abc", "def"},
+			shouldMakeMemberOf:              []string{"abc"},
 			shouldCreateBadgeGroupRelations: [][2]string{{"def", "abc"}},
 		},
 		{
@@ -195,7 +195,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			},
 			userID:                          5,
 			shouldCreateBadgeGroupsForURLs:  []string{"abc", "def"},
-			shouldMakeMemberOf:              []string{"abc", "def"},
+			shouldMakeMemberOf:              []string{"abc"},
 			shouldCreateBadgeGroupRelations: [][2]string{{"def", "abc"}},
 		},
 		{
@@ -249,7 +249,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			userID:                         5,
 			existingGroups:                 []int64{1},
 			shouldCreateBadgeGroupsForURLs: []string{"abc", "def", "ghi", "jkl", "mno"},
-			shouldMakeMemberOf:             []string{"abc", "def", "ghi", "jkl", "mno"},
+			shouldMakeMemberOf:             []string{"abc", "jkl"},
 			// Note that the user doesn't become a manager of 'abc' as it already exists when we process the second badge!
 			shouldMakeManagerOf:             []string{},
 			shouldCreateBadgeGroupRelations: [][2]string{{"ghi", "abc"}, {"def", "ghi"}, {"mno", "jkl"}, {"abc", "mno"}},
