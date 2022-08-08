@@ -2,6 +2,8 @@ package database
 
 import (
 	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
 // GroupMembershipAction represents an action that changes relation between two groups
@@ -487,6 +489,9 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 
 func resolveApprovalTimesForGroupsGroups(oldActionsMap map[int64]stateInfo, id int64, approvals map[int64]GroupApprovals) (
 	personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{}) {
+	personalInfoViewApprovedAt = gorm.Expr("NULL")
+	lockMembershipApprovedAt = gorm.Expr("NULL")
+	watchApprovedAt = gorm.Expr("NULL")
 	if oldActionsMap[id].Action.hasApprovals() {
 		personalInfoViewApprovedAt = oldActionsMap[id].PersonalInfoViewApprovedAt
 		lockMembershipApprovedAt = oldActionsMap[id].LockMembershipApprovedAt
