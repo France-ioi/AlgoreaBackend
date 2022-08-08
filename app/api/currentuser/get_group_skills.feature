@@ -1,25 +1,25 @@
 Feature: Get root skills for a participant group
   Background:
     Given the database has the following table 'groups':
-      | id | name      | text_id | grade | type  | root_skill_id | created_at          |
-      | 1  | all       |         | -2    | Base  | 220           | 2019-01-30 08:26:49 |
-      | 11 | jdoe      |         | -2    | User  | null          | 2019-01-30 08:26:48 |
-      | 12 | Group A   |         | -2    | Class | 200           | 2019-01-30 08:26:49 |
-      | 13 | Group B   |         | -2    | Team  | 230           | 2019-01-30 08:26:46 |
-      | 14 | info_root |         | -2    | User  | null          | 2019-01-30 08:26:45 |
-      | 16 | info_mid  |         | -2    | User  | null          | 2019-01-30 08:26:44 |
-      | 18 | french    |         | -2    | User  | null          | 2019-01-30 08:26:43 |
-      | 19 | Team      |         | -2    | Team  | 210           | 2019-01-30 08:26:42 |
-      | 20 | Group C   |         | -2    | Club  | 230           | 2019-01-30 08:26:42 |
-      | 21 | Group D   |         | -2    | Club  | 240           | 2019-01-30 08:26:42 |
-      | 22 | Group E   |         | -2    | Club  | 250           | 2019-01-30 08:26:42 |
-      | 23 | Group F   |         | -2    | Club  | 260           | 2019-01-30 08:26:42 |
-      | 24 | Group G   |         | -2    | Club  | 270           | 2019-01-30 08:26:42 |
-      | 25 | Group H   |         | -2    | Club  | 280           | 2019-01-30 08:26:42 |
-      | 26 | Group K   |         | -2    | Club  | 290           | 2019-01-30 08:26:42 |
-      | 27 | Group Z   |         | -2    | Club  | 300           | 2019-01-30 08:26:42 |
-      | 29 | Class     |         | -2    | Class | 280           | 2019-01-30 08:26:42 |
-      | 30 | manager   |         | -2    | User  | 280           | 2019-01-30 08:26:42 |
+      | id | name      | grade | type  | root_skill_id | created_at          |
+      | 1  | all       | -2    | Base  | 220           | 2019-01-30 08:26:49 |
+      | 11 | jdoe      | -2    | User  | null          | 2019-01-30 08:26:48 |
+      | 12 | Group A   | -2    | Class | 200           | 2019-01-30 08:26:49 |
+      | 13 | Group B   | -2    | Team  | 230           | 2019-01-30 08:26:46 |
+      | 14 | info_root | -2    | User  | null          | 2019-01-30 08:26:45 |
+      | 16 | info_mid  | -2    | User  | null          | 2019-01-30 08:26:44 |
+      | 18 | french    | -2    | User  | null          | 2019-01-30 08:26:43 |
+      | 19 | Team      | -2    | Team  | 210           | 2019-01-30 08:26:42 |
+      | 20 | Group C   | -2    | Club  | 230           | 2019-01-30 08:26:42 |
+      | 21 | Group D   | -2    | Club  | 240           | 2019-01-30 08:26:42 |
+      | 22 | Group E   | -2    | Club  | 250           | 2019-01-30 08:26:42 |
+      | 23 | Group F   | -2    | Club  | 260           | 2019-01-30 08:26:42 |
+      | 24 | Group G   | -2    | Club  | 270           | 2019-01-30 08:26:42 |
+      | 25 | Group H   | -2    | Club  | 280           | 2019-01-30 08:26:42 |
+      | 26 | Group K   | -2    | Club  | 290           | 2019-01-30 08:26:42 |
+      | 27 | Group Z   | -2    | Club  | 300           | 2019-01-30 08:26:42 |
+      | 29 | Class     | -2    | Class | 280           | 2019-01-30 08:26:42 |
+      | 30 | manager   | -2    | User  | 280           | 2019-01-30 08:26:42 |
     And the database has the following table 'languages':
       | tag |
       | fr  |

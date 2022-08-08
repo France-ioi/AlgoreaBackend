@@ -2,11 +2,11 @@ Feature: Get item breadcrumbs
 
 Background:
   Given the database has the following table 'groups':
-    | id | name    | text_id | grade | type  | root_activity_id | root_skill_id |
-    | 11 | jdoe    |         | -2    | User  | 22               | null          |
-    | 13 | Group B |         | -2    | Class | 21               | null          |
-    | 14 | Team B  |         | -2    | Team  | 23               | 25            |
-    | 15 | Group C |         | -2    | Class | 21               | null          |
+    | id | name    | grade | type  | root_activity_id | root_skill_id |
+    | 11 | jdoe    | -2    | User  | 22               | null          |
+    | 13 | Group B | -2    | Class | 21               | null          |
+    | 14 | Team B  | -2    | Team  | 23               | 25            |
+    | 15 | Group C | -2    | Class | 21               | null          |
   And the database has the following table 'languages':
     | tag |
     | en  |

@@ -2,16 +2,16 @@ Feature: Get item view information
 
   Background:
     Given the database has the following table 'groups':
-      | id | name       | text_id | grade | type  |
-      | 11 | jdoe       |         | -2    | User  |
-      | 13 | Group B    |         | -2    | Team  |
-      | 14 | nosolution |         | -2    | User  |
-      | 15 | Group C    |         | -2    | Class |
-      | 17 | fr         |         | -2    | User  |
-      | 22 | info       |         | -2    | User  |
-      | 26 | team       |         | -2    | Team  |
-      | 27 | Group D    |         | -2    | Class |
-      | 28 | Group E    |         | -2    | Class |
+      | id | name       | grade | type  |
+      | 11 | jdoe       | -2    | User  |
+      | 13 | Group B    | -2    | Team  |
+      | 14 | nosolution | -2    | User  |
+      | 15 | Group C    | -2    | Class |
+      | 17 | fr         | -2    | User  |
+      | 22 | info       | -2    | User  |
+      | 26 | team       | -2    | Team  |
+      | 27 | Group D    | -2    | Class |
+      | 28 | Group E    | -2    | Class |
     And the database has the following table 'users':
       | login      | temp_user | group_id | default_language |
       | jdoe       | 0         | 11       |                  |
