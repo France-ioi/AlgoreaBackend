@@ -171,6 +171,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
+		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), userID, true))
 		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token.AccessToken,
 			int32(time.Until(token.Expiry)/time.Second), "login-module"))
 
@@ -325,6 +326,10 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
 		userData["default_language"] = database.Default()
 	}
+
+	badges := userData["badges"]
+	delete(userData, "badges")
+	defer func() { userData["badges"] = badges }()
 
 	if gorm.IsRecordNotFoundError(err) {
 		selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
