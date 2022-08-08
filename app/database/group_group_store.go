@@ -43,9 +43,6 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	defer recoverPanics(&err)
 
 	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
-		mustNotBeError(s.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
-		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
-
 		found, err := s.GroupAncestors().
 			WithWriteLock().
 			// do not allow cycles even via expired relations
@@ -57,6 +54,9 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		}
 
 		groupGroupStore := s.GroupGroups()
+		mustNotBeError(groupGroupStore.Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
+		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
+
 		groupGroupStore.createRelation(parentGroupID, childGroupID)
 		groupGroupStore.createNewAncestors()
 		return s.Results().Propagate()

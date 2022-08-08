@@ -66,6 +66,11 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	mock.ExpectQuery("^"+
+		regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors`  "+
+			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
+		WithArgs(parentGroupID, childGroupID).
+		WillReturnRows(sqlmock.NewRows([]string{"1"}))
 	mock.ExpectExec("^"+
 		regexp.QuoteMeta("DELETE FROM `groups_groups`  "+
 			"WHERE (child_group_id = ? AND parent_group_id = ?)")+"$").
@@ -76,11 +81,6 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 			"WHERE (group_id = ? AND member_id = ?)")+"$").
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
-	mock.ExpectQuery("^"+
-		regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors`  "+
-			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
-		WithArgs(parentGroupID, childGroupID).
-		WillReturnRows(sqlmock.NewRows([]string{"1"}))
 
 	mock.ExpectExec("^"+
 		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `parent_group_id`) "+
@@ -141,16 +141,6 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	mock.ExpectExec("^"+
-		regexp.QuoteMeta("DELETE FROM `groups_groups`  "+
-			"WHERE (child_group_id = ? AND parent_group_id = ?)")+"$").
-		WithArgs(childGroupID, parentGroupID).
-		WillReturnResult(sqlmock.NewResult(-1, 1))
-	mock.ExpectExec("^"+
-		regexp.QuoteMeta("DELETE FROM `group_pending_requests`  "+
-			"WHERE (group_id = ? AND member_id = ?)")+"$").
-		WithArgs(parentGroupID, childGroupID).
-		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+
 		regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors`  "+
 			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
