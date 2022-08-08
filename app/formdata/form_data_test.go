@@ -26,6 +26,14 @@ func TestFormData_IsValid(t *testing.T) {
 	assert.False(t, formData.IsValid("fieldWithErrors"))
 }
 
+func TestFormData_AllowUnknownFields(t *testing.T) {
+	formData := NewFormData(&struct {
+		ID int64 `json:"id"`
+	}{})
+	formData.AllowUnknownFields()
+	assert.NoError(t, formData.ParseMapData(map[string]interface{}{"my_id": "123"}))
+}
+
 func TestFormData_decodeMapIntoStruct_PanicsWhenMapstructureNewDecoderFails(t *testing.T) {
 	f := &FormData{}
 	defer func() {
