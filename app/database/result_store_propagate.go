@@ -47,7 +47,7 @@ func (s *ResultStore) Propagate() (err error) {
 			)`).Error())
 		defer func() { mustNotBeError(s.Exec("DROP TEMPORARY TABLE results_to_mark").Error()) }()
 
-		mustNotBeError(s.Exec(`
+		result := s.db.Exec(`
 			INSERT INTO results_to_mark (participant_id, attempt_id, item_id, result_exists)
 			WITH RECURSIVE results_to_insert (participant_id, attempt_id, item_id, result_exists) AS (
 					SELECT results.participant_id,
@@ -121,22 +121,24 @@ func (s *ResultStore) Propagate() (err error) {
 				attempts.root_item_id IS NULL OR attempts.root_item_id = results_to_insert.item_id OR
 				root_item_descendant.ancestor_item_id IS NOT NULL))
 			GROUP BY results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id
-		`).Error())
+		`)
+		mustNotBeError(result.Error)
 
-		mustNotBeError(s.Exec(`
-			INSERT IGNORE INTO results (participant_id, attempt_id, item_id, latest_activity_at)
-			SELECT
-				results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, '1000-01-01 00:00:00'
-			FROM results_to_mark
-			WHERE NOT result_exists`).Error())
+		if result.RowsAffected > 0 {
+			mustNotBeError(s.Exec(`
+				INSERT IGNORE INTO results (participant_id, attempt_id, item_id, latest_activity_at)
+				SELECT
+					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, '1000-01-01 00:00:00'
+				FROM results_to_mark
+				WHERE NOT result_exists`).Error())
 
-		mustNotBeError(s.Exec(`
-			INSERT INTO results_propagate (participant_id, attempt_id, item_id, state)
-			SELECT
-				results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
-			FROM results_to_mark
-			ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
-
+			mustNotBeError(s.Exec(`
+				INSERT INTO results_propagate (participant_id, attempt_id, item_id, state)
+				SELECT
+					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
+				FROM results_to_mark
+				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
+		}
 		hasChanges := true
 
 		var updateStatement *sql.Stmt
@@ -274,7 +276,7 @@ func (s *ResultStore) Propagate() (err error) {
 		}
 
 		canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
-		result := s.db.Exec(`
+		result = s.db.Exec(`
 			INSERT INTO permissions_granted
 				(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
 				SELECT

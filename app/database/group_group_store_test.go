@@ -95,8 +95,6 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	mock.ExpectExec("^DROP TEMPORARY TABLE IF EXISTS results_to_mark").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("^CREATE TEMPORARY TABLE results_to_mark").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectPrepare("^UPDATE ")
 	mock.ExpectExec("^UPDATE ").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
