@@ -48,7 +48,7 @@ func TestBase_ResolveWatchedGroupID_DBError(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	expectedError := errors.New("test")
 	mock.ExpectQuery("").WillReturnError(expectedError)
-	srv := &Base{Store: database.NewDataStore(db)}
+	srv := &Base{store: database.NewDataStore(db)}
 	patch := monkey.PatchInstanceMethod(reflect.TypeOf(srv), "GetUser",
 		func(*Base, *http.Request) *database.User { return &database.User{GroupID: 567} })
 	defer patch.Unpatch()

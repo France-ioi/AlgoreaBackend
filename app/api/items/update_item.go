@@ -124,7 +124,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	formData := formdata.NewFormData(&input)
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var itemInfo struct {
 			ParticipantsGroupID   *int64
 			Type                  string

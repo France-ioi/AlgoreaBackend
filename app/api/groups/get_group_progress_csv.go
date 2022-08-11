@@ -72,17 +72,18 @@ type idName struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -102,19 +103,19 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
 	csvWriter := csv.NewWriter(w)
 	defer csvWriter.Flush()
 	csvWriter.Comma = ';'
 
-	srv.printTableHeader(user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
+	printTableHeader(store, user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
 		[]string{"Group name"})
 
 	// Preselect groups for that we will calculate the stats.
 	// All the "end members" are descendants of these groups.
 	var groups []idName
-	service.MustNotBeError(srv.Store.ActiveGroupGroups().
+	service.MustNotBeError(store.ActiveGroupGroups().
 		Where("groups_groups_active.parent_group_id = ?", groupID).
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
@@ -140,7 +141,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		ancestorsInBatch := ancestorGroupIDs[startFromGroup:batchBoundary]
 		ancestorsInBatchIDsList := strings.Join(ancestorsInBatch, ", ")
 
-		endMembers := srv.Store.Groups().
+		endMembers := store.Groups().
 			Select("groups.id").
 			Joins(`
 				JOIN groups_ancestors_active
@@ -149,7 +150,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 			Where("groups.type = 'Team' OR groups.type = 'User'").
 			Group("groups.id")
 
-		endMembersStats := srv.Store.Raw(`
+		endMembersStats := store.Raw(`
 		SELECT
 			end_members.id,
 			items.id AS item_id,
@@ -164,7 +165,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 			Joins("JOIN ? AS items", itemsSubQuery)
 
 		groupNumber := startFromGroup
-		service.MustNotBeError(srv.Store.ActiveGroupAncestors().
+		service.MustNotBeError(store.ActiveGroupAncestors().
 			Select(`
 				groups_ancestors_active.ancestor_group_id AS group_id,
 				member_stats.item_id,

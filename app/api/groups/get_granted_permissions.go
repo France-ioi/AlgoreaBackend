@@ -136,61 +136,62 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	found, err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
+	found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		Where("groups.type != 'User'").Where("can_grant_group_access").HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
 	}
 
-	itemsQuery := srv.Store.Permissions().MatchingUserAncestors(user).
+	itemsQuery := store.Permissions().MatchingUserAncestors(user).
 		Where("? OR can_watch_generated = 'answer_with_grant' OR can_edit_generated = 'all_with_grant'",
-			srv.Store.PermissionsGranted().PermissionIsAtLeastSqlExpr("grant_view", "enter")).
+			store.PermissionsGranted().PermissionIsAtLeastSqlExpr("grant_view", "enter")).
 		Select("DISTINCT item_id AS id")
 
-	managedGroupsQuery := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+	managedGroupsQuery := store.ActiveGroupAncestors().ManagedByUser(user).
 		Group("groups_ancestors_active.child_group_id").
 		Having("MAX(can_grant_group_access)").
 		Select("groups_ancestors_active.child_group_id AS id")
 
 	var sourceGroupsQuery, groupsQuery *database.DB
 	if forDescendants {
-		ancestorsAndDescendantsQuery := srv.Store.ActiveGroupAncestors().
+		ancestorsAndDescendantsQuery := store.ActiveGroupAncestors().
 			Select("ancestor_group_id AS id").
 			Where("child_group_id = ?", groupID).
 			Union(
-				srv.Store.ActiveGroupAncestors().
+				store.ActiveGroupAncestors().
 					Select("child_group_id AS id").
 					Where("ancestor_group_id = ?", groupID).SubQuery())
 
-		sourceGroupsQuery = srv.Store.Groups().
+		sourceGroupsQuery = store.Groups().
 			Where("groups.type != 'User'").
 			Where("id IN ?", managedGroupsQuery.SubQuery()).
 			Where("id IN ?", ancestorsAndDescendantsQuery.SubQuery()).
 			Select("groups.id, groups.name")
 
-		groupsQuery = srv.Store.Groups().
+		groupsQuery = store.Groups().
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id").
 			Where("ancestor_group_id = ?", groupID).
 			Where("NOT is_self").
 			Select("groups.id, groups.name")
 	} else {
-		sourceGroupsQuery = srv.Store.ActiveGroupAncestors().
+		sourceGroupsQuery = store.ActiveGroupAncestors().
 			Where("child_group_id = ?", groupID).
 			Where("ancestor_group_id IN ?", managedGroupsQuery.SubQuery()).
 			Joins("JOIN `groups` ON groups.id = ancestor_group_id").
 			Where("groups.type != 'User'").
 			Select("groups.id, groups.name")
 
-		groupsQuery = srv.Store.Groups().
+		groupsQuery = store.Groups().
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups.id").
 			Where("child_group_id = ?", groupID).
 			Select("groups.id, groups.name")
 	}
 
 	var permissions []grantedPermissionsViewResultRow
-	query := srv.Store.PermissionsGranted().
+	query := store.PermissionsGranted().
 		Joins("JOIN ? AS source_group ON source_group.id = source_group_id", sourceGroupsQuery.SubQuery()).
 		Joins("JOIN ? AS target_group ON target_group.id = group_id", groupsQuery.SubQuery()).
 		Joins("JOIN items ON items.id = item_id").

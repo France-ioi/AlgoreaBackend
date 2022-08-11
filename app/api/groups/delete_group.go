@@ -56,7 +56,7 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 	user := srv.GetUser(r)
 	apiErr := service.NoError
 
-	err = srv.Store.InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		var found bool
 		found, err = s.Groups().ManagedBy(user).
 			WithWriteLock().

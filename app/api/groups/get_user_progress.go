@@ -112,17 +112,18 @@ type groupUserProgressResponseTableCell struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -132,12 +133,12 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, uniqueItemIDs, _, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, _, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
 	var userIDs []string
-	userIDQuery := srv.Store.ActiveGroupAncestors().
+	userIDQuery := store.ActiveGroupAncestors().
 		Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id").
 		Joins("JOIN `groups` ON groups.id = groups_groups_active.child_group_id AND groups.type = 'User'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
@@ -169,7 +170,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	scanAndBuildProgressResults(
 		// nolint:gosec
 		joinUserProgressResults(
-			srv.Store.Raw(`
+			store.Raw(`
 				SELECT STRAIGHT_JOIN
 					items.id AS item_id,
 					users.group_id AS group_id, `+userProgressFields+`

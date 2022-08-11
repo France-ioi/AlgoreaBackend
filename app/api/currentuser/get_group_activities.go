@@ -132,6 +132,8 @@ func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) se
 
 func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
+
 	participantID := service.ParticipantIDFromContext(r.Context())
 	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
@@ -141,8 +143,8 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 		return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 	}
 
-	rawData := srv.getRootItemsFromDB(participantID, watchedGroupID, watchedGroupIDSet, user, getActivities)
-	activitiesResult, skillsResult := srv.generateRootItemListFromRawData(rawData, getActivities)
+	rawData := getRootItemsFromDB(store, participantID, watchedGroupID, watchedGroupIDSet, user, getActivities)
+	activitiesResult, skillsResult := generateRootItemListFromRawData(store, rawData, getActivities)
 
 	if getActivities {
 		render.Respond(w, r, activitiesResult)
@@ -152,8 +154,8 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 	return service.NoError
 }
 
-func (srv *Service) generateRootItemListFromRawData(
-	rawData []rawRootItem, getActivities bool) ([]activitiesViewResponseRow, []skillsViewResponseRow) {
+func generateRootItemListFromRawData(
+	store *database.DataStore, rawData []rawRootItem, getActivities bool) ([]activitiesViewResponseRow, []skillsViewResponseRow) {
 	var activitiesResult []activitiesViewResponseRow
 	var skillsResult []skillsViewResponseRow
 	if getActivities {
@@ -164,7 +166,7 @@ func (srv *Service) generateRootItemListFromRawData(
 	var currentItem *rootItem
 	for index := range rawData {
 		if index == 0 || rawData[index].GroupID != rawData[index-1].GroupID {
-			currentItem = srv.generateRootItemInfoFromRawData(&rawData[index])
+			currentItem = generateRootItemInfoFromRawData(store, &rawData[index])
 			if getActivities {
 				row := activitiesViewResponseRow{
 					groupInfoForRootItem: generateGroupInfoForRootItemFromRawData(rawData, index),
@@ -207,13 +209,13 @@ func generateGroupInfoForRootItemFromRawData(rawData []rawRootItem, index int) *
 	}
 }
 
-func (srv *Service) generateRootItemInfoFromRawData(rawData *rawRootItem) *rootItem {
+func generateRootItemInfoFromRawData(store *database.DataStore, rawData *rawRootItem) *rootItem {
 	return &rootItem{
 		ItemCommonFields: &structures.ItemCommonFields{
 			ID:          rawData.ItemID,
 			Type:        rawData.ItemType,
 			String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-			Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(srv.Store.PermissionsGranted()),
+			Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(store.PermissionsGranted()),
 		},
 		RequiresExplicitEntry: rawData.RequiresExplicitEntry,
 		EntryParticipantType:  rawData.EntryParticipantType,
@@ -224,20 +226,21 @@ func (srv *Service) generateRootItemInfoFromRawData(rawData *rawRootItem) *rootI
 	}
 }
 
-func (srv *Service) getRootItemsFromDB(
-	watcherID, watchedGroupID int64, watchedGroupIDSet bool, user *database.User, selectActivities bool) []rawRootItem {
-	hasVisibleChildrenQuery := srv.Store.Permissions().
+func getRootItemsFromDB(
+	store *database.DataStore, watcherID, watchedGroupID int64, watchedGroupIDSet bool,
+	user *database.User, selectActivities bool) []rawRootItem {
+	hasVisibleChildrenQuery := store.Permissions().
 		MatchingGroupAncestors(watcherID).
 		WherePermissionIsAtLeast("view", "info").
 		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
 		Where("items_items.parent_item_id = items.id").
 		Select("1").Limit(1).SubQuery()
 
-	itemsWithResultsQuery := srv.Store.ActiveGroupAncestors().
+	itemsWithResultsQuery := store.ActiveGroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
 	groupID := watcherID
 
-	groupsManagedByUserQuery := srv.Store.GroupManagers().
+	groupsManagedByUserQuery := store.GroupManagers().
 		Joins(`
 				JOIN groups_ancestors_active ON
 					groups_ancestors_active.ancestor_group_id = group_managers.manager_id AND
@@ -249,11 +252,11 @@ func (srv *Service) getRootItemsFromDB(
 			Where("groups_ancestors_active.child_group_id = ? OR groups_ancestors_active.child_group_id IN(?)",
 				groupID, groupsManagedByUserQuery.SubQuery())
 	} else {
-		groupsQuery := srv.Store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
+		groupsQuery := store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
 			groupsManagedByUserQuery.SubQuery(),
-			srv.Store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
+			store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
 				Select("child_group_id").QueryExpr(), // descendants of managed groups
-			srv.Store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
+			store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
 				Select("ancestor_group_id").QueryExpr()) // ancestors of managed groups
 		itemsWithResultsQuery = itemsWithResultsQuery.
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", groupsQuery.QueryExpr())
@@ -286,7 +289,7 @@ func (srv *Service) getRootItemsFromDB(
 			attempts.ended_at`, groupID, hasVisibleChildrenQuery).
 		Group("groups.id, results.participant_id, results.attempt_id")
 
-	query := srv.Store.Raw(`
+	query := store.Raw(`
 		SELECT items.*, items.id AS item_id, COALESCE(user_strings.title, default_strings.title) AS title,
 			IF(user_strings.title IS NOT NULL, user_strings.language_tag, default_strings.language_tag) AS language_tag
 		FROM ? AS items`, itemsWithResultsSubquery.SubQuery()).

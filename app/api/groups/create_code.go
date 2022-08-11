@@ -51,18 +51,19 @@ import (
 func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
 	var newCode string
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		for retryCount := 1; ; retryCount++ {
 			if retryCount > 3 {
 				generatorErr := errors.New("the code generator is broken")

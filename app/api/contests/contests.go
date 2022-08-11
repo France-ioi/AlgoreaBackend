@@ -19,7 +19,7 @@ type Service struct {
 // SetRoutes defines the routes for this package in a route contests
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
+	router.Use(auth.UserMiddleware(srv.Base))
 
 	router.Get("/contests/{item_id}/groups/by-name", service.AppHandler(srv.getGroupByName).ServeHTTP)
 
@@ -47,9 +47,10 @@ type contestInfo struct {
 
 const team = "Team"
 
-func (srv *Service) getParticipantTypeForContestManagedByUser(itemID int64, user *database.User) (string, error) {
+func getParticipantTypeForContestManagedByUser(
+	store *database.DataStore, itemID int64, user *database.User) (string, error) {
 	var participantType string
-	err := srv.Store.Items().ContestManagedByUser(itemID, user).
+	err := store.Items().ContestManagedByUser(itemID, user).
 		PluckFirst("items.entry_participant_type", &participantType).Error()
 	return participantType, err
 }

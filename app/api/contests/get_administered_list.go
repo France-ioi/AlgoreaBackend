@@ -79,9 +79,10 @@ type contestAdminListRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	var rows []contestAdminListRow
-	query := srv.Store.Items().Select(`
+	query := store.Items().Select(`
 			items.id AS item_id,
 			items.allows_multiple_attempts,
 			items.entry_participant_type,
@@ -121,7 +122,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			ParentTitle       *string
 			ParentLanguageTag string
 		}
-		service.MustNotBeError(srv.Store.Items().
+		service.MustNotBeError(store.Items().
 			Joins("JOIN items_items ON items_items.parent_item_id = items.id AND items_items.child_item_id IN (?)", itemIDs).
 			WhereItemsAreVisible(user.GroupID).
 			JoinsUserAndDefaultItemStrings(user).

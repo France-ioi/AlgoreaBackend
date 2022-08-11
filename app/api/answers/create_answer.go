@@ -77,14 +77,15 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
+	store := srv.GetStore(httpReq)
 
-	found, err := srv.Store.Results().ByID(participantID, attemptID, itemID).HasRows()
+	found, err := store.Results().ByID(participantID, attemptID, itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
 	}
 
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = store.InTransaction(func(store *database.DataStore) error {
 		answersStore := store.Answers()
 
 		answerType := "Saved"

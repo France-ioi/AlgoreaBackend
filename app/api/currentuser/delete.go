@@ -49,8 +49,9 @@ import (
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	doNotDelete, err := srv.Store.ActiveGroupGroups().WhereUserIsMember(user).
+	doNotDelete, err := store.ActiveGroupGroups().WhereUserIsMember(user).
 		Where("groups_groups_active.lock_membership_approved").
 		Joins("JOIN `groups` ON `groups`.id = groups_groups_active.parent_group_id").
 		Where("NOW() < `groups`.require_lock_membership_approval_until").HasRows()
@@ -65,10 +66,10 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 
 	var loginID int64
 	if !user.IsTempUser {
-		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).
+		service.MustNotBeError(store.Users().ByID(user.GroupID).
 			PluckFirst("login_id", &loginID).Error())
 	}
-	service.MustNotBeError(srv.Store.Users().DeleteWithTraps(user))
+	service.MustNotBeError(store.Users().DeleteWithTraps(user))
 
 	if !user.IsTempUser {
 		var result bool

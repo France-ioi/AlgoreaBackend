@@ -21,7 +21,7 @@ type Service struct {
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
+	router.Use(auth.UserMiddleware(srv.Base))
 
 	router.Get("/current-user", service.AppHandler(srv.getInfo).ServeHTTP)
 	router.Put("/current-user", service.AppHandler(srv.update).ServeHTTP)
@@ -46,7 +46,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
 	router.Get("/current-user/group-memberships-history", service.AppHandler(srv.getGroupMembershipsHistory).ServeHTTP)
 
-	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Store))
+	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Base))
 	routerWithParticipant.Get("/current-user/group-memberships/activities", service.AppHandler(srv.getRootActivities).ServeHTTP)
 	routerWithParticipant.Get("/current-user/group-memberships/skills", service.AppHandler(srv.getRootSkills).ServeHTTP)
 
@@ -84,10 +84,10 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	apiError := service.NoError
 	var result database.GroupGroupTransitionResult
 	var approvalsToRequest database.GroupApprovals
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		if action == leaveGroupAction {
 			var found bool
-			found, err = srv.Store.Groups().ByID(groupID).
+			found, err = store.Groups().ByID(groupID).
 				Joins(`
 				JOIN groups_groups_active
 					ON groups_groups_active.parent_group_id = groups.id AND
@@ -104,7 +104,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 
 		if action == createGroupLeaveRequestAction {
 			var found bool
-			found, err = srv.Store.Groups().ByID(groupID).
+			found, err = store.Groups().ByID(groupID).
 				Joins(`
 				JOIN groups_groups_active
 					ON groups_groups_active.parent_group_id = groups.id AND

@@ -70,7 +70,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, attemptID, true, true)
 		service.MustNotBeError(err)

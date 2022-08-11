@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
@@ -15,6 +16,11 @@ type DataStore struct {
 // NewDataStore returns a DataStore
 func NewDataStore(conn *DB) *DataStore {
 	return &DataStore{DB: conn}
+}
+
+// NewDataStoreWithContext returns a new DataStore with the given context
+func NewDataStoreWithContext(ctx context.Context, conn *DB) *DataStore {
+	return &DataStore{DB: newDB(ctx, conn.db)}
 }
 
 // NewDataStoreWithTable returns a specialized DataStore

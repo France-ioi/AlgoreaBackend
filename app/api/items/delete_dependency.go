@@ -52,7 +52,7 @@ func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Reque
 	user := srv.GetUser(httpReq)
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("edit", "all").

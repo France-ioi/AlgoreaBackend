@@ -60,7 +60,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 	user := srv.GetUser(httpReq)
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.ItemDependencies().
 			Where("dependent_item_id = ?", dependentItemID).

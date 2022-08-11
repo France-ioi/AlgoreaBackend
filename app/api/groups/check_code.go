@@ -101,12 +101,13 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 	userIDToCheck := user.GroupID
 	if user.IsTempUser {
 		userIDToCheck = domain.ConfigFromContext(r.Context()).AllUsersGroupID
 	}
 
-	valid, reason, groupID := checkGroupCodeForUser(srv.Store, userIDToCheck, code)
+	valid, reason, groupID := checkGroupCodeForUser(store, userIDToCheck, code)
 	response := groupCodeCheckResponse{
 		Valid:  valid,
 		Reason: string(reason),
@@ -114,11 +115,11 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.AP
 
 	if valid {
 		var groupInfo groupCodeCheckResponseGroup
-		service.MustNotBeError(srv.Store.Groups().ByID(groupID).Select(`
+		service.MustNotBeError(store.Groups().ByID(groupID).Select(`
 			id, name, require_personal_info_access_approval, require_lock_membership_approval_until,
 			require_watch_approval, root_activity_id, root_skill_id`).Take(&groupInfo).Error())
 		response.Group = &groupInfo
-		service.MustNotBeError(srv.Store.GroupManagers().
+		service.MustNotBeError(store.GroupManagers().
 			Select("users.group_id AS id, login, first_name, last_name").
 			Where("group_managers.group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = group_managers.manager_id").

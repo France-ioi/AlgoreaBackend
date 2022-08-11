@@ -50,7 +50,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	apiError := service.NoError
 
 	if user.IsTempUser {
-		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+		service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 			sessionStore := store.Sessions()
 			// delete all the user's access tokens keeping the input token only
 			service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
@@ -64,7 +64,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 		// usage of the old refresh token for that reason.
 		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), user, oldAccessToken)
+			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), srv.GetStore(r), user, oldAccessToken)
 			return nil
 		}))
 	}
@@ -77,10 +77,10 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	return service.NoError
 }
 
-func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (
+func (srv *Service) refreshTokens(ctx context.Context, store *database.DataStore, user *database.User, oldAccessToken string) (
 	newToken string, expiresIn int32, apiError service.APIError) {
 	var refreshToken string
-	err := srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
+	err := store.RefreshTokens().Where("user_id = ?", user.GroupID).
 		PluckFirst("refresh_token", &refreshToken).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		logging.Warnf("No refresh token found in the DB for user %d", user.GroupID)
@@ -92,7 +92,7 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
 	service.MustNotBeError(err)
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		sessionStore := store.Sessions()
 		// delete all the user's access tokens keeping the input token only
 		service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",

@@ -32,7 +32,8 @@ func GetResponseForRouteWithMockedDBAndUser(
 
 	setMockExpectationsFunc(mock)
 
-	base := service.Base{Store: database.NewDataStore(db)}
+	base := service.Base{}
+	base.SetGlobalStore(database.NewDataStore(db))
 	router := chi.NewRouter()
 	router.Use(auth.MockUserMiddleware(user))
 	router.Use(middleware.RequestLogger(&logging.StructuredLogger{Logger: logger}))

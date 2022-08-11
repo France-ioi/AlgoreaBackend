@@ -100,10 +100,11 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	var attemptIDMap map[int64]int64
 	var attemptNumberMap map[int64]int
 	var err error
+	store := srv.GetStore(r)
 	if attemptIDSet {
-		attemptIDMap, attemptNumberMap, err = srv.Store.Items().BreadcrumbsHierarchyForAttempt(ids, groupID, attemptID, false)
+		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForAttempt(ids, groupID, attemptID, false)
 	} else {
-		attemptIDMap, attemptNumberMap, err = srv.Store.Items().BreadcrumbsHierarchyForParentAttempt(ids, groupID, parentAttemptID, false)
+		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForParentAttempt(ids, groupID, parentAttemptID, false)
 	}
 	service.MustNotBeError(err)
 	if attemptIDMap == nil {
@@ -115,7 +116,7 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 		idsInterface = append(idsInterface, id)
 	}
 	var result []map[string]interface{}
-	service.MustNotBeError(srv.Store.Items().Select(`
+	service.MustNotBeError(store.Items().Select(`
 			items.id AS item_id,
 			items.type,
 			COALESCE(user_strings.title, default_strings.title) AS title,
@@ -145,7 +146,7 @@ func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
 		return nil, 0, 0, 0, false, nil, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, apiError = srv.attemptIDOrParentAttemptID(r)
+	attemptID, parentAttemptID, attemptIDSet, apiError = attemptIDOrParentAttemptID(r)
 	if apiError != service.NoError {
 		return nil, 0, 0, 0, false, nil, apiError
 	}
@@ -155,7 +156,7 @@ func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
 	return ids, participantID, attemptID, parentAttemptID, attemptIDSet, user, service.NoError
 }
 
-func (srv *Service) attemptIDOrParentAttemptID(r *http.Request) (
+func attemptIDOrParentAttemptID(r *http.Request) (
 	attemptID, parentAttemptID int64, attemptIDSet bool, apiError service.APIError) {
 	var err error
 	attemptIDSet = len(r.URL.Query()["attempt_id"]) != 0

@@ -94,20 +94,21 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	skipGroups := srv.Store.ActiveGroupGroups().
+	skipGroups := store.ActiveGroupGroups().
 		Select("groups_groups_active.parent_group_id").
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).
 		SubQuery()
 
-	skipPending := srv.Store.GroupPendingRequests().
+	skipPending := store.GroupPendingRequests().
 		Select("group_pending_requests.group_id").
 		Where("group_pending_requests.member_id = ?", user.GroupID).
 		Where("group_pending_requests.type IN ('join_request', 'invitation')").
 		SubQuery()
 
 	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := srv.Store.Groups().
+	query := store.Groups().
 		Select(`
 			groups.id,
 			groups.name,

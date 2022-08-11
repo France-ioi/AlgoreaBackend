@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/jinzhu/gorm"
@@ -84,7 +85,7 @@ func TestResultStore_Propagate_Concurrent(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
-		s := database.NewDataStore(db)
+		s := database.NewDataStoreWithContext(context.Background(), db)
 		err := s.InTransaction(func(st *database.DataStore) error {
 			return st.Results().Propagate()
 		})

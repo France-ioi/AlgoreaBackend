@@ -64,6 +64,7 @@ import (
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	itemID, groupID, seconds, apiError := srv.getParametersForSetAdditionalTime(r)
 	if apiError != service.NoError {
@@ -71,7 +72,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 
 	var groupType string
-	err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
+	err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").
 		Group("groups.id").
 		PluckFirst("groups.type", &groupType).Error()
@@ -86,7 +87,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		ParticipantsGroupID int64
 	}
 
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = store.InTransaction(func(store *database.DataStore) error {
 		err = store.Items().ContestManagedByUser(itemID, user).WithWriteLock().
 			Select(`
 				TIME_TO_SEC(items.duration) AS duration_in_seconds,

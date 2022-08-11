@@ -70,7 +70,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	var hintsInfo *database.HintsInfo
 	apiError := service.NoError
 
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
 		hasAccess, reason, err = store.Items().

@@ -122,7 +122,7 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 	}
 	user := srv.GetUser(r)
 
-	query := srv.Store.Results().Where("results.participant_id = ?", groupID).
+	query := srv.GetStore(r).Results().Where("results.participant_id = ?", groupID).
 		Where("item_id = ?", itemID).
 		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Joins("LEFT JOIN users ON users.group_id = attempts.creator_id").
@@ -172,17 +172,18 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, apiError := srv.attemptIDOrParentAttemptID(r)
+	attemptID, parentAttemptID, attemptIDSet, apiError := attemptIDOrParentAttemptID(r)
 	if apiError != service.NoError {
 		return 0, 0, 0, apiError
 	}
 
 	participantID = service.ParticipantIDFromContext(r.Context())
+	store := srv.GetStore(r)
 
 	if attemptIDSet {
 		if attemptID != 0 {
 			var result struct{ ParentAttemptID int64 }
-			err = srv.Store.Attempts().
+			err = store.Attempts().
 				Where("attempts.participant_id = ? AND attempts.id = ?", participantID, attemptID).
 				Select("IF(attempts.root_item_id = ?, attempts.parent_attempt_id, attempts.id) AS parent_attempt_id", itemID).
 				Take(&result).Error()
@@ -194,7 +195,7 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
 		}
 	}
 
-	found, err := srv.Store.Permissions().MatchingGroupAncestors(participantID).
+	found, err := store.Permissions().MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "content").
 		Where("item_id = ?", itemID).HasRows()
 

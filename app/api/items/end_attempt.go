@@ -57,7 +57,7 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Attempts().
 			Where("participant_id = ?", participantID).

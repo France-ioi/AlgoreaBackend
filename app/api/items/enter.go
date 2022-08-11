@@ -78,7 +78,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		Duration            *string
 		ParticipantsGroupID *int64
 	}
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, false, true)
 		service.MustNotBeError(err)
@@ -87,7 +87,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			return apiError.Error // rollback
 		}
 
-		entryState, apiError = srv.getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
+		entryState, apiError = getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
 		if apiError != service.NoError {
 			return apiError.Error
 		}

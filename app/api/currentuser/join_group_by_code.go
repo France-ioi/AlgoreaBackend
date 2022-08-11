@@ -87,7 +87,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	apiError := service.NoError
 	var results database.GroupGroupTransitionResults
 	var approvalsToRequest map[int64]database.GroupApprovals
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		info, errInTransaction := store.GetGroupJoiningByCodeInfoByCode(code, true)
 		service.MustNotBeError(errInTransaction)
 		if info == nil {

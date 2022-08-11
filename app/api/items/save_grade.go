@@ -92,7 +92,8 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.APIError {
-	requestData := saveGradeRequestParsed{store: srv.Store, publicKey: srv.TokenConfig.PublicKey}
+	store := srv.GetStore(r)
+	requestData := saveGradeRequestParsed{store: store, publicKey: srv.TokenConfig.PublicKey}
 
 	var err error
 	if err = render.Bind(r, &requestData); err != nil {
@@ -108,7 +109,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	var validated, ok bool
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = store.InTransaction(func(store *database.DataStore) error {
 		validated, ok = saveGradingResultsIntoDB(store, user, &requestData)
 		return nil
 	})

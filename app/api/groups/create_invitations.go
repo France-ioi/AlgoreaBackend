@@ -126,7 +126,8 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 	}
 
 	user := srv.GetUser(r)
-	if apiErr := checkThatUserCanManageTheGroupMemberships(srv.Store, user, parentGroupID); apiErr != service.NoError {
+	store := srv.GetStore(r)
+	if apiErr := checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiErr != service.NoError {
 		return apiErr
 	}
 
@@ -139,7 +140,7 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 		Login   string
 		GroupID int64
 	}
-	service.MustNotBeError(srv.Store.Users().Select("login, group_id").
+	service.MustNotBeError(store.Users().Select("login, group_id").
 		Where("login IN (?)", requestData.Logins).
 		Where("NOT temp_user").
 		Scan(&groupsToInviteRows).Error())
@@ -153,7 +154,7 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 
 	var groupResults database.GroupGroupTransitionResults
 	if len(groupsToInvite) > 0 {
-		err = srv.Store.InTransaction(func(store *database.DataStore) error {
+		err = store.InTransaction(func(store *database.DataStore) error {
 			groupsToInvite = filterOtherTeamsMembersOutForLogins(store, parentGroupID, groupsToInvite, results, groupIDToLoginMap)
 
 			groupResults, _, err = store.GroupGroups().

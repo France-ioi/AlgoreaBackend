@@ -81,8 +81,9 @@ type membershipsViewResponseRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	query := srv.Store.ActiveGroupGroups().
+	query := store.ActiveGroupGroups().
 		Select(`
 			latest_change.at AS member_since,
 			IFNULL(latest_change.action, 'added_directly') AS action,
@@ -101,7 +102,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 				),
 				NULL
 			) AS can_leave_team`,
-			srv.Store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+			store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
 				gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
 		Joins("JOIN `groups` ON `groups`.id = groups_groups_active.parent_group_id").
 		Joins(`

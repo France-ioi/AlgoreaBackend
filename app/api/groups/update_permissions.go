@@ -124,7 +124,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	user := srv.GetUser(r)
 	apiErr := service.NoError
 
-	err = srv.Store.InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		apiErr = checkIfUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s, user, sourceGroupID, groupID, itemID)
 		if apiErr != service.NoError {
 			return apiErr.Error

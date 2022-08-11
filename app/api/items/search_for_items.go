@@ -97,6 +97,7 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) servi
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(r, "types",
 		map[string]bool{"Chapter": true, "Task": true, "Course": true, "Skill": true})
@@ -105,7 +106,7 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) servi
 	}
 
 	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := srv.Store.Items().JoinsUserAndDefaultItemStrings(user).
+	query := store.Items().JoinsUserAndDefaultItemStrings(user).
 		Select(`
 			items.id,
 			COALESCE(user_strings.title, default_strings.title) AS title,
@@ -128,7 +129,7 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) servi
 			ID:          result[i].ID,
 			Title:       result[i].Title,
 			Type:        result[i].Type,
-			Permissions: *result[i].AsItemPermissions(srv.Store.PermissionsGranted()),
+			Permissions: *result[i].AsItemPermissions(store.PermissionsGranted()),
 		})
 	}
 	render.Respond(w, r, convertedResult)

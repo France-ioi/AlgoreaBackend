@@ -93,7 +93,8 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 		return apiError
 	}
 
-	found, err := srv.Store.Permissions().
+	store := srv.GetStore(httpReq)
+	found, err := store.Permissions().
 		MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "info").
 		Where("permissions.item_id = ?", itemID).HasRows()
@@ -104,11 +105,11 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 
 	var rawData []RawListItem
 	service.MustNotBeError(
-		constructItemParentsQuery(srv.Store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID).
+		constructItemParentsQuery(store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID).
 			JoinsUserAndDefaultItemStrings(user).
 			Scan(&rawData).Error())
 
-	response := srv.parentItemsFromRawData(rawData, watchedGroupIDSet, srv.Store.PermissionsGranted())
+	response := parentItemsFromRawData(rawData, watchedGroupIDSet, store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -165,8 +166,8 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 		})
 }
 
-func (srv *Service) parentItemsFromRawData(
-	rawData []RawListItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []parentItem {
+func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDSet bool,
+	permissionGrantedStore *database.PermissionGrantedStore) []parentItem {
 	result := make([]parentItem, 0, len(rawData))
 	for index := range rawData {
 		item := parentItem{
@@ -183,7 +184,7 @@ func (srv *Service) parentItemsFromRawData(
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
+		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, permissionGrantedStore)
 		result = append(result, item)
 	}
 	return result

@@ -137,7 +137,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 	apiErr := service.NoError
 
-	err = srv.Store.InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		groupStore := s.Groups()
 
 		var currentGroupData groupUpdateInput

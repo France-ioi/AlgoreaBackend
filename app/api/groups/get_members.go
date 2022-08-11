@@ -87,17 +87,18 @@ type groupsMembersViewResponseRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroup(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	query := srv.Store.GroupGroups().
+	query := store.GroupGroups().
 		Select(`
 			groups_groups.child_group_id AS id,
 			latest_change.at AS member_since,

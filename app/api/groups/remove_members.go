@@ -80,7 +80,8 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	user := srv.GetUser(r)
-	if apiErr := checkThatUserCanManageTheGroupMemberships(srv.Store, user, parentGroupID); apiErr != service.NoError {
+	store := srv.GetStore(r)
+	if apiErr := checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiErr != service.NoError {
 		return apiErr
 	}
 
@@ -90,12 +91,12 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	var groupsToRemove []int64
-	service.MustNotBeError(srv.Store.Users().Select("group_id").
+	service.MustNotBeError(store.Users().Select("group_id").
 		Where("group_id IN (?)", userIDs).Pluck("group_id", &groupsToRemove).Error())
 
 	var groupResults database.GroupGroupTransitionResults
 	if len(groupsToRemove) > 0 {
-		err = srv.Store.InTransaction(func(store *database.DataStore) error {
+		err = store.InTransaction(func(store *database.DataStore) error {
 			groupResults, _, err = store.GroupGroups().
 				Transition(database.AdminRemovesUser, parentGroupID, groupsToRemove, nil, user.GroupID)
 			return err
