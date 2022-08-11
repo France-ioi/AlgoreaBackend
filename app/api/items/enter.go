@@ -143,7 +143,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			service.MustNotBeError(store.GroupGroups().After())
 			// Upserting into groups_groups may mark some attempts as 'to_be_propagated',
 			// so we need to recompute them
-			service.MustNotBeError(store.Results().Propagate())
+			store.ScheduleResultsPropagation()
 		} else {
 			logging.GetLogEntry(r).Warnf("items.participants_group_id is not set for the item with id = %d", entryState.itemID)
 		}

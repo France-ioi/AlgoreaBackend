@@ -226,9 +226,9 @@ func setAdditionalTimeForGroupInContest(
 				) AS latest_attempt) AND
 			(NOW() < new_expires_at.expires_at OR NOW() < attempts.allows_submissions_until)
 	`, itemID, itemID).Error())
+	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 	if groupsGroupsModified {
 		service.MustNotBeError(store.GroupGroups().After())
-		service.MustNotBeError(store.Results().Propagate())
+		store.ScheduleResultsPropagation()
 	}
-	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 }

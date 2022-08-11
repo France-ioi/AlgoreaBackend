@@ -443,7 +443,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			if shouldPropagatePermissions {
 				dataStore.PermissionsGranted().computeAllAccess()
 			}
-			mustNotBeError(dataStore.Results().Propagate())
+			dataStore.ScheduleResultsPropagation()
 		}
 		return nil
 	}))

@@ -59,7 +59,8 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 
 		groupGroupStore.createRelation(parentGroupID, childGroupID)
 		groupGroupStore.createNewAncestors()
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	}))
 	return err
 }

@@ -190,7 +190,6 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	service.MustNotBeError(resultStore.MarkAsToBePropagated(
 		requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 		requestData.TaskToken.Converted.LocalItemID))
-	service.MustNotBeError(resultStore.Propagate())
 	return validated, true
 }
 

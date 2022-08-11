@@ -89,6 +89,10 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	setMockExpectationsForCreateNewAncestors(mock)
+	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs("groups_groups").
+		WillReturnResult(sqlmock.NewResult(-1, 0))
+
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("listener_propagate", propagateLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
@@ -104,14 +108,10 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 		WithArgs("listener_propagate").
 		WillReturnResult(sqlmock.NewResult(-1, 0))
 
-	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs("groups_groups").
-		WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectCommit()
 
-	err := db.inTransaction(func(db *DB) error {
-		groupGroupStore := NewDataStore(db).GroupGroups()
-		return groupGroupStore.CreateRelation(1, 2)
+	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
+		return s.GroupGroups().CreateRelation(1, 2)
 	})
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -149,9 +149,8 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectRollback()
 
-	err := db.inTransaction(func(db *DB) error {
-		groupGroupStore := NewDataStore(db).GroupGroups()
-		return groupGroupStore.CreateRelation(1, 2)
+	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
+		return s.GroupGroups().CreateRelation(1, 2)
 	})
 	assert.Equal(t, ErrRelationCycle, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

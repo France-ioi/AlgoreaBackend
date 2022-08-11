@@ -8,7 +8,7 @@ import (
 const propagateLockName = "listener_propagate"
 const propagateLockTimeout = 10 * time.Second
 
-// Propagate recomputes fields of results
+// propagate recomputes fields of results
 // For results marked as 'to_be_propagated'/'to_be_recomputed':
 // 1. We mark all their ancestors in results as 'to_be_recomputed'
 //  (we consider a row in results as an ancestor if
@@ -21,7 +21,7 @@ const propagateLockTimeout = 10 * time.Second
 //    latest_activity_at, tasks_tried, tasks_with_help, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new permissions_granted for each unlocked item according to corresponding item_dependencies.
-func (s *ResultStore) Propagate() (err error) {
+func (s *ResultStore) propagate() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
@@ -317,7 +317,7 @@ func (s *ResultStore) Propagate() (err error) {
 		mustNotBeError(s.PermissionsGranted().After())
 		// we should compute attempts again as new permissions were set and
 		// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-		return s.Propagate()
+		return s.propagate()
 	}
 	return nil
 }

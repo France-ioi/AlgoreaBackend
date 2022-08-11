@@ -154,7 +154,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		service.MustNotBeError(resultScope.UpdateColumn("latest_activity_at", database.Now()).Error())
 		service.MustNotBeError(store.Results().MarkAsToBePropagated(participantID, attemptID, itemID))
 
-		return store.Results().Propagate()
+		return nil
 	})
 	if apiError != service.NoError {
 		return apiError

@@ -116,7 +116,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 			service.MustNotBeError(store.PermissionsGranted().After())
 			// we should compute attempts again as new permissions were set and
 			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-			err = store.Results().Propagate()
+			store.ScheduleResultsPropagation()
 		}
 		return err
 	})

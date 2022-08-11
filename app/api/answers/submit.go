@@ -108,7 +108,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		service.MustNotBeError(resultStore.MarkAsToBePropagated(
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 			requestData.TaskToken.Converted.LocalItemID))
-		return store.Results().Propagate()
+		return nil
 	})
 
 	if apiError != service.NoError {

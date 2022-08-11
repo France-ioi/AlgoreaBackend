@@ -147,8 +147,6 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 			requestData.TaskToken.Converted.LocalItemID))
 
-		service.MustNotBeError(store.Results().Propagate())
-
 		return nil
 	})
 	if apiError != service.NoError {
