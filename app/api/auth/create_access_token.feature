@@ -662,7 +662,9 @@ Feature: Create an access token
     And the table "group_membership_changes" should be:
       | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action         | initiator_id        |
       | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_code | 5577006791947779410 |
-    And the table "group_managers" should be empty
+    And the table "group_managers" should be:
+      | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
+      | 8674665223082153551 | 5577006791947779410 | memberships | true                   | true              | false                  |
 
   Scenario: Create a new user and make him a manager of his badge group
     Given the time now is "2019-07-16T22:02:28Z"

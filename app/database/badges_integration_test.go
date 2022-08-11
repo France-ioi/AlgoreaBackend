@@ -246,13 +246,32 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 					},
 				},
 			},
-			userID:                         5,
-			existingGroups:                 []int64{1},
-			shouldCreateBadgeGroupsForURLs: []string{"abc", "def", "ghi", "jkl", "mno"},
-			shouldMakeMemberOf:             []string{"abc", "jkl"},
-			// Note that the user doesn't become a manager of 'abc' as it already exists when we process the second badge!
-			shouldMakeManagerOf:             []string{},
+			userID:                          5,
+			existingGroups:                  []int64{1},
+			shouldCreateBadgeGroupsForURLs:  []string{"abc", "def", "ghi", "jkl", "mno"},
+			shouldMakeMemberOf:              []string{"abc", "jkl"},
+			shouldMakeManagerOf:             []string{"abc"},
 			shouldCreateBadgeGroupRelations: [][2]string{{"ghi", "abc"}, {"def", "ghi"}, {"mno", "jkl"}, {"abc", "mno"}},
+		},
+		{
+			name: "grand-grand-parent badge exists, grand-parent badge does not exist, parent badge exists",
+			badges: []database.Badge{
+				{
+					URL:     "abc",
+					Manager: true,
+					BadgeInfo: database.BadgeInfo{
+						GroupPath: []database.BadgeGroupPathElement{{URL: "jkl", Manager: true}, {URL: "def", Manager: true}, {URL: "ghi", Manager: true}},
+					},
+				},
+			},
+			fixture: `
+				groups: [{id: 1, text_id: ghi}, {id: 2, text_id: jkl}]
+				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}, {ancestor_group_id: 2, child_group_id: 2}]`,
+			userID:                          5,
+			existingGroups:                  []int64{1, 2},
+			shouldCreateBadgeGroupsForURLs:  []string{"abc"},
+			shouldMakeManagerOf:             []string{"abc", "ghi", "jkl"},
+			shouldCreateBadgeGroupRelations: [][2]string{{"ghi", "abc"}},
 		},
 	}
 	for _, tt := range tests {
@@ -365,6 +384,44 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			assert.False(t, found, "some unexpected groups_groups have been created")
 		})
 	}
+}
+
+func TestGroupStore_StoreBadge_PropagatesResults(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+				groups: [{id: 1, text_id: badge_url}, {id: 5}, {id: 6}]
+				users: [{group_id: 5, login: john}, {group_id: 6, login: jane}]
+				groups_groups: [{parent_group_id: 1, child_group_id: 5}]
+				groups_ancestors:
+					- {ancestor_group_id: 1, child_group_id: 1}
+					- {ancestor_group_id: 1, child_group_id: 5}
+					- {ancestor_group_id: 5, child_group_id: 5}
+					- {ancestor_group_id: 6, child_group_id: 6}
+				items: [{id: 100, default_language_tag: fr}, {id: 101, default_language_tag: fr}]
+				items_items: [{parent_item_id: 100, child_item_id: 101, child_order: 1}]
+				items_ancestors: [{ancestor_item_id: 100, child_item_id: 101}]
+				permissions_generated:
+					- {group_id: 1, item_id: 100, can_view_generated: content}
+					- {group_id: 1, item_id: 101, can_view_generated: content}
+				attempts: [{participant_id: 5, id: 1}, {participant_id: 6, id: 1}]
+				results:
+					- {participant_id: 5, item_id: 101, attempt_id: 1, score_computed: 100}
+					- {participant_id: 6, item_id: 101, attempt_id: 1, score_computed: 10}
+`)
+	defer func() { _ = db.Close() }()
+	store := database.NewDataStore(db)
+	err := store.InTransaction(func(store *database.DataStore) error {
+		return store.Groups().StoreBadges([]database.Badge{{URL: "badge_url"}}, 6, false)
+	})
+	assert.NoError(t, err)
+
+	found, err := store.Table("results_propagate").HasRows()
+	assert.NoError(t, err)
+	assert.False(t, found)
+
+	var score float32
+	assert.NoError(t, store.Results().ByID(6, 1, 100).
+		PluckFirst("score_computed", &score).Error())
+	assert.Equal(t, float32(10), score)
 }
 
 func getGroupIDByBadgeURL(store *database.DataStore, url string, knownBadgeGroups map[string]int64) int64 {
