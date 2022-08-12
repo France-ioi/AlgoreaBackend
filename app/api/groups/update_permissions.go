@@ -125,7 +125,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
-		apiErr = checkIfUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s, user, sourceGroupID, groupID, itemID)
+		apiErr = checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s, user, sourceGroupID, groupID, itemID)
 		if apiErr != service.NoError {
 			return apiErr.Error
 		}
@@ -357,14 +357,14 @@ const (
 	allWithGrant      = "all_with_grant"
 )
 
-func checkIfUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *database.DataStore, user *database.User,
+func checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s *database.DataStore, user *database.User,
 	sourceGroupID, groupID, itemID int64) service.APIError {
 	apiError := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(s, user, sourceGroupID, groupID)
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	return checkIfItemOrOneOfItsParentsIsVisibleToGroup(s, groupID, itemID)
+	return checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(s, groupID, itemID)
 }
 
 func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
@@ -385,7 +385,7 @@ func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
 	return service.NoError
 }
 
-func checkIfItemOrOneOfItsParentsIsVisibleToGroup(s *database.DataStore, groupID, itemID int64) service.APIError {
+func checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(s *database.DataStore, groupID, itemID int64) service.APIError {
 	// at least one of the item's parents should be visible to the group
 	found, err := s.Permissions().MatchingGroupAncestors(groupID).
 		WherePermissionIsAtLeast("view", info).
@@ -394,11 +394,20 @@ func checkIfItemOrOneOfItsParentsIsVisibleToGroup(s *database.DataStore, groupID
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
+		// if not, the item itself should be visible to the group
 		found, err = s.Permissions().MatchingGroupAncestors(groupID).WherePermissionIsAtLeast("view", info).
 			Where("item_id = ?", itemID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError
+			// if not, the item should be a root item for one of the group's ancestors
+			found, err = s.Groups().
+				Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups.id").
+				Where("groups_ancestors_active.child_group_id = ?", groupID).
+				Where("root_activity_id = ? OR root_skill_id = ?", itemID, itemID).HasRows()
+			service.MustNotBeError(err)
+			if !found {
+				return service.InsufficientAccessRightsError
+			}
 		}
 	}
 	return service.NoError

@@ -418,3 +418,46 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+
+  Scenario Outline: There are no item's parents visible to the group, but the item is a root activity of one of the group's ancestors
+    Given I am the user with id "21"
+    And the database table 'items' has also the following row:
+      | id  | default_language_tag |
+      | 104 | fr                   |
+    And the database table 'groups' has also the following row:
+      | id | name                 | type  | root_activity_id   | root_skill_id   |
+      | 40 | Group with root item | Class | <root_activity_id> | <root_skill_id> |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 40              | 23             |
+    And the groups ancestors are computed
+    And the database table 'permissions_granted' has also the following rows:
+      | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | can_make_session_official | is_owner | origin           | source_group_id | latest_update_at    |
+      | 21       | 104     | solution | solution_with_grant | answer_with_grant | all_with_grant | true                      | true     | group_membership | 23              | 2019-05-30 11:00:00 |
+    And the database table 'permissions_generated' has also the following rows:
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 21       | 104     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+    When I send a PUT request to "/groups/25/permissions/23/104" with the following body:
+    """
+    {
+      "can_view": "solution"
+    }
+    """
+    Then the response should be "updated"
+    And the table "permissions_granted" should be:
+      | group_id | item_id | source_group_id | origin           | can_view   | can_grant_view      | can_watch         | can_edit       | can_make_session_official   | is_owner   | can_enter_from      | can_enter_until     | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
+      | 21       | 104     | 23              | group_membership | solution   | solution_with_grant | answer_with_grant | all_with_grant | true                        | true       | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 | 0                                                  |
+      | 23       | 100     | 23              | group_membership | content    | none                | none              | none           | false                       | false      | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 | 0                                                  |
+      | 23       | 104     | 25              | group_membership | solution   | none                | none              | none           | false                       | false      | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 | 1                                                  |
+    And the table "permissions_generated" should be:
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 21       | 104     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 23       | 100     | content            | none                     | none                | none               | false              |
+      | 23       | 101     | info               | none                     | none                | none               | false              |
+      | 23       | 102     | none               | none                     | none                | none               | false              |
+      | 23       | 103     | none               | none                     | none                | none               | false              |
+      | 23       | 104     | solution           | none                     | none                | none               | false              |
+  Examples:
+    | root_activity_id | root_skill_id |
+    | 104              | null          |
+    | null             | 104           |
