@@ -166,7 +166,7 @@ func (s *GroupStore) makeUserManagerOfBadgeGroups(badgeGroupIDsMap map[int64]str
 func (s *GroupStore) makeUserMemberOfBadgeGroup(ancestorsCalculationNeeded *bool, badgeGroupID, userID int64, badgeURL string) bool {
 	// This approach prevents cycles in group relations, logs the membership change, checks approvals, and respects group limits
 	results, _, err := s.GroupGroups().Transition(
-		UserJoinsGroupByCode, badgeGroupID, []int64{userID}, map[int64]GroupApprovals{}, userID)
+		UserJoinsGroupByBadge, badgeGroupID, []int64{userID}, map[int64]GroupApprovals{}, userID)
 	mustNotBeError(err)
 
 	if results[userID] != Success {

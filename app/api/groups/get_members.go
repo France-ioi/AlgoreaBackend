@@ -17,7 +17,7 @@ type groupsMembersViewResponseRow struct {
 	ID          int64          `json:"id,string"`
 	MemberSince *database.Time `json:"member_since,omitempty"`
 	// the latest `group_membership_changes.action`
-	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
+	// enum: invitation_accepted,join_request_accepted,joined_by_badge,joined_by_code,added_directly
 	Action *string `json:"action,omitempty"`
 	// required: true
 	User struct {

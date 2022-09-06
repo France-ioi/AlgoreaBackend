@@ -114,8 +114,8 @@ Feature: Create an access token
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
-      | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action         | initiator_id        |
-      | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_code | 5577006791947779410 |
+      | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id        |
+      | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_badge | 5577006791947779410 |
     And the table "sessions" should be:
       | expires_at          | user_id             | issuer       | issued_at           | access_token                |
       | 2020-07-16 22:02:28 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
@@ -660,8 +660,8 @@ Feature: Create an access token
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
-      | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action         | initiator_id        |
-      | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_code | 5577006791947779410 |
+      | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id        |
+      | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_badge | 5577006791947779410 |
     And the table "group_managers" should be:
       | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
       | 8674665223082153551 | 5577006791947779410 | memberships | true                   | true              | false                  |

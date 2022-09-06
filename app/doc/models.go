@@ -36,7 +36,7 @@ type groupsMembershipHistoryResponseRow struct {
 	At time.Time `json:"at"`
 	// `group_membership_changes.action`
 	// required: true
-	// enum: invitation_created,join_request_created,invitation_accepted,join_request_accepted,invitation_refused,joined_by_code,join_request_refused,join_request_withdrawn,invitation_withdrawn,removed,left,expired
+	// enum: invitation_created,join_request_created,invitation_accepted,join_request_accepted,invitation_refused,joined_by_badge,joined_by_code,join_request_refused,join_request_withdrawn,invitation_withdrawn,removed,left,expired
 	Action string `json:"action"`
 
 	// required: true

@@ -17,7 +17,7 @@ type membershipsViewResponseRow struct {
 	MemberSince *database.Time `json:"member_since"`
 	// `group_membership_changes.action` of the latest change
 	// required: true
-	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
+	// enum: invitation_accepted,join_request_accepted,joined_by_badge,joined_by_code,added_directly
 	Action string `json:"action"`
 
 	// required: true
