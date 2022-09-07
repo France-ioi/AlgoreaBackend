@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,14 +26,15 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
-	itemItemStore := database.NewDataStore(db).ItemItems()
 	testhelpers.RunConcurrently(func() {
-		assert.NoError(t, itemItemStore.InTransaction(func(ds *database.DataStore) error {
+		dataStore := database.NewDataStoreWithContext(context.Background(), db)
+		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
 			ds.ItemItems().CreateNewAncestors()
 			return nil
 		}))
 	}, 30)
 
+	itemItemStore := database.NewDataStore(db).ItemItems()
 	var result []itemAncestorsResultRow
 	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 

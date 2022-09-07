@@ -18,6 +18,7 @@ Feature: Get requests for group_id
       | 122 |
       | 123 |
       | 124 |
+      | 125 |
       | 131 |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
@@ -40,6 +41,7 @@ Feature: Get requests for group_id
       | 13              | 122            | null                           |
       | 13              | 123            | null                           |
       | 13              | 124            | null                           |
+      | 13              | 125            | null                           |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | at                        | personal_info_view_approved |
@@ -69,6 +71,7 @@ Feature: Get requests for group_id
       | 13       | 122       | left                  | 2017-05-21 06:38:38       | 11           |
       | 13       | 123       | added_directly        | 2017-05-20 06:38:38       | 11           |
       | 13       | 124       | joined_by_code        | 2017-05-19 06:38:38       | 11           |
+      | 13       | 125       | joined_by_badge       | 2017-05-19 06:38:38       | 11           |
 
   Scenario: User is a manager of the group (default sort)
     Given I am the user with id "21"

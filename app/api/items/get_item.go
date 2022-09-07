@@ -218,12 +218,13 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		languageTagSet = true
 	}
 
-	rawData := getRawItemData(srv.Store.Items(), itemID, participantID, languageTag, languageTagSet, user, watchedGroupID, watchedGroupIDSet)
+	store := srv.GetStore(httpReq)
+	rawData := getRawItemData(store.Items(), itemID, participantID, languageTag, languageTagSet, user, watchedGroupID, watchedGroupIDSet)
 	if rawData == nil {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
-	permissionGrantedStore := srv.Store.PermissionsGranted()
+	permissionGrantedStore := store.PermissionsGranted()
 	response := constructItemResponseFromDBData(rawData, permissionGrantedStore, watchedGroupIDSet)
 
 	render.Respond(rw, httpReq, response)

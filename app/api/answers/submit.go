@@ -70,7 +70,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	var hintsInfo *database.HintsInfo
 	apiError := service.NoError
 
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
 		hasAccess, reason, err = store.Items().
@@ -108,7 +108,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		service.MustNotBeError(resultStore.MarkAsToBePropagated(
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 			requestData.TaskToken.Converted.LocalItemID))
-		return store.Results().Propagate()
+		return nil
 	})
 
 	if apiError != service.NoError {

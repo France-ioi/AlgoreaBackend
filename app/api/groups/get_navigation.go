@@ -87,9 +87,10 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	var result groupNavigationViewResponse
-	err = pickVisibleGroups(srv.Store.Groups().ByID(groupID), user).
+	err = pickVisibleGroups(store.Groups().ByID(groupID), user).
 		Where("groups.type != 'User'").
 		Select("id, name, type").Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -97,7 +98,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 	}
 	service.MustNotBeError(err)
 
-	query := pickVisibleGroups(srv.Store.Groups().DB, user).
+	query := pickVisibleGroups(store.Groups().DB, user).
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).
@@ -105,7 +106,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 		Order("name")
 	query = service.NewQueryLimiter().Apply(r, query)
 
-	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, query, user, "").Scan(&result.Children).Error())
+	service.MustNotBeError(selectGroupsDataForMenu(store, query, user, "").Scan(&result.Children).Error())
 
 	render.Respond(w, r, result)
 	return service.NoError

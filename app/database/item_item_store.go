@@ -21,14 +21,15 @@ func (s *ItemItemStore) createNewAncestors() {
 }
 
 // After is a "listener" that calls ItemItemStore::createNewAncestors(),
-// PermissionGrantedStore::computeAllAccess() & ResultStore.Propagate()
+// PermissionGrantedStore::computeAllAccess() and schedules a run of ResultStore.propagate()
 func (s *ItemItemStore) After() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
 	s.createNewAncestors()
 	s.PermissionsGranted().computeAllAccess()
-	return s.Results().Propagate()
+	s.ScheduleResultsPropagation()
+	return nil
 }
 
 // ContentViewPropagationNameByIndex returns the content view propagation level name with the given index from the enum

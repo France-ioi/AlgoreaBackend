@@ -112,6 +112,7 @@ type groupManagersViewResponseRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
@@ -126,16 +127,16 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		}
 	}
 
-	found, err := srv.Store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found",
-		srv.Store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).QueryExpr(),
-		ancestorsOfJoinedGroups(srv.Store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
+	found, err := store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found",
+		store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).QueryExpr(),
+		ancestorsOfJoinedGroups(store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
 	).Having("found").HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.GroupManagers().
+	query := store.GroupManagers().
 		Joins("JOIN `groups` ON groups.id = group_managers.manager_id").
 		Joins("LEFT JOIN users ON users.group_id = groups.id")
 
@@ -177,7 +178,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	for index := range result {
-		result[index].CanManage = srv.Store.GroupManagers().CanManageNameByIndex(result[index].CanManageValue)
+		result[index].CanManage = store.GroupManagers().CanManageNameByIndex(result[index].CanManageValue)
 		if result[index].Type != groupTypeUser {
 			result[index].GroupManagersViewResponseRowUser = nil
 		}
@@ -185,7 +186,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 			result[index].GroupManagersViewResponseRowThroughAncestorGroups = nil
 		} else {
 			result[index].CanManageThroughAncestorGroups =
-				srv.Store.GroupManagers().CanManageNameByIndex(result[index].CanManageThroughAncestorGroupsValue)
+				store.GroupManagers().CanManageNameByIndex(result[index].CanManageThroughAncestorGroupsValue)
 		}
 	}
 

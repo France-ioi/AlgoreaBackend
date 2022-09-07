@@ -273,7 +273,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		return service.ErrInvalidRequest(err)
 	}
 
-	query, apiError := srv.constructActivityLogQuery(r, itemID, user, fromValues)
+	query, apiError := srv.constructActivityLogQuery(srv.GetStore(r), r, itemID, user, fromValues)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -305,16 +305,16 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	return service.NoError
 }
 
-func (srv *Service) constructActivityLogQuery(
-	r *http.Request, itemID *int64, user *database.User, fromValues map[string]interface{}) (*database.DB, service.APIError) {
+func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http.Request, itemID *int64,
+	user *database.User, fromValues map[string]interface{}) (*database.DB, service.APIError) {
 	participantID := service.ParticipantIDFromContext(r.Context())
 	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
 		return nil, apiError
 	}
-	participantsQuery := srv.Store.Raw("SELECT ? AS id", participantID)
+	participantsQuery := store.Raw("SELECT ? AS id", participantID)
 
-	visibleItemDescendants := srv.Store.Permissions().MatchingUserAncestors(user).
+	visibleItemDescendants := store.Permissions().MatchingUserAncestors(user).
 		Select("item_id AS id").
 		Group("item_id").
 		HavingMaxPermissionAtLeast("view", "info")
@@ -323,14 +323,14 @@ func (srv *Service) constructActivityLogQuery(
 		if len(r.URL.Query()["as_team_id"]) != 0 {
 			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
-		srv.Store.Permissions().MatchingUserAncestors(user).Where("item_id = ?")
-		participantsQuery = srv.Store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
+		store.Permissions().MatchingUserAncestors(user).Where("item_id = ?")
+		participantsQuery = store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
 			Select("child_group_id AS id")
 		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
 	}
 
 	if itemID != nil {
-		itemDescendants := srv.Store.ItemAncestors().DescendantsOf(*itemID).Select("child_item_id")
+		itemDescendants := store.ItemAncestors().DescendantsOf(*itemID).Select("child_item_id")
 		visibleItemDescendants = visibleItemDescendants.
 			Where("item_id = ? OR item_id IN ?", *itemID, itemDescendants.SubQuery())
 	}
@@ -345,7 +345,7 @@ func (srv *Service) constructActivityLogQuery(
 	var cnt struct {
 		Cnt int
 	}
-	service.MustNotBeError(srv.Store.Raw(`
+	service.MustNotBeError(store.Raw(`
 		WITH items_to_show AS ?, participants AS ?
 		SELECT COUNT(*) AS cnt FROM answers
 		WHERE (answers.item_id IN (SELECT id FROM items_to_show)) AND
@@ -362,7 +362,7 @@ func (srv *Service) constructActivityLogQuery(
 			answers.id AS answer_id,
 			answers.attempt_id, answers.participant_id,
 			answers.item_id, author_id AS user_id`
-	answersQuery := srv.Store.Answers().
+	answersQuery := store.Answers().
 		Where("answers.participant_id IN (SELECT id FROM participants)").
 		Where("answers.item_id IN (SELECT id FROM items_to_show)")
 
@@ -378,7 +378,7 @@ func (srv *Service) constructActivityLogQuery(
 	}
 	answersQuery = answersQuery.Select(answersQuerySelect)
 
-	startedResultsQuery := srv.Store.Table("results AS started_results").
+	startedResultsQuery := store.Table("results AS started_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
 			1 AS activity_type_int,
@@ -394,7 +394,7 @@ func (srv *Service) constructActivityLogQuery(
 		Where("started_results.participant_id >= (SELECT MIN(id) FROM participants)").
 		Where("started_results.participant_id IN (SELECT id FROM participants)")
 
-	validatedResultsQuery := srv.Store.Table("results AS validated_results").
+	validatedResultsQuery := store.Table("results AS validated_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
 			3 AS activity_type_int,
@@ -408,7 +408,7 @@ func (srv *Service) constructActivityLogQuery(
 		Where("validated_results.participant_id IN (SELECT id FROM participants)")
 
 	startFromRowSubQuery, startFromRowCTESubQuery := srv.generateSubQueriesForPagination(
-		r.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery, answersQuery, fromValues)
+		store, r.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery, answersQuery, fromValues)
 
 	answersQuery = service.NewQueryLimiter().Apply(r, answersQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
@@ -435,7 +435,7 @@ func (srv *Service) constructActivityLogQuery(
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
 
-	answersQuery = srv.Store.Raw("SELECT limited_answers.*, gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
+	answersQuery = store.Raw("SELECT limited_answers.*, gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
 		Joins("LEFT JOIN gradings ON gradings.answer_id = limited_answers.answer_id")
 
 	startedResultsQuery = service.NewQueryLimiter().Apply(r, startedResultsQuery)
@@ -470,9 +470,9 @@ func (srv *Service) constructActivityLogQuery(
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
 
-	unionCTEQuery := srv.Store.Raw("SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un",
+	unionCTEQuery := store.Raw("SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un",
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
-	unionQuery := srv.Store.Table("un")
+	unionQuery := store.Table("un")
 	unionQuery = service.NewQueryLimiter().Apply(r, unionQuery)
 	unionQuery, _ = service.ApplySortingAndPaging(
 		nil, unionQuery,
@@ -490,7 +490,7 @@ func (srv *Service) constructActivityLogQuery(
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
 
-	query := srv.Store.Raw(`
+	query := store.Raw(`
 		WITH items_to_show AS ?, participants AS ?, start_from_row AS ?, un AS ?
 		SELECT STRAIGHT_JOIN
 			CASE activity_type_int
@@ -523,9 +523,10 @@ func (srv *Service) constructActivityLogQuery(
 }
 
 func (srv *Service) generateSubQueriesForPagination(
-	activityTypeIndex string, startedResultsQuery, validatedResultsQuery, answersQuery *database.DB, fromValues map[string]interface{}) (
+	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
+	answersQuery *database.DB, fromValues map[string]interface{}) (
 	startFromRowSubQuery, startFromRowCTESubQuery interface{}) {
-	startFromRowSubQuery = srv.Store.Table("start_from_row").SubQuery()
+	startFromRowSubQuery = store.Table("start_from_row").SubQuery()
 	var startFromRowQuery *database.DB
 	switch activityTypeIndex {
 	case "1": // result_started
@@ -541,7 +542,7 @@ func (srv *Service) generateSubQueriesForPagination(
 			Where("validated_results.attempt_id = ?", fromValues["attempt_id"]).
 			Where("validated_results.item_id = ?", fromValues["item_id"])
 	default:
-		startFromRowQuery = srv.Store.Raw("SELECT 1")
+		startFromRowQuery = store.Raw("SELECT 1")
 		startFromRowSubQuery = service.FromFirstRow
 	}
 	return startFromRowSubQuery, startFromRowQuery.Limit(1).SubQuery()

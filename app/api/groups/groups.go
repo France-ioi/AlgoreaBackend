@@ -20,7 +20,7 @@ type Service struct {
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
+	router.Use(auth.UserMiddleware(srv.Base))
 	router.Post("/groups", service.AppHandler(srv.createGroup).ServeHTTP)
 	router.Get("/groups/possible-subgroups", service.AppHandler(srv.searchForPossibleSubgroups).ServeHTTP)
 	router.Get("/groups/roots", service.AppHandler(srv.getRoots).ServeHTTP)
@@ -52,6 +52,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Put("/groups/{group_id}/managers/{manager_id}", service.AppHandler(srv.updateGroupManager).ServeHTTP)
 	router.Delete("/groups/{group_id}/managers/{manager_id}", service.AppHandler(srv.removeGroupManager).ServeHTTP)
 
+	router.Get("/groups/{group_id}/parents", service.AppHandler(srv.getParents).ServeHTTP)
+
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
 	router.Get("/groups/user-requests", service.AppHandler(srv.getUserRequests).ServeHTTP)
 	router.Get("/groups/{group_id}/group-progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
@@ -60,7 +62,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/team-progress-csv", service.AppHandler(srv.getTeamProgressCSV).ServeHTTP)
 	router.Get("/groups/{group_id}/user-progress", service.AppHandler(srv.getUserProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/user-progress-csv", service.AppHandler(srv.getUserProgressCSV).ServeHTTP)
-	router.With(service.ParticipantMiddleware(srv.Store)).
+	router.With(service.ParticipantMiddleware(srv.Base)).
 		Get("/items/{item_id}/participant-progress", service.AppHandler(srv.getParticipantProgress).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/join-requests/accept", service.AppHandler(srv.acceptJoinRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/join-requests/reject", service.AppHandler(srv.rejectJoinRequests).ServeHTTP)
@@ -196,7 +198,7 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 	apiError := service.NoError
 	var results database.GroupGroupTransitionResults
 	if len(groupIDs) > 0 {
-		err = srv.Store.InTransaction(func(store *database.DataStore) error {
+		err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 			var groupType string
 			groupType, apiError = checkPreconditionsForBulkMembershipAction(action, user, store, parentGroupID, groupIDs)
 			if apiError != service.NoError {

@@ -63,7 +63,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	ids := findGroupPath(srv.Store, groupID, user)
+	ids := findGroupPath(srv.GetStore(r), groupID, user)
 	if ids == nil {
 		return service.InsufficientAccessRightsError
 	}

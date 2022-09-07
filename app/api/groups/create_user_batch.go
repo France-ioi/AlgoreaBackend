@@ -123,6 +123,7 @@ type subgroupApproval struct {
 func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	input := createUserBatchRequest{}
 	formData := formdata.NewFormData(&input)
@@ -137,12 +138,12 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	numberOfUsersToBeCreated, subgroupsApprovals, apiError := srv.checkCreateUserBatchRequestParameters(user, input)
+	numberOfUsersToBeCreated, subgroupsApprovals, apiError := checkCreateUserBatchRequestParameters(store, user, input)
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	err = srv.Store.UserBatches().InsertMap(map[string]interface{}{
+	err = store.UserBatches().InsertMap(map[string]interface{}{
 		"group_prefix":  input.GroupPrefix,
 		"custom_prefix": input.CustomPrefix,
 		"size":          numberOfUsersToBeCreated,
@@ -166,7 +167,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 
 	defer func() {
 		if p := recover(); p != nil {
-			srv.Store.UserBatches().Delete("group_prefix = ? AND custom_prefix = ?", input.GroupPrefix, input.CustomPrefix)
+			store.UserBatches().Delete("group_prefix = ? AND custom_prefix = ?", input.GroupPrefix, input.CustomPrefix)
 			panic(p)
 		}
 	}()
@@ -175,19 +176,19 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 		panic(errors.New("login module failed"))
 	}
 
-	users := srv.createBatchUsersInDB(input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
+	users := createBatchUsersInDB(store, input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(users)))
 	return service.NoError
 }
 
-func (srv *Service) checkCreateUserBatchRequestParameters(user *database.User, input createUserBatchRequest) (
+func checkCreateUserBatchRequestParameters(store *database.DataStore, user *database.User, input createUserBatchRequest) (
 	numberOfUsersToBeCreated int, subgroupsApprovals []subgroupApproval, apiError service.APIError) {
 	var prefixInfo struct {
 		GroupID  int64
 		MaxUsers int
 	}
-	err := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+	err := store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins(`JOIN user_batch_prefixes ON user_batch_prefixes.group_id = groups_ancestors_active.child_group_id AND `+
 			`user_batch_prefixes.allow_new AND user_batch_prefixes.group_prefix = ?`, input.GroupPrefix).
 		Where("group_managers.can_manage != 'none'").
@@ -210,7 +211,7 @@ func (srv *Service) checkCreateUserBatchRequestParameters(user *database.User, i
 		return 0, nil, service.ErrInvalidRequest(errors.New("'postfix_length' is too small"))
 	}
 
-	service.MustNotBeError(srv.Store.Groups().
+	service.MustNotBeError(store.Groups().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id").
 		Where("ancestor_group_id = ?", prefixInfo.GroupID).
 		Where("groups.id IN(?)", subgroupIDs).
@@ -226,7 +227,7 @@ func (srv *Service) checkCreateUserBatchRequestParameters(user *database.User, i
 	}
 
 	var currentSumSize int
-	service.MustNotBeError(srv.Store.UserBatches().Where("group_prefix = ?", input.GroupPrefix).
+	service.MustNotBeError(store.UserBatches().Where("group_prefix = ?", input.GroupPrefix).
 		PluckFirst("IFNULL(SUM(size), 0)", &currentSumSize).Error())
 	if prefixInfo.MaxUsers < numberOfUsersToBeCreated+currentSumSize {
 		return 0, nil, service.ErrInvalidRequest(errors.New("'user_batch_prefix.max_users' exceeded"))
@@ -251,11 +252,11 @@ type resultRow struct {
 	Users []resultRowUser `json:"users"`
 }
 
-func (srv *Service) createBatchUsersInDB(input createUserBatchRequest, r *http.Request, numberOfUsersToBeCreated int,
+func createBatchUsersInDB(store *database.DataStore, input createUserBatchRequest, r *http.Request, numberOfUsersToBeCreated int,
 	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User) []*resultRow {
 	result := make([]*resultRow, 0, len(subgroupsApprovals))
 
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		domainConfig := domain.ConfigFromContext(r.Context())
 
 		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated)

@@ -88,7 +88,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 	var result []map[string]interface{}
 	apiError := service.NoError
 	var attemptID int64
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
 			apiError = service.InsufficientAccessRightsError
@@ -121,7 +121,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert, []string{"started_at", "latest_activity_at"}))
 			service.MustNotBeError(resultStore.InsertIgnoreMaps("results_propagate", rowsToInsertPropagate))
-			service.MustNotBeError(resultStore.Propagate())
+			resultStore.ScheduleResultsPropagation()
 		}
 
 		return nil

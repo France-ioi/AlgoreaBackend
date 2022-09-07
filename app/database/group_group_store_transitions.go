@@ -2,6 +2,8 @@ package database
 
 import (
 	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
 // GroupMembershipAction represents an action that changes relation between two groups
@@ -22,6 +24,8 @@ const (
 	InvitationRefused GroupMembershipAction = "invitation_refused"
 	// InvitationWithdrawn means an admin withdrew his invitation to join a group
 	InvitationWithdrawn GroupMembershipAction = "invitation_withdrawn"
+	// JoinedByBadge means a user has been added into a group because of a badge returned by the login module
+	JoinedByBadge GroupMembershipAction = "joined_by_badge"
 	// JoinedByCode means a user joined a group by the group's code
 	JoinedByCode GroupMembershipAction = "joined_by_code"
 	// JoinRequestRefused means an admin refused a user's request to join a group
@@ -48,7 +52,7 @@ const (
 
 func (groupMembershipAction GroupMembershipAction) isActive() bool {
 	switch groupMembershipAction {
-	case InvitationAccepted, JoinRequestAccepted, JoinedByCode, IsMember,
+	case JoinedByBadge, InvitationAccepted, JoinRequestAccepted, JoinedByCode, IsMember,
 		LeaveRequestCreated, LeaveRequestWithdrawn, LeaveRequestRefused:
 		return true
 	}
@@ -122,6 +126,8 @@ const (
 	UserCancelsLeaveRequest
 	// AdminRemovesDirectRelation removes a direct relation
 	AdminRemovesDirectRelation
+	// UserJoinsGroupByBadge means we add a user into a group because of his badge returned by the login module
+	UserJoinsGroupByBadge
 	// UserJoinsGroupByCode means a user joins a group using a group's code
 	// We don't check the code here (a calling service should check the code by itself)
 	UserJoinsGroupByCode
@@ -158,6 +164,14 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestCreated:  JoinRequestAccepted,
 			InvitationCreated:   JoinRequestAccepted,
 			LeaveRequestExpired: JoinRequestAccepted,
+		},
+	},
+	UserJoinsGroupByBadge: {
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			NoRelation:          JoinedByBadge,
+			JoinRequestCreated:  JoinedByBadge,
+			InvitationCreated:   JoinedByBadge,
+			LeaveRequestExpired: JoinedByBadge,
 		},
 	},
 	UserJoinsGroupByCode: {
@@ -441,7 +455,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			if shouldPropagatePermissions {
 				dataStore.PermissionsGranted().computeAllAccess()
 			}
-			mustNotBeError(dataStore.Results().Propagate())
+			dataStore.ScheduleResultsPropagation()
 		}
 		return nil
 	}))
@@ -452,7 +466,7 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 	limits *requiredApprovalsAndLimits, results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupMembershipAction,
 	idsToInsertRelation, idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
 	if !limits.EnforceMaxParticipants || !map[GroupGroupTransitionAction]bool{
-		UserJoinsGroupByCode: true, UserCreatesJoinRequest: true, UserCreatesAcceptedJoinRequest: true,
+		UserJoinsGroupByBadge: true, UserJoinsGroupByCode: true, UserCreatesJoinRequest: true, UserCreatesAcceptedJoinRequest: true,
 		AdminCreatesInvitation: true, AdminAcceptsJoinRequest: true,
 	}[action] {
 		return
@@ -487,6 +501,9 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 
 func resolveApprovalTimesForGroupsGroups(oldActionsMap map[int64]stateInfo, id int64, approvals map[int64]GroupApprovals) (
 	personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{}) {
+	personalInfoViewApprovedAt = gorm.Expr("NULL")
+	lockMembershipApprovedAt = gorm.Expr("NULL")
+	watchApprovedAt = gorm.Expr("NULL")
 	if oldActionsMap[id].Action.hasApprovals() {
 		personalInfoViewApprovedAt = oldActionsMap[id].PersonalInfoViewApprovedAt
 		lockMembershipApprovedAt = oldActionsMap[id].LockMembershipApprovedAt

@@ -75,13 +75,14 @@ import (
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
+	store := srv.GetStore(httpReq)
 
 	itemID, itemIDError := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if itemIDError != nil {
 		return service.ErrInvalidRequest(itemIDError)
 	}
 
-	found, err := srv.Store.Permissions().MatchingUserAncestors(user).
+	found, err := store.Permissions().MatchingUserAncestors(user).
 		WherePermissionIsAtLeast("view", "content").
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
@@ -89,7 +90,7 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 		return service.InsufficientAccessRightsError
 	}
 
-	dataQuery := srv.Store.Answers().WithUsers().WithResults().
+	dataQuery := store.Answers().WithUsers().WithResults().
 		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
 		Select(`
 			answers.id, answers.type, answers.created_at, gradings.score,
@@ -109,13 +110,13 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 			return service.ErrInvalidRequest(fmt.Errorf("either author_id or attempt_id must be present"))
 		}
 
-		if result := srv.checkAccessRightsForGetAnswersByAttemptID(attemptID, user); result != service.NoError {
+		if result := srv.checkAccessRightsForGetAnswersByAttemptID(store, attemptID, user); result != service.NoError {
 			return result
 		}
 
 		dataQuery = dataQuery.Where("answers.attempt_id = ?", attemptID)
 	} else { // author_id
-		if result := srv.checkAccessRightsForGetAnswersByAuthorID(authorID, user); result != service.NoError {
+		if result := srv.checkAccessRightsForGetAnswersByAuthorID(store, authorID, user); result != service.NoError {
 			return result
 		}
 
@@ -205,12 +206,13 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 	return &responseData
 }
 
-func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *database.User) service.APIError {
+func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
+	store *database.DataStore, attemptID int64, user *database.User) service.APIError {
 	var count int64
-	groupsManagedByUser := srv.Store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
-	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
+	groupsManagedByUser := store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
+	groupsWhereUserIsMember := store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
-	service.MustNotBeError(srv.Store.Attempts().ByID(attemptID).
+	service.MustNotBeError(store.Attempts().ByID(attemptID).
 		Where("(attempts.participant_id IN ?) OR (attempts.participant_id IN ?) OR attempts.participant_id = ?",
 			groupsManagedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
@@ -222,9 +224,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	return service.NoError
 }
 
-func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(authorID int64, user *database.User) service.APIError {
+func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(
+	store *database.DataStore, authorID int64, user *database.User) service.APIError {
 	if authorID != user.GroupID {
-		found, err := srv.Store.GroupAncestors().ManagedByUser(user).
+		found, err := store.GroupAncestors().ManagedByUser(user).
 			Where("groups_ancestors.child_group_id=?", authorID).HasRows()
 		service.MustNotBeError(err)
 		if !found {

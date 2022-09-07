@@ -69,13 +69,14 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 	customPrefix := chi.URLParam(r, "custom_prefix")
 
 	user := srv.GetUser(r)
-	managedByUser := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+	store := srv.GetStore(r)
+	managedByUser := store.ActiveGroupAncestors().ManagedByUser(user).
 		Where("can_manage != 'none'").
 		Select("groups_ancestors_active.child_group_id AS id")
 
 	// The user batch should exist and the current user should be a manager of the group
 	// linked to the group_prefix
-	found, err := srv.Store.UserBatches().
+	found, err := store.UserBatches().
 		Joins("JOIN user_batch_prefixes USING(group_prefix)").
 		Joins("JOIN ? AS managed_groups ON managed_groups.id = user_batch_prefixes.group_id", managedByUser.SubQuery()).
 		Where("group_prefix = ?", groupPrefix).
@@ -87,7 +88,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	// There should not be users with locked membership in the groups the current user cannot manage
-	found, err = srv.Store.Users().
+	found, err = store.Users().
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = users.group_id`).
@@ -116,11 +117,11 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 	if !result {
 		return service.ErrUnexpected(errors.New("login module failed"))
 	}
-	service.MustNotBeError(srv.Store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
+	service.MustNotBeError(store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
 		return store.Users().Where("login LIKE CONCAT(?, '\\_', ?, '\\_%')", groupPrefix, customPrefix)
 	}))
 	service.MustNotBeError(
-		srv.Store.UserBatches().
+		store.UserBatches().
 			Where("group_prefix = ?", groupPrefix).
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 

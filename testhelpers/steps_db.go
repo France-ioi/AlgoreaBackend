@@ -382,9 +382,9 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(tableName, columnName string,
 		iDataRow++
 	}
 
-	// check that no row in the test data table has not been uncheck (if less rows in SQL result)
+	// check that there are no rows in the test data table left for checking (this means there are fewer rows in the SQL result)
 	if iDataRow < len(data.Rows) {
-		return fmt.Errorf("there are less rows in the SQL results than expected")
+		return fmt.Errorf("there are fewer rows in the SQL result than expected")
 	}
 	return nil
 }

@@ -108,14 +108,15 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	user := srv.GetUser(r)
 
 	var scope *database.DB
+	store := srv.GetStore(r)
 	if userLogin := chi.URLParam(r, "login"); userLogin != "" {
-		scope = srv.Store.Users().Where("login = ?", userLogin)
+		scope = store.Users().Where("login = ?", userLogin)
 	} else {
 		userID, err := service.ResolveURLQueryPathInt64Field(r, "user_id")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
-		scope = srv.Store.Users().ByID(userID)
+		scope = store.Users().ByID(userID)
 	}
 
 	var userInfo userViewResponse
@@ -132,7 +133,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
 			LEFT JOIN LATERAL ? AS manager_access ON 1`,
-			srv.Store.GroupAncestors().ManagedByUser(user).
+			store.GroupAncestors().ManagedByUser(user).
 				Select(`
 					1 AS found,
 					MAX(can_manage_value) AS can_manage_value,
@@ -153,7 +154,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	if userInfo.CurrentUserIsManager {
-		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
+		service.MustNotBeError(store.Groups().ManagedBy(user).
 			Joins(`
 				JOIN groups_ancestors_active AS groups_ancestors
 					ON groups_ancestors.ancestor_group_id = groups.id AND

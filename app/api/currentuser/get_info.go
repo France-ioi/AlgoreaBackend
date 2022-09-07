@@ -121,7 +121,7 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 	user := srv.GetUser(r)
 
 	var userInfo getInfoData
-	err := srv.Store.Users().ByID(user.GroupID).
+	err := srv.GetStore(r).Users().ByID(user.GroupID).
 		Select(`group_id, temp_user, login, registered_at, email, email_verified, first_name, last_name,
 			student_id, country_code, time_zone,
 			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,

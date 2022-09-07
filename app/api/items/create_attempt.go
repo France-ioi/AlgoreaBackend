@@ -82,7 +82,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 
 	var attemptID int64
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, true, true)
 		service.MustNotBeError(err)
@@ -100,7 +100,8 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		attemptID, err = store.Attempts().CreateNew(participantID, parentAttemptID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
-		return store.Results().Propagate()
+		store.ScheduleResultsPropagation()
+		return nil
 	})
 	if apiError != service.NoError {
 		return apiError

@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
@@ -128,8 +129,9 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
+	store := srv.GetStore(httpReq)
 
-	attemptID, apiError := srv.resolveAttemptIDForNavigationData(httpReq, participantID, itemID)
+	attemptID, apiError := resolveAttemptIDForNavigationData(store, httpReq, participantID, itemID)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -139,27 +141,27 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 		return apiError
 	}
 
-	rawData := getRawNavigationData(srv.Store, itemID, participantID, attemptID, user, watchedGroupID, watchedGroupIDSet)
+	rawData := getRawNavigationData(store, itemID, participantID, attemptID, user, watchedGroupID, watchedGroupIDSet)
 
 	if len(rawData) == 0 || rawData[0].ID != itemID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
 	response := itemNavigationResponse{
-		ItemCommonFields: srv.fillItemCommonFieldsWithDBData(&rawData[0]),
+		ItemCommonFields: fillItemCommonFieldsWithDBData(store, &rawData[0]),
 		AttemptID:        *rawData[0].AttemptID,
 	}
 	idMap := map[int64]*rawNavigationItem{}
 	for index := range rawData {
 		idMap[rawData[index].ID] = &rawData[index]
 	}
-	srv.fillNavigationWithChildren(rawData, watchedGroupIDSet, &response.Children)
+	fillNavigationWithChildren(store, rawData, watchedGroupIDSet, &response.Children)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
 }
 
-func (srv *Service) resolveAttemptIDForNavigationData(httpReq *http.Request, groupID, itemID int64) (int64, service.APIError) {
+func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.Request, groupID, itemID int64) (int64, service.APIError) {
 	attemptIDSet := len(httpReq.URL.Query()["attempt_id"]) != 0
 	childAttemptIDSet := len(httpReq.URL.Query()["child_attempt_id"]) != 0
 	var attemptID, childAttemptID int64
@@ -184,7 +186,7 @@ func (srv *Service) resolveAttemptIDForNavigationData(httpReq *http.Request, gro
 	}
 
 	if !attemptIDSet {
-		err := srv.Store.Table("results AS child_result").
+		err := store.Table("results AS child_result").
 			Where("child_result.participant_id = ? AND child_result.attempt_id = ? AND child_result.started",
 				groupID, childAttemptID).
 			Joins(`
@@ -202,11 +204,11 @@ func (srv *Service) resolveAttemptIDForNavigationData(httpReq *http.Request, gro
 	return attemptID, service.NoError
 }
 
-func (srv *Service) fillNavigationWithChildren(
-	rawData []rawNavigationItem, watchedGroupIDSet bool, target *[]navigationItemChild) {
+func fillNavigationWithChildren(
+	store *database.DataStore, rawData []rawNavigationItem, watchedGroupIDSet bool, target *[]navigationItemChild) {
 	*target = make([]navigationItemChild, 0, len(rawData)-1)
 	var currentChild *navigationItemChild
-	if len(rawData) > 0 && rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
+	if len(rawData) > 0 && rawData[0].CanViewGeneratedValue == store.PermissionsGranted().ViewIndexByName("info") {
 		return // Only 'info' access to the parent item
 	}
 	for index := range rawData {
@@ -216,7 +218,7 @@ func (srv *Service) fillNavigationWithChildren(
 
 		if rawData[index].ID != rawData[index-1].ID {
 			child := navigationItemChild{
-				ItemCommonFields:      srv.fillItemCommonFieldsWithDBData(&rawData[index]),
+				ItemCommonFields:      fillItemCommonFieldsWithDBData(store, &rawData[index]),
 				RequiresExplicitEntry: rawData[index].RequiresExplicitEntry,
 				EntryParticipantType:  rawData[index].EntryParticipantType,
 				NoScore:               rawData[index].NoScore,
@@ -224,10 +226,10 @@ func (srv *Service) fillNavigationWithChildren(
 				BestScore:             rawData[index].BestScore,
 				Results:               make([]structures.ItemResult, 0, 1),
 			}
-			if rawData[index].CanViewGeneratedValue < srv.Store.PermissionsGranted().ViewIndexByName("content") {
+			if rawData[index].CanViewGeneratedValue < store.PermissionsGranted().ViewIndexByName("content") {
 				child.HasVisibleChildren = false
 			}
-			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
+			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDSet, store.PermissionsGranted())
 			*target = append(*target, child)
 			currentChild = &(*target)[len(*target)-1]
 		}
@@ -239,12 +241,12 @@ func (srv *Service) fillNavigationWithChildren(
 	}
 }
 
-func (srv *Service) fillItemCommonFieldsWithDBData(rawData *rawNavigationItem) *structures.ItemCommonFields {
+func fillItemCommonFieldsWithDBData(store *database.DataStore, rawData *rawNavigationItem) *structures.ItemCommonFields {
 	result := &structures.ItemCommonFields{
 		ID:          rawData.ID,
 		Type:        rawData.Type,
 		String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-		Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(srv.Store.PermissionsGranted()),
+		Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(store.PermissionsGranted()),
 	}
 	return result
 }

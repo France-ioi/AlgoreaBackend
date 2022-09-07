@@ -12,12 +12,13 @@ Feature: Get group invitations for the current user
       | 8  | Club    | Another Club       | Another club group     |
       | 9  | Friends | Some other friends | Another friends group  |
       | 10 | Other   | Secret group       | Our secret group       |
-      | 11 | User    | user self          |                        |
+      | 11 | Club    | Secret club        | Our secret club        |
+      | 12 | User    | user self          |                        |
       | 21 | User    | owner self         |                        |
     And the database has the following table 'users':
       | login | temp_user | group_id | first_name  | last_name | grade |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-      | user  | 0         | 11       | John        | Doe       | 1     |
+      | user  | 0         | 12       | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 5               | 21             |
@@ -26,22 +27,23 @@ Feature: Get group invitations for the current user
       | 10              | 21             |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                        | initiator_id |
-      | 1        | 21        | invitation_created    | {{relativeTime("-169h")}} | 11           |
+      | 1        | 21        | invitation_created    | {{relativeTime("-169h")}} | 12           |
       | 2        | 21        | invitation_refused    | {{relativeTime("-168h")}} | 21           |
       | 3        | 21        | join_request_created  | {{relativeTime("-167h")}} | 21           |
-      | 4        | 21        | join_request_refused  | {{relativeTime("-166h")}} | 11           |
-      | 5        | 21        | invitation_accepted   | {{relativeTime("-165h")}} | 11           |
-      | 6        | 21        | join_request_accepted | {{relativeTime("-164h")}} | 11           |
+      | 4        | 21        | join_request_refused  | {{relativeTime("-166h")}} | 12           |
+      | 5        | 21        | invitation_accepted   | {{relativeTime("-165h")}} | 12           |
+      | 6        | 21        | join_request_accepted | {{relativeTime("-164h")}} | 12           |
       | 7        | 21        | removed               | {{relativeTime("-163h")}} | 21           |
       | 8        | 21        | left                  | {{relativeTime("-162h")}} | 21           |
-      | 9        | 21        | added_directly        | {{relativeTime("-161h")}} | 11           |
-      | 1        | 11        | invitation_created    | {{relativeTime("-170h")}} | 11           |
+      | 9        | 21        | added_directly        | {{relativeTime("-161h")}} | 12           |
+      | 1        | 12        | invitation_created    | {{relativeTime("-170h")}} | 12           |
       | 10       | 21        | joined_by_code        | {{relativeTime("-180h")}} | null         |
+      | 11       | 21        | joined_by_badge       | {{relativeTime("-190h")}} | null         |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 1        | 21        | invitation   |
       | 3        | 21        | join_request |
-      | 1        | 11        | invitation   |
+      | 1        | 12        | invitation   |
 
   Scenario: Show all invitations
     Given I am the user with id "21"
@@ -77,7 +79,7 @@ Feature: Get group invitations for the current user
       {
         "group_id": "1",
         "inviting_user": {
-          "id": "11",
+          "id": "12",
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"

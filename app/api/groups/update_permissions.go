@@ -124,7 +124,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	user := srv.GetUser(r)
 	apiErr := service.NoError
 
-	err = srv.Store.InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		apiErr = checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s, user, sourceGroupID, groupID, itemID)
 		if apiErr != service.NoError {
 			return apiErr.Error
@@ -565,6 +565,6 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 	if dbMap["can_view"] != nil && dbMap["can_view"] != none || dbMap["is_owner"] != nil && dbMap["is_owner"].(bool) {
 		// permissionGrantedStore.After() implicitly (via triggers) marks some attempts as to_be_propagated
 		// when an item becomes visible, so we should propagate attempts here
-		service.MustNotBeError(s.Results().Propagate())
+		s.ScheduleResultsPropagation()
 	}
 }

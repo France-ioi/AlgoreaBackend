@@ -71,7 +71,7 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	user := srv.GetUser(r)
 
 	var result []groupBreadcrumbsViewResponseRow
-	err = pickVisibleGroups(srv.Store.Groups().Where("id IN(?)", ids), user).
+	err = pickVisibleGroups(srv.GetStore(r).Groups().Where("id IN(?)", ids), user).
 		Select("id, name, type").
 		Order(gorm.Expr("FIELD(id"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
 		Scan(&result).Error()

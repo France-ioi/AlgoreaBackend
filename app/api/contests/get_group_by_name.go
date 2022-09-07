@@ -73,17 +73,18 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantType, err := srv.getParticipantTypeForContestManagedByUser(itemID, user)
+	store := srv.GetStore(r)
+	participantType, err := getParticipantTypeForContestManagedByUser(store, itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	groupsManagedByUserSubQuery := srv.Store.GroupAncestors().ManagedByUser(user).
+	groupsManagedByUserSubQuery := store.GroupAncestors().ManagedByUser(user).
 		Group("groups_ancestors.child_group_id").
 		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").
 		Select("groups_ancestors.child_group_id").SubQuery()
-	query := srv.Store.Groups().
+	query := store.Groups().
 		Joins(`
 			JOIN groups_ancestors_active AS found_group_ancestors
 				ON found_group_ancestors.child_group_id = groups.id`).
@@ -110,7 +111,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		Having(`
 			MAX(permissions_generated.can_view_generated_value) >= ? OR
 			MAX(permissions_granted.can_enter_from < permissions_granted.can_enter_until)`,
-			srv.Store.PermissionsGranted().ViewIndexByName("info")).
+			store.PermissionsGranted().ViewIndexByName("info")).
 		Group("groups.id").
 		Order("groups.id")
 

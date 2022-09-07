@@ -43,12 +43,13 @@ func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) service.A
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(srv.Store, user, groupID); apiError != service.NoError {
+	store := srv.GetStore(r)
+	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
 	service.MustNotBeError(
-		srv.Store.Groups().Where("id = ?", groupID).
+		store.Groups().Where("id = ?", groupID).
 			UpdateColumn("code", nil).Error())
 
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))

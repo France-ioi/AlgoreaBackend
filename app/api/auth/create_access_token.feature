@@ -46,8 +46,25 @@ Feature: Create an access token
         "origin_instance_id":null,"creator_client_id":null,"nationality":"AL",
         "primary_email":"mohammedam@gmail.com","secondary_email":"mohammed.amrani@gmail.com",
         "primary_email_verified":null,"secondary_email_verified":null,"has_picture":true,
-        "badges":[],"client_id":1,"verification":[],"subscription_news":true
-      }
+        "badges": [
+          {
+            "id": 110504,
+            "url": "https:\/\/badges.example.com\/examples\/one",
+            "code": "examplebadge001",
+            "do_not_possess": false,
+            "data": {"category": "", "round": null},
+            "manager": false,
+            "badge_info": {
+              "name": "Example #1",
+              "group_path": [
+                {"url": "https:\/\/badges.example.com\/", "name": "Example badges", "manager": true},
+                {"url": "https:\/\/badges.example.com\/parents", "name": "Example badges with multiple parents", "manager": false}
+              ]
+            },
+            "last_update": "2022-07-18T16:07:12+0000"
+          }
+        ],
+      "client_id":1,"verification":[],"subscription_news":true}
       """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url<query>"
     Then the response code should be 201
@@ -67,27 +84,47 @@ Feature: Create an access token
       | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
       | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
     And the table "groups" should be:
-      | id                  | name     | type | description | created_at          | is_open | send_emails |
-      | 2                   | AllUsers | Base | null        | 2015-08-10 12:34:55 | false   | false       |
-      | 5577006791947779410 | mohammed | User | mohammed    | 2019-07-16 22:02:28 | false   | false       |
+      | id                  | name                                 | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers                             | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4037200794235010051 | Example badges                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
+      | 5577006791947779410 | mohammed                             | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 6129484611666145821 | Example badges with multiple parents | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
+      | 8674665223082153551 | Example #1                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id      |
-      | 2               | 5577006791947779410 |
+      | parent_group_id     | child_group_id      |
+      | 2                   | 5577006791947779410 |
+      | 4037200794235010051 | 6129484611666145821 |
+      | 6129484611666145821 | 8674665223082153551 |
+      | 8674665223082153551 | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
       | 2                   | 5577006791947779410 | false   |
+      | 4037200794235010051 | 4037200794235010051 | true    |
+      | 4037200794235010051 | 5577006791947779410 | false   |
+      | 4037200794235010051 | 6129484611666145821 | false   |
+      | 4037200794235010051 | 8674665223082153551 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |
+      | 6129484611666145821 | 5577006791947779410 | false   |
+      | 6129484611666145821 | 6129484611666145821 | true    |
+      | 6129484611666145821 | 8674665223082153551 | false   |
+      | 8674665223082153551 | 5577006791947779410 | false   |
+      | 8674665223082153551 | 8674665223082153551 | true    |
     And the table "attempts" should be:
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
-    And the table "group_membership_changes" should be empty
+    And the table "group_membership_changes" should be:
+      | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id        |
+      | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_badge | 5577006791947779410 |
     And the table "sessions" should be:
       | expires_at          | user_id             | issuer       | issued_at           | access_token                |
       | 2020-07-16 22:02:28 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
       | user_id             | refresh_token                |
       | 5577006791947779410 | {{refresh_token_from_oauth}} |
+    And the table "group_managers" should be:
+      | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
+      | 4037200794235010051 | 5577006791947779410 | memberships | true                   | true              | false                  |
   Examples:
     | query                            | token_in_data                                  | expected_cookie                                                                                                                                                            |
     |                                  | "access_token": "{{access_token_from_oauth}}", | [NULL]                                                                                                                                                                     |
@@ -526,3 +563,282 @@ Feature: Create an access token
       access_token=; Path=/api/; Domain=example.org; Expires=Tue, 16 Jul 2019 21:45:49 GMT; Max-Age=0; HttpOnly; SameSite=Strict
       access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None
     """
+
+  Scenario: Create a new user with cycled badges (should refuse to create cycles)
+    Given the time now is "2019-07-16T22:02:28Z"
+    And the DB time now is "2019-07-16 22:02:28"
+    And the template constant "code_from_oauth" is "somecode"
+    And the template constant "access_token_from_oauth" is "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6Ijc3M2IyMjY0ZDU0MDUzNWQ5OTFlMjNlODY0MzljNzJmYjI0MWI5ZWY1ZTI5NjMyYjc3OWQwNjdlNmJmZWRiYmUyZDM4NmQ4YmQ2OTBlNGI3In0.eyJhdWQiOiIxIiwianRpIjoiNzczYjIyNjRkNTQwNTM1ZDk5MWUyM2U4NjQzOWM3MmZiMjQxYjllZjVlMjk2MzJiNzc5ZDA2N2U2YmZlZGJiZTJkMzg2ZDhiZDY5MGU0YjciLCJpYXQiOjE1NjM1Mjk4MjUsIm5iZiI6MTU2MzUyOTgyNSwiZXhwIjoxNTk1MTUyMjI0LCJzdWIiOiIxMDAwMDAwMDEiLCJzY29wZXMiOlsiYWNjb3VudCJdfQ.hcMLfoK8ocb0dpJg-R6EViMePCE4uw_Zzid_CIzFMFT6khY7m1kLorzKgYLWbDBxyxG-RBWTjJIbE-0J96VvLegYoZo5JObHzZP_FQyOUQ-qVe98mjI3Mc0a-dmr5bQyPTS2OC2COlFnletMHhBe4D_DSh2Zi8TfN79kTjsYErN59Vc4Bz0sPPmnLRqdKbg8r6jVX-s6cidN8mgDjujAljiaPkjCCiumdMj9kSfTKLNxMu1e9-4GfN41xc72ikstcBXjvakTyeq2-M9Wcby4XA5fys313kKlKQy3WJAVW3D6qMEwRH566vesEIx-RWUIlkPyV4QvIaE3k4mKdiO6c21LSFFSlIfr6jkVaGDvi8Rc9g77CWgUXaZOsETliW0Yea0tL9fG1negRr9uQGKyOZCM1dxSlBJAKlD3kyLi4ykEw6uTp0tM-AdwRB7mUpu9bw3evpr7f0mN65Nhd-byAuys0PXyegZeSKxZB3i1mAzE6s7vUbADJcBOx0kRmfkpT3kfUkJ4c9QohVCpkIMl80sbxcv9RTck0P9W1J-LGUULTtcPeaLNz85q7DKKbdiTAcbqzQkxZn0hO2wrF-3L0p_ms-yQg8ebu-ZJIzUG5LQq6Szu-QpXyQPP3NdKqHEvMhKoFY-9BZwA9SCEfiB8kMwCm9TAfztZBiCRcS2I4LE"
+    And the template constant "refresh_token_from_oauth" is "def502008be6565fe7888139650994031dcf475fd4ec863d9d088562aeff095c4fb5026d189b05385b5d6e834bb26ed98d67b19f21c8e4f70e035083b8aba36027c748eb0a8fc987b900a96734eb3952733d8d87368cbf5194195dfee364ebe774117dc8e51075ea7afe356d985021a38be505ea7328137d0f3552dcf4ed1b7187affee3399964b81d396a597fb9ef78c1651c5203529cd016a9c9584fc024e597e47327c36431981000741c8e6e24066718b3b46d6278a0f13b0d1bd87e2811269a2464b832b765f45d40a878ce4d3bc9da03aad32dc6f17caa52f67befffd89bae734ac0b424d9a32bd2e47c47dfee43e534d36d6cc180759b3d220ddea18ba70d8490501934e960a9ad99012184fcd67f471a16c65db5185f24ace83857efefdd935280cc0a9653150d89f9ca531283ec9e566592de626d0c350ddd682f59ede69f29acfb0bc3104d826afabd0f1e1a246375154c78a9ad27a2c47bde5159686a4264bd91f16ffa185554d09858402a68"
+    And the login module "token" endpoint for code "{{code_from_oauth}}" and code_verifier "123456" and redirect_uri "http://my.url" returns 200 with body:
+      """
+      {
+        "token_type":"Bearer",
+        "expires_in":31622400,
+        "access_token":"{{access_token_from_oauth}}",
+        "refresh_token":"{{refresh_token_from_oauth}}"
+      }
+      """
+    And the login module "account" endpoint for token "{{access_token_from_oauth}}" returns 200 with body:
+      """
+      {
+        "id":100000001, "login":"mohammed","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Mohammed",
+        "last_name":"Amrani","real_name_visible":true,"timezone":"Africa\/Algiers","country_code":"DZ",
+        "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
+        "role":"student","school_grade":null,"student_id":"123456789","ministry_of_education":null,
+        "ministry_of_education_fr":false,"birthday":"2000-07-02","presentation":"I'm Mohammed Amrani",
+        "website":"http://mohammed.freepages.com","ip":"127.0.0.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
+        "gender":"m","graduation_year":2020,"graduation_grade_expire_at":"2020-07-01 00:00:00",
+        "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
+        "logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
+        "origin_instance_id":null,"creator_client_id":null,"nationality":"AL",
+        "primary_email":"mohammedam@gmail.com","secondary_email":"mohammed.amrani@gmail.com",
+        "primary_email_verified":null,"secondary_email_verified":null,"has_picture":true,
+        "badges": [
+          {
+            "id": 110504,
+            "url": "https:\/\/badges.example.com\/examples\/one",
+            "code": "examplebadge001",
+            "do_not_possess": false,
+            "data": {"category": "", "round": null},
+            "manager": false,
+            "badge_info": {
+              "name": "Example #1",
+              "group_path": [
+                {"url": "https:\/\/badges.example.com\/examples\/one", "name": "Example #1", "manager": true},
+                {"url": "https:\/\/badges.example.com\/parents", "name": "Example #2", "manager": false}
+              ]
+            },
+            "last_update": "2022-07-18T16:07:12+0000"
+          }
+        ],
+      "client_id":1,"verification":[],"subscription_news":true}
+      """
+    When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {
+          "access_token": "{{access_token_from_oauth}}",
+          "expires_in": 31622400
+        }
+      }
+      """
+    And logs should contain:
+      """
+      Cannot add badge group 6129484611666145821 into badge group 8674665223082153551 (https://badges.example.com/examples/one) because it would create a cycle
+      """
+    And the table "users" should be:
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+    And the table "groups" should be:
+      | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 6129484611666145821 | Example #2 | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
+      | 8674665223082153551 | Example #1 | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
+    And the table "groups_groups" should be:
+      | parent_group_id     | child_group_id      |
+      | 2                   | 5577006791947779410 |
+      | 6129484611666145821 | 8674665223082153551 |
+      | 8674665223082153551 | 5577006791947779410 |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
+      | 6129484611666145821 | 5577006791947779410 | false   |
+      | 6129484611666145821 | 6129484611666145821 | true    |
+      | 6129484611666145821 | 8674665223082153551 | false   |
+      | 8674665223082153551 | 5577006791947779410 | false   |
+      | 8674665223082153551 | 8674665223082153551 | true    |
+    And the table "attempts" should be:
+      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+      | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
+    And the table "group_membership_changes" should be:
+      | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id        |
+      | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_badge | 5577006791947779410 |
+    And the table "group_managers" should be:
+      | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
+      | 8674665223082153551 | 5577006791947779410 | memberships | true                   | true              | false                  |
+
+  Scenario: Create a new user and make him a manager of his badge group
+    Given the time now is "2019-07-16T22:02:28Z"
+    And the DB time now is "2019-07-16 22:02:28"
+    And the template constant "code_from_oauth" is "somecode"
+    And the template constant "access_token_from_oauth" is "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6Ijc3M2IyMjY0ZDU0MDUzNWQ5OTFlMjNlODY0MzljNzJmYjI0MWI5ZWY1ZTI5NjMyYjc3OWQwNjdlNmJmZWRiYmUyZDM4NmQ4YmQ2OTBlNGI3In0.eyJhdWQiOiIxIiwianRpIjoiNzczYjIyNjRkNTQwNTM1ZDk5MWUyM2U4NjQzOWM3MmZiMjQxYjllZjVlMjk2MzJiNzc5ZDA2N2U2YmZlZGJiZTJkMzg2ZDhiZDY5MGU0YjciLCJpYXQiOjE1NjM1Mjk4MjUsIm5iZiI6MTU2MzUyOTgyNSwiZXhwIjoxNTk1MTUyMjI0LCJzdWIiOiIxMDAwMDAwMDEiLCJzY29wZXMiOlsiYWNjb3VudCJdfQ.hcMLfoK8ocb0dpJg-R6EViMePCE4uw_Zzid_CIzFMFT6khY7m1kLorzKgYLWbDBxyxG-RBWTjJIbE-0J96VvLegYoZo5JObHzZP_FQyOUQ-qVe98mjI3Mc0a-dmr5bQyPTS2OC2COlFnletMHhBe4D_DSh2Zi8TfN79kTjsYErN59Vc4Bz0sPPmnLRqdKbg8r6jVX-s6cidN8mgDjujAljiaPkjCCiumdMj9kSfTKLNxMu1e9-4GfN41xc72ikstcBXjvakTyeq2-M9Wcby4XA5fys313kKlKQy3WJAVW3D6qMEwRH566vesEIx-RWUIlkPyV4QvIaE3k4mKdiO6c21LSFFSlIfr6jkVaGDvi8Rc9g77CWgUXaZOsETliW0Yea0tL9fG1negRr9uQGKyOZCM1dxSlBJAKlD3kyLi4ykEw6uTp0tM-AdwRB7mUpu9bw3evpr7f0mN65Nhd-byAuys0PXyegZeSKxZB3i1mAzE6s7vUbADJcBOx0kRmfkpT3kfUkJ4c9QohVCpkIMl80sbxcv9RTck0P9W1J-LGUULTtcPeaLNz85q7DKKbdiTAcbqzQkxZn0hO2wrF-3L0p_ms-yQg8ebu-ZJIzUG5LQq6Szu-QpXyQPP3NdKqHEvMhKoFY-9BZwA9SCEfiB8kMwCm9TAfztZBiCRcS2I4LE"
+    And the template constant "refresh_token_from_oauth" is "def502008be6565fe7888139650994031dcf475fd4ec863d9d088562aeff095c4fb5026d189b05385b5d6e834bb26ed98d67b19f21c8e4f70e035083b8aba36027c748eb0a8fc987b900a96734eb3952733d8d87368cbf5194195dfee364ebe774117dc8e51075ea7afe356d985021a38be505ea7328137d0f3552dcf4ed1b7187affee3399964b81d396a597fb9ef78c1651c5203529cd016a9c9584fc024e597e47327c36431981000741c8e6e24066718b3b46d6278a0f13b0d1bd87e2811269a2464b832b765f45d40a878ce4d3bc9da03aad32dc6f17caa52f67befffd89bae734ac0b424d9a32bd2e47c47dfee43e534d36d6cc180759b3d220ddea18ba70d8490501934e960a9ad99012184fcd67f471a16c65db5185f24ace83857efefdd935280cc0a9653150d89f9ca531283ec9e566592de626d0c350ddd682f59ede69f29acfb0bc3104d826afabd0f1e1a246375154c78a9ad27a2c47bde5159686a4264bd91f16ffa185554d09858402a68"
+    And the login module "token" endpoint for code "{{code_from_oauth}}" and code_verifier "123456" and redirect_uri "http://my.url" returns 200 with body:
+      """
+      {
+        "token_type":"Bearer",
+        "expires_in":31622400,
+        "access_token":"{{access_token_from_oauth}}",
+        "refresh_token":"{{refresh_token_from_oauth}}"
+      }
+      """
+    And the login module "account" endpoint for token "{{access_token_from_oauth}}" returns 200 with body:
+      """
+      {
+        "id":100000001, "login":"mohammed","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Mohammed",
+        "last_name":"Amrani","real_name_visible":true,"timezone":"Africa\/Algiers","country_code":"DZ",
+        "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
+        "role":"student","school_grade":null,"student_id":"123456789","ministry_of_education":null,
+        "ministry_of_education_fr":false,"birthday":"2000-07-02","presentation":"I'm Mohammed Amrani",
+        "website":"http://mohammed.freepages.com","ip":"127.0.0.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
+        "gender":"m","graduation_year":2020,"graduation_grade_expire_at":"2020-07-01 00:00:00",
+        "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
+        "logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
+        "origin_instance_id":null,"creator_client_id":null,"nationality":"AL",
+        "primary_email":"mohammedam@gmail.com","secondary_email":"mohammed.amrani@gmail.com",
+        "primary_email_verified":null,"secondary_email_verified":null,"has_picture":true,
+        "badges": [
+          {
+            "id": 110504,
+            "url": "https:\/\/badges.example.com\/examples\/one",
+            "code": "examplebadge001",
+            "do_not_possess": false,
+            "data": {"category": "", "round": null},
+            "manager": true,
+            "badge_info": {
+              "name": "Example #1",
+              "group_path": []
+            },
+            "last_update": "2022-07-18T16:07:12+0000"
+          }
+        ],
+      "client_id":1,"verification":[],"subscription_news":true}
+      """
+    When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {
+          "access_token": "{{access_token_from_oauth}}",
+          "expires_in": 31622400
+        }
+      }
+      """
+    And the table "users" should be:
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+    And the table "groups" should be:
+      | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 8674665223082153551 | Example #1 | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
+    And the table "groups_groups" should be:
+      | parent_group_id     | child_group_id      |
+      | 2                   | 5577006791947779410 |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
+      | 8674665223082153551 | 8674665223082153551 | true    |
+    And the table "attempts" should be:
+      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+      | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
+    And the table "group_membership_changes" should be empty
+    And the table "group_managers" should be:
+      | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
+      | 8674665223082153551 | 5577006791947779410 | memberships | true                   | true              | false                  |
+
+  Scenario: Create a new user which cannot be added into his badge group
+    Given the time now is "2019-07-16T22:02:28Z"
+    And the DB time now is "2019-07-16 22:02:28"
+    And the template constant "code_from_oauth" is "somecode"
+    And the template constant "access_token_from_oauth" is "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6Ijc3M2IyMjY0ZDU0MDUzNWQ5OTFlMjNlODY0MzljNzJmYjI0MWI5ZWY1ZTI5NjMyYjc3OWQwNjdlNmJmZWRiYmUyZDM4NmQ4YmQ2OTBlNGI3In0.eyJhdWQiOiIxIiwianRpIjoiNzczYjIyNjRkNTQwNTM1ZDk5MWUyM2U4NjQzOWM3MmZiMjQxYjllZjVlMjk2MzJiNzc5ZDA2N2U2YmZlZGJiZTJkMzg2ZDhiZDY5MGU0YjciLCJpYXQiOjE1NjM1Mjk4MjUsIm5iZiI6MTU2MzUyOTgyNSwiZXhwIjoxNTk1MTUyMjI0LCJzdWIiOiIxMDAwMDAwMDEiLCJzY29wZXMiOlsiYWNjb3VudCJdfQ.hcMLfoK8ocb0dpJg-R6EViMePCE4uw_Zzid_CIzFMFT6khY7m1kLorzKgYLWbDBxyxG-RBWTjJIbE-0J96VvLegYoZo5JObHzZP_FQyOUQ-qVe98mjI3Mc0a-dmr5bQyPTS2OC2COlFnletMHhBe4D_DSh2Zi8TfN79kTjsYErN59Vc4Bz0sPPmnLRqdKbg8r6jVX-s6cidN8mgDjujAljiaPkjCCiumdMj9kSfTKLNxMu1e9-4GfN41xc72ikstcBXjvakTyeq2-M9Wcby4XA5fys313kKlKQy3WJAVW3D6qMEwRH566vesEIx-RWUIlkPyV4QvIaE3k4mKdiO6c21LSFFSlIfr6jkVaGDvi8Rc9g77CWgUXaZOsETliW0Yea0tL9fG1negRr9uQGKyOZCM1dxSlBJAKlD3kyLi4ykEw6uTp0tM-AdwRB7mUpu9bw3evpr7f0mN65Nhd-byAuys0PXyegZeSKxZB3i1mAzE6s7vUbADJcBOx0kRmfkpT3kfUkJ4c9QohVCpkIMl80sbxcv9RTck0P9W1J-LGUULTtcPeaLNz85q7DKKbdiTAcbqzQkxZn0hO2wrF-3L0p_ms-yQg8ebu-ZJIzUG5LQq6Szu-QpXyQPP3NdKqHEvMhKoFY-9BZwA9SCEfiB8kMwCm9TAfztZBiCRcS2I4LE"
+    And the template constant "refresh_token_from_oauth" is "def502008be6565fe7888139650994031dcf475fd4ec863d9d088562aeff095c4fb5026d189b05385b5d6e834bb26ed98d67b19f21c8e4f70e035083b8aba36027c748eb0a8fc987b900a96734eb3952733d8d87368cbf5194195dfee364ebe774117dc8e51075ea7afe356d985021a38be505ea7328137d0f3552dcf4ed1b7187affee3399964b81d396a597fb9ef78c1651c5203529cd016a9c9584fc024e597e47327c36431981000741c8e6e24066718b3b46d6278a0f13b0d1bd87e2811269a2464b832b765f45d40a878ce4d3bc9da03aad32dc6f17caa52f67befffd89bae734ac0b424d9a32bd2e47c47dfee43e534d36d6cc180759b3d220ddea18ba70d8490501934e960a9ad99012184fcd67f471a16c65db5185f24ace83857efefdd935280cc0a9653150d89f9ca531283ec9e566592de626d0c350ddd682f59ede69f29acfb0bc3104d826afabd0f1e1a246375154c78a9ad27a2c47bde5159686a4264bd91f16ffa185554d09858402a68"
+    And the login module "token" endpoint for code "{{code_from_oauth}}" and code_verifier "123456" and redirect_uri "http://my.url" returns 200 with body:
+      """
+      {
+        "token_type":"Bearer",
+        "expires_in":31622400,
+        "access_token":"{{access_token_from_oauth}}",
+        "refresh_token":"{{refresh_token_from_oauth}}"
+      }
+      """
+    And the login module "account" endpoint for token "{{access_token_from_oauth}}" returns 200 with body:
+      """
+      {
+        "id":100000001, "login":"mohammed","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Mohammed",
+        "last_name":"Amrani","real_name_visible":true,"timezone":"Africa\/Algiers","country_code":"DZ",
+        "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
+        "role":"student","school_grade":null,"student_id":"123456789","ministry_of_education":null,
+        "ministry_of_education_fr":false,"birthday":"2000-07-02","presentation":"I'm Mohammed Amrani",
+        "website":"http://mohammed.freepages.com","ip":"127.0.0.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
+        "gender":"m","graduation_year":2020,"graduation_grade_expire_at":"2020-07-01 00:00:00",
+        "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
+        "logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
+        "origin_instance_id":null,"creator_client_id":null,"nationality":"AL",
+        "primary_email":"mohammedam@gmail.com","secondary_email":"mohammed.amrani@gmail.com",
+        "primary_email_verified":null,"secondary_email_verified":null,"has_picture":true,
+        "badges": [
+          {
+            "id": 110504,
+            "url": "https:\/\/badges.example.com\/examples\/one",
+            "code": "examplebadge001",
+            "do_not_possess": false,
+            "data": {"category": "", "round": null},
+            "manager": false,
+            "badge_info": {
+              "name": "Example #1",
+              "group_path": []
+            },
+            "last_update": "2022-07-18T16:07:12+0000"
+          }
+        ],
+      "client_id":1,"verification":[],"subscription_news":true}
+      """
+    And the database table 'groups' has also the following rows:
+      | id                  | name       | type  | description | is_open | send_emails | text_id                                 | require_personal_info_access_approval |
+      | 8674665223082153551 | Example #1 | Other | null        | false   | false       | https://badges.example.com/examples/one | edit                                  |
+    When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {
+          "access_token": "{{access_token_from_oauth}}",
+          "expires_in": 31622400
+        }
+      }
+      """
+    And logs should contain:
+      """
+      Cannot add the user 5577006791947779410 into a badge group 8674665223082153551 (https://badges.example.com/examples/one), reason: approvals_missing
+      """
+    And the table "users" should be:
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+    And the table "groups" should be:
+      | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 8674665223082153551 | Example #1 | Other | null        | false                                             | false   | false       | https://badges.example.com/examples/one |
+    And the table "groups_groups" should be:
+      | parent_group_id     | child_group_id      |
+      | 2                   | 5577006791947779410 |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
+      | 8674665223082153551 | 8674665223082153551 | true    |
+    And the table "attempts" should be:
+      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+      | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
+    And the table "group_membership_changes" should be empty
+    And the table "group_managers" should be empty

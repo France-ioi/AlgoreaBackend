@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
@@ -224,12 +226,14 @@ func Encode(data []byte, clientKey string) string {
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {
 	dest := make(map[string]interface{}, len(source)+2)
 	/*
-	 We ignore fields: badges, birthday_year, client_id, created_at, creator_client_id,
+	 We ignore fields: birthday_year, client_id, created_at, creator_client_id,
 	 school_grade, graduation_grade_expire_at, ip, last_password_recovery_at, last_login,
 	 login_change_required, login_fixed, login_revalidate_required, login_updated_at,
 	 logout_config, merge_group_id, ministry_of_education, ministry_of_education_fr,
 	 nationality (capitalized country code), origin_instance_id, picture (URL),
-	 role, secondary_email, secondary_email_verified, subscription_results (bool), verification
+	 role, secondary_email, secondary_email_verified, subscription_results (bool), verification.
+
+	 "badges" are returned as []database.Badge (always set, but can be nil), all unnecessary inner properties are skipped.
 	*/
 
 	mapping := map[string]string{
@@ -291,6 +295,11 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 	dest["public_first_name"] = realNameVisible
 	dest["public_last_name"] = realNameVisible
 
+	err := convertBadges(source, dest)
+	if err != nil {
+		return nil, fmt.Errorf("invalid badges data")
+	}
+
 	return dest, nil
 }
 
@@ -308,6 +317,23 @@ func convertUserGender(source, dest map[string]interface{}) {
 	case "f":
 		dest["sex"] = "Female"
 	}
+}
+
+func convertBadges(source, dest map[string]interface{}) error {
+	if badges, ok := source["badges"]; !ok || badges == nil {
+		dest["badges"] = []database.Badge(nil)
+		return nil
+	}
+	data := struct {
+		Badges []database.Badge `json:"badges"`
+	}{}
+	form := formdata.NewFormData(&data)
+	form.AllowUnknownFields()
+	if err := form.ParseMapData(source); err != nil {
+		return err
+	}
+	dest["badges"] = data.Badges
+	return nil
 }
 
 func mustNotBeError(err error) {

@@ -749,6 +749,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			"UserCreatesAcceptedJoinRequest (enforce max participants)",
 			database.UserCreatesAcceptedJoinRequest, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
+			"UserJoinsGroupByBadge", database.UserJoinsGroupByBadge, database.JoinedByBadge, true, nil),
+		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserJoinsGroupByBadge (max participants limit is not exceeded)",
+			database.UserJoinsGroupByBadge, database.JoinedByBadge, false, ptrInt(9)),
+		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
+			"UserJoinsGroupByBadge (enforce max participants)", database.UserJoinsGroupByBadge, false),
+		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, true, nil),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserJoinsGroupByCode (max participants limit is not exceeded)",
 			database.UserJoinsGroupByCode, database.JoinedByCode, false, ptrInt(9)),
@@ -1055,6 +1061,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 		action database.GroupGroupTransitionAction
 	}{
 		{"when a user joins the group by code", database.UserJoinsGroupByCode},
+		{"when a user joins the group by badge", database.UserJoinsGroupByBadge},
 		{"when a group owner creates an accepted join request", database.UserCreatesAcceptedJoinRequest},
 	} {
 		test := test

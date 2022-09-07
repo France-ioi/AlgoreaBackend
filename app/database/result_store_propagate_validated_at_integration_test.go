@@ -59,7 +59,8 @@ func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValid
 		UpdateColumn("validated_at", skippedDate).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	})
 	assert.NoError(t, err)
 
@@ -89,7 +90,8 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 			Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	})
 	assert.NoError(t, err)
 
@@ -120,7 +122,8 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 		UpdateColumn("category", "Validation").Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	})
 	assert.NoError(t, err)
 
@@ -156,7 +159,8 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 		UpdateColumn("category", "Validation").Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	})
 	assert.NoError(t, err)
 
@@ -198,7 +202,8 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 	}).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	})
 	assert.NoError(t, err)
 

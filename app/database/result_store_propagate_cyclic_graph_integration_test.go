@@ -25,7 +25,8 @@ func TestResultStore_Propagate_WithCyclicGraph(t *testing.T) {
 	resultStore := database.NewDataStore(db).Results()
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	})
 	assert.NoError(t, err)
 

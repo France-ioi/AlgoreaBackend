@@ -1,13 +1,13 @@
 Feature: List answers by (item_id, author_id) pair
 Background:
   Given the database has the following table 'groups':
-    | id | name    | text_id | grade | type  |
-    | 11 | jdoe    |         | -2    | User  |
-    | 13 | Group B |         | -2    | Class |
-    | 21 | other   |         | -2    | User  |
-    | 23 | Group C |         | -2    | Class |
-    | 24 | Group D |         | -2    | Class |
-    | 25 | jane    |         | -2    | User  |
+    | id | name    | grade | type  |
+    | 11 | jdoe    | -2    | User  |
+    | 13 | Group B | -2    | Class |
+    | 21 | other   | -2    | User  |
+    | 23 | Group C | -2    | Class |
+    | 24 | Group D | -2    | Class |
+    | 25 | jane    | -2    | User  |
   And the database has the following table 'users':
     | login | temp_user | group_id | first_name | last_name |
     | jdoe  | 0         | 11       | John       | Doe       |

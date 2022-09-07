@@ -59,17 +59,18 @@ import (
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroup(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	query := srv.Store.Groups().
+	query := store.Groups().
 		Select("groups.id, groups.name, groups.grade").
 		Joins(`
 			JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id AND
@@ -103,7 +104,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	}
 
 	var parentsResult []descendantParent
-	service.MustNotBeError(srv.Store.Groups().
+	service.MustNotBeError(store.Groups().
 		Select("parent_links.child_group_id AS linked_group_id, groups.id, groups.name").
 		Joins(`
 			JOIN groups_groups_active AS parent_links
@@ -121,7 +122,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	}
 
 	var membersResult []teamDescendantMember
-	service.MustNotBeError(srv.Store.Users().
+	service.MustNotBeError(store.Users().
 		Select(`
 			member_links.parent_group_id AS linked_group_id,
 			users.group_id,

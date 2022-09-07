@@ -71,8 +71,9 @@ type managedGroupsGetResponseRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	query := srv.Store.Groups().
+	query := store.Groups().
 		Joins("JOIN group_managers ON group_managers.group_id = groups.id").
 		Joins(`
 			JOIN groups_ancestors_active AS user_ancestors
@@ -104,7 +105,7 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 	var result []managedGroupsGetResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	groupManagerStore := srv.Store.GroupManagers()
+	groupManagerStore := store.GroupManagers()
 	for index := range result {
 		result[index].CanManage = groupManagerStore.CanManageNameByIndex(result[index].CanManageValue)
 	}

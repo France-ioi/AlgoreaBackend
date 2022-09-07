@@ -107,13 +107,14 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
+	store := srv.GetStore(httpReq)
 
 	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	found, err := srv.Store.Permissions().
+	found, err := store.Permissions().
 		MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "info").
 		Where("permissions.item_id = ?", itemID).
@@ -126,7 +127,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 	var rawData []rawPrerequisiteOrDependencyItem
 	service.MustNotBeError(
 		constructItemListWithoutResultsQuery(
-			srv.Store, participantID, "info", watchedGroupIDSet, watchedGroupID,
+			store, participantID, "info", watchedGroupIDSet, watchedGroupID,
 			`items.allows_multiple_attempts, items.id, items.type, items.default_language_tag,
 				validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
 				can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
@@ -151,13 +152,13 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 			Order("title, subtitle, id").
 			Scan(&rawData).Error())
 
-	response := srv.prerequisiteOrDependencyItemsFromRawData(rawData, watchedGroupIDSet, srv.Store.PermissionsGranted())
+	response := prerequisiteOrDependencyItemsFromRawData(rawData, watchedGroupIDSet, store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
 }
 
-func (srv *Service) prerequisiteOrDependencyItemsFromRawData(
+func prerequisiteOrDependencyItemsFromRawData(
 	rawData []rawPrerequisiteOrDependencyItem, watchedGroupIDSet bool,
 	permissionGrantedStore *database.PermissionGrantedStore) []prerequisiteOrDependencyItem {
 	result := make([]prerequisiteOrDependencyItem, 0, len(rawData))
@@ -175,7 +176,7 @@ func (srv *Service) prerequisiteOrDependencyItemsFromRawData(
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
+		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, permissionGrantedStore)
 		result = append(result, item)
 	}
 	return result

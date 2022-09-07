@@ -139,6 +139,7 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	// We do not use the participant middleware as we get groups_groups.frozen_membership using the same SQL query
 	groupID := user.GroupID
@@ -149,7 +150,7 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) servic
 		}
 	}
 
-	result, apiError := srv.getItemInfoAndEntryState(itemID, groupID, user, srv.Store, false)
+	result, apiError := getItemInfoAndEntryState(itemID, groupID, user, store, false)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -158,7 +159,7 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) servic
 	return service.NoError
 }
 
-func (srv *Service) getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store *database.DataStore, lock bool) (
+func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store *database.DataStore, lock bool) (
 	*itemGetEntryStateResponse, service.APIError) {
 
 	var itemInfo struct {
@@ -213,7 +214,7 @@ func (srv *Service) getItemInfoAndEntryState(itemID, groupID int64, user *databa
 	service.MustNotBeError(err)
 
 	membersCount, otherMembers, teamCanEnter, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound :=
-		srv.getEntryStateInfo(groupID, itemID, user, store, lock)
+		getEntryStateInfo(groupID, itemID, user, store, lock)
 	state := computeEntryState(
 		participationInfo.IsStarted, participationInfo.IsActive, itemInfo.AllowsMultipleAttempts, itemInfo.IsTeamItem,
 		itemInfo.EntryMaxTeamSize, itemInfo.EntryMinAdmittedMembersRatio, membersCount, admittedMembersCount, attemptsViolationsFound,
@@ -269,7 +270,7 @@ func isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamContest boo
 	return !attemptsViolationsFound && (!hasAlreadyStarted || allowsMultipleAttempts)
 }
 
-func (srv *Service) getEntryStateInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (
+func getEntryStateInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (
 	membersCount int32, otherMembers []itemGetEntryStateOtherMember, teamCanEnter, currentUserCanEnter bool, admittedMembersCount int32,
 	attemptsViolationsFound bool) {
 	if groupID != user.GroupID {

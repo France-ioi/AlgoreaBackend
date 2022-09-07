@@ -73,7 +73,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	ids := findItemPath(srv.Store, participantID, itemID)
+	ids := findItemPath(srv.GetStore(r), participantID, itemID)
 	if ids == nil {
 		return service.InsufficientAccessRightsError
 	}

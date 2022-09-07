@@ -24,7 +24,7 @@ import (
 func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.Sessions().Delete("user_id = ?", user.GroupID).Error())
 		service.MustNotBeError(store.RefreshTokens().Delete("user_id = ?", user.GroupID).Error())
 		return nil

@@ -124,13 +124,14 @@ type groupUserRequestsViewResponseRow struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupID, groupIDSet, includeDescendantGroups, types, apiError := srv.resolveParametersForGetUserRequests(r)
+	store := srv.GetStore(r)
+	groupID, groupIDSet, includeDescendantGroups, types, apiError := srv.resolveParametersForGetUserRequests(store, r)
 	if apiError != service.NoError {
 		return apiError
 	}
 
 	user := srv.GetUser(r)
-	query := srv.Store.GroupPendingRequests().
+	query := store.GroupPendingRequests().
 		Select(`
 			group_pending_requests.at,
 			group_pending_requests.type,
@@ -160,7 +161,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 		}
 	} else {
 		query = query.Where("group_pending_requests.group_id IN ?",
-			srv.Store.ActiveGroupAncestors().ManagedByUser(user).Where("can_manage != 'none'").
+			store.ActiveGroupAncestors().ManagedByUser(user).Where("can_manage != 'none'").
 				Select("groups_ancestors_active.child_group_id").SubQuery())
 	}
 
@@ -197,7 +198,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 	return service.NoError
 }
 
-func (srv *Service) resolveParametersForGetUserRequests(r *http.Request) (
+func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, r *http.Request) (
 	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, apiError service.APIError) {
 	user := srv.GetUser(r)
 
@@ -211,7 +212,7 @@ func (srv *Service) resolveParametersForGetUserRequests(r *http.Request) (
 			return 0, false, false, nil, service.ErrInvalidRequest(err)
 		}
 
-		if apiError = checkThatUserCanManageTheGroupMemberships(srv.Store, user, groupID); apiError != service.NoError {
+		if apiError = checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
 			return 0, false, false, nil, apiError
 		}
 

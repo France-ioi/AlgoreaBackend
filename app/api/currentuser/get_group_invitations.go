@@ -60,7 +60,7 @@ import (
 func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	query := srv.Store.GroupMembershipChanges().
+	query := srv.GetStore(r).GroupMembershipChanges().
 		Select(`
 			group_membership_changes.group_id,
 			group_membership_changes.at,

@@ -134,11 +134,12 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	query := pickVisibleGroups(srv.Store.Groups().DB, user).
+	query := pickVisibleGroups(store.Groups().DB, user).
 		Joins(`
 			LEFT JOIN ? AS manager_access ON child_group_id = groups.id`,
-			srv.Store.GroupAncestors().ManagedByUser(user).
+			store.GroupAncestors().ManagedByUser(user).
 				Select(`
 					1 AS found,
 					MAX(can_manage_value) AS can_manage_value,
@@ -156,7 +157,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Limit(1)
 
 	var result groupGetResponse
-	err = selectGroupsDataForMenu(srv.Store, query, user,
+	err = selectGroupsDataForMenu(store, query, user,
 		`groups.grade, groups.description, groups.created_at,
 		groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
 		IF(manager_access.found, groups.code, NULL) AS code,
@@ -177,7 +178,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			),
 			NULL
 		) AS can_leave_team`,
-		srv.Store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+		store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
 			gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
 		Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -191,11 +192,11 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		result.ManagerPermissionsPart = nil
 	} else {
 		result.ManagerPermissionsPart.CurrentUserCanManage =
-			srv.Store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
+			store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
 	}
 
 	if result.CurrentUserMembership != "none" {
-		service.MustNotBeError(srv.Store.Groups().
+		service.MustNotBeError(store.Groups().
 			Joins(`
 				JOIN groups_ancestors_active
 					ON groups_ancestors_active.child_group_id = groups.id AND
@@ -214,7 +215,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		result.DescendantsCurrentUserIsMemberOf = make([]structures.GroupShortInfo, 0)
 	}
 	if isManager {
-		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
+		service.MustNotBeError(store.Groups().ManagedBy(user).
 			Joins(`
 				JOIN groups_ancestors_active AS groups_ancestors
 					ON groups_ancestors.ancestor_group_id = groups.id AND
@@ -229,7 +230,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		result.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
 	}
 	if result.CurrentUserManagership != none {
-		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
+		service.MustNotBeError(store.Groups().ManagedBy(user).
 			Joins(`
 				JOIN groups_ancestors_active AS groups_ancestors
 					ON groups_ancestors.child_group_id = groups.id AND

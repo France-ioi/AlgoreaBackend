@@ -17,7 +17,7 @@ type groupsMembersViewResponseRow struct {
 	ID          int64          `json:"id,string"`
 	MemberSince *database.Time `json:"member_since,omitempty"`
 	// the latest `group_membership_changes.action`
-	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
+	// enum: invitation_accepted,join_request_accepted,joined_by_badge,joined_by_code,added_directly
 	Action *string `json:"action,omitempty"`
 	// required: true
 	User struct {
@@ -87,17 +87,18 @@ type groupsMembersViewResponseRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroup(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	query := srv.Store.GroupGroups().
+	query := store.GroupGroups().
 		Select(`
 			groups_groups.child_group_id AS id,
 			latest_change.at AS member_since,

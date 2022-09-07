@@ -29,12 +29,13 @@ func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig
 	r := chi.NewRouter()
 
 	srv := &service.Base{
-		Store:        database.NewDataStore(db),
 		ServerConfig: serverConfig,
 		AuthConfig:   authConfig,
 		DomainConfig: domainConfig,
 		TokenConfig:  tokenConfig,
 	}
+	srv.SetGlobalStore(database.NewDataStore(db))
+
 	ctx := &Ctx{srv}
 	r.Group((&auth.Service{Base: srv}).SetRoutes)
 	r.Group((&contests.Service{Base: srv}).SetRoutes)

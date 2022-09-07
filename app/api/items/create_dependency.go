@@ -89,7 +89,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 	}
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("view", "info").

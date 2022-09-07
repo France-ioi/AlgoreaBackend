@@ -119,7 +119,7 @@ func callThroughParticipantMiddleware(userID, asTeamID int64, apiError APIError)
 		_, _ = w.Write([]byte(body))
 	})
 	dataStore := database.NewDataStore(dbmock)
-	participantMiddleware := ParticipantMiddleware(dataStore)
+	participantMiddleware := ParticipantMiddleware(&Base{store: dataStore})
 	mainSrv := httptest.NewServer(participantMiddleware(handler))
 	defer mainSrv.Close()
 

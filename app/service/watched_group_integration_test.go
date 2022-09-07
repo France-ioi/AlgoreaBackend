@@ -33,7 +33,8 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		return trStore.GroupGroups().After()
 	}))
 
-	srv := &service.Base{Store: store}
+	srv := &service.Base{}
+	srv.SetGlobalStore(store)
 	patch := monkey.PatchInstanceMethod(reflect.TypeOf(srv), "GetUser",
 		func(*service.Base, *http.Request) *database.User { return &database.User{GroupID: 4} })
 	defer patch.Unpatch()

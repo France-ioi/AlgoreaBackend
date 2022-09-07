@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,14 +30,15 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
-	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	testhelpers.RunConcurrently(func() {
-		assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
+		dataStore := database.NewDataStoreWithContext(context.Background(), db)
+		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
 			ds.GroupGroups().CreateNewAncestors()
 			return nil
 		}))
 	}, 30)
 
+	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	var result []groupAncestorsResultRow
 	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 

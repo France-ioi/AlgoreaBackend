@@ -78,7 +78,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		Duration            *string
 		ParticipantsGroupID *int64
 	}
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, false, true)
 		service.MustNotBeError(err)
@@ -87,7 +87,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			return apiError.Error // rollback
 		}
 
-		entryState, apiError = srv.getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
+		entryState, apiError = getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
 		if apiError != service.NoError {
 			return apiError.Error
 		}
@@ -143,7 +143,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			service.MustNotBeError(store.GroupGroups().After())
 			// Upserting into groups_groups may mark some attempts as 'to_be_propagated',
 			// so we need to recompute them
-			service.MustNotBeError(store.Results().Propagate())
+			store.ScheduleResultsPropagation()
 		} else {
 			logging.GetLogEntry(r).Warnf("items.participants_group_id is not set for the item with id = %d", entryState.itemID)
 		}

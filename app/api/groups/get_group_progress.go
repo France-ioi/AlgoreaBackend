@@ -119,17 +119,18 @@ type groupGroupProgressResponseTableCell struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -140,13 +141,13 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
 	// There should not be many of them
-	orderedItemIDListWithDuplicates, uniqueItemIDs, _, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, _, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
 	// Preselect IDs of groups for that we will calculate the final stats.
 	// All the "end members" are descendants of these groups.
 	// There should not be too many of groups because we paginate on them.
 	var ancestorGroupIDs []interface{}
-	ancestorGroupIDQuery := srv.Store.ActiveGroupGroups().
+	ancestorGroupIDQuery := store.ActiveGroupGroups().
 		Where("groups_groups_active.parent_group_id = ?", groupID).
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
@@ -174,7 +175,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.NoError
 	}
 
-	endMembers := srv.Store.Groups().
+	endMembers := store.Groups().
 		Select("groups.id").
 		Joins(`
 			JOIN groups_ancestors_active
@@ -183,7 +184,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Where("groups.type = 'Team' OR groups.type = 'User'").
 		Group("groups.id")
 
-	endMembersStats := srv.Store.Raw(`
+	endMembersStats := store.Raw(`
 		SELECT
 			end_members.id,
 			items.id AS item_id,
@@ -216,7 +217,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	var result []*groupGroupProgressResponseTableCell
 	// It still takes more than 2 minutes to complete on large data sets
 	scanAndBuildProgressResults(
-		srv.Store.ActiveGroupAncestors().
+		store.ActiveGroupAncestors().
 			Select(`
 				groups_ancestors_active.ancestor_group_id AS group_id,
 				member_stats.item_id,
@@ -238,7 +239,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	return service.NoError
 }
 
-func (srv *Service) preselectIDsOfVisibleItems(itemParentIDs []int64, user *database.User) (
+func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64, user *database.User) (
 	orderedItemIDListWithDuplicates []interface{}, uniqueItemIDs []string, itemOrder []int, itemsSubQuery interface{}) {
 	itemParentIDsAsIntSlice := make([]interface{}, len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
@@ -250,11 +251,11 @@ func (srv *Service) preselectIDsOfVisibleItems(itemParentIDs []int64, user *data
 		ChildItemID  int64
 	}
 
-	service.MustNotBeError(srv.Store.ItemItems().
+	service.MustNotBeError(store.ItemItems().
 		Select("items_items.child_item_id AS id").
 		Where("parent_item_id IN (?)", itemParentIDs).
 		Joins("JOIN ? AS permissions ON permissions.item_id = items_items.child_item_id",
-			srv.Store.Permissions().MatchingUserAncestors(user).
+			store.Permissions().MatchingUserAncestors(user).
 				Select("item_id").
 				WherePermissionIsAtLeast("view", "info").SubQuery()).
 		Order(gorm.Expr(
@@ -385,7 +386,7 @@ func scanAndBuildProgressResults(
 	appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 }
 
-func (srv *Service) resolveAndCheckParentIDs(r *http.Request, user *database.User) ([]int64, service.APIError) {
+func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *database.User) ([]int64, service.APIError) {
 	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
 	if err != nil {
 		return nil, service.ErrInvalidRequest(err)
@@ -393,7 +394,7 @@ func (srv *Service) resolveAndCheckParentIDs(r *http.Request, user *database.Use
 	itemParentIDs = uniqueIDs(itemParentIDs)
 	if len(itemParentIDs) > 0 {
 		var cnt int
-		service.MustNotBeError(srv.Store.Permissions().MatchingUserAncestors(user).
+		service.MustNotBeError(store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("watch", "result").Where("item_id IN(?)", itemParentIDs).
 			PluckFirst("COUNT(DISTINCT item_id)", &cnt).Error())
 		if cnt != len(itemParentIDs) {
