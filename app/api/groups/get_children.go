@@ -108,6 +108,7 @@ type groupChildrenViewResponseRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
@@ -123,13 +124,13 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	found, err := pickVisibleGroups(srv.Store.Groups().ByID(groupID), user).HasRows()
+	found, err := pickVisibleGroups(store.Groups().ByID(groupID), user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
 	}
 
-	query := pickVisibleGroups(srv.Store.Groups().DB, user).
+	query := pickVisibleGroups(store.Groups().DB, user).
 		Select(`
 			groups.id as id, groups.name, groups.type, groups.grade,
 			groups.is_open, groups.is_public,
@@ -155,7 +156,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 					ON group_ancestors.ancestor_group_id = group_managers.group_id AND group_ancestors.child_group_id = groups.id
 			) AS manager_permissions ON 1`, user.GroupID).
 		Where("groups.id IN(?)",
-			srv.Store.ActiveGroupGroups().
+			store.ActiveGroupGroups().
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)
@@ -177,7 +178,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 
 	var result []groupChildrenViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
-	groupManagerStore := srv.Store.GroupManagers()
+	groupManagerStore := store.GroupManagers()
 	for index := range result {
 		if !result[index].CurrentUserIsManager {
 			result[index].ManagerPermissionsPart = nil

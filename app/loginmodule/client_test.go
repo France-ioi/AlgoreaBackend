@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/thingful/httpmock"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
@@ -76,14 +77,31 @@ func TestClient_GetUserProfile(t *testing.T) {
 					"address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
 					"role":"student","school_grade":null,"student_id":"456789012","ministry_of_education":null,
 					"ministry_of_education_fr":false,"birthday":"2001-08-03","presentation":"I'm Jane Doe",
-					"website":"http://jane.freepages.com","ip":"192.168.11.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
+					"website":"http:\/\/jane.freepages.com","ip":"192.168.11.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
 					"gender":"f","graduation_year":2021,"graduation_grade_expire_at":"2020-07-01 00:00:00",
 					"graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
 					"logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
 					"origin_instance_id":null,"creator_client_id":null,"nationality":"GB",
 					"primary_email":"janedoe@gmail.com","secondary_email":"jane.doe@gmail.com",
 					"primary_email_verified":1,"secondary_email_verified":null,"has_picture":true,
-					"badges":[],"client_id":1,"verification":[],"subscription_news":true
+					"badges": [
+						{
+							"id": 110504,
+							"url": "https:\/\/badges.example.com\/examples\/one",
+							"code": "examplebadge001",
+							"do_not_possess": false,
+							"data": {"category": "", "round": null},
+							"manager": false,
+							"badge_info": {
+								"name": "Example #1",
+								"group_path": [
+									{"url": "https:\/\/badges.example.com\/", "name": "Example badges", "manager": true},
+									{"url": "https:\/\/badges.example.com\/parents", "name": "Example badges with multiple parents", "manager": false}
+								]
+							},
+							"last_update": "2022-07-18T16:07:12+0000"
+						}
+        ],"client_id":1,"verification":[],"subscription_news":true
 				}`,
 			expectedProfile: map[string]interface{}{
 				"login_id": int64(100000001), "sex": "Female", "land_line_number": nil, "city": nil, "default_language": "en",
@@ -92,6 +110,19 @@ func TestClient_GetUserProfile(t *testing.T) {
 				"last_name": "Doe", "birth_date": "2001-08-03", "first_name": "Jane", "zipcode": nil, "address": nil,
 				"login": "jane", "email_verified": true, "time_zone": "Europe/London",
 				"notify_news": true, "photo_autoload": true, "public_first_name": false, "public_last_name": false,
+				"badges": []database.Badge{
+					{
+						URL:     "https://badges.example.com/examples/one",
+						Manager: false,
+						BadgeInfo: database.BadgeInfo{
+							Name: "Example #1",
+							GroupPath: []database.BadgeGroupPathElement{
+								{Name: "Example badges", URL: "https://badges.example.com/", Manager: true},
+								{Name: "Example badges with multiple parents", URL: "https://badges.example.com/parents", Manager: false},
+							},
+						},
+					},
+				},
 			},
 		},
 		{
@@ -120,7 +151,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 				"email_verified": false, "birth_date": nil, "grade": nil, "city": nil, "first_name": nil,
 				"login_id": int64(100000001), "email": nil, "login": "jane", "zipcode": nil, "land_line_number": nil,
 				"free_text": nil, "time_zone": nil, "notify_news": false, "photo_autoload": false,
-				"public_first_name": false, "public_last_name": false,
+				"public_first_name": false, "public_last_name": false, "badges": []database.Badge(nil),
 			},
 		},
 		{
@@ -143,6 +174,15 @@ func TestClient_GetUserProfile(t *testing.T) {
 			expectedErr:  errors.New("user's profile is invalid"),
 			expectedLog: `level=warning msg="User's profile is invalid (response = \"{}\", ` +
 				`error = \"no id in user's profile\")"`,
+		},
+		{
+			name:         "invalid badges",
+			responseCode: 200,
+			response:     `{"id":100000001,"login":"jane","badges":1234}`,
+			expectedErr:  errors.New("user's profile is invalid"),
+			expectedLog: `level=warning msg="User's profile is invalid ` +
+				`(response = \"{\\\"id\\\":100000001,\\\"login\\\":\\\"jane\\\",\\\"badges\\\":1234}\", ` +
+				`error = \"invalid badges data\")"`,
 		},
 	}
 	const moduleURL = "http://login.url.com"
@@ -195,10 +235,39 @@ func Test_convertUserProfile(t *testing.T) {
 				"origin_instance_id": nil, "creator_client_id": nil, "nationality": "GB",
 				"primary_email": "janedoe@gmail.com", "secondary_email": "jane.doe@gmail.com",
 				"primary_email_verified": int64(1), "secondary_email_verified": nil, "has_picture": true,
-				"badges": []interface{}(nil), "client_id": int64(1), "verification": []interface{}(nil),
+				"badges": []interface{}{
+					map[string]interface{}{
+						"id":             110501,
+						"url":            "https://badges.castor-informatique.fr/qualification_demi_finale/2020",
+						"code":           "t9556",
+						"do_not_possess": false,
+						"data":           map[string]interface{}{"category": "", "round": nil},
+						"manager":        false,
+						"badge_info": map[string]interface{}{
+							"name": "Concours Castor 2020",
+							"group_path": []interface{}{
+								map[string]interface{}{"url": "https://badges.castor-informatique.fr/", "name": "Concours Castor", "manager": false},
+							},
+						},
+						"last_update": "2022-07-11T12:54:37+0000",
+					},
+				},
+				"client_id": int64(1), "verification": []interface{}(nil),
 			},
 			expected: map[string]interface{}{
 				"free_text": "I'm Jane Doe", "email": "janedoe@gmail.com", "grade": int64(-1),
+				"badges": []database.Badge{
+					{
+						URL:     "https://badges.castor-informatique.fr/qualification_demi_finale/2020",
+						Manager: false,
+						BadgeInfo: database.BadgeInfo{
+							Name: "Concours Castor 2020",
+							GroupPath: []database.BadgeGroupPathElement{
+								{URL: "https://badges.castor-informatique.fr/", Name: "Concours Castor", Manager: false},
+							},
+						},
+					},
+				},
 				"web_site": "http://jane.freepages.com", "email_verified": true, "land_line_number": nil, "last_name": "Doe",
 				"zipcode": nil, "sex": "Female", "login_id": int64(100000001), "country_code": "gb", "first_name": "Jane",
 				"cell_phone_number": nil, "login": "jane", "address": nil, "birth_date": "2001-08-03", "graduation_year": int64(2021),
@@ -210,6 +279,7 @@ func Test_convertUserProfile(t *testing.T) {
 			name: "null fields",
 			source: map[string]interface{}{
 				"id": int64(100000001), "login": "jane", "login_updated_at": nil, "login_fixed": int64(0),
+				"badges":                    []interface{}(nil),
 				"login_revalidate_required": int64(0), "login_change_required": int64(0), "language": nil, "first_name": nil,
 				"last_name": nil, "real_name_visible": false, "timezone": nil, "country_code": nil,
 				"address": nil, "city": nil, "zipcode": nil, "primary_phone": nil, "secondary_phone": nil,
@@ -222,11 +292,12 @@ func Test_convertUserProfile(t *testing.T) {
 				"origin_instance_id": nil, "creator_client_id": nil, "nationality": nil,
 				"primary_email": nil, "secondary_email": nil,
 				"primary_email_verified": nil, "secondary_email_verified": nil, "has_picture": false,
-				"badges": nil, "client_id": nil, "verification": nil, "public_first_name": false, "public_last_name": false,
+				"client_id": nil, "verification": nil, "public_first_name": false, "public_last_name": false,
 				"subscription_news": nil,
 			},
 			expected: map[string]interface{}{
 				"land_line_number": nil, "login_id": int64(100000001), "login": "jane", "free_text": nil, "sex": nil,
+				"badges":     []database.Badge(nil),
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "",
@@ -238,7 +309,8 @@ func Test_convertUserProfile(t *testing.T) {
 			name:   "gender: male",
 			source: map[string]interface{}{"id": int64(100000001), "login": "john", "gender": "m"},
 			expected: map[string]interface{}{
-				"land_line_number": nil, "login_id": int64(100000001), "login": "john", "free_text": nil, "sex": "Male",
+				"land_line_number": nil, "login_id": int64(100000001), "login": "john",
+				"badges": []database.Badge(nil), "free_text": nil, "sex": "Male",
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "",
@@ -250,7 +322,8 @@ func Test_convertUserProfile(t *testing.T) {
 			name:   "primary email verified: true",
 			source: map[string]interface{}{"id": int64(100000001), "login": "john", "primary_email_verified": true},
 			expected: map[string]interface{}{
-				"land_line_number": nil, "login_id": int64(100000001), "login": "john", "free_text": nil, "sex": nil,
+				"land_line_number": nil, "login_id": int64(100000001),
+				"badges": []database.Badge(nil), "login": "john", "free_text": nil, "sex": nil,
 				"student_id": nil, "email_verified": true, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "",
@@ -262,7 +335,8 @@ func Test_convertUserProfile(t *testing.T) {
 			name:   "country code",
 			source: map[string]interface{}{"id": int64(100000001), "login": "john", "country_code": "US"},
 			expected: map[string]interface{}{
-				"land_line_number": nil, "login_id": int64(100000001), "login": "john", "free_text": nil, "sex": nil,
+				"land_line_number": nil, "login_id": int64(100000001),
+				"badges": []database.Badge(nil), "login": "john", "free_text": nil, "sex": nil,
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
 				"zipcode": nil, "birth_date": nil, "email": nil, "graduation_year": int64(0), "city": nil,
 				"default_language": nil, "web_site": nil, "last_name": nil, "first_name": nil, "country_code": "us",

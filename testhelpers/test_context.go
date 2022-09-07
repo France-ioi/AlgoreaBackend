@@ -142,7 +142,7 @@ func (ctx *TestContext) db() *sql.DB {
 	if db == nil {
 		var err error
 		config, _ := app.DBConfig(ctx.application.Config)
-		db, err = sql.Open("mysql", config.FormatDSN())
+		db, err = sql.Open("instrumented-mysql", config.FormatDSN())
 		if err != nil {
 			fmt.Println("Unable to connect to the database: ", err)
 			os.Exit(1)

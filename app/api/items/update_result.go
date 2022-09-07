@@ -81,7 +81,7 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 	formData := formdata.NewFormData(&input)
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		resultScope := store.Results().
 			Where("participant_id = ?", participantID).
 			Where("attempt_id = ?", attemptID).

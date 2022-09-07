@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
@@ -15,6 +16,11 @@ type DataStore struct {
 // NewDataStore returns a DataStore
 func NewDataStore(conn *DB) *DataStore {
 	return &DataStore{DB: conn}
+}
+
+// NewDataStoreWithContext returns a new DataStore with the given context
+func NewDataStoreWithContext(ctx context.Context, conn *DB) *DataStore {
+	return &DataStore{DB: newDB(ctx, conn.db)}
 }
 
 // NewDataStoreWithTable returns a specialized DataStore
@@ -164,11 +170,34 @@ func (s *DataStore) NewID() int64 {
 	return rand.Int63()
 }
 
+type awaitingTriggers struct {
+	Results bool
+}
+type dbContextKey string
+
+var triggersContextKey = dbContextKey("triggers")
+
 // InTransaction executes the given function in a transaction and commits
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
+	s.DB.ctx = context.WithValue(s.DB.ctx, triggersContextKey, &awaitingTriggers{})
 	return s.inTransaction(func(db *DB) error {
-		return txFunc(NewDataStoreWithTable(db, s.tableName))
+		dataStore := NewDataStoreWithTable(db, s.tableName)
+		err := txFunc(dataStore)
+		if err == nil {
+			triggersToRun := db.ctx.Value(triggersContextKey).(*awaitingTriggers)
+			if triggersToRun.Results {
+				triggersToRun.Results = false
+				err = dataStore.Results().propagate()
+			}
+		}
+		return err
 	})
+}
+
+// ScheduleResultsPropagation schedules a run of ResultStore::propagate() on transaction commit
+func (s *DataStore) ScheduleResultsPropagation() {
+	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	triggersToRun.Results = true
 }
 
 // WithForeignKeyChecksDisabled executes the given function with foreign keys checking disabled

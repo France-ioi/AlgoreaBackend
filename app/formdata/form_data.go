@@ -31,6 +31,7 @@ type FormData struct {
 	usedKeys            map[string]bool
 	decodeErrors        map[string]bool
 	oldValues           interface{}
+	allowUnknownFields  bool
 
 	validate *validator.Validate
 	trans    ut.Translator
@@ -116,6 +117,11 @@ func (f *FormData) RegisterTranslation(tag, text string) {
 // SetOldValues sets the internal pointer to the structure containing old values for validation
 func (f *FormData) SetOldValues(oldValues interface{}) {
 	f.oldValues = oldValues
+}
+
+// AllowUnknownFields disables the check for unknown fields in data
+func (f *FormData) AllowUnknownFields() {
+	f.allowUnknownFields = true
 }
 
 // ParseJSONRequestData parses and validates JSON from the request according to the structure definition
@@ -303,8 +309,10 @@ func (f *FormData) getUsedKeysPathFromValidatorPath(path string) string {
 }
 
 func (f *FormData) checkProvidedFields() {
-	for _, unusedKey := range f.metadata.Unused {
-		f.fieldErrors[unusedKey] = append(f.fieldErrors[unusedKey], "unexpected field")
+	if !f.allowUnknownFields {
+		for _, unusedKey := range f.metadata.Unused {
+			f.fieldErrors[unusedKey] = append(f.fieldErrors[unusedKey], "unexpected field")
+		}
 	}
 	for _, usedKey := range f.metadata.Keys {
 		f.usedKeys[usedKey] = true

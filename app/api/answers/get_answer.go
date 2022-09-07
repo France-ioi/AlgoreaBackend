@@ -50,26 +50,27 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
 
-	usersGroupsQuery := srv.Store.ActiveGroupGroups().WhereUserIsMember(user).Select("parent_group_id")
+	store := srv.GetStore(httpReq)
+	usersGroupsQuery := store.ActiveGroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	// a participant should have at least 'content' access to the answers.item_id
-	participantItemPerms := srv.Store.Permissions().MatchingUserAncestors(user).
+	participantItemPerms := store.Permissions().MatchingUserAncestors(user).
 		WherePermissionIsAtLeast("view", "content").
 		Where("permissions.item_id = answers.item_id").
 		Select("1").Limit(1)
 	// an observer should have 'can_watch'>='answer' permission on the answers.item_id
-	observerItemPerms := srv.Store.Permissions().MatchingUserAncestors(user).
+	observerItemPerms := store.Permissions().MatchingUserAncestors(user).
 		WherePermissionIsAtLeast("watch", "answer").
 		Where("permissions.item_id = answers.item_id").
 		Select("1").Limit(1)
 	// an observer should be able to watch the participant
-	observerParticipantPerms := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+	observerParticipantPerms := store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Where("groups_ancestors_active.child_group_id = answers.participant_id").
 		Where("can_watch_members").
 		Select("1").Limit(1)
 
-	err = withGradings(srv.Store.Answers().ByID(answerID).
+	err = withGradings(store.Answers().ByID(answerID).
 		// 1) the user is the participant or a member of the participant group able to view the item,
 		// 2) or an observer with required permissions
 		Where(`

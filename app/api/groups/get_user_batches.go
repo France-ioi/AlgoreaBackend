@@ -73,20 +73,21 @@ type userBatch struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	managedByUser := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+	managedByUser := store.ActiveGroupAncestors().ManagedByUser(user).
 		Where("can_manage != 'none'").
 		Select("groups_ancestors_active.child_group_id AS id")
 
-	prefixAncestors := srv.Store.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
+	prefixAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
 		Select("ancestor_group_id AS id")
 
-	query := srv.Store.UserBatches().
+	query := store.UserBatches().
 		Joins("JOIN user_batch_prefixes USING(group_prefix)").
 		Where(`user_batch_prefixes.group_id IN(?)`, managedByUser.QueryExpr()).
 		Where(`user_batch_prefixes.group_id IN(?)`, prefixAncestors.QueryExpr()).

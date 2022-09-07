@@ -227,6 +227,14 @@ func TestUserMiddleware(t *testing.T) {
 	}
 }
 
+type storeProvider struct {
+	store *database.DataStore
+}
+
+func (sp *storeProvider) GetStore(*http.Request) *database.DataStore { return sp.store }
+
+var _ GetStorer = &storeProvider{}
+
 func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, cookieHeaders []string,
 	userID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
 	dbmock, mock := database.NewDBMock()
@@ -254,7 +262,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, c
 	}
 
 	// dummy server using the middleware
-	middleware := UserMiddleware(database.NewDataStore(dbmock).Sessions())
+	middleware := UserMiddleware(&storeProvider{database.NewDataStore(dbmock)})
 	enteredService := false // used to log if the service has been reached
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service

@@ -120,15 +120,16 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	apiErr := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(srv.Store, user, sourceGroupID, groupID)
+	apiErr := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(store, user, sourceGroupID, groupID)
 	if apiErr != service.NoError {
 		return apiErr
 	}
 
-	found, err := srv.Store.Permissions().MatchingUserAncestors(user).
+	found, err := store.Permissions().MatchingUserAncestors(user).
 		Where("? OR can_watch_generated = 'answer_with_grant' OR can_edit_generated = 'all_with_grant'",
-			srv.Store.PermissionsGranted().PermissionIsAtLeastSqlExpr("grant_view", enter)).
+			store.PermissionsGranted().PermissionIsAtLeastSqlExpr("grant_view", enter)).
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
@@ -137,7 +138,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 
 	var permissions []map[string]interface{}
 	const canMakeSessionOfficialColumn = "IFNULL(MAX(can_make_session_official), 0) AS can_make_session_official"
-	grantedPermissions := srv.Store.PermissionsGranted().
+	grantedPermissions := store.PermissionsGranted().
 		Where("group_id = ?", groupID).
 		Where("item_id = ?", itemID).
 		Where("source_group_id = ?", sourceGroupID).
@@ -151,7 +152,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 			IFNULL(MAX(can_enter_until), '9999-12-31 23:59:59') AS can_enter_until,
 			IFNULL(MAX(is_owner), 0) AS is_owner, ` + canMakeSessionOfficialColumn)
 
-	generatedPermissions := srv.Store.Permissions().
+	generatedPermissions := store.Permissions().
 		Joins("JOIN groups_ancestors_active AS ancestors ON ancestors.ancestor_group_id = permissions.group_id").
 		Where("ancestors.child_group_id = ?", groupID).
 		Where("item_id = ?", itemID).
@@ -162,7 +163,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 			IFNULL(MAX(can_edit_generated_value), 1) AS can_edit_generated_value,
 			IFNULL(MAX(is_owner_generated), 0) AS is_owner_generated`)
 
-	ancestorPermissions := srv.Store.PermissionsGranted().
+	ancestorPermissions := store.PermissionsGranted().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_granted.group_id").
 		Where("groups_ancestors_active.child_group_id = ?", groupID).
 		Where("item_id = ?", itemID)
@@ -189,7 +190,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 	grantedPermissionsSelf := grantedPermissionsWithAncestors.Where("origin = 'self'")
 	grantedPermissionsOther := grantedPermissionsWithAncestors.Where("origin = 'other'")
 
-	err = srv.Store.
+	err = store.
 		Raw(`
 			SELECT
 				grp.can_view_value AS granted_directly_can_view_value, grp.can_grant_view_value AS granted_directly_can_grant_view_value,
@@ -238,7 +239,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 	service.MustNotBeError(err)
 
 	permissionsRow := permissions[0]
-	permissionsGrantedStore := srv.Store.PermissionsGranted()
+	permissionsGrantedStore := store.PermissionsGranted()
 
 	render.Respond(w, r, &permissionsViewResponse{
 		Granted: grantedPermissionsStruct{

@@ -81,7 +81,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 	var token string
 	var expiresIn int32
 
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var login string
 		var userID int64
 		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {

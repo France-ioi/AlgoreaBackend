@@ -15,7 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-var nowRegexp = regexp.MustCompile(`(?i)\bNOW\s*\(\s*\)`)
+var nowRegexp = regexp.MustCompile(`(?i)\bNOW\s*\(\s*(?:\d+\s*)?\)`)
 var patchedMethods []*monkey.PatchGuard
 
 // MockDBTime replaces the DB NOW() function call with a given constant value in all the queries

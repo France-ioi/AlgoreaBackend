@@ -106,17 +106,18 @@ type groupTeamProgressResponseTableCell struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -126,12 +127,12 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, uniqueItemIDs, _, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, _, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
 	var teamIDs []interface{}
-	teamIDQuery := srv.Store.ActiveGroupAncestors().
+	teamIDQuery := store.ActiveGroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
@@ -158,7 +159,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	var result []*groupTeamProgressResponseTableCell
-	scanAndBuildProgressResults(srv.Store.Groups().
+	scanAndBuildProgressResults(store.Groups().
 		Select(`
 			items.id AS item_id,
 			groups.id AS group_id,

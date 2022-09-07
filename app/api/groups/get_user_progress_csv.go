@@ -74,17 +74,18 @@ const csvExportBatchSize = 500
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -104,13 +105,13 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
 	csvWriter := csv.NewWriter(w)
 	defer csvWriter.Flush()
 	csvWriter.Comma = ';'
 
-	srv.printTableHeader(user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
+	printTableHeader(store, user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
 		[]string{"Login", "First name", "Last name"})
 
 	// Preselect end member for that we will calculate the stats.
@@ -120,7 +121,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 		LastName  string
 		Login     string
 	}
-	service.MustNotBeError(srv.Store.ActiveGroupAncestors().
+	service.MustNotBeError(store.ActiveGroupAncestors().
 		Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id").
 		Joins("JOIN `users` ON users.group_id = groups_groups_active.child_group_id").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
@@ -153,7 +154,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 		service.MustNotBeError(
 			// nolint:gosec
 			joinUserProgressResultsForCSV(
-				srv.Store.Raw(`
+				store.Raw(`
 				SELECT STRAIGHT_JOIN
 					items.id AS item_id,
 					users.group_id AS group_id, MAX(result_with_best_score.score_computed) AS score
@@ -174,15 +175,15 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 	return service.NoError
 }
 
-func (srv *Service) printTableHeader(
-	user *database.User, uniqueItemIDs []string, orderedItemIDListWithDuplicates []interface{}, itemOrder []int,
-	csvWriter *csv.Writer, firstColumns []string) {
+func printTableHeader(
+	store *database.DataStore, user *database.User, uniqueItemIDs []string, orderedItemIDListWithDuplicates []interface{},
+	itemOrder []int, csvWriter *csv.Writer, firstColumns []string) {
 	var items []struct {
 		ID           int64  `json:"id"`
 		ParentItemID int64  `json:"parent_item_id"`
 		Title        string `json:"-"`
 	}
-	service.MustNotBeError(srv.Store.Items().
+	service.MustNotBeError(store.Items().
 		JoinsUserAndDefaultItemStrings(user).
 		Where("items.id IN (?)", uniqueItemIDs).
 		Select("id, COALESCE(user_strings.title, default_strings.title) AS title").

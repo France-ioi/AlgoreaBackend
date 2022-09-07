@@ -19,7 +19,8 @@ func TestDbOk(t *testing.T) {
 func TestDbNotOk(t *testing.T) {
 	assert := assertlib.New(t)
 	dbMock, _ := database.NewDBMock()
-	ctx := &Ctx{&service.Base{Store: database.NewDataStore(dbMock)}}
+	ctx := &Ctx{&service.Base{}}
+	ctx.service.SetGlobalStore(database.NewDataStore(dbMock))
 	assert.HTTPSuccess(ctx.status, "GET", "", nil)
 	assert.HTTPBodyContains(ctx.status, "GET", "", nil, "The web service is responding! The database connection is established.")
 }

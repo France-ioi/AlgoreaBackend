@@ -87,20 +87,21 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantType, err := srv.getParticipantTypeForContestManagedByUser(itemID, user)
+	store := srv.GetStore(r)
+	participantType, err := getParticipantTypeForContestManagedByUser(store, itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	ok, err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
+	ok, err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").HasRows()
 	service.MustNotBeError(err)
 	if !ok {
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.ActiveGroupAncestors().Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
+	query := store.ActiveGroupAncestors().Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Joins(`
 			JOIN `+"`groups`"+` AS found_group
 				ON found_group.id = groups_ancestors_active.child_group_id AND found_group.type = ?`, participantType).
@@ -132,7 +133,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		Having(`
 			MAX(permissions_generated.can_view_generated_value) >= ? OR
 			MAX(permissions_granted.can_enter_from < permissions_granted.can_enter_until)`,
-			srv.Store.PermissionsGranted().ViewIndexByName("info"))
+			store.PermissionsGranted().ViewIndexByName("info"))
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(

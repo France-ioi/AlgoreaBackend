@@ -62,8 +62,9 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 	if user.LoginID == nil {
 		return service.InsufficientAccessRightsError
 	}
+	store := srv.GetStore(r)
 
-	found, err := srv.Store.Permissions().MatchingUserAncestors(user).WherePermissionIsAtLeast("view", "content").
+	found, err := store.Permissions().MatchingUserAncestors(user).WherePermissionIsAtLeast("view", "content").
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
@@ -80,7 +81,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	var score float32
-	err = srv.Store.Results().ByID(user.GroupID, attemptID, itemID).PluckFirst("score_computed", &score).Error()
+	err = store.Results().ByID(user.GroupID, attemptID, itemID).PluckFirst("score_computed", &score).Error()
 	if !gorm.IsRecordNotFoundError(err) {
 		service.MustNotBeError(err)
 	}

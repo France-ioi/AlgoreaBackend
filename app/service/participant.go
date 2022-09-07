@@ -15,15 +15,20 @@ type participantMiddlewareKey int
 
 const ctxParticipant participantMiddlewareKey = iota
 
+// GetStorer is an interface allowing to get a data store bound to the context of the given request
+type GetStorer interface {
+	GetStore(r *http.Request) *database.DataStore
+}
+
 // ParticipantMiddleware is a middleware retrieving a participant from the request content.
 // The participant id is the `as_team_id` parameter value if it is given or the user's `group_id` otherwise.
 // If `as_team_id` is given, it should be an id of a team and the user should be a member of this team, otherwise
 // the 'forbidden' error is returned.
-func ParticipantMiddleware(dataStore *database.DataStore) func(next http.Handler) http.Handler {
+func ParticipantMiddleware(srv GetStorer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user := auth.UserFromContext(r.Context())
-			participantID, apiError := GetParticipantIDFromRequest(r, user, dataStore)
+			participantID, apiError := GetParticipantIDFromRequest(r, user, srv.GetStore(r))
 			if apiError != NoError {
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				_ = render.Render(w, r, apiError.httpResponse())

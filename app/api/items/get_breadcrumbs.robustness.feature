@@ -1,9 +1,9 @@
 Feature: Get item breadcrumbs - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name    | text_id | grade | type  |
-      | 11 | jdoe    |         | -2    | User  |
-      | 13 | Group B |         | -2    | Class |
+      | id | name    | grade | type  |
+      | 11 | jdoe    | -2    | User  |
+      | 13 | Group B | -2    | Class |
     And the database has the following table 'users':
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |

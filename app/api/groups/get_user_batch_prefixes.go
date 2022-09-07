@@ -72,21 +72,22 @@ type userBatchPrefix struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	managedByUser := srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+	managedByUser := store.ActiveGroupAncestors().ManagedByUser(user).
 		Where("can_manage != 'none'").
 		Select("groups_ancestors_active.child_group_id AS id")
 
-	query := srv.Store.UserBatchPrefixes().
+	query := store.UserBatchPrefixes().
 		Joins(`
 			JOIN groups_ancestors_active
 				ON groups_ancestors_active.ancestor_group_id = user_batch_prefixes.group_id AND

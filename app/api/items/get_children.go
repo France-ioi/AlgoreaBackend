@@ -223,7 +223,8 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		}
 	}
 
-	found, err := srv.Store.Permissions().
+	store := srv.GetStore(httpReq)
+	found, err := store.Permissions().
 		MatchingGroupAncestors(participantID).
 		WherePermissionIsAtLeast("view", "content").
 		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", participantID).
@@ -238,7 +239,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 
 	var rawData []rawListChildItem
 	service.MustNotBeError(
-		constructItemChildrenQuery(srv.Store, itemID, participantID, requiredViewPermissionOnItems, attemptID, watchedGroupIDSet, watchedGroupID,
+		constructItemChildrenQuery(store, itemID, participantID, requiredViewPermissionOnItems, attemptID, watchedGroupIDSet, watchedGroupID,
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation,
 				items.id, items.type, items.default_language_tag,
@@ -261,7 +262,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 			JoinsUserAndDefaultItemStrings(user).
 			Scan(&rawData).Error())
 
-	response := srv.childItemsFromRawData(rawData, watchedGroupIDSet, srv.Store.PermissionsGranted())
+	response := childItemsFromRawData(rawData, watchedGroupIDSet, store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -288,7 +289,7 @@ func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, gro
 		})
 }
 
-func (srv *Service) childItemsFromRawData(
+func childItemsFromRawData(
 	rawData []rawListChildItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []childItem {
 	result := make([]childItem, 0, len(rawData))
 	var currentChild *childItem
@@ -329,7 +330,7 @@ func (srv *Service) childItemsFromRawData(
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 			}
-			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, srv.Store.PermissionsGranted())
+			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, permissionGrantedStore)
 			result = append(result, child)
 			currentChild = &result[len(result)-1]
 		}

@@ -81,6 +81,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 
 	user := srv.GetUser(r)
 	participantID := user.GroupID
+	store := srv.GetStore(r)
 
 	if len(r.URL.Query()["participant_id"]) != 0 {
 		participantID, err = service.ResolveURLQueryGetInt64Field(r, "participant_id")
@@ -88,7 +89,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 			return service.ErrInvalidRequest(err)
 		}
 
-		found, err := srv.Store.ActiveGroupAncestors().ManagedByUser(user).Where("can_watch_members").
+		found, err := store.ActiveGroupAncestors().ManagedByUser(user).Where("can_watch_members").
 			Where("groups_ancestors_active.child_group_id = ?", participantID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
@@ -96,7 +97,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	breadcrumbs := findItemBreadcrumbs(srv.Store, participantID, user, itemID)
+	breadcrumbs := findItemBreadcrumbs(store, participantID, user, itemID)
 	if breadcrumbs == nil {
 		return service.InsufficientAccessRightsError
 	}

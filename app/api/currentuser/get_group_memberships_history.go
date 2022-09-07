@@ -56,7 +56,7 @@ import (
 func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	query := srv.Store.GroupMembershipChanges().
+	query := srv.GetStore(r).GroupMembershipChanges().
 		Select(`
 			group_membership_changes.at,
 			group_membership_changes.action,

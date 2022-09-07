@@ -86,7 +86,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 	input := itemStringUpdateRequest{}
 	data := formdata.NewFormData(&input)
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		err = data.ParseJSONRequestData(r)
 		if err != nil {
 			apiError = service.ErrInvalidRequest(err)

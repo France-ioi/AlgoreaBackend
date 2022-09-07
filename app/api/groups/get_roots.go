@@ -48,11 +48,12 @@ type groupRootsViewResponseRow struct {
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	innerQuery := srv.Store.Groups().
+	innerQuery := store.Groups().
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
-			ancestorsOfJoinedGroups(srv.Store, user).QueryExpr(), ancestorsOfManagedGroups(srv.Store, user).QueryExpr()).
+			ancestorsOfJoinedGroups(store, user).QueryExpr(), ancestorsOfManagedGroups(store, user).QueryExpr()).
 		Where("groups.type != 'Base'").
 		Where("groups.id != ?", user.GroupID).
 		Where(`
@@ -66,7 +67,7 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 		Order("groups.name")
 
 	var result []groupRootsViewResponseRow
-	service.MustNotBeError(selectGroupsDataForMenu(srv.Store, innerQuery, user, "").Scan(&result).Error())
+	service.MustNotBeError(selectGroupsDataForMenu(store, innerQuery, user, "").Scan(&result).Error())
 
 	render.Respond(w, r, result)
 	return service.NoError

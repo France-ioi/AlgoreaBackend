@@ -82,7 +82,8 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIError {
-	requestData := AskHintRequest{store: srv.Store, publicKey: srv.TokenConfig.PublicKey}
+	store := srv.GetStore(r)
+	requestData := AskHintRequest{store: store, publicKey: srv.TokenConfig.PublicKey}
 
 	var err error
 	if err = render.Bind(r, &requestData); err != nil {
@@ -97,7 +98,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		return apiError
 	}
 
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
 		hasAccess, reason, err = store.Items().
@@ -145,8 +146,6 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		service.MustNotBeError(resultStore.MarkAsToBePropagated(
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 			requestData.TaskToken.Converted.LocalItemID))
-
-		service.MustNotBeError(store.Results().Propagate())
 
 		return nil
 	})

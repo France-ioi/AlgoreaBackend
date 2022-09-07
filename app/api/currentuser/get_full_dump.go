@@ -50,6 +50,7 @@ func (srv *Service) getFullDump(w http.ResponseWriter, r *http.Request) service.
 
 func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full bool) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=user_data.json")
 	w.WriteHeader(200)
@@ -58,9 +59,9 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	service.MustNotBeError(err)
 
 	writeJSONObjectElement("current_user", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, "users", nil)
+		columns := getColumnsList(store, "users", nil)
 		var userData []map[string]interface{}
-		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).Select(columns).
+		service.MustNotBeError(store.Users().ByID(user.GroupID).Select(columns).
 			ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(w, userData[0])
 	})
@@ -68,16 +69,16 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("sessions", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, "sessions", []string{"access_token"})
-			service.MustNotBeError(srv.Store.Sessions().Where("user_id = ?", user.GroupID).
+			columns := getColumnsList(store, "sessions", []string{"access_token"})
+			service.MustNotBeError(store.Sessions().Where("user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS access_token").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectElement("refresh_token", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, "refresh_tokens", []string{"refresh_token"})
+			columns := getColumnsList(store, "refresh_tokens", []string{"refresh_token"})
 			var refreshTokens []map[string]interface{}
-			service.MustNotBeError(srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
+			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS refresh_token").ScanIntoSliceOfMaps(&refreshTokens).Error())
 			if len(refreshTokens) > 0 {
 				writeValue(w, refreshTokens[0])
@@ -89,7 +90,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 	writeComma(w)
 	writeJSONObjectArrayElement("managed_groups", w, func(writer io.Writer) {
-		service.MustNotBeError(srv.Store.Groups().ManagedBy(user).
+		service.MustNotBeError(store.Groups().ManagedBy(user).
 			Order("`groups`.`id`").
 			Group("`groups`.`id`").
 			Select("`groups`.id, `groups`.name").ScanAndHandleMaps(streamerFunc(w)).Error())
@@ -97,7 +98,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 	writeComma(w)
 	writeJSONObjectArrayElement("joined_groups", w, func(writer io.Writer) {
-		service.MustNotBeError(srv.Store.ActiveGroupGroups().
+		service.MustNotBeError(store.ActiveGroupGroups().
 			Where("groups_groups_active.child_group_id = ?", user.GroupID).
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id").
 			Joins("JOIN `groups` ON `groups`.id = groups_ancestors_active.ancestor_group_id").
@@ -108,27 +109,27 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("answers", w, func(writer io.Writer) {
-			service.MustNotBeError(srv.Store.Answers().Where("author_id = ?", user.GroupID).
+			service.MustNotBeError(store.Answers().Where("author_id = ?", user.GroupID).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("attempts", w, func(writer io.Writer) {
-			service.MustNotBeError(buildQueryForGettingAttemptsOrResults(srv.Store.Attempts().DataStore, user, "attempts").
+			service.MustNotBeError(buildQueryForGettingAttemptsOrResults(store.Attempts().DataStore, user, "attempts").
 				Order("participant_id, id").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("results", w, func(writer io.Writer) {
-			service.MustNotBeError(buildQueryForGettingAttemptsOrResults(srv.Store.Results().DataStore, user, "results").
+			service.MustNotBeError(buildQueryForGettingAttemptsOrResults(store.Results().DataStore, user, "results").
 				Order("participant_id, attempt_id, item_id").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 	}
 
 	writeComma(w)
 	writeJSONObjectArrayElement("groups_groups", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, "groups_groups", nil)
-		service.MustNotBeError(srv.Store.GroupGroups().
+		columns := getColumnsList(store, "groups_groups", nil)
+		service.MustNotBeError(store.GroupGroups().
 			Where("child_group_id = ?", user.GroupID).
 			Joins("JOIN `groups` ON `groups`.id = parent_group_id").
 			Select(columns + ", `groups`.name").
@@ -137,8 +138,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 	writeComma(w)
 	writeJSONObjectArrayElement("group_managers", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, "group_managers", nil)
-		service.MustNotBeError(srv.Store.GroupManagers().
+		columns := getColumnsList(store, "group_managers", nil)
+		service.MustNotBeError(store.GroupManagers().
 			Where("manager_id = ?", user.GroupID).
 			Joins("JOIN `groups` ON `groups`.id = group_id").
 			Select(columns + ", `groups`.name").
@@ -148,8 +149,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("group_membership_changes", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, "group_membership_changes", nil)
-			service.MustNotBeError(srv.Store.GroupMembershipChanges().
+			columns := getColumnsList(store, "group_membership_changes", nil)
+			service.MustNotBeError(store.GroupMembershipChanges().
 				Where("member_id = ?", user.GroupID).
 				Joins("JOIN `groups` ON `groups`.id = group_id").
 				Select(columns + ", `groups`.name").
@@ -159,8 +160,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 		writeComma(w)
 		writeJSONObjectArrayElement("group_pending_requests", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, "group_pending_requests", nil)
-			service.MustNotBeError(srv.Store.GroupPendingRequests().
+			columns := getColumnsList(store, "group_pending_requests", nil)
+			service.MustNotBeError(store.GroupPendingRequests().
 				Where("member_id = ?", user.GroupID).
 				Joins("JOIN `groups` ON `groups`.id = group_id").
 				Select(columns + ", `groups`.name").

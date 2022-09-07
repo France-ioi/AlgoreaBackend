@@ -110,7 +110,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		Validated        bool
 	}
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		// the group should have can_view >= 'content' permission on the item
 		err = store.Items().ByID(itemID).
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", participantID).
@@ -154,7 +154,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		service.MustNotBeError(resultScope.UpdateColumn("latest_activity_at", database.Now()).Error())
 		service.MustNotBeError(store.Results().MarkAsToBePropagated(participantID, attemptID, itemID))
 
-		return store.Results().Propagate()
+		return nil
 	})
 	if apiError != service.NoError {
 		return apiError

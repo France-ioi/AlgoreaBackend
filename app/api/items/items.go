@@ -28,8 +28,8 @@ const skill = "Skill"
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
-	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Store))
+	router.Use(auth.UserMiddleware(srv.Base))
+	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Base))
 
 	router.Post("/items", service.AppHandler(srv.createItem).ServeHTTP)
 	routerWithParticipant.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)

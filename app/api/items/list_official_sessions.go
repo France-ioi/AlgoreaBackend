@@ -164,7 +164,8 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 	}
 
 	user := srv.GetUser(r)
-	found, err := srv.Store.Permissions().MatchingUserAncestors(user).
+	store := srv.GetStore(r)
+	found, err := store.Permissions().MatchingUserAncestors(user).
 		Where("item_id = ?", itemID).
 		WherePermissionIsAtLeast("view", "info").HasRows()
 	service.MustNotBeError(err)
@@ -172,7 +173,7 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 		return service.InsufficientAccessRightsError
 	}
 
-	idsQuery := srv.Store.Groups().Where("type = 'Session'").
+	idsQuery := store.Groups().Where("type = 'Session'").
 		Where("is_official_session").
 		Where("is_public").
 		Where("root_activity_id = ?", itemID)
@@ -197,7 +198,7 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 
 	var rawData []rawOfficialSession
 	if len(ids) > 0 {
-		service.MustNotBeError(srv.Store.Groups().Where("groups.id IN (?)", ids).
+		service.MustNotBeError(store.Groups().Where("groups.id IN (?)", ids).
 			Select(`
 				groups.id AS group_id, groups.name, groups.description, groups.open_activity_when_joining,
 				groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until,
@@ -209,10 +210,10 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 				parent.id AS parent__group_id, parent.name AS parent__name, parent.is_public AS parent__is_public,
 				parent.id IS NOT NULL AND EXISTS(?) AS parent__current_user_is_member,
 				parent.id IS NOT NULL AND EXISTS(?) AS parent__current_user_is_manager`,
-				srv.Store.ActiveGroupGroups().WhereUserIsMember(user).Where("parent_group_id = groups.id").QueryExpr(),
-				srv.Store.ActiveGroupAncestors().ManagedByUser(user).Where("groups_ancestors_active.child_group_id = groups.id").QueryExpr(),
-				srv.Store.ActiveGroupGroups().WhereUserIsMember(user).Where("parent_group_id = parent.id").QueryExpr(),
-				srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+				store.ActiveGroupGroups().WhereUserIsMember(user).Where("parent_group_id = groups.id").QueryExpr(),
+				store.ActiveGroupAncestors().ManagedByUser(user).Where("groups_ancestors_active.child_group_id = groups.id").QueryExpr(),
+				store.ActiveGroupGroups().WhereUserIsMember(user).Where("parent_group_id = parent.id").QueryExpr(),
+				store.ActiveGroupAncestors().ManagedByUser(user).
 					Where("groups_ancestors_active.child_group_id = parent.id").QueryExpr()).
 			Joins("LEFT JOIN groups_groups_active ON groups_groups_active.child_group_id = groups.id").
 			Joins("LEFT JOIN `groups` AS parent ON parent.id = groups_groups_active.parent_group_id").

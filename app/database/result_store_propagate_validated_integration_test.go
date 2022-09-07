@@ -42,7 +42,8 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 	}
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
+		s.ScheduleResultsPropagation()
+		return nil
 	})
 	assert.NoError(t, err)
 

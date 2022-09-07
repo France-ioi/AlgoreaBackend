@@ -205,7 +205,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 
 	apiError := service.NoError
 	var itemID int64
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var parentInfo parentItemInfo
 		var childrenInfoMap map[int64]permissionAndType
 		registerAddItemValidators(formData, store, user, &parentInfo, &childrenInfoMap)

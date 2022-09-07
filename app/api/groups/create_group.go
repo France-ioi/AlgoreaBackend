@@ -67,7 +67,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	var groupID int64
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		groupID, err = store.Groups().CreateNew(input.Name, input.Type)
 		service.MustNotBeError(err)
 		return store.GroupManagers().InsertMap(map[string]interface{}{

@@ -1,15 +1,15 @@
 Feature: Get navigation for an item
   Background:
     Given the database has the following table 'groups':
-      | id | name      | text_id | grade | type  |
-      | 1  | all       |         | -2    | Base  |
-      | 11 | jdoe      |         | -2    | User  |
-      | 12 | Group A   |         | -2    | Class |
-      | 13 | Group B   |         | -2    | Team  |
-      | 14 | info_root |         | -2    | User  |
-      | 16 | info_mid  |         | -2    | User  |
-      | 18 | french    |         | -2    | User  |
-      | 19 | Group C   |         | -2    | Team  |
+      | id | name      | grade | type  |
+      | 1  | all       | -2    | Base  |
+      | 11 | jdoe      | -2    | User  |
+      | 12 | Group A   | -2    | Class |
+      | 13 | Group B   | -2    | Team  |
+      | 14 | info_root | -2    | User  |
+      | 16 | info_mid  | -2    | User  |
+      | 18 | french    | -2    | User  |
+      | 19 | Group C   | -2    | Team  |
     And the database has the following table 'languages':
       | tag |
       | fr  |

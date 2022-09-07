@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,14 +22,15 @@ func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
-	dataStore := database.NewDataStore(db)
 	testhelpers.RunConcurrently(func() {
+		dataStore := database.NewDataStoreWithContext(context.Background(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
 			ds.PermissionsGranted().ComputeAllAccess()
 			return nil
 		}))
 	}, 30)
 
+	dataStore := database.NewDataStore(db)
 	permissionsGeneratedStore := dataStore.Permissions()
 	var result []groupItemsResultRow
 

@@ -65,17 +65,18 @@ import (
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
-	itemParentIDs, apiError := srv.resolveAndCheckParentIDs(r, user)
+	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -95,13 +96,13 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := srv.preselectIDsOfVisibleItems(itemParentIDs, user)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
 	csvWriter := csv.NewWriter(w)
 	defer csvWriter.Flush()
 	csvWriter.Comma = ';'
 
-	srv.printTableHeader(user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
+	printTableHeader(store, user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
 		[]string{"Team name"})
 
 	// Preselect teams for that we will calculate the stats.
@@ -109,7 +110,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 		ID   int64
 		Name string
 	}
-	service.MustNotBeError(srv.Store.ActiveGroupAncestors().
+	service.MustNotBeError(store.ActiveGroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id").
@@ -133,7 +134,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 		teamIDsList := strings.Join(teamIDs[startFromTeam:batchBoundary], ", ")
 		teamNumber := startFromTeam
 		// nolint:gosec
-		service.MustNotBeError(srv.Store.Raw(`
+		service.MustNotBeError(store.Raw(`
 				SELECT
 				items.id AS item_id,
 				groups.id AS group_id,

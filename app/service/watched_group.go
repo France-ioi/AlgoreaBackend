@@ -18,7 +18,7 @@ func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID in
 		return 0, false, ErrInvalidRequest(err)
 	}
 	var found bool
-	found, err = srv.Store.ActiveGroupAncestors().ManagedByUser(srv.GetUser(httpReq)).
+	found, err = srv.GetStore(httpReq).ActiveGroupAncestors().ManagedByUser(srv.GetUser(httpReq)).
 		Where("groups_ancestors_active.child_group_id = ?", watchedGroupID).
 		Where("can_watch_members").HasRows()
 	if err != nil {

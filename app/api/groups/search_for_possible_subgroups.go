@@ -90,7 +90,7 @@ func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Re
 	user := srv.GetUser(r)
 
 	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := srv.Store.Groups().ManagedBy(user).
+	query := srv.GetStore(r).Groups().ManagedBy(user).
 		Where("group_managers.can_manage = 'memberships_and_group'").
 		Group("groups.id").
 		Where("groups.type != 'User'").

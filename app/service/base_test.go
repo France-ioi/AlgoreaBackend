@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,4 +31,18 @@ func TestBase_GetUser(t *testing.T) {
 	}
 
 	assert.True(t, called)
+}
+
+func TestBase_GetStore(t *testing.T) {
+	expectedDB := &database.DB{}
+	expectedContext := context.Background()
+	expectedStore := database.NewDataStoreWithContext(expectedContext, expectedDB)
+	req := (&http.Request{}).WithContext(expectedContext)
+	store := (&Base{store: database.NewDataStore(expectedDB)}).GetStore(req)
+	assert.Equal(t, *expectedStore.DB, *store.DB)
+}
+
+func TestBase_GetStore_WithNilStore(t *testing.T) {
+	req := &http.Request{}
+	assert.Nil(t, (&Base{}).GetStore(req))
 }

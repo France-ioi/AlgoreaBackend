@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/jinzhu/gorm"
@@ -70,10 +71,11 @@ func TestResultStore_Propagate(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
-				return s.Results().Propagate()
+				s.ScheduleResultsPropagation()
+				return nil
 			})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ResultStore.Propagate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ResultStore.propagate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -84,9 +86,10 @@ func TestResultStore_Propagate_Concurrent(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
-		s := database.NewDataStore(db)
+		s := database.NewDataStoreWithContext(context.Background(), db)
 		err := s.InTransaction(func(st *database.DataStore) error {
-			return st.Results().Propagate()
+			st.ScheduleResultsPropagation()
+			return nil
 		})
 		assert.NoError(t, err)
 	}, 30)

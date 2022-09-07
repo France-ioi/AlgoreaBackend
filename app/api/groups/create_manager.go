@@ -77,7 +77,7 @@ func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) s
 	}
 
 	apiError := service.NoError
-	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		// managerID should exist and the authenticated user should have
 		// can_manage:memberships_and_group permission on the groupID
