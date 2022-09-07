@@ -52,6 +52,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Put("/groups/{group_id}/managers/{manager_id}", service.AppHandler(srv.updateGroupManager).ServeHTTP)
 	router.Delete("/groups/{group_id}/managers/{manager_id}", service.AppHandler(srv.removeGroupManager).ServeHTTP)
 
+	router.Get("/groups/{group_id}/parents", service.AppHandler(srv.getParents).ServeHTTP)
+
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
 	router.Get("/groups/user-requests", service.AppHandler(srv.getUserRequests).ServeHTTP)
 	router.Get("/groups/{group_id}/group-progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
