@@ -322,6 +322,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 
 	userData["latest_login_at"] = database.Now()
 	userData["latest_activity_at"] = database.Now()
+	userData["latest_profile_sync_at"] = database.Now()
 
 	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
 		userData["default_language"] = database.Default()

@@ -33,6 +33,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), user.GroupID, false))
 		userProfile["latest_activity_at"] = database.Now()
+		userProfile["latest_profile_sync_at"] = database.Now()
 		delete(userProfile, "default_language")
 		delete(userProfile, "badges")
 		service.MustNotBeError(store.Users().ByID(user.GroupID).UpdateColumn(userProfile).Error())

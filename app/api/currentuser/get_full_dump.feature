@@ -81,7 +81,7 @@ Feature: Export the current user's data
         "group_id": "11", "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
         "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
         "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
-        "access_group_id": null, "login_id": null,
+        "access_group_id": null, "login_id": null, "latest_profile_sync_at": null,
         "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
         "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
         "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
@@ -256,7 +256,8 @@ Feature: Export the current user's data
         "free_text": null, "land_line_number": null, "lang_prog": "Python", "latest_activity_at": null, "last_ip": null,
         "latest_login_at": null, "last_name": "Doe", "login": "jane", "notifications_read_at": null, "notify": "Answers",
         "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
-        "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0
+        "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0,
+        "latest_profile_sync_at": null
       },
       "attempts": [],
       "results": [],
