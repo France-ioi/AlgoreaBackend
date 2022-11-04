@@ -75,7 +75,8 @@ type managerGeneratedPermissions struct {
 //   * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
 //     for the item.
 //
-//   * The group must already have access to one of the parents of the item or the item itself.
+//   * The group must already have access to one of the parents of the item or the item itself. If it does not,
+//     the item must be a root activity/skill for an ancestor of the group.
 // parameters:
 // - name: group_id
 //   in: path
