@@ -51,8 +51,8 @@ Feature: Create item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Course | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
+      | 5577006791947779410 | Course | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List            | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -101,8 +101,8 @@ Feature: Create item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Course | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout  | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
+      | 5577006791947779410 | Course | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List             |0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -161,8 +161,8 @@ Feature: Create item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type  | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Skill | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | id                  | type  | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
+      | 5577006791947779410 | Skill | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List            | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -220,6 +220,7 @@ Feature: Create item
         "uses_api": true,
         "read_only": true,
         "full_screen": "forceYes",
+        "children_layout": "Grid",
         "hints_allowed": true,
         "fixed_ranks": true,
         "validation_type": "AllButOne",
@@ -266,8 +267,8 @@ Feature: Create item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type    | url               | options          | default_language_tag | entry_frozen_teams | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Chapter | http://myurl.com/ | {"opt1":"value"} | sl                   | 0                  | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                              | 2345                | 1                        | Team                   | 01:02:03 | 1                       | 1               | 1        | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 8674665223082153551   |
+      | id                  | type    | url               | options          | default_language_tag | entry_frozen_teams | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
+      | 5577006791947779410 | Chapter | http://myurl.com/ | {"opt1":"value"} | sl                   | 0                  | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | Grid            | 1             | 1           | AllButOne       | All                              | 2345                | 1                        | Team                   | 01:02:03 | 1                       | 1               | 1        | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 8674665223082153551   |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -361,8 +362,8 @@ Feature: Create item
     }
     """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type  | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | participants_group_id |
-      | 5577006791947779410 | Skill | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | null                  |
+      | id                  | type  | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | participants_group_id |
+      | 5577006791947779410 | Skill | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List            | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url | subtitle | description |
       | 5577006791947779410 | sl           | my skill | null      | null     | null        |
