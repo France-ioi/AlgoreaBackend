@@ -121,6 +121,7 @@ Feature: Get item prerequisites
         "best_score": 13.3,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A",
           "subtitle": "Subtitle 1"
         },
@@ -148,6 +149,7 @@ Feature: Get item prerequisites
         "best_score": 22.2,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B",
           "subtitle": "Subtitle 2"
         },
@@ -192,6 +194,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "fr",
+          "image_url": "http://example.com/mf1.jpg",
           "title": "Chapitre A",
           "subtitle": "Sous-titre 1"
         }
@@ -219,6 +222,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "fr",
+          "image_url": "http://example.com/mf2.jpg",
           "title": "Chapitre B",
           "subtitle": "Sous-titre 2"
         }
@@ -256,6 +260,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A"
         }
       },
@@ -282,6 +287,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B"
         }
       }
@@ -318,6 +324,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A",
           "subtitle": "Subtitle 1"
         }
@@ -345,6 +352,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B",
           "subtitle": "Subtitle 2"
         }
@@ -382,6 +390,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A"
         }
       },
@@ -408,6 +417,7 @@ Feature: Get item prerequisites
         "requires_explicit_entry": false,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B"
         }
       }
@@ -444,6 +454,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A"
         },
         "watched_group": {
@@ -473,6 +484,7 @@ Feature: Get item prerequisites
         },
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B"
         },
         "watched_group": {

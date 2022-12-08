@@ -37,6 +37,7 @@ type rawPrerequisiteOrDependencyItem struct {
 	StringLanguageTag string  `sql:"column:language_tag"`
 	StringTitle       *string `sql:"column:title"`
 	StringSubtitle    *string `sql:"column:subtitle"`
+	StringImageURL    *string `sql:"column:image_url"`
 
 	// max from results of the current participant
 	BestScore float32
@@ -138,6 +139,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
 				COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 				IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
+				IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 				IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
 			[]interface{}{participantID},
 			func(db *database.DB) *database.DB {
@@ -168,6 +170,7 @@ func prerequisiteOrDependencyItemsFromRawData(
 			BestScore:        rawData[index].BestScore,
 			String: listItemString{
 				LanguageTag: rawData[index].StringLanguageTag,
+				ImageURL:    rawData[index].StringImageURL,
 				Title:       rawData[index].StringTitle,
 			},
 			DependencyRequiredScore:    rawData[index].DependencyRequiredScore,

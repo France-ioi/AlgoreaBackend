@@ -21,6 +21,9 @@ type listItemString struct {
 	// Nullable
 	// required: true
 	Title *string `json:"title"`
+	// Nullable
+	// required: true
+	ImageURL *string `json:"image_url"`
 
 	*listItemStringNotInfo
 }
@@ -118,6 +121,7 @@ type RawListItem struct {
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `sql:"column:language_tag"`
 	StringTitle       *string `sql:"column:title"`
+	StringImageURL    *string `sql:"column:image_url"`
 	StringSubtitle    *string `sql:"column:subtitle"`
 
 	// items_items
@@ -258,6 +262,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 			[]interface{}{participantID},
 			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
+			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`).
 			JoinsUserAndDefaultItemStrings(user).
 			Scan(&rawData).Error())
@@ -312,6 +317,7 @@ func childItemsFromRawData(
 					String: visibleChildItemString{&listItemString{
 						LanguageTag: rawData[index].StringLanguageTag,
 						Title:       rawData[index].StringTitle,
+						ImageURL:    rawData[index].StringImageURL,
 					}},
 					DefaultLanguageTag:     rawData[index].DefaultLanguageTag,
 					BestScore:              rawData[index].BestScore,
