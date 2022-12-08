@@ -19,10 +19,10 @@ Feature: Get item view information
       | fr         | 0         | 17       | fr               |
       | info       | 0         | 22       |                  |
     And the database has the following table 'items':
-      | id  | type    | default_language_tag | no_score | text_id  | display_details_in_parent | validation_type | requires_explicit_entry | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | prompt_to_join_group_by_code | title_bar_visible | read_only | full_screen | show_user_infos | url            | options | uses_api | hints_allowed |
-      | 200 | Course  | en                   | true     | Task_30c | true                      | All             | true                    | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | true            | http://someurl | {}      | true     | true          |
-      | 210 | Chapter | en                   | true     | null     | true                      | All             | false                   | All                              | false              | 10                  | true                     | User                   | 10:20:31 | true                         | true              | true      | forceYes    | true            | null           | null    | true     | true          |
-      | 220 | Chapter | en                   | true     | Task_30e | true                      | All             | false                   | All                              | false              | 10                  | true                     | Team                   | 10:20:32 | true                         | true              | true      | forceYes    | true            | null           | null    | true     | true          |
+      | id  | type    | default_language_tag | no_score | text_id  | display_details_in_parent | validation_type | requires_explicit_entry | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | prompt_to_join_group_by_code | title_bar_visible | read_only | full_screen | children_layout | show_user_infos | url            | options | uses_api | hints_allowed |
+      | 200 | Course  | en                   | true     | Task_30c | true                      | All             | true                    | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | List            | true            | http://someurl | {}      | true     | true          |
+      | 210 | Chapter | en                   | true     | null     | true                      | All             | false                   | All                              | false              | 10                  | true                     | User                   | 10:20:31 | true                         | true              | true      | forceYes    | List            | true            | null           | null    | true     | true          |
+      | 220 | Chapter | en                   | true     | Task_30e | true                      | All             | false                   | All                              | false              | 10                  | true                     | Team                   | 10:20:32 | true                         | true              | true      | forceYes    | List            | true            | null           | null    | true     | true          |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
       | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
@@ -114,6 +114,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
       "url": "http://someurl",
       "options": "{}",
@@ -170,6 +171,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
 
       "best_score": 10,
@@ -222,6 +224,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
 
       "best_score": 0,
@@ -273,6 +276,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
       "url": "http://someurl",
       "options": "{}",
@@ -329,6 +333,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
       "url": "http://someurl",
       "options": "{}",
@@ -385,6 +390,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
 
       "best_score": 0,
@@ -434,6 +440,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
       "url": "http://someurl",
       "options": "{}",
@@ -514,6 +521,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
 
       "best_score": 0,
@@ -599,6 +607,7 @@ Feature: Get item view information
       "title_bar_visible": true,
       "read_only": true,
       "full_screen": "forceYes",
+      "children_layout": "List",
       "show_user_infos": true,
 
       "best_score": 0,
