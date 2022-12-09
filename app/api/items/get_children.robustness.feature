@@ -30,8 +30,8 @@ Background:
     | 15       | 200     | info                     |
     | 15       | 210     | content_with_descendants |
   And the database has the following table 'items_strings':
-    | item_id | language_tag | title      |
-    | 200     | en           | Category 1 |
+    | item_id | language_tag | title      | image_url         |
+    | 200     | en           | Category 1 | http://my/img.png |
   And the database has the following table 'attempts':
     | id | participant_id | created_at          | root_item_id | parent_attempt_id | ended_at            |
     | 0  | 15             | 2019-01-30 08:26:41 | null         | null              | null                |

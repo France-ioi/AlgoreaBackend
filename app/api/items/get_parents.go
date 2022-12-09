@@ -149,6 +149,7 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 		[]interface{}{groupID},
 		`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
+			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items_items ON items_items.child_item_id = ? AND items_items.parent_item_id = items.id", childItemID)
@@ -176,6 +177,7 @@ func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDSet bool,
 			Result:           rawData[index].asItemResult(),
 			String: listItemString{
 				LanguageTag: rawData[index].StringLanguageTag,
+				ImageURL:    rawData[index].StringImageURL,
 				Title:       rawData[index].StringTitle,
 			},
 			Category: rawData[index].Category,

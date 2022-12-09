@@ -118,6 +118,7 @@ Feature: Get item parents
         "best_score": 13.3,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B",
           "subtitle": "Subtitle 2"
         },
@@ -154,6 +155,7 @@ Feature: Get item parents
         "best_score": 22.2,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A",
           "subtitle": "Subtitle 1"
         },
@@ -208,6 +210,7 @@ Feature: Get item parents
         "result": null,
         "string": {
           "language_tag": "fr",
+          "image_url": "http://example.com/mf2.jpg",
           "title": "Chapitre B",
           "subtitle": "Sous-titre 2"
         }
@@ -244,6 +247,7 @@ Feature: Get item parents
         },
         "string": {
           "language_tag": "fr",
+          "image_url": "http://example.com/mf1.jpg",
           "title": "Chapitre A",
           "subtitle": "Sous-titre 1"
         }
@@ -275,6 +279,7 @@ Feature: Get item parents
         "result": null,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B"
         },
         "permissions": {
@@ -302,6 +307,7 @@ Feature: Get item parents
         "result": null,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A"
         },
         "permissions": {
@@ -338,6 +344,7 @@ Feature: Get item parents
         "best_score": 15.5,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B",
           "subtitle": "Subtitle 2"
         },
@@ -374,6 +381,7 @@ Feature: Get item parents
         "best_score": 24.4,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A",
           "subtitle": "Subtitle 1"
         },
@@ -420,6 +428,7 @@ Feature: Get item parents
         "best_score": 0,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B"
         },
         "permissions": {
@@ -446,6 +455,7 @@ Feature: Get item parents
         "best_score": 0,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A"
         },
         "permissions": {
@@ -485,6 +495,7 @@ Feature: Get item parents
         "result": null,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my2.jpg",
           "title": "Chapter B"
         },
         "permissions": {
@@ -515,6 +526,7 @@ Feature: Get item parents
         "result": null,
         "string": {
           "language_tag": "en",
+          "image_url": "http://example.com/my1.jpg",
           "title": "Chapter A"
         },
         "permissions": {

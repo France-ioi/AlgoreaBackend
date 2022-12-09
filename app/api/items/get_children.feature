@@ -133,6 +133,7 @@ Feature: Get item children
         "string": {
           "language_tag": "en",
           "title": "Chapter B",
+          "image_url": "http://example.com/my2.jpg",
           "subtitle": "Subtitle 2"
         },
         "permissions": {
@@ -178,6 +179,7 @@ Feature: Get item children
         "string": {
           "language_tag": "en",
           "title": "Chapter A",
+          "image_url": "http://example.com/my1.jpg",
           "subtitle": "Subtitle 1"
         },
         "permissions": {
@@ -241,6 +243,7 @@ Feature: Get item children
         "string": {
           "language_tag": "fr",
           "title": "Chapitre B",
+          "image_url": "http://example.com/mf2.jpg",
           "subtitle": "Sous-titre 2"
         }
       },
@@ -286,6 +289,7 @@ Feature: Get item children
         "string": {
           "language_tag": "fr",
           "title": "Chapitre A",
+          "image_url": "http://example.com/mf1.jpg",
           "subtitle": "Sous-titre 1"
         }
       }
@@ -323,7 +327,8 @@ Feature: Get item children
         "results": [],
         "string": {
           "language_tag": "en",
-          "title": "Chapter B"
+          "title": "Chapter B",
+          "image_url": "http://example.com/my2.jpg"
         },
         "permissions": {
           "can_edit": "none",
@@ -357,7 +362,8 @@ Feature: Get item children
         "results": [],
         "string": {
           "language_tag": "en",
-          "title": "Chapter A"
+          "title": "Chapter A",
+          "image_url": "http://example.com/my1.jpg"
         },
         "permissions": {
           "can_edit": "none",
@@ -401,6 +407,7 @@ Feature: Get item children
         "string": {
           "language_tag": "en",
           "title": "Chapter B",
+          "image_url": "http://example.com/my2.jpg",
           "subtitle": "Subtitle 2"
         },
         "permissions": {
@@ -446,6 +453,7 @@ Feature: Get item children
         "string": {
           "language_tag": "en",
           "title": "Chapter A",
+          "image_url": "http://example.com/my1.jpg",
           "subtitle": "Subtitle 1"
         },
         "permissions": {
@@ -500,7 +508,8 @@ Feature: Get item children
         "grants_access_to_items": false,
         "string": {
           "language_tag": "en",
-          "title": "Chapter B"
+          "title": "Chapter B",
+          "image_url": "http://example.com/my2.jpg"
         },
         "permissions": {
           "can_edit": "none",
@@ -533,7 +542,8 @@ Feature: Get item children
         "grants_access_to_items": true,
         "string": {
           "language_tag": "en",
-          "title": "Chapter A"
+          "title": "Chapter A",
+          "image_url": "http://example.com/my1.jpg"
         },
         "permissions": {
           "can_edit": "none",
@@ -579,7 +589,8 @@ Feature: Get item children
         "results": [],
         "string": {
           "language_tag": "en",
-          "title": "Chapter B"
+          "title": "Chapter B",
+          "image_url": "http://example.com/my2.jpg"
         },
         "permissions": {
           "can_edit": "none",
@@ -616,7 +627,8 @@ Feature: Get item children
         "results": [],
         "string": {
           "language_tag": "en",
-          "title": "Chapter A"
+          "title": "Chapter A",
+          "image_url": "http://example.com/my1.jpg"
         },
         "permissions": {
           "can_edit": "none",
@@ -665,7 +677,8 @@ Feature: Get item children
         "results": [],
         "string": {
           "language_tag": "en",
-          "title": "Chapter B"
+          "title": "Chapter B",
+          "image_url": "http://example.com/my2.jpg"
         },
         "permissions": {
           "can_edit": "none",
@@ -702,7 +715,8 @@ Feature: Get item children
         "results": [],
         "string": {
           "language_tag": "en",
-          "title": "Chapter A"
+          "title": "Chapter A",
+          "image_url": "http://example.com/my1.jpg"
         },
         "permissions": {
           "can_edit": "none",

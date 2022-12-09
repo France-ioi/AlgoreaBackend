@@ -124,6 +124,9 @@ type itemResponse struct {
 	// enum: forceYes,forceNo,default
 	FullScreen string `json:"full_screen"`
 	// required: true
+	// enum: List,Grid
+	ChildrenLayout string `json:"children_layout"`
+	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`
 	// required: true
 	EnteringTimeMin time.Time `json:"entering_time_min"`
@@ -239,6 +242,7 @@ type rawItem struct {
 	TitleBarVisible              bool
 	ReadOnly                     bool
 	FullScreen                   string
+	ChildrenLayout               string
 	ShowUserInfos                bool
 	EntryMinAdmittedMembersRatio string
 	EntryFrozenTeams             bool
@@ -295,6 +299,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 		items.title_bar_visible,
 		items.read_only,
 		items.full_screen,
+		items.children_layout,
 		items.show_user_infos,
 		items.url,
 		items.options,
@@ -426,6 +431,7 @@ func constructItemResponseFromDBData(
 		TextID:                       rawData.TextID,
 		ReadOnly:                     rawData.ReadOnly,
 		FullScreen:                   rawData.FullScreen,
+		ChildrenLayout:               rawData.ChildrenLayout,
 		ShowUserInfos:                rawData.ShowUserInfos,
 		EnteringTimeMin:              time.Time(rawData.EnteringTimeMin),
 		EnteringTimeMax:              time.Time(rawData.EnteringTimeMax),
