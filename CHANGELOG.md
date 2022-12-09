@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.4.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.3.0...v1.4.0) - 2022-12-09
+
+- fix spec of updatePermissions
+- add image_url to get-children service (and other services using the same signature)
+- new attribute 'children_layout' for items, update get-item-by-id, create-item and update-item services
+
 ## [v1.3.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.2.0...v1.3.0) - 2022-09-14
 
 - new service: groupParentsView
