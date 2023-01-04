@@ -63,7 +63,8 @@ Feature: Generate a task token with a refreshed attempt for an item
             "nbHintsGiven": "4",
             "sHintsRequested": "[1,2,3,4]",
             "randomSeed": "12601247502642542026",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
+            "platformName": "{{app().Config.GetString("token.platformName")}}",
+            "sLogin": "john"
           }
         },
         "message": "updated",
@@ -111,7 +112,8 @@ Feature: Generate a task token with a refreshed attempt for an item
             "sHintsRequested": "[1,2,3,4]",
             "sSupportedLangProg": "c,python",
             "randomSeed": "17292903417420170135",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
+            "platformName": "{{app().Config.GetString("token.platformName")}}",
+            "sLogin": "john"
           }
         },
         "message": "updated",
@@ -159,7 +161,8 @@ Feature: Generate a task token with a refreshed attempt for an item
             "nbHintsGiven": "4",
             "sHintsRequested": "[1,2,3,4]",
             "randomSeed": "12601247502642542026",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
+            "platformName": "{{app().Config.GetString("token.platformName")}}",
+            "sLogin": "john"
           }
         },
         "message": "updated",
