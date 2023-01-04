@@ -13,6 +13,7 @@
 
 # IDE's artefacts
 .vscode
+.idea
 
 # Tests artefacts
 /test-results
