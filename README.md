@@ -51,6 +51,14 @@ The app configuration stands in the `conf/config.yml` file. The file `conf/confi
 
 Environment-specific configurations can be defined using `conf/config.ENV.yml` files when ENV can be "prod", "dev" or "test.
 
+## Creating the keys
+
+```
+openssl genrsa --out private_key.pem 4096
+openssl rsa -in private_key.pem -pubout -out public_key.pem
+```
+
+
 ## Seeding the database
 
 An empty dump (schema without data) can be loaded using the
