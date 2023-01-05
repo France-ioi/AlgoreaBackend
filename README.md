@@ -4,6 +4,8 @@
 
 This project requires Go >=1.13.
 
+Warning: make test-bdd doesn't work with Go 1.19
+
 ## Running the app (for development)
 
 Compile the app:
@@ -98,6 +100,10 @@ make test-bdd
 or if you want only to run bdd tests with a specific tag:
 ```
 make ARGS="--tags=wip" test-bdd
+```
+you may have to specify the godog directory:
+```
+make BIN_DIR=~/go/bin ARGS="--tags=wip" test-bdd
 ```
 
 ## Style

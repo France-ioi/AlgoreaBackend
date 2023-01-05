@@ -76,7 +76,7 @@ db-recompute: $(BIN_PATH)
 	$(BIN_PATH) db-recompute
 
 test: $(TEST_REPORT_DIR)
-	$(Q)# the tests using the db do not currently support
+	$(Q)# TODO: the tests using the db do not currently support parallelism
 	$(Q)# add TEST_DIR=./app/api/item to only test a certain directory. Must start with ".".
 	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
