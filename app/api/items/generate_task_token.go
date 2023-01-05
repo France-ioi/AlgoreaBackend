@@ -182,6 +182,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		SupportedLangProg:  itemInfo.SupportedLangProg,
 		RandomSeed:         strconv.FormatUint(randomSeed, 10),
 		PlatformName:       srv.TokenConfig.PlatformName,
+		Login:              &user.Login,
 	}
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
