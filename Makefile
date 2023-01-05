@@ -24,6 +24,11 @@ PWD=$(shell pwd)
 VERSION_FETCHING_CMD=git describe --always --dirty
 GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
 
+# Default test directory
+ifndef TEST_DIR
+	TEST_DIR=./app/...
+endif
+
 # extract AWS_PROFILE if given
 ifdef AWS_PROFILE
 	AWS_PARAMS=--profile $(AWS_PROFILE)
@@ -69,7 +74,9 @@ db-recompute: $(BIN_PATH)
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
-	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
+	$(Q)# add TEST_DIR="./app/api/items" to only test a certain directory. Path should start with a "."
+
+	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1
 test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
