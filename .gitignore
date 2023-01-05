@@ -23,6 +23,7 @@
 
 # Local config
 conf/config.yaml
+conf/config.test.yaml
 
 # Keys
 *.pem
