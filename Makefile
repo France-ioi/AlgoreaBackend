@@ -24,7 +24,10 @@ PWD=$(shell pwd)
 VERSION_FETCHING_CMD=git describe --always --dirty
 GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
 
-# Default test directory
+# Filter for tests
+ifdef FILTER
+	TEST_FILTER=-run $(FILTER)
+endif
 ifndef TEST_DIR
 	TEST_DIR=./app/...
 endif
@@ -73,10 +76,11 @@ db-recompute: $(BIN_PATH)
 	$(BIN_PATH) db-recompute
 
 test: $(TEST_REPORT_DIR)
-	$(Q)# the tests using the db do not currently support parallism
-	$(Q)# add TEST_DIR="./app/api/items" to only test a certain directory. Path should start with a "."
+	$(Q)# the tests using the db do not currently support
+	$(Q)# add TEST_DIR=./app/api/item to only test a certain directory. Must start with ".".
+	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
-	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1
+	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
