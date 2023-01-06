@@ -13,6 +13,7 @@
 
 # IDE's artefacts
 .vscode
+.idea
 
 # Tests artefacts
 /test-results
@@ -22,6 +23,7 @@
 
 # Local config
 conf/config.yaml
+conf/config.test.yaml
 
 # Keys
 *.pem
