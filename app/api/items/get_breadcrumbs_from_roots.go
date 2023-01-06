@@ -19,6 +19,9 @@ type breadcrumbElement struct {
 	// required: true
 	Title *string `json:"title"`
 	// required: true
+	// enum: Chapter,Task,Course,Skill
+	Type *string `json:"type"`
+	// required: true
 	LanguageTag string `json:"language_tag"`
 }
 
@@ -190,6 +193,7 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 	var itemsInfo []struct {
 		ID          int64
 		Title       *string
+		Type        *string
 		LanguageTag string
 	}
 	service.MustNotBeError(store.Items().Where("id IN(?)", idsList).
@@ -197,14 +201,18 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 		Select(`
 			id,
 			COALESCE(user_strings.title, default_strings.title) AS title,
-			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag`).
+			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
+			type
+		`).
 		Scan(&itemsInfo).Error())
 
 	itemTitles := make(map[int64]*string, len(itemsInfo))
 	itemLanguageTags := make(map[int64]string, len(itemsInfo))
+	itemType := make(map[int64]*string, len(itemsInfo))
 	for _, itemInfo := range itemsInfo {
 		itemTitles[itemInfo.ID] = itemInfo.Title
 		itemLanguageTags[itemInfo.ID] = itemInfo.LanguageTag
+		itemType[itemInfo.ID] = itemInfo.Type
 	}
 
 	for breadcrumbsIndex := range breadcrumbs {
@@ -212,6 +220,7 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 			id := breadcrumbs[breadcrumbsIndex][pathIndex].ID
 			breadcrumbs[breadcrumbsIndex][pathIndex].Title = itemTitles[id]
 			breadcrumbs[breadcrumbsIndex][pathIndex].LanguageTag = itemLanguageTags[id]
+			breadcrumbs[breadcrumbsIndex][pathIndex].Type = itemType[id]
 		}
 	}
 	return breadcrumbs
