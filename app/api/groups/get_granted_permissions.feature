@@ -33,15 +33,15 @@ Feature: Get permissions granted to group
       | 26              | 25             |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id  | default_language_tag | requires_explicit_entry |
-      | 100 | fr                   | true                    |
-      | 101 | en                   | false                   |
-      | 102 | fr                   | true                    |
-      | 103 | fr                   | false                   |
-      | 104 | fr                   | false                   |
+      | id  | default_language_tag | requires_explicit_entry | type    |
+      | 100 | fr                   | true                    | Chapter |
+      | 101 | en                   | false                   | Task    |
+      | 102 | fr                   | true                    | Chapter |
+      | 103 | fr                   | false                   | Chapter |
+      | 104 | fr                   | false                   | Chapter |
     And the database has the following table 'items_strings':
       | item_id  | language_tag | title      |
-      | 101      | en           | Chapter A  |
+      | 101      | en           | Task A     |
       | 102      | en           | Chapter B  |
       | 102      | fr           | Chapitre B |
       | 104      | fr           | Chapitre C |
@@ -81,7 +81,7 @@ Feature: Get permissions granted to group
     [
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "2999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -91,7 +91,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -101,7 +101,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
@@ -111,7 +111,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "104", "language_tag": "fr", "requires_explicit_entry": false, "title": "Chapitre C"},
+        "item": {"id": "104", "language_tag": "fr", "requires_explicit_entry": false, "title": "Chapitre C", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "result",
@@ -121,7 +121,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": true, "can_view": "none", "can_watch": "none",
@@ -131,7 +131,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "enter", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -141,7 +141,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "9", "name": "Class"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -151,7 +151,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "children", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -174,7 +174,7 @@ Feature: Get permissions granted to group
     [
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "2999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -184,7 +184,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -194,7 +194,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
@@ -204,7 +204,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "104", "language_tag": "fr", "requires_explicit_entry": false, "title": "Chapitre C"},
+        "item": {"id": "104", "language_tag": "fr", "requires_explicit_entry": false, "title": "Chapitre C", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "result",
@@ -214,7 +214,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -224,7 +224,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": true, "can_view": "none", "can_watch": "none",
@@ -234,7 +234,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "enter", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -244,7 +244,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "9", "name": "Class"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -254,7 +254,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "children", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -274,7 +274,7 @@ Feature: Get permissions granted to group
     [
       {
         "group": {"id": "10", "name": "Other"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
@@ -294,7 +294,7 @@ Feature: Get permissions granted to group
     [
       {
         "group": {"id": "25", "name": "some class"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
@@ -317,7 +317,7 @@ Feature: Get permissions granted to group
     [
       {
         "group": {"id": "31", "name": "jane"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
@@ -327,7 +327,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "23", "name": "user"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",
@@ -337,7 +337,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "31", "name": "jane"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",
@@ -360,7 +360,7 @@ Feature: Get permissions granted to group
     [
       {
         "group": {"id": "31", "name": "jane"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
@@ -370,7 +370,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "31", "name": "jane"},
-        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Chapter A"},
+        "item": {"id": "101", "language_tag": "en", "requires_explicit_entry": false, "title": "Task A", "type": "Task"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",
@@ -380,7 +380,7 @@ Feature: Get permissions granted to group
       },
       {
         "group": {"id": "23", "name": "user"},
-        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B"},
+        "item": {"id": "102", "language_tag": "fr", "requires_explicit_entry": true, "title": "Chapitre B", "type": "Chapter"},
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",

@@ -41,6 +41,9 @@ type grantedPermissionsViewResultRow struct {
 		// required: true
 		Title *string `json:"title"`
 		// required: true
+		// enum: Chapter,Task,Course,Skill
+		Type *string `json:"type"`
+		// required: true
 		LanguageTag string `json:"language_tag"`
 		// required: true
 		RequiresExplicitEntry bool `json:"requires_explicit_entry"`
@@ -209,6 +212,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__title,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS item__language_tag,
 			items.requires_explicit_entry AS item__requires_explicit_entry,
+			items.type AS item__type,
 			can_view AS permissions__can_view, can_grant_view AS permissions__can_grant_view,
 			can_watch AS permissions__can_watch, can_edit AS permissions__can_edit,
 			can_make_session_official AS permissions__can_make_session_official,
