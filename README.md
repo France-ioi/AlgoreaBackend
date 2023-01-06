@@ -4,6 +4,8 @@
 
 This project requires Go >=1.13.
 
+Warning: make test-bdd doesn't work with Go 1.19
+
 ## Running the app (for development)
 
 Compile the app:
@@ -51,6 +53,14 @@ The app configuration stands in the `conf/config.yml` file. The file `conf/confi
 
 Environment-specific configurations can be defined using `conf/config.ENV.yml` files when ENV can be "prod", "dev" or "test.
 
+## Creating the keys
+
+```
+openssl genrsa --out private_key.pem 4096
+openssl rsa -in private_key.pem -pubout -out public_key.pem
+```
+
+
 ## Seeding the database
 
 An empty dump (schema without data) can be loaded using the
@@ -90,6 +100,12 @@ make test-bdd
 or if you want only to run bdd tests with a specific tag:
 ```
 make ARGS="--tags=wip" test-bdd
+```
+To add a tag to a test, just precede it by @wip on the line above it in the *.feature file. This is useful to only execute appropriate tests.
+
+you may have to specify the godog directory:
+```
+make BIN_DIR=~/go/bin ARGS="--tags=wip" test-bdd
 ```
 
 ## Style
