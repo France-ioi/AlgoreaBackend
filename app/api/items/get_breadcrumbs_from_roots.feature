@@ -94,9 +94,9 @@ Feature: Find all breadcrumbs to an item
       """
   Examples:
     | item_id | expected_output                                                                                                                                                          |
-    | 50      | [[{"id": "50", "title": "DFS", "language_tag": "en"}]]                                                                                                                   |
-    | 10      | [[{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr"}]]                                                                                                      |
-    | 90      | [[{"id": "80", "title": "Trees", "language_tag": "en"}, {"id": "90", "title": "Queues", "language_tag": "en"}], [{"id": "90", "title": "Queues", "language_tag": "en"}]] |
+    | 50      | [[{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]]                                                                                                                   |
+    | 10      | [[{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]]                                                                                                      |
+    | 90      | [[{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}], [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]] |
 
   Scenario: Find breadcrumbs for a team
     Given I am the user with id "111"
@@ -106,13 +106,13 @@ Feature: Find all breadcrumbs to an item
       """
       [
         [
-          {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr"},
-          {"id": "60", "title": "Reduce Graph", "language_tag": "en"},
-          {"id": "70", "title": null, "language_tag": "fr"}
+          {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
+          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"},
+          {"id": "70", "title": null, "language_tag": "fr", "type": "Task"}
         ],
         [
-          {"id": "60", "title": "Reduce Graph", "language_tag": "en"},
-          {"id": "70","title": null, "language_tag": "fr"}
+          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"},
+          {"id": "70","title": null, "language_tag": "fr", "type": "Task"}
         ]
       ]
       """
@@ -125,9 +125,9 @@ Feature: Find all breadcrumbs to an item
       """
       [
         [
-          {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr"},
-          {"id": "60", "title": "Reduce Graph", "language_tag": "en"}
+          {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
+          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"}
         ],
-        [{"id": "60", "title": "Reduce Graph", "language_tag": "en"}]
+        [{"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"}]
       ]
       """
