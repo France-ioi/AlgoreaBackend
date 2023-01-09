@@ -11,7 +11,7 @@ Feature: Update item - robustness
       | 22 | fr                   | Chapter | 0                       | null     |
       | 23 | fr                   | Skill   | 0                       | null     |
       | 24 | fr                   | Task    | 0                       | null     |
-      | 25 | fr                   | Course  | 1                       | 00:00:01 |
+      | 25 | fr                   | Task    | 1                       | 00:00:01 |
       | 50 | fr                   | Chapter | 0                       | null     |
       | 60 | fr                   | Chapter | 0                       | null     |
       | 70 | fr                   | Skill   | 0                       | null     |
@@ -101,7 +101,7 @@ Feature: Update item - robustness
     When I send a PUT request to "/items/abc" with the following body:
       """
       {
-        "type": "Course"
+        "type": "Task"
       }
       """
     Then the response code should be 400
@@ -117,7 +117,7 @@ Feature: Update item - robustness
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "type": "Course"
+        "type": "Task"
       }
       """
     Then the response code should be 401
@@ -133,7 +133,7 @@ Feature: Update item - robustness
     When I send a PUT request to "/items/60" with the following body:
       """
       {
-        "type": "Course"
+        "type": "Task"
       }
       """
     Then the response code should be 403
@@ -403,7 +403,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "children": ["a task or a course cannot have children items"]
+          "children": ["a task cannot have children items"]
         }
       }
       """

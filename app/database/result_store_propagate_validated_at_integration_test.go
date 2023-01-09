@@ -195,7 +195,7 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 		UpdateColumn("category", "Validation").Error())
 
 	assert.NoError(t, itemStore.Where("id=1").Updates(map[string]interface{}{
-		"type": "Course",
+		"type": "Task",
 	}).Error())
 	assert.NoError(t, itemStore.Where("id=3").Updates(map[string]interface{}{
 		"no_score": true,

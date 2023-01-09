@@ -16,7 +16,7 @@ Background:
     | jdoe  | 11       | fr               |
   And the database has the following table 'items':
     | id | type    | default_language_tag | allows_multiple_attempts |
-    | 21 | Course  | en                   | 0                        |
+    | 21 | Task    | en                   | 0                        |
     | 22 | Chapter | en                   | 1                        |
     | 23 | Chapter | en                   | 1                        |
     | 24 | Task    | fr                   | 0                        |
@@ -65,7 +65,7 @@ Scenario: Full access on all the breadcrumbs (as a user)
   And the response body should be, in JSON:
   """
   [
-    { "item_id": "21", "type": "Course", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
+    { "item_id": "21", "type": "Task", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
     { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 2 },
     { "item_id": "23", "type": "Chapter", "language_tag": "en", "title": "Reduce Graph", "attempt_id": "1", "attempt_order": 1 }
   ]
@@ -99,7 +99,7 @@ Scenario: 'Content' access on all the breadcrumbs (as a team)
   And the response body should be, in JSON:
     """
     [
-      { "item_id": "21", "type": "Course", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
+      { "item_id": "21", "type": "Task", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
       { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 1 },
       { "item_id": "23", "type": "Chapter", "language_tag": "en", "title": "Reduce Graph", "attempt_id": "1", "attempt_order": 2 }
     ]
@@ -129,7 +129,7 @@ Scenario: Content access to all items except for last for which we have info acc
   And the response body should be, in JSON:
     """
     [
-      { "item_id": "21", "type": "Course", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
+      { "item_id": "21", "type": "Task", "language_tag": "fr", "title": "Graphe: Methodes", "attempt_id": "0" },
       { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "1", "attempt_order": 1 },
       { "item_id": "23", "type": "Chapter", "language_tag": "en", "title": "Reduce Graph" }
     ]

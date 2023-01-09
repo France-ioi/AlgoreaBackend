@@ -94,7 +94,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 227  | Task    | fr                   | false    |
       | 228  | Task    | fr                   | false    |
       | 229  | Task    | fr                   | false    |
-      | 300  | Course  | fr                   | false    |
+      | 300  | Task    | fr                   | false    |
       | 310  | Chapter | fr                   | false    |
       | 311  | Task    | fr                   | false    |
       | 312  | Task    | fr                   | false    |

@@ -32,7 +32,7 @@ Feature: Create item
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "image_url":"http://bit.ly/1234",
@@ -52,7 +52,7 @@ Feature: Create item
       """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Course | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List            | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | 5577006791947779410 | Task   | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List            | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -82,7 +82,7 @@ Feature: Create item
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "image_url":"http://bit.ly/1234",
@@ -102,7 +102,7 @@ Feature: Create item
       """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout  | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Course | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List             |0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | 5577006791947779410 | Task   | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List             |0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |

@@ -46,7 +46,7 @@ Feature: Update a group (groupEdit)
       | 123  | fr                   | Task    |
       | 4567 | fr                   | Skill   |
       | 5678 | fr                   | Chapter |
-      | 6789 | fr                   | Course  |
+      | 6789 | fr                   | Task    |
       | 7890 | fr                   | Task    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |

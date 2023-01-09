@@ -31,7 +31,7 @@ Feature: Find all breadcrumbs to an item
       | id | url                                                                     | type    | default_language_tag |
       | 10 | null                                                                    | Chapter | en                   |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | en                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   |
       | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | fr                   |
       | 80 | null                                                                    | Chapter | en                   |
       | 90 | null                                                                    | Chapter | en                   |

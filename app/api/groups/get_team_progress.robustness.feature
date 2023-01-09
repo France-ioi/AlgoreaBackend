@@ -14,7 +14,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
     And the groups ancestors are computed
     And the database has the following table 'items':
       | id  | type    | default_language_tag |
-      | 200 | Course  | fr                   |
+      | 200 | Task    | fr                   |
       | 210 | Chapter | fr                   |
       | 211 | Task    | fr                   |
     And the database has the following table 'permissions_generated':

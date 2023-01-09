@@ -47,7 +47,7 @@ type visibleChildItemFields struct {
 	// items
 
 	// only for visible items
-	// enum: Chapter,Task,Course,Skill
+	// enum: Chapter,Task,Skill
 	Type string `json:"type"`
 	// only for visible items
 	DisplayDetailsInParent bool `json:"display_details_in_parent"`

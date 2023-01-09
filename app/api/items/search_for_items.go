@@ -23,7 +23,7 @@ type itemSearchResponseRow struct {
 	// required:true
 	Title *string `json:"title"`
 	// required:true
-	// enum: Chapter,Task,Course,Skill
+	// enum: Chapter,Task,Skill
 	Type string `json:"type"`
 
 	// required: true
@@ -52,18 +52,18 @@ type itemSearchResponseRowRaw struct {
 //   required: true
 // - name: types_include
 //   in: query
-//   default: [Chapter,Task,Course,Skill]
+//   default: [Chapter,Task,Skill]
 //   type: array
 //   items:
 //     type: string
-//     enum: [Chapter,Task,Course,Skill]
+//     enum: [Chapter,Task,Skill]
 // - name: types_exclude
 //   in: query
 //   default: []
 //   type: array
 //   items:
 //     type: string
-//     enum: [Chapter,Task,Course,Skill]
+//     enum: [Chapter,Task,Skill]
 // - name: limit
 //   description: Display the first N items
 //   in: query
@@ -100,7 +100,7 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) servi
 	store := srv.GetStore(r)
 
 	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(r, "types",
-		map[string]bool{"Chapter": true, "Task": true, "Course": true, "Skill": true})
+		map[string]bool{"Chapter": true, "Task": true, "Skill": true})
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}

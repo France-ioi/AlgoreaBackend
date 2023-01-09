@@ -72,7 +72,7 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //
 //   If the `children` array is given, the service removes relations between the item and its former children,
 //   inserts relations between the item and its new children into `items_items`, and propagates `permissions_generated`.
-//   (The only allowed parent-child relations are skills-*, chapter-task, chapter-course, chapter-chapter.
+//   (The only allowed parent-child relations are skills-*, chapter-task, chapter-chapter.
 //   Otherwise the "bad request" error is returned.)
 //
 //

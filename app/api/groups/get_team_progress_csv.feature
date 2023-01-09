@@ -98,7 +98,7 @@ Feature: Export the current progress of teams on a subset of items as CSV (group
       | 317 | Task    | fr                   |
       | 318 | Task    | fr                   |
       | 319 | Task    | fr                   |
-      | 400 | Course  | fr                   |
+      | 400 | Task    | fr                   |
       | 410 | Chapter | fr                   |
       | 411 | Task    | fr                   |
       | 412 | Task    | fr                   |
@@ -133,7 +133,7 @@ Feature: Export the current progress of teams on a subset of items as CSV (group
       | 227     | fr           | Item 227      |
       | 228     | fr           | Item 228      |
       | 229     | fr           | Item 229      |
-      | 300     | fr           | Cours 300     |
+      | 300     | fr           | Tache 300     |
       | 310     | fr           | Chapitre 310  |
       | 311     | fr           | Item 311      |
       | 312     | fr           | Item 312      |

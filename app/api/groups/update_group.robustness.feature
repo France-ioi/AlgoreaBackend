@@ -33,7 +33,7 @@ Feature: Update a group (groupEdit) - robustness
       | id   | default_language_tag | type   |
       | 123  | fr                   | Task   |
       | 124  | fr                   | Task   |
-      | 5678 | fr                   | Course |
+      | 5678 | fr                   | Task   |
       | 6789 | fr                   | Skill  |
       | 7890 | fr                   | Skill  |
     And the database has the following table 'permissions_generated':

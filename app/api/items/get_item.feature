@@ -20,7 +20,7 @@ Feature: Get item view information
       | info       | 0         | 22       |                  |
     And the database has the following table 'items':
       | id  | type    | default_language_tag | no_score | text_id  | display_details_in_parent | validation_type | requires_explicit_entry | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | prompt_to_join_group_by_code | title_bar_visible | read_only | full_screen | children_layout | show_user_infos | url            | options | uses_api | hints_allowed |
-      | 200 | Course  | en                   | true     | Task_30c | true                      | All             | true                    | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | List            | true            | http://someurl | {}      | true     | true          |
+      | 200 | Task    | en                   | true     | Task_30c | true                      | All             | true                    | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | List            | true            | http://someurl | {}      | true     | true          |
       | 210 | Chapter | en                   | true     | null     | true                      | All             | false                   | All                              | false              | 10                  | true                     | User                   | 10:20:31 | true                         | true              | true      | forceYes    | List            | true            | null           | null    | true     | true          |
       | 220 | Chapter | en                   | true     | Task_30e | true                      | All             | false                   | All                              | false              | 10                  | true                     | Team                   | 10:20:32 | true                         | true              | true      | forceYes    | List            | true            | null           | null    | true     | true          |
     And the database has the following table 'items_strings':
@@ -93,7 +93,7 @@ Feature: Get item view information
     """
     {
       "id": "200",
-      "type": "Course",
+      "type": "Task",
       "display_details_in_parent": true,
       "validation_type": "All",
       "requires_explicit_entry": true,
@@ -255,7 +255,7 @@ Feature: Get item view information
     """
     {
       "id": "200",
-      "type": "Course",
+      "type": "Task",
       "display_details_in_parent": true,
       "validation_type": "All",
       "requires_explicit_entry": true,
@@ -312,7 +312,7 @@ Feature: Get item view information
     """
     {
       "id": "200",
-      "type": "Course",
+      "type": "Task",
       "display_details_in_parent": true,
       "validation_type": "All",
       "requires_explicit_entry": true,
@@ -419,7 +419,7 @@ Feature: Get item view information
     """
     {
       "id": "200",
-      "type": "Course",
+      "type": "Task",
       "display_details_in_parent": true,
       "validation_type": "All",
       "requires_explicit_entry": true,

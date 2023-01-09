@@ -28,7 +28,7 @@ Feature: Find all breadcrumbs to an item - robustness
       | 30 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
       | 40 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | en                   | false                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
       | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | fr                   | false                   |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title            |

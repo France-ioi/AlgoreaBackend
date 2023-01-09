@@ -19,8 +19,8 @@ Feature: Delete an item dependency - robustness
       | jane       | 0         | 23       |                  |
     And the database has the following table 'items':
       | id  | type    | default_language_tag | requires_explicit_entry |
-      | 100 | Course  | en                   | true                    |
-      | 200 | Course  | en                   | true                    |
+      | 100 | Task    | en                   | true                    |
+      | 200 | Task    | en                   | true                    |
       | 210 | Chapter | en                   | false                   |
       | 220 | Chapter | en                   | false                   |
     And the database has the following table 'groups_groups':
