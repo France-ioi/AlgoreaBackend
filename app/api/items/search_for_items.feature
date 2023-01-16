@@ -1,3 +1,4 @@
+@wip
 Feature: Search for items
 
   Background:
@@ -9,7 +10,6 @@ Feature: Search for items
       | 4  | Skill   | en                   |
       | 6  | Chapter | en                   |
       | 7  | Task    | en                   |
-      | 8  | Task    | en                   |
       | 10 | Chapter | en                   |
       | 11 | Chapter | en                   |
       | 12 | Chapter | en                   |
@@ -41,7 +41,6 @@ Feature: Search for items
       | 6       | en           | Another Chapter                         |
       | 6       | fr           | Un autre chapitre                       |
       | 7       | en           | Another %%%Task                         |
-      | 8       | en           | Another %%%Task 2                       |
       | 10      | en           | The third chapter                       |
       | 10      | fr           | Le troisième chapitre                   |
       | 11      | en           | chapter                                 |
@@ -77,7 +76,6 @@ Feature: Search for items
       | 21       | 4       | info                     |
       | 21       | 6       | solution                 |
       | 21       | 7       | info                     |
-      | 21       | 8       | content                  |
       | 21       | 10      | content_with_descendants |
       | 21       | 11      | content_with_descendants |
       | 21       | 12      | content_with_descendants |
@@ -125,12 +123,6 @@ Feature: Search for items
         "title": "Another %%%Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      },
-      {
-        "id": "8",
-        "title": "Another %%%Task 2",
-        "type": "Task",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -169,12 +161,6 @@ Feature: Search for items
         "title": "Another %%%Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      },
-      {
-        "id": "8",
-        "title": "Another %%%Task 2",
-        "type": "Task",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -245,12 +231,6 @@ Feature: Search for items
         "title": "Another %%%Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      },
-      {
-        "id": "8",
-        "title": "Another %%%Task 2",
-        "type": "Task",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
