@@ -34,7 +34,7 @@ type groupRootsViewResponseRow struct {
 // ---
 // summary: List root groups
 // description: Returns groups which are ancestors of a joined groups or managed non-user groups
-//   and do not have parents, not considering "type='Base'" groups
+//   and do not have parents. Groups having "type='Base'" are ignored, thus their children become roots.
 // responses:
 //   "200":
 //     description: OK. Success response with an array of root groups
@@ -54,7 +54,7 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
 			ancestorsOfJoinedGroups(store, user).QueryExpr(), ancestorsOfManagedGroups(store, user).QueryExpr()).
-		Where("groups.type != 'Base'").
+		Where("groups.type != 'Base' and groups.type != 'User'").
 		Where("groups.id != ?", user.GroupID).
 		Where(`
 			NOT EXISTS(
