@@ -40,6 +40,7 @@ Feature: Get root groups (groupRootsView)
       | 49 | jack                                     | User    |
       | 50 | jane                                     | User    |
       | 51 | john                                     | User    |
+      | 52 | AllUsers                                 | Base    |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 41       | Jean-Michel | Blanquer  |
@@ -58,6 +59,7 @@ Feature: Get root groups (groupRootsView)
       | 23       | 25         |
       | 26       | 50         |
       | 28       | 51         |
+      | 52       | 41         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | expires_at          |
       | 1               | 41             | 9999-12-31 23:59:59 |
@@ -104,6 +106,10 @@ Feature: Get root groups (groupRootsView)
       | 22              | 41             | 2010-01-01 00:00:00 |
       | 23              | 41             | 2010-01-01 00:00:00 |
       | 25              | 41             | 2010-01-01 00:00:00 |
+      | 52              | 41             | 9999-12-31 23:59:59 |
+      | 52              | 49             | 9999-12-31 23:59:59 |
+      | 52              | 50             | 9999-12-31 23:59:59 |
+      | 52              | 51             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | expires_at          |

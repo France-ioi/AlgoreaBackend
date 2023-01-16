@@ -54,7 +54,7 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
 			ancestorsOfJoinedGroups(store, user).QueryExpr(), ancestorsOfManagedGroups(store, user).QueryExpr()).
-		Where("groups.type != 'Base'").
+		Where("groups.type != 'Base' and groups.type != 'User'").
 		Where("groups.id != ?", user.GroupID).
 		Where(`
 			NOT EXISTS(
