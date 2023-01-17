@@ -53,7 +53,7 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	innerQuery := store.Groups().
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
-			ancestorsOfJoinedGroups(store, user).QueryExpr(), ancestorsOfManagedGroups(store, user).QueryExpr()).
+			ancestorsOfJoinedGroups(store, user).QueryExpr(), managedUsersAndAncestorsOfManagedGroups(store, user).QueryExpr()).
 		Where("groups.type != 'Base' and groups.type != 'User'").
 		Where("groups.id != ?", user.GroupID).
 		Where(`
@@ -151,8 +151,9 @@ func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *da
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
-// This function will also return entries for users who are in a group managed by the user.
-func ancestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
+// managedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
+// and all users who are descendants from managed groups.
+func managedUsersAndAncestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
 	return store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Joins(`
