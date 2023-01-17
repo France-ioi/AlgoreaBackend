@@ -1,4 +1,3 @@
-@wip
 Feature: Search for items
 
   Background:
