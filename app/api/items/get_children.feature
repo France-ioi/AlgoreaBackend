@@ -735,6 +735,7 @@ Feature: Get item children
         "category": "Discovery",
         "content_view_propagation": "as_info",
         "edit_propagation": false,
+        "type": "Chapter",
         "grant_view_propagation": false,
         "id": "230",
         "order": 3,
