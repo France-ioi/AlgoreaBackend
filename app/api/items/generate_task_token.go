@@ -33,7 +33,7 @@ import (
 //
 //     * if `{as_team_id}` is given, it should be a team and the current user should be a member of this team,
 //     * the user (or `{as_team_id}`) should have at least 'content' access to the item,
-//     * the item should be either 'Task' or 'Course',
+//     * the item should be a 'Task',
 //     * there should be a row in the `results` table with `participant_id` equal to the user's group (or `{as_team_id}`),
 //       `attempt_id` = `{attempt_id}`, `item_id` = `{item_id}`, `started_at` set,
 //     * the attempt with (`participant_id`, `{attempt_id}`) should have allows_submissions_until in the future,
@@ -119,7 +119,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 					ON permissions_generated.item_id = items.id AND
 						 permissions_generated.group_id = groups_ancestors_active.ancestor_group_id`).
 			WherePermissionIsAtLeast("view", "content").
-			Where("items.type IN('Task','Course')").
+			Where("items.type = 'Task'").
 			Select(`
 					can_view_generated_value = ? AS access_solutions,
 					hints_allowed, text_id, url, supported_lang_prog`,

@@ -53,7 +53,7 @@ type itemActivityLogResponseRow struct {
 		// required: true
 		ID int64 `json:"id,string"`
 		// required: true
-		// enum: Chapter,Task,Course,Skill
+		// enum: Chapter,Task,Skill
 		Type string `json:"type"`
 		// required: true
 		String struct {

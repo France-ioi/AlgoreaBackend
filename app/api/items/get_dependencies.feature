@@ -20,7 +20,7 @@ Feature: Get item dependencies
       | jane       | 0         | 23       |                  |
     And the database has the following table 'items':
       | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
-      | 200 | Course  | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://someurl | true     | true          |
+      | 200 | Task    | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://someurl | true     | true          |
       | 210 | Chapter | en                   | true     | true                      | All             | false                   | true                     | User                   | 10:20:31 | true              | true      | forceYes    | true            | null           | true     | true          |
       | 220 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null           | true     | true          |
     And the database has the following table 'items_strings':

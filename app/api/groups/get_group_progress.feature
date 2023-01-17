@@ -106,7 +106,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 317  | Task    | fr                   |
       | 318  | Task    | fr                   |
       | 319  | Task    | fr                   |
-      | 400  | Course  | fr                   |
+      | 400  | Task    | fr                   |
       | 410  | Chapter | fr                   |
       | 411  | Task    | fr                   |
       | 412  | Task    | fr                   |

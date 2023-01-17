@@ -9,8 +9,8 @@ Feature: Get item breadcrumbs - robustness
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
       | id | no_score | type    | default_language_tag |
-      | 21 | false    | Course  | fr                   |
-      | 22 | false    | Course  | fr                   |
+      | 21 | false    | Task    | fr                   |
+      | 22 | false    | Task    | fr                   |
       | 23 | false    | Chapter | fr                   |
       | 24 | false    | Task    | fr                   |
     And the database has the following table 'items_strings':

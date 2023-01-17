@@ -154,7 +154,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": 123,
         "title": "my title",
         "parent": {"item_id": "21"}
@@ -184,7 +184,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "unknown",
         "title": "my title",
         "parent": {"item_id": "21"}
@@ -215,7 +215,7 @@ Feature: Create item - robustness
       """
       {
         "id": "2",
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "parent": {"item_id": "sfaewr20"}
@@ -245,7 +245,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "parent": {"item_id": "404"}
@@ -275,7 +275,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "parent": {"item_id": "<parent_item>"}
@@ -309,7 +309,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21"
@@ -329,7 +329,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "parent_item_id": "21"
@@ -349,7 +349,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "parent": {"item_id": "21"},
@@ -378,7 +378,7 @@ Feature: Create item - robustness
       | field                            | value       | error                                                                     |
       | full_screen                      | wrong value | full_screen must be one of [forceYes forceNo default]                     |
       | full_screen                      |             | full_screen must be one of [forceYes forceNo default]                     |
-      | type                             | Wrong       | type must be one of [Chapter Task Course Skill]                           |
+      | type                             | Wrong       | type must be one of [Chapter Task Skill]                           |
       | type                             | Skill       | type can be equal to 'Skill' only if the parent item is a skill           |
       | validation_type                  | Wrong       | validation_type must be one of [None All AllButOne Categories One Manual] |
       | entry_min_admitted_members_ratio | Wrong       | entry_min_admitted_members_ratio must be one of [All Half One None]       |
@@ -398,7 +398,7 @@ Feature: Create item - robustness
     When I send a POST request to "/items" with the following body:
       """
       {
-        "type": "Course",
+        "type": "Task",
         "language_tag": "sl",
         "title": "my title",
         "parent": {
@@ -518,7 +518,7 @@ Feature: Create item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "parent.item_id": ["parent item cannot be Task or Course"]
+          "parent.item_id": ["parent item cannot be Task"]
         }
       }
       """
@@ -531,7 +531,6 @@ Feature: Create item - robustness
     Examples:
       | type   |
       | Task   |
-      | Course |
 
   Scenario Outline: The new item cannot have children
     Given I am the user with id "11"
@@ -555,7 +554,7 @@ Feature: Create item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "children": ["a task or a course cannot have children items"]
+          "children": ["a task cannot have children items"]
         }
       }
       """
@@ -568,7 +567,6 @@ Feature: Create item - robustness
     Examples:
       | type   |
       | Task   |
-      | Course |
 
   Scenario: Child order is missing
     Given I am the user with id "11"

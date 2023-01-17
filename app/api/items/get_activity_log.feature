@@ -83,7 +83,7 @@ Feature: Get activity log
       | 8         | 2017-05-30 06:38:38 | 100   |
     And the database has the following table 'items':
       | id  | type    | no_score | default_language_tag |
-      | 200 | Course  | false    | fr                   |
+      | 200 | Task    | false    | fr                   |
       | 201 | Chapter | false    | fr                   |
       | 202 | Chapter | false    | fr                   |
       | 203 | Chapter | false    | fr                   |
@@ -108,8 +108,8 @@ Feature: Get activity log
       | 200              | 204           |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title      | image_url                  | subtitle     | description   | edu_comment    |
-      | 200     | en           | Course 1   | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
-      | 200     | fr           | Cours 1    | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+      | 200     | en           | Task 1     | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 200     | fr           | Tache 1    | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
       | 201     | en           | Chapter 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
       | 201     | fr           | Chapitre 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
       | 202     | en           | Chapter 2  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
@@ -137,7 +137,7 @@ Feature: Get activity log
         "at": "2017-05-30T12:00:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "-1"
       },
@@ -147,7 +147,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "15",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -157,7 +157,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "14",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -167,7 +167,7 @@ Feature: Get activity log
         "answer_id": "18",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       },
@@ -177,7 +177,7 @@ Feature: Get activity log
         "answer_id": "13",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "13"
       },
@@ -209,7 +209,7 @@ Feature: Get activity log
         "answer_id": "12",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "12"
       },
@@ -219,7 +219,7 @@ Feature: Get activity log
         "answer_id": "16",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "16"
       },
@@ -228,7 +228,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "16"
       },
@@ -238,7 +238,7 @@ Feature: Get activity log
         "answer_id": "11",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "11"
       },
@@ -248,7 +248,7 @@ Feature: Get activity log
         "answer_id": "17",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "17"
       },
@@ -257,7 +257,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "17"
       },
@@ -297,7 +297,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "7"
       },
@@ -315,7 +315,7 @@ Feature: Get activity log
         "at": "2016-05-30T12:00:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       },
@@ -324,7 +324,7 @@ Feature: Get activity log
         "at": "2016-05-29T06:38:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       }
@@ -348,7 +348,7 @@ Feature: Get activity log
         "at": "2017-05-30T12:00:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "-1"
       }
@@ -373,7 +373,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "15",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -383,7 +383,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "14",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       }
@@ -408,7 +408,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "14",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -418,7 +418,7 @@ Feature: Get activity log
         "answer_id": "18",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       }
@@ -443,7 +443,7 @@ Feature: Get activity log
         "answer_id": "18",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       },
@@ -453,7 +453,7 @@ Feature: Get activity log
         "answer_id": "13",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "13"
       }
@@ -477,7 +477,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "16"
       },
@@ -487,7 +487,7 @@ Feature: Get activity log
         "answer_id": "11",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "11"
       }
@@ -535,7 +535,7 @@ Feature: Get activity log
         "at": "2016-05-30T12:00:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       },
@@ -544,7 +544,7 @@ Feature: Get activity log
         "at": "2016-05-29T06:38:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       }
@@ -567,7 +567,7 @@ Feature: Get activity log
         "at": "2017-05-30T12:00:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }
@@ -586,7 +586,7 @@ Feature: Get activity log
         "at": "2017-05-30T12:00:00Z",
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "from_answer_id": "-1"
       },
       {
@@ -594,7 +594,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:00Z",
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "from_answer_id": "-1"
       }
     ]
@@ -617,7 +617,7 @@ Feature: Get activity log
         "at": "2017-05-30T12:00:00Z",
         "attempt_id": "1",
         "from_answer_id": "-1",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -645,7 +645,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "15",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -655,7 +655,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "14",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -665,7 +665,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "18",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -675,7 +675,7 @@ Feature: Get activity log
         "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "13",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
       },
@@ -747,7 +747,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "12",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -757,7 +757,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "16",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -766,7 +766,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "16",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -776,7 +776,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "11",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -786,7 +786,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "17",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -795,7 +795,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "17",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -875,7 +875,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:00Z",
         "attempt_id": "1",
         "from_answer_id": "27",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -911,7 +911,7 @@ Feature: Get activity log
         "at": "2016-05-30T12:00:00Z",
         "attempt_id": "1",
         "from_answer_id": "27",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
       },
@@ -920,7 +920,7 @@ Feature: Get activity log
         "at": "2016-05-29T06:38:00Z",
         "attempt_id": "1",
         "from_answer_id": "27",
-        "item": {"id": "200", "string": {"title": "Cours 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
       }
@@ -944,7 +944,7 @@ Feature: Get activity log
         "at": "2017-05-30T12:00:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       },
@@ -953,7 +953,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }
@@ -977,7 +977,7 @@ Feature: Get activity log
         "at": "2017-05-30T12:00:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }
@@ -1001,7 +1001,7 @@ Feature: Get activity log
         "at": "2017-05-29T06:38:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
-        "item": {"id": "200", "string": {"title": "Course 1"}, "type": "Course"},
+        "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }

@@ -94,7 +94,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 227 | Task    | fr                   |
       | 228 | Task    | fr                   |
       | 229 | Task    | fr                   |
-      | 300 | Course  | fr                   |
+      | 300 | Task    | fr                   |
       | 310 | Chapter | fr                   |
       | 311 | Task    | fr                   |
       | 312 | Task    | fr                   |

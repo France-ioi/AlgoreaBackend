@@ -51,7 +51,7 @@ type groupParticipantProgressResponseChild struct {
 	// required: true
 	NoScore bool `json:"no_score"`
 	// required: true
-	// enum: Chapter,Task,Course,Skill
+	// enum: Chapter,Task,Skill
 	Type string `json:"type"`
 
 	// required: true

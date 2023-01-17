@@ -17,7 +17,7 @@ Feature: Generate a task token with a refreshed attempt for an item - robustness
     And the database has the following table 'items':
       | id | url                                                                     | type    | entry_participant_type | default_language_tag |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | User                   | fr                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | Team                   | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | Team                   | fr                   |
       | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | Team                   | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |

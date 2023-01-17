@@ -70,8 +70,8 @@ type ItemWithRequiredType struct {
 	Item `json:"item,squash"`
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
-	// enum: Chapter,Task,Course,Skill
-	Type string `json:"type" validate:"set,oneof=Chapter Task Course Skill,type_skill"`
+	// enum: Chapter,Task,Skill
+	Type string `json:"type" validate:"set,oneof=Chapter Task Skill,type_skill"`
 }
 
 // swagger:ignore
@@ -158,7 +158,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //       `is_owner` = 1).
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
-//       (The only allowed parent-child relations are skills-*, chapter-task, chapter-course, chapter-chapter.
+//       (The only allowed parent-child relations are skills-*, chapter-task, chapter-chapter.
 //       Otherwise the "bad request" error is returned.)
 //
 //     * (if `requires_explicit_entry` is true) creates a participants group, links `participants_group_id` to it,
@@ -305,10 +305,10 @@ func constructAsRootOfGroupIDValidator(
 	})
 }
 
-// constructParentItemTypeValidator constructs a validator checking that the parent item is not a Task or a Course.
+// constructParentItemTypeValidator constructs a validator checking that the parent item is not a Task.
 func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		return parentInfo.Type != course && parentInfo.Type != task
+		return parentInfo.Type != task
 	})
 }
 
@@ -442,7 +442,7 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 	return childrenInfoMap
 }
 
-// constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task or a Course).
+// constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task).
 func constructChildrenAllowedValidator(
 	defaultItemType string, childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
 	return validator.Func(func(fl validator.FieldLevel) bool {
@@ -456,7 +456,7 @@ func constructChildrenAllowedValidator(
 		} else {
 			itemType = defaultItemType
 		}
-		return itemType != task && itemType != course
+		return itemType != task
 	})
 }
 
@@ -485,7 +485,7 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should be able to manage its children")
 	formData.RegisterValidation("parent_item_type", constructParentItemTypeValidator(parentInfo))
-	formData.RegisterTranslation("parent_item_type", "parent item cannot be Task or Course")
+	formData.RegisterTranslation("parent_item_type", "parent item cannot be Task")
 
 	formData.RegisterValidation("as_root_of_group_id", constructAsRootOfGroupIDValidator(store, user, formData))
 	formData.RegisterTranslation("as_root_of_group_id", "should exist and the user should be able to manage the group")
@@ -517,7 +517,7 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 		"children IDs should be unique and each should be visible to the user")
 
 	formData.RegisterValidation("children_allowed", constructChildrenAllowedValidator(itemType, childrenInfoMap))
-	formData.RegisterTranslation("children_allowed", "a task or a course cannot have children items")
+	formData.RegisterTranslation("children_allowed", "a task cannot have children items")
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,

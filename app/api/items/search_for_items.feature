@@ -5,11 +5,10 @@ Feature: Search for items
       | id | type    | default_language_tag |
       | 1  | Chapter | en                   |
       | 2  | Task    | en                   |
-      | 3  | Course  | en                   |
+      | 3  | Task    | en                   |
       | 4  | Skill   | en                   |
       | 6  | Chapter | en                   |
       | 7  | Task    | en                   |
-      | 8  | Course  | en                   |
       | 10 | Chapter | en                   |
       | 11 | Chapter | en                   |
       | 12 | Chapter | en                   |
@@ -36,12 +35,11 @@ Feature: Search for items
       | item_id | language_tag | title                                   |
       | 1       | fr           | (the) Our Chapter                       |
       | 2       | fr           | (the) Our Task ___                      |
-      | 3       | en           | (the) Our Course                        |
+      | 3       | en           | (the) Our Task                          |
       | 4       | fr           | (the) \|\|\|Our Skill \\\\\\%\\\\%\\ :) |
       | 6       | en           | Another Chapter                         |
       | 6       | fr           | Un autre chapitre                       |
       | 7       | en           | Another %%%Task                         |
-      | 8       | en           | Another %%%Course                       |
       | 10      | en           | The third chapter                       |
       | 10      | fr           | Le troisième chapitre                   |
       | 11      | en           | chapter                                 |
@@ -77,7 +75,6 @@ Feature: Search for items
       | 21       | 4       | info                     |
       | 21       | 6       | solution                 |
       | 21       | 7       | info                     |
-      | 21       | 8       | content                  |
       | 21       | 10      | content_with_descendants |
       | 21       | 11      | content_with_descendants |
       | 21       | 12      | content_with_descendants |
@@ -125,12 +122,6 @@ Feature: Search for items
         "title": "Another %%%Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      },
-      {
-        "id": "8",
-        "title": "Another %%%Course",
-        "type": "Course",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -169,12 +160,6 @@ Feature: Search for items
         "title": "Another %%%Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      },
-      {
-        "id": "8",
-        "title": "Another %%%Course",
-        "type": "Course",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       }
     ]
     """
@@ -251,7 +236,7 @@ Feature: Search for items
 
   Scenario: Search for items with "the", exclude items of specified types
     Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=the&types_exclude=Task,Course"
+    When I send a GET request to "/items/search?search=the&types_exclude=Task"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

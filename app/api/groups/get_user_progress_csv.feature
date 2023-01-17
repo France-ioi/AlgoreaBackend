@@ -94,7 +94,7 @@ Feature: Export the current progress of users on a subset of items as CSV (group
       | 227  | Task    | fr                   |
       | 228  | Task    | fr                   |
       | 229  | Task    | fr                   |
-      | 300  | Course  | fr                   |
+      | 300  | Task    | fr                   |
       | 310  | Chapter | fr                   |
       | 311  | Task    | fr                   |
       | 312  | Task    | fr                   |
@@ -141,7 +141,7 @@ Feature: Export the current progress of users on a subset of items as CSV (group
       | 227     | fr           | Item 227      |
       | 228     | fr           | Item 228      |
       | 229     | fr           | Item 229      |
-      | 300     | fr           | Cours 300     |
+      | 300     | fr           | Tache 300     |
       | 310     | fr           | Chapitre 310  |
       | 311     | fr           | Item 311      |
       | 312     | fr           | Item 312      |

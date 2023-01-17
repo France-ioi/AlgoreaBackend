@@ -58,7 +58,7 @@ Feature: Get root activities for a participant group
       | 30         | 24       | true              |
     And the database has the following table 'items':
       | id  | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
-      | 200 | Course  | en                   | false    | false                   | User                   |
+      | 200 | Task    | en                   | false    | false                   | User                   |
       | 210 | Chapter | en                   | false    | false                   | User                   |
       | 220 | Chapter | en                   | false    | false                   | User                   |
       | 230 | Chapter | en                   | true     | true                    | Team                   |
@@ -248,7 +248,7 @@ Feature: Get root activities for a participant group
         "type": "Class",
         "activity": {
           "id": "200",
-          "type": "Course",
+          "type": "Task",
           "string": {"title": "Category 1", "language_tag": "en"},
           "permissions": {
             "can_view": "solution", "can_grant_view": "solution_with_grant", "can_watch": "none", "can_edit": "none", "is_owner": true
@@ -327,7 +327,7 @@ Feature: Get root activities for a participant group
         "type": "Class",
         "activity": {
           "id": "200",
-          "type": "Course",
+          "type": "Task",
           "string": {"title": "Catégorie 1", "language_tag": "fr"},
           "permissions": {
             "can_view": "content", "can_grant_view": "none", "can_watch": "none", "can_edit": "none", "is_owner": false

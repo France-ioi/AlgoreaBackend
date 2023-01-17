@@ -22,7 +22,7 @@ Feature: Start a result for an item
       | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag |
       | 10 | null                                                                    | Chapter | 1                        | fr                   |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
       | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
       | 80 | null                                                                    | Skill   | 0                        | fr                   |
     And the database has the following table 'items_items':

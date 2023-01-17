@@ -28,7 +28,7 @@ Feature: End an attempt (itemAttemptEnd)
       | id | url                                                                     | type    | allows_multiple_attempts | participants_group_id | default_language_tag |
       | 10 | null                                                                    | Chapter | 0                        | 201                   | fr                   |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0                        | 202                   | fr                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1                        | 203                   | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | 203                   | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |

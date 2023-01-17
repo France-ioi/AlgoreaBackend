@@ -17,7 +17,7 @@ Feature: Create an attempt for an item - robustness
     And the database has the following table 'items':
       | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course | 1                        | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 1                        | fr                   |
       | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |

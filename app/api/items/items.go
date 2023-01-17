@@ -21,7 +21,6 @@ type Service struct {
 }
 
 const undefined = "Undefined"
-const course = "Course"
 const task = "Task"
 const skill = "Skill"
 

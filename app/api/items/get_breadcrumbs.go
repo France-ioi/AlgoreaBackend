@@ -64,7 +64,7 @@ import (
 //             format: int64
 //           type:
 //             type: string
-//             enum: [Chapter,Task,Course,Skill]
+//             enum: [Chapter,Task,Skill]
 //           title:
 //             type: string
 //           language_tag:
