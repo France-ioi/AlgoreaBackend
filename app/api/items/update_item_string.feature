@@ -44,6 +44,23 @@ Feature: Update an item string entry
       | item_id | language_tag | title     | image_url                   | subtitle     | description     |
       | 50      | en           | The title | http://mysite.com/image.jpg | The subtitle | The description |
 
+  Scenario: Update the default language string with an image_url > 100 and < 2048 characters.
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50/strings/default" with the following body:
+      """
+      {
+        "title": "The title",
+        "image_url": "http://mysite.com/image-1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.jpg",
+        "subtitle": "The subtitle",
+        "description": "The description"
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_strings" should stay unchanged but the row with language_tag "en"
+    And the table "items_strings" at language_tag "en" should be:
+      | item_id | language_tag | title     | image_url                                                                                                                        | subtitle     | description     |
+      | 50      | en           | The title | http://mysite.com/image-1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.jpg | The subtitle | The description |
+
   Scenario: Update the specified language string
     Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/sl" with the following body:
