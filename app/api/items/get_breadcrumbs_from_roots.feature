@@ -107,11 +107,11 @@ Feature: Find all breadcrumbs to an item
       [
         [
           {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
-          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"},
+          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"},
           {"id": "70", "title": null, "language_tag": "fr", "type": "Task"}
         ],
         [
-          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"},
+          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"},
           {"id": "70","title": null, "language_tag": "fr", "type": "Task"}
         ]
       ]
@@ -126,8 +126,8 @@ Feature: Find all breadcrumbs to an item
       [
         [
           {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
-          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"}
+          {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}
         ],
-        [{"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Course"}]
+        [{"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}]
       ]
       """
