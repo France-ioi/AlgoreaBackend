@@ -34,7 +34,7 @@ type groupRootsViewResponseRow struct {
 // ---
 // summary: List root groups
 // description: Returns groups which are ancestors of a joined groups or managed non-user groups
-//   and do not have parents. Groups having "type='Base'" are ignored, thus their children become roots.
+//   and do not have parents. Groups of type "Base" or "User" are ignored.
 // responses:
 //   "200":
 //     description: OK. Success response with an array of root groups
@@ -151,6 +151,7 @@ func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *da
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
+// This function will also return entries for users who are in a group managed by the user.
 func ancestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
 	return store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
