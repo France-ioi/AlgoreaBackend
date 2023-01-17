@@ -34,7 +34,7 @@ type groupRootsViewResponseRow struct {
 // ---
 // summary: List root groups
 // description: Returns groups which are ancestors of a joined groups or managed non-user groups
-//   and do not have parents, not considering "type='Base'" groups
+//   and do not have parents. Groups of type "Base" or "User" are ignored.
 // responses:
 //   "200":
 //     description: OK. Success response with an array of root groups
@@ -53,8 +53,8 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	innerQuery := store.Groups().
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
-			ancestorsOfJoinedGroups(store, user).QueryExpr(), ancestorsOfManagedGroups(store, user).QueryExpr()).
-		Where("groups.type != 'Base'").
+			ancestorsOfJoinedGroups(store, user).QueryExpr(), managedUsersAndAncestorsOfManagedGroups(store, user).QueryExpr()).
+		Where("groups.type != 'Base' and groups.type != 'User'").
 		Where("groups.id != ?", user.GroupID).
 		Where(`
 			NOT EXISTS(
@@ -151,7 +151,9 @@ func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *da
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
-func ancestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
+// managedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
+// and all users who are descendants from managed groups.
+func managedUsersAndAncestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
 	return store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Joins(`

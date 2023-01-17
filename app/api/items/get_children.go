@@ -47,9 +47,6 @@ type visibleChildItemFields struct {
 	// items
 
 	// only for visible items
-	// enum: Chapter,Task,Skill
-	Type string `json:"type"`
-	// only for visible items
 	DisplayDetailsInParent bool `json:"display_details_in_parent"`
 	// only for visible items
 	// enum: None,All,AllButOne,Categories,One,Manual
@@ -77,6 +74,9 @@ type visibleChildItemFields struct {
 type childItem struct {
 	// required: true
 	ID int64 `json:"id,string"`
+	// required: true
+	// enum: Chapter,Task,Skill
+	Type string `json:"type"`
 
 	// `items_items.order`
 	// required: true
@@ -304,6 +304,7 @@ func childItemsFromRawData(
 				ID:                         rawData[index].ID,
 				Order:                      rawData[index].Order,
 				Category:                   rawData[index].Category,
+				Type:                       rawData[index].Type,
 				ScoreWeight:                rawData[index].ScoreWeight,
 				ContentViewPropagation:     rawData[index].ContentViewPropagation,
 				UpperViewLevelsPropagation: rawData[index].UpperViewLevelsPropagation,
@@ -322,7 +323,6 @@ func childItemsFromRawData(
 					DefaultLanguageTag:     rawData[index].DefaultLanguageTag,
 					BestScore:              rawData[index].BestScore,
 					Results:                make([]structures.ItemResult, 0, 1),
-					Type:                   rawData[index].Type,
 					DisplayDetailsInParent: rawData[index].DisplayDetailsInParent,
 					ValidationType:         rawData[index].ValidationType,
 					RequiresExplicitEntry:  rawData[index].RequiresExplicitEntry,
