@@ -151,6 +151,7 @@ func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *da
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
+// This function will also return entries for users who are in a group managed by the user.
 func ancestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
 	return store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
