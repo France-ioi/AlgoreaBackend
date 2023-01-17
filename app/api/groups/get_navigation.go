@@ -114,8 +114,8 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 
 func pickVisibleGroups(db *database.DB, user *database.User) *database.DB {
 	ancestorsOfJoinedGroupsQuery := ancestorsOfJoinedGroups(database.NewDataStore(db.New()), user).QueryExpr()
-	ancestorsOfManagedGroupsQuery := ancestorsOfManagedGroups(database.NewDataStore(db.New()), user).QueryExpr()
+	managedUsersAndAncestorsOfManagedGroupsQuery := managedUsersAndAncestorsOfManagedGroups(database.NewDataStore(db.New()), user).QueryExpr()
 
 	return db.Where("groups.is_public OR groups.id IN(?) OR groups.id IN(?)",
-		ancestorsOfJoinedGroupsQuery, ancestorsOfManagedGroupsQuery)
+		ancestorsOfJoinedGroupsQuery, managedUsersAndAncestorsOfManagedGroupsQuery)
 }
