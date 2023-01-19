@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.5.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.4.0...v1.5.0) - 2023-01-19
+
+- provide 'login' in task token
+- add item type in granted permissions view
+- add item type in itemBreadcrumbsFromRootsGet
+- fix root group service that returned users
+- limit item image url to 2048 char
+- add type of invisible items in itemChildrenView
+- merge item type 'Course' into 'Task'
+
 ## [v1.4.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.3.0...v1.4.0) - 2022-12-09
 
 - fix spec of updatePermissions
