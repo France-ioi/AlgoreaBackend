@@ -28,6 +28,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Base))
 	router.Get("/items/{item_id}/answers", service.AppHandler(srv.listAnswers).ServeHTTP)
+	router.Get("/items/{item_id}/best-answer", service.AppHandler(srv.getBestAnswer).ServeHTTP)
 	router.Get("/answers/{answer_id}", service.AppHandler(srv.getAnswer).ServeHTTP)
 	router.Post("/answers", service.AppHandler(srv.submit).ServeHTTP)
 
