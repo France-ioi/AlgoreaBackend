@@ -30,6 +30,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/items/{item_id}/answers", service.AppHandler(srv.listAnswers).ServeHTTP)
 	router.Get("/answers/{answer_id}", service.AppHandler(srv.getAnswer).ServeHTTP)
 	router.Post("/answers", service.AppHandler(srv.submit).ServeHTTP)
+	router.Post("/answers/{answer_id}/generate-task-token", service.AppHandler(srv.generateTaskToken).ServeHTTP)
 
 	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Base))
 	routerWithParticipant.Get("/items/{item_id}/current-answer", service.AppHandler(srv.getCurrentAnswer).ServeHTTP)
