@@ -38,12 +38,12 @@ Feature: Get the best answer - robustness
       | 2          | 13             | 210     |
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | type          | state    | answer   | created_at          |
-      | 101 | 11        | 11             | 1          | 200     | Submission    | State101 | print(1) | 2017-05-29 06:38:38 |
-      | 102 | 13        | 13             | 2          | 210     | Submission    | State102 | print(3) | 2017-05-29 06:38:38 |
+      | 101 | 11        | 11             | 1          | 200     | Submission    | State101 | print(1) | 2020-01-01 06:00:00 |
+      | 102 | 13        | 13             | 2          | 210     | Submission    | State102 | print(3) | 2020-01-01 06:00:00 |
     And the database has the following table 'gradings':
       | answer_id | score | graded_at           |
-      | 101       | 100   | 2018-05-29 06:38:38 |
-      | 102       | 100   | 2019-05-29 06:38:38 |
+      | 101       | 100   | 2020-01-01 06:00:00 |
+      | 102       | 100   | 2020-01-01 06:00:00 |
 
   Scenario: Invalid item_id
     Given I am the user with id "11"

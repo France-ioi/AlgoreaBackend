@@ -1,16 +1,19 @@
+@wip
 Feature: Get a current answer
 Background:
   Given the database has the following table 'groups':
-    | id | name    | type  |
-    | 11 | jdoe    | User  |
-    | 13 | Team    | Team  |
-    | 14 | Group B | Class |
-    | 21 | manager | User  |
-    | 23 | Group C | Class |
+    | id  | name    | type  |
+    | 11  | jdoe    | User  |
+    | 13  | Team    | Team  |
+    | 14  | Group B | Class |
+    | 21  | manager | User  |
+    | 23  | Group C | Class |
+    | 100 | top     | User  |
   And the database has the following table 'users':
     | login   | group_id | first_name | last_name |
     | jdoe    | 11       | John       | Doe       |
     | manager | 21       | Man        | Ager      |
+    | top     | 100      | Top        | Score     |
   And the database has the following table 'groups_groups':
     | parent_group_id | child_group_id |
     | 14              | 11             |
@@ -29,32 +32,40 @@ Background:
     | group_id | item_id | can_view_generated       | can_watch_generated |
     | 13       | 200     | content                  | answer              |
     | 14       | 200     | content                  | none                |
-    | 23       | 210     | content_with_descendants | answer                |
+    | 23       | 210     | content_with_descendants | answer              |
   And the database has the following table 'results':
     | attempt_id | participant_id | item_id |
     | 1          | 11             | 200     |
     | 2          | 11             | 200     |
     | 3          | 11             | 200     |
+    | 1          | 100            | 200     |
     | 1          | 13             | 210     |
     | 1          | 11             | 210     |
+    | 1          | 100            | 210     |
   And the database has the following table 'answers':
-    | id  | author_id | participant_id | attempt_id | item_id | type       | state    | answer   | created_at          |
-    | 101 | 11        | 11             | 1          | 200     | Submission | State101 | print(1) | 2017-05-29 06:38:38 |
-    | 102 | 11        | 11             | 2          | 200     | Submission | State102 | print(2) | 2017-05-29 07:38:38 |
-    | 103 | 11        | 11             | 3          | 200     | Submission | State103 | print(3) | 2017-05-29 08:38:38 |
-    | 104 | 11        | 13             | 1          | 210     | Submission | State104 | print(4) | 2017-05-29 09:38:38 |
-    | 105 | 11        | 13             | 1          | 210     | Submission | State105 | print(5) | 2017-05-29 10:38:38 |
-    | 106 | 11        | 13             | 1          | 210     | Submission | State106 | print(6) | 2017-05-29 11:38:38 |
-    | 107 | 11        | 11             | 1          | 210     | Submission | State107 | print(7) | 2017-05-29 08:38:38 |
+    | id  | author_id | participant_id | attempt_id | item_id | type       | state    | answer    | created_at          |
+    | 101 | 11        | 11             | 1          | 200     | Submission | State101 | print(1)  | 2020-01-01 06:00:00 |
+    | 102 | 11        | 11             | 2          | 200     | Submission | State102 | print(2)  | 2020-01-01 07:00:00 |
+    | 103 | 11        | 11             | 3          | 200     | Submission | State103 | print(3)  | 2020-01-01 08:00:00 |
+    | 104 | 11        | 11             | 3          | 200     | Submission | State104 | print(4)  | 2020-01-01 09:00:00 |
+    | 105 | 11        | 13             | 1          | 210     | Submission | State105 | print(5)  | 2020-01-01 10:00:00 |
+    | 106 | 11        | 13             | 1          | 210     | Submission | State106 | print(6)  | 2020-01-01 11:00:00 |
+    | 107 | 11        | 13             | 1          | 210     | Submission | State107 | print(7)  | 2020-01-01 12:00:00 |
+    | 108 | 11        | 11             | 1          | 210     | Submission | State108 | print(8)  | 2020-01-01 13:00:00 |
+    | 109 | 100       | 100            | 1          | 200     | Submission | State109 | print(9)  | 2020-01-01 14:00:00 |
+    | 110 | 100       | 100            | 1          | 210     | Submission | State110 | print(10) | 2020-01-01 15:00:00 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
-    | 101       | 91    | 2018-05-29 06:38:31 |
-    | 102       | 97    | 2019-05-29 06:38:32 |
-    | 103       | 97    | 2018-05-29 06:38:33 |
-    | 104       | 96    | 2019-05-29 06:38:34 |
-    | 105       | 96    | 2018-05-29 06:38:35 |
-    | 106       | 95    | 2019-05-29 06:38:36 |
-    | 107       | 98    | 2019-05-29 06:38:38 |
+    | 101       | 91    | 2020-01-01 06:00:01 |
+    | 102       | 97    | 2020-01-01 07:00:01 |
+    | 103       | 97    | 2020-01-01 08:00:01 |
+    | 104       | 96    | 2020-01-01 09:00:01 |
+    | 105       | 98    | 2020-01-01 10:00:01 |
+    | 106       | 98    | 2020-01-01 11:00:01 |
+    | 107       | 96    | 2020-01-01 12:00:01 |
+    | 108       | 96    | 2020-01-01 13:00:01 |
+    | 109       | 100   | 2020-01-01 14:00:01 |
+    | 110       | 100   | 2020-01-01 15:00:01 |
 
   Scenario: User has access to the item and retrieves his best answer
     Given I am the user with id "11"
@@ -69,11 +80,11 @@ Background:
       "score": 97.0,
       "answer": "print(3)",
       "state": "State103",
-      "created_at": "2017-05-29T08:38:38Z",
+      "created_at": "2020-01-01T08:00:00Z",
       "type": "Submission",
       "item_id": "200",
       "author_id": "11",
-      "graded_at": "2018-05-29T06:38:33Z"
+      "graded_at": "2020-01-01T08:00:01Z"
     }
     """
 
@@ -84,16 +95,16 @@ Background:
     And the response body should be, in JSON:
     """
     {
-      "id": "105",
+      "id": "106",
       "attempt_id": "1",
       "participant_id": "13",
-      "score": 96.0,
-      "answer": "print(5)",
-      "state": "State105",
-      "created_at": "2017-05-29T10:38:38Z",
+      "score": 98.0,
+      "answer": "print(6)",
+      "state": "State106",
+      "created_at": "2020-01-01T11:00:00Z",
       "type": "Submission",
       "item_id": "210",
       "author_id": "11",
-      "graded_at": "2018-05-29T06:38:35Z"
+      "graded_at": "2020-01-01T11:00:01Z"
     }
     """
