@@ -70,7 +70,6 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 
 		// check if able to watch the participant
 		participantPerms := store.ActiveGroupAncestors().ManagedByUser(user).
-			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 			Where("groups_ancestors_active.child_group_id = answers.participant_id").
 			Where("can_watch_members").
 			Select("1").
