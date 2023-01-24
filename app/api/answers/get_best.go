@@ -80,9 +80,16 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 			Where(`?`, participantPerms.SubQuery()).
 			Where("participant_id = ?", watchedGroupID)
 	} else {
+		// check 'can_view'>='content' permission on the answers.item_id
+		itemPerms := store.Permissions().MatchingUserAncestors(user).
+			WherePermissionIsAtLeast("view", "content").
+			Where("permissions.item_id = answers.item_id").
+			Select("1").
+			Limit(1)
+
 		bestAnswerQuery = store.Answers().
-			Visible(user).
-			Where("author_id = ?", user.GroupID)
+			Where(`?`, itemPerms.SubQuery()).
+			Where("participant_id = ?", user.GroupID)
 	}
 
 	err = withGradings(bestAnswerQuery).
