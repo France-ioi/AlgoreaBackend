@@ -42,35 +42,35 @@ Feature: Get activity log
       | 1          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
     And the database has the following table 'answers':
       | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
-      | 1  | 11        | 11             | 0          | 201     | Submission | Current | 2017-05-29 06:38:38 |
-      | 4  | 11        | 11             | 1          | 201     | Saved      | Current | 2017-05-30 06:38:38 |
-      | 5  | 11        | 11             | 1          | 201     | Current    | Current | 2017-05-30 06:38:38 |
-      | 7  | 31        | 11             | 0          | 201     | Submission | Current | 2017-05-29 06:38:38 |
-      | 11 | 11        | 11             | 0          | 200     | Submission | Current | 2017-05-29 06:38:38 |
-      | 12 | 11        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
-      | 13 | 41        | 41             | 1          | 200     | Submission | Current | 2017-05-30 06:38:38 |
-      | 14 | 11        | 11             | 1          | 200     | Saved      | Current | 2017-05-30 06:38:38 |
-      | 15 | 11        | 11             | 1          | 200     | Current    | Current | 2017-05-30 06:38:38 |
-      | 16 | 31        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
-      | 17 | 31        | 11             | 0          | 200     | Submission | Current | 2017-05-29 06:38:38 |
-      | 18 | 31        | 11             | 1          | 200     | Submission | Current | 2017-05-30 06:38:38 |
-      | 21 | 11        | 11             | 0          | 202     | Submission | Current | 2017-05-29 06:38:38 |
-      | 22 | 11        | 11             | 1          | 202     | Submission | Current | 2017-05-29 06:38:38 |
-      | 23 | 11        | 11             | 1          | 202     | Submission | Current | 2017-05-30 06:38:38 |
-      | 24 | 11        | 11             | 1          | 202     | Saved      | Current | 2017-05-30 06:38:38 |
-      | 25 | 11        | 11             | 1          | 202     | Current    | Current | 2017-05-30 06:38:38 |
-      | 26 | 31        | 11             | 1          | 202     | Submission | Current | 2017-05-29 06:38:38 |
-      | 27 | 31        | 11             | 0          | 202     | Submission | Current | 2017-05-29 06:38:38 |
-      | 28 | 31        | 11             | 1          | 202     | Submission | Current | 2017-05-30 06:38:38 |
-      | 31 | 11        | 11             | 0          | 203     | Submission | Current | 2017-05-29 06:38:38 |
-      | 32 | 11        | 11             | 1          | 203     | Submission | Current | 2017-05-29 06:38:38 |
-      | 33 | 11        | 11             | 1          | 203     | Submission | Current | 2017-05-30 06:38:38 |
-      | 34 | 11        | 11             | 1          | 203     | Saved      | Current | 2017-05-30 06:38:38 |
-      | 35 | 11        | 11             | 1          | 203     | Current    | Current | 2017-05-30 06:38:38 |
-      | 36 | 31        | 11             | 1          | 203     | Submission | Current | 2017-05-29 06:38:38 |
-      | 37 | 31        | 11             | 0          | 203     | Submission | Current | 2017-05-29 06:38:38 |
-      | 38 | 31        | 11             | 1          | 203     | Submission | Current | 2017-05-30 06:38:38 |
-      | 39 | 31        | 11             | 1          | 204     | Submission | Current | 2017-05-30 06:38:38 |
+      | 1  | 11        | 11             | 0          | 201     | Submission | State1 | 2017-05-29 06:38:38 |
+      | 4  | 11        | 11             | 1          | 201     | Saved      | State4 | 2017-05-30 06:38:38 |
+      | 5  | 11        | 11             | 1          | 201     | Current    | State5 | 2017-05-30 06:38:38 |
+      | 7  | 31        | 11             | 0          | 201     | Submission | State7 | 2017-05-29 06:38:38 |
+      | 11 | 11        | 11             | 0          | 200     | Submission | State11 | 2017-05-29 06:38:38 |
+      | 12 | 11        | 11             | 1          | 200     | Submission | State12 | 2017-05-29 06:38:38 |
+      | 13 | 41        | 41             | 1          | 200     | Submission | State13 | 2017-05-30 06:38:38 |
+      | 14 | 11        | 11             | 1          | 200     | Saved      | State14 | 2017-05-30 06:38:38 |
+      | 15 | 11        | 11             | 1          | 200     | Current    | State15 | 2017-05-30 06:38:38 |
+      | 16 | 31        | 11             | 1          | 200     | Submission | State16 | 2017-05-29 06:38:38 |
+      | 17 | 31        | 11             | 0          | 200     | Submission | State17 | 2017-05-29 06:38:38 |
+      | 18 | 31        | 11             | 1          | 200     | Submission | State18 | 2017-05-30 06:38:38 |
+      | 21 | 11        | 11             | 0          | 202     | Submission | State21 | 2017-05-29 06:38:38 |
+      | 22 | 11        | 11             | 1          | 202     | Submission | State22 | 2017-05-29 06:38:38 |
+      | 23 | 11        | 11             | 1          | 202     | Submission | State23 | 2017-05-30 06:38:38 |
+      | 24 | 11        | 11             | 1          | 202     | Saved      | State24 | 2017-05-30 06:38:38 |
+      | 25 | 11        | 11             | 1          | 202     | Current    | State25 | 2017-05-30 06:38:38 |
+      | 26 | 31        | 11             | 1          | 202     | Submission | State26 | 2017-05-29 06:38:38 |
+      | 27 | 31        | 11             | 0          | 202     | Submission | State27 | 2017-05-29 06:38:38 |
+      | 28 | 31        | 11             | 1          | 202     | Submission | State28 | 2017-05-30 06:38:38 |
+      | 31 | 11        | 11             | 0          | 203     | Submission | State31 | 2017-05-29 06:38:38 |
+      | 32 | 11        | 11             | 1          | 203     | Submission | State32 | 2017-05-29 06:38:38 |
+      | 33 | 11        | 11             | 1          | 203     | Submission | State33 | 2017-05-30 06:38:38 |
+      | 34 | 11        | 11             | 1          | 203     | Saved      | State34 | 2017-05-30 06:38:38 |
+      | 35 | 11        | 11             | 1          | 203     | Current    | State35 | 2017-05-30 06:38:38 |
+      | 36 | 31        | 11             | 1          | 203     | Submission | State36 | 2017-05-29 06:38:38 |
+      | 37 | 31        | 11             | 0          | 203     | Submission | State37 | 2017-05-29 06:38:38 |
+      | 38 | 31        | 11             | 1          | 203     | Submission | State38 | 2017-05-30 06:38:38 |
+      | 39 | 31        | 11             | 1          | 204     | Submission | State39 | 2017-05-30 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | graded_at           | score |
       | 2         | 2017-05-29 06:38:38 | 100   |

@@ -24,11 +24,11 @@ Feature: Get a current answer - robustness
       | 1          | 11             | 200     |
       | 1          | 13             | 210     |
     And the database has the following table 'answers':
-      | id  | author_id | participant_id | attempt_id | item_id | type       | state   | answer   | created_at          |
-      | 101 | 11        | 11             | 1          | 200     | Current    | Current | print(1) | 2017-05-29 06:38:38 |
-      | 102 | 11        | 11             | 1          | 200     | Current    | Current | print(1) | 2017-05-29 06:38:38 |
-      | 103 | 11        | 11             | 1          | 210     | Submission | Current | print(1) | 2017-05-29 06:38:38 |
-      | 104 | 11        | 11             | 2          | 210     | Current    | Current | print(1) | 2017-05-29 06:38:38 |
+      | id  | author_id | participant_id | attempt_id | item_id | type       | state    | answer   | created_at          |
+      | 101 | 11        | 11             | 1          | 200     | Current    | State101 | print(1) | 2017-05-29 06:38:38 |
+      | 102 | 11        | 11             | 1          | 200     | Current    | State102 | print(1) | 2017-05-29 06:38:38 |
+      | 103 | 11        | 11             | 1          | 210     | Submission | State103 | print(1) | 2017-05-29 06:38:38 |
+      | 104 | 11        | 11             | 2          | 210     | Current    | State104 | print(1) | 2017-05-29 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | score | graded_at           |
       | 101       | 100   | 2018-05-29 06:38:38 |

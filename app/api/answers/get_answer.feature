@@ -36,9 +36,9 @@ Background:
     | 1          | 11             | 200     |
     | 1          | 13             | 210     |
   And the database has the following table 'answers':
-    | id  | author_id | participant_id | attempt_id | item_id | type       | state   | answer   | created_at          |
-    | 101 | 11        | 11             | 1          | 200     | Submission | Current | print(1) | 2017-05-29 06:38:38 |
-    | 102 | 11        | 13             | 1          | 210     | Submission | Current | print(2) | 2017-05-29 06:38:38 |
+    | id  | author_id | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
+    | 101 | 11        | 11             | 1          | 200     | Submission | State1 | print(1) | 2017-05-29 06:38:38 |
+    | 102 | 11        | 13             | 1          | 210     | Submission | State2 | print(2) | 2017-05-29 06:38:38 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
     | 101       | 100   | 2018-05-29 06:38:38 |
@@ -59,7 +59,7 @@ Background:
       "participant_id": "11",
       "score": 100.0,
       "answer": "print(1)",
-      "state": "Current",
+      "state": "State1",
       "created_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "200",
@@ -80,7 +80,7 @@ Background:
       "participant_id": "13",
       "score": 100,
       "answer": "print(2)",
-      "state": "Current",
+      "state": "State2",
       "created_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "210",
@@ -101,7 +101,7 @@ Background:
       "participant_id": "13",
       "score": 100,
       "answer": "print(2)",
-      "state": "Current",
+      "state": "State2",
       "created_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "210",

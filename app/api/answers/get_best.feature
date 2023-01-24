@@ -38,14 +38,14 @@ Background:
     | 1          | 13             | 210     |
     | 1          | 11             | 210     |
   And the database has the following table 'answers':
-    | id  | author_id | participant_id | attempt_id | item_id | type       | state   | answer   | created_at          |
-    | 101 | 11        | 11             | 1          | 200     | Submission | Current | print(1) | 2017-05-29 06:38:38 |
-    | 102 | 11        | 11             | 2          | 200     | Submission | Current | print(2) | 2017-05-29 07:38:38 |
-    | 103 | 11        | 11             | 3          | 200     | Submission | Current | print(3) | 2017-05-29 08:38:38 |
-    | 104 | 11        | 13             | 1          | 210     | Submission | Current | print(4) | 2017-05-29 09:38:38 |
-    | 105 | 11        | 13             | 1          | 210     | Submission | Current | print(5) | 2017-05-29 10:38:38 |
-    | 106 | 11        | 13             | 1          | 210     | Submission | Current | print(6) | 2017-05-29 11:38:38 |
-    | 107 | 11        | 11             | 1          | 210     | Submission | Current | print(7) | 2017-05-29 08:38:38 |
+    | id  | author_id | participant_id | attempt_id | item_id | type       | state    | answer   | created_at          |
+    | 101 | 11        | 11             | 1          | 200     | Submission | State101 | print(1) | 2017-05-29 06:38:38 |
+    | 102 | 11        | 11             | 2          | 200     | Submission | State102 | print(2) | 2017-05-29 07:38:38 |
+    | 103 | 11        | 11             | 3          | 200     | Submission | State103 | print(3) | 2017-05-29 08:38:38 |
+    | 104 | 11        | 13             | 1          | 210     | Submission | State104 | print(4) | 2017-05-29 09:38:38 |
+    | 105 | 11        | 13             | 1          | 210     | Submission | State105 | print(5) | 2017-05-29 10:38:38 |
+    | 106 | 11        | 13             | 1          | 210     | Submission | State106 | print(6) | 2017-05-29 11:38:38 |
+    | 107 | 11        | 11             | 1          | 210     | Submission | State107 | print(7) | 2017-05-29 08:38:38 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
     | 101       | 91    | 2018-05-29 06:38:31 |
@@ -68,7 +68,7 @@ Background:
       "participant_id": "11",
       "score": 97.0,
       "answer": "print(3)",
-      "state": "Current",
+      "state": "State103",
       "created_at": "2017-05-29T08:38:38Z",
       "type": "Submission",
       "item_id": "200",
@@ -89,7 +89,7 @@ Background:
       "participant_id": "13",
       "score": 96.0,
       "answer": "print(5)",
-      "state": "Current",
+      "state": "State105",
       "created_at": "2017-05-29T10:38:38Z",
       "type": "Submission",
       "item_id": "210",
