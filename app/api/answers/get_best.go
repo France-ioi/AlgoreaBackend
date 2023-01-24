@@ -60,7 +60,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 	var result []map[string]interface{}
 
 	var bestAnswerQuery *database.DB
-	if watchedGroupID != 0 && watchedGroupIDSet {
+	if watchedGroupIDSet {
 		// check 'can_watch'>='answer' permission on the answers.item_id
 		itemPerms := store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("watch", "answer").
