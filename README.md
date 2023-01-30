@@ -108,6 +108,10 @@ you may have to specify the godog directory:
 make BIN_DIR=~/go/bin ARGS="--tags=wip" test-bdd
 ```
 
+## Install the git hooks
+
+Copy `githooks/pre-commit` to `.git/hooks/pre-commit`. You may want to adapt the content in case you have personnal hooks.
+
 ## Style
 
 A `.editorconfig` file defines the basic editor style configuration to use. Check the "editorconfig" support for your favorite editor if it is not installed by default.
