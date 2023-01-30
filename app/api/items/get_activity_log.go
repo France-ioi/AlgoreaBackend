@@ -308,7 +308,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http.Request, itemID *int64,
 	user *database.User, fromValues map[string]interface{}) (*database.DB, service.APIError) {
 	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
+	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
 		return nil, apiError
 	}
@@ -319,7 +319,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		Group("item_id").
 		HavingMaxPermissionAtLeast("view", "info")
 
-	if watchedGroupIDSet {
+	if ok {
 		if len(r.URL.Query()["as_team_id"]) != 0 {
 			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
@@ -335,7 +335,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			Where("item_id = ? OR item_id IN ?", *itemID, itemDescendants.SubQuery())
 	}
 
-	if watchedGroupIDSet {
+	if ok {
 		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
 	}
 

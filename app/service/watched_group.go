@@ -7,7 +7,7 @@ import (
 
 // ResolveWatchedGroupID returns the watched_group_id parameter (if given) and checks if the current user has rights
 // to watch for its members.
-func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID int64, watchedGroupIDSet bool, apiError APIError) {
+func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID int64, ok bool, apiError APIError) {
 	if len(httpReq.URL.Query()["watched_group_id"]) == 0 {
 		return 0, false, NoError
 	}
