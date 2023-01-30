@@ -31,25 +31,25 @@ Background:
     | 1          | 13             | 210     |
   And the database has the following table 'answers':
     | id  | author_id | participant_id | attempt_id | item_id | type       | state   | answer   | created_at          |
-    |   1 | 11        | 11             | 1          | 200     | Submission | Current | print(1) | 2017-05-29 06:38:37 |
-    |   2 | 11        | 11             | 1          | 200     | Saved      | Current | print(2) | 2017-05-29 06:38:37 |
-    |   3 | 11        | 11             | 1          | 200     | Current    | Current | print(3) | 2017-05-29 06:38:37 |
-    |   4 | 11        | 13             | 1          | 210     | Submission | Current | print(4) | 2017-05-29 06:38:37 |
-    |   5 | 11        | 13             | 1          | 210     | Saved      | Current | print(5) | 2017-05-29 06:38:37 |
-    |   6 | 11        | 13             | 1          | 210     | Current    | Current | print(6) | 2017-05-29 06:38:37 |
-    | 101 | 11        | 11             | 1          | 200     | Submission | Current | print(1) | 2017-05-29 06:38:38 |
-    | 102 | 11        | 11             | 1          | 200     | Saved      | Current | print(2) | 2017-05-29 06:38:38 |
-    | 103 | 11        | 11             | 1          | 200     | Current    | Current | print(3) | 2017-05-29 06:38:38 |
-    | 104 | 11        | 13             | 1          | 210     | Submission | Current | print(4) | 2017-05-29 06:38:38 |
-    | 105 | 11        | 13             | 1          | 210     | Saved      | Current | print(5) | 2017-05-29 06:38:38 |
-    | 106 | 11        | 13             | 1          | 210     | Current    | Current | print(6) | 2017-05-29 06:38:38 |
-    | 201 | 11        | 11             | 1          | 200     | Submission | Current | print(1) | 2017-05-29 06:38:38 |
-    | 202 | 11        | 11             | 1          | 200     | Saved      | Current | print(2) | 2017-05-29 06:38:38 |
-    | 203 | 11        | 11             | 1          | 200     | Current    | Current | print(3) | 2017-05-29 06:38:38 |
-    | 204 | 11        | 13             | 1          | 210     | Submission | Current | print(4) | 2017-05-29 06:38:38 |
-    | 205 | 11        | 13             | 1          | 210     | Saved      | Current | print(5) | 2017-05-29 06:38:38 |
-    | 206 | 11        | 13             | 2          | 210     | Current    | Current | print(6) | 2017-05-29 06:38:38 |
-    | 207 | 11        | 11             | 2          | 200     | Current    | Current | print(7) | 2018-05-29 06:38:37 |
+    |   1 | 11        | 11             | 1          | 200     | Submission | State1 | print(1) | 2017-05-29 06:38:37 |
+    |   2 | 11        | 11             | 1          | 200     | Saved      | State2 | print(2) | 2017-05-29 06:38:37 |
+    |   3 | 11        | 11             | 1          | 200     | Current    | State3 | print(3) | 2017-05-29 06:38:37 |
+    |   4 | 11        | 13             | 1          | 210     | Submission | State4 | print(4) | 2017-05-29 06:38:37 |
+    |   5 | 11        | 13             | 1          | 210     | Saved      | State5 | print(5) | 2017-05-29 06:38:37 |
+    |   6 | 11        | 13             | 1          | 210     | Current    | State6 | print(6) | 2017-05-29 06:38:37 |
+    | 101 | 11        | 11             | 1          | 200     | Submission | State101 | print(1) | 2017-05-29 06:38:38 |
+    | 102 | 11        | 11             | 1          | 200     | Saved      | State102 | print(2) | 2017-05-29 06:38:38 |
+    | 103 | 11        | 11             | 1          | 200     | Current    | State103 | print(3) | 2017-05-29 06:38:38 |
+    | 104 | 11        | 13             | 1          | 210     | Submission | State104 | print(4) | 2017-05-29 06:38:38 |
+    | 105 | 11        | 13             | 1          | 210     | Saved      | State105 | print(5) | 2017-05-29 06:38:38 |
+    | 106 | 11        | 13             | 1          | 210     | Current    | State106 | print(6) | 2017-05-29 06:38:38 |
+    | 201 | 11        | 11             | 1          | 200     | Submission | State201 | print(1) | 2017-05-29 06:38:38 |
+    | 202 | 11        | 11             | 1          | 200     | Saved      | State202 | print(2) | 2017-05-29 06:38:38 |
+    | 203 | 11        | 11             | 1          | 200     | Current    | State203 | print(3) | 2017-05-29 06:38:38 |
+    | 204 | 11        | 13             | 1          | 210     | Submission | State204 | print(4) | 2017-05-29 06:38:38 |
+    | 205 | 11        | 13             | 1          | 210     | Saved      | State205 | print(5) | 2017-05-29 06:38:38 |
+    | 206 | 11        | 13             | 2          | 210     | Current    | State206 | print(6) | 2017-05-29 06:38:38 |
+    | 207 | 11        | 11             | 2          | 200     | Current    | State207 | print(7) | 2018-05-29 06:38:37 |
   And the database has the following table 'gradings':
     | answer_id | score | graded_at           |
     | 101       | 91    | 2018-05-29 06:38:31 |
@@ -71,7 +71,7 @@ Background:
       "participant_id": "11",
       "score": 93.0,
       "answer": "print(3)",
-      "state": "Current",
+      "state": "State103",
       "created_at": "2017-05-29T06:38:38Z",
       "type": "Current",
       "item_id": "200",
@@ -92,7 +92,7 @@ Background:
       "participant_id": "13",
       "score": null,
       "answer": "print(6)",
-      "state": "Current",
+      "state": "State206",
       "created_at": "2017-05-29T06:38:38Z",
       "type": "Current",
       "item_id": "210",

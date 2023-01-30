@@ -42,26 +42,26 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	forbiddenError := service.ErrForbidden(errors.New("no rights to watch for watched_group_id"))
 
 	tests := []struct {
-		name                  string
-		url                   string
-		wantWatchedGroupID    int64
-		wantWatchedGroupIDSet bool
-		wantAPIError          service.APIError
+		name               string
+		url                string
+		wantWatchedGroupID int64
+		wantOk             bool
+		wantAPIError       service.APIError
 	}{
 		{name: "watched_group_id is not managed by the user", url: "?watched_group_id=4", wantAPIError: forbiddenError},
 		{name: "no can_watch_members permission", url: "?watched_group_id=2", wantAPIError: forbiddenError},
-		{name: "managed by an ancestor", url: "?watched_group_id=3", wantWatchedGroupID: 3, wantWatchedGroupIDSet: true},
-		{name: "managed by the user", url: "?watched_group_id=5", wantWatchedGroupID: 5, wantWatchedGroupIDSet: true},
-		{name: "an ancestor is managed", url: "?watched_group_id=6", wantWatchedGroupID: 6, wantWatchedGroupIDSet: true},
+		{name: "managed by an ancestor", url: "?watched_group_id=3", wantWatchedGroupID: 3, wantOk: true},
+		{name: "managed by the user", url: "?watched_group_id=5", wantWatchedGroupID: 5, wantOk: true},
+		{name: "an ancestor is managed", url: "?watched_group_id=6", wantWatchedGroupID: 6, wantOk: true},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			req, _ := http.NewRequest("GET", tt.url, nil)
-			watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(req)
+			watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(req)
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)
-			assert.Equal(t, tt.wantWatchedGroupIDSet, watchedGroupIDSet)
+			assert.Equal(t, tt.wantOk, ok)
 			assert.Equal(t, tt.wantAPIError, apiError)
 		})
 	}

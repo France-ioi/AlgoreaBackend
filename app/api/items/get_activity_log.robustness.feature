@@ -26,9 +26,9 @@ Feature: Get activity log - robustness
       | 0          | 200     | 11             |
       | 1          | 200     | 11             |
     And the database has the following table 'answers':
-      | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
-      | 1  | 11        | 11             | 0          | 200     | Submission | Current | 2017-05-29 06:38:38 |
-      | 2  | 11        | 11             | 1          | 200     | Submission | Current | 2017-05-29 06:38:38 |
+      | id | author_id | participant_id | attempt_id | item_id | type       | state  | created_at          |
+      | 1  | 11        | 11             | 0          | 200     | Submission | State1 | 2017-05-29 06:38:38 |
+      | 2  | 11        | 11             | 1          | 200     | Submission | State2 | 2017-05-29 06:38:38 |
     And the database has the following table 'gradings':
       | answer_id | graded_at           | score |
       | 1         | 2017-05-29 06:38:38 | 100   |

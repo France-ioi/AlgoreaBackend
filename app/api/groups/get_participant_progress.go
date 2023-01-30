@@ -285,12 +285,12 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 	}
 	checkPermissionsForGroupID = participantID
 
-	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
+	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
 		return 0, 0, 0, "", apiError
 	}
 
-	if watchedGroupIDSet {
+	if ok {
 		if len(r.URL.Query()["as_team_id"]) != 0 {
 			return 0, 0, 0, "", service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
