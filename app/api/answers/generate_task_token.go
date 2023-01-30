@@ -24,7 +24,6 @@ import (
 //
 //   * `bAccessSolutions` of the token is true if either the participant has `can_view` >= 'solution' on the item or
 //     the item has been validated for the participant in the given attempt.
-TODO: THIS MUST BE TESTED!
 //
 //   Restrictions:
 //
