@@ -153,6 +153,11 @@ func (s *DataStore) Sessions() *SessionStore {
 	return &SessionStore{NewDataStoreWithTable(s.DB, "sessions")}
 }
 
+// Threads returns a ThreadStore
+func (s *DataStore) Threads() *ThreadStore {
+	return &ThreadStore{NewDataStoreWithTable(s.DB, "threads")}
+}
+
 // UserBatches returns a UserBatchStore
 func (s *DataStore) UserBatches() *UserBatchStore {
 	return &UserBatchStore{NewDataStoreWithTable(s.DB, "user_batches")}
