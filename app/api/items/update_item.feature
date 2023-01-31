@@ -597,6 +597,128 @@ Background:
       | can_edit_generated       | children                | edit_propagation  | false |
       | can_edit_generated       | none                    | edit_propagation  | false |
 
+  Scenario: Sets items_items.request_help_propagation correctly
+    Given I am the user with id "11"
+    And the database has the following table 'items':
+      | id  | default_language_tag |
+      | 112 | fr                   |
+      | 113 | fr                   |
+      | 114 | fr                   |
+      | 115 | fr                   |
+      | 116 | fr                   |
+      | 117 | fr                   |
+      | 118 | fr                   |
+      | 119 | fr                   |
+      | 120 | fr                   |
+      | 121 | fr                   |
+      | 122 | fr                   |
+      | 123 | fr                   |
+      | 124 | fr                   |
+      | 125 | fr                   |
+      | 126 | fr                   |
+      | 127 | fr                   |
+    And the database table 'permissions_generated' has also the following row:
+      | group_id | item_id | can_grant_view_generated | can_view_generated |
+      | 11       | 112     | content                  | content            |
+      | 11       | 113     | content                  | content            |
+      | 11       | 114     | content                  | content            |
+      | 11       | 115     | content_with_descendants | content            |
+      | 11       | 116     | content_with_descendants | content            |
+      | 11       | 117     | content_with_descendants | content            |
+      | 11       | 118     | solution                 | content            |
+      | 11       | 119     | solution                 | content            |
+      | 11       | 120     | solution                 | content            |
+      | 11       | 121     | solution_with_grant      | content            |
+      | 11       | 122     | solution_with_grant      | content            |
+      | 11       | 123     | solution_with_grant      | content            |
+      | 11       | 124     | none                     | content            |
+      | 11       | 125     | none                     | content            |
+      | 11       | 126     | enter                    | content            |
+      | 11       | 127     | enter                    | content            |
+    When I send a PUT request to "/items/21" with the following body:
+      """
+      {
+        "children": [{
+          "item_id": 112,
+          "order": 1,
+          "request_help_propagation": true
+        },{
+          "item_id": 113,
+          "order": 2,
+          "request_help_propagation": false
+        },{
+          "item_id": 114,
+          "order": 3
+        },{
+          "item_id": 115,
+          "order": 4,
+          "request_help_propagation": true
+        },{
+          "item_id": 116,
+          "order": 5,
+          "request_help_propagation": false
+        },{
+          "item_id": 117,
+          "order": 6
+        },{
+          "item_id": 118,
+          "order": 7,
+          "request_help_propagation": true
+        },{
+          "item_id": 119,
+          "order": 8,
+          "request_help_propagation": false
+        },{
+          "item_id": 120,
+          "order": 9
+        },{
+          "item_id": 121,
+          "order": 10,
+          "request_help_propagation": true
+        },{
+          "item_id": 122,
+          "order": 11,
+          "request_help_propagation": false
+        },{
+          "item_id": 123,
+          "order": 12
+        },{
+          "item_id": 124,
+          "order": 13,
+          "request_help_propagation": false
+        },{
+          "item_id": 125,
+          "order": 14
+        },{
+          "item_id": 126,
+          "order": 15,
+          "request_help_propagation": false
+        },{
+          "item_id": 127,
+          "order": 16
+        }]
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_items" at parent_item_id "21" should be:
+      | parent_item_id | child_item_id | child_order | request_help_propagation |
+      | 21             | 112           | 1           | true                     |
+      | 21             | 113           | 2           | false                    |
+      | 21             | 114           | 3           | true                     |
+      | 21             | 115           | 4           | true                     |
+      | 21             | 116           | 5           | false                    |
+      | 21             | 117           | 6           | true                     |
+      | 21             | 118           | 7           | true                     |
+      | 21             | 119           | 8           | false                    |
+      | 21             | 120           | 9           | true                     |
+      | 21             | 121           | 10          | true                     |
+      | 21             | 122           | 11          | false                    |
+      | 21             | 123           | 12          | true                     |
+      | 21             | 124           | 13          | false                    |
+      | 21             | 125           | 14          | false                    |
+      | 21             | 126           | 15          | false                    |
+      | 21             | 127           | 16          | false                    |
+
   Scenario Outline: Allows setting items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation/watch_propagation/edit_propagation to the same of a lower value
     Given I am the user with id "11"
     And the database table 'items' has also the following rows:
