@@ -10,7 +10,7 @@ ALTER TABLE `permissions_granted`
     ON DELETE SET NULL;
 
 ALTER TABLE `items_items`
-  ADD COLUMN `help_request_propagation`
+  ADD COLUMN `request_help_propagation`
     TINYINT NOT NULL DEFAULT 0
     COMMENT 'Whether can_request_help_to propagates'
     AFTER `edit_propagation`;
@@ -23,4 +23,4 @@ ALTER TABLE `permissions_granted`
   DROP `can_request_help_to`;
 
 ALTER TABLE `items_items`
-  DROP `help_request_propagation`;
+  DROP `request_help_propagation`;
