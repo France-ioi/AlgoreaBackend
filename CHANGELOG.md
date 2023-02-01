@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.6.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.5.0...v1.6.0) - 2023-02-01
+
+- new service: get best answer
+
 ## [v1.5.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.4.0...v1.5.0) - 2023-01-19
 
 - provide 'login' in task token
