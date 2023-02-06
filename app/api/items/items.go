@@ -146,6 +146,7 @@ type itemChild struct {
 	EditPropagation bool `json:"edit_propagation"`
 	// Can be set to true if `can_request_help_to` can be set (i.e. if user have “can_grant_view ≥ content” on item)
 	// Defaults to true if `can_request_help_to` can be set, false otherwise.
+	// It is always possible to set this field to the same or a lower value, `can_request_help_to` doesn't matter in this case.
 	RequestHelpPropagation bool `json:"request_help_propagation"`
 }
 
