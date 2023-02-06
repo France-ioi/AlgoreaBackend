@@ -23,7 +23,7 @@ import (
 //   * Then the service returns a task token for the attempt for the given item.
 //
 //   * `bAccessSolutions` of the token is true if either the participant has `can_view` >= 'solution' on the item or
-//     the item has been validated for the participant in the given attempt.
+//     the item has been validated by the participant.
 //
 //   Restrictions:
 //
@@ -121,13 +121,16 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		Limit(1)
 
 	err = store.Answers().WithItems().WithResults().
-		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = answers.participant_id").
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", user.GroupID).
 		Joins(`
 				JOIN permissions_generated
 					ON permissions_generated.item_id = items.id AND
 						 permissions_generated.group_id = groups_ancestors_active.ancestor_group_id`).
 		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Joins("JOIN users AS author_users ON author_users.group_id = answers.author_id").
+		Joins(`
+			JOIN results AS requester_results ON requester_results.participant_id = ? AND
+				requester_results.item_id = answers.item_id`, user.GroupID).
 		Select(`
 					permissions_generated.can_view_generated_value = ? AS access_solutions,
 					items.text_id AS text_id,
@@ -139,7 +142,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 					answers.item_id AS item_id,
 					results.hints_requested AS hints_requested,
 					results.hints_cached AS hints_cached,
-					results.validated AS validated,
+					requester_results.validated AS validated,
 					author_users.login AS author_login`,
 			store.PermissionsGranted().ViewIndexByName("solution")).
 		// 1) if the participant of the answer is either the current-user or a team which the current-user is member of,
