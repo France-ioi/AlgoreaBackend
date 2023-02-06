@@ -354,7 +354,9 @@ Feature: Update item - robustness
       | upper_view_levels_propagation | as_content_with_descendants | can_grant_view_generated | content                  | Not enough permissions for setting upper_view_levels_propagation |
       | grant_view_propagation        | true                        | can_grant_view_generated | solution                 | Not enough permissions for setting grant_view_propagation        |
       | watch_propagation             | true                        | can_watch_generated      | answer                   | Not enough permissions for setting watch_propagation             |
-      | edit_propagation              | true                        | can_edit_generated       | all                      | Not enough permissions for setting edit_propagation             |
+      | edit_propagation              | true                        | can_edit_generated       | all                      | Not enough permissions for setting edit_propagation              |
+      | request_help_propagation      | true                        | can_grant_view_generated | none                     | Not enough permissions for setting request_help_propagation      |
+      | request_help_propagation      | true                        | can_grant_view_generated | enter                    | Not enough permissions for setting request_help_propagation      |
 
   Scenario: A child is a skill while the item is not a skill
     Given I am the user with id "11"
