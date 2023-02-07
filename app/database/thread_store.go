@@ -6,7 +6,7 @@ type ThreadStore struct {
 }
 
 // UpdateHelperGroupID updates all occurrences of a certain helper_group_id to a new value
-func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID int64, newHelperGroupID int64) (err error) {
+func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 

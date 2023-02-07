@@ -12,9 +12,9 @@ import (
 // swagger:model thread
 type thread struct {
 	// required: true
-	ParticipantId int64 `json:"participant_id"`
+	ParticipantID int64 `json:"participant_id"`
 	// required: true
-	ItemId int64 `json:"item_id"`
+	ItemID int64 `json:"item_id"`
 	// required: true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
 	Status string `json:"status"`
@@ -76,8 +76,8 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 	store := srv.GetStore(r)
 
 	threadInfo := new(thread)
-	threadInfo.ItemId = itemID
-	threadInfo.ParticipantId = participantID
+	threadInfo.ItemID = itemID
+	threadInfo.ParticipantID = participantID
 
 	// TODO: Try to make the permission checks one query with OR instead of using subqueries.
 
