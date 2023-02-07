@@ -97,16 +97,21 @@ Only bdd (cucumber using `godog`), using the database connection:
 ```
 make test-bdd
 ```
-or if you want only to run bdd tests with a specific tag:
+or if you want only to run bdd tests with a specific tag, in a specific directory.
+
+Note: specifying the directory **can save you a few seconds per run**:
 ```
-make ARGS="--tags=wip" test-bdd
+make ARGS="--tags=wip" TEST_DIR=app/api/answers/ test-bdd
 ```
 To add a tag to a test, just precede it by @wip on the line above it in the *.feature file. This is useful to only execute appropriate tests.
 
 you may have to specify the godog directory:
 ```
-make BIN_DIR=~/go/bin ARGS="--tags=wip" test-bdd
+make BIN_DIR=~/go/bin ARGS="--tags=wip" TEST_DIR=app/api/answers/ test-bdd
 ```
+
+Specifying a test directory can significantly reduce the time it takes to run the tests, when used with a tag.
+
 
 ## Install the git hooks
 
