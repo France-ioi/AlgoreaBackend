@@ -202,7 +202,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 		return service.InsufficientAccessRightsError
 	}
 
-	itemID, err, apiError := validateAndInsertItem(srv, r)
+	itemID, apiError, err := validateAndInsertItem(srv, r)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -216,7 +216,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 	return service.NoError
 }
 
-func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, err error, apiError service.APIError) {
+func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError service.APIError, err error) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 	err = store.InTransaction(func(store *database.DataStore) error {
@@ -267,7 +267,7 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, err err
 		return nil
 	})
 
-	return itemID, err, apiError
+	return itemID, apiError, err
 }
 
 func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formdata.FormData, input *NewItemRequest, itemID int64) {
