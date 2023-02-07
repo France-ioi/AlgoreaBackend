@@ -206,13 +206,25 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 	}
 
 	err := store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
-	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails
-	// (no items_strings for the new default_language_tag)
-	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1452 {
-		return service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
-			"default language should exist and there should be item's strings in this language",
-		}})
+
+	e, ok := err.(*mysql.MySQLError)
+	if ok {
+		switch e.Number {
+		// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails
+		// (no items_strings for the new default_language_tag)
+		case 1452:
+			return service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
+				"default language should exist and there should be item's strings in this language",
+			}})
+		// ERROR 1062: Duplicate entry '...' for key 'items.unique_text_id_unique'
+		// (text_id field must be unique)
+		case 1062:
+			return service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
+				"text_id must be unique",
+			}})
+		}
 	}
+
 	service.MustNotBeError(err)
 	return service.NoError
 }
