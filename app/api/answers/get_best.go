@@ -50,16 +50,17 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 		return service.ErrInvalidRequest(err)
 	}
 
-	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
-
 	user := srv.GetUser(httpReq)
 	store := srv.GetStore(httpReq)
 	var result []map[string]interface{}
 
 	var bestAnswerQuery *database.DB
+
+	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(httpReq)
+	if apiError != service.NoError {
+		return apiError
+	}
+	
 	if ok {
 		// check 'can_watch'>='answer' permission on the answers.item_id
 		itemPerms := store.Permissions().MatchingUserAncestors(user).
