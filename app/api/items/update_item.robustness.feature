@@ -4,17 +4,18 @@ Feature: Update item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id | default_language_tag | type    | requires_explicit_entry | duration |
-      | 4  | fr                   | Chapter | 0                       | null     |
-      | 20 | fr                   | Chapter | 0                       | null     |
-      | 21 | fr                   | Chapter | 0                       | null     |
-      | 22 | fr                   | Chapter | 0                       | null     |
-      | 23 | fr                   | Skill   | 0                       | null     |
-      | 24 | fr                   | Task    | 0                       | null     |
-      | 25 | fr                   | Task    | 1                       | 00:00:01 |
-      | 50 | fr                   | Chapter | 0                       | null     |
-      | 60 | fr                   | Chapter | 0                       | null     |
-      | 70 | fr                   | Skill   | 0                       | null     |
+      | id | default_language_tag | type    | requires_explicit_entry | duration | text_id |
+      | 4  | fr                   | Chapter | 0                       | null     | id4     |
+      | 20 | fr                   | Chapter | 0                       | null     | id20    |
+      | 21 | fr                   | Chapter | 0                       | null     | id21    |
+      | 22 | fr                   | Chapter | 0                       | null     | id22    |
+      | 23 | fr                   | Skill   | 0                       | null     | id23    |
+      | 24 | fr                   | Task    | 0                       | null     | id24    |
+      | 25 | fr                   | Task    | 1                       | 00:00:01 | id25    |
+      | 50 | fr                   | Chapter | 0                       | null     | id50    |
+      | 60 | fr                   | Chapter | 0                       | null     | id60    |
+      | 70 | fr                   | Skill   | 0                       | null     | id70    |
+      | 80 | fr                   | Task    | 0                       | null     | id80    |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -34,6 +35,7 @@ Feature: Update item - robustness
       | 11       | 25      | solution           | all                | false              |
       | 11       | 50      | solution           | all                | false              |
       | 11       | 70      | solution           | all                | false              |
+      | 11       | 80      | solution           | all                | false              |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | can_edit | is_owner | source_group_id |
       | 11       | 4       | solution | none     | false    | 11              |
@@ -44,6 +46,7 @@ Feature: Update item - robustness
       | 11       | 25      | solution | all      | false    | 11              |
       | 11       | 50      | solution | all      | false    | 11              |
       | 11       | 70      | solution | all      | false    | 11              |
+      | 11       | 80      | solution | all      | false    | 11              |
     And the groups ancestors are computed
     And the database has the following table 'languages':
       | tag |
@@ -475,3 +478,25 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
+
+  Scenario: text_id should be unique
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/80" with the following body:
+      """
+      {
+        "text_id": "id70"
+      }
+      """
+    Then the response code should be 403
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Forbidden",
+        "error_text": "Invalid input data",
+        "errors":{
+          "text_id": ["text_id must be unique"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
