@@ -27,17 +27,17 @@ ALTER TABLE `items`
   ADD UNIQUE `unique_text_id_unique`(`text_id_unique`);
 
 DROP TRIGGER IF EXISTS itemTextIdUniqueUpdate;
-DELIMITER //
-CREATE TRIGGER itemTextIdUniqueUpdate BEFORE UPDATE ON `items`
-  FOR EACH ROW BEGIN
-    SET @counter = 1;
-    SET NEW.`text_id_unique` = OLD.`text_id`;
-    WHILE exists (SELECT 1 FROM `items` WHERE `items`.`text_id_unique` = NEW.`text_id_unique`) DO
-      SET NEW.`text_id_unique` = CONCAT(OLD.`text_id`, @counter);
-      SET @counter = @counter + 1;
-    END WHILE;
-  END//
-DELIMITER ;
+
+-- +migrate StatementBegin
+CREATE TRIGGER itemTextIdUniqueUpdate BEFORE UPDATE ON `items` FOR EACH ROW BEGIN
+  SET @counter = 1;
+  SET NEW.`text_id_unique` = OLD.`text_id`;
+  WHILE exists (SELECT 1 FROM `items` WHERE `items`.`text_id_unique` = NEW.`text_id_unique`) DO
+    SET NEW.`text_id_unique` = CONCAT(OLD.`text_id`, @counter);
+    SET @counter = @counter + 1;
+  END WHILE;
+END
+-- +migrate StatementEnd
 
 UPDATE `items` SET `items`.`text_id_unique` = `items`.`text_id`;
 
