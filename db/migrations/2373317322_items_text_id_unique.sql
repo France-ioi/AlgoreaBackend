@@ -51,4 +51,4 @@ ALTER TABLE `items`
 UNLOCK TABLES;
 
 -- +migrate Down
-
+ALTER TABLE `items` DROP INDEX `unique_text_id_unique`;
