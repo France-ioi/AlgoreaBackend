@@ -27,7 +27,7 @@ ALTER TABLE `items`
   ADD UNIQUE `unique_text_id_unique`(`text_id_unique`);
 
 DROP TRIGGER IF EXISTS itemTextIdUniqueUpdate;
-DELIMITER |
+DELIMITER //
 CREATE TRIGGER itemTextIdUniqueUpdate BEFORE UPDATE ON `items`
   FOR EACH ROW BEGIN
     SET @counter = 1;
@@ -36,8 +36,7 @@ CREATE TRIGGER itemTextIdUniqueUpdate BEFORE UPDATE ON `items`
       SET NEW.`text_id_unique` = CONCAT(OLD.`text_id`, @counter);
       SET @counter = @counter + 1;
     END WHILE;
-  END;
-|
+  END//
 DELIMITER ;
 
 UPDATE `items` SET `items`.`text_id_unique` = `items`.`text_id`;
