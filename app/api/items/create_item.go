@@ -540,15 +540,12 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			return s.Items().InsertMap(itemMap)
 		})
 	})
-	if err != nil {
-		e, ok := err.(*mysql.MySQLError)
-		if ok && e.Number == 1062 {
-			return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
-				"text_id must be unique",
-			}})
-		}
+	e, ok := err.(*mysql.MySQLError)
+	if ok && e.Number == 1062 {
+		return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
+			"text_id must be unique",
+		}})
 	}
-
 	service.MustNotBeError(err)
 
 	if itemMap["requires_explicit_entry"] == true {
@@ -570,21 +567,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	stringMap["language_tag"] = newItemRequest.LanguageTag
 	service.MustNotBeError(store.ItemStrings().InsertMap(stringMap))
 
-	if !formData.IsSet("parent.category") {
-		newItemRequest.Parent.Category = undefined
-	}
-	if !formData.IsSet("parent.score_weight") {
-		newItemRequest.Parent.ScoreWeight = 1
-	}
-
-	for index := range newItemRequest.Children {
-		if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
-			newItemRequest.Children[index].Category = undefined
-		}
-		if !formData.IsSet(fmt.Sprintf("children[%d].score_weight", index)) {
-			newItemRequest.Children[index].ScoreWeight = 1
-		}
-	}
+	setItemRequestDefaults(newItemRequest, formData)
 
 	parentChildSpecLength := len(newItemRequest.Children)
 	if formData.IsSet("parent") {
@@ -622,6 +605,25 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	service.MustNotBeError(store.ItemItems().After())
 
 	return itemID, service.NoError
+}
+
+// setItemRequestDefaults sets the default values of a newItemRequest which are not set
+func setItemRequestDefaults(newItemRequest *NewItemRequest, formData *formdata.FormData) {
+	if !formData.IsSet("parent.category") {
+		newItemRequest.Parent.Category = undefined
+	}
+	if !formData.IsSet("parent.score_weight") {
+		newItemRequest.Parent.ScoreWeight = 1
+	}
+
+	for index := range newItemRequest.Children {
+		if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
+			newItemRequest.Children[index].Category = undefined
+		}
+		if !formData.IsSet(fmt.Sprintf("children[%d].score_weight", index)) {
+			newItemRequest.Children[index].ScoreWeight = 1
+		}
+	}
 }
 
 func valueOrDefault(formData *formdata.FormData, fieldName string, value, defaultValue interface{}) interface{} {
