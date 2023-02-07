@@ -16,8 +16,6 @@
 # Then, we update text_id_unique for each row, and use a TRIGGER to add a number if the value already exists
 # Finally, we rename text_id_unique into text_id_unique and REMOVE the TRIGGER
 
-LOCK TABLES `items` WRITE;
-
 UPDATE `items` SET `text_id` = NULL WHERE `text_id` = '';
 
 ALTER TABLE `items`
@@ -46,9 +44,7 @@ DROP TRIGGER itemTextIdUniqueUpdate;
 ALTER TABLE `items`
   DROP COLUMN `text_id`;
 ALTER TABLE `items`
-  RENAME COLUMN `text_id_unique` TO `text_id`;
-
-UNLOCK TABLES;
+  CHANGE COLUMN `text_id_unique` `text_id` VARCHAR(200) DEFAULT NULL COMMENT 'Unique string identifying the item, independently of where it is hosted';
 
 -- +migrate Down
 ALTER TABLE `items` DROP INDEX `unique_text_id_unique`;
