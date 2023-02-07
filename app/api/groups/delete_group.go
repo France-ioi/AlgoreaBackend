@@ -2,12 +2,12 @@ package groups
 
 import (
 	"errors"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"net/http"
 
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
