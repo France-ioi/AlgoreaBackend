@@ -197,19 +197,32 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.APIError {
-	var err error
 	user := srv.GetUser(r)
-
 	if user.IsTempUser {
 		return service.InsufficientAccessRightsError
 	}
 
-	input := NewItemRequest{}
-	formData := formdata.NewFormData(&input)
+	itemID, err, apiError := validateAndInsertItem(srv, r)
+	if apiError != service.NoError {
+		return apiError
+	}
+	service.MustNotBeError(err)
 
-	apiError := service.NoError
-	var itemID int64
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	// response
+	response := struct {
+		ItemID int64 `json:"id,string"`
+	}{ItemID: itemID}
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
+	return service.NoError
+}
+
+func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, err error, apiError service.APIError) {
+	user := srv.GetUser(r)
+	store := srv.GetStore(r)
+	err = store.InTransaction(func(store *database.DataStore) error {
+		input := NewItemRequest{}
+		formData := formdata.NewFormData(&input)
+
 		var parentInfo parentItemInfo
 		var childrenInfoMap map[int64]permissionAndType
 		registerAddItemValidators(formData, store, user, &parentInfo, &childrenInfoMap)
@@ -254,17 +267,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 		return nil
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
-	service.MustNotBeError(err)
-
-	// response
-	response := struct {
-		ItemID int64 `json:"id,string"`
-	}{ItemID: itemID}
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
-	return service.NoError
+	return itemID, err, apiError
 }
 
 func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formdata.FormData, input *NewItemRequest, itemID int64) {
