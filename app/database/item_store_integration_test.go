@@ -106,8 +106,10 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 		wantError  error
 	}{
 		{name: "Should retrieve the corresponding item", textID: "id12", wantItemID: 12, wantError: nil},
-		{name: "Should return an error if textID is empty", textID: "", wantItemID: 0, wantError: errors.New("record not found")},
-		{name: "Should return an error if no corresponding item", textID: "doesn't exist", wantItemID: 0, wantError: errors.New("record not found")},
+		{name: "Should return an error if textID is empty", textID: "", wantItemID: 0,
+			wantError: errors.New("record not found")},
+		{name: "Should return an error if no corresponding item", textID: "doesn't exist", wantItemID: 0,
+			wantError: errors.New("record not found")},
 	}
 	for _, test := range tests {
 		test := test

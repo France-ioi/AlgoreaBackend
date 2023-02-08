@@ -117,7 +117,7 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbsFromRootsByTextId(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *http.Request) service.APIError {
 	textID := chi.URLParam(r, "text_id")
 
 	store := srv.GetStore(r)
