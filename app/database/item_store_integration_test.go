@@ -88,6 +88,40 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	}
 }
 
+func TestItemStore_GetItemIDFromTextID(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items: [
+			{id: 11, text_id: "id11", default_language_tag: fr},
+			{id: 12, text_id: "id12", default_language_tag: fr},
+			{id: 13, text_id: "id13", default_language_tag: fr},
+			{id: 14, default_language_tag: fr}
+		]
+	`)
+	defer func() { _ = db.Close() }()
+
+	tests := []struct {
+		name       string
+		textID     string
+		wantItemID int64
+		wantError  error
+	}{
+		{name: "Should retrieve the corresponding item", textID: "id12", wantItemID: 12, wantError: nil},
+		{name: "Should return an error if textID is empty", textID: "", wantItemID: 0, wantError: errors.New("record not found")},
+		{name: "Should return an error if no corresponding item", textID: "doesn't exist", wantItemID: 0, wantError: errors.New("record not found")},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				itemID, err := store.Items().GetItemIDFromTextID(test.textID)
+				assert.Equal(t, test.wantItemID, itemID)
+				assert.Equal(t, test.wantError, err)
+				return nil
+			}))
+		})
+	}
+}
+
 func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_BreadcrumbsHierarchyForParentAttempt(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
