@@ -258,6 +258,7 @@ func (s *DataStore) InsertMaps(dataMaps []map[string]interface{}) error {
 
 // InsertOrUpdateMap reads fields from the given map and inserts the values which have been set
 // into the store's table (like InsertMap does). If it is a duplicate, the listed columns will be updated.
+// If updateColumns is nil, all the columns in dataMaps will be updated.
 func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColumns []string) error {
 	return s.DB.insertOrUpdateMaps(s.tableName, []map[string]interface{}{dataMap}, updateColumns)
 }

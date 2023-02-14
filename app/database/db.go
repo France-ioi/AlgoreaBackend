@@ -521,11 +521,19 @@ func (conn *DB) constructInsertMapsStatement(
 // insertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
 // (so all the maps should have the same keys)
 // into the given table (like insertMaps does). If it is a duplicate, the listed columns will be updated.
+// If updateColumns is nil, all the columns in dataMaps will be updated.
 func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]interface{}, updateColumns []string) error {
 	if len(dataMaps) == 0 {
 		return nil
 	}
 	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, false)
+
+	if updateColumns == nil {
+		updateColumns = make([]string, 0, len(dataMaps))
+		for key := range dataMaps[0] {
+			updateColumns = append(updateColumns, key)
+		}
+	}
 
 	var builder strings.Builder
 	_, _ = builder.WriteString(query)
