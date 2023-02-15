@@ -27,7 +27,8 @@ type Item struct {
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// default: false
 	NoScore bool `json:"no_score"`
-	// Unique identifier to reference the task. An error is returned if another task has the same `text_id`
+	// Identifier to reference the task.
+	// Unique
 	// Nullable
 	TextID                 *string `json:"text_id"`
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
