@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
-	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -203,12 +202,12 @@ func saveNewScoreIntoGradings(store *database.DataStore, user *database.User,
 	})
 
 	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (the answer has been removed)
-	if e, ok := insertError.(*mysql.MySQLError); ok && e.Number == 1452 {
+	if insertError != nil && database.IsForeignConstraintError(insertError) {
 		return false
 	}
 
 	// ERROR 1062 (23000): Duplicate entry (already graded)
-	if e, ok := insertError.(*mysql.MySQLError); ok && e.Number == 1062 {
+	if insertError != nil && database.IsDuplicateEntryError(insertError) {
 		var oldScore *float64
 		service.MustNotBeError(gradingStore.
 			Where("answer_id = ?", answerID).PluckFirst("score", &oldScore).Error())

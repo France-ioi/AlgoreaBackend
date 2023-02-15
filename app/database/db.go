@@ -113,7 +113,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadLock(txFunc, count, p, rollbackErr, &err) {
+			if conn.handleDeadLock(txFunc, count, p.(error), rollbackErr, &err) {
 				return
 			}
 			panic(p) // re-throw panic after rollback
@@ -134,10 +134,10 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 	return err
 }
 
-func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle interface{},
+func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle error,
 	rollbackErr error, returnErr *error) bool { //nolint:gocritic
 	// Error 1213: Deadlock found when trying to get lock; try restarting transaction
-	if e, ok := errToHandle.(*mysql.MySQLError); ok && e.Number == 1213 {
+	if errToHandle != nil && IsLockDeadlockError(errToHandle) {
 		if rollbackErr != nil {
 			panic(rollbackErr)
 		}
@@ -574,7 +574,7 @@ func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db 
 	for ; i < keyTriesCount; i++ {
 		err := f(conn)
 		if err != nil {
-			if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, fmt.Sprintf("for key '%s'", keyName)) {
+			if IsDuplicateEntryErrorForKey(err, keyName) {
 				continue // retry with a new id
 			}
 			return err
