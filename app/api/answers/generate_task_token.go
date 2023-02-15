@@ -126,7 +126,6 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 				JOIN permissions_generated
 					ON permissions_generated.item_id = items.id AND
 						 permissions_generated.group_id = groups_ancestors_active.ancestor_group_id`).
-		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Joins("JOIN users AS author_users ON author_users.group_id = answers.author_id").
 		Joins(`
 			JOIN results AS requester_results ON requester_results.participant_id = ? AND
@@ -163,8 +162,6 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
-
-	fmt.Println(answerInfos)
 
 	fullAttemptID := fmt.Sprintf("%d/%d", answerInfos.ParticipantID, answerInfos.AttemptID)
 	randomSeed := crc64.Checksum([]byte(fullAttemptID), crc64.MakeTable(crc64.ECMA))
