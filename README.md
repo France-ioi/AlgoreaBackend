@@ -85,27 +85,37 @@ in order to recompute DB caches.
 
 ## Testing
 
-Run all tests (unit and bdd):
+Run all tests (unit, and bdd):
 ```
 make test
 ```
-Only unit:
+You can filter with a certain directory and the name of the test function you want to run:
+```
+make DIRECTORY=./app/database FILTER=TestItemStore_TriggerBeforeInsert_SetsPlatformID test
+```
+Only unit tests who are marked with the "unit" tag. For unit tests not marked, use `make test`:
 ```
 make test-unit
 ```
-Only bdd (cucumber using `godog`), using the database connection:
+You can also use the filters:
+```
+make DIRECTORY=./app/database FILTER=TestItemStore_TriggerBeforeInsert_SetsPlatformID test-unit
+```
+Only Gherkin tests defined in *.feature files (cucumber using `godog`), using the database connection:
 ```
 make test-bdd
 ```
+
 or if you want only to run bdd tests with a specific tag, in a specific directory.
 
 Note: specifying the directory **can save you a few seconds per run**:
+
 ```
 make ARGS="--tags=wip" TEST_DIR=app/api/answers/ test-bdd
 ```
 To add a tag to a test, just precede it by @wip on the line above it in the *.feature file. This is useful to only execute appropriate tests.
 
-you may have to specify the godog directory:
+you may also have to specify the godog directory:
 ```
 make BIN_DIR=~/go/bin ARGS="--tags=wip" TEST_DIR=app/api/answers/ test-bdd
 ```
