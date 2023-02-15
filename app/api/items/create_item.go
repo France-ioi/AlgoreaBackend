@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
-	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/validator"
@@ -543,8 +542,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			return s.Items().InsertMap(itemMap)
 		})
 	})
-	e, ok := err.(*mysql.MySQLError)
-	if ok && e.Number == 1062 {
+	if err != nil && database.IsDuplicateEntryError(err) {
 		return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
 			"text_id must be unique",
 		}})
