@@ -87,10 +87,12 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 	return srv.getBreadcrumbsFromRoots(w, r, itemID)
 }
 
-// swagger:operation GET /items/by-text-id/{item_id}/breadcrumbs-from-roots items itemBreadcrumbsFromRootsByTextIdGet
+// swagger:operation GET /items/by-text-id/{text_id}/breadcrumbs-from-roots items itemBreadcrumbsFromRootsByTextIdGet
 // ---
 // summary: List all possible breadcrumbs for a started item using `text_id`
-// description: Same as "List all possible breadcrumbs for a started item using `item_id`"
+// description: >
+//   Same as [/items/{item_id}/breadcrumbs-from-roots](#tag/items/operation/itemBreadcrumbsFromRootsGet)
+//   but using `text_id`.
 // parameters:
 // - name: text_id
 //   in: path
