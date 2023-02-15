@@ -30,11 +30,10 @@ ifdef FILTER
 endif
 ifdef DIRECTORY
 	TEST_DIR=$(DIRECTORY)
+	TEST_BDD_DIR =$(DIRECTORY)
 else
 	TEST_DIR=./app/...
 	TEST_BDD_DIR=.
-else
-	TEST_BDD_DIR = $(TEST_DIR)
 endif
 
 # extract AWS_PROFILE if given
