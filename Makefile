@@ -30,8 +30,10 @@ ifdef FILTER
 endif
 ifdef DIRECTORY
 	TEST_DIR=$(DIRECTORY)
+	TEST_BDD_DIR =$(DIRECTORY)
 else
 	TEST_DIR=./app/...
+	TEST_BDD_DIR=.
 endif
 
 # extract AWS_PROFILE if given
@@ -88,7 +90,7 @@ test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
-	$(GODOG) --format=progress $(ARGS) .
+	$(GODOG) --format=progress $(ARGS) $(TEST_BDD_DIR)
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run --deadline 10m0s
 
