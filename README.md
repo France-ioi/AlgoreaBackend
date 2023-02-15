@@ -110,9 +110,6 @@ you may have to specify the godog directory:
 make BIN_DIR=~/go/bin ARGS="--tags=wip" TEST_DIR=app/api/answers/ test-bdd
 ```
 
-Specifying a test directory can significantly reduce the time it takes to run the tests, when used with a tag.
-
-
 ## Install the git hooks
 
 Copy `githooks/pre-commit` to `.git/hooks/pre-commit`. You may want to adapt the content in case you have personnal hooks.
