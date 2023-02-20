@@ -139,7 +139,7 @@ Feature: Delete a group
       | 15 | Group D | Class |
       | 21 | Self    | User  |
       | 22 | Group   | Class |
-    
+
   Scenario: User deletes a group that is the helper_group_id of a thread should change the helper group to AllUsers
     Given I am the user with id "21"
     When I send a DELETE request to "/groups/30"

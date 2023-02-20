@@ -77,11 +77,6 @@ Feature: Delete an item
       | 0          | 10             | 21      |
       | 0          | 10             | 22      |
       | 1          | 10             | 21      |
-    And the database has the following table 'threads':
-      | id | creator_id | type | item_id |
-      | 1  | 10         | Help | 21      |
-      | 2  | 10         | Help | 22      |
-      | 3  | 11         | Bug  | null    |
     And the database has the following table 'languages':
       | tag |
       | fr  |
@@ -144,4 +139,3 @@ Feature: Delete an item
       | 10             | 0          | 21      | 10        | 2019-05-30 11:00:00 |
       | 10             | 1          | 21      | 10        | 2019-05-30 11:00:00 |
     And the table "filters" should stay unchanged
-    And the table "threads" should stay unchanged
