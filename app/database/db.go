@@ -134,8 +134,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 	return err
 }
 
-func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle error,
-	rollbackErr error, returnErr *error) bool { //nolint:gocritic
+func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle, rollbackErr error, returnErr *error) bool {
 	// Error 1213: Deadlock found when trying to get lock; try restarting transaction
 	if errToHandle != nil && IsLockDeadlockError(errToHandle) {
 		if rollbackErr != nil {
