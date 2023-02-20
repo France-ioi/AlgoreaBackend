@@ -10,6 +10,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database/mysqldb"
 )
 
+const DuplicateEntryErrorKey = "key"
+
 func TestIsDuplicateEntryError_matchError(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
@@ -38,7 +40,7 @@ func TestIsDuplicateEntryError_otherErrors(t *testing.T) {
 }
 
 func TestIsDuplicateEntryErrorForKey_matchError(t *testing.T) {
-	key := "test"
+	key := DuplicateEntryErrorKey
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: fmt.Sprintf("Duplicate Error for key '%s'", key),
@@ -62,7 +64,7 @@ func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithoutKey(t *testing.T) {
 }
 
 func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
-	key := "test"
+	key := DuplicateEntryErrorKey
 
 	lockDeadlockErrorWithKey := mysql.MySQLError{
 		Number:  uint16(mysqldb.LockDeadlockError),
@@ -73,7 +75,7 @@ func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
 		t.Error("should not match a Lock Deadlock Error")
 	}
 
-	nonMysqlErrorWithKey := errors.New(fmt.Sprintf("other error for key '%s'", key))
+	nonMysqlErrorWithKey := fmt.Errorf("other error for key '%s'", key)
 	if IsDuplicateEntryErrorForKey(nonMysqlErrorWithKey, key) {
 		t.Error("should not match a non-mysql error")
 	}
