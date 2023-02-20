@@ -26,7 +26,7 @@ func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int
 }
 
 // CanRetrieveThread checks whether a user can retrieve a thread
-func (s *ThreadStore) CanRetrieveThread(user *User, participantID int64, itemID int64) (bool, error) {
+func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64) (bool, error) {
 	// TODO: Try to make the permission checks one query with OR instead of using subqueries.
 
 	// TODO: We need to update GORM for this and use https://gorm.io/docs/advanced_query.html#Group-Conditions
@@ -87,7 +87,7 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID int64, itemID 
 }
 
 // GetThreadStatus retrieves a thread's status
-func (s *ThreadStore) GetThreadStatus(participantID int64, itemID int64) string {
+func (s *ThreadStore) GetThreadStatus(participantID, itemID int64) string {
 	var status string
 
 	err := s.Threads().
