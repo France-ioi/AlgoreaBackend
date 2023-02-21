@@ -8,16 +8,18 @@ Feature: Create item - robustness
       | id | name    | type    |
       | 30 | Friends | Friends |
     And the database has the following table 'items':
-      | id | no_score | default_language_tag | type    |
-      | 4  | false    | fr                   | Chapter |
-      | 5  | false    | fr                   | Skill   |
-      | 21 | false    | fr                   | Chapter |
-      | 22 | false    | fr                   | Chapter |
-      | 23 | false    | fr                   | Chapter |
-      | 24 | false    | fr                   | Chapter |
-      | 25 | false    | fr                   | Chapter |
-      | 26 | false    | fr                   | Skill   |
-      | 27 | false    | fr                   | Chapter |
+      | id | no_score | default_language_tag | type    | text_id        |
+      | 4  | false    | fr                   | Chapter | null           |
+      | 5  | false    | fr                   | Skill   | null           |
+      | 21 | false    | fr                   | Chapter | null           |
+      | 22 | false    | fr                   | Chapter | null           |
+      | 23 | false    | fr                   | Chapter | null           |
+      | 24 | false    | fr                   | Chapter | null           |
+      | 25 | false    | fr                   | Chapter | null           |
+      | 26 | false    | fr                   | Skill   | null           |
+      | 27 | false    | fr                   | Chapter | null           |
+      | 28 | false    | fr                   | Chapter | existingTextId |
+
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -833,3 +835,29 @@ Feature: Create item - robustness
     | field                   | value      |
     | duration                | "00:00:01" |
     | requires_explicit_entry | true       |
+
+  Scenario: text_id must be unique
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Task",
+        "language_tag": "sl",
+        "title": "Title",
+        "parent": {"item_id": "21"},
+        "text_id": "existingTextId"
+      }
+      """
+    Then the response code should be 403
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Forbidden",
+        "error_text": "Invalid input data",
+        "errors":{
+          "text_id": ["text_id must be unique"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
