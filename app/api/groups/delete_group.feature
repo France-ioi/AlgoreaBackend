@@ -68,34 +68,11 @@ Feature: Delete a group
       "message": "deleted"
     }
     """
-    And the table "groups_groups" should be:
-      | parent_group_id | child_group_id |
-      | 14              | 21             |
-      | 15              | 13             |
-      | 22              | 13             |
-      | 22              | 14             |
-    And the table "group_pending_requests" should be:
-      | group_id | member_id |
-      | 22       | 13        |
-      | 22       | 14        |
-    And the table "group_membership_changes" should be:
-      | group_id | member_id |
-      | 22       | 13        |
-      | 22       | 14        |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 15                | 13             | 0       |
-      | 15                | 15             | 1       |
-      | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 21             | 0       |
-      | 22                | 22             | 1       |
-    And the table "groups" should stay unchanged but the row with id "11"
-    And the table "groups" should not contain id "11"
+    And the table "groups_groups" should stay unchanged but the rows with child_group_id "11" should be deleted
+    And the table "group_pending_requests" should stay unchanged but the rows with group_id,member_id "11" should be deleted
+    And the table "group_membership_changes" should stay unchanged but the rows with group_id,member_id "11" should be deleted
+    And the table "groups_ancestors" should stay unchanged but the rows with ancestor_group_id,child_group_id "11" should be deleted
+    And the table "groups" should stay unchanged but the rows with id "11" should be deleted
 
   Scenario: User deletes a group ignoring an expired parent-child relation
     Given I am the user with id "21"
@@ -108,37 +85,11 @@ Feature: Delete a group
       "message": "deleted"
     }
     """
-    And the table "groups_groups" should be:
-      | parent_group_id | child_group_id |
-      | 14              | 21             |
-      | 15              | 11             |
-      | 22              | 14             |
-    And the table "group_membership_changes" should be:
-      | group_id | member_id |
-      | 22       | 11        |
-      | 22       | 14        |
-    And the table "group_pending_requests" should be:
-      | group_id | member_id |
-      | 22       | 11        |
-      | 22       | 14        |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 14                | 14             | 1       |
-      | 14                | 21             | 0       |
-      | 15                | 11             | 0       |
-      | 15                | 15             | 1       |
-      | 21                | 21             | 1       |
-      | 22                | 14             | 0       |
-      | 22                | 21             | 0       |
-      | 22                | 22             | 1       |
-    And the table "groups" should be:
-      | id | name    | type  |
-      | 11 | Group A | Class |
-      | 14 | Group C | Class |
-      | 15 | Group D | Class |
-      | 21 | Self    | User  |
-      | 22 | Group   | Class |
+    And the table "groups_groups" should stay unchanged but the rows with parent_group_id,child_group_id "13" should be deleted
+    And the table "group_membership_changes" should stay unchanged but the rows with group_id,member_id "13" should be deleted
+    And the table "group_pending_requests" should stay unchanged but the rows with group_id,member_id "13" should be deleted
+    And the table "groups_ancestors" should stay unchanged but the rows with ancestor_group_id,child_group_id "13" should be deleted
+    And the table "groups" should stay unchanged but the row with id "13" should be deleted
 
   Scenario: User deletes a group that is the helper_group_id of a thread should change the helper group to AllUsers
     Given I am the user with id "21"

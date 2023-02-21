@@ -94,48 +94,18 @@ Feature: Delete an item
         "message": "deleted"
       }
       """
-    And the table "items" should be:
-      | id | default_language_tag |
-      | 20 | fr                   |
-      | 21 | fr                   |
-    And the table "items_strings" should be:
-      | item_id | language_tag |
-      | 20      | fr           |
-      | 21      | fr           |
+    And the table "items" should stay unchanged but the rows with id "22" should be deleted
+    And the table "items_strings" stay unchanged but the rows with item_id "22" should be deleted
     And the table "permissions_propagate" should be empty
-    And the table "items_items" should be:
-      | parent_item_id | child_item_id | child_order |
-      | 20             | 21            | 1           |
-    And the table "items_propagate" should be:
-      | id | ancestors_computation_state |
-      | 20 | done                        |
-      | 21 | done                        |
-    And the table "items_ancestors" should be:
-      | ancestor_item_id | child_item_id |
-      | 20               | 21            |
-    And the table "permissions_granted" at group_id "11" should be:
-      | group_id | item_id | is_owner | source_group_id |
-      | 11       | 21      | false    | 10              |
-    And the table "permissions_generated" should be:
-      | group_id | item_id | is_owner_generated |
-      | 11       | 21      | false              |
-    And the table "item_dependencies" should be:
-      | item_id | dependent_item_id |
-      | 21      | 21                |
-    And the table "groups_contest_items" should be:
-      | group_id | item_id |
-      | 10       | 21      |
-    And the table "attempts" should be:
-      | id | participant_id | root_item_id |
-      | 0  | 10             | null         |
-      | 1  | 10             | null         |
-    And the table "results" should be:
-      | attempt_id | participant_id | item_id |
-      | 0          | 10             | 21      |
-      | 1          | 10             | 21      |
+    And the table "items_items" stay unchanged but the rows with parent_item_id,child_item_id "22" should be deleted
+    And the table "items_propagate" should stay unchanged but the rows with id "22" should be deleted
+    And the table "items_ancestors" stay unchanged but the rows with ancestor_item_id,child_item_id "22" should be deleted
+    And the table "permissions_granted" should stay unchanged but the rows with item_id "22" should be deleted
+    And the table "permissions_generated" should stay unchanged but the rows with item_id "22" should be deleted
+    And the table "item_dependencies" should stay unchanged but the rows with item_id "22" should be deleted
+    And the table "groups_contest_items" should stay unchanged but the rows with item_id "22" should be deleted
+    And the table "attempts" should stay unchanged but the rows with root_item_id "22":
+    And the table "results" should stay unchanged but the rows with item_id "22" should be deleted
     And the table "results_propagate" should be empty
-    And the table "answers" should be:
-      | participant_id | attempt_id | item_id | author_id | created_at          |
-      | 10             | 0          | 21      | 10        | 2019-05-30 11:00:00 |
-      | 10             | 1          | 21      | 10        | 2019-05-30 11:00:00 |
+    And the table "answers" should should stay unchanged but the rows with item_id "22" should be deleted
     And the table "filters" should stay unchanged
