@@ -149,7 +149,7 @@ jobs:
       - restore_cache: *CACHEKEYMOD
       - run:
           command: |
-            echo 'export PATH="$GOPATH"/bin:"$PATH"' >> "$BASH_ENV"
+            echo 'export PATH="$PATH":/usr/local/go/bin' >> "$BASH_ENV"
             make lint
   build:
     docker:
