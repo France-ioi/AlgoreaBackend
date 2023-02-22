@@ -228,8 +228,8 @@ func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(table, 
 	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), changed, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted(table, columns,
-	values string) error {
+// TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted checks for row deletion
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted(table, columns, values string) error {
 	data := ctx.dbTableData[table]
 	if data == nil {
 		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
@@ -347,7 +347,7 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(table string, columns, values
 	return nil
 }
 
-// dataTableMatchesSQLRows checks wheter the provided data table maches the database rows result
+// dataTableMatchesSQLRows checks whether the provided data table matches the database rows result
 func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgument_PickleTable, sqlRows *sql.Rows,
 	rowTransformation rowTransformation, tableColumns, columns, values []string) error {
 	iDataRow := 1
@@ -366,7 +366,7 @@ func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgumen
 			return err
 		}
 
-		err = ctx.dataRowMatchesSqlRow(data.Rows[iDataRow], sqlRowValues, tableColumns, iDataRow)
+		err = ctx.dataRowMatchesSQLRow(data.Rows[iDataRow], sqlRowValues, tableColumns, iDataRow)
 		if err != nil {
 			return err
 		}
@@ -385,8 +385,8 @@ func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgumen
 	return nil
 }
 
-// dataRowMatchesSqlRow checks that a data row matches a row from database
-func (ctx *TestContext) dataRowMatchesSqlRow(dataRow *messages.PickleStepArgument_PickleTable_PickleTableRow,
+// dataRowMatchesSQLRow checks that a data row matches a row from database
+func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgument_PickleTable_PickleTableRow,
 	values []*string, tableColumns []string, rowIndex int) error {
 	// checking that all columns of the test data table match the SQL row
 	for colIndex, dataCell := range dataRow.Cells {
