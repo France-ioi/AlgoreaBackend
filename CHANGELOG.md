@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.7.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.6.0...v1.7.0) - 2023-02-22
+
+- new service: get a task token for observation
+- make `items.text_id` unique
+- new permission "can_request_help_to" (for forum)
+
 ## [v1.6.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.5.0...v1.6.0) - 2023-02-01
 
 - new service: get best answer
