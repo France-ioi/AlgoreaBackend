@@ -74,8 +74,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	canRetrieveThread, err := store.Threads().CanRetrieveThread(user, participantID, itemID)
-	service.MustNotBeError(err)
+	canRetrieveThread := store.Threads().CanRetrieveThread(user, participantID, itemID)
 	if !canRetrieveThread {
 		return service.InsufficientAccessRightsError
 	}

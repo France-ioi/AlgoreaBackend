@@ -10,7 +10,9 @@ type ThreadStore struct {
 }
 
 // UpdateHelperGroupID updates all occurrences of a certain helper_group_id to a new value
-func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int64) (err error) {
+func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int64) {
+	var err error
+
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
@@ -18,15 +20,11 @@ func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int
 		Where("helper_group_id = ?", oldHelperGroupID).
 		UpdateColumn("helper_group_id", newHelperGroupID).
 		Error()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	mustNotBeError(err)
 }
 
 // CanRetrieveThread checks whether a user can retrieve a thread
-func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64) (bool, error) {
+func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64) bool {
 	// TODO: Try to make the permission checks one query with OR instead of using subqueries.
 
 	// TODO: We need to update GORM for this and use https://gorm.io/docs/advanced_query.html#Group-Conditions
@@ -43,8 +41,9 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 		Select("1").
 		Limit(1).
 		HasRows()
-	if err != nil {
-		return false, err
+	mustNotBeError(err)
+	if currentUserParticipantCanViewContent {
+		return true
 	}
 
 	// the current-user has the "can_watch >= answer" permission on the item
@@ -54,8 +53,9 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 		Select("1").
 		Limit(1).
 		HasRows()
-	if err != nil {
-		return false, err
+	mustNotBeError(err)
+	if currentUserCanWatch {
+		return true
 	}
 
 	// the following rules all matches:
@@ -75,15 +75,12 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 		Where("results.validated").
 		Limit(1).
 		HasRows()
-	if err != nil {
-		return false, err
+	mustNotBeError(err)
+	if currentUserCanHelp {
+		return true
 	}
 
-	if !currentUserParticipantCanViewContent && !currentUserCanWatch && !currentUserCanHelp {
-		return false, nil
-	}
-
-	return true, nil
+	return false
 }
 
 // GetThreadStatus retrieves a thread's status
