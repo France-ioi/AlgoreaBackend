@@ -76,7 +76,7 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 		Limit(1).
 		HasRows()
 	mustNotBeError(err)
-	
+
 	return currentUserCanHelp
 }
 
