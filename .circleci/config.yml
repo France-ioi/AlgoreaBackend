@@ -148,9 +148,9 @@ jobs:
           at: ./
       - restore_cache: *CACHEKEYMOD
       - run:
-        environment:
-          PATH: $PATH:/usr/local/go/bin
-        command: make lint
+          environment:
+            PATH: $PATH:/usr/local/go/bin
+          command: make lint
   build:
     docker:
       - image: circleci/golang:1.13
