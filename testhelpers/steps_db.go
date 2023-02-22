@@ -3,6 +3,7 @@
 package testhelpers
 
 import (
+	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
@@ -20,7 +21,7 @@ const (
 	deleted
 )
 
-func (ctx *TestContext) DBHasTable(tableName string, data *messages.PickleStepArgument_PickleTable) error { // nolint
+func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	db := ctx.db()
 
 	if len(data.Rows) > 1 {
@@ -37,7 +38,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *messages.PickleStepAr
 		if len(data.Rows) > 2 {
 			finalMarksString = strings.Repeat(marksString+", ", len(data.Rows)-2) + finalMarksString
 		}
-		query := "INSERT INTO " + database.QuoteName(tableName) + // nolint: gosec
+		query := "INSERT INTO " + database.QuoteName(table) + // nolint: gosec
 			" (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
@@ -78,10 +79,10 @@ func (ctx *TestContext) DBHasTable(tableName string, data *messages.PickleStepAr
 		}
 	}
 
-	if ctx.dbTableData[tableName] == nil {
-		ctx.dbTableData[tableName] = data
+	if ctx.dbTableData[table] == nil {
+		ctx.dbTableData[table] = data
 	} else if len(data.Rows) > 1 {
-		ctx.dbTableData[tableName] = combinePickleTables(ctx.dbTableData[tableName], data)
+		ctx.dbTableData[table] = combinePickleTables(ctx.dbTableData[table], data)
 	}
 
 	return nil
@@ -174,82 +175,79 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { // nolint
 	return nil
 }
 
-func (ctx *TestContext) TableShouldBeEmpty(tableName string) error { // nolint
+func (ctx *TestContext) TableShouldBeEmpty(table string) error { // nolint
 	db := ctx.db()
-	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName)) //nolint:gosec
+	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", table)) //nolint:gosec
 	if err != nil {
 		return err
 	}
 	defer func() { _ = sqlRows.Close() }()
 	if sqlRows.Next() {
-		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
+		return fmt.Errorf("the table %q should be empty, but it is not", table)
 	}
 
 	return nil
 }
 
-func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(tableName string, columnName, columnValuesStr string) error { // nolint
-	columnValues := parseMultipleValuesString(columnValuesStr)
+func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(table string, column, valuesStr string) error { // nolint
+	values := parseMultipleValuesString(valuesStr)
 
 	db := ctx.db()
-	where, parameters := constructWhereForColumnValues([]string{columnName}, columnValues, true)
-	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...) //nolint:gosec
+	where, parameters := constructWhereForColumnValues([]string{column}, values, true)
+	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", table, where), parameters...) //nolint:gosec
 	if err != nil {
 		return err
 	}
 	defer func() { _ = sqlRows.Close() }()
 	if sqlRows.Next() {
-		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
+		return fmt.Errorf("the table %q should be empty, but it is not", table)
 	}
 
 	return nil
 }
 
-func (ctx *TestContext) TableShouldBe(tableName string, data *messages.PickleStepArgument_PickleTable) error { // nolint
-	return ctx.tableAtColumnValueShouldBe(tableName, []string{""}, nil, unchanged, data)
+func (ctx *TestContext) TableShouldBe(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
+	return ctx.tableAtColumnValueShouldBe(table, []string{""}, nil, unchanged, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
-	data := ctx.dbTableData[tableName]
+func (ctx *TestContext) TableShouldStayUnchanged(table string) error { // nolint
+	data := ctx.dbTableData[table]
 	if data == nil {
 		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
 			{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: "1"}}}},
 		}
 	}
-	return ctx.tableAtColumnValueShouldBe(tableName, []string{""}, nil, unchanged, data)
+	return ctx.tableAtColumnValueShouldBe(table, []string{""}, nil, unchanged, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(tableName, columnName, columnValues string) error { // nolint
-	data := ctx.dbTableData[tableName]
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(table, column, values string) error { // nolint
+	data := ctx.dbTableData[table]
 	if data == nil {
 		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
 	}
-	return ctx.tableAtColumnValueShouldBe(tableName, []string{columnName}, parseMultipleValuesString(columnValues),
-		changed, data)
+	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), changed, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted(tableName, columnNames,
-	columnValues string) error {
-	data := ctx.dbTableData[tableName]
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted(table, columns,
+	values string) error {
+	data := ctx.dbTableData[table]
 	if data == nil {
 		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
 	}
 
-	return ctx.tableAtColumnValueShouldBe(tableName, parseMultipleValuesString(columnNames),
-		parseMultipleValuesString(columnValues), deleted, data)
+	return ctx.tableAtColumnValueShouldBe(table, parseMultipleValuesString(columns), parseMultipleValuesString(values), deleted, data)
 }
 
-func (ctx *TestContext) TableAtColumnValueShouldBe(tableName, columnName, columnValues string, data *messages.PickleStepArgument_PickleTable) error { // nolint
-	return ctx.tableAtColumnValueShouldBe(tableName, []string{columnName}, parseMultipleValuesString(columnValues),
-		unchanged, data)
+func (ctx *TestContext) TableAtColumnValueShouldBe(table, column, values string, data *messages.PickleStepArgument_PickleTable) error { // nolint
+	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), unchanged, data)
 }
 
-func (ctx *TestContext) TableShouldNotContainColumnValue(tableName, columnName, columnValues string) error { // nolint
-	return ctx.tableAtColumnValueShouldBe(tableName, []string{columnName}, parseMultipleValuesString(columnValues), unchanged,
+func (ctx *TestContext) TableShouldNotContainColumnValue(table, column, values string) error { // nolint
+	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), unchanged,
 		&messages.PickleStepArgument_PickleTable{
 
 			Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
-				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: columnName}}}},
+				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: column}}}},
 		})
 }
 
@@ -257,11 +255,11 @@ func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable
 	table1FieldMap := map[string]int{}
 	combinedFieldMap := map[string]bool{}
 	columnNumber := len(table1.Rows[0].Cells)
-	combinedColumnNames := make([]string, 0, columnNumber+len(table2.Rows[0].Cells))
+	combinedcolumns := make([]string, 0, columnNumber+len(table2.Rows[0].Cells))
 	for index, cell := range table1.Rows[0].Cells {
 		table1FieldMap[cell.Value] = index
 		combinedFieldMap[cell.Value] = true
-		combinedColumnNames = append(combinedColumnNames, cell.Value)
+		combinedcolumns = append(combinedcolumns, cell.Value)
 	}
 	table2FieldMap := map[string]int{}
 	for index, cell := range table2.Rows[0].Cells {
@@ -270,7 +268,7 @@ func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable
 		if !combinedFieldMap[cell.Value] {
 			combinedFieldMap[cell.Value] = true
 			columnNumber++
-			combinedColumnNames = append(combinedColumnNames, cell.Value)
+			combinedcolumns = append(combinedcolumns, cell.Value)
 		}
 	}
 
@@ -280,23 +278,23 @@ func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable
 	header := &messages.PickleStepArgument_PickleTable_PickleTableRow{
 		Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, columnNumber),
 	}
-	for _, columnName := range combinedColumnNames {
-		header.Cells = append(header.Cells, &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{Value: columnName})
+	for _, column := range combinedcolumns {
+		header.Cells = append(header.Cells, &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{Value: column})
 	}
 	combinedTable.Rows = append(combinedTable.Rows, header)
 
-	copyCellsIntoCombinedTable(table1, combinedColumnNames, table1FieldMap, combinedTable)
-	copyCellsIntoCombinedTable(table2, combinedColumnNames, table2FieldMap, combinedTable)
+	copyCellsIntoCombinedTable(table1, combinedcolumns, table1FieldMap, combinedTable)
+	copyCellsIntoCombinedTable(table2, combinedcolumns, table2FieldMap, combinedTable)
 	return combinedTable
 }
 
-func copyCellsIntoCombinedTable(sourceTable *messages.PickleStepArgument_PickleTable, combinedColumnNames []string,
+func copyCellsIntoCombinedTable(sourceTable *messages.PickleStepArgument_PickleTable, combinedcolumns []string,
 	sourceTableFieldMap map[string]int, combinedTable *messages.PickleStepArgument_PickleTable) {
 	for rowNum := 1; rowNum < len(sourceTable.Rows); rowNum++ {
 		newRow := &messages.PickleStepArgument_PickleTable_PickleTableRow{
-			Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, len(combinedColumnNames)),
+			Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, len(combinedcolumns)),
 		}
-		for _, column := range combinedColumnNames {
+		for _, column := range combinedcolumns {
 			var newCell *messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell
 			if sourceColumnNumber, ok := sourceTableFieldMap[column]; ok {
 				newCell = sourceTable.Rows[rowNum].Cells[sourceColumnNumber]
@@ -311,124 +309,71 @@ func parseMultipleValuesString(valuesString string) []string {
 	return strings.Split(valuesString, ",")
 }
 
-var columnNameRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
+var columnRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
 
-func (ctx *TestContext) tableAtColumnValueShouldBe(tableName string, columnNames, columnValues []string,
+func (ctx *TestContext) tableAtColumnValueShouldBe(table string, columns, values []string,
 	rowTransformation rowTransformation, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	// For that, we build a SQL request with only the attributes we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
-
-	db := ctx.db()
-
-	var selects []string
-	head := data.Rows[0].Cells
-	for _, cell := range head {
-		dataTableColumnName := cell.Value
-		if columnNameRegexp.MatchString(dataTableColumnName) {
-			dataTableColumnName = database.QuoteName(dataTableColumnName)
-		}
-		selects = append(selects, dataTableColumnName)
-	}
-	selectsJoined := strings.Join(selects, ", ")
+	// Expect 'null' string in the table to check for nullness
 
 	if rowTransformation == deleted {
-		// check that the rows are not present anymore
-		where, parameters := constructWhereForColumnValues(columnNames, columnValues, true)
-
-		// exec sql
-		var nbRows int
-		selectValuesInQuery := fmt.Sprintf("SELECT COUNT(*) FROM `%s` %s", tableName, where) // nolint: gosec
-		err := db.QueryRow(selectValuesInQuery, parameters...).Scan(&nbRows)
+		nbRows, err := ctx.getNbRowsMatching(table, columns, values)
 		if err != nil {
 			return err
 		}
-
 		if nbRows > 0 {
 			return fmt.Errorf("found %d rows that should have been deleted", nbRows)
 		}
 	}
 
+	tableColumns := getColumnNamesFromData(data)
+
 	// request for "unchanged": WHERE IN...
 	// request for "changed" or "deleted": WHERE NOT IN...
 	whereIn := rowTransformation == unchanged
-	where, parameters := constructWhereForColumnValues(columnNames, columnValues, whereIn)
-
-	// exec sql
-	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, tableName, where, selectsJoined) // nolint: gosec
-	sqlRows, err := db.Query(query, parameters...)
+	sqlRows, closer, err := ctx.getSQLRowsMatching(table, tableColumns, columns, values, whereIn)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = sqlRows.Close() }()
+	defer closer()
 
-	headerColumns := data.Rows[0].Cells
-	columnIndexes := make([]int, len(columnNames))
-	for i := range columnIndexes {
-		columnIndexes[i] = -1
-	}
-	for headerColumnIndex, headerColumn := range headerColumns {
-		for columnIndex, columnName := range columnNames {
-			if headerColumn.Value == columnName {
-				columnIndexes[columnIndex] = headerColumnIndex
-				break
-			}
-		}
+	err = ctx.dataTableMatchesSQLRows(data, sqlRows, rowTransformation, tableColumns, columns, values)
+	if err != nil {
+		return err
 	}
 
+	return nil
+}
+
+// dataTableMatchesSQLRows checks wheter the provided data table maches the database rows result
+func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgument_PickleTable, sqlRows *sql.Rows,
+	rowTransformation rowTransformation, tableColumns, columns, values []string) error {
 	iDataRow := 1
-	sqlCols, _ := sqlRows.Columns() // nolint: gosec
+	columnIndexes := getColumnIndexes(data, columns)
 	for sqlRows.Next() {
-		for rowTransformation != unchanged && iDataRow < len(data.Rows) && rowMatchesColumnValues(data.Rows[iDataRow], columnIndexes, columnValues) {
+		for shouldSkipRow(data, iDataRow, columnIndexes, values, rowTransformation) {
 			iDataRow++
 		}
 		if iDataRow >= len(data.Rows) {
 			return fmt.Errorf("there are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
 		}
 
-		// Create a slice of string to represent each attribute value,
-		// and a second slice to contain pointers to each item.
-		rowValues := make([]*string, len(sqlCols))
-		rowValPtr := make([]interface{}, len(sqlCols))
-		for i := range rowValues {
-			rowValPtr[i] = &rowValues[i]
-		}
-		// Scan the result into the column pointers...
-		if err := sqlRows.Scan(rowValPtr...); err != nil {
+		// We need pointers to differentiate null values
+		sqlRowValues, err := getStringPtrFromSQLRow(sqlRows, len(tableColumns))
+		if err != nil {
 			return err
 		}
 
-		nullValue := tableValueNull
-		pNullValue := &nullValue
-		// checking that all columns of the test data table match the SQL row
-		for iCol, dataCell := range data.Rows[iDataRow].Cells {
-			if dataCell == nil {
-				continue
-			}
-			colName := headerColumns[iCol].Value
-			dataValue, err := ctx.preprocessString(dataCell.Value)
-			if err != nil {
-				return err
-			}
-			sqlValue := rowValPtr[iCol].(**string)
-
-			if *sqlValue == nil {
-				sqlValue = &pNullValue
-			}
-
-			if (dataValue == tableValueTrue && **sqlValue == "1") || (dataValue == tableValueFalse && **sqlValue == "0") {
-				continue
-			}
-
-			if dataValue != **sqlValue {
-				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow, colName, dataValue, **sqlValue)
-			}
+		err = ctx.dataRowMatchesSqlRow(data.Rows[iDataRow], sqlRowValues, tableColumns, iDataRow)
+		if err != nil {
+			return err
 		}
 
 		iDataRow++
 	}
-
-	for rowTransformation != unchanged && iDataRow < len(data.Rows) && rowMatchesColumnValues(data.Rows[iDataRow], columnIndexes, columnValues) {
+	for shouldSkipRow(data, iDataRow, columnIndexes, values, rowTransformation) {
 		iDataRow++
 	}
 
@@ -436,19 +381,143 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(tableName string, columnNames
 	if iDataRow < len(data.Rows) {
 		return fmt.Errorf("there are fewer rows in the SQL result than expected")
 	}
+
 	return nil
+}
+
+// dataRowMatchesSqlRow checks that a data row matches a row from database
+func (ctx *TestContext) dataRowMatchesSqlRow(dataRow *messages.PickleStepArgument_PickleTable_PickleTableRow,
+	values []*string, tableColumns []string, rowIndex int) error {
+	// checking that all columns of the test data table match the SQL row
+	for colIndex, dataCell := range dataRow.Cells {
+		if dataCell == nil {
+			continue
+		}
+
+		dataValue, err := ctx.preprocessString(dataCell.Value)
+		if err != nil {
+			return err
+		}
+
+		value := values[colIndex]
+		if value == nil {
+			value = pTableValueNull
+		}
+
+		if (dataValue == tableValueTrue && *value == "1") || (dataValue == tableValueFalse && *value == "0") {
+			continue
+		}
+
+		if dataValue != *value {
+			return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'",
+				rowIndex, tableColumns[colIndex], dataValue, *value)
+		}
+	}
+
+	return nil
+}
+
+// getColumnNamesFromData gets the column names from the data table
+func getColumnNamesFromData(data *messages.PickleStepArgument_PickleTable) (columns []string) {
+	// the first row contains the column names
+	headerColumns := data.Rows[0].Cells
+	for _, cell := range headerColumns {
+		dataTablecolumn := cell.Value
+		if columnRegexp.MatchString(dataTablecolumn) {
+			dataTablecolumn = database.QuoteName(dataTablecolumn)
+		}
+
+		columns = append(columns, dataTablecolumn)
+	}
+
+	return columns
+}
+
+// getStringPtrFromSQLRow gets a slice of string pointers from a SQL row
+func getStringPtrFromSQLRow(sqlRows *sql.Rows, length int) ([]*string, error) {
+	// Create a slice of values and a second slice with pointers to each item.
+	rowValues := make([]*string, length)
+	rowValPtr := make([]interface{}, length)
+	for i := range rowValues {
+		rowValPtr[i] = &rowValues[i]
+	}
+
+	// Scan the result into the column pointers...
+	err := sqlRows.Scan(rowValPtr...)
+
+	return rowValues, err
+}
+
+// getColumnIndexes gets the indices of the columns referenced by columns
+func getColumnIndexes(data *messages.PickleStepArgument_PickleTable, columns []string) []int {
+	// the first row contains the column names
+	headerColumns := data.Rows[0].Cells
+
+	columnIndexes := make([]int, len(columns))
+	for i := range columnIndexes {
+		columnIndexes[i] = -1
+	}
+	for headerColumnIndex, headerColumn := range headerColumns {
+		for columnIndex, column := range columns {
+			if headerColumn.Value == column {
+				columnIndexes[columnIndex] = headerColumnIndex
+				break
+			}
+		}
+	}
+
+	return columnIndexes
+}
+
+// getSQLRowsMatching returns the rows that matches (if whereIn) or not (if !whereIn) one of filterColumns at any filterValues
+func (ctx *TestContext) getSQLRowsMatching(table string, columns, filterColumns, filterValues []string, whereIn bool) (
+	*sql.Rows, func(), error) {
+	db := ctx.db()
+
+	selectsJoined := strings.Join(columns, ", ")
+
+	where, parameters := constructWhereForColumnValues(filterColumns, filterValues, whereIn)
+
+	// exec sql
+	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, table, where, selectsJoined) // nolint: gosec
+	sqlRows, err := db.Query(query, parameters...)
+
+	closer := func() { _ = sqlRows.Close() }
+	return sqlRows, closer, err
+}
+
+// getNbRowsMatching returns how many rows matches one of values at any column
+func (ctx *TestContext) getNbRowsMatching(table string, columns, values []string) (int, error) {
+	db := ctx.db()
+
+	// check that the rows are not present anymore
+	where, parameters := constructWhereForColumnValues(columns, values, true)
+
+	// exec sql
+	var nbRows int
+	selectValuesInQuery := fmt.Sprintf("SELECT COUNT(*) FROM `%s` %s", table, where) // nolint: gosec
+	err := db.QueryRow(selectValuesInQuery, parameters...).Scan(&nbRows)
+
+	return nbRows, err
+}
+
+func shouldSkipRow(data *messages.PickleStepArgument_PickleTable, rowIndex int, columnIndexes []int,
+	values []string, rowTransformation rowTransformation) bool {
+	return rowTransformation != unchanged &&
+		rowIndex < len(data.Rows) &&
+		rowMatchesColumnValues(data.Rows[rowIndex], columnIndexes, values)
 }
 
 // rowMatchesColumnValues checks whether a column matches some values at some rows
 // we do an OR operation, thus returning if any column is match one of the values
-func rowMatchesColumnValues(row *messages.PickleStepArgument_PickleTable_PickleTableRow, columnIndexes []int, columnValues []string) bool {
+func rowMatchesColumnValues(row *messages.PickleStepArgument_PickleTable_PickleTableRow, columnIndexes []int, values []string) bool {
+	// Both loops should contain 1 or 2 elements only
 	for _, columnIndex := range columnIndexes {
-		for _, columnValue := range columnValues {
-			if row.Cells[columnIndex].Value == columnValue {
+		for _, value := range values {
+			if row.Cells[columnIndex].Value == value {
 				return true
 			}
 		}
-
 	}
 
 	return false
@@ -456,13 +525,13 @@ func rowMatchesColumnValues(row *messages.PickleStepArgument_PickleTable_PickleT
 
 // constructWhereForColumnValues construct the WHERE part of a query matching column with values
 // note: the same values are checked for every column
-func constructWhereForColumnValues(columnNames, columnValues []string, whereIn bool) (
+func constructWhereForColumnValues(columns, values []string, whereIn bool) (
 	where string, parameters []interface{}) {
-	if len(columnValues) > 0 {
-		questionMarks := "?" + strings.Repeat(", ?", len(columnValues)-1)
+	if len(values) > 0 {
+		questionMarks := "?" + strings.Repeat(", ?", len(values)-1)
 
 		isFirstCondition := true
-		for _, columnName := range columnNames {
+		for _, column := range columns {
 			if isFirstCondition {
 				where += " WHERE "
 			} else {
@@ -471,13 +540,13 @@ func constructWhereForColumnValues(columnNames, columnValues []string, whereIn b
 			isFirstCondition = false
 
 			if whereIn {
-				where += fmt.Sprintf(" %s IN (%s) ", columnName, questionMarks) // #nosec
+				where += fmt.Sprintf(" %s IN (%s) ", column, questionMarks) // #nosec
 			} else {
-				where += fmt.Sprintf(" %s NOT IN (%s) ", columnName, questionMarks) // #nosec
+				where += fmt.Sprintf(" %s NOT IN (%s) ", column, questionMarks) // #nosec
 			}
 
-			for _, columnValue := range columnValues {
-				parameters = append(parameters, columnValue)
+			for _, value := range values {
+				parameters = append(parameters, value)
 			}
 		}
 	}
@@ -493,6 +562,9 @@ func (ctx *TestContext) DbTimeNow(timeStrRaw string) error { // nolint
 const tableValueFalse = "false"
 const tableValueTrue = "true"
 const tableValueNull = "null"
+
+var tableValueNullVar = tableValueNull
+var pTableValueNull = &tableValueNullVar
 
 // dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db
 // e.g., the string "null" means the SQL `NULL`

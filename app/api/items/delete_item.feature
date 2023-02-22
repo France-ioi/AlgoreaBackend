@@ -95,17 +95,21 @@ Feature: Delete an item
       }
       """
     And the table "items" should stay unchanged but the rows with id "22" should be deleted
-    And the table "items_strings" stay unchanged but the rows with item_id "22" should be deleted
+
+    And the table "items_strings" should stay unchanged but the rows with item_id "22" should be deleted
     And the table "permissions_propagate" should be empty
-    And the table "items_items" stay unchanged but the rows with parent_item_id,child_item_id "22" should be deleted
+    And the table "items_items" should stay unchanged but the rows with parent_item_id,child_item_id "22" should be deleted
     And the table "items_propagate" should stay unchanged but the rows with id "22" should be deleted
-    And the table "items_ancestors" stay unchanged but the rows with ancestor_item_id,child_item_id "22" should be deleted
+    And the table "items_ancestors" should stay unchanged but the rows with ancestor_item_id,child_item_id "22" should be deleted
     And the table "permissions_granted" should stay unchanged but the rows with item_id "22" should be deleted
     And the table "permissions_generated" should stay unchanged but the rows with item_id "22" should be deleted
-    And the table "item_dependencies" should stay unchanged but the rows with item_id "22" should be deleted
+    And the table "item_dependencies" should stay unchanged but the rows with item_id,dependent_item_id "22" should be deleted
     And the table "groups_contest_items" should stay unchanged but the rows with item_id "22" should be deleted
-    And the table "attempts" should stay unchanged but the rows with root_item_id "22":
+    And the table "attempts" should stay unchanged but the rows with id "1"
+    And the table "attempts" at id "1" should be:
+      | id | participant_id | root_item_id |
+      | 1  | 10             | null         |
     And the table "results" should stay unchanged but the rows with item_id "22" should be deleted
     And the table "results_propagate" should be empty
-    And the table "answers" should should stay unchanged but the rows with item_id "22" should be deleted
+    And the table "answers" should stay unchanged but the rows with item_id "22" should be deleted
     And the table "filters" should stay unchanged
