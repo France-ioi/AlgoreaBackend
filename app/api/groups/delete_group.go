@@ -82,8 +82,7 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 
 		// Updates all threads where helper_group_id was the deleted groupID to the AllUsers group.
 		allUsersGroupID := domain.ConfigFromContext(r.Context()).AllUsersGroupID
-		err = s.Threads().UpdateHelperGroupID(groupID, allUsersGroupID)
-		service.MustNotBeError(err)
+		s.Threads().UpdateHelperGroupID(groupID, allUsersGroupID)
 
 		return s.Groups().DeleteGroup(groupID)
 	})
