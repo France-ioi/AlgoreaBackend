@@ -76,11 +76,8 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 		Limit(1).
 		HasRows()
 	mustNotBeError(err)
-	if currentUserCanHelp {
-		return true
-	}
-
-	return false
+	
+	return currentUserCanHelp
 }
 
 // GetThreadStatus retrieves a thread's status
