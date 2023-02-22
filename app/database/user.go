@@ -29,3 +29,14 @@ func (u *User) Clone() *User {
 	}
 	return &result
 }
+
+// CanWatchGroupMembers checks whether user has "can_watch_members" on a group
+func (u *User) CanWatchGroupMembers(store *DataStore, groupID int64) bool {
+	found, err := store.ActiveGroupAncestors().ManagedByUser(u).
+		Where("group_managers.can_watch_members").
+		Where("groups_ancestors_active.child_group_id = ?", groupID).
+		HasRows()
+	mustNotBeError(err)
+
+	return found
+}

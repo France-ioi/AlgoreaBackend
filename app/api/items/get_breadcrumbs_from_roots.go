@@ -143,12 +143,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 			return service.ErrInvalidRequest(err)
 		}
 
-		found, err := store.ActiveGroupAncestors().ManagedByUser(user).
-			Where("group_managers.can_watch_members").
-			Where("groups_ancestors_active.child_group_id = ?", participantID).
-			HasRows()
-		service.MustNotBeError(err)
-		if !found {
+		if !user.CanWatchGroupMembers(store, participantID) {
 			return service.InsufficientAccessRightsError
 		}
 	}
