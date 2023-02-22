@@ -11,7 +11,7 @@ func TestThreadStore_UpdateHelperGroupID_MustBeInTransaction(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_ = NewDataStore(db).Threads().UpdateHelperGroupID(0, 1)
+		NewDataStore(db).Threads().UpdateHelperGroupID(0, 1)
 	})
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
