@@ -3,6 +3,7 @@ package items
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -93,6 +94,9 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 // description: >
 //   Same as [/items/{item_id}/breadcrumbs-from-roots](#tag/items/operation/itemBreadcrumbsFromRootsGet)
 //   but using `text_id`.
+//
+// `text_id` must be URL-encoded.
+//
 // parameters:
 // - name: text_id
 //   in: path
@@ -122,8 +126,11 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *http.Request) service.APIError {
 	textID := chi.URLParam(r, "text_id")
 
+	// we wouldn't be here if the url weren't valid.
+	decodedTextID, _ := url.QueryUnescape(textID)
+
 	store := srv.GetStore(r)
-	itemID, err := store.Items().GetItemIDFromTextID(textID)
+	itemID, err := store.Items().GetItemIDFromTextID(decodedTextID)
 	if err != nil {
 		return service.ErrInvalidRequest(errors.New("no item found with text_id"))
 	}

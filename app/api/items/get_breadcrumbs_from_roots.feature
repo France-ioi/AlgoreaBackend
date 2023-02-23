@@ -28,13 +28,13 @@ Feature: Find all breadcrumbs to an item
       | 91         | 94       | false             |
       | 111        | 92       | false             |
     And the database has the following table 'items':
-      | id | url                    | type    | default_language_tag | text_id |
-      | 10 | null                   | Chapter | en                   | id10    |
-      | 50 | http://taskplatform/50 | Task    | en                   | id50    |
-      | 60 | http://taskplatform/60 | Task    | en                   | id60    |
-      | 70 | http://taskplatform/70 | Task    | fr                   | id70    |
-      | 80 | null                   | Chapter | en                   | id80    |
-      | 90 | null                   | Chapter | en                   | id90    |
+      | id | url                    | type    | default_language_tag | text_id               |
+      | 10 | null                   | Chapter | en                   | id10                  |
+      | 50 | http://taskplatform/50 | Task    | en                   | -_ '#&?:=/\.,+%¤€aéàd |
+      | 60 | http://taskplatform/60 | Task    | en                   | id60                  |
+      | 70 | http://taskplatform/70 | Task    | fr                   | id70                  |
+      | 80 | null                   | Chapter | en                   | id80                  |
+      | 90 | null                   | Chapter | en                   | id90                  |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title            |
       | 10      | fr           | Graphe: Methodes |
@@ -95,7 +95,7 @@ Feature: Find all breadcrumbs to an item
   Examples:
     | service_url                                   | expected_output                                                                                                                                                                                                                   |
     | /items/50/breadcrumbs-from-roots              | [[{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]]                                                                                                                                                            |
-    | /items/by-text-id/id50/breadcrumbs-from-roots | [[{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]]                                                                                                                                                            |
+    | /items/by-text-id/-_%20%27%23%26%3F%3A%3D%2F%5C.%2C%2B%25%C2%A4%E2%82%ACa%C3%A9%C3%A0d/breadcrumbs-from-roots | [[{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]]                                                                                                                                                            |
     | /items/10/breadcrumbs-from-roots              | [[{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]]                                                                                                                                            |
     | /items/by-text-id/id10/breadcrumbs-from-roots | [[{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]]                                                                                                                                            |
     | /items/90/breadcrumbs-from-roots              | [[{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}], [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]] |
