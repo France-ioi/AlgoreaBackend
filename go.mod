@@ -26,7 +26,6 @@ require (
 	github.com/go-playground/locales v0.12.1
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/jinzhu/gorm v1.9.16
 	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/pmezard/go-difflib v1.0.0
@@ -38,6 +37,8 @@ require (
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/yaml.v2 v2.2.8
+	gorm.io/driver/mysql v1.4.7
+	gorm.io/gorm v1.24.5
 )
 
 require (
@@ -81,6 +82,4 @@ require (
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
-	gorm.io/driver/mysql v1.1.1
-	gorm.io/gorm v1.21.11
 )

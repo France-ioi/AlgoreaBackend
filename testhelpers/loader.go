@@ -37,9 +37,13 @@ func RunGodogTests(t *testing.T, tags string) {
 		opt.Tags = tags
 	}
 
-	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
-		FeatureContext(s)
-	}, opt)
+	status := godog.TestSuite{
+		Name:                 "godogs",
+		TestSuiteInitializer: InitializeTestSuite,
+		ScenarioInitializer:  InitializeScenario,
+		Options:              &opt,
+	}
+
 	assert.Zero(t, status)
 }
 

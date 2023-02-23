@@ -9,7 +9,7 @@ import (
 // FeatureContext binds the supported steps to the verifying functions.
 func FeatureContext(s *godog.Suite) {
 	ctx := &TestContext{}
-	s.BeforeScenario(ctx.SetupTestContext)
+	s.Before(ctx.SetupScenarioContext)
 
 	s.Step(`^the template constant "([^"]+)" is "(.*)"$`, ctx.TheTemplateConstantIsString)
 	s.Step(`^the template constant "([^"]+)" is:$`, ctx.TheTemplateConstantIsDocString)
@@ -120,5 +120,5 @@ func FeatureContext(s *godog.Suite) {
 			`content id "([^"]*)", score "([^"]*)" returns (\d+) with encoded body:$`,
 		ctx.TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns)
 
-	s.AfterScenario(ctx.ScenarioTeardown)
+	s.After(ctx.ScenarioTeardown)
 }
