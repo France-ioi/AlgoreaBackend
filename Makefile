@@ -24,6 +24,9 @@ PWD=$(shell pwd)
 VERSION_FETCHING_CMD=git describe --always --dirty
 GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
 
+# Don't cover the packages ending by test, and separate the packages by a comma
+COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | tr '\n' ',')
+
 # Filter for tests
 ifdef FILTER
 	TEST_FILTER=-run $(FILTER)
@@ -80,7 +83,7 @@ test: $(TEST_REPORT_DIR)
 	$(Q)# add TEST_DIR=./app/api/item to only test a certain directory. Must start with ".".
 	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
-	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
+	$(Q)$(GOTEST) -gcflags=all=-l -race -coverpkg=$(COVER_PACKAGES) -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
