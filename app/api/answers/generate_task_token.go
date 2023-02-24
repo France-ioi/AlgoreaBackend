@@ -13,7 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation POST /answers/{answer_id}/generate-task-token answers itemTaskTokenGenerate
+// swagger:operation POST /answers/{answer_id}/generate-task-token answers answerTaskTokenGenerate
 // ---
 // summary: Generate a task token
 // description: >
