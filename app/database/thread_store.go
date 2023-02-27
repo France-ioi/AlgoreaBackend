@@ -2,6 +2,8 @@ package database
 
 import (
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 // ThreadStore implements database operations on threads
@@ -91,9 +93,10 @@ func (s *ThreadStore) GetThreadStatus(participantID, itemID int64) string {
 		Limit(1).
 		PluckFirst("status", &status).
 		Error()
-	if err != nil {
-		status = "not_started"
+	if gorm.IsRecordNotFoundError(err) {
+		return "not_started"
 	}
+	mustNotBeError(err)
 
 	return status
 }
