@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/go-sql-driver/mysql"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -119,8 +118,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 			"score":              valueOrDefault(formData, "score", input.Score, database.Default()),
 			"grant_content_view": input.GrantContentView,
 		})
-
-		if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 {
+		if err != nil && database.IsDuplicateEntryError(err) {
 			apiError = service.ErrUnprocessableEntity(errors.New("the dependency already exists"))
 			return apiError.Error // rollback
 		}

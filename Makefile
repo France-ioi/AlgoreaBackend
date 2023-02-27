@@ -31,8 +31,12 @@ COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | tr '\n' ',')
 ifdef FILTER
 	TEST_FILTER=-run $(FILTER)
 endif
-ifndef TEST_DIR
+ifdef DIRECTORY
+	TEST_DIR=$(DIRECTORY)
+	TEST_BDD_DIR =$(DIRECTORY)
+else
 	TEST_DIR=./app/...
+	TEST_BDD_DIR=.
 endif
 
 # extract AWS_PROFILE if given
@@ -80,15 +84,16 @@ db-recompute: $(BIN_PATH)
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# TODO: the tests using the db do not currently support parallelism
-	$(Q)# add TEST_DIR=./app/api/item to only test a certain directory. Must start with ".".
+	$(Q)# add DIRECTORY=./app/api/item to only test a certain directory. Must start with ".".
+	$(Q)# Warning: DIRECTORY must be a directory, it will fail if it is a file
 	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
 	$(Q)$(GOTEST) -gcflags=all=-l -race -coverpkg=$(COVER_PACKAGES) -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
-	$(GOTEST) -gcflags=all=-l -race -cover -v ./app/... -tags=unit
+	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
-	$(GODOG) --format=progress $(ARGS) .
+	$(GODOG) --format=progress $(ARGS) $(TEST_BDD_DIR)
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run --deadline 10m0s
 

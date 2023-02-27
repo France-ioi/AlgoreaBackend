@@ -27,6 +27,8 @@ type Item struct {
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// default: false
 	NoScore bool `json:"no_score"`
+	// Identifier to reference the task.
+	// Unique
 	// Nullable
 	TextID                 *string `json:"text_id"`
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
@@ -195,19 +197,32 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.APIError {
-	var err error
 	user := srv.GetUser(r)
-
 	if user.IsTempUser {
 		return service.InsufficientAccessRightsError
 	}
 
-	input := NewItemRequest{}
-	formData := formdata.NewFormData(&input)
+	itemID, apiError, err := validateAndInsertItem(srv, r)
+	if apiError != service.NoError {
+		return apiError
+	}
+	service.MustNotBeError(err)
 
-	apiError := service.NoError
-	var itemID int64
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	// response
+	response := struct {
+		ItemID int64 `json:"id,string"`
+	}{ItemID: itemID}
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
+	return service.NoError
+}
+
+func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError service.APIError, err error) {
+	user := srv.GetUser(r)
+	store := srv.GetStore(r)
+	err = store.InTransaction(func(store *database.DataStore) error {
+		input := NewItemRequest{}
+		formData := formdata.NewFormData(&input)
+
 		var parentInfo parentItemInfo
 		var childrenInfoMap map[int64]permissionAndType
 		registerAddItemValidators(formData, store, user, &parentInfo, &childrenInfoMap)
@@ -235,7 +250,11 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 			}
 
 			// insertion
-			itemID = srv.insertItem(lockedStore, user, formData, &input)
+			itemID, apiError = srv.insertItem(lockedStore, user, formData, &input)
+			if apiError != service.NoError {
+				return apiError.Error
+			}
+
 			return nil
 		})
 
@@ -248,17 +267,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 		return nil
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
-	service.MustNotBeError(err)
-
-	// response
-	response := struct {
-		ItemID int64 `json:"id,string"`
-	}{ItemID: itemID}
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
-	return service.NoError
+	return itemID, apiError, err
 }
 
 func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formdata.FormData, input *NewItemRequest, itemID int64) {
@@ -521,11 +530,11 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
-	newItemRequest *NewItemRequest) (itemID int64) {
+	newItemRequest *NewItemRequest) (itemID int64, apiError service.APIError) {
 	itemMap := formData.ConstructPartialMapForDB("ItemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
-	service.MustNotBeError(store.WithForeignKeyChecksDisabled(func(fkStore *database.DataStore) error {
+	err := store.WithForeignKeyChecksDisabled(func(fkStore *database.DataStore) error {
 		return fkStore.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
 			itemID = s.NewID()
 
@@ -533,7 +542,13 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			itemMap["default_language_tag"] = newItemRequest.LanguageTag
 			return s.Items().InsertMap(itemMap)
 		})
-	}))
+	})
+	if err != nil && database.IsDuplicateEntryError(err) {
+		return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
+			"text_id must be unique",
+		}})
+	}
+	service.MustNotBeError(err)
 
 	if itemMap["requires_explicit_entry"] == true {
 		participantsGroupID := createContestParticipantsGroup(store, itemID)
@@ -554,21 +569,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	stringMap["language_tag"] = newItemRequest.LanguageTag
 	service.MustNotBeError(store.ItemStrings().InsertMap(stringMap))
 
-	if !formData.IsSet("parent.category") {
-		newItemRequest.Parent.Category = undefined
-	}
-	if !formData.IsSet("parent.score_weight") {
-		newItemRequest.Parent.ScoreWeight = 1
-	}
-
-	for index := range newItemRequest.Children {
-		if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
-			newItemRequest.Children[index].Category = undefined
-		}
-		if !formData.IsSet(fmt.Sprintf("children[%d].score_weight", index)) {
-			newItemRequest.Children[index].ScoreWeight = 1
-		}
-	}
+	setItemRequestDefaults(newItemRequest, formData)
 
 	parentChildSpecLength := len(newItemRequest.Children)
 	if formData.IsSet("parent") {
@@ -605,7 +606,26 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	}
 	service.MustNotBeError(store.ItemItems().After())
 
-	return itemID
+	return itemID, service.NoError
+}
+
+// setItemRequestDefaults sets the default values of a newItemRequest which are not set
+func setItemRequestDefaults(newItemRequest *NewItemRequest, formData *formdata.FormData) {
+	if !formData.IsSet("parent.category") {
+		newItemRequest.Parent.Category = undefined
+	}
+	if !formData.IsSet("parent.score_weight") {
+		newItemRequest.Parent.ScoreWeight = 1
+	}
+
+	for index := range newItemRequest.Children {
+		if !formData.IsSet(fmt.Sprintf("children[%d].category", index)) {
+			newItemRequest.Children[index].Category = undefined
+		}
+		if !formData.IsSet(fmt.Sprintf("children[%d].score_weight", index)) {
+			newItemRequest.Children[index].ScoreWeight = 1
+		}
+	}
 }
 
 func valueOrDefault(formData *formdata.FormData, fieldName string, value, defaultValue interface{}) interface{} {

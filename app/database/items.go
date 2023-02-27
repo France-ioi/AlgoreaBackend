@@ -16,6 +16,16 @@ func (conn *DB) WhereUserHasPermissionOnItems(user *User, permissionKind, needed
 	return conn.WhereGroupHasPermissionOnItems(user.GroupID, permissionKind, neededPermission)
 }
 
+// WhereUserHaveStartedResultOnItem makes sure that the user have a started result on the item, whatever the attempt
+func (conn *DB) WhereUserHaveStartedResultOnItem(user *User) *DB {
+	return conn.
+		Joins(`
+				JOIN results AS current_user_results
+					ON current_user_results.item_id = items.id AND
+					current_user_results.participant_id = ?`, user.GroupID).
+		Where("current_user_results.started = 1")
+}
+
 // WhereItemsAreVisible returns a subview of the visible items for the given group basing on the given view
 func (conn *DB) WhereItemsAreVisible(groupID int64) *DB {
 	return conn.WhereGroupHasPermissionOnItems(groupID, "view", "info")
