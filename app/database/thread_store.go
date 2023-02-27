@@ -70,7 +70,7 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", user.GroupID).
 		Where("threads.helper_group_id = groups_ancestors_active.ancestor_group_id").
 		Where("threads.item_id = ?", itemID).
-		Where("threads.status != 'closed' OR (threads.status = 'closed' AND threads.latest_update_at > ?)", twoWeeksAgo).
+		Where("threads.status != 'closed' OR threads.latest_update_at > ?", twoWeeksAgo).
 		Where("results.participant_id = ?", user.GroupID).
 		Where("results.validated").
 		Limit(1).
