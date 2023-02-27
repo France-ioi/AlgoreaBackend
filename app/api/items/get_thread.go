@@ -39,14 +39,16 @@ type thread struct {
 // parameters:
 // - name: item_id
 //   in: path
+//   type: integer
 //   format: int64
 //   required: true
 // - name: participant_id
 //   in: path
+//   type: integer
 //   format: int64
 //   required: true
-//  responses:
-//    "200":
+// responses:
+//   "200":
 //     description: OK. Success response with thread data
 //     schema:
 //       type: array
