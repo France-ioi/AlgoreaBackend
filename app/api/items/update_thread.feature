@@ -224,7 +224,7 @@ Feature: Update thread
     Then the response should be "updated"
     And the table "threads" should stay unchanged but the row with item_id "<item_id>"
     And the table "threads" at item_id "<item_id>" should be:
-      | latest_update_at    | status          |
+      | latest_update_at    | status   |
       | 2022-01-01 00:00:00 | <status> |
     Examples:
       | item_id | status                  |

@@ -1,79 +1,79 @@
 Feature: Update thread - robustness
-Background:
-  Given the database has the following table 'groups':
-    | id | name           | type  |
-    | 1  | john           | User  |
-    | 2  | manager        | User  |
-    | 3  | jack           | User  |
-    | 4  | managernowatch | User  |
-    | 5  | jess           | User  |
-    | 10 | Group          | Class |
-  And the database has the following table 'users':
-    | login          | group_id |
-    | john           | 1        |
-    | manager        | 2        |
-    | jack           | 3        |
-    | managernowatch | 4        |
-    | jess           | 5        |
-  And the database has the following table 'groups_groups':
-    | parent_group_id | child_group_id |
-    | 10              | 3              |
-    | 10              | 5              |
-  And the groups ancestors are computed
-  And the database has the following table 'group_managers':
-    | group_id | manager_id | can_watch_members |
-    | 10       | 2          | true              |
-    | 10       | 4          | false             |
-  And the database has the following table 'items':
-    | id  | default_language_tag |
-    | 10  | en                   |
-    | 20  | en                   |
-    | 30  | en                   |
-    | 40  | en                   |
-    | 50  | en                   |
-    | 60  | en                   |
-    | 70  | en                   |
-    | 80  | en                   |
-    | 90  | en                   |
-    | 100 | en                   |
-    | 110 | en                   |
-    | 120 | en                   |
-    | 130 | en                   |
-    | 140 | en                   |
-    | 150 | en                   |
-    | 160 | en                   |
-    | 170 | en                   |
-    | 180 | en                   |
-  And the database has the following table 'permissions_generated':
-    | group_id | item_id | can_watch_generated |
-    | 2        | 20      | result              |
-    | 4        | 30      | answer              |
-    | 1        | 40      | answer              |
-    | 1        | 70      | answer              |
-    | 2        | 110     | none                |
-    | 2        | 120     | result              |
-    | 2        | 130     | result              |
-    | 4        | 150     | answer              |
-    | 4        | 160     | answer_with_grant   |
-    | 4        | 170     | answer_with_grant   |
-    | 4        | 180     | answer              |
-  And the database has the following table 'results':
-    | attempt_id | participant_id | item_id | validated_at        |
-    | 0          | 1              | 40      | 2020-01-01 00:00:00 |
-  And the database has the following table 'threads':
-    | item_id | participant_id | status                  | helper_group_id | latest_update_at    |
-    | 10      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
-    | 20      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
-    | 30      | 3              | waiting_for_participant | 10              | 2020-01-01 00:00:00 |
-    | 40      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
-    | 50      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
-    | 60      | 1              | waiting_for_participant | 1               | 2020-01-01 00:00:00 |
-    | 70      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
-    | 80      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
-    | 110     | 3              | closed                  | 3               | 2020-01-01 00:00:00 |
-    | 120     | 3              | closed                  | 3               | 2020-01-01 00:00:00 |
-    | 150     | 3              | waiting_for_participant | 10              | 2020-01-01 00:00:00 |
-    | 160     | 3              | waiting_for_trainer     | 10               | 2020-01-01 00:00:00 |
+  Background:
+    Given the database has the following table 'groups':
+      | id | name           | type  |
+      | 1  | john           | User  |
+      | 2  | manager        | User  |
+      | 3  | jack           | User  |
+      | 4  | managernowatch | User  |
+      | 5  | jess           | User  |
+      | 10 | Group          | Class |
+    And the database has the following table 'users':
+      | login          | group_id |
+      | john           | 1        |
+      | manager        | 2        |
+      | jack           | 3        |
+      | managernowatch | 4        |
+      | jess           | 5        |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 10              | 3              |
+      | 10              | 5              |
+    And the groups ancestors are computed
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_watch_members |
+      | 10       | 2          | true              |
+      | 10       | 4          | false             |
+    And the database has the following table 'items':
+      | id  | default_language_tag |
+      | 10  | en                   |
+      | 20  | en                   |
+      | 30  | en                   |
+      | 40  | en                   |
+      | 50  | en                   |
+      | 60  | en                   |
+      | 70  | en                   |
+      | 80  | en                   |
+      | 90  | en                   |
+      | 100 | en                   |
+      | 110 | en                   |
+      | 120 | en                   |
+      | 130 | en                   |
+      | 140 | en                   |
+      | 150 | en                   |
+      | 160 | en                   |
+      | 170 | en                   |
+      | 180 | en                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_watch_generated |
+      | 2        | 20      | result              |
+      | 4        | 30      | answer              |
+      | 1        | 40      | answer              |
+      | 1        | 70      | answer              |
+      | 2        | 110     | none                |
+      | 2        | 120     | result              |
+      | 2        | 130     | result              |
+      | 4        | 150     | answer              |
+      | 4        | 160     | answer_with_grant   |
+      | 4        | 170     | answer_with_grant   |
+      | 4        | 180     | answer              |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 0          | 1              | 40      | 2020-01-01 00:00:00 |
+    And the database has the following table 'threads':
+      | item_id | participant_id | status                  | helper_group_id | latest_update_at    |
+      | 10      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
+      | 20      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
+      | 30      | 3              | waiting_for_participant | 10              | 2020-01-01 00:00:00 |
+      | 40      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
+      | 50      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
+      | 60      | 1              | waiting_for_participant | 1               | 2020-01-01 00:00:00 |
+      | 70      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
+      | 80      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
+      | 110     | 3              | closed                  | 3               | 2020-01-01 00:00:00 |
+      | 120     | 3              | closed                  | 3               | 2020-01-01 00:00:00 |
+      | 150     | 3              | waiting_for_participant | 10              | 2020-01-01 00:00:00 |
+      | 160     | 3              | waiting_for_trainer     | 10               | 2020-01-01 00:00:00 |
 
   Scenario: Should be logged
     When I send a PUT request to "/items/10/participant/1/thread"
@@ -213,7 +213,7 @@ Background:
     When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
       """
       {
-        "status": "<status>,
+        "status": "<status>"
       }
       """
     Then the response code should be 400
@@ -240,7 +240,7 @@ Background:
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
-        "status": "<status>,
+        "status": "<status>"
       }
       """
     Then the response code should be 400
@@ -267,7 +267,7 @@ Background:
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
-        "status": "<status>,
+        "status": "<status>"
       }
       """
     Then the response code should be 400
@@ -294,7 +294,7 @@ Background:
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
-        "status": "<status>,
+        "status": "<status>"
       }
       """
     Then the response code should be 400

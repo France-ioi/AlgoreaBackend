@@ -147,7 +147,10 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_cache: *CACHEKEYMOD
-      - run: make lint
+      - run:
+          command: |
+            echo 'export PATH="$PATH":/usr/local/go/bin' >> "$BASH_ENV"
+            make lint
   build:
     docker:
       - image: circleci/golang:1.13
