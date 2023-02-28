@@ -1,3 +1,4 @@
+//go:build !prod
 // +build !prod
 
 package testhelpers
@@ -22,7 +23,7 @@ import (
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
 func init() { // nolint:gochecknoinits
-	if strings.HasSuffix(os.Args[0], ".test") {
+	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
 		appenv.SetDefaultEnvToTest()
 		// Apply the config to the global logger
 		logging.SharedLogger.Configure(app.LoggingConfig(app.LoadConfig()))

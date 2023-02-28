@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -165,14 +164,13 @@ func (s *ThreadStore) UserCanWrite(user *User, participantID int64, itemID int64
 //   - A user who has can_watch>=answer on the item AND can_watch_members on the participant:
 //     can always switch a thread to any open status (i.e. he can always open it but not close it)
 //   - A user who can write on the thread can switch from an open status to another open status.
-func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus string, newStatus string, participantID int64,
-	itemID int64) (bool, error) {
-	if oldStatus == "" {
-		// TODO: Permissions to create a thread
-		return false, errors.New("needs implementation")
+func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus string, newStatus string,
+	participantID, itemID, newHelperGroupID int64) bool {
+	if oldStatus == "" && newStatus == "" {
+		return false
 	}
 	if oldStatus == newStatus {
-		return true, nil
+		return true
 	}
 
 	wasOpen := oldStatus == "waiting_for_trainer" || oldStatus == "waiting_for_participant"
@@ -181,16 +179,45 @@ func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus string, newStatu
 	// The participant of a thread can always switch the thread from open to any another other status.
 	if user.GroupID == participantID {
 		if wasOpen {
-			return true, nil
+			return true
 		}
 
 		// He can only switch it from not-open to an open status if he is allowed to request help on this item (see “specific permission” above)
 		if willBeOpen {
-			// TODO: Check if allowed to request_help on this item, when forum permissions are merged
+			canRequestHelpTo := s.CanRequestHelpTo(user, itemID, newHelperGroupID)
+
+			return canRequestHelpTo
 		}
 	} else {
+		// the current-user has the "can_watch >= answer" permission on the item
+		currentUserCanWatch, err := s.Permissions().MatchingUserAncestors(user).
+			Where("permissions.item_id = ?", itemID).
+			WherePermissionIsAtLeast("watch", "answer").
+			Select("1").
+			Limit(1).
+			HasRows()
+		mustNotBeError(err)
+		if !currentUserCanWatch {
+			return false
+		}
 
+		userCanWatchMembersOnParticipant, err := s.ActiveGroupAncestors().ManagedByUser(user).
+			Where("groups_ancestors_active.child_group_id = ?", participantID).
+			Where("group_managers.can_watch_members").
+			Select("1").
+			Limit(1).
+			HasRows()
+		mustNotBeError(err)
+		if !userCanWatchMembersOnParticipant {
+			return false
+		}
 	}
 
-	return true, nil
+	return true
+}
+
+// CanRequestHelpTo checks whether the user can request help on an item to a group.
+func (s *ThreadStore) CanRequestHelpTo(user *User, itemID, newHelperGroupID int64) bool {
+	// TODO: Implement this!
+	return true
 }

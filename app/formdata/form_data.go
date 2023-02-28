@@ -12,13 +12,12 @@ import (
 	"strings"
 	"time"
 
-	english "github.com/go-playground/locales/en"
-	ut "github.com/go-playground/universal-translator"
-	"github.com/jinzhu/gorm"
-
 	"github.com/France-ioi/mapstructure"
 	"github.com/France-ioi/validator"
 	"github.com/France-ioi/validator/translations/en"
+	english "github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )

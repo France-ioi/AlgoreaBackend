@@ -1,6 +1,8 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // GroupStore implements database operations on groups
 type GroupStore struct {
@@ -27,8 +29,9 @@ func (s *GroupStore) ManagedBy(user *User) *DB {
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team that
-//  1) the given user is a member of
-//  2) has an unexpired attempt with root_item_id = `itemID`.
+//  1. the given user is a member of
+//  2. has an unexpired attempt with root_item_id = `itemID`.
+//
 // If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
 func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
@@ -173,4 +176,47 @@ func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
 		return nil
 	}))
 	return nil
+}
+
+func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
+	return store.ActiveGroupGroups().
+		Where("groups_groups_active.child_group_id = ?", user.GroupID).
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id").
+		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = groups_ancestors_active.ancestor_group_id").
+		Where("ancestor_group.type != 'ContestParticipants'").
+		Select("groups_ancestors_active.ancestor_group_id")
+}
+
+// ManagedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
+// and all users who are descendants from managed groups.
+func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, user *User) *DB {
+	return store.ActiveGroupAncestors().ManagedByUser(user).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+		Joins(`
+			JOIN groups_ancestors_active AS ancestors_of_managed
+				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id AND
+				   (groups.type != 'User' OR ancestors_of_managed.is_self)`).
+		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
+		Where("ancestor_group.type != 'ContestParticipants'").
+		Select("ancestors_of_managed.ancestor_group_id")
+}
+
+func (s *GroupStore) PickVisibleGroups(db *DB, user *User) *DB {
+	AncestorsOfJoinedGroupsQuery := s.AncestorsOfJoinedGroups(NewDataStore(db.New()), user).QueryExpr()
+	ManagedUsersAndAncestorsOfManagedGroupsQuery := s.ManagedUsersAndAncestorsOfManagedGroups(NewDataStore(db.New()), user).QueryExpr()
+
+	return db.Where("groups.is_public OR groups.id IN(?) OR groups.id IN(?)",
+		AncestorsOfJoinedGroupsQuery, ManagedUsersAndAncestorsOfManagedGroupsQuery)
+}
+
+// IsVisibleFor checks whether a group is visible to a user
+func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
+	isVisible, err := s.PickVisibleGroups(s.Groups().DB, user).
+		Where("groups.id = ?", groupID).
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return isVisible
 }

@@ -9,5 +9,9 @@ import (
 )
 
 func TestBDD(t *testing.T) {
-	testhelpers.RunGodogTests(t)
+	testhelpers.RunGodogTests(t, "")
+}
+
+func TestBDDWIP(t *testing.T) {
+	testhelpers.RunGodogTests(t, "wop")
 }

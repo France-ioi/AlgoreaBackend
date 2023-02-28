@@ -61,55 +61,58 @@ type groupManagersViewResponseRow struct {
 // summary: List group managers
 // description: >
 //
-//   Lists managers of the given group and (optionally) managers of its ancestors
-//   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
+//	Lists managers of the given group and (optionally) managers of its ancestors
+//	(rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
 //
 //
-//   The authenticated user should be a manager of the `group_id` group or a member of the group or of its descendant,
-//   otherwise the 'forbidden' error is returned.
+//	The authenticated user should be a manager of the `group_id` group or a member of the group or of its descendant,
+//	otherwise the 'forbidden' error is returned.
+//
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: include_managers_of_ancestor_groups
-//   description: If equal to 1, the results include managers of all ancestor groups
-//   in: query
-//   type: integer
-//   enum: [0,1]
-//   default: 0
-// - name: sort
-//   in: query
-//   default: [name,id]
-//   type: array
-//   items:
+//   - name: group_id
+//     in: path
+//     type: integer
+//     required: true
+//   - name: include_managers_of_ancestor_groups
+//     description: If equal to 1, the results include managers of all ancestor groups
+//     in: query
+//     type: integer
+//     enum: [0,1]
+//     default: 0
+//   - name: sort
+//     in: query
+//     default: [name,id]
+//     type: array
+//     items:
 //     type: string
 //     enum: [name,-name,id,-id]
-// - name: from.id
-//   description: Start the page from the manager next to the manager with `groups.id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display the first N managers
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
+//   - name: from.id
+//     description: Start the page from the manager next to the manager with `groups.id`=`{from.id}`
+//     in: query
+//     type: integer
+//   - name: limit
+//     description: Display the first N managers
+//     in: query
+//     type: integer
+//     maximum: 1000
+//     default: 500
+//
 // responses:
-//   "200":
-//     description: OK. The array of group managers
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupManagersViewResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	"200":
+//	  description: OK. The array of group managers
+//	  schema:
+//	    type: array
+//	    items:
+//	      "$ref": "#/definitions/groupManagersViewResponseRow"
+//	"400":
+//	  "$ref": "#/responses/badRequestResponse"
+//	"401":
+//	  "$ref": "#/responses/unauthorizedResponse"
+//	"403":
+//	  "$ref": "#/responses/forbiddenResponse"
+//	"500":
+//	  "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -129,7 +132,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 
 	found, err := store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found",
 		store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).QueryExpr(),
-		ancestorsOfJoinedGroups(store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
+		store.Groups().AncestorsOfJoinedGroups(store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
 	).Having("found").HasRows()
 	service.MustNotBeError(err)
 	if !found {

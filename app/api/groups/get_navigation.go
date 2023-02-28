@@ -6,7 +6,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -48,38 +47,40 @@ type groupNavigationViewResponse struct {
 // summary: Get navigation data
 // description: >
 //
-//   Lists child groups visible to the user, so either 1) ancestors of a group he joined, or
-//   2) ancestors of a non-user group he manages, or 3) descendants of a group he manages, or
-//   4) groups with `is_public` = 1. Ordered alphabetically by name.
+//	Lists child groups visible to the user, so either 1) ancestors of a group he joined, or
+//	2) ancestors of a non-user group he manages, or 3) descendants of a group he manages, or
+//	4) groups with `is_public` = 1. Ordered alphabetically by name.
 //
 //
-//   The input group should be visible to the current user with the same definition as above,
-//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//	The input group should be visible to the current user with the same definition as above,
+//	otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 //
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: limit
-//   description: Display the first N children
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
+//   - name: group_id
+//     in: path
+//     type: integer
+//     required: true
+//   - name: limit
+//     description: Display the first N children
+//     in: query
+//     type: integer
+//     maximum: 1000
+//     default: 500
+//
 // responses:
-//   "200":
-//     description: OK. Success response with an array root groups
-//     schema:
-//       "$ref": "#/definitions/groupNavigationViewResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	"200":
+//	  description: OK. Success response with an array root groups
+//	  schema:
+//	    "$ref": "#/definitions/groupNavigationViewResponse"
+//	"400":
+//	  "$ref": "#/responses/badRequestResponse"
+//	"401":
+//	  "$ref": "#/responses/unauthorizedResponse"
+//	"403":
+//	  "$ref": "#/responses/forbiddenResponse"
+//	"500":
+//	  "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
@@ -90,7 +91,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 	store := srv.GetStore(r)
 
 	var result groupNavigationViewResponse
-	err = pickVisibleGroups(store.Groups().ByID(groupID), user).
+	err = store.Groups().PickVisibleGroups(store.Groups().ByID(groupID), user).
 		Where("groups.type != 'User'").
 		Select("id, name, type").Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -98,7 +99,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 	}
 	service.MustNotBeError(err)
 
-	query := pickVisibleGroups(store.Groups().DB, user).
+	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).
@@ -110,12 +111,4 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 
 	render.Respond(w, r, result)
 	return service.NoError
-}
-
-func pickVisibleGroups(db *database.DB, user *database.User) *database.DB {
-	ancestorsOfJoinedGroupsQuery := ancestorsOfJoinedGroups(database.NewDataStore(db.New()), user).QueryExpr()
-	managedUsersAndAncestorsOfManagedGroupsQuery := managedUsersAndAncestorsOfManagedGroups(database.NewDataStore(db.New()), user).QueryExpr()
-
-	return db.Where("groups.is_public OR groups.id IN(?) OR groups.id IN(?)",
-		ancestorsOfJoinedGroupsQuery, managedUsersAndAncestorsOfManagedGroupsQuery)
 }
