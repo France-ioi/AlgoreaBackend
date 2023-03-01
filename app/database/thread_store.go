@@ -109,7 +109,14 @@ func (s *ThreadStore) UserCanWrite(user *User, participantID int64, itemID int64
 	// (3) be part of the group the participant has requested help to AND either have can_watch>=answer on the item
 	//     OR have validated the item.
 
-	userIsParticipant := user.GroupID == participantID
+	threadStatus := s.GetThreadStatus(participantID, itemID)
+	if threadStatus == "not_started" || threadStatus == "closed" {
+		return false, nil
+	}
+
+	if user.GroupID == participantID {
+		return true, nil
+	}
 
 	userCanWatchAnswer, err := s.Permissions().MatchingUserAncestors(user).
 		Where("permissions.item_id = ?", itemID).
@@ -129,6 +136,10 @@ func (s *ThreadStore) UserCanWrite(user *User, participantID int64, itemID int64
 		HasRows()
 	if err != nil {
 		return false, err
+	}
+
+	if userCanWatchAnswer && userCanWatchMembersOnParticipant {
+		return true, nil
 	}
 
 	isMemberOfHelperGroup, err := s.Threads().
@@ -153,9 +164,7 @@ func (s *ThreadStore) UserCanWrite(user *User, participantID int64, itemID int64
 		return false, err
 	}
 
-	return userIsParticipant ||
-		(userCanWatchAnswer && userCanWatchMembersOnParticipant) ||
-		(isMemberOfHelperGroup && (userCanWatchAnswer || hasValidatedItem)), nil
+	return isMemberOfHelperGroup && (userCanWatchAnswer || hasValidatedItem), nil
 }
 
 // UserCanChangeStatus checks whether a user can change the status of a thread
@@ -186,38 +195,74 @@ func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus string, newStatu
 		if willBeOpen {
 			canRequestHelpTo := s.CanRequestHelpTo(user, itemID, newHelperGroupID)
 
-			return canRequestHelpTo
+			// TODO: This check here is not required anymore because helper_group_id has been set already
+			return canRequestHelpTo || true
 		}
 	} else {
-		// the current-user has the "can_watch >= answer" permission on the item
-		currentUserCanWatch, err := s.Permissions().MatchingUserAncestors(user).
-			Where("permissions.item_id = ?", itemID).
-			WherePermissionIsAtLeast("watch", "answer").
-			Select("1").
-			Limit(1).
-			HasRows()
-		mustNotBeError(err)
-		if !currentUserCanWatch {
-			return false
-		}
+		// A user who has can_watch>=answer on the item AND can_watch_members on the participant:
+		// can always switch a thread to any open status (i.e. he can always open it but not close it)
+		if willBeOpen {
+			currentUserCanWatch, err := s.Permissions().MatchingUserAncestors(user).
+				Where("permissions.item_id = ?", itemID).
+				WherePermissionIsAtLeast("watch", "answer").
+				Select("1").
+				Limit(1).
+				HasRows()
+			mustNotBeError(err)
 
-		userCanWatchMembersOnParticipant, err := s.ActiveGroupAncestors().ManagedByUser(user).
-			Where("groups_ancestors_active.child_group_id = ?", participantID).
-			Where("group_managers.can_watch_members").
-			Select("1").
-			Limit(1).
-			HasRows()
-		mustNotBeError(err)
-		if !userCanWatchMembersOnParticipant {
-			return false
+			userCanWatchMembersOnParticipant, err := s.ActiveGroupAncestors().ManagedByUser(user).
+				Where("groups_ancestors_active.child_group_id = ?", participantID).
+				Where("group_managers.can_watch_members").
+				Select("1").
+				Limit(1).
+				HasRows()
+			mustNotBeError(err)
+
+			if currentUserCanWatch && userCanWatchMembersOnParticipant {
+				return true
+			} else if wasOpen {
+				// A user who can write on the thread can switch from an open status to another open status
+				userCanWrite, err := s.UserCanWrite(user, participantID, itemID)
+				mustNotBeError(err)
+
+				return userCanWrite
+			}
 		}
 	}
 
-	return true
+	return false
 }
 
 // CanRequestHelpTo checks whether the user can request help on an item to a group.
-func (s *ThreadStore) CanRequestHelpTo(user *User, itemID, newHelperGroupID int64) bool {
-	// TODO: Implement this!
-	return true
+func (s *ThreadStore) CanRequestHelpTo(user *User, itemID, helperGroupID int64) bool {
+	// in order to verify that the user “can request help to” a group on an item we need to verify whether
+	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
+	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
+
+	itemAncestorsHelpPropagationQuery := s.Raw(`
+		WITH RECURSIVE items_ancestors_request_help_propagation(item_id) AS
+		(
+			SELECT ?
+			UNION ALL
+			SELECT items.id FROM items
+			JOIN items_items ON items_items.parent_item_id = items.id AND	items_items.request_help_propagation = 1
+			JOIN items_ancestors_request_help_propagation ON items_ancestors_request_help_propagation.item_id = items_items.child_item_id
+		)
+		SELECT item_id FROM items_ancestors_request_help_propagation
+	`, itemID)
+
+	canRequestHelpTo, err := s.Users().
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", user.GroupID).
+		Joins(`JOIN permissions_granted ON
+			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+			(permissions_granted.item_id = ? OR permissions_granted.item_id IN (?))`, itemID, itemAncestorsHelpPropagationQuery.SubQuery()).
+		Joins(`JOIN groups_ancestors_active AS groups_ancestors_can_request_help_to ON
+			groups_ancestors_can_request_help_to.child_group_id = ?`, helperGroupID).
+		Where("permissions_granted.can_request_help_to = groups_ancestors_can_request_help_to.ancestor_group_id").
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return canRequestHelpTo
 }
