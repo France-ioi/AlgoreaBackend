@@ -1,3 +1,4 @@
+//go:build !prod
 // +build !prod
 
 package testhelpers
@@ -28,6 +29,16 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the generated auth keys are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedAuthKeysAre)
 	s.Step(`^the application config is:$`, ctx.TheApplicationConfigIs)
 	s.Step(`^the context variable "([^"]*)" is "([^"]*)"$`, ctx.TheContextVariableIs)
+
+	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchParticipantWithID)
+	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`, ctx.ICanViewOnItemWithID)
+	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
+	s.Step(`^I am in the group with id "([^"]*)"$`, ctx.IAmInTheGroupWithID)
+	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`, ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
+	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
+	s.Step(`^There is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
+	s.Step(`^There is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
+	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
 
 	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)

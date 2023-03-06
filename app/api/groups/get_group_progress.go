@@ -59,64 +59,68 @@ type groupGroupProgressResponseTableCell struct {
 // ---
 // summary: Get group progress
 // description: >
-//              Returns the current progress of a group on a subset of items.
+//
+//	Returns the current progress of a group on a subset of items.
 //
 //
-//              For each item from `{parent_item_id}` and its visible children, displays the result
-//              of each direct child of the given `group_id` whose type is not in (Team, User).
+//	For each item from `{parent_item_id}` and its visible children, displays the result
+//	of each direct child of the given `group_id` whose type is not in (Team, User).
 //
 //
-//              Restrictions:
+//	Restrictions:
 //
-//              * The current user should be a manager of the group (or of one of its ancestors)
-//              with `can_watch_members` set to true,
+//	* The current user should be a manager of the group (or of one of its ancestors)
+//	with `can_watch_members` set to true,
 //
-//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//	* The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//              otherwise the 'forbidden' error is returned.
+//	otherwise the 'forbidden' error is returned.
+//
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: parent_item_ids
-//   in: query
-//   type: array
-//   required: true
-//   items:
+//   - name: group_id
+//     in: path
 //     type: integer
-// - name: from.id
-//   description: Start the page from the group next to the group with `id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display results for the first N groups (sorted by `name`)
-//   in: query
-//   type: integer
-//   maximum: 20
-//   default: 10
+//     required: true
+//   - name: parent_item_ids
+//     in: query
+//     type: array
+//     required: true
+//     items:
+//     type: integer
+//   - name: from.id
+//     description: Start the page from the group next to the group with `id`=`{from.id}`
+//     in: query
+//     type: integer
+//   - name: limit
+//     description: Display results for the first N groups (sorted by `name`)
+//     in: query
+//     type: integer
+//     maximum: 20
+//     default: 10
+//
 // responses:
-//   "200":
-//     description: >
-//       OK. Success response with groups progress on items
-//       For each item from `{parent_item_id}` and its visible children, displays the result for each direct child
-//       of the given group_id whose type is not in (Team, User). Values are averages of all the group's
-//       "end-members" where “end-member” defined as descendants of the group which are either
-//       1) teams or
-//       2) users who descend from the input group not only through teams (one or more).
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupGroupProgressResponseTableCell"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	"200":
+//	  description: >
+//	    OK. Success response with groups progress on items
+//	    For each item from `{parent_item_id}` and its visible children, displays the result for each direct child
+//	    of the given group_id whose type is not in (Team, User). Values are averages of all the group's
+//	    "end-members" where “end-member” defined as descendants of the group which are either
+//	    1) teams or
+//	    2) users who descend from the input group not only through teams (one or more).
+//	  schema:
+//	    type: array
+//	    items:
+//	      "$ref": "#/definitions/groupGroupProgressResponseTableCell"
+//	"400":
+//	  "$ref": "#/responses/badRequestResponse"
+//	"401":
+//	  "$ref": "#/responses/unauthorizedResponse"
+//	"403":
+//	  "$ref": "#/responses/forbiddenResponse"
+//	"500":
+//	  "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -126,8 +130,8 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
-		return apiError
+	if !user.CanWatchMembersOnParticipant(store, groupID) {
+		return service.InsufficientAccessRightsError
 	}
 
 	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)

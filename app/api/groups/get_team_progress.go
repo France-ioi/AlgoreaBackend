@@ -52,58 +52,62 @@ type groupTeamProgressResponseTableCell struct {
 // ---
 // summary: Get group progress for teams
 // description: >
-//              Returns the current progress of teams on a subset of items.
+//
+//	Returns the current progress of teams on a subset of items.
 //
 //
-//              For each item from `{parent_item_id}` and its visible children,
-//              displays the result of each team among the descendants of the group.
+//	For each item from `{parent_item_id}` and its visible children,
+//	displays the result of each team among the descendants of the group.
 //
 //
-//              Restrictions:
+//	Restrictions:
 //
-//              * The current user should be a manager of the group (or of one of its ancestors)
-//              with `can_watch_members` set to true,
+//	* The current user should be a manager of the group (or of one of its ancestors)
+//	with `can_watch_members` set to true,
 //
-//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//	* The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//              otherwise the 'forbidden' error is returned.
+//	otherwise the 'forbidden' error is returned.
+//
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: parent_item_ids
-//   in: query
-//   required: true
-//   type: array
-//   items:
+//   - name: group_id
+//     in: path
 //     type: integer
-// - name: from.id
-//   description: Start the page from the team next to the team with `id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display results for the first N teams (sorted by `name`)
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
+//     required: true
+//   - name: parent_item_ids
+//     in: query
+//     required: true
+//     type: array
+//     items:
+//     type: integer
+//   - name: from.id
+//     description: Start the page from the team next to the team with `id`=`{from.id}`
+//     in: query
+//     type: integer
+//   - name: limit
+//     description: Display results for the first N teams (sorted by `name`)
+//     in: query
+//     type: integer
+//     maximum: 1000
+//     default: 500
+//
 // responses:
-//   "200":
-//     description: OK. Success response with teams progress on items
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupTeamProgressResponseTableCell"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	"200":
+//	  description: OK. Success response with teams progress on items
+//	  schema:
+//	    type: array
+//	    items:
+//	      "$ref": "#/definitions/groupTeamProgressResponseTableCell"
+//	"400":
+//	  "$ref": "#/responses/badRequestResponse"
+//	"401":
+//	  "$ref": "#/responses/unauthorizedResponse"
+//	"403":
+//	  "$ref": "#/responses/forbiddenResponse"
+//	"500":
+//	  "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -113,8 +117,8 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
-		return apiError
+	if !user.CanWatchMembersOnParticipant(store, groupID) {
+		return service.InsufficientAccessRightsError
 	}
 
 	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)

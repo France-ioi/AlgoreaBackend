@@ -23,20 +23,18 @@ type threadInfo struct {
 // ---
 // summary: Retrieve a thread information
 // description: >
+//   Retrieve a thread information.
 //
-//	Retrieve a thread information.
+//   The `status` is `not_started` if the thread hasn't been started
 //
-//	The `status` is `not_started` if the thread hasn't been started
-//
-//	Restrictions:
-//	  * one of these conditions matches:
-//	    - the current-user is the thread participant and allowed to "can_view >= content" the item
-//	    - the current-user has the "can_watch >= answer" permission on the item
-//	    - the following rules all matches:
-//	      * the current-user is descendant of the thread helper_group
-//	      * the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
-//	      * the current-user has validated the item
-//
+//   Restrictions:
+//     * one of these conditions matches:
+//       - the current-user is the thread participant and allowed to "can_view >= content" the item
+//       - the current-user has the "can_watch >= answer" permission on the item
+//       - the following rules all matches:
+//         * the current-user is descendant of the thread helper_group
+//         * the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
+//         * the current-user has validated the item
 // parameters:
 //   - name: item_id
 //     in: path
@@ -48,23 +46,21 @@ type threadInfo struct {
 //     type: integer
 //     format: int64
 //     required: true
-//
 // responses:
-//
-//	"200":
-//	  description: OK. Success response with thread data
-//	  schema:
-//	    type: array
-//	    items:
-//	      "$ref": "#/definitions/thread"
-//	"400":
-//	  "$ref": "#/responses/badRequestResponse"
-//	"401":
-//	  "$ref": "#/responses/unauthorizedResponse"
-//	"403":
-//	  "$ref": "#/responses/forbiddenResponse"
-//	"500":
-//	  "$ref": "#/responses/internalErrorResponse"
+//   "200":
+//     description: OK. Success response with thread data
+//     schema:
+//       type: array
+//     items:
+//       "$ref": "#/definitions/thread"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {

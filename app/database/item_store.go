@@ -25,13 +25,13 @@ func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
-//    of a group the `groupID` is a descendant of or manages,
-//  * `ids` is an ordered list of parent-child items,
-//  * the `groupID` group has at least 'content' access on each of the items in `ids`,
-//  * the `groupID` group has a started, allowing submission, not ended result for each item but the last,
-//    with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
-//  * if `ids` consists of only one item, the `parentAttemptID` is zero.
+//   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
+//     of a group the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids`,
+//   - the `groupID` group has a started, allowing submission, not ended result for each item but the last,
+//     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//   - if `ids` consists of only one item, the `parentAttemptID` is zero.
 func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
 	ids []int64, groupID, parentAttemptID int64, requireContentAccessToTheLastItem, withWriteLock bool) (bool, error) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
@@ -124,14 +124,14 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids (but the last item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
-//    of a group the `groupID` is a descendant of or manages,
-//  * `ids` is an ordered list of parent-child items,
-//  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//    at least 'info' access on the last one,
-//  * the `groupID` group has a started result for each item but the last,
-//    with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
-//  * if `ids` consists of only one item, the `parentAttemptID` is zero.
+//   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
+//     of a group the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
+//     at least 'info' access on the last one,
+//   - the `groupID` group has a started result for each item but the last,
+//     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//   - if `ids` consists of only one item, the `parentAttemptID` is zero.
 func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, parentAttemptID int64, withWriteLock bool) (
 	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
@@ -156,13 +156,13 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 // BreadcrumbsHierarchyForAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids if it is a valid participation hierarchy
 // for the given `attemptID` which means all the following statements are true:
-//  * the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
-//    the `groupID` is a descendant of or manages,
-//  * `ids` is an ordered list of parent-child items,
-//  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//    at least 'info' access on the last one,
-//  * the `groupID` group has a started result for each item,
-//    with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
+//   - the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
+//     the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
+//     at least 'info' access on the last one,
+//   - the `groupID` group has a started result for each item,
+//     with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
 func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (
 	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error) {
 	if len(ids) == 0 {
@@ -306,4 +306,19 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 		mustNotBeError(s.ItemItems().After())
 		return nil
 	})
+}
+
+// getAncestorsRequestHelpPropagationQuery gets all ancestors of an itemID while request_help_propagation = 1
+func (s *ItemStore) getAncestorsRequestHelpPropagationQuery(itemID int64) *DB {
+	return s.Raw(`
+		WITH RECURSIVE items_ancestors_request_help_propagation(item_id) AS
+		(
+			SELECT ?
+			UNION ALL
+			SELECT items.id FROM items
+			JOIN items_items ON items_items.parent_item_id = items.id AND	items_items.request_help_propagation = 1
+			JOIN items_ancestors_request_help_propagation ON items_ancestors_request_help_propagation.item_id = items_items.child_item_id
+		)
+		SELECT item_id FROM items_ancestors_request_help_propagation
+	`, itemID)
 }

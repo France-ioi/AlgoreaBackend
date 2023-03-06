@@ -220,6 +220,11 @@ func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc
 	})
 }
 
+// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement
+func (s *DataStore) WithWriteLock() *DataStore {
+	return NewDataStore(s.DB.WithWriteLock())
+}
+
 // ByID returns a composable query for filtering by _table_.id
 func (s *DataStore) ByID(id int64) *DB {
 	if s.tableName == "" {

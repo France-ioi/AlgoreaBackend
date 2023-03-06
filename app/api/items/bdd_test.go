@@ -13,5 +13,5 @@ func TestBDD(t *testing.T) {
 }
 
 func TestBDDWIP(t *testing.T) {
-	testhelpers.RunGodogTests(t, "wop")
+	testhelpers.RunGodogTests(t, "wup")
 }
