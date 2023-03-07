@@ -51,7 +51,7 @@ Feature: Get thread - robustness
       | 70      | 3              | waiting_for_trainer     | 10              | 2020-01-20 00:00:00 |
       | 80      | 3              | waiting_for_participant | 20              | 2020-01-20 00:00:00 |
     And the time now is "2020-01-20T00:00:00Z"
-=======
+
 Background:
   Given the database has the following table 'groups':
     | id | name       | type  |
