@@ -117,7 +117,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			WithWriteLock().
 			Threads().
 			GetThreadInfo(participantID, itemID, &oldThread)
-		if err != nil && !gorm.IsRecordNotFoundError(err) {
+		if !gorm.IsRecordNotFoundError(err) {
 			service.MustNotBeError(err)
 		}
 
@@ -252,9 +252,7 @@ func constructValidateGroupVisibleBy(srv *Service, r *http.Request) validator.Fu
 			var err error
 			user = new(database.User)
 			user.GroupID, err = service.ResolveURLQueryPathInt64Field(r, param)
-			if err != nil {
-				return false
-			}
+			service.MustNotBeError(err)
 		}
 
 		return store.Groups().IsVisibleFor(*groupIDPtr, user)
