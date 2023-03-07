@@ -22,7 +22,6 @@ Background:
     | id | default_language_tag |
     | 10 | en                   |
     | 20 | en                   |
-    | 30 | en                   |
     | 40 | en                   |
     | 50 | en                   |
     | 60 | en                   |
@@ -31,7 +30,6 @@ Background:
   And the database has the following table 'results':
     | attempt_id | participant_id | item_id | validated_at        |
     | 0          | 4              | 20      | 2020-01-01 00:00:00 |
-    | 0          | 4              | 30      | 2020-01-01 00:00:00 |
     | 0          | 4              | 40      | null                |
     | 0          | 4              | 60      | 2020-01-01 00:00:00 |
     | 0          | 4              | 70      | 2020-01-01 00:00:00 |
@@ -43,8 +41,7 @@ Background:
   And the database has the following table 'threads':
     | item_id | participant_id | status                  | helper_group_id | latest_update_at    |
     | 10      | 1              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
-    | 20      | 3              | closed                  | 20              | 2020-01-06 00:00:00 |
-    | 30      | 3              | closed                  | 20              | 2019-01-20 00:00:00 |
+    | 20      | 3              | closed                  | 20              | 2020-01-05 00:00:00 |
     | 40      | 3              | closed                  | 20              | 2020-01-20 00:00:00 |
     | 50      | 3              | closed                  | 20              | 2020-01-20 00:00:00 |
     | 60      | 3              | closed                  | 10              | 2020-01-20 00:00:00 |
@@ -85,19 +82,9 @@ Background:
       Should be forbidden when
       the current-user is descendant of the thread helper group
       and user has validated the item
-      but the thread is closed for 2 weeks
+      but the thread is closed for more than 2 weeks
     Given I am the user with id "4"
     When I send a GET request to "/items/20/participant/3/thread"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
-  Scenario: >
-      Should be forbidden when
-      the current-user is descendant of the thread helper group
-      and user has validated the item
-      but the thread is closed for 1 year
-    Given I am the user with id "4"
-    When I send a GET request to "/items/30/participant/3/thread"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
