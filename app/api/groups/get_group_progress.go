@@ -127,7 +127,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	
+
 	if !user.CanWatchMembersOnParticipant(store, groupID) {
 		return service.InsufficientAccessRightsError
 	}
