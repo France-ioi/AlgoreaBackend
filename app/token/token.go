@@ -65,7 +65,7 @@ func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
 }
 
-var tokenPathTestRegexp = regexp.MustCompile(".*([/\\\\]app(?:[/\\\\][a-z]+)*?)$")
+var tokenPathTestRegexp = regexp.MustCompile(`.*([/\\]app(?:[/\\][a-z]+)*?)$`)
 
 func prepareFileName(fileName string) string {
 	if len(fileName) > 0 && fileName[0] == '/' {

@@ -178,6 +178,7 @@ func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
 	return nil
 }
 
+// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of a user.
 func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
 	return store.ActiveGroupGroups().
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).
@@ -201,6 +202,7 @@ func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, u
 		Select("ancestors_of_managed.ancestor_group_id")
 }
 
+// PickVisibleGroups returns a query filtering only group which are visible.
 func (s *GroupStore) PickVisibleGroups(db *DB, user *User) *DB {
 	AncestorsOfJoinedGroupsQuery := s.AncestorsOfJoinedGroups(NewDataStore(db.New()), user).QueryExpr()
 	ManagedUsersAndAncestorsOfManagedGroupsQuery := s.ManagedUsersAndAncestorsOfManagedGroups(NewDataStore(db.New()), user).QueryExpr()
@@ -209,7 +211,7 @@ func (s *GroupStore) PickVisibleGroups(db *DB, user *User) *DB {
 		AncestorsOfJoinedGroupsQuery, ManagedUsersAndAncestorsOfManagedGroupsQuery)
 }
 
-// IsVisibleFor checks whether a group is visible to a user
+// IsVisibleFor checks whether a group is visible to a user.
 func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
 	isVisible, err := s.PickVisibleGroups(s.Groups().DB, user).
 		Where("groups.id = ?", groupID).

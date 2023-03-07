@@ -44,7 +44,6 @@ type TestContext struct {
 	templateSet      *jet.Set
 	requestHeaders   map[string][]string
 	thread           map[string]interface{}
-	item             map[string]interface{}
 }
 
 var db *sql.DB

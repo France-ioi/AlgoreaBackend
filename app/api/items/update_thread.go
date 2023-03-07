@@ -19,9 +19,9 @@ import (
 type threadUpdateFields struct {
 	// Optional
 	// enum: waiting_for_participant,waiting_for_trainer,closed
-	Status string `json:"status" validate:"helper_group_id_set_if_non_open_to_open_status,oneof=waiting_for_participant waiting_for_trainer closed"`
+	Status string `json:"status" validate:"helper_group_id_set_if_non_open_to_open_status,oneof=waiting_for_participant waiting_for_trainer closed"` // nolint
 	// Optional
-	HelperGroupID *int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=:user_id,group_visible_by=participant_id,can_request_help_to_when_own_thread"`
+	HelperGroupID *int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=:user_id,group_visible_by=participant_id,can_request_help_to_when_own_thread"` // nolint
 	// Optional
 	MessageCount *int `json:"message_count" validate:"omitempty,gte=0,exclude_increment_if_message_count_set"`
 }
@@ -30,6 +30,9 @@ type threadUpdateFields struct {
 // swagger:model threadEditRequest
 type updateThreadRequest struct {
 	threadUpdateFields `json:"thread,squash"`
+
+	ItemID        int64
+	ParticipantID int64
 
 	// Used to increment the message count when we are not sure of the exact total message count. Can be negative.
 	// Optional
@@ -49,14 +52,19 @@ type updateThreadRequest struct {
 //
 //   Validations and restrictions:
 //     * if `status` is given:
-//       - The participant of a thread can always switch the thread from open to any another other status. He can only switch it from non-open to an open status if he is allowed to request help on this item (see “specific permission” above)
-//       - A user who has `can_watch>=answer` on the item AND `can_watch_members` on the participant: can always switch a thread to any open status (i.e. he can always open it but not close it)
+//       - The participant of a thread can always switch the thread from open to any another other status.
+//         He can only switch it from non-open to an open status if he is allowed to request help on this item.
+//       - A user who has `can_watch>=answer` on the item AND `can_watch_members` on the participant: can always switch
+//         a thread to any open status (i.e. he can always open it but not close it)
 //       - A user who `can write` on the thread can switch from an open status to another open status.
-//     * if `status` is already "closed" and not changing status OR if switching to status "closed": `helper_group_id` must not be given
+//     * if `status` is already "closed" and not changing status OR if switching to status "closed":
+//       `helper_group_id` must not be given
 //     * if switching to an open status from a non-closed status: `helper_group_id` must be given
 //     * if given, the `helper_group_id` must be visible to the current-user and to participant.
-//     * if participant is the current user and `helper_group_id` given, `helper_group_id` must be a descendants (including self) of one of the group he `can_request_help_to`.
-//     * if `helper_group_id` or `message_count` or `message_count_increment` is given: the current-user must be allowed to write (see doc) (if `status` is given, checks related to status supersede this one).
+//     * if participant is the current user and `helper_group_id` given, `helper_group_id` must be a descendants
+//       (including self) of one of the group he `can_request_help_to`.
+//     * if `helper_group_id` or `message_count` or `message_count_increment` is given: the current-user must be allowed
+//       to write (see doc) (if `status` is given, checks related to status supersede this one).
 //     * at most one of `message_count_increment`, `message_count` must be given
 //
 // parameters:
@@ -109,32 +117,33 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			WithWriteLock().
 			Threads().
 			GetThreadInfo(participantID, itemID, &oldThread)
-		if gorm.IsRecordNotFoundError(err) {
-			// Create
-		} else if err != nil {
+		if err != nil && !gorm.IsRecordNotFoundError(err) {
 			service.MustNotBeError(err)
 		}
 
 		user := srv.GetUser(r)
 
-		input := updateThreadRequest{}
+		input := updateThreadRequest{
+			ItemID:        itemID,
+			ParticipantID: participantID,
+		}
 		formData := formdata.NewFormData(&input)
 
 		formData.RegisterValidation("exclude_increment_if_message_count_set", excludeIncrementIfMessageCountSetValidator)
 		formData.RegisterTranslation("exclude_increment_if_message_count_set",
 			"cannot have both message_count and message_count_increment set")
 		formData.RegisterValidation("helper_group_id_set_if_non_open_to_open_status",
-			constructHelperGroupIdSetIfNonOpenToOpenStatus(oldThread.Status))
+			constructHelperGroupIDSetIfNonOpenToOpenStatus(oldThread.Status))
 		formData.RegisterTranslation("helper_group_id_set_if_non_open_to_open_status",
 			"the helper_group_id must be set to switch from a non-open to an open status")
 		formData.RegisterValidation("helper_group_id_not_set_when_set_or_keep_closed",
-			constructHelperGroupIdNotSetWhenSetOrKeepClosed(oldThread.Status))
+			constructHelperGroupIDNotSetWhenSetOrKeepClosed(oldThread.Status))
 		formData.RegisterTranslation("helper_group_id_not_set_when_set_or_keep_closed",
 			"the helper_group_id must not be given when setting or keeping status to closed")
 		formData.RegisterValidation("group_visible_by", constructValidateGroupVisibleBy(srv, r))
 		formData.RegisterTranslation("group_visible_by", "the group must be visible to the current-user and the participant")
 		formData.RegisterValidation("can_request_help_to_when_own_thread",
-			constructValidateCanRequestHelpToWhenOwnThread(user, participantID, itemID, store))
+			constructValidateCanRequestHelpToWhenOwnThread(user, store, participantID, itemID))
 		formData.RegisterTranslation("can_request_help_to_when_own_thread",
 			"the group must be descendant of a group the participant can request help to")
 
@@ -144,50 +153,13 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			return apiError.Error
 		}
 
-		newHelperGroupID := oldThread.HelperGroupID
-		if input.HelperGroupID != nil {
-			newHelperGroupID = *input.HelperGroupID
+		apiError = checkUpdateThreadPermissions(user, store, oldThread.Status, input)
+		if apiError != service.NoError {
+			return apiError.Error
 		}
 
-		if input.Status == "" {
-			if input.HelperGroupID == nil && input.MessageCount == nil && input.MessageCountIncrement == nil {
-				apiError = service.ErrInvalidRequest(
-					errors.New("either status, helper_group_id, message_count or message_count_increment must be given"))
-				return apiError.Error
-			}
-
-			// the current-user must be allowed to write
-			if !store.Threads().UserCanWrite(user, participantID, itemID) {
-				apiError = service.InsufficientAccessRightsError
-				return apiError.Error
-			}
-		} else {
-			if !store.Threads().UserCanChangeStatus(user, oldThread.Status, input.Status, participantID, itemID) {
-				apiError = service.InsufficientAccessRightsError
-				return apiError.Error
-			}
-		}
-
-		threadData := formData.ConstructPartialMapForDB("threadUpdateFields")
-
-		if formData.IsSet("message_count_increment") && input.MessageCountIncrement != nil {
-			// if the thread doesn't exist, oldThread.MessageCount = 0
-			newMessageCount := oldThread.MessageCount + *input.MessageCountIncrement
-			if newMessageCount < 0 {
-				newMessageCount = 0
-			}
-
-			threadData["message_count"] = newMessageCount
-		}
-
-		if len(threadData) > 0 {
-			threadData["item_id"] = itemID
-			threadData["participant_id"] = participantID
-			threadData["latest_update_at"] = time.Now()
-			threadData["helper_group_id"] = newHelperGroupID
-
-			service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil))
-		}
+		threadData := computeNewThreadData(formData, oldThread.MessageCount, oldThread.HelperGroupID, input)
+		service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil))
 
 		return nil
 	})
@@ -200,7 +172,60 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
-func constructValidateCanRequestHelpToWhenOwnThread(user *database.User, participantID, itemID int64, store *database.DataStore) validator.Func {
+func computeNewThreadData(formData *formdata.FormData, oldMessageCount int, oldHelperGroupID int64,
+	input updateThreadRequest) map[string]interface{} {
+	threadData := formData.ConstructPartialMapForDB("threadUpdateFields")
+	if formData.IsSet("message_count_increment") && input.MessageCountIncrement != nil {
+		threadData["message_count"] = newMessageCountWithIncrement(oldMessageCount, *input.MessageCountIncrement)
+	}
+	if input.HelperGroupID != nil {
+		threadData["helper_group_id"] = *input.HelperGroupID
+	}
+
+	if len(threadData) > 0 {
+		threadData["item_id"] = input.ItemID
+		threadData["participant_id"] = input.ParticipantID
+		threadData["latest_update_at"] = time.Now()
+
+		if _, ok := threadData["helper_group_id"]; !ok {
+			threadData["helper_group_id"] = oldHelperGroupID
+		}
+	}
+
+	return threadData
+}
+
+func checkUpdateThreadPermissions(user *database.User, store *database.DataStore, oldThreadStatus string,
+	input updateThreadRequest) service.APIError {
+	if input.Status == "" {
+		if input.HelperGroupID == nil && input.MessageCount == nil && input.MessageCountIncrement == nil {
+			return service.ErrInvalidRequest(
+				errors.New("either status, helper_group_id, message_count or message_count_increment must be given"))
+		}
+
+		// the current-user must be allowed to write
+		if !store.Threads().UserCanWrite(user, input.ParticipantID, input.ItemID) {
+			return service.InsufficientAccessRightsError
+		}
+	} else if !store.Threads().UserCanChangeStatus(user, oldThreadStatus, input.Status, input.ParticipantID, input.ItemID) {
+		return service.InsufficientAccessRightsError
+	}
+
+	return service.NoError
+}
+
+func newMessageCountWithIncrement(oldMessageCount, increment int) int {
+	// if the thread doesn't exist, oldThread.MessageCount = 0
+	newMessageCount := oldMessageCount + increment
+	if newMessageCount < 0 {
+		newMessageCount = 0
+	}
+
+	return newMessageCount
+}
+
+func constructValidateCanRequestHelpToWhenOwnThread(user *database.User, store *database.DataStore,
+	participantID, itemID int64) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		if user.GroupID != participantID {
 			return true
@@ -236,7 +261,7 @@ func constructValidateGroupVisibleBy(srv *Service, r *http.Request) validator.Fu
 	}
 }
 
-func constructHelperGroupIdNotSetWhenSetOrKeepClosed(oldStatus string) validator.Func {
+func constructHelperGroupIDNotSetWhenSetOrKeepClosed(oldStatus string) validator.Func {
 	// if status is already "closed" and not changing status OR if switching to status "closed": helper_group_id must not be given
 	wasOpen := database.IsThreadOpenStatus(oldStatus)
 
@@ -244,8 +269,8 @@ func constructHelperGroupIdNotSetWhenSetOrKeepClosed(oldStatus string) validator
 		newStatus := fl.Top().Elem().FieldByName("Status").String()
 		willBeOpen := database.IsThreadOpenStatus(newStatus)
 
-		helperGroupIdPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
-		if helperGroupIdPtr != nil {
+		helperGroupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+		if helperGroupIDPtr != nil {
 			if (!wasOpen && newStatus == "") || (!willBeOpen && newStatus != "") {
 				return false
 			}
@@ -255,7 +280,7 @@ func constructHelperGroupIdNotSetWhenSetOrKeepClosed(oldStatus string) validator
 	}
 }
 
-func constructHelperGroupIdSetIfNonOpenToOpenStatus(oldStatus string) validator.Func {
+func constructHelperGroupIDSetIfNonOpenToOpenStatus(oldStatus string) validator.Func {
 	// if switching to an open status from a non-open status: helper_group_id must be given
 	wasOpen := database.IsThreadOpenStatus(oldStatus)
 
@@ -263,8 +288,8 @@ func constructHelperGroupIdSetIfNonOpenToOpenStatus(oldStatus string) validator.
 		newStatus := fl.Field().String()
 		willBeOpen := database.IsThreadOpenStatus(newStatus)
 
-		helperGroupIdPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
-		if !wasOpen && willBeOpen && helperGroupIdPtr == nil {
+		helperGroupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+		if !wasOpen && willBeOpen && helperGroupIDPtr == nil {
 			return false
 		}
 

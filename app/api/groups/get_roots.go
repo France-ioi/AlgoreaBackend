@@ -55,7 +55,8 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	innerQuery := store.Groups().
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
-			store.Groups().AncestorsOfJoinedGroups(store, user).QueryExpr(), store.Groups().ManagedUsersAndAncestorsOfManagedGroups(store, user).QueryExpr()).
+			store.Groups().AncestorsOfJoinedGroups(store, user).QueryExpr(),
+			store.Groups().ManagedUsersAndAncestorsOfManagedGroups(store, user).QueryExpr()).
 		Where("groups.type != 'Base' and groups.type != 'User'").
 		Where("groups.id != ?", user.GroupID).
 		Where(`

@@ -150,8 +150,7 @@ func (s *ThreadStore) UserCanWrite(user *User, participantID, itemID int64) bool
 //   - A user who has can_watch>=answer on the item AND can_watch_members on the participant:
 //     can always switch a thread to any open status (i.e. he can always open it but not close it)
 //   - A user who can write on the thread can switch from an open status to another open status.
-func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus string, newStatus string,
-	participantID, itemID int64) bool {
+func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus, newStatus string, participantID, itemID int64) bool {
 	if oldStatus == "" && newStatus == "" {
 		return false
 	}
@@ -163,29 +162,22 @@ func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus string, newStatu
 	willBeOpen := IsThreadOpenStatus(newStatus)
 
 	if user.GroupID == participantID {
-		// the participant of a thread can always switch the thread from open to any another other status.
-		if wasOpen {
-			return true
-		}
-
-		// he can only switch it from not-open to an open status if he is allowed to request help on this item.
-		// "allowed request help" should have been checked before calling this method
-		if willBeOpen {
-			return true
-		}
-	} else {
+		// * the participant of a thread can always switch the thread from open to any another other status.
+		// * he can only switch it from not-open to an open status if he is allowed to request help on this item.
+		// -> "allowed request help" have been checked before calling this method, therefore, the user can always
+		//     change the status in this situation.
+		return true
+	} else if willBeOpen {
 		// a user who has can_watch>=answer on the item AND can_watch_members on the participant:
 		// can always switch a thread to any open status (i.e. he can always open it but not close it)
-		if willBeOpen {
-			currentUserCanWatch := user.CanWatchItemAnswer(s.DataStore, itemID)
-			userCanWatchMembersOnParticipant := user.CanWatchMembersOnParticipant(s.DataStore, participantID)
+		currentUserCanWatch := user.CanWatchItemAnswer(s.DataStore, itemID)
+		userCanWatchMembersOnParticipant := user.CanWatchMembersOnParticipant(s.DataStore, participantID)
 
-			if currentUserCanWatch && userCanWatchMembersOnParticipant {
-				return true
-			} else if wasOpen {
-				// a user who can write on the thread can switch from an open status to another open status
-				return s.UserCanWrite(user, participantID, itemID)
-			}
+		if currentUserCanWatch && userCanWatchMembersOnParticipant {
+			return true
+		} else if wasOpen {
+			// a user who can write on the thread can switch from an open status to another open status
+			return s.UserCanWrite(user, participantID, itemID)
 		}
 	}
 

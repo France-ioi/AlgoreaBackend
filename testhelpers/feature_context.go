@@ -31,10 +31,12 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the context variable "([^"]*)" is "([^"]*)"$`, ctx.TheContextVariableIs)
 
 	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchParticipantWithID)
-	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`, ctx.ICanViewOnItemWithID)
+	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
+		ctx.ICanViewOnItemWithID)
 	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
 	s.Step(`^I am in the group with id "([^"]*)"$`, ctx.IAmInTheGroupWithID)
-	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`, ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
+	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
+		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
 	s.Step(`^There is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
 	s.Step(`^There is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
@@ -69,7 +71,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the following token "([^"]+)" signed by (.+) is distributed:$`, ctx.SignedTokenIsDistributed)
 	s.Step(`^logs should contain:$`, ctx.LogsShouldContain)
 
-	s.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`, ctx.TheLoginModuleTokenEndpointForCodeReturns)
+	s.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`,
+		ctx.TheLoginModuleTokenEndpointForCodeReturns)
 	s.Step(`^the login module "token" endpoint for code "([^"]*)" and code_verifier "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns)
 	s.Step(

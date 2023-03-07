@@ -18,6 +18,7 @@ func Test_IsThreadOpenStatus(t *testing.T) {
 		{"not_started", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.status, func(t *testing.T) {
 			assert.Equal(t, tt.want, IsThreadOpenStatus(tt.status))
 		})
@@ -36,6 +37,7 @@ func Test_IsClosedStatus(t *testing.T) {
 		{"not_started", true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.status, func(t *testing.T) {
 			isClosed := IsThreadClosedStatus(tt.status)
 			assert.Equal(t, tt.want, isClosed)

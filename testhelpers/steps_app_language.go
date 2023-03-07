@@ -23,6 +23,7 @@ func getParametersMap(parameters string) map[string]interface{} {
 	return parametersMap
 }
 
+// ThereIsAGroupWith creates a new group.
 func (ctx *TestContext) ThereIsAGroupWith(parameters string) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -49,6 +50,7 @@ func (ctx *TestContext) ThereIsAGroupWith(parameters string) error {
 	})
 }
 
+// ICanWatchParticipantWithID adds the permission for the user to watch a participant.
 func (ctx *TestContext) ICanWatchParticipantWithID(participantID int64) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -91,6 +93,7 @@ func (ctx *TestContext) ICanWatchParticipantWithID(participantID int64) error {
 	})
 }
 
+// IAmInTheGroupWithID creates a group and add the user in it.
 func (ctx *TestContext) IAmInTheGroupWithID(groupID int64) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -120,6 +123,7 @@ func (ctx *TestContext) IAmInTheGroupWithID(groupID int64) error {
 	})
 }
 
+// ICanOnItemWithID gives the user a permission on an item.
 func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue string, itemID int64) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -137,14 +141,17 @@ func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue string, itemID in
 	})
 }
 
+// ICanViewOnItemWithID gives the user a "view" permission on an item.
 func (ctx *TestContext) ICanViewOnItemWithID(watchValue string, itemID int64) error {
 	return ctx.ICanOnItemWithID("view", watchValue, itemID)
 }
 
+// ICanWatchOnItemWithID gives the user a "watch" permission on an item.
 func (ctx *TestContext) ICanWatchOnItemWithID(watchValue string, itemID int64) error {
 	return ctx.ICanOnItemWithID("watch", watchValue, itemID)
 }
 
+// IHaveValidatedItemWithID states that user has validated an item.
 func (ctx *TestContext) IHaveValidatedItemWithID(itemID int64) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -172,6 +179,7 @@ func (ctx *TestContext) IHaveValidatedItemWithID(itemID int64) error {
 	})
 }
 
+// ThereIsAThreadWith creates a thread.
 func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -225,6 +233,8 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 		return store.Threads().InsertMap(thread)
 	})
 }
+
+// ThereIsNoThreadWith states that a given thread doesn't exists.
 func (ctx *TestContext) ThereIsNoThreadWith(parameters string) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -250,6 +260,7 @@ func (ctx *TestContext) ThereIsNoThreadWith(parameters string) error {
 	})
 }
 
+// IAmPartOfTheHelperGroupOfTheThread states that user is a member of the helper group of a given thread.
 func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -274,6 +285,8 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 	})
 }
 
+// ICanRequestHelpToTheGroupWithIDOnTheItemWithID gives the user the permission to request help from a given group
+// to a given item.
 func (ctx *TestContext) ICanRequestHelpToTheGroupWithIDOnTheItemWithID(groupID, itemID int64) error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
