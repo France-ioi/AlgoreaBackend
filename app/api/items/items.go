@@ -146,6 +146,10 @@ type itemChild struct {
 	// Defaults to true  if `can_edit` >= 'all_with_grant', false otherwise.
 	// It is always possible to set this field to the same or a lower value, `can_edit` doesn't matter in this case.
 	EditPropagation bool `json:"edit_propagation"`
+	// Can be set to true if `can_request_help_to` can be set (i.e. if user have “can_grant_view ≥ content” on item)
+	// Defaults to true if `can_request_help_to` can be set, false otherwise.
+	// It is always possible to set this field to the same or a lower value, `can_request_help_to` doesn't matter in this case.
+	RequestHelpPropagation bool `json:"request_help_propagation"`
 }
 
 type insertItemItemsSpec struct {
@@ -159,6 +163,7 @@ type insertItemItemsSpec struct {
 	GrantViewPropagation       bool
 	WatchPropagation           bool
 	EditPropagation            bool
+	RequestHelpPropagation     bool
 }
 
 // constructItemsItemsForChildren constructs items_items rows to be inserted by itemCreate/itemEdit services.
@@ -177,6 +182,7 @@ func constructItemsItemsForChildren(children []itemChild, itemID int64) []*inser
 				GrantViewPropagation:       child.GrantViewPropagation,
 				WatchPropagation:           child.WatchPropagation,
 				EditPropagation:            child.EditPropagation,
+				RequestHelpPropagation:     child.RequestHelpPropagation,
 			})
 	}
 	return parentChildSpec
@@ -217,6 +223,7 @@ type itemsRelationData struct {
 	GrantViewPropagation            bool
 	WatchPropagation                bool
 	EditPropagation                 bool
+	RequestHelpPropagation          bool
 }
 
 func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permissionAndType, children []itemChild,
@@ -254,6 +261,12 @@ func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permission
 		}
 
 		apiError = validateChildEditPropagationAndApplyDefaultValue(
+			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
+		if apiError != service.NoError {
+			return apiError
+		}
+
+		apiError = validateChildRequestHelpPropagationAndApplyDefaultValue(
 			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
 		if apiError != service.NoError {
 			return apiError
@@ -310,6 +323,18 @@ func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormDat
 	return validateChildBooleanPropagationAndApplyDefaultValue(formData, "edit_propagation", prefix,
 		&child.EditPropagation, oldPropagationValue,
 		childPermissions.CanEditGeneratedValue, store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all_with_grant"))
+}
+
+func validateChildRequestHelpPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
+	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore) service.APIError {
+	var oldPropagationValue *bool
+	if oldRelationData != nil {
+		oldPropagationValue = &oldRelationData.RequestHelpPropagation
+	}
+
+	return validateChildBooleanPropagationAndApplyDefaultValue(formData, "request_help_propagation", prefix,
+		&child.RequestHelpPropagation, oldPropagationValue,
+		childPermissions.CanGrantViewGeneratedValue, store.PermissionsGranted().PermissionIndexByKindAndName("can_grant_view", "content"))
 }
 
 func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
@@ -415,12 +440,13 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 			"grant_view_propagation":        spec[index].GrantViewPropagation,
 			"watch_propagation":             spec[index].WatchPropagation,
 			"edit_propagation":              spec[index].EditPropagation,
+			"request_help_propagation":      spec[index].RequestHelpPropagation,
 		})
 	}
 
 	service.MustNotBeError(store.ItemItems().InsertOrUpdateMaps(values,
-		[]string{"child_order", "category", "score_weight", "content_view_propagation",
-			"upper_view_levels_propagation", "grant_view_propagation", "watch_propagation", "edit_propagation"}))
+		[]string{"child_order", "category", "score_weight", "content_view_propagation", "upper_view_levels_propagation",
+			"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation"}))
 }
 
 // createContestParticipantsGroup creates a new contest participants group for the given item and

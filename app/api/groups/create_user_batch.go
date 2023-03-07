@@ -10,7 +10,6 @@ import (
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
-	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -150,7 +149,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 		"creator_id":    user.GroupID,
 		"created_at":    database.Now(),
 	})
-	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 {
+	if err != nil && database.IsDuplicateEntryError(err) {
 		return service.ErrInvalidRequest(errors.New("'custom_prefix' already exists for the given 'group_prefix'"))
 	}
 	service.MustNotBeError(err)

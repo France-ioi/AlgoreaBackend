@@ -64,3 +64,24 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestDB_WhereUserHaveStartedResultOnItem(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	user := User{
+		GroupID: 1,
+	}
+
+	mock.ExpectQuery("^" + regexp.QuoteMeta(
+		"SELECT `items`.* FROM `items` "+
+			"JOIN results AS current_user_results ON current_user_results.item_id = items.id AND current_user_results.participant_id = ? "+
+			"WHERE (current_user_results.started = 1)") + "$").
+		WithArgs(user.GroupID).
+		WillReturnRows(mock.NewRows([]string{"id"}))
+
+	var result []interface{}
+	err := db.Table("items").WhereUserHaveStartedResultOnItem(&user).Scan(&result).Error()
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/validator"
@@ -206,14 +205,19 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 	}
 
 	err := store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
-	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails
-	// (no items_strings for the new default_language_tag)
-	if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1452 {
-		return service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
-			"default language should exist and there should be item's strings in this language",
-		}})
+	if err != nil {
+		if database.IsDuplicateEntryError(err) {
+			return service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
+				"text_id must be unique",
+			}})
+		} else if database.IsForeignConstraintError(err) {
+			return service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
+				"default language should exist and there should be item's strings in this language",
+			}})
+		}
 	}
 	service.MustNotBeError(err)
+
 	return service.NoError
 }
 

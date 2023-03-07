@@ -12,27 +12,28 @@ import (
 // swagger:operation GET /items/{item_id}/best-answer answers bestAnswerGet
 // ---
 // summary: Get the best answer
-// description: Returns the best answer of the user on the given `{item_id}` among all attempts. The best answer is
-//              defined as the one which gives the highest score. If there are several, it is the most recent one
-//							by `created_at`.
+// description: >
+//   Returns the best answer of the user on the given `{item_id}` among all attempts. The best answer is
+//   defined as the one which gives the highest score. If there are several, it is the most recent one
+//   by `created_at`.
 //
 //   * if `watched_group_id` is given, the current user must be allowed to watch "answer" of the item identified by `item_id`
 //   * if `watched_group_id` is given, it must be a participant (= team or user)
 //   * if `watched_group_id` is given, the current user must be allowed to watch the participant
 //
-//
 //   If any of the preconditions fails, the 'forbidden' error is returned.
 // parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: watched_group_id
-//   in: query
-//   type: integer
-//   description: A participant (`team_id` or user). If given, get the best answer of the participant instead
-//				  		  of the one of the user.
+//   - name: item_id
+//     in: path
+//     type: integer
+//     format: int64
+//     required: true
+//   - name: watched_group_id
+//     in: query
+//     type: integer
+//     description: >
+//       A participant (`team_id` or user). If given, get the best answer of the participant instead
+//       of the one of the user.
 // responses:
 //   "200":
 //     "$ref": "#/responses/itemAnswerGetResponse"
