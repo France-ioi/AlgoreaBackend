@@ -322,3 +322,12 @@ func (s *ItemStore) getAncestorsRequestHelpPropagationQuery(itemID int64) *DB {
 		SELECT item_id FROM items_ancestors_request_help_propagation
 	`, itemID)
 }
+
+// GetItemIDFromTextID gets the item_id from the text_id of an item
+func (s *ItemStore) GetItemIDFromTextID(textID string) (itemID int64, err error) {
+	err = s.Select("items.id AS id").
+		Where("text_id = ?", textID).
+		PluckFirst("id", &itemID).Error()
+
+	return itemID, err
+}
