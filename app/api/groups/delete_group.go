@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -21,6 +22,10 @@ import (
 //   `group_membership_changes`, `group_pending_requests`,
 //   `permissions_granted`, `permissions_generated`, and `filters` linked to the group.
 //   Access rights are updated accordingly too.
+//
+//
+//   If the group who is referenced in a `threads.helper_group_id`, the value of `threads.helper_group_id` will
+//   be updated to the group `AllUsers`.
 //
 //
 //   Restrictions (otherwise the 'forbidden' error is returned):
@@ -74,6 +79,10 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 			apiErr = service.ErrNotFound(errors.New("the group must be empty"))
 			return apiErr.Error // rollback
 		}
+
+		// Updates all threads where helper_group_id was the deleted groupID to the AllUsers group.
+		allUsersGroupID := domain.ConfigFromContext(r.Context()).AllUsersGroupID
+		s.Threads().UpdateHelperGroupID(groupID, allUsersGroupID)
 
 		return s.Groups().DeleteGroup(groupID)
 	})
