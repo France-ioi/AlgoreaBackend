@@ -147,10 +147,9 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_cache: *CACHEKEYMOD
-      - run:
-          command: |
-            echo 'export PATH="$PATH":/usr/local/go/bin' >> "$BASH_ENV"
-            make lint
+      - run: # Fix go: command not found
+          command: PATH=/usr/local/go/bin:/usr/bin:/bin make lint
+
   build:
     docker:
       - image: circleci/golang:1.13
