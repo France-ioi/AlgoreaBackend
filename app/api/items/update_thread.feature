@@ -49,7 +49,6 @@ Feature: Update thread
       | 3006           | 2010          | 1                        | 2           |
     And the database has the following table 'permissions_granted':
       | group_id | source_group_id | item_id | can_request_help_to |
-      | 3        | 11              | 270     | 12                  |
       | 3        | 11              | 2000    | 12                  |
       | 3        | 11              | 2001    | 12                  |
       | 11       | 11              | 2002    | 12                  |
@@ -263,9 +262,9 @@ Feature: Update thread
       | latest_update_at    | status   |
       | 2022-01-01 00:00:00 | <status> |
     Examples:
-      | item_id | status                  | helper_group_id | comment                 |
-      | 200     | waiting_for_participant | 30              | # Doesn't exist: Create |
-      | 210     | waiting_for_trainer     | 30              | # Doesn't exist: Create |
+      | item_id | status                  | helper_group_id |
+      | 200     | waiting_for_participant | 30              |
+      | 210     | waiting_for_trainer     | 30              |
 
   Scenario Outline: Can switch to open if part of the group the participant has requested help to AND can_watch>=answer on the item
     Given I am the user with id "4"
@@ -364,11 +363,11 @@ Feature: Update thread
       | latest_update_at    | status   | helper_group_id   |
       | 2022-01-01 00:00:00 | <status> | <helper_group_id> |
     Examples:
-      | item_id | status                  | helper_group_id | comment                           |
-      | 2002    | waiting_for_trainer     | 11              | Doesn't exist: Create             |
-      | 2003    | waiting_for_participant | 12              | Doesn't exist: Create             |
-      | 2009    | waiting_for_participant | 12              | In chapter; doesn't exist: Create |
-      | 2010    | waiting_for_participant | 11              | In chapter; Doesn't exist: Create |
+      | item_id | status                  | helper_group_id | comment    |
+      | 2002    | waiting_for_trainer     | 11              |            |
+      | 2003    | waiting_for_participant | 12              |            |
+      | 2009    | waiting_for_participant | 12              | In chapter |
+      | 2010    | waiting_for_participant | 11              | In chapter |
 
   Scenario: Participant who can request help on region can request help on class
     Given I am the user with id "3"

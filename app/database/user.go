@@ -79,3 +79,15 @@ func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool 
 
 	return canRequestHelpTo
 }
+
+// HasValidatedItem checks whether the user has validated an item.
+func (u *User) HasValidatedItem(s *DataStore, itemID int64) bool {
+	hasValidatedItem, err := s.Results().
+		Where("results.item_id = ?", itemID).
+		Where("results.validated").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return hasValidatedItem
+}

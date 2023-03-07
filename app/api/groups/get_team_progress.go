@@ -53,22 +53,22 @@ type groupTeamProgressResponseTableCell struct {
 // summary: Get group progress for teams
 // description: >
 //
-//	Returns the current progress of teams on a subset of items.
+//   Returns the current progress of teams on a subset of items.
 //
 //
-//	For each item from `{parent_item_id}` and its visible children,
-//	displays the result of each team among the descendants of the group.
+//   For each item from `{parent_item_id}` and its visible children,
+//   displays the result of each team among the descendants of the group.
 //
 //
-//	Restrictions:
+//   Restrictions:
 //
-//	* The current user should be a manager of the group (or of one of its ancestors)
-//	with `can_watch_members` set to true,
+//   * The current user should be a manager of the group (or of one of its ancestors)
+//   with `can_watch_members` set to true,
 //
-//	* The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//   * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//	otherwise the 'forbidden' error is returned.
+//   otherwise the 'forbidden' error is returned.
 //
 // parameters:
 //   - name: group_id
@@ -80,7 +80,7 @@ type groupTeamProgressResponseTableCell struct {
 //     required: true
 //     type: array
 //     items:
-//     type: integer
+//       type: integer
 //   - name: from.id
 //     description: Start the page from the team next to the team with `id`=`{from.id}`
 //     in: query
@@ -91,23 +91,21 @@ type groupTeamProgressResponseTableCell struct {
 //     type: integer
 //     maximum: 1000
 //     default: 500
-//
 // responses:
-//
-//	"200":
-//	  description: OK. Success response with teams progress on items
-//	  schema:
-//	    type: array
-//	    items:
-//	      "$ref": "#/definitions/groupTeamProgressResponseTableCell"
-//	"400":
-//	  "$ref": "#/responses/badRequestResponse"
-//	"401":
-//	  "$ref": "#/responses/unauthorizedResponse"
-//	"403":
-//	  "$ref": "#/responses/forbiddenResponse"
-//	"500":
-//	  "$ref": "#/responses/internalErrorResponse"
+//   "200":
+//     description: OK. Success response with teams progress on items
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupTeamProgressResponseTableCell"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

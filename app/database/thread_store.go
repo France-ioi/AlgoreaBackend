@@ -88,7 +88,7 @@ func (s *ThreadStore) GetThreadQuery(participantID, itemID int64) *DB {
 func (s *ThreadStore) GetThreadStatus(participantID, itemID int64) string {
 	var status string
 
-	err := s.Threads().
+	err := s.
 		GetThreadQuery(participantID, itemID).
 		Select("threads.status AS status").
 		PluckFirst("status", &status).
@@ -99,6 +99,14 @@ func (s *ThreadStore) GetThreadStatus(participantID, itemID int64) string {
 	mustNotBeError(err)
 
 	return status
+}
+
+// GetThreadInfo retrieves a thread's information in an interface
+func (s *ThreadStore) GetThreadInfo(participantID, itemID int64, out interface{}) error {
+	return s.
+		GetThreadQuery(participantID, itemID).
+		Take(out).
+		Error()
 }
 
 // UserCanWrite checks write permission from a user to a thread
@@ -124,23 +132,14 @@ func (s *ThreadStore) UserCanWrite(user *User, participantID, itemID int64) bool
 		return true
 	}
 
-	isMemberOfHelperGroup, err := s.Threads().
+	isMemberOfHelperGroup, err := s.
+		GetThreadQuery(participantID, itemID).
 		Joins(`JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = threads.helper_group_id
 			AND groups_ancestors_active.child_group_id = ?`, user.GroupID).
-		Where("threads.item_id = ?", itemID).
-		Where("threads.participant_id = ?", participantID).
-		Limit(1).
 		HasRows()
 	mustNotBeError(err)
 
-	hasValidatedItem, err := s.Threads().
-		Joins("JOIN results ON results.item_id = threads.item_id").
-		Where("threads.item_id = ?", itemID).
-		Where("threads.participant_id = ?", participantID).
-		Where("results.validated").
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
+	hasValidatedItem := user.HasValidatedItem(s.DataStore, itemID)
 
 	return isMemberOfHelperGroup && (userCanWatchAnswer || hasValidatedItem)
 }
@@ -191,14 +190,4 @@ func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus string, newStatu
 	}
 
 	return false
-}
-
-// GetThreadInfo retrieves a thread's information in an interface
-func (s *ThreadStore) GetThreadInfo(participantID, itemID int64, out interface{}) error {
-	return s.
-		Where("threads.participant_id = ?", participantID).
-		Where("threads.item_id = ?", itemID).
-		Limit(1).
-		Take(out).
-		Error()
 }

@@ -61,12 +61,12 @@ type groupManagersViewResponseRow struct {
 // summary: List group managers
 // description: >
 //
-//	Lists managers of the given group and (optionally) managers of its ancestors
-//	(rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
+//   Lists managers of the given group and (optionally) managers of its ancestors
+//   (rows from the `group_managers` table with `group_id` = `{group_id}`) including managers' names.
 //
 //
-//	The authenticated user should be a manager of the `group_id` group or a member of the group or of its descendant,
-//	otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of the `group_id` group or a member of the group or of its descendant,
+//   otherwise the 'forbidden' error is returned.
 //
 // parameters:
 //   - name: group_id
@@ -84,8 +84,8 @@ type groupManagersViewResponseRow struct {
 //     default: [name,id]
 //     type: array
 //     items:
-//     type: string
-//     enum: [name,-name,id,-id]
+//       type: string
+//       enum: [name,-name,id,-id]
 //   - name: from.id
 //     description: Start the page from the manager next to the manager with `groups.id`=`{from.id}`
 //     in: query
@@ -96,23 +96,21 @@ type groupManagersViewResponseRow struct {
 //     type: integer
 //     maximum: 1000
 //     default: 500
-//
 // responses:
-//
-//	"200":
-//	  description: OK. The array of group managers
-//	  schema:
-//	    type: array
-//	    items:
-//	      "$ref": "#/definitions/groupManagersViewResponseRow"
-//	"400":
-//	  "$ref": "#/responses/badRequestResponse"
-//	"401":
-//	  "$ref": "#/responses/unauthorizedResponse"
-//	"403":
-//	  "$ref": "#/responses/forbiddenResponse"
-//	"500":
-//	  "$ref": "#/responses/internalErrorResponse"
+//   "200":
+//     description: OK. The array of group managers
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupManagersViewResponseRow"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

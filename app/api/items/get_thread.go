@@ -23,6 +23,7 @@ type threadInfo struct {
 // ---
 // summary: Retrieve a thread information
 // description: >
+//
 //   Retrieve a thread information.
 //
 //   The `status` is `not_started` if the thread hasn't been started
@@ -35,6 +36,7 @@ type threadInfo struct {
 //         * the current-user is descendant of the thread helper_group
 //         * the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
 //         * the current-user has validated the item
+//
 // parameters:
 //   - name: item_id
 //     in: path
@@ -50,8 +52,6 @@ type threadInfo struct {
 //   "200":
 //     description: OK. Success response with thread data
 //     schema:
-//       type: array
-//     items:
 //       "$ref": "#/definitions/thread"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
