@@ -307,3 +307,12 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 		return nil
 	})
 }
+
+// GetItemIDFromTextID gets the item_id from the text_id of an item
+func (s *ItemStore) GetItemIDFromTextID(textID string) (itemID int64, err error) {
+	err = s.Select("items.id AS id").
+		Where("text_id = ?", textID).
+		PluckFirst("id", &itemID).Error()
+
+	return itemID, err
+}

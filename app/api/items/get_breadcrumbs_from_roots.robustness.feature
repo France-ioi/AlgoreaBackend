@@ -22,14 +22,14 @@ Feature: Find all breadcrumbs to an item - robustness
       | 91         | 90       | true              |
       | 111        | 111      | false             |
     And the database has the following table 'items':
-      | id | url                                                                     | type    | default_language_tag | requires_explicit_entry |
-      | 10 | null                                                                    | Chapter | en                   | false                   |
-      | 20 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | true                    |
-      | 30 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
-      | 40 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   | false                   |
-      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | fr                   | false                   |
+      | id | url                    | type    | default_language_tag | requires_explicit_entry | text_id |
+      | 10 | null                   | Chapter | en                   | false                   | id10    |
+      | 20 | http://taskplatform/20 | Task    | en                   | true                    | id20    |
+      | 30 | http://taskplatform/30 | Task    | en                   | false                   | id30    |
+      | 40 | http://taskplatform/40 | Task    | en                   | false                   | id40    |
+      | 50 | http://taskplatform/50 | Task    | en                   | false                   | id50    |
+      | 60 | http://taskplatform/60 | Task    | en                   | false                   | id60    |
+      | 70 | http://taskplatform/70 | Task    | fr                   | false                   | id70    |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title            |
       | 10      | fr           | Graphe: Methodes |
@@ -74,18 +74,18 @@ Feature: Find all breadcrumbs to an item - robustness
       | 6  | 102            | 40           | 4                 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 102            | 10      | 2019-05-30 11:00:00 |
-      | 2          | 102            | 10      | 2019-05-30 11:00:00 |
-      | 2          | 102            | 60      | 2019-05-30 11:00:00 |
-      | 3          | 102            | 10      | 2019-05-30 11:00:00 |
-      | 3          | 102            | 60      | 2019-05-30 11:00:00 |
-      | 3          | 102            | 70      | 2019-05-30 11:00:00 |
+      | 1          | 102            | 10      | 2020-01-01 00:00:00 |
+      | 2          | 102            | 10      | 2020-01-01 00:00:00 |
+      | 2          | 102            | 60      | 2020-01-01 00:00:00 |
+      | 3          | 102            | 10      | 2020-01-01 00:00:00 |
+      | 3          | 102            | 60      | 2020-01-01 00:00:00 |
+      | 3          | 102            | 70      | 2020-01-01 00:00:00 |
       | 3          | 102            | 20      | null                |
-      | 4          | 102            | 20      | 2019-05-30 11:00:00 |
-      | 5          | 102            | 30      | 2019-05-30 11:00:00 |
-      | 6          | 102            | 40      | 2019-05-30 11:00:00 |
-      | 0          | 111            | 10      | 2019-05-30 11:00:00 |
-      | 0          | 111            | 50      | 2019-05-30 11:00:00 |
+      | 4          | 102            | 20      | 2020-01-01 00:00:00 |
+      | 5          | 102            | 30      | 2020-01-01 00:00:00 |
+      | 6          | 102            | 40      | 2020-01-01 00:00:00 |
+      | 0          | 111            | 10      | 2020-01-01 00:00:00 |
+      | 0          | 111            | 50      | 2020-01-01 00:00:00 |
 
   Scenario: Invalid item_id
     And I am the user with id "111"
@@ -93,30 +93,46 @@ Feature: Find all breadcrumbs to an item - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
-  Scenario: Invalid participant_id
+  Scenario: text_id not found
     And I am the user with id "111"
-    When I send a GET request to "/items/10/breadcrumbs-from-roots?participant_id=abc"
+    When I send a GET request to "/items/by-text-id/abc/breadcrumbs-from-roots"
+    Then the response code should be 400
+    And the response error message should contain "No item found with text_id"
+
+  Scenario Outline: Invalid participant_id
+    And I am the user with id "111"
+    When I send a GET request to "<service_url>?participant_id=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for participant_id (should be int64)"
+    Examples:
+      | service_url                                   |
+      | /items/10/breadcrumbs-from-roots              |
+      | /items/by-text-id/id10/breadcrumbs-from-roots |
 
   Scenario Outline: No access to participant_id
     Given I am the user with id "111"
-    When I send a GET request to "/items/10/breadcrumbs-from-roots?participant_id=<participant_id>"
+    When I send a GET request to "<service_url>?participant_id=<participant_id>"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     Examples:
-      | participant_id |
-      | 404            |
-      | 111            |
+      | service_url                                   | participant_id |
+      | /items/10/breadcrumbs-from-roots              | 404            |
+      | /items/by-text-id/id10/breadcrumbs-from-roots | 404            |
+      | /items/10/breadcrumbs-from-roots              | 111            |
+      | /items/by-text-id/id10/breadcrumbs-from-roots | 111            |
 
   Scenario Outline: No paths
     Given I am the user with id "111"
-    When I send a GET request to "/items/<item_id>/breadcrumbs-from-roots?participant_id=102"
+    When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
   Examples:
-    | item_id |
-    | 70      |
-    | 60      |
-    | 20      |
-    | 40      |
+    | service_url                                   |
+    | /items/70/breadcrumbs-from-roots              |
+    | /items/by-text-id/id70/breadcrumbs-from-roots |
+    | /items/60/breadcrumbs-from-roots              |
+    | /items/by-text-id/id60/breadcrumbs-from-roots |
+    | /items/20/breadcrumbs-from-roots              |
+    | /items/by-text-id/id20/breadcrumbs-from-roots |
+    | /items/40/breadcrumbs-from-roots              |
+    | /items/by-text-id/id40/breadcrumbs-from-roots |
