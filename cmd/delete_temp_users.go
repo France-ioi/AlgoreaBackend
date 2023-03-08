@@ -14,7 +14,6 @@ import (
 
 // nolint:gosec
 func init() { // nolint:gochecknoinits,gocyclo
-
 	var deleteTempUsersCmd = &cobra.Command{
 		Use:   "delete-temp-users [environment]",
 		Short: "delete all temporary users with expired sessions",

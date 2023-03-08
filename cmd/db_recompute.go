@@ -12,7 +12,6 @@ import (
 )
 
 func init() { // nolint:gochecknoinits
-
 	var recomputeCmd = &cobra.Command{
 		Use:   "db-recompute [environment]",
 		Short: "recompute db caches",

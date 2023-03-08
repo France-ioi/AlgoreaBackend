@@ -505,7 +505,6 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestClient_CreateUsers(t *testing.T) {

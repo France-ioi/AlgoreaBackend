@@ -16,7 +16,6 @@ import (
 
 // nolint:gosec
 func init() { // nolint:gochecknoinits
-
 	var restoreCmd = &cobra.Command{
 		Use:   "db-restore [environment]",
 		Short: "load the last db schema",

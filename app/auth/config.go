@@ -7,7 +7,6 @@ import (
 
 // GetOAuthConfig generates the OAuth2 config from a configuration
 func GetOAuthConfig(config *viper.Viper) *oauth2.Config {
-
 	oauthConfig := oauth2.Config{
 		ClientID:     config.GetString("clientID"),
 		ClientSecret: config.GetString("clientSecret"),

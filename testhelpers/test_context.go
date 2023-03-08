@@ -153,7 +153,6 @@ func (ctx *TestContext) db() *sql.DB {
 
 // nolint: gosec
 func (ctx *TestContext) emptyDB() error {
-
 	db := ctx.db()
 	config, _ := app.DBConfig(ctx.application.Config)
 	return emptyDB(db, config.DBName)

@@ -15,7 +15,6 @@ import (
 )
 
 func init() { // nolint:gochecknoinits
-
 	var migrateCmd = &cobra.Command{
 		Use:   "db-migrate [environment]",
 		Short: "apply schema-change migrations to the database",

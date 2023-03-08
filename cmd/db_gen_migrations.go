@@ -23,7 +23,6 @@ const (
 
 // nolint:gosec
 func init() { // nolint:gochecknoinits,gocyclo
-
 	var dbGenMigrationsCmd = &cobra.Command{
 		Use:   "db-gen-migrations  [environment]",
 		Short: "generate migrations",

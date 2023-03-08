@@ -13,7 +13,6 @@ import (
 
 // nolint:gosec
 func init() { // nolint:gochecknoinits,gocyclo
-
 	var installCmd = &cobra.Command{
 		Use:   "install [environment]",
 		Short: "fill the database with required data",

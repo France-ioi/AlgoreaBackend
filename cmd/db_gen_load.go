@@ -21,7 +21,6 @@ import (
 
 // nolint:gosec
 func init() { // nolint:gochecknoinits,gocyclo
-
 	var dbGenLoadCmd = &cobra.Command{
 		Use:   "db-gen-load  [environment]",
 		Short: "generate data for load tests",
