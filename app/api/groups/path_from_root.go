@@ -72,7 +72,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 }
 
 func findGroupPath(store *database.DataStore, groupID int64, user *database.User) []string {
-	visibleAncestors := pickVisibleGroups(
+	visibleAncestors := store.Groups().PickVisibleGroups(
 		store.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
 			Joins("JOIN `groups` ON groups.id = ancestor_group_id"), user).
 		Select("ancestor_group_id AS id").

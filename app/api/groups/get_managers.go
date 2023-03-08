@@ -129,7 +129,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 
 	found, err := store.Raw("SELECT EXISTS(?) OR EXISTS(?) AS found",
 		store.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", groupID).QueryExpr(),
-		ancestorsOfJoinedGroups(store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
+		store.Groups().AncestorsOfJoinedGroups(store, user).Where("groups_ancestors_active.ancestor_group_id = ?", groupID).QueryExpr(),
 	).Having("found").HasRows()
 	service.MustNotBeError(err)
 	if !found {

@@ -124,13 +124,13 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	found, err := pickVisibleGroups(store.Groups().ByID(groupID), user).HasRows()
+	found, err := store.Groups().PickVisibleGroups(store.Groups().ByID(groupID), user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
 	}
 
-	query := pickVisibleGroups(store.Groups().DB, user).
+	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
 		Select(`
 			groups.id as id, groups.name, groups.type, groups.grade,
 			groups.is_open, groups.is_public,
