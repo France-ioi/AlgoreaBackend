@@ -3,7 +3,6 @@
 package testhelpers
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -51,7 +50,7 @@ func (ctx *TestContext) populateDatabase() error {
 			for _, tableRow := range tableRows {
 				err = database.NewDataStoreWithTable(store.DB, tableName).InsertMap(tableRow)
 				if err != nil {
-					return fmt.Errorf("populateDatabase %s %+v: %v", tableName, tableRow, err)
+					return err
 				}
 			}
 		}
@@ -110,7 +109,7 @@ func (ctx *TestContext) addGroupGroup(parentGroupID, childGroupID string) {
 
 // addGroupManager adds a group manager in database
 func (ctx *TestContext) addGroupManager(managerID, groupID, canWatchMembers string) {
-	ctx.addInDatabase("group_managers", managerID+","+groupID, map[string]interface{}{
+	ctx.addInDatabase("groups_managers", managerID+","+groupID, map[string]interface{}{
 		"manager_id":        managerID,
 		"group_id":          groupID,
 		"can_watch_members": canWatchMembers,
@@ -121,7 +120,7 @@ func (ctx *TestContext) addGroupManager(managerID, groupID, canWatchMembers stri
 func (ctx *TestContext) addPermissionGenerated(groupID, itemID, watchType, watchValue string) {
 	permissionsGeneratedTable := "permissions_generated"
 	key := groupID + "," + itemID
-	if !ctx.isInDatabase(permissionsGeneratedTable, key) {
+	if ctx.isInDatabase(permissionsGeneratedTable, key) {
 		ctx.addInDatabase(permissionsGeneratedTable, key, map[string]interface{}{
 			"group_id": groupID,
 			"item_id":  itemID,
@@ -150,7 +149,7 @@ func (ctx *TestContext) addAttempt(id, participantID string) {
 }
 
 // addResult adds a result in database
-func (ctx *TestContext) addResult(attemptID, participantID, itemID string, validatedAt time.Time) {
+func (ctx *TestContext) addResult(attemptID, participantID, itemID, validatedAt string) {
 	ctx.addInDatabase("results", attemptID+","+participantID+","+itemID, map[string]interface{}{
 		"attempt_id":     attemptID,
 		"participant_id": participantID,
@@ -192,7 +191,7 @@ func (ctx *TestContext) IAm(name string) error {
 		"id":   strconv.FormatInt(userID, 10),
 		"name": name,
 	}))
-	if err != nil {
+	if err != err {
 		return err
 	}
 
@@ -294,7 +293,7 @@ func (ctx *TestContext) IHaveValidatedItemWithID(itemID int64) error {
 		strconv.FormatInt(attemptID, 10),
 		strconv.FormatInt(ctx.userID, 10),
 		strconv.FormatInt(itemID, 10),
-		time.Now(),
+		time.Now().String(),
 	)
 
 	return nil
@@ -313,7 +312,7 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 
 		err := ctx.ThereIsAGroupWith(getParametersString(map[string]string{
 			"id":   strconv.FormatInt(helperGroupID, 10),
-			"name": "helper_group_for_" + thread["item_id"] + "-" + thread["participant_id"],
+			"name": "helper_group_for_" + thread["item_id"] + "," + thread["participant_id"],
 		}))
 		if err != nil {
 			return err
@@ -332,7 +331,7 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 		thread["message_count"] = "0"
 	}
 
-	ctx.currentThreadKey = ctx.getThreadKey(thread["item_id"], thread["participant_id"])
+	ctx.currentThreadKey = thread["item_id"] + "," + thread["participant_id"]
 
 	ctx.addThread(thread["item_id"], thread["participant_id"], thread["helper_group_id"], thread["status"], thread["message_count"])
 

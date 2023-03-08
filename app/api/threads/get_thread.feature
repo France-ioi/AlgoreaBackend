@@ -1,3 +1,4 @@
+@wip
 Feature: Get thread
   Background:
     Given the database has the following table 'groups':

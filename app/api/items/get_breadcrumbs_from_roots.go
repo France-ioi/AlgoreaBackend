@@ -95,7 +95,7 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 //   Same as [/items/{item_id}/breadcrumbs-from-roots](#tag/items/operation/itemBreadcrumbsFromRootsGet)
 //   but using `text_id`.
 //
-// `text_id` must be URL-encoded.
+//   `text_id` must be URL-encoded.
 //
 // parameters:
 // - name: text_id

@@ -1,5 +1,4 @@
 Feature: Get thread - robustness
-<<<<<<< HEAD
   Background:
     Given the database has the following table 'groups':
       | id | name       | type  |
