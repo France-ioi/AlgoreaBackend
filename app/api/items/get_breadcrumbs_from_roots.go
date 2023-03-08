@@ -150,7 +150,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 			return service.ErrInvalidRequest(err)
 		}
 
-		if !user.CanWatchGroupMembers(store, participantID) {
+		if !user.CanWatchMembersOnParticipant(store, participantID) {
 			return service.InsufficientAccessRightsError
 		}
 	}

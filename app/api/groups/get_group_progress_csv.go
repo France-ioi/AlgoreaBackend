@@ -83,7 +83,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		return service.ErrInvalidRequest(err)
 	}
 
-	if !user.CanWatchGroupMembers(store, groupID) {
+	if !user.CanWatchMembersOnParticipant(store, groupID) {
 		return service.InsufficientAccessRightsError
 	}
 

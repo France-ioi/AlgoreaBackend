@@ -116,7 +116,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	if !user.CanWatchGroupMembers(store, groupID) {
+	if !user.CanWatchMembersOnParticipant(store, groupID) {
 		return service.InsufficientAccessRightsError
 	}
 
