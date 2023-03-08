@@ -95,7 +95,7 @@ test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS) $(TEST_BDD_DIR)
 lint: $(GOLANGCILINT)
-	$(GOLANGCILINT) run --deadline 10m0s
+	$(GOLANGCILINT) run -v --deadline 10m0s
 
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)
