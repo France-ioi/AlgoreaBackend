@@ -1,3 +1,4 @@
+// Package structures provides item related structures
 package structures
 
 import (

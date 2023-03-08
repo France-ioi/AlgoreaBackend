@@ -53,6 +53,7 @@ linters:
     - maligned
     - prealloc
     - gochecknoglobals
+    - wsl # requires many changes, enable it later
 
 run:
   skip-dirs:

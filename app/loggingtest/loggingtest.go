@@ -34,6 +34,7 @@ func (hook *Hook) GetAllLogs() string {
 // GetAllStructuredLogs returns all the structured logs collected by the hook as a string
 func (hook *Hook) GetAllStructuredLogs() string {
 	logs := ""
+
 	for _, entry := range hook.AllEntries() {
 		if len(logs) > 0 {
 			logs += newLine
@@ -45,6 +46,7 @@ func (hook *Hook) GetAllStructuredLogs() string {
 			logs += strings.TrimSpace(logString)
 		}
 	}
+	
 	return logs
 }
 

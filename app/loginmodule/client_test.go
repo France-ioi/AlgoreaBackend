@@ -185,6 +185,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 				`error = \"invalid badges data\")"`,
 		},
 	}
+	
 	const moduleURL = "http://login.url.com"
 	for _, tt := range tests {
 		tt := tt
@@ -597,6 +598,7 @@ func TestClient_CreateUsers(t *testing.T) {
 			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/create: unknown error"`,
 		},
 	}
+
 	const moduleURL = "http://login.url.com"
 	for _, tt := range tests {
 		tt := tt
@@ -688,6 +690,7 @@ func TestEncode(t *testing.T) {
 		{name: "16 bytes", data: []byte("1234567890123456"), expectedLen: 44},
 		{name: "17 bytes", data: []byte("12345678901234567"), expectedLen: 44},
 	}
+
 	const clientKey = "1234567890123456"
 	for _, tt := range tests {
 		tt := tt

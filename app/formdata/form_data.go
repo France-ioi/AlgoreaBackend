@@ -293,18 +293,22 @@ func (f *FormData) processValidatorErrors(err error) {
 
 func (f *FormData) getUsedKeysPathFromValidatorPath(path string) string {
 	prefix := ""
+
 	structType := reflect.TypeOf(f.definitionStructure)
 	for structType.Kind() == reflect.Ptr {
 		structType = structType.Elem()
 	}
+
 	structName := structType.Name()
 	if structName != "" {
 		prefix = structName + "."
 	}
+
 	path = strings.TrimPrefix(path, prefix)
 	path = strings.Replace(path, ".<squash>", "", -1)
 	path = strings.Replace(path, "<squash>.", "", -1)
 	path = strings.Replace(path, "<squash>", "", -1)
+	
 	return path
 }
 
@@ -420,6 +424,7 @@ func getFieldValueByStructPath(value reflect.Value, structPath string) interface
 		}
 		value = value.Elem()
 	}
+
 	if structPath == "" {
 		return value.Interface()
 	}
