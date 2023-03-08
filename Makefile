@@ -119,7 +119,7 @@ $(TEST_REPORT_DIR):
 $(GODOG):
 	$(GOGET) -u github.com/cucumber/godog/cmd/godog@v0.9.0
 $(GOLANGCILINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.18.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.19.0
 $(MYSQL_CONNECTOR_JAVA):
 	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)
