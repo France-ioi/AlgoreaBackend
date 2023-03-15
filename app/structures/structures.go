@@ -1,4 +1,4 @@
-// Package structures provides item related structures
+// Package structures provides item-related structs.
 package structures
 
 import (
