@@ -1,4 +1,4 @@
-module github.com/France-ioi/AlgoreaBackend
+gimodule github.com/France-ioi/AlgoreaBackend
 
 go 1.13
 

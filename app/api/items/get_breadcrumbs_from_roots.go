@@ -1,10 +1,12 @@
 package items
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -27,7 +29,7 @@ type breadcrumbElement struct {
 
 // swagger:operation GET /items/{item_id}/breadcrumbs-from-roots items itemBreadcrumbsFromRootsGet
 // ---
-// summary: List all possible breadcrumbs for a started item
+// summary: List all possible breadcrumbs for a started item using `item_id`
 // description: >
 //   Lists all paths from a root (`root_activity_id`|`root_skill_id` of groups the participant is descendant of or manages)
 //   to the given item that the participant may have used to access this item,
@@ -76,24 +78,73 @@ type breadcrumbElement struct {
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	participantID := user.GroupID
-	store := srv.GetStore(r)
+	return srv.getBreadcrumbsFromRoots(w, r, itemID)
+}
 
+// swagger:operation GET /items/by-text-id/{item_id}/breadcrumbs-from-roots items itemBreadcrumbsFromRootsByTextIdGet
+// ---
+// summary: List all possible breadcrumbs for a started item using `text_id`
+// description: Same as "List all possible breadcrumbs for a started item using `item_id`"
+// parameters:
+// - name: text_id
+//   in: path
+//   type: string
+//   required: true
+// - name: participant_id
+//   in: query
+//   type: integer
+//   format: int64
+// responses:
+//   "200":
+//     description: OK. Success response with the found item path
+//     schema:
+//       type: array
+//       items:
+//         type: array
+//         items:
+//           "$ref": "#/definitions/breadcrumbElement"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
+func (srv *Service) getBreadcrumbsFromRootsByTextId(w http.ResponseWriter, r *http.Request) service.APIError {
+	textID := chi.URLParam(r, "text_id")
+
+	store := srv.GetStore(r)
+	itemID, err := store.Items().GetItemIDFromTextID(textID)
+	if err != nil {
+		return service.ErrInvalidRequest(errors.New("no item found with text_id"))
+	}
+
+	return srv.getBreadcrumbsFromRoots(w, r, itemID)
+}
+
+func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Request, itemID int64) service.APIError {
+	store := srv.GetStore(r)
+	user := srv.GetUser(r)
+
+	participantID := user.GroupID
 	if len(r.URL.Query()["participant_id"]) != 0 {
+		var err error
 		participantID, err = service.ResolveURLQueryGetInt64Field(r, "participant_id")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
 
-		found, err := store.ActiveGroupAncestors().ManagedByUser(user).Where("can_watch_members").
-			Where("groups_ancestors_active.child_group_id = ?", participantID).HasRows()
+		found, err := store.ActiveGroupAncestors().ManagedByUser(user).
+			Where("group_managers.can_watch_members").
+			Where("groups_ancestors_active.child_group_id = ?", participantID).
+			HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			return service.InsufficientAccessRightsError
