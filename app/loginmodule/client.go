@@ -107,9 +107,11 @@ func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey strin
 	}
 
 	var resultRows []CreateUsersResponseDataRow
+
 	if response.Success {
 		mustNotBeError(json.Unmarshal(response.Data, &resultRows))
 	}
+	
 	return response.Success, resultRows, nil
 }
 

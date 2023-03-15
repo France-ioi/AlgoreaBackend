@@ -30,7 +30,6 @@ type Config struct {
 
 // Initialize loads keys from the config and resolves the platform name
 func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
-
 	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
 
 	bytes, err := getKey(config, "Public")

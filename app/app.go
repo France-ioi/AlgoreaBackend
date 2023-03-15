@@ -161,7 +161,6 @@ func (app *Application) CreateMissingData() error {
 }
 
 func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) error {
-
 	groupStore := store.Groups()
 	groupGroupStore := store.GroupGroups()
 	var relationsToCreate []map[string]interface{}

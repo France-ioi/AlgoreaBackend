@@ -69,7 +69,7 @@ type Item struct {
 
 // ItemWithRequiredType represents common item fields plus the required type field
 type ItemWithRequiredType struct {
-	Item `json:"item,squash"`
+	Item `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
 	// enum: Chapter,Task,Skill
@@ -115,14 +115,14 @@ type itemParent struct {
 type NewItemRequest struct {
 	// `default_language_tag` of the item
 	// required: true
-	LanguageTag   string `json:"language_tag" validate:"set,language_tag"`
-	newItemString `json:"string,squash"`
+	LanguageTag   string                 `json:"language_tag" validate:"set,language_tag"`
+	newItemString `json:"string,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 
 	Parent          itemParent `json:"parent"`
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
 	// Nullable fields are of pointer types
-	ItemWithRequiredType `json:"item,squash"`
+	ItemWithRequiredType `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }

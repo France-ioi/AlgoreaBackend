@@ -17,8 +17,9 @@ func decryptAes128Ecb(data, key []byte) []byte {
 
 	// see https://secure.php.net/manual/de/function.openssl-encrypt.php#109598
 	if len(decrypted) > 0 {
-		paddingCharacter := decrypted[len(decrypted)-1]
 		stripPadding := true
+
+		paddingCharacter := decrypted[len(decrypted)-1]
 		for i := 1; i <= int(paddingCharacter); i++ {
 			if decrypted[len(decrypted)-i] != paddingCharacter {
 				stripPadding = false

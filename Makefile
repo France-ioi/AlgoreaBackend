@@ -95,7 +95,7 @@ test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS) $(TEST_BDD_DIR)
 lint: $(GOLANGCILINT)
-	$(GOLANGCILINT) run --deadline 10m0s
+	$(GOLANGCILINT) run -v --deadline 10m0s
 
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)
@@ -119,7 +119,7 @@ $(TEST_REPORT_DIR):
 $(GODOG):
 	$(GOGET) -u github.com/cucumber/godog/cmd/godog@v0.9.0
 $(GOLANGCILINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.18.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.20.0
 $(MYSQL_CONNECTOR_JAVA):
 	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)
