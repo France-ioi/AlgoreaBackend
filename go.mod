@@ -1,4 +1,4 @@
-gimodule github.com/France-ioi/AlgoreaBackend
+module github.com/France-ioi/AlgoreaBackend
 
 go 1.13
 
@@ -44,7 +44,8 @@ require (
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v2 v2.2.8

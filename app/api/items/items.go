@@ -71,6 +71,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Get("/items/{item_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByItemID).ServeHTTP)
 	router.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
+
+	router.Get("/items/{item_id}/participant/{participant_id}/thread", service.AppHandler(srv.getThread).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.Task, otherTokenFieldName string,
