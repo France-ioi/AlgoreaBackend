@@ -27,7 +27,7 @@ CREATE TABLE `attempts` (
     `root_item_id` BIGINT(20) DEFAULT NULL COMMENT 'The item on which the attempt was created',
     CONSTRAINT `fk_attempts_root_item_id_items_id`FOREIGN KEY (`root_item_id`) REFERENCES `items`(`id`) ON DELETE SET NULL,
     `created_at` DATETIME NOT NULL DEFAULT NOW()
-        COMMENT 'Time at which the attempt was manually created or was first marked as started (should be when it is first visited).',
+        COMMENT 'Time at which the attempt was manually created or was first marked as started (should be when it is first visited). (null if result created by propagation, i.e. path not visited)',
     INDEX `participant_id_parent_attempt_id_root_item_id` (`participant_id`, `parent_attempt_id`, `root_item_id`),
     INDEX `participant_id_root_item_id` (`participant_id`, `root_item_id`)
     -- We cannot add the following constraint because it would set both `participant_id` and `parent_attempt_id` to NULL
