@@ -245,7 +245,6 @@ func (ctx *TestContext) TableAtColumnValueShouldBe(table, column, values string,
 func (ctx *TestContext) TableShouldNotContainColumnValue(table, column, values string) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), unchanged,
 		&messages.PickleStepArgument_PickleTable{
-
 			Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
 				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: column}}}},
 		})

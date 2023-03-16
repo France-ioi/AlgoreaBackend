@@ -198,7 +198,6 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 
 func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
 	groupID int64, action userGroupRelationAction) service.APIError {
-
 	// The group should exist (and optionally should have `is_public` = 1)
 	query := store.Groups().ByID(groupID).
 		Where("type != 'User'").Select("type, frozen_membership").WithWriteLock()

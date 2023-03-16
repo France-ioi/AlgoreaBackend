@@ -22,6 +22,7 @@ func SetDefaultEnv(newVal string) {
 	if _, ok := os.LookupEnv(envVarName); ok {
 		return // already set
 	}
+
 	SetEnv(newVal)
 }
 

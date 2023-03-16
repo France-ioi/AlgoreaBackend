@@ -129,7 +129,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 
 	found, err := store.Permissions().MatchingUserAncestors(user).
 		Where("? OR can_watch_generated = 'answer_with_grant' OR can_edit_generated = 'all_with_grant'",
-			store.PermissionsGranted().PermissionIsAtLeastSqlExpr("grant_view", enter)).
+			store.PermissionsGranted().PermissionIsAtLeastSQLExpr("grant_view", enter)).
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {

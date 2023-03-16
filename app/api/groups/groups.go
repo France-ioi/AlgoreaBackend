@@ -120,7 +120,6 @@ const (
 func checkThatUserHasRightsForDirectRelation(
 	store *database.DataStore, user *database.User,
 	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation) service.APIError {
-
 	groupStore := store.Groups()
 
 	var groupData []struct {

@@ -45,7 +45,7 @@ func (e APIError) httpResponse() render.Renderer {
 		result.Errors = fieldErrors
 	}
 
-	result.ErrorText = e.Error.Error() // FIXME: should be disabled in prod
+	result.ErrorText = e.Error.Error() // nolint FIXME: should be disabled in prod
 	if len(result.ErrorText) > 0 {
 		result.ErrorText = strings.ToUpper(result.ErrorText[0:1]) + result.ErrorText[1:]
 	}

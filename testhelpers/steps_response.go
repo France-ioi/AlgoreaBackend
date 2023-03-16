@@ -161,7 +161,6 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersVal
 }
 
 func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { // nolint
-
 	errorResp := service.ErrorResponse{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {

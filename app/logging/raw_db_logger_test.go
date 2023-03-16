@@ -19,7 +19,7 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
-	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
+	rawLogger.Log(nil, "some message", "err", nil) // nolint:staticcheck ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
 }
 
@@ -31,7 +31,7 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	logger := &Logger{nulllogger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
-	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
+	rawLogger.Log(nil, "some message", "err", nil) // nolint:staticcheck SA1012 sql often uses nil context
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }
 
@@ -43,7 +43,7 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	logger := &Logger{nulllogger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
-	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
+	rawLogger.Log(nil, "some message", "err", nil) // nolint:staticcheck SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
 }
@@ -56,7 +56,7 @@ func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
 	logger := &Logger{nulllogger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
-	rawLogger.Log(nil, "sql-stmt-exec", "err", driver.ErrSkip) //lint:ignore SA1012 we check the nil context here
+	rawLogger.Log(nil, "sql-stmt-exec", "err", driver.ErrSkip) // nolint:staticcheck SA1012 we check the nil context here
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }
 

@@ -27,9 +27,9 @@ func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int
 
 // CanRetrieveThread checks whether a user can retrieve a thread
 func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64) bool {
-	// TODO: Try to make the permission checks one query with OR instead of using subqueries.
+	// nolint TODO: Try to make the permission checks one query with OR instead of using subqueries.
 
-	// TODO: We need to update GORM for this and use https://gorm.io/docs/advanced_query.html#Group-Conditions
+	// nolint TODO: We need to update GORM for this and use https://gorm.io/docs/advanced_query.html#Group-Conditions
 	// Update in progress by Dmitry: https://github.com/France-ioi/AlgoreaBackend/issues/769
 
 	// we check the permissions first without joining the threads because we need to distinguish between an

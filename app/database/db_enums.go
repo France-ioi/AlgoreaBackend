@@ -22,13 +22,13 @@ var (
 	enumValueIndex2Name []map[int]string
 )
 
-func (db *DB) loadDBEnum(fullColumnName string) {
+func (conn *DB) loadDBEnum(fullColumnName string) {
 	parsedColumn := strings.SplitN(fullColumnName, ".", 2)
 	tableName := parsedColumn[0]
 	columnName := parsedColumn[1]
 
 	var valuesString string
-	mustNotBeError(NewDataStore(db.New()).Table("information_schema.COLUMNS").
+	mustNotBeError(NewDataStore(conn.New()).Table("information_schema.COLUMNS").
 		Set("gorm:query_option", "").
 		Where("TABLE_SCHEMA = DATABASE()").
 		Where("TABLE_NAME = ?", tableName).
@@ -48,7 +48,7 @@ func (db *DB) loadDBEnum(fullColumnName string) {
 	enumValueIndex2Name[enumNumber] = indexesMap
 }
 
-func (db *DB) getFromEnumUnderLock(getterFunc func() interface{}) interface{} {
+func (conn *DB) getFromEnumUnderLock(getterFunc func() interface{}) interface{} {
 	// Lock for reading to check if the enums have been already loaded
 	enumsMutex.RLock()
 	if len(enumValueName2Index) != 0 { // the enums have been loaded, so return the value
@@ -72,13 +72,13 @@ func (db *DB) getFromEnumUnderLock(getterFunc func() interface{}) interface{} {
 			enumValueName2Index = nil
 		}
 	}()
-	db.loadAllEnums()
+	conn.loadAllEnums()
 	success = true
 
 	return getterFunc()
 }
 
-func (db *DB) loadAllEnums() {
+func (conn *DB) loadAllEnums() {
 	enumName2Number = make(map[string]int, len(enumColumns))
 	for index := range enumColumns {
 		enumName2Number[enumColumns[index]] = index
@@ -87,7 +87,7 @@ func (db *DB) loadAllEnums() {
 	enumValueName2Index = make([]map[string]int, len(enumColumns))
 	enumValueIndex2Name = make([]map[int]string, len(enumColumns))
 	for _, fullColumnName := range enumColumns {
-		db.loadDBEnum(fullColumnName)
+		conn.loadDBEnum(fullColumnName)
 	}
 }
 

@@ -161,7 +161,6 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) servic
 
 func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store *database.DataStore, lock bool) (
 	*itemGetEntryStateResponse, service.APIError) {
-
 	var itemInfo struct {
 		IsTeamItem                   bool
 		AllowsMultipleAttempts       bool
