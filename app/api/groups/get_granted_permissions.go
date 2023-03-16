@@ -153,10 +153,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			store.PermissionsGranted().PermissionIsAtLeastSQLExpr("grant_view", "enter")).
 		Select("DISTINCT item_id AS id")
 
-	managedGroupsQuery := store.ActiveGroupAncestors().ManagedByUser(user).
-		Group("groups_ancestors_active.child_group_id").
-		Having("MAX(can_grant_group_access)").
-		Select("groups_ancestors_active.child_group_id AS id")
+	managedGroupsWithCanGrantGroupAccessIds := user.GetManagedGroupsWithCanGrantGroupAccessIds(store)
 
 	var sourceGroupsQuery, groupsQuery *database.DB
 	if forDescendants {
@@ -170,7 +167,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 
 		sourceGroupsQuery = store.Groups().
 			Where("groups.type != 'User'").
-			Where("id IN ?", managedGroupsQuery.SubQuery()).
+			Where("id IN (?)", managedGroupsWithCanGrantGroupAccessIds).
 			Where("id IN ?", ancestorsAndDescendantsQuery.SubQuery()).
 			Select("groups.id, groups.name")
 
@@ -182,7 +179,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	} else {
 		sourceGroupsQuery = store.ActiveGroupAncestors().
 			Where("child_group_id = ?", groupID).
-			Where("ancestor_group_id IN ?", managedGroupsQuery.SubQuery()).
+			Where("ancestor_group_id IN (?)", managedGroupsWithCanGrantGroupAccessIds).
 			Joins("JOIN `groups` ON groups.id = ancestor_group_id").
 			Where("groups.type != 'User'").
 			Select("groups.id, groups.name")
