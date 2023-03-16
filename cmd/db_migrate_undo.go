@@ -14,7 +14,6 @@ import (
 )
 
 func init() { // nolint:gochecknoinits
-
 	var migrateUndoCmd = &cobra.Command{
 		Use:   "db-migrate-undo [environment]",
 		Short: "undo the last schema-change migration applied to the database",

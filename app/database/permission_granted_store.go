@@ -22,9 +22,9 @@ func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string)
 	return s.DB.getFromEnumUnderLock(getterFunc).(int)
 }
 
-// PermissionIsAtLeastSqlExpr returns a gorm.SqlExpr for filtering by `can_*_generated_value` >= indexOf(`permissionName`)
+// PermissionIsAtLeastSQLExpr returns a gorm.SqlExpr for filtering by `can_*_generated_value` >= indexOf(`permissionName`)
 // depending on the given permission kind
-func (s *PermissionGrantedStore) PermissionIsAtLeastSqlExpr(permissionKind, permissionName string) *gorm.SqlExpr { // nolint:golint
+func (s *PermissionGrantedStore) PermissionIsAtLeastSQLExpr(permissionKind, permissionName string) *gorm.SqlExpr { // nolint:golint
 	return gorm.Expr("IFNULL("+permissionColumnByKind(permissionKind)+", 1) >= ?",
 		s.PermissionIndexByKindAndName(permissionKind, permissionName))
 }

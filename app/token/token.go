@@ -30,7 +30,6 @@ type Config struct {
 
 // Initialize loads keys from the config and resolves the platform name
 func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
-
 	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
 
 	bytes, err := getKey(config, "Public")
@@ -65,7 +64,7 @@ func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
 }
 
-var tokenPathTestRegexp = regexp.MustCompile(".*(/app(?:/[a-z]+)*?)$")
+var tokenPathTestRegexp = regexp.MustCompile(`.*([/\\]app(?:[/\\][a-z]+)*?)$`)
 
 func prepareFileName(fileName string) string {
 	if len(fileName) > 0 && fileName[0] == '/' {
@@ -73,7 +72,7 @@ func prepareFileName(fileName string) string {
 	}
 
 	cwd, _ := os.Getwd()
-	if strings.HasSuffix(os.Args[0], ".test") {
+	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
 		match := tokenPathTestRegexp.FindStringSubmatchIndex(cwd)
 		if match != nil {
 			cwd = cwd[:match[2]]

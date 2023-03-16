@@ -72,8 +72,8 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanWatchGroupMembers(store, user, groupID); apiError != service.NoError {
-		return apiError
+	if !user.CanWatchGroupMembers(store, groupID) {
+		return service.InsufficientAccessRightsError
 	}
 
 	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)

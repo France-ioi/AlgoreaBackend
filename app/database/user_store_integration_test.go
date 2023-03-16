@@ -43,7 +43,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5001, 5002})
-	for _, table := range []string{"users_threads", "filters", "refresh_tokens"} {
+	for _, table := range []string{"filters", "refresh_tokens"} {
 		assertTableColumn(t, db, table, "user_id", []int64{5001, 5002})
 	}
 
@@ -84,7 +84,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5000})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5000, 5002})
-	for _, table := range []string{"users_threads", "filters", "refresh_tokens"} {
+	for _, table := range []string{"filters", "refresh_tokens"} {
 		assertTableColumn(t, db, table, "user_id", []int64{5000, 5002})
 	}
 
@@ -126,7 +126,7 @@ func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5001})
-	for _, table := range []string{"users_threads", "filters", "refresh_tokens"} {
+	for _, table := range []string{"filters", "refresh_tokens"} {
 		assertTableColumn(t, db, table, "user_id", []int64{5001})
 	}
 
@@ -157,7 +157,6 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {user_id: 5000, expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
 				- {user_id: 5001, expires_at: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
 				- {user_id: 5001, expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
-			users_threads: [{user_id: 5000, thread_id: 1}, {user_id: 5001, thread_id: 1}, {user_id: 5002, thread_id: 1}]
 			answers:
 				- {author_id: 5000, attempt_id: 1, participant_id: 5000, item_id: 1, created_at: 2019-05-30 11:00:00}
 				- {author_id: 5001, attempt_id: 1, participant_id: 5001, item_id: 1, created_at: 2019-05-30 11:00:00}

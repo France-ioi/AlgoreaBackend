@@ -28,13 +28,13 @@ Feature: Find all breadcrumbs to an item
       | 91         | 94       | false             |
       | 111        | 92       | false             |
     And the database has the following table 'items':
-      | id | url                                                                     | type    | default_language_tag |
-      | 10 | null                                                                    | Chapter | en                   |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | en                   |
-      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | fr                   |
-      | 80 | null                                                                    | Chapter | en                   |
-      | 90 | null                                                                    | Chapter | en                   |
+      | id | url                    | type    | default_language_tag | text_id               |
+      | 10 | null                   | Chapter | en                   | id10                  |
+      | 50 | http://taskplatform/50 | Task    | en                   | -_ '#&?:=/\.,+%¤€aéàd |
+      | 60 | http://taskplatform/60 | Task    | en                   | id60                  |
+      | 70 | http://taskplatform/70 | Task    | fr                   | id70                  |
+      | 80 | null                   | Chapter | en                   | id80                  |
+      | 90 | null                   | Chapter | en                   | id90                  |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title            |
       | 10      | fr           | Graphe: Methodes |
@@ -75,32 +75,35 @@ Feature: Find all breadcrumbs to an item
       | 3  | 102            | 60           | 1                 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          |
-      | 1          | 102            | 10      | 2019-05-30 11:00:00 |
-      | 2          | 102            | 60      | 2019-05-30 11:00:00 |
-      | 3          | 102            | 60      | 2019-05-30 11:00:00 |
-      | 3          | 102            | 70      | 2019-05-30 11:00:00 |
-      | 0          | 111            | 10      | 2019-05-30 11:00:00 |
-      | 0          | 111            | 50      | 2019-05-30 11:00:00 |
-      | 1          | 111            | 80      | 2019-05-30 11:00:00 |
-      | 1          | 111            | 90      | 2019-05-30 11:00:00 |
+      | 1          | 102            | 10      | 2020-01-01 00:00:00 |
+      | 2          | 102            | 60      | 2020-01-01 00:00:00 |
+      | 3          | 102            | 60      | 2020-01-01 00:00:00 |
+      | 3          | 102            | 70      | 2020-01-01 00:00:00 |
+      | 0          | 111            | 10      | 2020-01-01 00:00:00 |
+      | 0          | 111            | 50      | 2020-01-01 00:00:00 |
+      | 1          | 111            | 80      | 2020-01-01 00:00:00 |
+      | 1          | 111            | 90      | 2020-01-01 00:00:00                    |
 
   Scenario Outline: Find breadcrumbs for the current user
     Given I am the user with id "111"
-    When I send a GET request to "/items/<item_id>/breadcrumbs-from-roots"
+    When I send a GET request to "<service_url>"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       <expected_output>
       """
   Examples:
-    | item_id | expected_output                                                                                                                                                          |
-    | 50      | [[{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]]                                                                                                                   |
-    | 10      | [[{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]]                                                                                                      |
-    | 90      | [[{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}], [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]] |
+    | service_url                                   | expected_output                                                                                                                                                                                                                   |
+    | /items/50/breadcrumbs-from-roots              | [[{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]]                                                                                                                                                            |
+    | /items/by-text-id/-_%20%27%23%26%3F%3A%3D%2F%5C.%2C%2B%25%C2%A4%E2%82%ACa%C3%A9%C3%A0d/breadcrumbs-from-roots | [[{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]]                                                                                                                                                            |
+    | /items/10/breadcrumbs-from-roots              | [[{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]]                                                                                                                                            |
+    | /items/by-text-id/id10/breadcrumbs-from-roots | [[{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]]                                                                                                                                            |
+    | /items/90/breadcrumbs-from-roots              | [[{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}], [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]] |
+    | /items/by-text-id/id90/breadcrumbs-from-roots | [[{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}], [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]] |
 
-  Scenario: Find breadcrumbs for a team
+  Scenario Outline: Find breadcrumbs for a team
     Given I am the user with id "111"
-    When I send a GET request to "/items/70/breadcrumbs-from-roots?participant_id=102"
+    When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -116,10 +119,14 @@ Feature: Find all breadcrumbs to an item
         ]
       ]
       """
+    Examples:
+      | service_url                                   |
+      | /items/70/breadcrumbs-from-roots              |
+      | /items/by-text-id/id70/breadcrumbs-from-roots |
 
-  Scenario: Find breadcrumbs for a team for another item
+  Scenario Outline: Find breadcrumbs for a team for another item
     Given I am the user with id "111"
-    When I send a GET request to "/items/60/breadcrumbs-from-roots?participant_id=102"
+    When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -131,3 +138,7 @@ Feature: Find all breadcrumbs to an item
         [{"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}]
       ]
       """
+    Examples:
+      | service_url                                   |
+      | /items/60/breadcrumbs-from-roots              |
+      | /items/by-text-id/id60/breadcrumbs-from-roots |

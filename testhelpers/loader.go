@@ -23,10 +23,13 @@ var opt = godog.Options{
 
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package)
-func RunGodogTests(t *testing.T) {
+func RunGodogTests(t *testing.T, tags string) {
 	appenv.SetDefaultEnvToTest()
 
 	opt.Paths = featureFilesInCurrentDir()
+	if tags != "" {
+		opt.Tags = tags
+	}
 	godog.BindFlags("godog.", flag.CommandLine, &opt)
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {

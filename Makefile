@@ -24,6 +24,9 @@ PWD=$(shell pwd)
 VERSION_FETCHING_CMD=git describe --always --dirty
 GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
 
+# Don't cover the packages ending by test, and separate the packages by a comma
+COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | tr '\n' ',')
+
 # Filter for tests
 ifdef FILTER
 	TEST_FILTER=-run $(FILTER)
@@ -85,14 +88,14 @@ test: $(TEST_REPORT_DIR)
 	$(Q)# Warning: DIRECTORY must be a directory, it will fail if it is a file
 	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
-	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
+	$(Q)$(GOTEST) -gcflags=all=-l -race -coverpkg=$(COVER_PACKAGES) -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS) $(TEST_BDD_DIR)
 lint: $(GOLANGCILINT)
-	$(GOLANGCILINT) run --deadline 10m0s
+	$(GOLANGCILINT) run -v --deadline 10m0s
 
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)
@@ -116,7 +119,7 @@ $(TEST_REPORT_DIR):
 $(GODOG):
 	$(GOGET) -u github.com/cucumber/godog/cmd/godog@v0.9.0
 $(GOLANGCILINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.18.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.20.0
 $(MYSQL_CONNECTOR_JAVA):
 	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)

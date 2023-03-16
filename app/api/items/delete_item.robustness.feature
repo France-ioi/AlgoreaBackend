@@ -78,11 +78,6 @@ Feature: Delete an item - robustness
       | 0          | 10             | 21      |
       | 0          | 10             | 22      |
       | 1          | 10             | 21      |
-    And the database has the following table 'threads':
-      | id | creator_id | type | item_id |
-      | 1  | 10         | Help | 21      |
-      | 2  | 10         | Help | 22      |
-      | 3  | 11         | Bug  | null    |
     And the database has the following table 'languages':
       | tag |
       | fr  |
@@ -107,7 +102,6 @@ Feature: Delete an item - robustness
     And the table "results" should stay unchanged
     And the table "answers" should stay unchanged
     And the table "filters" should stay unchanged
-    And the table "threads" should stay unchanged
 
   Scenario: The user is not an owner of the item
     Given I am the user with id "11"
@@ -127,7 +121,6 @@ Feature: Delete an item - robustness
     And the table "results" should stay unchanged
     And the table "answers" should stay unchanged
     And the table "filters" should stay unchanged
-    And the table "threads" should stay unchanged
 
   Scenario: The item has children
     Given I am the user with id "11"
@@ -154,4 +147,3 @@ Feature: Delete an item - robustness
     And the table "results" should stay unchanged
     And the table "answers" should stay unchanged
     And the table "filters" should stay unchanged
-    And the table "threads" should stay unchanged

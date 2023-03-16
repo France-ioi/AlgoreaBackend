@@ -18,7 +18,7 @@ const deleteWithTrapsBatchSize = 1000
 
 // DeleteTemporaryWithTraps deletes temporary users who don't have active sessions.
 // It also removes linked rows in the tables:
-// 1. [`users_threads`, `filters`, `sessions`, `refresh_tokens`]
+// 1. [`filters`, `sessions`, `refresh_tokens`]
 //    having `user_id` = `users.group_id`;
 // 2. `answers` having `author_id`/`participant_id` = `users.group_id`;
 // 3. [`permissions_granted`, `permissions_generated`, `attempts`]
@@ -98,13 +98,12 @@ func (s *UserStore) deleteWithTraps(userScope *DB) int {
 func deleteOneBatchOfUsers(db *DB, userIDs []int64) {
 	db.mustBeInTransaction()
 
-	executeDeleteQuery(db, "users_threads", "WHERE user_id IN (?)", userIDs)
 	// we should delete from groups_groups explicitly in order to invoke triggers on groups_groups
 	executeDeleteQuery(db, "groups_groups", "WHERE parent_group_id IN (?)", userIDs)
 	// deleting from `groups` triggers deletion from
 	// `groups_propagate`, `groups_groups`, `groups_ancestors`, `group_pending_requests`, `group_membership_changes`,
 	// `permissions_granted`, `permissions_generated", `attempts`, `results`,
-	// `users`, `users_threads`, `answers`, `filters`, `sessions`, `refresh_tokens`
+	// `users`, `answers`, `filters`, `sessions`, `refresh_tokens`
 	executeDeleteQuery(db, "groups", "WHERE id IN (?)", userIDs)
 }
 

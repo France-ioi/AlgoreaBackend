@@ -162,7 +162,6 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64, requir
 	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	externalColumnList string,
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB) *database.DB {
-
 	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, requiredViewPermissionOnItems,
 		watchedGroupIDSet, watchedGroupID, columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
 
