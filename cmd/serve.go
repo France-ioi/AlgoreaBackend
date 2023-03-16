@@ -1,3 +1,4 @@
+// Package cmd provides the app's commands available through command line.
 package cmd
 
 import (

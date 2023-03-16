@@ -1,3 +1,4 @@
+// Package app contains the app server.
 package app
 
 import (

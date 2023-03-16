@@ -185,7 +185,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 				`error = \"invalid badges data\")"`,
 		},
 	}
-	
+
 	const moduleURL = "http://login.url.com"
 	for _, tt := range tests {
 		tt := tt

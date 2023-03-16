@@ -1,5 +1,6 @@
 // +build !prod
 
+// Package loggingtest provides functions to test the content of the logs.
 package loggingtest
 
 import (
@@ -46,7 +47,7 @@ func (hook *Hook) GetAllStructuredLogs() string {
 			logs += strings.TrimSpace(logString)
 		}
 	}
-	
+
 	return logs
 }
 

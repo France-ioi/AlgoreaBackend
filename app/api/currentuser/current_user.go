@@ -1,3 +1,4 @@
+// Package currentuser provides the services related to the current user.
 package currentuser
 
 import (

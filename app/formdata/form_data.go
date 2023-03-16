@@ -308,7 +308,7 @@ func (f *FormData) getUsedKeysPathFromValidatorPath(path string) string {
 	path = strings.Replace(path, ".<squash>", "", -1)
 	path = strings.Replace(path, "<squash>.", "", -1)
 	path = strings.Replace(path, "<squash>", "", -1)
-	
+
 	return path
 }
 
