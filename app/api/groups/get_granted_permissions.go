@@ -155,7 +155,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 
 	// Used to be a subquery, but it failed with MySQL-8.0.26 due to obscure bugs introduced in this version.
 	// It works when doing the query first and using the result in the second query.
-	// See commit 1abc337a81f83462d4361b9876abee2a82c0e23a
+	// See commit 5a25fbded8134c93c72dc853f72071943a1bd24c
 	managedGroupsWithCanGrantGroupAccessIds := user.GetManagedGroupsWithCanGrantGroupAccessIds(store)
 
 	var sourceGroupsQuery, groupsQuery *database.DB
