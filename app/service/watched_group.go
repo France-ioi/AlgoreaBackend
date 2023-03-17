@@ -22,5 +22,6 @@ func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID in
 	if !found {
 		return 0, false, ErrForbidden(errors.New("no rights to watch for watched_group_id"))
 	}
+
 	return watchedGroupID, true, NoError
 }
