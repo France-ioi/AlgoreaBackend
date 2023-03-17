@@ -136,7 +136,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	query := pickVisibleGroups(store.Groups().DB, user).
+	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
 		Joins(`
 			LEFT JOIN ? AS manager_access ON child_group_id = groups.id`,
 			store.GroupAncestors().ManagedByUser(user).

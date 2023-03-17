@@ -53,7 +53,8 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	innerQuery := store.Groups().
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
-			ancestorsOfJoinedGroups(store, user).QueryExpr(), managedUsersAndAncestorsOfManagedGroups(store, user).QueryExpr()).
+			store.Groups().AncestorsOfJoinedGroups(store, user).QueryExpr(),
+			store.Groups().ManagedUsersAndAncestorsOfManagedGroups(store, user).QueryExpr()).
 		Where("groups.type != 'Base' and groups.type != 'User'").
 		Where("groups.id != ?", user.GroupID).
 		Where(`
@@ -140,27 +141,4 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 		) AS 'current_user_managership'`+otherColumns, user.GroupID, user.GroupID, otherColumnValues)
 
 	return store.Raw("WITH user_ancestors AS ? ?", usersAncestorsQuery.SubQuery(), db.QueryExpr())
-}
-
-func ancestorsOfJoinedGroups(store *database.DataStore, user *database.User) *database.DB {
-	return store.ActiveGroupGroups().
-		Where("groups_groups_active.child_group_id = ?", user.GroupID).
-		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id").
-		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = groups_ancestors_active.ancestor_group_id").
-		Where("ancestor_group.type != 'ContestParticipants'").
-		Select("groups_ancestors_active.ancestor_group_id")
-}
-
-// managedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
-// and all users who are descendants from managed groups.
-func managedUsersAndAncestorsOfManagedGroups(store *database.DataStore, user *database.User) *database.DB {
-	return store.ActiveGroupAncestors().ManagedByUser(user).
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-		Joins(`
-			JOIN groups_ancestors_active AS ancestors_of_managed
-				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id AND
-				   (groups.type != 'User' OR ancestors_of_managed.is_self)`).
-		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
-		Where("ancestor_group.type != 'ContestParticipants'").
-		Select("ancestors_of_managed.ancestor_group_id")
 }
