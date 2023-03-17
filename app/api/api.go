@@ -1,3 +1,4 @@
+// Package api contains the web services API.
 package api
 
 import (

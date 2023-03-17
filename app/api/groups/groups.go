@@ -1,3 +1,4 @@
+// Package groups provides API services to manage groups.
 package groups
 
 import (

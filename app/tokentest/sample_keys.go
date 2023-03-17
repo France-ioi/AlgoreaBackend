@@ -1,5 +1,6 @@
 // +build !prod
 
+// Package tokentest provides cryptographic keys to be used for tests.
 package tokentest
 
 import "github.com/SermoDigital/jose/crypto"

@@ -133,10 +133,10 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 					Name        string `json:"name" validate:"set"`
 					OtherStruct struct {
 						Name *string `json:"name1" validate:"set"`
-					} `json:"other_struct,squash" validate:"set"`
+					} `json:"other_struct,squash" validate:"set"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 					OtherStruct2 struct {
 						Name *string `json:"name2" validate:"set"`
-					} `json:"other_struct2,squash" validate:"set"`
+					} `json:"other_struct2,squash" validate:"set"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 				} `json:"struct" validate:"set"`
 			}{},
 			`{"id":null, "struct":{"name1": "my name"}}`,
@@ -152,7 +152,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			&struct {
 				Struct struct {
 					Name string `json:"name" validate:"min=1"`
-				} `json:"struct,squash"`
+				} `json:"struct,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 			}{},
 			`{"name": ""}}`,
 			"invalid input data",
@@ -634,7 +634,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 					OtherStruct struct {
 						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
 					} `json:"other_struct" validate:"set"`
-				} `json:"struct,squash"`
+				} `json:"struct,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 			}{},
 			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
@@ -727,7 +727,7 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 					OtherStruct struct {
 						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
 					} `json:"other_struct" validate:"set"`
-				} `json:"struct,squash"`
+				} `json:"struct,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 			}{},
 			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},

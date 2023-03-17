@@ -111,7 +111,7 @@ func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey strin
 	if response.Success {
 		mustNotBeError(json.Unmarshal(response.Data, &resultRows))
 	}
-	
+
 	return response.Success, resultRows, nil
 }
 

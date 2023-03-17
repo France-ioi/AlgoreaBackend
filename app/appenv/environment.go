@@ -1,3 +1,4 @@
+// Package appenv provides utilities to configure the app environment (prod, dev, test).
 package appenv
 
 import "os"

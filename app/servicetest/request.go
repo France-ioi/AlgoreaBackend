@@ -1,5 +1,6 @@
 // +build !prod
 
+// Package servicetest provides utilities to test services.
 package servicetest
 
 import (
