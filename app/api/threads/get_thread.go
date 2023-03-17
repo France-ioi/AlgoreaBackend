@@ -1,4 +1,4 @@
-package items
+package threads
 
 import (
 	"net/http"
@@ -8,8 +8,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model thread
-type thread struct {
+// swagger:model threadInfo
+type threadInfo struct {
 	// required: true
 	ParticipantID int64 `json:"participant_id"`
 	// required: true
@@ -19,7 +19,7 @@ type thread struct {
 	Status string `json:"status"`
 }
 
-// swagger:operation GET /items/{item_id}/participant/{participant_id}/thread items getThread
+// swagger:operation GET /items/{item_id}/participant/{participant_id}/thread threads getThread
 // ---
 // summary: Retrieve a thread information
 // description: >
@@ -51,9 +51,7 @@ type thread struct {
 //   "200":
 //     description: OK. Success response with thread data
 //     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/thread"
+//       "$ref": "#/definitions/threadInfo"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -81,7 +79,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 		return service.InsufficientAccessRightsError
 	}
 
-	threadInfo := new(thread)
+	threadInfo := new(threadInfo)
 	threadInfo.ItemID = itemID
 	threadInfo.ParticipantID = participantID
 	threadInfo.Status = store.Threads().GetThreadStatus(participantID, itemID)
