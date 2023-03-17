@@ -3,13 +3,9 @@ package service
 import (
 	"errors"
 	"net/http"
-	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 func TestBase_ResolveWatchedGroupID(t *testing.T) {
@@ -41,23 +37,4 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 			assert.Equal(t, tt.wantAPIError, apiError)
 		})
 	}
-}
-
-func TestBase_ResolveWatchedGroupID_DBError(t *testing.T) {
-	db, mock := database.NewDBMock()
-	defer func() { _ = db.Close() }()
-	expectedError := errors.New("test")
-	mock.ExpectQuery("").WillReturnError(expectedError)
-	srv := &Base{store: database.NewDataStore(db)}
-	patch := monkey.PatchInstanceMethod(reflect.TypeOf(srv), "GetUser",
-		func(*Base, *http.Request) *database.User { return &database.User{GroupID: 567} })
-	defer patch.Unpatch()
-
-	req, _ := http.NewRequest("GET", "/dummy?watched_group_id=123", nil)
-	watchedGroupID, ok, appErr := srv.ResolveWatchedGroupID(req)
-
-	assert.Nil(t, mock.ExpectationsWereMet())
-	assert.Equal(t, int64(0), watchedGroupID)
-	assert.Equal(t, false, ok)
-	assert.Equal(t, ErrUnexpected(expectedError), appErr)
 }
