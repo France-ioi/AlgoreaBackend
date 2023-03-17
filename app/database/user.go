@@ -41,7 +41,7 @@ func (u *User) CanWatchGroupMembers(store *DataStore, groupID int64) bool {
 	return found
 }
 
-// GetManagedGroupsWithCanGrantGroupAccessIds retrieve all group ids that the user manager and for which
+// GetManagedGroupsWithCanGrantGroupAccessIds retrieves all group ids that the user manages and for which
 // he can_grant_group_access.
 func (u *User) GetManagedGroupsWithCanGrantGroupAccessIds(store *DataStore) []int64 {
 	var managedGroupsWithCanGrantGroupAccessIds []int64
