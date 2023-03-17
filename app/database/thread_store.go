@@ -49,14 +49,7 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 	}
 
 	// the current-user has the "can_watch >= answer" permission on the item
-	currentUserCanWatch, err := s.Permissions().MatchingUserAncestors(user).
-		Where("permissions.item_id = ?", itemID).
-		WherePermissionIsAtLeast("watch", "answer").
-		Select("1").
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-	if currentUserCanWatch {
+	if user.CanWatchItemAnswer(s.DataStore, itemID) {
 		return true
 	}
 
