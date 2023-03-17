@@ -1,3 +1,4 @@
+// Package mysqldb contains database-related functions that are specific to mysql.
 package mysqldb
 
 import (

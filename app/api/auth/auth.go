@@ -1,4 +1,4 @@
-// Package auth provides API services related to authentication
+// Package auth provides API services related to authentication.
 package auth
 
 import (

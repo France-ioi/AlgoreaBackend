@@ -1,3 +1,4 @@
+// Package payloads defines data structures to be used as tokens.
 package payloads
 
 import (

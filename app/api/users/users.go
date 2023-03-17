@@ -1,4 +1,4 @@
-// Package users provides API services for users managing
+// Package users provides API services for users managing.
 package users
 
 import (

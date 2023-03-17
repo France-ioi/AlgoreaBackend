@@ -1,3 +1,4 @@
+// Package service provides utilities used for implementing services.
 package service
 
 import (
