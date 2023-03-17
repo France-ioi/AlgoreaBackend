@@ -40,3 +40,17 @@ func (u *User) CanWatchGroupMembers(store *DataStore, groupID int64) bool {
 
 	return found
 }
+
+// GetManagedGroupsWithCanGrantGroupAccessIds retrieves all group ids that the user manages and for which
+// he can_grant_group_access.
+func (u *User) GetManagedGroupsWithCanGrantGroupAccessIds(store *DataStore) []int64 {
+	var managedGroupsWithCanGrantGroupAccessIds []int64
+
+	store.ActiveGroupAncestors().ManagedByUser(u).
+		Group("groups_ancestors_active.child_group_id").
+		Having("MAX(group_managers.can_grant_group_access)").
+		Select("groups_ancestors_active.child_group_id AS id").
+		Pluck("id", &managedGroupsWithCanGrantGroupAccessIds)
+
+	return managedGroupsWithCanGrantGroupAccessIds
+}
