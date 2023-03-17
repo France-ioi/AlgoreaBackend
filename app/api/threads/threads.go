@@ -1,4 +1,4 @@
-// Package threads provides API services for threads managing
+// Package threads provides API services for threads managing.
 package threads
 
 import (

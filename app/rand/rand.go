@@ -1,3 +1,4 @@
+// Package rand provides utilities to generate random data.
 package rand
 
 import (

@@ -1,3 +1,4 @@
+// Package token provides a way to serialize/un-serialize data structures in an encrypted token.
 package token
 
 import (

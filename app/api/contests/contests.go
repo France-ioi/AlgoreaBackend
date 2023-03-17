@@ -1,4 +1,4 @@
-// Package contests provides API services for contests managing
+// Package contests provides API services for contests managing.
 package contests
 
 import (

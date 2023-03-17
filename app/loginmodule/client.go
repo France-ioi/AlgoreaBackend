@@ -1,3 +1,4 @@
+// Package loginmodule provides functions related to user login.
 package loginmodule
 
 import (
