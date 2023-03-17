@@ -1,3 +1,4 @@
+// Package domain provides domain-specific configuration.
 package domain
 
 import (

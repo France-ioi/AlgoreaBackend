@@ -1,3 +1,4 @@
+// Package database provides an interface for database operations.
 package database
 
 import (

@@ -1,3 +1,4 @@
+// Package formdata provides an interface to handle forms.
 package formdata
 
 import (
