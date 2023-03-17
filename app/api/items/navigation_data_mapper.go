@@ -106,7 +106,6 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc func(*database.DB) *database.DB) *database.DB {
 	watchedGroupCanViewQuery := interface{}(gorm.Expr("NULL"))
-	watchedGroupParticipantsQuery := interface{}(gorm.Expr("(SELECT NULL AS id)"))
 	watchedGroupAvgScoreQuery := interface{}(gorm.Expr("(SELECT NULL AS avg_score, NULL AS all_validated)"))
 	if watchedGroupIDSet {
 		watchedGroupCanViewQuery = dataStore.Permissions().
@@ -114,12 +113,10 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 			Where("groups_ancestors_active.child_group_id = ?", watchedGroupID).
 			Where("permissions.item_id = items.id").
 			Select("IFNULL(MAX(IFNULL(can_view_generated_value, 1)), 1)").SubQuery()
-		watchedGroupParticipantsQuery = dataStore.ActiveGroupAncestors().
-			Select("participant.id").
-			Joins(`
-				JOIN `+"`groups`"+` AS participant
-					ON participant.id = groups_ancestors_active.child_group_id AND participant.type IN ('User', 'Team')`).
-			Where("groups_ancestors_active.ancestor_group_id = ?", watchedGroupID).SubQuery()
+
+		// Used to be made with a WITH(), but it failed with MySQL-8.0.26 due to obscure bugs introduced in this version.
+		// It works when we get the groups directly with joins.
+		// See commit 1abc337a81f83462d4361b9876abee2a82c0e23a
 		watchedGroupAvgScoreQuery = dataStore.Raw(
 			"SELECT IFNULL(AVG(score), 0) AS avg_score, COUNT(*) > 0 AND COUNT(*) = SUM(validated) AS all_validated FROM ? AS stats",
 			dataStore.Table("watched_group_participants").
@@ -129,31 +126,29 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 						WHERE results.item_id = items.id
 					) AS results ON results.participant_id = watched_group_participants.id`).
 				Select("MAX(IFNULL(results.score_computed, 0)) AS score, MAX(IFNULL(results.validated, 0)) AS validated").
-				Group("watched_group_participants.id").SubQuery()).SubQuery()
+				Group("participant.id").
+				Where("groups_ancestors_active.ancestor_group_id = ?", watchedGroupID).SubQuery()).SubQuery()
 	}
 
 	values := make([]interface{}, len(columnListValues), len(columnListValues)+4)
 	copy(values, columnListValues)
 	canWatchResultEnumIndex := dataStore.PermissionsGranted().WatchIndexByName("result")
 	values = append(values, watchedGroupCanViewQuery, canWatchResultEnumIndex, canWatchResultEnumIndex, canWatchResultEnumIndex)
-	itemsWithoutResultsQuery := dataStore.Raw("WITH watched_group_participants AS ? ?",
-		watchedGroupParticipantsQuery,
-		joinItemRelationsToItemsFunc(
-			dataStore.Items().
-				Joins("LEFT JOIN ? AS permissions ON items.id = permissions.item_id",
-					joinItemRelationsToPermissionsFunc(
-						dataStore.Permissions().
-							AggregatedPermissionsForItemsOnWhichGroupHasViewPermission(groupID, requiredViewPermissionOnItems)).SubQuery()).
-				WherePermissionIsAtLeast("view", requiredViewPermissionOnItems)).
-			Select(
-				columnList+`,
+	itemsWithoutResultsQuery := joinItemRelationsToItemsFunc(
+		dataStore.Items().
+			Joins("LEFT JOIN ? AS permissions ON items.id = permissions.item_id",
+				joinItemRelationsToPermissionsFunc(
+					dataStore.Permissions().
+						AggregatedPermissionsForItemsOnWhichGroupHasViewPermission(groupID, requiredViewPermissionOnItems)).SubQuery()).
+			WherePermissionIsAtLeast("view", requiredViewPermissionOnItems)).
+		Select(
+			columnList+`,
 				? AS watched_group_can_view,
 				can_watch_generated_value >= ? AS can_watch_for_group_results,
 				IF(can_watch_generated_value >= ?, watched_group_stats.avg_score, 0) AS watched_group_avg_score,
 				IF(can_watch_generated_value >= ?, watched_group_stats.all_validated, 0) AS watched_group_all_validated`,
-				values...).
-			Joins("JOIN LATERAL ? AS watched_group_stats", watchedGroupAvgScoreQuery).
-			SubQuery())
+			values...).
+		Joins("JOIN LATERAL ? AS watched_group_stats", watchedGroupAvgScoreQuery)
 
 	return itemsWithoutResultsQuery
 }
