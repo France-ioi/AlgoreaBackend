@@ -43,6 +43,8 @@ type TestContext struct {
 	dbTableData      map[string]*messages.PickleStepArgument_PickleTable
 	templateSet      *jet.Set
 	requestHeaders   map[string][]string
+	dbTables         map[string]map[string]map[string]interface{}
+	currentThreadKey string
 }
 
 var db *sql.DB
@@ -64,6 +66,7 @@ func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) { // nolint
 	ctx.requestHeaders = map[string][]string{}
 	ctx.dbTableData = make(map[string]*messages.PickleStepArgument_PickleTable)
 	ctx.templateSet = ctx.constructTemplateSet()
+	ctx.dbTables = make(map[string]map[string]map[string]interface{})
 
 	// reset the seed to get predictable results on PRNG for tests
 	rand.Seed(1)

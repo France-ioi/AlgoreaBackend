@@ -209,14 +209,13 @@ func (s *GroupStore) PickVisibleGroups(db *DB, user *User) *DB {
 }
 
 // IsVisibleFor checks whether a group is visible to a user.
-// For next PR
-// func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
-//	isVisible, err := s.PickVisibleGroups(s.Groups().DB, user).
-//		Where("groups.id = ?", groupID).
-//		Select("1").
-//		Limit(1).
-//		HasRows()
-//	mustNotBeError(err)
-//
-//	return isVisible
-// }
+func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
+	isVisible, err := s.PickVisibleGroups(s.Groups().DB, user).
+		Where("groups.id = ?", groupID).
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return isVisible
+}
