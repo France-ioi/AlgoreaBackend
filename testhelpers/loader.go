@@ -1,3 +1,4 @@
+//go:build !prod
 // +build !prod
 
 // Package testhelpers provides the interface and features to run the Gherkin tests.

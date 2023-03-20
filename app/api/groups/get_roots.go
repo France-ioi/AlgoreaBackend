@@ -34,18 +34,21 @@ type groupRootsViewResponseRow struct {
 // ---
 // summary: List root groups
 // description: Returns groups which are ancestors of a joined groups or managed non-user groups
-//   and do not have parents. Groups of type "Base" or "User" are ignored.
+//
+//	and do not have parents. Groups of type "Base" or "User" are ignored.
+//
 // responses:
-//   "200":
-//     description: OK. Success response with an array of root groups
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupRootsViewResponseRow"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	"200":
+//	  description: OK. Success response with an array of root groups
+//	  schema:
+//	    type: array
+//	    items:
+//	      "$ref": "#/definitions/groupRootsViewResponseRow"
+//	"401":
+//	  "$ref": "#/responses/unauthorizedResponse"
+//	"500":
+//	  "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

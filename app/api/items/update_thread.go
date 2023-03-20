@@ -1,14 +1,16 @@
 package items
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/validator"
-	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"errors"
 	"net/http"
 	"time"
 
+	"github.com/France-ioi/validator"
+	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -16,9 +18,9 @@ import (
 type threadUpdateFields struct {
 	// Optional
 	// enum: waiting_for_participant,waiting_for_trainer,closed
-	Status string `json:"status"`
+	Status string `json:"status" validate:"helper_group_id_set_if_non_open_to_open_status"`
 	// Optional
-	HelperGroupID int64 `json:"helper_group_id"`
+	HelperGroupID int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=:user_id,group_visible_by=participant_id"`
 	// Optional
 	MessageCount int `json:"message_count" validate:"gte=0,exclude_increment_if_set"`
 }
@@ -95,18 +97,6 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		return service.ErrInvalidRequest(err)
 	}
 
-	input := updateThreadRequest{}
-	formData := formdata.NewFormData(&input)
-
-	formData.RegisterValidation("exclude_increment_if_set", excludeIncrementIfSetValidator)
-	formData.RegisterTranslation("exclude_increment_if_set",
-		"cannot have both message_count and message_count_increment set")
-
-	err = formData.ParseJSONRequestData(r)
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
-
 	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		threadRecordQuery := store.Threads().
@@ -114,29 +104,61 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			Where("threads.item_id = ?", itemID).
 			Limit(1)
 
-		var oldThread threadUpdateFields
+		var oldThread struct {
+			Status        string
+			HelperGroupID int64
+			MessageCount  int
+		}
 		err = threadRecordQuery.WithWriteLock().Take(&oldThread).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			// Create
+		} else if err != nil {
+			service.MustNotBeError(err)
 		}
-		service.MustNotBeError(err)
+
+		input := updateThreadRequest{}
+		formData := formdata.NewFormData(&input)
+
+		formData.RegisterValidation("exclude_increment_if_message_count_set", excludeIncrementIfMessageCountSetValidator)
+		formData.RegisterTranslation("exclude_increment_if_message_count_set",
+			"cannot have both message_count and message_count_increment set")
+		formData.RegisterValidation("helper_group_id_set_if_non_open_to_open_status",
+			constructHelperGroupIdSetIfNonOpenToOpenStatus(oldThread.Status))
+		formData.RegisterTranslation("helper_group_id_set_if_non_open_to_open_status",
+			"the helper_group_id must be set to switch from a non-open to an open status")
+		formData.RegisterValidation("helper_group_id_not_set_when_set_or_keep_closed",
+			constructHelperGroupIdNotSetWhenSetOrKeepClosed(oldThread.Status))
+		formData.RegisterTranslation("helper_group_id_not_set_when_set_or_keep_closed",
+			"the helper_group_id must not be given when setting or keeping status to closed")
+		formData.RegisterValidation("group_visible_by", constructValidateGroupVisibleBy(srv, r))
+		formData.RegisterTranslation("group_visible_by", "the group must be visible to the current-user and the participant")
+
+		err = formData.ParseJSONRequestData(r)
+		if err != nil {
+			apiError = service.ErrInvalidRequest(err)
+			return apiError.Error
+		}
+
+		newHelperGroupID := oldThread.HelperGroupID
+		if input.HelperGroupID > 0 {
+			newHelperGroupID = input.HelperGroupID
+		}
 
 		if input.Status == "" {
-			// the current-user must be allowed to write
-			canWrite, err := store.Threads().UserCanWrite(srv.GetUser(r), participantID, itemID)
-			if err != nil {
-				return err
+			if input.HelperGroupID == 0 && input.MessageCount == 0 && input.MessageCountIncrement == 0 {
+				apiError = service.ErrInvalidRequest(
+					errors.New("either status, helper_group_id, message_count or message_count_increment must be given"))
+				return apiError.Error
 			}
+
+			// the current-user must be allowed to write
+			canWrite := store.Threads().UserCanWrite(srv.GetUser(r), participantID, itemID)
 			if !canWrite {
 				apiError = service.InsufficientAccessRightsError
 				return apiError.Error
 			}
 		} else {
-			canChangeStatus, err := store.Threads().UserCanChangeStatus(srv.GetUser(r), oldThread.Status, input.Status, participantID, itemID)
-			if err != nil {
-				return err
-			}
-			if !canChangeStatus {
+			if !store.Threads().UserCanChangeStatus(srv.GetUser(r), oldThread.Status, input.Status, participantID, itemID) {
 				apiError = service.InsufficientAccessRightsError
 				return apiError.Error
 			}
@@ -158,6 +180,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			threadData["item_id"] = itemID
 			threadData["participant_id"] = participantID
 			threadData["latest_update_at"] = time.Now()
+			threadData["helper_group_id"] = newHelperGroupID
 
 			service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil))
 		}
@@ -173,9 +196,68 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
-// excludeIncrementIfSetValidator validates that message_count and message_count_increment are not both set
-func excludeIncrementIfSetValidator(messageCountField validator.FieldLevel) bool {
-	return true
-	//return messageCountField.Field().Interface() == nil ||
-	//	messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Interface() == nil
+func constructValidateGroupVisibleBy(srv *Service, r *http.Request) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		store := srv.GetStore(r)
+		groupID := fl.Field().Int()
+
+		var user *database.User
+		param := fl.Param()
+		if param == ":user_id" {
+			user = srv.GetUser(r)
+		} else {
+			var err error
+			user = new(database.User)
+			user.GroupID, err = service.ResolveURLQueryPathInt64Field(r, param)
+			if err != nil {
+				return false
+			}
+		}
+
+		return store.Groups().IsVisibleFor(groupID, user)
+	}
+}
+
+func constructHelperGroupIdNotSetWhenSetOrKeepClosed(oldStatus string) validator.Func {
+	// if status is already "closed" and not changing status OR if switching to status "closed": helper_group_id must not be given
+	wasOpen := oldStatus == "waiting_for_trainer" || oldStatus == "waiting_for_participant"
+
+	return func(fl validator.FieldLevel) bool {
+		newStatus := fl.Top().Elem().FieldByName("Status").String()
+		willBeOpen := newStatus == "waiting_for_trainer" || newStatus == "waiting_for_participant"
+
+		helperGroupId := fl.Field().Int()
+		if helperGroupId != 0 {
+			if (!wasOpen && newStatus == "") || (!willBeOpen && newStatus != "") {
+				return false
+			}
+		}
+
+		return true
+	}
+}
+
+func constructHelperGroupIdSetIfNonOpenToOpenStatus(oldStatus string) validator.Func {
+	// if switching to an open status from a non-open status: helper_group_id must be given
+	wasOpen := oldStatus == "waiting_for_trainer" || oldStatus == "waiting_for_participant"
+
+	return func(fl validator.FieldLevel) bool {
+		newStatus := fl.Field().String()
+		willBeOpen := newStatus == "waiting_for_trainer" || newStatus == "waiting_for_participant"
+
+		helperGroupId := fl.Top().Elem().FieldByName("HelperGroupID").Int()
+		if !wasOpen && willBeOpen && helperGroupId == 0 {
+			return false
+		}
+
+		return true
+	}
+}
+
+// excludeIncrementIfMessageCountSetValidator validates that message_count and message_count_increment are not both set
+func excludeIncrementIfMessageCountSetValidator(messageCountField validator.FieldLevel) bool {
+	messageCount := messageCountField.Field().Int()
+	messageCountIncrement := messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Int()
+
+	return !(messageCount != 0 && messageCountIncrement != 0)
 }
