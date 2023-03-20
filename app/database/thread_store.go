@@ -182,37 +182,3 @@ func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus, newStatus strin
 
 	return false
 }
-
-// CanRequestHelpTo checks whether the user can request help on an item to a group.
-func (s *ThreadStore) CanRequestHelpTo(user *User, itemID, helperGroupID int64) bool {
-	// in order to verify that the user “can request help to” a group on an item we need to verify whether
-	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
-	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
-
-	itemAncestorsHelpPropagationQuery := s.Raw(`
-		WITH RECURSIVE items_ancestors_request_help_propagation(item_id) AS
-		(
-			SELECT ?
-			UNION ALL
-			SELECT items.id FROM items
-			JOIN items_items ON items_items.parent_item_id = items.id AND	items_items.request_help_propagation = 1
-			JOIN items_ancestors_request_help_propagation ON items_ancestors_request_help_propagation.item_id = items_items.child_item_id
-		)
-		SELECT item_id FROM items_ancestors_request_help_propagation
-	`, itemID)
-
-	canRequestHelpTo, err := s.Users().
-		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", user.GroupID).
-		Joins(`JOIN permissions_granted ON
-			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
-			(permissions_granted.item_id = ? OR permissions_granted.item_id IN (?))`, itemID, itemAncestorsHelpPropagationQuery.SubQuery()).
-		Joins(`JOIN groups_ancestors_active AS groups_ancestors_can_request_help_to ON
-			groups_ancestors_can_request_help_to.child_group_id = ?`, helperGroupID).
-		Where("permissions_granted.can_request_help_to = groups_ancestors_can_request_help_to.ancestor_group_id").
-		Select("1").
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-
-	return canRequestHelpTo
-}

@@ -318,7 +318,7 @@ Feature: Update thread - robustness
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
-        "status": "<status>,
+        "status": "<status>"
       }
       """
     Then the response code should be 403
