@@ -73,7 +73,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the following token "([^"]+)" signed by (.+) is distributed:$`, ctx.SignedTokenIsDistributed)
 	s.Step(`^logs should contain:$`, ctx.LogsShouldContain)
 
-	s.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`, ctx.TheLoginModuleTokenEndpointForCodeReturns)
+	s.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`,
+		ctx.TheLoginModuleTokenEndpointForCodeReturns)
 	s.Step(`^the login module "token" endpoint for code "([^"]*)" and code_verifier "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns)
 	s.Step(
