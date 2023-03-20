@@ -23,53 +23,57 @@ type idName struct {
 // ---
 // summary: Get group progress as a CSV file
 // description: >
-//              Returns the current progress of a group on a subset of items.
+//
+//	Returns the current progress of a group on a subset of items.
 //
 //
-//              For each item from `{parent_item_id}` and its visible children, displays the average result
-//              of each direct child of the given `group_id` whose type is not in (Team, User).
+//	For each item from `{parent_item_id}` and its visible children, displays the average result
+//	of each direct child of the given `group_id` whose type is not in (Team, User).
 //
 //
-//              Restrictions:
+//	Restrictions:
 //
-//              * The current user should be a manager of the group (or of one of its ancestors)
-//              with `can_watch_members` set to true,
+//	* The current user should be a manager of the group (or of one of its ancestors)
+//	with `can_watch_members` set to true,
 //
-//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//	* The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//              otherwise the 'forbidden' error is returned.
+//	otherwise the 'forbidden' error is returned.
+//
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: parent_item_ids
-//   in: query
-//   type: array
-//   required: true
-//   items:
+//   - name: group_id
+//     in: path
 //     type: integer
-// responses:
-//   "200":
-//     description: OK. Success response with users progress on items
-//     content:
-//       text/csv:
-//         schema:
-//            type: string
-//     examples:
-//            text/csv:
-//              Group name;Parent item;1. First child item;2. Second child item
+//     required: true
+//   - name: parent_item_ids
+//     in: query
+//     type: array
+//     required: true
+//     items:
+//     type: integer
 //
-//              Our group;30;20;10
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+// responses:
+//
+//	"200":
+//	  description: OK. Success response with users progress on items
+//	  content:
+//	    text/csv:
+//	      schema:
+//	         type: string
+//	  examples:
+//	         text/csv:
+//	           Group name;Parent item;1. First child item;2. Second child item
+//
+//	           Our group;30;20;10
+//	"400":
+//	  "$ref": "#/responses/badRequestResponse"
+//	"401":
+//	  "$ref": "#/responses/unauthorizedResponse"
+//	"403":
+//	  "$ref": "#/responses/forbiddenResponse"
+//	"500":
+//	  "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

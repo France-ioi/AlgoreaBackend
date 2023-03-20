@@ -43,19 +43,19 @@ type groupChildrenViewResponseRow struct {
 // summary: List group's children
 // description: >
 //
-//	Returns visible children of the group having types
-//	specified by `types_include` and `types_exclude` parameters.
+//   Returns visible children of the group having types
+//   specified by `types_include` and `types_exclude` parameters.
 //
 //
-//	A group is visible if it is either
-//	1) an ancestor of a group the current user joined, or 2) an ancestor of a non-user group he manages, or
-//	3) a descendant of a group he manages, or 4) a public group.
+//   A group is visible if it is either
+//   1) an ancestor of a group the current user joined, or 2) an ancestor of a non-user group he manages, or
+//   3) a descendant of a group he manages, or 4) a public group.
 //
 //
-//	* The `group_id` should be visible to the current user.
+//   * The `group_id` should be visible to the current user.
 //
 //
-//	Note: `user_count` and `current_user_can_*` fields are omitted when the user is not a manager of the group.
+//   Note: `user_count` and `current_user_can_*` fields are omitted when the user is not a manager of the group.
 //
 // parameters:
 //   - name: group_id
@@ -67,14 +67,14 @@ type groupChildrenViewResponseRow struct {
 //     default: [Class,Team,Club,Friends,Other,User,Session,Base]
 //     type: array
 //     items:
-//     type: string
-//     enum: [Class,Team,Club,Friends,Other,User,Session,Base]
+//       type: string
+//       enum: [Class,Team,Club,Friends,Other,User,Session,Base]
 //   - name: types_exclude
 //     in: query
 //     default: []
 //     type: array
 //     items:
-//     type: string
+//       type: string
 //     enum: [Class,Team,Club,Friends,Other,User,Session,Base]
 //   - name: from.id
 //     description: Start the page from the sub-group next to the sub-group with `id`=`{from.id}`
@@ -85,7 +85,7 @@ type groupChildrenViewResponseRow struct {
 //     default: [name,id]
 //     type: array
 //     items:
-//     type: string
+//       type: string
 //     enum: [name,-name,type,-type,grade,-grade,id,-id]
 //   - name: limit
 //     description: Display the first N sub-groups
@@ -93,23 +93,21 @@ type groupChildrenViewResponseRow struct {
 //     type: integer
 //     maximum: 1000
 //     default: 500
-//
 // responses:
-//
-//	"200":
-//	  description: OK. Success response with an array of group's children
-//	  schema:
-//	    type: array
-//	    items:
-//	      "$ref": "#/definitions/groupChildrenViewResponseRow"
-//	"400":
-//	  "$ref": "#/responses/badRequestResponse"
-//	"401":
-//	  "$ref": "#/responses/unauthorizedResponse"
-//	"403":
-//	  "$ref": "#/responses/forbiddenResponse"
-//	"500":
-//	  "$ref": "#/responses/internalErrorResponse"
+//   "200":
+//     description: OK. Success response with an array of group's children
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupChildrenViewResponseRow"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

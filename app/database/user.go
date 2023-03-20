@@ -43,6 +43,19 @@ func (u *User) CanWatchItemAnswer(s *DataStore, itemID int64) bool {
 	return userCanWatchAnswer
 }
 
+// CanWatchMembersOnParticipant checks whether the user can_watch_members on a participant
+func (u *User) CanWatchMembersOnParticipant(s *DataStore, participantID int64) bool {
+	userCanWatchMembersOnParticipant, err := s.ActiveGroupAncestors().ManagedByUser(u).
+		Where("groups_ancestors_active.child_group_id = ?", participantID).
+		Where("group_managers.can_watch_members").
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return userCanWatchMembersOnParticipant
+}
+
 // CanRequestHelpTo checks whether the user can request help on an item to a group.
 func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool {
 	// in order to verify that the user “can request help to” a group on an item we need to verify whether

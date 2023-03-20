@@ -59,43 +59,46 @@ type groupGroupProgressResponseTableCell struct {
 // ---
 // summary: Get group progress
 // description: >
-//              Returns the current progress of a group on a subset of items.
+//
+//	Returns the current progress of a group on a subset of items.
 //
 //
-//              For each item from `{parent_item_id}` and its visible children, displays the result
-//              of each direct child of the given `group_id` whose type is not in (Team, User).
+//	For each item from `{parent_item_id}` and its visible children, displays the result
+//	of each direct child of the given `group_id` whose type is not in (Team, User).
 //
 //
-//              Restrictions:
+//	Restrictions:
 //
-//              * The current user should be a manager of the group (or of one of its ancestors)
-//              with `can_watch_members` set to true,
+//	* The current user should be a manager of the group (or of one of its ancestors)
+//	with `can_watch_members` set to true,
 //
-//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//	* The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//              otherwise the 'forbidden' error is returned.
+//	otherwise the 'forbidden' error is returned.
+//
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: parent_item_ids
-//   in: query
-//   type: array
-//   required: true
-//   items:
+//   - name: group_id
+//     in: path
 //     type: integer
-// - name: from.id
-//   description: Start the page from the group next to the group with `id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display results for the first N groups (sorted by `name`)
-//   in: query
-//   type: integer
-//   maximum: 20
-//   default: 10
+//     required: true
+//   - name: parent_item_ids
+//     in: query
+//     type: array
+//     required: true
+//     items:
+//     type: integer
+//   - name: from.id
+//     description: Start the page from the group next to the group with `id`=`{from.id}`
+//     in: query
+//     type: integer
+//   - name: limit
+//     description: Display results for the first N groups (sorted by `name`)
+//     in: query
+//     type: integer
+//     maximum: 20
+//     default: 10
+//
 // responses:
 //   "200":
 //     description: >

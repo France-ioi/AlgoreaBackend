@@ -39,23 +39,25 @@ type updateThreadRequest struct {
 // ---
 // summary: Update a thread
 // description: >
+//
 //   Service to update thread information.
 //
 //   If the thread doesn't exist, it is created.
 //
 //	 Once a thread has been created, it cannot be deleted or set back to `not_started`.
 //
-//  Validations and restrictions:
-//    * if `status` is given:
-//      - The participant of a thread can always switch the thread from open to any another other status. He can only switch it from non-open to an open status if he is allowed to request help on this item (see “specific permission” above)
-//      - A user who has `can_watch>=answer` on the item AND `can_watch_members` on the participant: can always switch a thread to any open status (i.e. he can always open it but not close it)
-//      - A user who `can write` on the thread can switch from an open status to another open status.
-//    * if `status` is already "closed" and not changing status OR if switching to status "closed": `helper_group_id` must not be given
-//    * if switching to an open status from a non-closed status: `helper_group_id` must be given
-//    * if given, the `helper_group_id` must be visible to the current-user and to participant.
-//    * if participant is the current user and `helper_group_id` given, `helper_group_id` must be a descendants (including self) of one of the group he `can_request_help_to`.
-//    * if `helper_group_id` or `message_count` or `message_count_increment` is given: the current-user must be allowed to write (see doc) (if `status` is given, checks related to status supersede this one).
-//    * at most one of `message_count_increment`, `message_count` must be given
+//   Validations and restrictions:
+//     * if `status` is given:
+//       - The participant of a thread can always switch the thread from open to any another other status. He can only switch it from non-open to an open status if he is allowed to request help on this item (see “specific permission” above)
+//       - A user who has `can_watch>=answer` on the item AND `can_watch_members` on the participant: can always switch a thread to any open status (i.e. he can always open it but not close it)
+//       - A user who `can write` on the thread can switch from an open status to another open status.
+//     * if `status` is already "closed" and not changing status OR if switching to status "closed": `helper_group_id` must not be given
+//     * if switching to an open status from a non-closed status: `helper_group_id` must be given
+//     * if given, the `helper_group_id` must be visible to the current-user and to participant.
+//     * if participant is the current user and `helper_group_id` given, `helper_group_id` must be a descendants (including self) of one of the group he `can_request_help_to`.
+//     * if `helper_group_id` or `message_count` or `message_count_increment` is given: the current-user must be allowed to write (see doc) (if `status` is given, checks related to status supersede this one).
+//     * at most one of `message_count_increment`, `message_count` must be given
+//
 // parameters:
 // - name: item_id
 //   in: path

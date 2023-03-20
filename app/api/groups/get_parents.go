@@ -28,18 +28,18 @@ type groupParentsViewResponseRow struct {
 // summary: List group parents
 // description: >
 //
-//	Lists visible parents of the given group.
+//   Lists visible parents of the given group.
 //
 //
-//	A group is visible if it is either
-//	1) an ancestor of a group the current user joined, or 2) an ancestor of a non-user group he manages, or
-//	3) a descendant of a group he manages, or 4) a public group.
+//   A group is visible if it is either
+//   1) an ancestor of a group the current user joined, or 2) an ancestor of a non-user group he manages, or
+//   3) a descendant of a group he manages, or 4) a public group.
 //
 //
-//	Groups with `type`='ContestParticipants' are not displayed.
+//   Groups with `type`='ContestParticipants' are not displayed.
 //
 //
-//	* The `group_id` should be visible to the current user, otherwise the 'forbidden' error is returned.
+//   * The `group_id` should be visible to the current user, otherwise the 'forbidden' error is returned.
 //
 // parameters:
 //   - name: group_id
@@ -51,8 +51,8 @@ type groupParentsViewResponseRow struct {
 //     default: [name,id]
 //     type: array
 //     items:
-//     type: string
-//     enum: [name,-name,id,-id]
+//       type: string
+//       enum: [name,-name,id,-id]
 //   - name: from.id
 //     description: Start the page from the parent next to the parent with `groups.id`=`{from.id}`
 //     in: query
@@ -63,23 +63,21 @@ type groupParentsViewResponseRow struct {
 //     type: integer
 //     maximum: 1000
 //     default: 500
-//
 // responses:
-//
-//	"200":
-//	  description: OK. The array of group parents
-//	  schema:
-//	    type: array
-//	    items:
-//	      "$ref": "#/definitions/groupParentsViewResponseRow"
-//	"400":
-//	  "$ref": "#/responses/badRequestResponse"
-//	"401":
-//	  "$ref": "#/responses/unauthorizedResponse"
-//	"403":
-//	  "$ref": "#/responses/forbiddenResponse"
-//	"500":
-//	  "$ref": "#/responses/internalErrorResponse"
+//   "200":
+//     description: OK. The array of group parents
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupParentsViewResponseRow"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

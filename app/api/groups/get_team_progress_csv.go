@@ -16,33 +16,36 @@ import (
 // ---
 // summary: Get group progress for teams as a CSV file
 // description: >
-//              Returns the current progress of teams on a subset of items.
+//
+//	Returns the current progress of teams on a subset of items.
 //
 //
-//              For each item from `{parent_item_id}` and its visible children,
-//              displays the result of each team among the descendants of the group.
+//	For each item from `{parent_item_id}` and its visible children,
+//	displays the result of each team among the descendants of the group.
 //
 //
-//              Restrictions:
+//	Restrictions:
 //
-//              * The current user should be a manager of the group (or of one of its ancestors)
-//              with `can_watch_members` set to true,
+//	* The current user should be a manager of the group (or of one of its ancestors)
+//	with `can_watch_members` set to true,
 //
-//              * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//	* The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//              otherwise the 'forbidden' error is returned.
+//	otherwise the 'forbidden' error is returned.
+//
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: parent_item_ids
-//   in: query
-//   required: true
-//   type: array
-//   items:
+//   - name: group_id
+//     in: path
 //     type: integer
+//     required: true
+//   - name: parent_item_ids
+//     in: query
+//     required: true
+//     type: array
+//     items:
+//     type: integer
+//
 // responses:
 //   "200":
 //     description: OK. Success response with users progress on items

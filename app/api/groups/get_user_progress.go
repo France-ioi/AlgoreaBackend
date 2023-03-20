@@ -52,49 +52,52 @@ type groupUserProgressResponseTableCell struct {
 // ---
 // summary: Get group progress for users
 // description: >
-//              Returns the current progress of users on a subset of items.
+//
+//	Returns the current progress of users on a subset of items.
 //
 //
-//              For each item from `{parent_item_id}` and its visible children,
-//              displays the result of all user self-groups among the descendants of the given group
-//              (including those in teams).
+//	For each item from `{parent_item_id}` and its visible children,
+//	displays the result of all user self-groups among the descendants of the given group
+//	(including those in teams).
 //
 //
-//              For each user, only the result corresponding to his best score counts
-//              (across all his teams and his own results) disregarding whether or not
-//              the score was done in a team which is descendant of the input group.
+//	For each user, only the result corresponding to his best score counts
+//	(across all his teams and his own results) disregarding whether or not
+//	the score was done in a team which is descendant of the input group.
 //
 //
-//              Restrictions:
+//	Restrictions:
 //
-//              * The current user should be a manager of the group (or of one of its ancestors)
-//              with `can_watch_members` set to true,
+//	* The current user should be a manager of the group (or of one of its ancestors)
+//	with `can_watch_members` set to true,
 //
-//              * The current user should have `can_watch` >= 'result' on each of `{parent_item_ids}` items,
+//	* The current user should have `can_watch` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//              otherwise the 'forbidden' error is returned.
+//	otherwise the 'forbidden' error is returned.
+//
 // parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: parent_item_ids
-//   required: true
-//   in: query
-//   type: array
-//   items:
+//   - name: group_id
+//     in: path
 //     type: integer
-// - name: from.id
-//   description: Start the page from the user next to the user with `groups.id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display results for the first N users (sorted by `groups.name`)
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
+//     required: true
+//   - name: parent_item_ids
+//     required: true
+//     in: query
+//     type: array
+//     items:
+//     type: integer
+//   - name: from.id
+//     description: Start the page from the user next to the user with `groups.id`=`{from.id}`
+//     in: query
+//     type: integer
+//   - name: limit
+//     description: Display results for the first N users (sorted by `groups.name`)
+//     in: query
+//     type: integer
+//     maximum: 1000
+//     default: 500
+//
 // responses:
 //   "200":
 //     description: OK. Success response with users progress on items
