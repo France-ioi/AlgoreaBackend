@@ -17,13 +17,16 @@ Feature: Update thread - robustness
       | jess           | 5        |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 12              | 11             |
+      | 11              | 10             |
       | 10              | 3              |
+      | 10              | 4              |
       | 10              | 5              |
     And the groups ancestors are computed
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_watch_members |
-      | 10       | 2          | true              |
-      | 10       | 4          | false             |
+      | 12       | 2          | true              |
+      | 12       | 4          | false             |
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 10  | en                   |
@@ -54,22 +57,32 @@ Feature: Update thread - robustness
       | 2        | 120     | result              |
       | 2        | 130     | result              |
       | 4        | 150     | answer              |
-      | 4        | 160     | answer_with_grant   |
+      | 4        | 160     | none                |
       | 4        | 170     | answer_with_grant   |
       | 4        | 180     | answer              |
+      | 2        | 320     | answer              |
+      | 4        | 330     | answer              |
+      | 4        | 340     | answer_with_grant   |
+      | 4        | 350     | answer              |
+      | 4        | 360     | answer_with_grant   |
+      | 4        | 430     | answer_with_grant   |
+      | 4        | 440     | answer              |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | validated_at        |
       | 0          | 1              | 40      | 2020-01-01 00:00:00 |
+      | 0          | 1              | 160     | 2020-01-01 00:00:00 |
+      | 0          | 4              | 430     | 2020-01-01 00:00:00 |
+      | 0          | 4              | 440     | 2020-01-01 00:00:00 |
     And the database has the following table 'threads':
       | item_id | participant_id | status                  | helper_group_id | latest_update_at    |
       | 10      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
       | 20      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
-      | 30      | 3              | waiting_for_participant | 10              | 2020-01-01 00:00:00 |
+      | 30      | 3              | waiting_for_participant | 20              | 2020-01-01 00:00:00 |
       | 40      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
       | 50      | 3              | waiting_for_trainer     | 10              | 2020-01-01 00:00:00 |
       | 60      | 1              | waiting_for_participant | 1               | 2020-01-01 00:00:00 |
-      | 70      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
-      | 80      | 1              | waiting_for_trainer     | 1               | 2020-01-01 00:00:00 |
+      | 70      | 3              | closed                  | 10              | 2020-01-01 00:00:00 |
+      | 80      | 3              | closed                  | 10              | 2020-01-01 00:00:00 |
       | 110     | 3              | closed                  | 3               | 2020-01-01 00:00:00 |
       | 120     | 3              | closed                  | 3               | 2020-01-01 00:00:00 |
       | 150     | 3              | waiting_for_participant | 10              | 2020-01-01 00:00:00 |
@@ -101,9 +114,7 @@ Feature: Update thread - robustness
       Then the response code should be 400
       And the response error message should contain "Either status, helper_group_id, message_count or message_count_increment must be given"
 
-  # TODO: 1) Test should be added for "userCanWrite", that the user have access to item (see doc)
-  # TODO: 2) If participant == user, existence should be tested via canRequest Help
-  Scenario: TODO: The item should exist
+  Scenario: The item should exist
     Given I am the user with id "1"
     When I send a PUT request to "/items/404/participant/1/thread" with the following body:
       """
@@ -115,6 +126,26 @@ Feature: Update thread - robustness
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The participant should exist
+    Given I am the user with id "1"
+    When I send a PUT request to "/items/5/participant/404/thread" with the following body:
+      """
+      {
+        "status": "waiting_for_trainer",
+        "helper_group_id": 10
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+        "helper_group_id": ["the group must be visible to the current-user and the participant"]
+        }
+      }
+    """
 
   # To write on a thread, a user must fulfill either of those conditions:
   #  (1) be the participant of the thread
@@ -135,7 +166,7 @@ Feature: Update thread - robustness
     And the response error message should contain "Insufficient access rights"
 
   Scenario: >
-      Should return access error when the status is not set and
+      Should return access error when the status is not set and not part of the helper group
       "can write to thread" condition (2) is not met: can_watch_members of the participant
     Given I am the user with id "4"
     When I send a PUT request to "/items/30/participant/3/thread" with the following body:
@@ -216,10 +247,9 @@ Feature: Update thread - robustness
     }
     """
 
-    # TODO: Implement when forum permissions are merged
-  Scenario Outline: TODO: Participant of a thread should not be able to switch from non-open to open if not allowed to request help on the item
-    Given I am the user with id "1"
-    When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
+  Scenario Outline: Participant of a thread should not be able to switch from non-open to open if not allowed to request help on the item
+    Given I am the user with id "3"
+    When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
         "status": "<status>,
@@ -233,7 +263,7 @@ Feature: Update thread - robustness
       "message": "Bad Request",
       "error_text": "Invalid input data",
       "errors":{
-        "message_count": ["cannot have both message_count and message_count_increment set"]
+        "helper_group_id": ["the group must be descendant of a group the participant can request help to"]
       }
     }
     """
@@ -243,6 +273,11 @@ Feature: Update thread - robustness
       | 80      | waiting_for_participant |                                        |
       | 90      | waiting_for_trainer     | Thread doesn't exist yet (not_started) |
       | 100     | waiting_for_participant | Thread doesn't exist yet (not_started) |
+      | 1004    | waiting_for_participant |                                        |
+      | 1005    | waiting_for_participant |                                        |
+      | 1006    | waiting_for_participant |                                        |
+      | 1007    | waiting_for_participant | Thread doesn't exist yet (not_started) |
+      | 1008    | waiting_for_participant | Thread doesn't exist yet (not_started) |
 
   Scenario Outline: Should not switch to open if can_watch_members on the participant but can_watch<answer
     Given I am the user with id "2"
@@ -278,7 +313,7 @@ Feature: Update thread - robustness
       | 130     | waiting_for_trainer     | Thread doesn't exist yet (not_started) |
       | 140     | waiting_for_participant | Thread doesn't exist yet (not_started) |
 
-  Scenario Outline: TODO: Cannot switch between open status if thread open but not a part of the helper group
+  Scenario Outline: Cannot switch between open status if thread open but not a part of the helper group, and cannot watch participant
     Given I am the user with id "1"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
@@ -286,22 +321,12 @@ Feature: Update thread - robustness
         "status": "<status>,
       }
       """
-    Then the response code should be 400
-    And the response body should be, in JSON:
-    """
-    {
-      "success": false,
-      "message": "Bad Request",
-      "error_text": "Invalid input data",
-      "errors":{
-        "message_count": ["cannot have both message_count and message_count_increment set"]
-      }
-    }
-    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
     Examples:
-      | item_id | status                  | comment |
-      | 150     | waiting_for_trainer     |         |
-      | 160     | waiting_for_participant |         |
+      | item_id | status                  | comment             |
+      | 150     | waiting_for_trainer     | can_watch >= answer |
+      | 160     | waiting_for_participant | item validated      |
 
   Scenario Outline: If switching to an open status from a non-open status, helper_group_id must be given
     Given I am the user with id "1"
@@ -396,6 +421,89 @@ Feature: Update thread - robustness
       "error_text": "Invalid input data",
       "errors":{
         "helper_group_id": ["the group must be visible to the current-user and the participant"]
+      }
+    }
+    """
+
+  Scenario: A user who can_watch >= answer on the item and can_watch the participant should not be able to close a thread
+    Given I am the user with id "2"
+    When I send a PUT request to "/items/320/participant/3/thread" with the following body:
+      """
+      {
+        "status": "closed"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario Outline: A user not part of the helper group with can_watch >= answer on the item cannot switch a thread to an open status
+    Given I am the user with id "4"
+    When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
+      """
+      {
+        "status": "<status>",
+        "helper_group_id": 10
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    Examples:
+      | item_id | status                  | comment                         |
+      | 330     | waiting_for_trainer     | Was open already: switch status |
+      | 340     | waiting_for_participant | Was open already: switch status |
+      | 350     | waiting_for_trainer     | Was closed                      |
+      | 360     | waiting_for_participant | Was closed                      |
+
+  Scenario Outline: A user with can_watch_members on the participant cannot switch a thread to an open status
+    Given I am the user with id "2"
+    When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
+      """
+      {
+        "status": "<status>",
+        "helper_group_id": 10
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    Examples:
+      | item_id | status                  | comment                         |
+      | 370     | waiting_for_trainer     | Was open already: switch status |
+      | 380     | waiting_for_participant | Was open already: switch status |
+      | 390     | waiting_for_trainer     | Was closed                      |
+      | 400     | waiting_for_participant | Was closed                      |
+
+  Scenario Outline: A user cannot write in a thread that is not open
+    Given I am the user with id "3"
+    When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
+      """
+      {
+        "message_count": 1
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    Examples:
+      | item_id | comment               |
+      | 410     | Thread does not exist |
+      | 420     | Thread closed         |
+
+  Scenario: If participant is the user and helper_group_id is given, it must be a descendant or a group he "can_request_help_to"
+    Given I am the user with id "3"
+    When I send a PUT request to "/items/430/participant/3/thread" with the following body:
+      """
+      {
+        "helper_group_id": 60
+      }
+      """
+      Then the response code should be 400
+      And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Bad Request",
+      "error_text": "Invalid input data",
+      "errors":{
+        "helper_group_id": ["the group must be descendant of a group the participant can request help to"]
       }
     }
     """

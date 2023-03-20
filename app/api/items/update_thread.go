@@ -20,7 +20,7 @@ type threadUpdateFields struct {
 	// enum: waiting_for_participant,waiting_for_trainer,closed
 	Status string `json:"status" validate:"helper_group_id_set_if_non_open_to_open_status"`
 	// Optional
-	HelperGroupID int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=:user_id,group_visible_by=participant_id"`
+	HelperGroupID *int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=:user_id,group_visible_by=participant_id,can_request_help_to_when_own_thread"`
 	// Optional
 	MessageCount int `json:"message_count" validate:"gte=0,exclude_increment_if_set"`
 }
@@ -32,7 +32,7 @@ type updateThreadRequest struct {
 
 	// Used to increment the message count when we are not sure of the exact total message count. Can be negative.
 	// Optional
-	MessageCountIncrement int `json:"message_count_increment"`
+	MessageCountIncrement *int `json:"message_count_increment"`
 }
 
 // swagger:operation PUT /items/{item_id}/participant/{participant_id}/thread items threadUpdate
@@ -116,6 +116,8 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			service.MustNotBeError(err)
 		}
 
+		user := srv.GetUser(r)
+
 		input := updateThreadRequest{}
 		formData := formdata.NewFormData(&input)
 
@@ -132,6 +134,10 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			"the helper_group_id must not be given when setting or keeping status to closed")
 		formData.RegisterValidation("group_visible_by", constructValidateGroupVisibleBy(srv, r))
 		formData.RegisterTranslation("group_visible_by", "the group must be visible to the current-user and the participant")
+		formData.RegisterValidation("can_request_help_to_when_own_thread",
+			constructValidateCanRequestHelpToWhenOwnThread(user, itemID, participantID, store))
+		formData.RegisterTranslation("can_request_help_to_when_own_thread",
+			"the group must be descendant of a group the participant can request help to")
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -140,12 +146,12 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		}
 
 		newHelperGroupID := oldThread.HelperGroupID
-		if input.HelperGroupID > 0 {
-			newHelperGroupID = input.HelperGroupID
+		if input.HelperGroupID != nil {
+			newHelperGroupID = *input.HelperGroupID
 		}
 
 		if input.Status == "" {
-			if input.HelperGroupID == 0 && input.MessageCount == 0 && input.MessageCountIncrement == 0 {
+			if input.HelperGroupID == nil && input.MessageCount == 0 && input.MessageCountIncrement == nil {
 				apiError = service.ErrInvalidRequest(
 					errors.New("either status, helper_group_id, message_count or message_count_increment must be given"))
 				return apiError.Error
@@ -166,9 +172,9 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 
 		threadData := formData.ConstructPartialMapForDB("threadUpdateFields")
 
-		if formData.IsSet("message_count_increment") {
+		if formData.IsSet("message_count_increment") && input.MessageCountIncrement != nil {
 			// if the thread doesn't exist, oldThread.MessageCount = 0
-			newMessageCount := oldThread.MessageCount + input.MessageCountIncrement
+			newMessageCount := oldThread.MessageCount + *input.MessageCountIncrement
 			if newMessageCount < 0 {
 				newMessageCount = 0
 			}
@@ -196,10 +202,24 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
+func constructValidateCanRequestHelpToWhenOwnThread(user *database.User, itemID, participantID int64, store *database.DataStore) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		if user.GroupID != participantID {
+			return true
+		}
+
+		helperGroupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+		return store.Threads().CanRequestHelpTo(user, itemID, *helperGroupIDPtr)
+	}
+}
+
 func constructValidateGroupVisibleBy(srv *Service, r *http.Request) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		store := srv.GetStore(r)
-		groupID := fl.Field().Int()
+		groupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+		if groupIDPtr == nil {
+			return false
+		}
 
 		var user *database.User
 		param := fl.Param()
@@ -214,7 +234,7 @@ func constructValidateGroupVisibleBy(srv *Service, r *http.Request) validator.Fu
 			}
 		}
 
-		return store.Groups().IsVisibleFor(groupID, user)
+		return store.Groups().IsVisibleFor(*groupIDPtr, user)
 	}
 }
 
@@ -226,8 +246,8 @@ func constructHelperGroupIdNotSetWhenSetOrKeepClosed(oldStatus string) validator
 		newStatus := fl.Top().Elem().FieldByName("Status").String()
 		willBeOpen := newStatus == "waiting_for_trainer" || newStatus == "waiting_for_participant"
 
-		helperGroupId := fl.Field().Int()
-		if helperGroupId != 0 {
+		helperGroupIdPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+		if helperGroupIdPtr != nil {
 			if (!wasOpen && newStatus == "") || (!willBeOpen && newStatus != "") {
 				return false
 			}
@@ -245,8 +265,8 @@ func constructHelperGroupIdSetIfNonOpenToOpenStatus(oldStatus string) validator.
 		newStatus := fl.Field().String()
 		willBeOpen := newStatus == "waiting_for_trainer" || newStatus == "waiting_for_participant"
 
-		helperGroupId := fl.Top().Elem().FieldByName("HelperGroupID").Int()
-		if !wasOpen && willBeOpen && helperGroupId == 0 {
+		helperGroupIdPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+		if !wasOpen && willBeOpen && helperGroupIdPtr == nil {
 			return false
 		}
 
@@ -256,8 +276,8 @@ func constructHelperGroupIdSetIfNonOpenToOpenStatus(oldStatus string) validator.
 
 // excludeIncrementIfMessageCountSetValidator validates that message_count and message_count_increment are not both set
 func excludeIncrementIfMessageCountSetValidator(messageCountField validator.FieldLevel) bool {
-	messageCount := messageCountField.Field().Int()
-	messageCountIncrement := messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Int()
+	messageCountPtr := messageCountField.Top().Elem().FieldByName("MessageCount").Interface().(*int)
+	messageCountIncrementPtr := messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Interface().(*int)
 
-	return !(messageCount != 0 && messageCountIncrement != 0)
+	return !(messageCountPtr != nil && messageCountIncrementPtr != nil)
 }
