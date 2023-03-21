@@ -36,6 +36,12 @@ func (ctx *TestContext) ISendrequestTo(method string, path string) error { // no
 }
 
 func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error {
+	// put all data into the database before we send the request
+	err := ctx.populateDatabase()
+	if err != nil {
+		return err
+	}
+
 	// app server
 	testServer := httptest.NewServer(ctx.application.HTTPHandler)
 	defer testServer.Close()
@@ -52,7 +58,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 		headers = ctx.requestHeaders
 	}
 
-	reqBody, err := ctx.preprocessString(reqBody)
+	reqBody, err = ctx.preprocessString(reqBody)
 	if err != nil {
 		return err
 	}

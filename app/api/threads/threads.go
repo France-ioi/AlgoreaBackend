@@ -20,4 +20,5 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(auth.UserMiddleware(srv.Base))
 
 	router.Get("/items/{item_id}/participant/{participant_id}/thread", service.AppHandler(srv.getThread).ServeHTTP)
+	router.Put("/items/{item_id}/participant/{participant_id}/thread", service.AppHandler(srv.updateThread).ServeHTTP)
 }

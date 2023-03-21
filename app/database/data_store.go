@@ -220,6 +220,11 @@ func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc
 	})
 }
 
+// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement
+func (s *DataStore) WithWriteLock() *DataStore {
+	return NewDataStore(s.DB.WithWriteLock())
+}
+
 // ByID returns a composable query for filtering by _table_.id
 func (s *DataStore) ByID(id int64) *DB {
 	if s.tableName == "" {
@@ -265,6 +270,7 @@ func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColu
 // InsertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
 // (so all the maps should have the same keys)
 // into the store's table (like InsertMaps does). If it is a duplicate, the listed columns will be updated.
+// If updateColumns is nil, all the columns in dataMaps will be updated.
 func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateColumns []string) error {
 	return s.DB.insertOrUpdateMaps(s.tableName, dataMap, updateColumns)
 }
