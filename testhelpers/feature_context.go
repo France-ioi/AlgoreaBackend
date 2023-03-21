@@ -39,8 +39,11 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
+	s.Step(`^there is an item (\w+)$`, ctx.ThereIsAnItem)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
+	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
+		ctx.ICanViewOnItemWithID)
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
 	s.Step(`^there is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
 	s.Step(`^there is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)

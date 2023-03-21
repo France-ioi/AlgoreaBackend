@@ -73,8 +73,10 @@ Feature: Update thread - robustness
     And the database has the following table 'threads':
       | item_id | participant_id | status | helper_group_id | latest_update_at |
 
-  Scenario: Should be logged in
-    When I send a PUT request to "/items/@SomeItem/participant/@RichardFeynman/thread"
+  Scenario: Should be logged
+    Given there is a user RichardFeynman
+    And there is an item Exercice
+    When I send a PUT request to "/items/@Exercice/participant/@RichardFeynman/thread"
     Then the response code should be 401
     And the response error message should contain "No access token provided"
 
@@ -86,14 +88,16 @@ Feature: Update thread - robustness
 
   Scenario: The participant_id parameter should be an int64
     Given I am RichardFeynman
-    When I send a PUT request to "/items/@SomeItem/participant/aaa/thread"
+    And there is an item Exercice
+    When I send a PUT request to "/items/@Exercice/participant/aaa/thread"
     Then the response code should be 400
     And the response error message should contain "Wrong value for participant_id (should be int64)"
 
   Scenario: Either status, helper_group_id, message_count or message_count_increment must be given
     Given I am RichardFeynman
-    And there is a thread with "item_id=@SomeItem,participant_id=@RichardFeynman"
-    When I send a PUT request to "/items/@SomeItem/participant/@RichardFeynman/thread" with the following body:
+    And there is an item Exercice
+    And there is a thread with "item_id=@Exercice,participant_id=@RichardFeynman"
+    When I send a PUT request to "/items/@Exercice/participant/@RichardFeynman/thread" with the following body:
       """
       {}
       """
@@ -102,7 +106,7 @@ Feature: Update thread - robustness
 
   Scenario: The item should exist
     Given I am RichardFeynman
-    When I send a PUT request to "/items/@NonExistentItem/participant/@RichardFeynman/thread" with the following body:
+    When I send a PUT request to "/items/404/participant/@RichardFeynman/thread" with the following body:
       """
       {
         "message_count": 42
@@ -113,7 +117,8 @@ Feature: Update thread - robustness
 
   Scenario: The participant should exist
     Given I am RichardFeynman
-    When I send a PUT request to "/items/@SomeItem/participant/@NonExistentParticipant/thread" with the following body:
+    And there is an item Exercice
+    When I send a PUT request to "/items/@Exercice/participant/404/thread" with the following body:
       """
       {
         "status": "waiting_for_trainer",

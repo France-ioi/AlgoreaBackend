@@ -294,6 +294,20 @@ func (ctx *TestContext) ICanViewOnItemWithID(watchValue string, itemID int64) er
 	return ctx.ICanOnItemWithID("view", watchValue, itemID)
 }
 
+// ThereIsAnItemWithID adds an item with a specific id.
+func (ctx *TestContext) ThereIsAnItemWithID(id string) error {
+	ctx.addItem(id, "en", "Task")
+
+	return nil
+}
+
+// ThereIsAnItem adds an item.
+func (ctx *TestContext) ThereIsAnItem(name string) error {
+	itemID := ctx.getReferenceFor(name)
+
+	return ctx.ThereIsAnItemWithID(strconv.FormatInt(itemID, 10))
+}
+
 // ICanWatchOnItemWithID gives the user a "watch" permission on an item.
 func (ctx *TestContext) ICanWatchOnItemWithID(watchValue string, itemID int64) error {
 	return ctx.ICanOnItemWithID("watch", watchValue, itemID)
@@ -319,7 +333,10 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	thread := ctx.getParametersMap(parameters)
 
 	// add item
-	ctx.addItem(thread["item_id"], "en", "Task")
+	err := ctx.ThereIsAnItemWithID(thread["item_id"])
+	if err != nil {
+		return err
+	}
 
 	// add helper_group_id
 	if _, ok := thread["helper_group_id"]; !ok {
