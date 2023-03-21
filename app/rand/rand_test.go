@@ -41,3 +41,14 @@ func TestInt63(t *testing.T) {
 	Seed(1)
 	assert.Equal(t, int64(5577006791947779410), Int63())
 }
+
+func TestString(t *testing.T) {
+	Seed(1)
+	assert.Equal(t, "", String(0))
+	assert.Equal(t, "BpLnfgDsc2", String(10))
+	Seed(2)
+	assert.Equal(t, "KSiOW4eQ7s", String(10))
+	assert.Equal(t, "klpgstrQZt", String(10))
+	Seed(1)
+	assert.Equal(t, "BpLnfgDsc2W", String(11))
+}
