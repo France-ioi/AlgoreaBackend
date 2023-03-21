@@ -17,13 +17,8 @@ func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID in
 	if err != nil {
 		return 0, false, ErrInvalidRequest(err)
 	}
-	var found bool
-	found, err = srv.GetStore(httpReq).ActiveGroupAncestors().ManagedByUser(srv.GetUser(httpReq)).
-		Where("groups_ancestors_active.child_group_id = ?", watchedGroupID).
-		Where("can_watch_members").HasRows()
-	if err != nil {
-		return 0, false, ErrUnexpected(err)
-	}
+
+	found := srv.GetUser(httpReq).CanWatchGroupMembers(srv.GetStore(httpReq), watchedGroupID)
 	if !found {
 		return 0, false, ErrForbidden(errors.New("no rights to watch for watched_group_id"))
 	}

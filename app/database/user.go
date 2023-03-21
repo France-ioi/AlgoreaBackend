@@ -30,15 +30,17 @@ func (u *User) Clone() *User {
 	return &result
 }
 
-// CanWatchGroupMembers checks whether user has "can_watch_members" on a group
-func (u *User) CanWatchGroupMembers(store *DataStore, groupID int64) bool {
-	found, err := store.ActiveGroupAncestors().ManagedByUser(u).
-		Where("group_managers.can_watch_members").
-		Where("groups_ancestors_active.child_group_id = ?", groupID).
+// CanWatchItemAnswer checks whether the user has can_watch >= answer on an item
+func (u *User) CanWatchItemAnswer(s *DataStore, itemID int64) bool {
+	userCanWatchAnswer, err := s.Permissions().MatchingUserAncestors(u).
+		Where("permissions.item_id = ?", itemID).
+		WherePermissionIsAtLeast("watch", "answer").
+		Select("1").
+		Limit(1).
 		HasRows()
 	mustNotBeError(err)
 
-	return found
+	return userCanWatchAnswer
 }
 
 // GetManagedGroupsWithCanGrantGroupAccessIds retrieves all group ids that the user manages and for which
@@ -54,3 +56,54 @@ func (u *User) GetManagedGroupsWithCanGrantGroupAccessIds(store *DataStore) []in
 
 	return managedGroupsWithCanGrantGroupAccessIds
 }
+
+// CanWatchGroupMembers checks whether the user can watch a group / a participant.
+func (u *User) CanWatchGroupMembers(s *DataStore, groupID int64) bool {
+	userCanWatchGroupMembers, err := s.ActiveGroupAncestors().ManagedByUser(u).
+		Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Where("group_managers.can_watch_members").
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return userCanWatchGroupMembers
+}
+
+// For Next PR
+// CanRequestHelpTo checks whether the user can request help on an item to a group.
+// func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool {
+//	// in order to verify that the user “can request help to” a group on an item we need to verify whether
+//	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
+//	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
+//
+//	itemAncestorsRequestHelpPropagationQuery := s.Items().getAncestorsRequestHelpPropagationQuery(itemID)
+//
+//	canRequestHelpTo, err := s.Users().
+//		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", u.GroupID).
+//		Joins(`JOIN permissions_granted ON
+//			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+//			(permissions_granted.item_id = ? OR permissions_granted.item_id IN (?))`, itemID, itemAncestorsRequestHelpPropagationQuery.SubQuery()).
+//		Joins(`JOIN groups_ancestors_active AS groups_ancestors_can_request_help_to ON
+//			groups_ancestors_can_request_help_to.child_group_id = ?`, helperGroupID).
+//		Where("permissions_granted.can_request_help_to = groups_ancestors_can_request_help_to.ancestor_group_id").
+//		Select("1").
+//		Limit(1).
+//		HasRows()
+//	mustNotBeError(err)
+//
+//	return canRequestHelpTo
+// }
+
+// For Next PR
+// HasValidatedItem checks whether the user has validated an item.
+// func (u *User) HasValidatedItem(s *DataStore, itemID int64) bool {
+//	hasValidatedItem, err := s.Results().
+//		Where("results.item_id = ?", itemID).
+//		Where("results.validated").
+//		Limit(1).
+//		HasRows()
+//	mustNotBeError(err)
+//
+//	return hasValidatedItem
+// }
