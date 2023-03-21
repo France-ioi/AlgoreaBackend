@@ -255,8 +255,8 @@ func (ctx *TestContext) ICanWatchParticipantWithID(participantID int64) error {
 	return ctx.IAmTheManagerOfTheGroupWith(participantID, true)
 }
 
-// IAmInTheGroupWithID creates a group and add the user in it.
-func (ctx *TestContext) IAmInTheGroupWithID(groupID int64) error {
+// IAmAMemberOfTheGroupWithID creates a group and add the user in it.
+func (ctx *TestContext) IAmAMemberOfTheGroupWithID(groupID int64) error {
 	err := ctx.ThereIsAGroupWith("id=" + strconv.FormatInt(groupID, 10))
 	if err != nil {
 		return err

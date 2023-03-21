@@ -92,7 +92,7 @@ Feature: Update thread - robustness
 
   Scenario: Either status, helper_group_id, message_count or message_count_increment must be given
     Given I am the user with id "1"
-    And There is a thread with "item_id=10,participant_id=1"
+    And there is a thread with "item_id=10,participant_id=1"
     When I send a PUT request to "/items/10/participant/1/thread" with the following body:
       """
       {}
@@ -135,7 +135,7 @@ Feature: Update thread - robustness
 
   Scenario Outline: Cannot set status to a wrong value
     Given I am the user with id "3"
-    And There is a thread with "item_id=25,participant_id=3"
+    And there is a thread with "item_id=25,participant_id=3"
     When I send a PUT request to "/items/25/participant/3/thread" with the following body:
       """
       {
@@ -170,7 +170,7 @@ Feature: Update thread - robustness
   Should return access error when the status is not set and
   "can write to thread" condition (2) is not met: can_watch>=answer not met
     Given I am the user with id "2"
-    And There is a thread with "item_id=20,participant_id=3"
+    And there is a thread with "item_id=20,participant_id=3"
     And I can watch result on item with id "20"
     When I send a PUT request to "/items/20/participant/3/thread" with the following body:
       """
@@ -186,7 +186,7 @@ Feature: Update thread - robustness
   "can write to thread" condition (2) is not met: can_watch_members of the participant
     Given I am the user with id "4"
     And I can watch answer on item with id "30"
-    And There is a thread with "item_id=30,participant_id=3"
+    And there is a thread with "item_id=30,participant_id=3"
     When I send a PUT request to "/items/30/participant/3/thread" with the following body:
       """
       {
@@ -202,7 +202,7 @@ Feature: Update thread - robustness
     Given I am the user with id "1"
     And I have validated the item with id "40"
     And I can watch answer on item with id "40"
-    And There is a thread with "item_id=40,participant_id=3"
+    And there is a thread with "item_id=40,participant_id=3"
     When I send a PUT request to "/items/40/participant/3/thread" with the following body:
       """
       {
@@ -216,7 +216,7 @@ Feature: Update thread - robustness
   Should return access error when the status is not set and
   "can write to thread" condition (3) is not met: user have neither can_watch>=answer, nor validated the item
     Given I am the user with id "5"
-    And There is a thread with "item_id=50,participant_id=3"
+    And there is a thread with "item_id=50,participant_id=3"
     When I send a PUT request to "/items/50/participant/3/thread" with the following body:
       """
       {
@@ -228,7 +228,7 @@ Feature: Update thread - robustness
 
   Scenario: message_count should be positive
     Given I am the user with id "1"
-    And There is a thread with "item_id=60,participant_id=1"
+    And there is a thread with "item_id=60,participant_id=1"
     When I send a PUT request to "/items/60/participant/3/thread" with the following body:
       """
       {
@@ -250,7 +250,7 @@ Feature: Update thread - robustness
 
   Scenario: Should not contain both message_count and message_count_increment
     Given I am the user with id "1"
-    And There is a thread with "item_id=60,participant_id=1"
+    And there is a thread with "item_id=60,participant_id=1"
     When I send a PUT request to "/items/60/participant/1/thread" with the following body:
       """
       {
@@ -274,7 +274,7 @@ Feature: Update thread - robustness
   Scenario Outline: Participant of a thread should not be able to switch from non-open to open if not allowed to request help on the item when thread exists
     Given I am the user with id "3"
     And I can watch <can_watch> on item with id "<item_id>"
-    And There is a thread with "item_id=<item_id>,participant_id=3,status=closed,helper_group_id=10"
+    And there is a thread with "item_id=<item_id>,participant_id=3,status=closed,helper_group_id=10"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -305,7 +305,7 @@ Feature: Update thread - robustness
   Scenario Outline: Participant of a thread should not be able to switch from non-open to open if not allowed to request help on the item when thread doesn't exists
     Given I am the user with id "3"
     And I can watch <can_watch> on item with id "<item_id>"
-    And There is no thread with "item_id=<item_id>,participant_id=3"
+    And there is no thread with "item_id=<item_id>,participant_id=3"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -336,7 +336,7 @@ Feature: Update thread - robustness
     Given I am the user with id "2"
     And I can watch the participant with id "3"
     And I can watch <can_watch> on item with id "<item_id>"
-    And There is a thread with "item_id=<item_id>,participant_id=3,status=closed"
+    And there is a thread with "item_id=<item_id>,participant_id=3,status=closed"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -355,7 +355,7 @@ Feature: Update thread - robustness
     Given I am the user with id "2"
     And I can watch the participant with id "3"
     And I can watch <can_watch> on item with id "<item_id>"
-    And There is no thread with "item_id=<item_id>,participant_id=3"
+    And there is no thread with "item_id=<item_id>,participant_id=3"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -373,7 +373,7 @@ Feature: Update thread - robustness
   Scenario Outline: Should not switch to open if can_watch>=answer but cannot watch_members on the participant when thread exists
     Given I am the user with id "4"
     And I can watch <can_watch> on item with id "<item_id>"
-    And There is a thread with "item_id=<item_id>,participant_id=3,status=closed"
+    And there is a thread with "item_id=<item_id>,participant_id=3,status=closed"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -408,7 +408,7 @@ Feature: Update thread - robustness
   Scenario: Cannot switch between open status if only can_watch>answer but not a part of the helper group, and cannot watch participant
     Given I am the user with id "1"
     And I can watch answer on item with id "150"
-    And There is a thread with "item_id=150,participant_id=3,status=waiting_for_participant"
+    And there is a thread with "item_id=150,participant_id=3,status=waiting_for_participant"
     When I send a PUT request to "/items/150/participant/3/thread" with the following body:
       """
       {
@@ -421,7 +421,7 @@ Feature: Update thread - robustness
   Scenario: Cannot switch between open status if only item validated but not a part of the helper group, and cannot watch participant
     Given I am the user with id "1"
     And I have validated the item with id "160"
-    And There is a thread with "item_id=160,participant_id=3,status=waiting_for_trainer"
+    And there is a thread with "item_id=160,participant_id=3,status=waiting_for_trainer"
     When I send a PUT request to "/items/160/participant/3/thread" with the following body:
       """
       {
@@ -433,7 +433,7 @@ Feature: Update thread - robustness
 
   Scenario Outline: If switching to an open status from a non-open status, helper_group_id must be given when thread exists
     Given I am the user with id "1"
-    And There is a thread with "item_id=<item_id>,participant_id=1,status=closed"
+    And there is a thread with "item_id=<item_id>,participant_id=1,status=closed"
     When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
       """
       {
@@ -484,7 +484,7 @@ Feature: Update thread - robustness
 
   Scenario Outline: If status is already "closed" and not changing status OR if switching to status "closed": helper_group_id must not be given when thread exists
     Given I am the user with id "1"
-    And There is a thread with "item_id=<item_id>,participant_id=1,status=<old_status>"
+    And there is a thread with "item_id=<item_id>,participant_id=1,status=<old_status>"
     When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
       """
       {
@@ -537,7 +537,7 @@ Feature: Update thread - robustness
 
   Scenario: helper_group_id is visible to current-user but not to participant
     Given I am the user with id "1"
-    And There is a thread with "item_id=300,participant_id=3"
+    And there is a thread with "item_id=300,participant_id=3"
     When I send a PUT request to "/items/300/participant/3/thread" with the following body:
       """
       {
@@ -559,7 +559,7 @@ Feature: Update thread - robustness
 
   Scenario: helper_group_id is visible to participant but not to current-user
     Given I am the user with id "1"
-    And There is a thread with "item_id=310,participant_id=3"
+    And there is a thread with "item_id=310,participant_id=3"
     When I send a PUT request to "/items/310/participant/3/thread" with the following body:
       """
       {
@@ -582,7 +582,7 @@ Feature: Update thread - robustness
   Scenario: A user who can_watch >= answer on the item and can_watch the participant should not be able to close a thread
     Given I am the user with id "2"
     And I can watch answer on item with id "320"
-    And There is a thread with "item_id=320,participant_id=3"
+    And there is a thread with "item_id=320,participant_id=3"
     When I send a PUT request to "/items/320/participant/3/thread" with the following body:
       """
       {
@@ -595,7 +595,7 @@ Feature: Update thread - robustness
   Scenario Outline: A user not part of the helper group with can_watch >= answer on the item cannot switch a thread to an open status
     Given I am the user with id "4"
     And I can watch <can_watch> on item with id "<item_id>"
-    And There is a thread with "item_id=<item_id>,participant_id=3,helper_group_id=20,status=<old_status>"
+    And there is a thread with "item_id=<item_id>,participant_id=3,helper_group_id=20,status=<old_status>"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -615,7 +615,7 @@ Feature: Update thread - robustness
   Scenario Outline: A user with can_watch_members on the participant cannot switch a thread to an open status
     Given I am the user with id "2"
     And I can watch the participant with id "3"
-    And There is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>"
+    And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -634,7 +634,7 @@ Feature: Update thread - robustness
 
   Scenario: A user cannot write in a thread that does not exists
     Given I am the user with id "3"
-    And There is no thread with "item_id=410,participant_id=3"
+    And there is no thread with "item_id=410,participant_id=3"
     When I send a PUT request to "/items/410/participant/3/thread" with the following body:
       """
       {
@@ -646,7 +646,7 @@ Feature: Update thread - robustness
 
   Scenario: A user cannot write in a thread that is closed
     Given I am the user with id "3"
-    And There is a thread with "item_id=420,participant_id=3,status=closed"
+    And there is a thread with "item_id=420,participant_id=3,status=closed"
     When I send a PUT request to "/items/420/participant/3/thread" with the following body:
       """
       {
@@ -660,7 +660,7 @@ Feature: Update thread - robustness
     Given I am the user with id "3"
     And I can watch answer_with_grant on item with id "430"
     And I have validated the item with id "430"
-    And There is a thread with "item_id=430,participant_id=3"
+    And there is a thread with "item_id=430,participant_id=3"
     When I send a PUT request to "/items/430/participant/3/thread" with the following body:
       """
       {

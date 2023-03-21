@@ -21,7 +21,7 @@ type threadUpdateFields struct {
 	// enum: waiting_for_participant,waiting_for_trainer,closed
 	Status string `json:"status" validate:"helper_group_id_set_if_non_open_to_open_status,oneof=waiting_for_participant waiting_for_trainer closed"` // nolint
 	// Optional
-	HelperGroupID *int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=:user_id,group_visible_by=participant_id,can_request_help_to_when_own_thread"` // nolint
+	HelperGroupID *int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=user_id,group_visible_by=participant_id,can_request_help_to_when_own_thread"` // nolint
 	// Optional
 	MessageCount *int `json:"message_count" validate:"omitempty,gte=0,exclude_increment_if_message_count_set"`
 }
@@ -59,7 +59,7 @@ type updateThreadRequest struct {
 //       - A user who `can write` on the thread can switch from an open status to another open status.
 //     * if `status` is already "closed" and not changing status OR if switching to status "closed":
 //       `helper_group_id` must not be given
-//     * if switching to an open status from a non-closed status: `helper_group_id` must be given
+//     * if switching to an open status from a non-open status: `helper_group_id` must be given
 //     * if given, the `helper_group_id` must be visible to the current-user and to participant.
 //     * if participant is the current user and `helper_group_id` given, `helper_group_id` must be a descendants
 //       (including self) of one of the group he `can_request_help_to`.
@@ -246,7 +246,7 @@ func constructValidateGroupVisibleBy(srv *Service, r *http.Request) validator.Fu
 
 		var user *database.User
 		param := fl.Param()
-		if param == ":user_id" {
+		if param == "user_id" {
 			user = srv.GetUser(r)
 		} else {
 			var err error
