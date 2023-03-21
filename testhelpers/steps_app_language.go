@@ -4,7 +4,6 @@ package testhelpers
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -40,23 +39,6 @@ func getParametersString(parameters map[string]string) string {
 	}
 
 	return str
-}
-
-// getReferenceFor gets the ID from a reference, or set it if it doesn't exist.
-func (ctx *TestContext) getReferenceFor(name string) int64 {
-	if _, ok := ctx.identifierReferences[name]; !ok {
-		ctx.identifierReferences[name] = rand.Int63()
-	}
-
-	return ctx.identifierReferences[name]
-}
-
-// replaceReferencesByIDs changes the references (@ref) in a string by the referenced identifiers (ID).
-func (ctx *TestContext) replaceReferencesByIDs(str string) string {
-	regex := regexp.MustCompile(`(@\w+)`)
-	return regex.ReplaceAllStringFunc(str, func(reference string) string {
-		return strconv.FormatInt(ctx.getReferenceFor(reference[1:]), 10)
-	})
 }
 
 // populateDatabase populate the database with all the initialized data

@@ -15,11 +15,39 @@ import (
 	"github.com/CloudyKit/jet"
 	"github.com/SermoDigital/jose/crypto"
 
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
 var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
+var replaceReferencesRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
+
+// getReferenceFor gets the ID from a reference, or set it if it doesn't exist.
+func (ctx *TestContext) getReferenceFor(name string) int64 {
+	if _, ok := ctx.identifierReferences[name]; !ok {
+		ctx.identifierReferences[name] = rand.Int63()
+	}
+
+	return ctx.identifierReferences[name]
+}
+
+// replaceReferencesByIDs changes the references (@ref) in a string by the referenced identifiers (ID).
+func (ctx *TestContext) replaceReferencesByIDs(str string) string {
+	// a reference should either be at the beginning of the string (^), or after a non alpha-num character (\W).
+	// we don't want to rewrite email addresses.
+	return replaceReferencesRegexp.ReplaceAllStringFunc(str, func(capture string) string {
+		// capture is either:
+		// - @Reference
+		// - /@Reference (or another non-alphanum character in front)
+
+		if capture[0] == '@' {
+			return strconv.FormatInt(ctx.getReferenceFor(capture[1:]), 10)
+		} else {
+			return string(capture[0]) + strconv.FormatInt(ctx.getReferenceFor(capture[2:]), 10)
+		}
+	})
+}
 
 func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
 	jsonBody = ctx.replaceReferencesByIDs(jsonBody)
