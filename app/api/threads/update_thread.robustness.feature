@@ -73,7 +73,7 @@ Feature: Update thread - robustness
     And the database has the following table 'threads':
       | item_id | participant_id | status | helper_group_id | latest_update_at |
 
-  Scenario: Should be logged
+  Scenario: Should be logged in
     When I send a PUT request to "/items/10/participant/1/thread"
     Then the response code should be 401
     And the response error message should contain "No access token provided"
