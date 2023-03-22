@@ -110,6 +110,9 @@ in the future.`,
 						}
 					}
 				}
+				if rows.Err() != nil {
+					panic(rows.Err())
+				}
 				_ = rows.Close()
 				table = strings.SplitN(table, ".", 2)[1]
 				if len(renameStatements) > 0 {
@@ -148,6 +151,10 @@ in the future.`,
 							}
 						}
 					}
+				}
+
+				if rows.Err() != nil {
+					panic(rows.Err())
 				}
 				_ = rows.Close()
 				table = strings.SplitN(table, ".", 2)[1]
@@ -190,8 +197,16 @@ in the future.`,
 						triggersMigrationDown += statement + "\n"
 						triggersMigrationDown += migrateStatementEnd
 					}
+
+					if triggerRows.Err() != nil {
+						panic(triggerRows.Err())
+					}
 					_ = triggerRows.Close()
 				}
+			}
+
+			if rows.Err() != nil {
+				panic(rows.Err())
 			}
 			_ = rows.Close()
 
@@ -225,7 +240,13 @@ func getTables(db *sql.DB, dbName string) []string {
 	if err != nil {
 		panic(err)
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() {
+		_ = rows.Close()
+
+		if rows.Err() != nil {
+			panic(rows.Err())
+		}
+	}()
 
 	var result []string
 	for rows.Next() {

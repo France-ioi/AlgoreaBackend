@@ -4,7 +4,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-// RawWatchedGroupStatFields represents DB data fields for watched group stats used by itemNavigationView & itemChildrenView
+// RawWatchedGroupStatFields represents DB data fields for watched group stats used by itemNavigationView & itemChildrenView.
 type RawWatchedGroupStatFields struct {
 	CanWatchForGroupResults  bool
 	WatchedGroupCanView      int

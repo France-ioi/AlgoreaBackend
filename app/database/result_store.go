@@ -1,16 +1,16 @@
 package database
 
-// ResultStore implements database operations on `results`
+// ResultStore implements database operations on `results`.
 type ResultStore struct {
 	*DataStore
 }
 
-// ByID returns a composable query for getting a result row by the primary key (participant_id, attemptID, itemID)
+// ByID returns a composable query for getting a result row by the primary key (participant_id, attemptID, itemID).
 func (s *ResultStore) ByID(participantID, attemptID, itemID int64) *DB {
 	return s.Where("results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", participantID, attemptID, itemID)
 }
 
-// HintsInfo contains information on requested hints and their cached count
+// HintsInfo contains information on requested hints and their cached count.
 type HintsInfo struct {
 	HintsRequested *string
 	HintsCached    int32
@@ -33,7 +33,7 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 	return &hintsInfo, nil
 }
 
-// MarkAsToBePropagated marks a given result as 'to_be_propagated'
+// MarkAsToBePropagated marks a given result as 'to_be_propagated'.
 func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int64) error {
 	err := s.Exec(`
 		INSERT IGNORE INTO results_propagate (participant_id, attempt_id, item_id, state)

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// ItemPermissions represents all the permissions that a group can have on an item
+// ItemPermissions represents all the permissions that a group can have on an item.
 type ItemPermissions struct {
 	// required: true
 	// enum: none,info,content,content_with_descendants,solution
@@ -23,7 +23,7 @@ type ItemPermissions struct {
 	IsOwner bool `json:"is_owner"`
 }
 
-// ItemString represents a title with a related language tag for an item
+// ItemString represents a title with a related language tag for an item.
 type ItemString struct {
 	// [Nullable] title (from `items_strings`) in the user’s default language or (if not available) default language of the item
 	// required: true
@@ -33,7 +33,7 @@ type ItemString struct {
 	LanguageTag string `json:"language_tag"`
 }
 
-// ItemCommonFields represents item fields common for different services (id, type, string, permissions)
+// ItemCommonFields represents item fields common for different services (id, type, string, permissions).
 type ItemCommonFields struct {
 	// required: true
 	ID int64 `json:"id,string"`
@@ -48,7 +48,7 @@ type ItemCommonFields struct {
 	Permissions ItemPermissions `json:"permissions"`
 }
 
-// ItemResult represents item result info
+// ItemResult represents item result info.
 type ItemResult struct {
 	// required:true
 	AttemptID int64 `json:"attempt_id,string"`
@@ -70,7 +70,7 @@ type ItemResult struct {
 	AttemptAllowsSubmissionsUntil time.Time `json:"attempt_allows_submissions_until"`
 }
 
-// GroupShortInfo contains group id & name
+// GroupShortInfo contains group id & name.
 type GroupShortInfo struct {
 	// group's `id`
 	// required:true
@@ -79,7 +79,7 @@ type GroupShortInfo struct {
 	Name string `json:"name"`
 }
 
-// UserPersonalInfo contains first_name and last_name
+// UserPersonalInfo contains first_name and last_name.
 type UserPersonalInfo struct {
 	// Nullable
 	FirstName *string `json:"first_name"`

@@ -91,7 +91,7 @@ func (l *StructuredLoggerEntry) Write(status, bytes int, elapsed time.Duration) 
 	l.Logger.Infoln("request complete")
 }
 
-// Panic prints stack trace
+// Panic prints stack trace.
 func (l *StructuredLoggerEntry) Panic(v interface{}, stack []byte) {
 	l.Logger = l.Logger.WithFields(logrus.Fields{
 		"stack": string(stack),
@@ -103,14 +103,14 @@ func (l *StructuredLoggerEntry) Panic(v interface{}, stack []byte) {
 // logger entry and set additional fields between handlers.
 
 // GetLogEntry return the request scoped logrus.FieldLogger.
-// noinspection GoUnusedExportedFunction
+// noinspection GoUnusedExportedFunction.
 func GetLogEntry(r *http.Request) logrus.FieldLogger {
 	entry := middleware.GetLogEntry(r).(*StructuredLoggerEntry)
 	return entry.Logger
 }
 
 // LogEntrySetField adds a field to the request scoped logrus.FieldLogger.
-// noinspection GoUnusedExportedFunction
+// noinspection GoUnusedExportedFunction.
 func LogEntrySetField(r *http.Request, key string, value interface{}) {
 	if entry, ok := r.Context().Value(middleware.LogEntryCtxKey).(*StructuredLoggerEntry); ok {
 		entry.Logger = entry.Logger.WithField(key, value)
@@ -118,7 +118,7 @@ func LogEntrySetField(r *http.Request, key string, value interface{}) {
 }
 
 // LogEntrySetFields adds multiple fields to the request scoped logrus.FieldLogger.
-// noinspection GoUnusedExportedFunction
+// noinspection GoUnusedExportedFunction.
 func LogEntrySetFields(r *http.Request, fields map[string]interface{}) {
 	if entry, ok := r.Context().Value(middleware.LogEntryCtxKey).(*StructuredLoggerEntry); ok {
 		entry.Logger = entry.Logger.WithFields(fields)

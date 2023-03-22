@@ -2,7 +2,7 @@ package database
 
 import "github.com/jinzhu/gorm"
 
-// GroupJoiningByCodeInfo represents info related to ability to join a team by code
+// GroupJoiningByCodeInfo represents info related to ability to join a team by code.
 type GroupJoiningByCodeInfo struct {
 	GroupID             int64
 	Type                string
@@ -12,7 +12,7 @@ type GroupJoiningByCodeInfo struct {
 }
 
 // GetGroupJoiningByCodeInfoByCode returns GroupJoiningByCodeInfo for a given code
-// (or null if there is no public team with this code or the code has expired)
+// (or null if there is no public team with this code or the code has expired).
 func (s *DataStore) GetGroupJoiningByCodeInfoByCode(code string, withLock bool) (*GroupJoiningByCodeInfo, error) {
 	var info GroupJoiningByCodeInfo
 	query := s.Groups().

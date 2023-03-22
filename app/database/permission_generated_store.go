@@ -1,16 +1,16 @@
 package database
 
-// PermissionGeneratedStore implements database operations on `permissions_generated`
+// PermissionGeneratedStore implements database operations on `permissions_generated`.
 type PermissionGeneratedStore struct {
 	*DataStore
 }
 
-// MatchingUserAncestors returns a composable query of generated permissions matching groups of which the user is descendant
+// MatchingUserAncestors returns a composable query of generated permissions matching groups of which the user is descendant.
 func (s *PermissionGeneratedStore) MatchingUserAncestors(user *User) *DB {
 	return s.MatchingGroupAncestors(user.GroupID)
 }
 
-// MatchingGroupAncestors returns a composable query of generated permissions matching groups of which the given group is descendant
+// MatchingGroupAncestors returns a composable query of generated permissions matching groups of which the given group is descendant.
 func (s *PermissionGeneratedStore) MatchingGroupAncestors(groupID int64) *DB {
 	return s.Joins(`
 		JOIN groups_ancestors_active AS ancestors

@@ -4,7 +4,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
-// RawGeneratedPermissionFields represents DB data fields for item permissions used by item-related services
+// RawGeneratedPermissionFields represents DB data fields for item permissions used by item-related services.
 type RawGeneratedPermissionFields struct {
 	CanViewGeneratedValue      int
 	CanGrantViewGeneratedValue int
@@ -13,7 +13,7 @@ type RawGeneratedPermissionFields struct {
 	IsOwnerGenerated           bool
 }
 
-// AsItemPermissions converts RawGeneratedPermissionFields into structures.ItemPermissions
+// AsItemPermissions converts RawGeneratedPermissionFields into structures.ItemPermissions.
 func (raw *RawGeneratedPermissionFields) AsItemPermissions(
 	permissionGrantedStore *PermissionGrantedStore) *structures.ItemPermissions {
 	return &structures.ItemPermissions{

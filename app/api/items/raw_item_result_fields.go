@@ -7,7 +7,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
-// RawItemResultFields represents DB data fields for item results used by itemNavigationView & itemChildrenView
+// RawItemResultFields represents DB data fields for item results used by itemNavigationView & itemChildrenView.
 type RawItemResultFields struct {
 	// results
 	AttemptID        *int64

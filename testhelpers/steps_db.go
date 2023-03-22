@@ -181,7 +181,13 @@ func (ctx *TestContext) TableShouldBeEmpty(table string) error { // nolint
 	if err != nil {
 		return err
 	}
-	defer func() { _ = sqlRows.Close() }()
+	defer func() {
+		_ = sqlRows.Close()
+
+		if sqlRows.Err() != nil {
+			panic(sqlRows.Err())
+		}
+	}()
 	if sqlRows.Next() {
 		return fmt.Errorf("the table %q should be empty, but it is not", table)
 	}
@@ -198,7 +204,13 @@ func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(table string, column, va
 	if err != nil {
 		return err
 	}
-	defer func() { _ = sqlRows.Close() }()
+	defer func() {
+		_ = sqlRows.Close()
+
+		if sqlRows.Err() != nil {
+			panic(sqlRows.Err())
+		}
+	}()
 	if sqlRows.Next() {
 		return fmt.Errorf("the table %q should be empty, but it is not", table)
 	}
@@ -228,7 +240,7 @@ func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(table, 
 	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), changed, data)
 }
 
-// TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted checks for row deletion
+// TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted checks for row deletion.
 func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted(table, columns, values string) error {
 	data := ctx.dbTableData[table]
 	if data == nil {
@@ -346,7 +358,7 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(table string, columns, values
 	return nil
 }
 
-// dataTableMatchesSQLRows checks whether the provided data table matches the database rows result
+// dataTableMatchesSQLRows checks whether the provided data table matches the database rows result.
 func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgument_PickleTable, sqlRows *sql.Rows,
 	rowTransformation rowTransformation, tableColumns, columns, values []string) error {
 	iDataRow := 1
@@ -384,7 +396,7 @@ func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgumen
 	return nil
 }
 
-// dataRowMatchesSQLRow checks that a data row matches a row from database
+// dataRowMatchesSQLRow checks that a data row matches a row from database.
 func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgument_PickleTable_PickleTableRow,
 	values []*string, tableColumns []string, rowIndex int) error {
 	// checking that all columns of the test data table match the SQL row
@@ -416,7 +428,7 @@ func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgumen
 	return nil
 }
 
-// getColumnNamesFromData gets the column names from the data table
+// getColumnNamesFromData gets the column names from the data table.
 func getColumnNamesFromData(data *messages.PickleStepArgument_PickleTable) (columns []string) {
 	// the first row contains the column names
 	headerColumns := data.Rows[0].Cells
@@ -432,7 +444,7 @@ func getColumnNamesFromData(data *messages.PickleStepArgument_PickleTable) (colu
 	return columns
 }
 
-// getStringPtrFromSQLRow gets a slice of string pointers from a SQL row
+// getStringPtrFromSQLRow gets a slice of string pointers from a SQL row.
 func getStringPtrFromSQLRow(sqlRows *sql.Rows, length int) ([]*string, error) {
 	// Create a slice of values and a second slice with pointers to each item.
 	rowValues := make([]*string, length)
@@ -447,7 +459,7 @@ func getStringPtrFromSQLRow(sqlRows *sql.Rows, length int) ([]*string, error) {
 	return rowValues, err
 }
 
-// getColumnIndexes gets the indices of the columns referenced by columns
+// getColumnIndexes gets the indices of the columns referenced by columns.
 func getColumnIndexes(data *messages.PickleStepArgument_PickleTable, columns []string) []int {
 	// the first row contains the column names
 	headerColumns := data.Rows[0].Cells
@@ -468,7 +480,7 @@ func getColumnIndexes(data *messages.PickleStepArgument_PickleTable, columns []s
 	return columnIndexes
 }
 
-// getSQLRowsMatching returns the rows that matches (if whereIn) or not (if !whereIn) one of filterColumns at any filterValues
+// getSQLRowsMatching returns the rows that matches (if whereIn) or not (if !whereIn) one of filterColumns at any filterValues.
 func (ctx *TestContext) getSQLRowsMatching(table string, columns, filterColumns, filterValues []string, whereIn bool) (
 	*sql.Rows, func(), error) {
 	db := ctx.db()
@@ -485,7 +497,7 @@ func (ctx *TestContext) getSQLRowsMatching(table string, columns, filterColumns,
 	return sqlRows, closer, err
 }
 
-// getNbRowsMatching returns how many rows matches one of values at any column
+// getNbRowsMatching returns how many rows matches one of values at any column.
 func (ctx *TestContext) getNbRowsMatching(table string, columns, values []string) (int, error) {
 	db := ctx.db()
 
@@ -508,7 +520,7 @@ func shouldSkipRow(data *messages.PickleStepArgument_PickleTable, rowIndex int, 
 }
 
 // rowMatchesColumnValues checks whether a column matches some values at some rows
-// we do an OR operation, thus returning if any column is match one of the values
+// we do an OR operation, thus returning if any column is match one of the values.
 func rowMatchesColumnValues(row *messages.PickleStepArgument_PickleTable_PickleTableRow, columnIndexes []int, values []string) bool {
 	// Both loops should contain 1 or 2 elements only
 	for _, columnIndex := range columnIndexes {
@@ -566,7 +578,7 @@ var tableValueNullVar = tableValueNull
 var pTableValueNull = &tableValueNullVar
 
 // dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db
-// e.g., the string "null" means the SQL `NULL`
+// e.g., the string "null" means the SQL `NULL`.
 func dbDataTableValue(input string) interface{} {
 	switch input {
 	case tableValueFalse:

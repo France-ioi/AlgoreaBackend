@@ -11,10 +11,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-// FieldType represents a type of tie-breaker field's value
+// FieldType represents a type of tie-breaker field's value.
 type FieldType string
 
-// Value type of 'from.*' field in HTTP requests
+// Value type of 'from.*' field in HTTP requests.
 const (
 	FieldTypeInt64  FieldType = "int64"
 	FieldTypeBool   FieldType = "bool"
@@ -22,7 +22,7 @@ const (
 	FieldTypeTime   FieldType = "time"
 )
 
-// FieldSortingParams represents sorting parameters for one field
+// FieldSortingParams represents sorting parameters for one field.
 type FieldSortingParams struct {
 	// ColumnName is a DB column name (should contain a table name as a prefix, e.g. "groups.id")
 	ColumnName string
@@ -75,13 +75,13 @@ func (t sortingType) conditionSign() string {
 // needed to bypass pagination completely and ignore 'from.*' parameters of the HTTP request.
 const FromFirstRow = iota
 
-// SortingAndPagingFields is a type of SortingAndPagingParameters.Fields (field_name -> params)
+// SortingAndPagingFields is a type of SortingAndPagingParameters.Fields (field_name -> params).
 type SortingAndPagingFields map[string]*FieldSortingParams
 
-// SortingAndPagingTieBreakers is a type of SortingAndPagingParameters.TieBreakers (field_name -> type)
+// SortingAndPagingTieBreakers is a type of SortingAndPagingParameters.TieBreakers (field_name -> type).
 type SortingAndPagingTieBreakers map[string]FieldType
 
-// SortingAndPagingParameters represents sorting and paging parameters to apply
+// SortingAndPagingParameters represents sorting and paging parameters to apply.
 type SortingAndPagingParameters struct {
 	Fields       SortingAndPagingFields
 	DefaultRules string
@@ -207,7 +207,7 @@ func validateSortingField(
 // from a given sorting statement.
 // "id"   -> ("id", 1)
 // "-name -> ("name", {-1, 0})
-// "-date$ -> ("date", {-1, 1}) # null last
+// "-date$ -> ("date", {-1, 1}) # null last.
 func getFieldNameAndSortingTypeFromSortStatement(sortStatement string) (string, sortingType) {
 	var direction sortingDirection
 	var np nullPlacement
@@ -226,7 +226,7 @@ func getFieldNameAndSortingTypeFromSortStatement(sortStatement string) (string, 
 }
 
 // applyOrder appends the "ORDER BY" statement to given query according to the given list of used fields,
-// the fields configuration (configuredFields) and sorting types
+// the fields configuration (configuredFields) and sorting types.
 func applyOrder(query *database.DB, usedFields []string, configuredFields map[string]*FieldSortingParams,
 	fieldsSortingTypes map[string]sortingType) *database.DB {
 	usedFieldsNumber := len(usedFields)
@@ -240,7 +240,7 @@ func applyOrder(query *database.DB, usedFields []string, configuredFields map[st
 	return query
 }
 
-// ParsePagingParameters returns a map with values provided for paging in a request URL (none or all should be present)
+// ParsePagingParameters returns a map with values provided for paging in a request URL (none or all should be present).
 func ParsePagingParameters(r *http.Request, expectedFromFields map[string]FieldType) (map[string]interface{}, error) {
 	fromValueIsMissing := false
 	fromValueAccepted := false
@@ -309,7 +309,7 @@ func getFromValueForField(r *http.Request, fieldName string, fieldType FieldType
 
 var safeColumnNameRegexp = regexp.MustCompile("[^a-zA-Z_0-9]")
 
-// applyPagingConditions adds filtering on paging values into the query
+// applyPagingConditions adds filtering on paging values into the query.
 func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortingTypes map[string]sortingType,
 	configuredFields map[string]*FieldSortingParams, fromValues map[string]interface{}, startFromRowSubQuery interface{}) *database.DB {
 	if startFromRowSubQuery == nil && len(fromValues) == 0 || startFromRowSubQuery == FromFirstRow {

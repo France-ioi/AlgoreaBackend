@@ -169,7 +169,7 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	oldHTTPHandler := ctx.application.HTTPHandler
 	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			// nolint: golint
+			// nolint: golint,staticcheck SA1029: should not use built-in type string as key for value; define your own type to avoid collisions (staticcheck)
 			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
 		})
 	}).(*chi.Mux)

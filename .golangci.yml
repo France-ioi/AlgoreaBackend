@@ -46,6 +46,7 @@ linters-settings:
       - experimental
     disabled-checks:
       - wrapperFunc
+      - whyNoLint # requires an explanation for each nolint. requires many changes
 
 linters:
   enable-all: true
@@ -53,7 +54,12 @@ linters:
     - maligned
     - prealloc
     - gochecknoglobals
-    - wsl # requires many changes, enable it later
+    - testpackage # requires that go test files are in a different package, but current tests are on private functions
+    - wsl # requires whitelines between blocks. requires many changes, enable it later
+    - nolintlint # requires explanation for each "nolint" directive. requires many changes
+    - gomnd # flags all "magic numbers" in the code. requires many changes
+    - goerr113 # don't allow dynamic errors, requires wrapped static errors. requires many changes
+    - nestif # Doesn't allow too long nested if. requires complex changes
 
 run:
   skip-dirs:
@@ -86,4 +92,4 @@ issues:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.20.0 # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.27.0 # use the fixed version to not introduce new linters unexpectedly

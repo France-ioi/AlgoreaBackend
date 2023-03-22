@@ -6,7 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// GroupMembershipAction represents an action that changes relation between two groups
+// GroupMembershipAction represents an action that changes relation between two groups.
 type GroupMembershipAction string
 
 const (
@@ -71,7 +71,7 @@ func (groupMembershipAction GroupMembershipAction) hasApprovals() bool {
 	return groupMembershipAction == JoinRequestCreated
 }
 
-// PendingType converts the GroupMembershipAction into `group_pending_requests.type`
+// PendingType converts the GroupMembershipAction into `group_pending_requests.type`.
 func (groupMembershipAction GroupMembershipAction) PendingType() string {
 	switch groupMembershipAction {
 	case InvitationCreated:
@@ -84,7 +84,7 @@ func (groupMembershipAction GroupMembershipAction) PendingType() string {
 	panic("groupMembershipAction should be of pending kind in PendingType()")
 }
 
-// GroupGroupTransitionAction represents a groups_groups relation transition action
+// GroupGroupTransitionAction represents a groups_groups relation transition action.
 type GroupGroupTransitionAction int
 
 const (
@@ -254,7 +254,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 	},
 }
 
-// GroupGroupTransitionResult is an enum{cycle, invalid, success, unchanged}
+// GroupGroupTransitionResult is an enum{cycle, invalid, success, unchanged}.
 type GroupGroupTransitionResult string
 
 const (
@@ -274,17 +274,17 @@ const (
 	Unchanged GroupGroupTransitionResult = "unchanged"
 )
 
-// GroupGroupTransitionResults represents results of mass transition (format: map{ id -> GroupGroupTransitionResult })
+// GroupGroupTransitionResults represents results of mass transition (format: map{ id -> GroupGroupTransitionResult }).
 type GroupGroupTransitionResults map[int64]GroupGroupTransitionResult
 
-// GroupApprovals represents all the approvals that can be given by a user to the group managers
+// GroupApprovals represents all the approvals that can be given by a user to the group managers.
 type GroupApprovals struct {
 	PersonalInfoViewApproval bool
 	LockMembershipApproval   bool
 	WatchApproval            bool
 }
 
-// FromString initializes GroupApprovals from the given comma-separated list of approvals
+// FromString initializes GroupApprovals from the given comma-separated list of approvals.
 func (approvals *GroupApprovals) FromString(s string) {
 	approvalsList := strings.Split(s, ",")
 	for _, approval := range approvalsList {
@@ -299,7 +299,7 @@ func (approvals *GroupApprovals) FromString(s string) {
 	}
 }
 
-// ToArray converts GroupApprovals to a list of approvals
+// ToArray converts GroupApprovals to a list of approvals.
 func (approvals *GroupApprovals) ToArray() []string {
 	approvalsList := make([]string, 0, 3)
 	if approvals.PersonalInfoViewApproval {
@@ -331,7 +331,7 @@ type requiredApprovalsAndLimits struct {
 	MaxParticipants                   int
 }
 
-// Transition performs a groups_groups relation transition according to groupGroupTransitionRules
+// Transition performs a groups_groups relation transition according to groupGroupTransitionRules.
 func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	parentGroupID int64, childGroupIDs []int64, approvals map[int64]GroupApprovals,
 	performedByUserID int64) (results GroupGroupTransitionResults, approvalsToRequest map[int64]GroupApprovals, err error) {

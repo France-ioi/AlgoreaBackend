@@ -154,7 +154,7 @@ type submitRequestWrapper struct {
 	Answer *string `json:"answer"`
 }
 
-// UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken
+// UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken.
 func (requestData *SubmitRequest) UnmarshalJSON(raw []byte) error {
 	var wrapper submitRequestWrapper
 	if err := json.Unmarshal(raw, &wrapper); err != nil {
@@ -190,7 +190,7 @@ var (
 
 // Created. Success response with answer_token
 // swagger:model answerSubmitResponse
-type answerSubmitResponse struct { // nolint:unused,deadcode
+type answerSubmitResponse struct { //nolint:deadcode Used for documentation.
 	// description
 	// swagger:allOf
 	doc.CreatedResponse

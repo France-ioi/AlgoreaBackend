@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 )
 
-// ErrorResponse is an extension of the response for returning errors
+// ErrorResponse is an extension of the response for returning errors.
 type ErrorResponse struct {
 	Response
 	ErrorText string      `json:"error_text,omitempty"` // application-level error message, for debugging
@@ -24,10 +24,10 @@ type APIError struct {
 	Error          error
 }
 
-// NoError is an APIError to be returned when there is no error
+// NoError is an APIError to be returned when there is no error.
 var NoError = APIError{0, nil}
 
-// InsufficientAccessRightsError is an APIError to be returned when the has no access rights to perform an action
+// InsufficientAccessRightsError is an APIError to be returned when the has no access rights to perform an action.
 var InsufficientAccessRightsError = ErrForbidden(errors.New("insufficient access rights"))
 
 func (e APIError) httpResponse() render.Renderer {
@@ -54,42 +54,42 @@ func (e APIError) httpResponse() render.Renderer {
 }
 
 // ErrInvalidRequest is for errors caused by invalid request input
-// It results in a 400 Invalid request response
+// It results in a 400 Invalid request response.
 func ErrInvalidRequest(err error) APIError {
 	return APIError{http.StatusBadRequest, err}
 }
 
 // ErrForbidden is for errors caused by a lack of permissions globally or on a requested object
-// It results in a 403 Forbidden
+// It results in a 403 Forbidden.
 func ErrForbidden(err error) APIError {
 	return APIError{http.StatusForbidden, err}
 }
 
 // ErrNotFound is for errors caused by absence of a requested object
-// It results in a 404 Not Found
+// It results in a 404 Not Found.
 func ErrNotFound(err error) APIError {
 	return APIError{http.StatusNotFound, err}
 }
 
 // ErrConflict is for errors caused by wrong resource state not allowing to perform the operation
-// It results in a 409 Conflict
+// It results in a 409 Conflict.
 func ErrConflict(err error) APIError {
 	return APIError{http.StatusConflict, err}
 }
 
 // ErrUnprocessableEntity is for errors caused by our inability to perform data modifications for some reason
-// It results in a 422 Unprocessable Entity
+// It results in a 422 Unprocessable Entity.
 func ErrUnprocessableEntity(err error) APIError {
 	return APIError{http.StatusUnprocessableEntity, err}
 }
 
 // ErrUnexpected is for internal errors (not supposed to fail) not directly caused by the user input
-// It results in a 500 Internal Server Error response
+// It results in a 500 Internal Server Error response.
 func ErrUnexpected(err error) APIError {
 	return APIError{http.StatusInternalServerError, err}
 }
 
-// MustNotBeError panics if the error is not nil
+// MustNotBeError panics if the error is not nil.
 func MustNotBeError(err error) {
 	if err != nil {
 		panic(err)

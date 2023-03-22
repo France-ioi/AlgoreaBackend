@@ -22,14 +22,14 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
-// Config contains parsed keys and PlatformName
+// Config contains parsed keys and PlatformName.
 type Config struct {
 	PublicKey    *rsa.PublicKey
 	PrivateKey   *rsa.PrivateKey
 	PlatformName string
 }
 
-// Initialize loads keys from the config and resolves the platform name
+// Initialize loads keys from the config and resolves the platform name.
 func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
 
@@ -53,7 +53,7 @@ func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
 }
 
 // getKey returns either "<keyType>Key" if not empty or the content of "<keyType>KeyFile" otherwise
-// keyType is either "Public" or "Private"
+// keyType is either "Public" or "Private".
 func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	key := config.GetString(keyType + "Key")
 	if key != "" {
@@ -82,7 +82,7 @@ func prepareFileName(fileName string) string {
 	return cwd + "/" + fileName
 }
 
-// ParseAndValidate parses a token and validates its signature and date
+// ParseAndValidate parses a token and validates its signature and date.
 func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interface{}, error) {
 	jwt, err := jws.ParseJWT(token)
 	if err != nil {
@@ -111,7 +111,7 @@ func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interf
 	return jwt.Claims(), nil
 }
 
-// Generate generates a signed token for a payload
+// Generate generates a signed token for a payload.
 func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte {
 	payload["date"] = time.Now().UTC().Format("02-01-2006")
 
@@ -122,17 +122,17 @@ func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte
 	return token
 }
 
-// UnexpectedError represents an unexpected error so that we could differentiate it from expected errors
+// UnexpectedError represents an unexpected error so that we could differentiate it from expected errors.
 type UnexpectedError struct {
 	err error
 }
 
-// Error returns a string representation for an unexpected error
+// Error returns a string representation for an unexpected error.
 func (ue *UnexpectedError) Error() string {
 	return ue.err.Error()
 }
 
-// IsUnexpectedError returns true if its argument is an unexpected error
+// IsUnexpectedError returns true if its argument is an unexpected error.
 func IsUnexpectedError(err error) bool {
 	if _, unexpected := err.(*UnexpectedError); unexpected {
 		return true

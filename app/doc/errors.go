@@ -11,7 +11,7 @@ package doc
 //     schema:
 //       "$ref": "#/definitions/badRequest"
 
-type genericError struct {
+type genericError struct { //nolint:deadcode Used for documentation.
 	// false
 	// example: false
 	// required: true
@@ -23,7 +23,7 @@ type genericError struct {
 	ErrorText string `json:"error_text,omitempty"`
 }
 
-type badRequest struct {
+type badRequest struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Bad Request
@@ -33,42 +33,42 @@ type badRequest struct {
 	Errors interface{} `json:"errors,omitempty"`
 }
 
-type unauthorized struct {
+type unauthorized struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Unauthorized
 	Message string `json:"message"`
 }
 
-type forbidden struct {
+type forbidden struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Forbidden
 	Message string `json:"message"`
 }
 
-type conflict struct {
+type conflict struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Conflict
 	Message string `json:"message"`
 }
 
-type notFound struct {
+type notFound struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Not Found
 	Message string `json:"message"`
 }
 
-type unprocessableEntity struct {
+type unprocessableEntity struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Unprocessable Entity
 	Message string `json:"message"`
 }
 
-type unprocessableEntityWithMissingApprovals struct {
+type unprocessableEntityWithMissingApprovals struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Unprocessable Entity
@@ -76,13 +76,13 @@ type unprocessableEntityWithMissingApprovals struct {
 	Data    unprocessableEntityWithMissingApprovalsData `json:"data"`
 }
 
-// Unprocessable Entity response with a list of missing approvals
-type unprocessableEntityWithMissingApprovalsData struct {
+// Unprocessable Entity response with a list of missing approvals.
+type unprocessableEntityWithMissingApprovalsData struct { //nolint:deadcode Used for documentation.
 	// items.enum: personal_info_view,lock_membership,watch
 	MissingApprovals []string `json:"missing_approvals"`
 }
 
-type internalError struct {
+type internalError struct { //nolint:deadcode Used for documentation.
 	genericError
 	// required: true
 	// enum: Internal Server Error

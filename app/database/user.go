@@ -1,6 +1,6 @@
 package database
 
-// User represents data associated with the user (from the `users` table)
+// User represents data associated with the user (from the `users` table).
 type User struct {
 	GroupID             int64
 	Login               string
@@ -12,7 +12,7 @@ type User struct {
 	NotificationsReadAt *Time
 }
 
-// Clone returns a deep copy of the given User structure
+// Clone returns a deep copy of the given User structure.
 func (u *User) Clone() *User {
 	result := *u
 	if result.NotificationsReadAt != nil {
@@ -30,7 +30,7 @@ func (u *User) Clone() *User {
 	return &result
 }
 
-// CanWatchItemAnswer checks whether the user has can_watch >= answer on an item
+// CanWatchItemAnswer checks whether the user has can_watch >= answer on an item.
 func (u *User) CanWatchItemAnswer(s *DataStore, itemID int64) bool {
 	userCanWatchAnswer, err := s.Permissions().MatchingUserAncestors(u).
 		Where("permissions.item_id = ?", itemID).

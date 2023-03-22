@@ -15,7 +15,7 @@ type participantMiddlewareKey int
 
 const ctxParticipant participantMiddlewareKey = iota
 
-// GetStorer is an interface allowing to get a data store bound to the context of the given request
+// GetStorer is an interface allowing to get a data store bound to the context of the given request.
 type GetStorer interface {
 	GetStore(r *http.Request) *database.DataStore
 }
@@ -41,7 +41,7 @@ func ParticipantMiddleware(srv GetStorer) func(next http.Handler) http.Handler {
 	}
 }
 
-// ParticipantIDFromContext retrieves a participant id  set by the middleware from a context
+// ParticipantIDFromContext retrieves a participant id  set by the middleware from a context.
 func ParticipantIDFromContext(ctx context.Context) int64 {
 	return ctx.Value(ctxParticipant).(int64)
 }

@@ -12,7 +12,7 @@ type GroupGroupStore struct {
 }
 
 // WhereUserIsMember returns a composable query of direct ancestors (parents) of user's self group,
-// i.e. groups of which he is a direct member
+// i.e. groups of which he is a direct member.
 func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
 	result := s.Where(QuoteName(s.tableName)+".child_group_id = ?", user.GroupID)
 	if s.tableName != "groups_groups_active" {
@@ -37,7 +37,7 @@ type ParentChild struct {
 	ChildID  int64
 }
 
-// CreateRelation creates a direct relation between two groups
+// CreateRelation creates a direct relation between two groups.
 func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -197,7 +197,7 @@ func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
 		WHERE groups.id IN(?)`, groupIDs)
 }
 
-// After is a "listener" that calls GroupGroupStore::createNewAncestors()
+// After is a "listener" that calls GroupGroupStore::createNewAncestors().
 func (s *GroupGroupStore) After() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -207,7 +207,7 @@ func (s *GroupGroupStore) After() (err error) {
 }
 
 // WithGroupsRelationsLock wraps the given function in GET_LOCK/RELEASE_LOCK
-// specific for modifying relations between groups
+// specific for modifying relations between groups.
 func (s *GroupGroupStore) WithGroupsRelationsLock(txFunc func(*DataStore) error) error {
 	return s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, txFunc)
 }

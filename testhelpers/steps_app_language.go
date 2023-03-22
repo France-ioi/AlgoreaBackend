@@ -37,7 +37,7 @@ func getParametersString(parameters map[string]string) string {
 	return str
 }
 
-// populateDatabase populate the database with all the initialized data
+// populateDatabase populate the database with all the initialized data.
 func (ctx *TestContext) populateDatabase() error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -76,7 +76,7 @@ func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]inte
 	ctx.dbTables[tableName][key] = row
 }
 
-// addUser adds a user in database
+// addUser adds a user in database.
 func (ctx *TestContext) addUser(groupID, login string) {
 	ctx.addInDatabase("users", groupID, map[string]interface{}{
 		"group_id": groupID,
@@ -84,7 +84,7 @@ func (ctx *TestContext) addUser(groupID, login string) {
 	})
 }
 
-// addGroup adds a group in database
+// addGroup adds a group in database.
 func (ctx *TestContext) addGroup(groupID, name string) {
 	ctx.addInDatabase("groups", groupID, map[string]interface{}{
 		"id":   groupID,
@@ -92,7 +92,7 @@ func (ctx *TestContext) addGroup(groupID, name string) {
 	})
 }
 
-// addGroupAncestor adds a group in database
+// addGroupAncestor adds a group in database.
 func (ctx *TestContext) addGroupAncestor(ancestorGroupID, childGroupID string) {
 	ctx.addInDatabase("groups_ancestors", ancestorGroupID+","+childGroupID, map[string]interface{}{
 		"ancestor_group_id": ancestorGroupID,
@@ -100,7 +100,7 @@ func (ctx *TestContext) addGroupAncestor(ancestorGroupID, childGroupID string) {
 	})
 }
 
-// addGroupGroup adds a group-group in database
+// addGroupGroup adds a group-group in database.
 func (ctx *TestContext) addGroupGroup(parentGroupID, childGroupID string) {
 	ctx.addInDatabase("groups_groups", parentGroupID+","+childGroupID, map[string]interface{}{
 		"parent_group_id": parentGroupID,
@@ -108,7 +108,7 @@ func (ctx *TestContext) addGroupGroup(parentGroupID, childGroupID string) {
 	})
 }
 
-// addGroupManager adds a group manager in database
+// addGroupManager adds a group manager in database.
 func (ctx *TestContext) addGroupManager(managerID, groupID, canWatchMembers string) {
 	ctx.addInDatabase("group_managers", managerID+","+groupID, map[string]interface{}{
 		"manager_id":        managerID,
@@ -117,7 +117,7 @@ func (ctx *TestContext) addGroupManager(managerID, groupID, canWatchMembers stri
 	})
 }
 
-// addPermissionGenerated adds a permission generated in database
+// addPermissionGenerated adds a permission generated in database.
 func (ctx *TestContext) addPermissionGenerated(groupID, itemID, watchType, watchValue string) {
 	permissionsGeneratedTable := "permissions_generated"
 	key := groupID + "," + itemID
@@ -131,7 +131,7 @@ func (ctx *TestContext) addPermissionGenerated(groupID, itemID, watchType, watch
 	ctx.dbTables[permissionsGeneratedTable][key]["can_"+watchType+"_generated"] = watchValue
 }
 
-// addPermissionsGranted adds a permission granted in database
+// addPermissionsGranted adds a permission granted in database.
 func (ctx *TestContext) addPermissionGranted(groupID, sourceGroupID, itemID, canRequestHelpTo string) {
 	ctx.addInDatabase("permissions_granted", groupID+","+itemID, map[string]interface{}{
 		"group_id":            groupID,
@@ -141,7 +141,7 @@ func (ctx *TestContext) addPermissionGranted(groupID, sourceGroupID, itemID, can
 	})
 }
 
-// addAttempt adds an attempt in database
+// addAttempt adds an attempt in database.
 func (ctx *TestContext) addAttempt(id, participantID string) {
 	ctx.addInDatabase("attempts", id+","+participantID, map[string]interface{}{
 		"id":             id,
@@ -149,7 +149,7 @@ func (ctx *TestContext) addAttempt(id, participantID string) {
 	})
 }
 
-// addResult adds a result in database
+// addResult adds a result in database.
 func (ctx *TestContext) addResult(attemptID, participantID, itemID string, validatedAt time.Time) {
 	ctx.addInDatabase("results", attemptID+","+participantID+","+itemID, map[string]interface{}{
 		"attempt_id":     attemptID,
@@ -159,7 +159,7 @@ func (ctx *TestContext) addResult(attemptID, participantID, itemID string, valid
 	})
 }
 
-// addItem adds an item in database
+// addItem adds an item in database.
 func (ctx *TestContext) addItem(id, defaultLanguageTag, itemType string) {
 	ctx.addInDatabase("items", id, map[string]interface{}{
 		"id":                   id,
@@ -173,7 +173,7 @@ func (ctx *TestContext) getThreadKey(itemID, participantID string) string {
 	return itemID + "," + participantID
 }
 
-// addThread adds a thread in database
+// addThread adds a thread in database.
 func (ctx *TestContext) addThread(itemID, participantID, helperGroupID, status, messageCount string) {
 	ctx.addInDatabase("threads", ctx.getThreadKey(itemID, participantID), map[string]interface{}{
 		"item_id":         itemID,

@@ -15,7 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// threadUpdateFields represents the fields of a thread in database
+// threadUpdateFields represents the fields of a thread in database.
 type threadUpdateFields struct {
 	// Optional
 	// enum: waiting_for_participant,waiting_for_trainer,closed
@@ -295,7 +295,7 @@ func constructHelperGroupIDSetIfNonOpenToOpenStatus(oldStatus string) validator.
 	}
 }
 
-// excludeIncrementIfMessageCountSetValidator validates that message_count and message_count_increment are not both set
+// excludeIncrementIfMessageCountSetValidator validates that message_count and message_count_increment are not both set.
 func excludeIncrementIfMessageCountSetValidator(messageCountField validator.FieldLevel) bool {
 	messageCountPtr := messageCountField.Top().Elem().FieldByName("MessageCount").Interface().(*int)
 	messageCountIncrementPtr := messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Interface().(*int)

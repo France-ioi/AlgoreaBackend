@@ -1,6 +1,6 @@
 // +build !unit
 
-package main
+package main_test
 
 import (
 	"github.com/cucumber/godog"
@@ -9,7 +9,7 @@ import (
 )
 
 // FeatureContext is required to be able to use the `godog` command at root of the project
-// noinspection GoUnusedExportedFunction
+// noinspection GoUnusedExportedFunction.
 func FeatureContext(s *godog.Suite) { // nolint
 	testhelpers.FeatureContext(s)
 }

@@ -24,7 +24,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-// FormData can parse JSON, validate it and construct a map for updating DB
+// FormData can parse JSON, validate it and construct a map for updating DB.
 type FormData struct {
 	definitionStructure interface{}
 	fieldErrors         FieldErrors
@@ -42,7 +42,7 @@ const set = "set"
 const null = "null"
 const squash = "squash"
 
-// NewFormData creates a new FormData object for given definitions
+// NewFormData creates a new FormData object for given definitions.
 func NewFormData(definitionStructure interface{}) *FormData {
 	// Initialize go-playground/validator
 	validate := validator.New()
@@ -96,12 +96,12 @@ func NewFormData(definitionStructure interface{}) *FormData {
 	return formData
 }
 
-// RegisterValidation adds a validation with the given tag
+// RegisterValidation adds a validation with the given tag.
 func (f *FormData) RegisterValidation(tag string, fn validator.Func) {
 	_ = f.validate.RegisterValidation(tag, fn)
 }
 
-// RegisterTranslation registers translations against the provided tag
+// RegisterTranslation registers translations against the provided tag.
 func (f *FormData) RegisterTranslation(tag, text string) {
 	_ = f.validate.RegisterTranslation(tag, f.trans,
 		func(ut ut.Translator) (err error) {
@@ -115,17 +115,17 @@ func (f *FormData) RegisterTranslation(tag, text string) {
 		})
 }
 
-// SetOldValues sets the internal pointer to the structure containing old values for validation
+// SetOldValues sets the internal pointer to the structure containing old values for validation.
 func (f *FormData) SetOldValues(oldValues interface{}) {
 	f.oldValues = oldValues
 }
 
-// AllowUnknownFields disables the check for unknown fields in data
+// AllowUnknownFields disables the check for unknown fields in data.
 func (f *FormData) AllowUnknownFields() {
 	f.allowUnknownFields = true
 }
 
-// ParseJSONRequestData parses and validates JSON from the request according to the structure definition
+// ParseJSONRequestData parses and validates JSON from the request according to the structure definition.
 func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 	if err := f.decodeRequestJSONDataIntoStruct(r); err != nil {
 		return err
@@ -134,7 +134,7 @@ func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 	return f.checkAndValidate()
 }
 
-// ParseMapData parses and validates map[string]interface{} according to the structure definition
+// ParseMapData parses and validates map[string]interface{} according to the structure definition.
 func (f *FormData) ParseMapData(m map[string]interface{}) error {
 	f.decodeMapIntoStruct(m)
 	return f.checkAndValidate()
@@ -151,14 +151,14 @@ func (f *FormData) checkAndValidate() error {
 	return nil
 }
 
-// ConstructMapForDB constructs a map for updating DB. It uses both the definition and the JSON input
+// ConstructMapForDB constructs a map for updating DB. It uses both the definition and the JSON input.
 func (f *FormData) ConstructMapForDB() map[string]interface{} {
 	result := map[string]interface{}{}
 	f.addDBFieldsIntoMap(result, reflect.ValueOf(f.definitionStructure), "")
 	return result
 }
 
-// ConstructPartialMapForDB constructs a map for updating DB. It uses both the definition and the JSON input
+// ConstructPartialMapForDB constructs a map for updating DB. It uses both the definition and the JSON input.
 func (f *FormData) ConstructPartialMapForDB(part string) map[string]interface{} {
 	result := map[string]interface{}{}
 	partField := reflect.ValueOf(f.definitionStructure).Elem().FieldByName(part)
@@ -174,17 +174,17 @@ func (f *FormData) ConstructPartialMapForDB(part string) map[string]interface{} 
 	return result
 }
 
-// IsSet returns true if the field is set
+// IsSet returns true if the field is set.
 func (f *FormData) IsSet(key string) bool {
 	return f.usedKeys[key]
 }
 
-// IsValid returns true if the field is valid (there are no errors for this field)
+// IsValid returns true if the field is valid (there are no errors for this field).
 func (f *FormData) IsValid(key string) bool {
 	return len(f.fieldErrors[key]) == 0
 }
 
-// ValidatorSkippingUnsetFields constructs a validator checking only fields given by the user
+// ValidatorSkippingUnsetFields constructs a validator checking only fields given by the user.
 func (f *FormData) ValidatorSkippingUnsetFields(nestedValidator validator.Func) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		path := f.getUsedKeysPathFromValidatorPath(fl.Path())
@@ -463,7 +463,7 @@ func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 }
 
 // stringToInt64HookFunc returns a DecodeHookFunc that converts
-// strings to int64
+// strings to int64.
 func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 	return func(
 		f reflect.Type,
@@ -476,7 +476,7 @@ func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 	}
 }
 
-// stringToDatabaseTimeUTCHookFunc returns a DecodeHookFunc that converts strings to database.Time in UTC
+// stringToDatabaseTimeUTCHookFunc returns a DecodeHookFunc that converts strings to database.Time in UTC.
 func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc {
 	timeDecodeFunc := mapstructure.StringToTimeHookFunc(layout)
 

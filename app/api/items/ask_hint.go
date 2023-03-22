@@ -199,7 +199,7 @@ func addHintToListIfNeeded(hintsList []formdata.Anything, hintToAdd formdata.Any
 	return hintsList
 }
 
-// AskHintRequest represents a JSON request body format needed by items.askHint()
+// AskHintRequest represents a JSON request body format needed by items.askHint().
 type AskHintRequest struct {
 	TaskToken *token.Task
 	HintToken *token.Hint
@@ -213,7 +213,7 @@ type askHintRequestWrapper struct {
 	HintRequestedToken *formdata.Anything `json:"hint_requested"`
 }
 
-// UnmarshalJSON unmarshals the items/askHint request data from JSON
+// UnmarshalJSON unmarshals the items/askHint request data from JSON.
 func (requestData *AskHintRequest) UnmarshalJSON(raw []byte) error {
 	var wrapper askHintRequestWrapper
 	if err := json.Unmarshal(raw, &wrapper); err != nil {
@@ -251,7 +251,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 	return nil
 }
 
-// Bind of AskHintRequest checks that the asked hint is present
+// Bind of AskHintRequest checks that the asked hint is present.
 func (requestData *AskHintRequest) Bind(r *http.Request) error {
 	if len(requestData.HintToken.AskedHint.Bytes()) == 0 || bytes.Equal([]byte("null"), requestData.HintToken.AskedHint.Bytes()) {
 		return fmt.Errorf("asked hint should not be empty")

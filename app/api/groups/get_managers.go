@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// GroupManagersViewResponseRowUser contains names of a manager
+// GroupManagersViewResponseRowUser contains names of a manager.
 type GroupManagersViewResponseRowUser struct {
 	// Displayed only for users
 	Login string `json:"login"`
@@ -18,7 +18,7 @@ type GroupManagersViewResponseRowUser struct {
 	LastName *string `json:"last_name"`
 }
 
-// GroupManagersViewResponseRowThroughAncestorGroups contains permissions propagated from ancestor groups
+// GroupManagersViewResponseRowThroughAncestorGroups contains permissions propagated from ancestor groups.
 type GroupManagersViewResponseRowThroughAncestorGroups struct {
 	// enum: none,memberships,memberships_and_group
 	// displayed only when include_managers_of_ancestor_groups=1, note that the group is an ancestor of itself

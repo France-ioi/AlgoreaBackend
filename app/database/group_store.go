@@ -2,7 +2,7 @@ package database
 
 import "github.com/jinzhu/gorm"
 
-// GroupStore implements database operations on groups
+// GroupStore implements database operations on groups.
 type GroupStore struct {
 	*DataStore
 }
@@ -43,7 +43,7 @@ func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }
 
-// TeamGroupForUser returns a composable query for getting team group of the given user with given id
+// TeamGroupForUser returns a composable query for getting team group of the given user with given id.
 func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 	return s.
 		ByID(teamGroupID).
@@ -163,7 +163,7 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 		) OR MIN(entry_max_team_size) < COUNT(*)`, membersPreconditionsQuery.QueryExpr()).Limit(1)
 }
 
-// DeleteGroup deletes a group and emerging orphaned groups
+// DeleteGroup deletes a group and emerging orphaned groups.
 func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)

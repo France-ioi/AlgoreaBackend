@@ -23,7 +23,7 @@ var opt = godog.Options{
 }
 
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
-// (the one from the tested package)
+// (the one from the tested package).
 func RunGodogTests(t *testing.T, tags string) {
 	appenv.SetDefaultEnvToTest()
 

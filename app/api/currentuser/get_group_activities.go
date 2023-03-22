@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
-// rawRootItem represents one row with a root activity/skill returned from the DB
+// rawRootItem represents one row with a root activity/skill returned from the DB.
 type rawRootItem struct {
 	// groups
 	GroupID   int64

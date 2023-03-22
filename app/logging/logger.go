@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Logger is wrapper around a logger and keeping the logging config so that it can be reused by other loggers
+// Logger is wrapper around a logger and keeping the logging config so that it can be reused by other loggers.
 type Logger struct {
 	*logrus.Logger
 	config *viper.Viper
@@ -31,7 +31,7 @@ const outputStderr = "stderr"
 const outputFile = "file"
 
 // Configure applies the given logging configuration to the logger
-// (may panic if the configuration is invalid)
+// (may panic if the configuration is invalid).
 func (l *Logger) Configure(config *viper.Viper) {
 	l.config = config
 
@@ -81,7 +81,7 @@ func (l *Logger) Configure(config *viper.Viper) {
 	log.SetOutput(l.Logger.Writer())
 }
 
-// ResetShared reset the global logger to its default settings before its configuration
+// ResetShared reset the global logger to its default settings before its configuration.
 func ResetShared() {
 	SharedLogger = new()
 }

@@ -9,7 +9,7 @@ import (
 )
 
 // ValidateJSONContentType validates the content-type header of the response is json
-// If not, return an error
+// If not, return an error.
 func ValidateJSONContentType(resp *http.Response) error {
 	contentType := resp.Header.Get("Content-Type")
 	if contentType == "" {

@@ -11,7 +11,7 @@ import (
 
 var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[(?:<nil>|[\w.]+) )|$)`)
 
-// NewRawDBLogger returns a logger for raw database actions using an existing dblogger and rawLogMode setting
+// NewRawDBLogger returns a logger for raw database actions using an existing dblogger and rawLogMode setting.
 func NewRawDBLogger(logger DBLogger, rawLogMode bool) instrumentedsql.Logger {
 	return instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
 		if !rawLogMode {

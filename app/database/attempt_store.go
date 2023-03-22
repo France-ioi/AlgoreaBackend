@@ -4,7 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// AttemptStore implements database operations on `attempts`
+// AttemptStore implements database operations on `attempts`.
 type AttemptStore struct {
 	*DataStore
 }

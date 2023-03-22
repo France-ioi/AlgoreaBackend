@@ -22,21 +22,21 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
-// DB contains information for current db connection (wraps *gorm.DB)
+// DB contains information for current db connection (wraps *gorm.DB).
 type DB struct {
 	db  *gorm.DB
 	ctx context.Context
 }
 
-// ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock
+// ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock.
 var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
 
-// newDB wraps *gorm.DB
+// newDB wraps *gorm.DB.
 func newDB(ctx context.Context, db *gorm.DB) *DB {
 	return &DB{db: db, ctx: ctx}
 }
 
-// Open connects to the database and tests the connection
+// Open connects to the database and tests the connection.
 // nolint: gosec
 func Open(source interface{}) (*DB, error) {
 	var err error
@@ -64,7 +64,7 @@ func Open(source interface{}) (*DB, error) {
 	return newDB(context.Background(), dbConn), err
 }
 
-// OpenRawDBConnection creates a new DB connection
+// OpenRawDBConnection creates a new DB connection.
 func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 	registerDriver := true
 	for _, driverName := range sql.Drivers() {
@@ -83,7 +83,7 @@ func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 	return sql.Open("instrumented-mysql", sourceDSN)
 }
 
-// New clones a new db connection without search conditions
+// New clones a new db connection without search conditions.
 func (conn *DB) New() *DB {
 	return newDB(conn.ctx, conn.db.New())
 }
@@ -181,7 +181,7 @@ func (conn *DB) Close() error {
 	return conn.db.Close()
 }
 
-// Limit specifies the number of records to be retrieved
+// Limit specifies the number of records to be retrieved.
 func (conn *DB) Limit(limit interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Limit(limit))
 }
@@ -199,17 +199,17 @@ func (conn *DB) Joins(query string, args ...interface{}) *DB {
 }
 
 // Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
-// When creating/updating, specify fields that you want to save to database
+// When creating/updating, specify fields that you want to save to database.
 func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Select(query, args...))
 }
 
-// Table specifies the table you would like to run db operations
+// Table specifies the table you would like to run db operations.
 func (conn *DB) Table(name string) *DB {
 	return newDB(conn.ctx, conn.db.Table(name))
 }
 
-// Group specifies the group method on the find
+// Group specifies the group method on the find.
 func (conn *DB) Group(query string) *DB {
 	return newDB(conn.ctx, conn.db.Group(query))
 }
@@ -222,17 +222,17 @@ func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
 	return newDB(conn.ctx, conn.db.Order(value, reorder...))
 }
 
-// Having specifies HAVING conditions for GROUP BY
+// Having specifies HAVING conditions for GROUP BY.
 func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Having(query, args...))
 }
 
-// Union specifies UNION of two queries (receiver UNION query)
+// Union specifies UNION of two queries (receiver UNION query).
 func (conn *DB) Union(query interface{}) *DB {
 	return conn.New().Raw("? UNION ?", conn.db.SubQuery(), query)
 }
 
-// UnionAll specifies UNION ALL of two queries (receiver UNION ALL query)
+// UnionAll specifies UNION ALL of two queries (receiver UNION ALL query).
 func (conn *DB) UnionAll(query interface{}) *DB {
 	return conn.New().Raw("? UNION ALL ?", conn.db.SubQuery(), query)
 }
@@ -254,24 +254,24 @@ func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.UpdateColumn(attrs...))
 }
 
-// SubQuery returns the query as sub query
+// SubQuery returns the query as sub query.
 func (conn *DB) SubQuery() interface{} {
 	mustNotBeError(conn.Error())
 	return conn.db.SubQuery()
 }
 
-// QueryExpr returns the query as expr object
+// QueryExpr returns the query as expr object.
 func (conn *DB) QueryExpr() interface{} {
 	mustNotBeError(conn.Error())
 	return conn.db.QueryExpr()
 }
 
-// Scan scans value to a struct
+// Scan scans value to a struct.
 func (conn *DB) Scan(dest interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Scan(dest))
 }
 
-// ScanIntoSlices scans multiple columns into slices
+// ScanIntoSlices scans multiple columns into slices.
 func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 	if conn.db.Error != nil {
 		return conn
@@ -286,7 +286,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 		valuesPointers[index] = reflect.New(reflSlice.Type().Elem()).Interface()
 	}
 
-	rows, err := conn.db.Rows()
+	rows, err := conn.db.Rows() //nolint:rowserrcheck rows.Err() is checked before return.
 	if rows != nil {
 		defer func() {
 			_ = conn.db.AddError(rows.Close())
@@ -309,7 +309,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 	return conn
 }
 
-// ScanIntoSliceOfMaps scans value into a slice of maps
+// ScanIntoSliceOfMaps scans value into a slice of maps.
 func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 	*dest = []map[string]interface{}(nil)
 
@@ -319,13 +319,13 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 	})
 }
 
-// ScanAndHandleMaps scans values into maps and calls the given handler for each row
+// ScanAndHandleMaps scans values into maps and calls the given handler for each row.
 func (conn *DB) ScanAndHandleMaps(handler func(map[string]interface{}) error) *DB {
 	if conn.db.Error != nil {
 		return conn
 	}
 
-	rows, err := conn.db.Rows()
+	rows, err := conn.db.Rows() //nolint:rowserrcheck rows.Err() is checked before return.
 	if rows != nil {
 		defer func() {
 			_ = conn.db.AddError(rows.Close())
@@ -374,7 +374,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interfa
 	return rowMap
 }
 
-// Count gets how many records for a model
+// Count gets how many records for a model.
 func (conn *DB) Count(dest interface{}) *DB {
 	if conn.Error() != nil {
 		return conn
@@ -385,7 +385,7 @@ func (conn *DB) Count(dest interface{}) *DB {
 // Pluck is used to query a single column into a slice of values
 //     var ids []int64
 //     db.Table("users").Pluck("id", &ids)
-// The 'values' parameter should be a pointer to a slice
+// The 'values' parameter should be a pointer to a slice.
 func (conn *DB) Pluck(column string, values interface{}) *DB {
 	if conn.db.Error != nil {
 		return conn
@@ -406,7 +406,7 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 // PluckFirst is used to query a single column and take the first value
 //     var id int64
 //     db.Table("users").PluckFirst("id", &id)
-// The 'values' parameter should be a pointer to a value
+// The 'values' parameter should be a pointer to a value.
 func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 	valuesReflValue := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(value).Elem()), 0, 1)
 	valuesPtrReflValue := reflect.New(reflect.SliceOf(reflect.TypeOf(value).Elem()))
@@ -425,12 +425,12 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 	return result
 }
 
-// Take returns a record that match given conditions, the order will depend on the database implementation
+// Take returns a record that match given conditions, the order will depend on the database implementation.
 func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Take(out, where...))
 }
 
-// HasRows returns true if at least one row is found
+// HasRows returns true if at least one row is found.
 func (conn *DB) HasRows() (bool, error) {
 	var result int64
 	err := conn.PluckFirst("1", &result).Error()
@@ -440,28 +440,28 @@ func (conn *DB) HasRows() (bool, error) {
 	return err == nil, err
 }
 
-// Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition
+// Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition.
 func (conn *DB) Delete(where ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Delete(nil, where...))
 }
 
-// RowsAffected returns the number of rows affected by the last INSERT/UPDATE/DELETE statement
+// RowsAffected returns the number of rows affected by the last INSERT/UPDATE/DELETE statement.
 func (conn *DB) RowsAffected() int64 {
 	return conn.db.RowsAffected
 }
 
-// Error returns current errors
+// Error returns current errors.
 func (conn *DB) Error() error {
 	return conn.db.Error
 }
 
-// Exec executes raw sql
+// Exec executes raw sql.
 func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Exec(sqlQuery, values...))
 }
 
 // insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
-// into the given table
+// into the given table.
 func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) error {
 	if len(dataMaps) == 0 {
 		return nil
@@ -471,7 +471,7 @@ func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) 
 }
 
 // InsertIgnoreMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
-// into the given table ignoring errors (such as duplicates)
+// into the given table ignoring errors (such as duplicates).
 func (conn *DB) InsertIgnoreMaps(tableName string, dataMaps []map[string]interface{}) error {
 	if len(dataMaps) == 0 {
 		return nil
@@ -552,12 +552,12 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 	return conn.db.Exec(builder.String(), values...).Error
 }
 
-// Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting
+// Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting.
 func (conn *DB) Set(name string, value interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Set(name, value))
 }
 
-// ErrNoTransaction means that a called method/function cannot work outside of a transaction
+// ErrNoTransaction means that a called method/function cannot work outside of a transaction.
 var ErrNoTransaction = errors.New("should be executed in a transaction")
 
 func (conn *DB) mustBeInTransaction() {
@@ -566,7 +566,7 @@ func (conn *DB) mustBeInTransaction() {
 	}
 }
 
-// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement
+// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
 func (conn *DB) WithWriteLock() *DB {
 	conn.mustBeInTransaction()
 	return conn.Set("gorm:query_option", "FOR UPDATE")
@@ -637,12 +637,12 @@ func recoverPanics(returnErr *error) { // nolint:gocritic
 	}
 }
 
-// QuoteName surrounds a given table/column name in backtick quotes and escapes the content
+// QuoteName surrounds a given table/column name in backtick quotes and escapes the content.
 func QuoteName(name string) string {
 	return "`" + strings.Replace(name, "`", "``", -1) + "`"
 }
 
-// Default returns gorm.Expr("DEFAULT")
+// Default returns gorm.Expr("DEFAULT").
 func Default() interface{} {
 	return gorm.Expr("DEFAULT")
 }

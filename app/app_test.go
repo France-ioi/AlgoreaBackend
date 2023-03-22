@@ -272,7 +272,7 @@ func TestApplication_CheckConfig_UnmarshalError(t *testing.T) {
 	assert.Contains(app.CheckConfig().Error(), "unable to unmarshal domains config: 2 error(s) decoding")
 }
 
-func TestApplication_CheckConfig(t *testing.T) {
+func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be refactored.
 	type groupSpec struct {
 		id     int64
 		exists bool

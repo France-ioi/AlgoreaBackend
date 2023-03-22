@@ -18,7 +18,7 @@ import (
 var nowRegexp = regexp.MustCompile(`(?i)\bNOW\s*\(\s*(?:\d+\s*)?\)`)
 var patchedMethods []*monkey.PatchGuard
 
-// MockDBTime replaces the DB NOW() function call with a given constant value in all the queries
+// MockDBTime replaces the DB NOW() function call with a given constant value in all the queries.
 func MockDBTime(timeStrRaw string) {
 	timeStr := fmt.Sprintf("%q", timeStrRaw)
 
@@ -234,7 +234,7 @@ func patchDatabaseDBMethodsWithIntQueryAndArgs(timeStr string) {
 	}
 }
 
-// RestoreDBTime restores the usual behavior of the NOW() function
+// RestoreDBTime restores the usual behavior of the NOW() function.
 func RestoreDBTime() {
 	database.RestoreNow()
 	for i := len(patchedMethods) - 1; i >= 0; i-- {

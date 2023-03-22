@@ -19,7 +19,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
-// Application is the core state of the app
+// Application is the core state of the app.
 type Application struct {
 	HTTPHandler *chi.Mux
 	Config      *viper.Viper
@@ -47,7 +47,7 @@ func New() (*Application, error) {
 	return application, nil
 }
 
-// Reset reinitializes the application with the given config
+// Reset reinitializes the application with the given config.
 func (app *Application) Reset(config *viper.Viper) error {
 	dbConfig, err := DBConfig(config)
 	if err != nil {
@@ -107,7 +107,7 @@ func (app *Application) Reset(config *viper.Viper) error {
 	return nil
 }
 
-// CheckConfig checks that the database contains all the data needed by the config
+// CheckConfig checks that the database contains all the data needed by the config.
 func (app *Application) CheckConfig() error {
 	groupStore := database.NewDataStore(app.Database).Groups()
 	groupGroupStore := groupStore.ActiveGroupGroups()
@@ -156,7 +156,7 @@ func (app *Application) CheckConfig() error {
 	return nil
 }
 
-// CreateMissingData fills the database with required data (if missing)
+// CreateMissingData fills the database with required data (if missing).
 func (app *Application) CreateMissingData() error {
 	return database.NewDataStore(app.Database).InTransaction(app.insertRootGroupsAndRelations)
 }

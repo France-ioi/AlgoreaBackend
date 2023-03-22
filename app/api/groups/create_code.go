@@ -92,7 +92,7 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.A
 	return service.NoError
 }
 
-// GenerateGroupCode generate a random code for a group
+// GenerateGroupCode generate a random code for a group.
 func GenerateGroupCode() (string, error) {
 	const allowedCharacters = "3456789abcdefghijkmnpqrstuvwxy" // copied from the JS code
 	const allowedCharactersLength = len(allowedCharacters)

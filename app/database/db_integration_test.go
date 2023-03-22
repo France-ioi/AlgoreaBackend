@@ -14,14 +14,14 @@ import (
 )
 
 func Test_ConnectionOfWrappedDriverImplementsDriverSessionResetter(t *testing.T) {
-	rawDb, err := testhelpers.OpenRawDBConnection()
+	rawDB, err := testhelpers.OpenRawDBConnection()
 	assert.NoError(t, err)
 	if err == nil {
-		defer func() { assert.NoError(t, rawDb.Close()) }()
+		defer func() { assert.NoError(t, rawDB.Close()) }()
 	}
 
-	assert.IsType(t, (*instrumentedsql.WrappedDriver)(nil), rawDb.Driver())
-	connection, err := rawDb.Conn(context.Background())
+	assert.IsType(t, (*instrumentedsql.WrappedDriver)(nil), rawDB.Driver())
+	connection, err := rawDB.Conn(context.Background())
 	assert.NoError(t, err)
 	if err == nil {
 		defer func() { assert.NoError(t, connection.Close()) }()

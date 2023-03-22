@@ -11,7 +11,7 @@ import (
 )
 
 // ResolveURLQueryGetInt64SliceField extracts from the query parameter of the request a list of integer separated by commas (',')
-// returns `nil` for no IDs
+// returns `nil` for no IDs.
 func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]int64, error) {
 	if err := checkQueryGetFieldIsNotMissing(req, paramName); err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]i
 	return ids, nil
 }
 
-// ResolveURLQueryGetInt64Field extracts a get-parameter of type int64 from the query
+// ResolveURLQueryGetInt64Field extracts a get-parameter of type int64 from the query.
 func ResolveURLQueryGetInt64Field(httpReq *http.Request, name string) (int64, error) {
 	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
 		return 0, err
@@ -46,7 +46,7 @@ func ResolveURLQueryGetInt64Field(httpReq *http.Request, name string) (int64, er
 	return int64Value, nil
 }
 
-// ResolveURLQueryGetStringField extracts a get-parameter of type string from the query, fails if the value is empty
+// ResolveURLQueryGetStringField extracts a get-parameter of type string from the query, fails if the value is empty.
 func ResolveURLQueryGetStringField(httpReq *http.Request, name string) (string, error) {
 	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
 		return "", err
@@ -55,7 +55,7 @@ func ResolveURLQueryGetStringField(httpReq *http.Request, name string) (string, 
 }
 
 // ResolveURLQueryGetStringSliceField extracts from the query parameter of the request a list of strings separated by commas (',')
-// returns `nil` the parameter is missing
+// returns `nil` the parameter is missing.
 func ResolveURLQueryGetStringSliceField(req *http.Request, paramName string) ([]string, error) {
 	if err := checkQueryGetFieldIsNotMissing(req, paramName); err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(
 	return valuesList, nil
 }
 
-// ResolveURLQueryGetTimeField extracts a get-parameter of type time.Time (rfc3339) from the query
+// ResolveURLQueryGetTimeField extracts a get-parameter of type time.Time (rfc3339) from the query.
 func ResolveURLQueryGetTimeField(httpReq *http.Request, name string) (time.Time, error) {
 	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
 		return time.Time{}, err
@@ -119,7 +119,7 @@ func ResolveURLQueryGetTimeField(httpReq *http.Request, name string) (time.Time,
 	return result, nil
 }
 
-// ResolveURLQueryGetBoolField extracts a get-parameter of type bool (0 or 1) from the query, fails if the value is empty
+// ResolveURLQueryGetBoolField extracts a get-parameter of type bool (0 or 1) from the query, fails if the value is empty.
 func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, error) {
 	if len(httpReq.URL.Query()[name]) == 0 {
 		return false, fmt.Errorf("missing %s", name)
@@ -134,7 +134,7 @@ func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, erro
 	return false, fmt.Errorf("wrong value for %s (should have a boolean value (0 or 1))", name)
 }
 
-// ResolveURLQueryPathInt64Field extracts a path element of type int64 from the query
+// ResolveURLQueryPathInt64Field extracts a path element of type int64 from the query.
 func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, error) {
 	strValue := chi.URLParam(httpReq, name)
 	if strValue == "" {
@@ -154,7 +154,7 @@ func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
 	return nil
 }
 
-// ResolveURLQueryPathInt64SliceField extracts a list of integers separated by commas (',') from the query path of the request
+// ResolveURLQueryPathInt64SliceField extracts a list of integers separated by commas (',') from the query path of the request.
 func ResolveURLQueryPathInt64SliceField(req *http.Request, paramName string) ([]int64, error) {
 	paramValue := chi.URLParam(req, paramName)
 	paramValue = strings.Trim(paramValue, "/")
@@ -174,7 +174,7 @@ func ResolveURLQueryPathInt64SliceField(req *http.Request, paramName string) ([]
 }
 
 // ResolveURLQueryPathInt64SliceFieldWithLimit extracts a list of integers separated by commas (',')
-// from the query path of the request applying the given limit
+// from the query path of the request applying the given limit.
 func ResolveURLQueryPathInt64SliceFieldWithLimit(r *http.Request, paramName string, limit int) ([]int64, error) {
 	ids, err := ResolveURLQueryPathInt64SliceField(r, paramName)
 	if err != nil {

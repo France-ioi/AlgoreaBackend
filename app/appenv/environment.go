@@ -27,7 +27,7 @@ func SetDefaultEnv(newVal string) {
 	SetEnv(newVal)
 }
 
-// SetEnv sets the deployment environment to the given value
+// SetEnv sets the deployment environment to the given value.
 func SetEnv(newVal string) {
 	if os.Setenv(envVarName, newVal) != nil {
 		panic("unable to set env variable")
@@ -39,17 +39,17 @@ func SetDefaultEnvToTest() {
 	SetDefaultEnv(testEnv)
 }
 
-// IsEnvTest return whether the app is in "test" environment
+// IsEnvTest return whether the app is in "test" environment.
 func IsEnvTest() bool {
 	return Env() == testEnv
 }
 
-// IsEnvDev return whether the app is in "dev" environment
+// IsEnvDev return whether the app is in "dev" environment.
 func IsEnvDev() bool {
 	return Env() == developmentEnv
 }
 
-// IsEnvProd return whether the app is in "prod" environment
+// IsEnvProd return whether the app is in "prod" environment.
 func IsEnvProd() bool {
 	return Env() == productionEnv
 }
