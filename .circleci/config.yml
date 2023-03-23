@@ -271,6 +271,7 @@ workflows:
       - lint:
           requires:
           - deps
+      - swagger-gen
   db-migration-check:
     jobs:
       - deps
