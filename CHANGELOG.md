@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## [v1.8.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.7.0...v1.8.0) - 2023-03-23
+
+- new service: all item breadcrumbs from a `text_id`
+- forum: get thread service
+- forum: update thread service
+- adapt SQL for MySQL 8.0.26 support
+- many internal improvements
+
 ## [v1.7.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.6.0...v1.7.0) - 2023-02-22
 
 - new service: get a task token for observation
