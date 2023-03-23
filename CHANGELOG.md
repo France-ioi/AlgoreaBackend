@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.8.1](https://github.com/France-ioi/AlgoreaBackend/compare/v1.8.0...v1.8.1) - 2023-03-23
+
+- fix swagger doc
+- fix migrations
 
 ## [v1.8.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.7.0...v1.8.0) - 2023-03-23
 
