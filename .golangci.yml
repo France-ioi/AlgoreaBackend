@@ -60,6 +60,40 @@ linters:
     - gomnd # flags all "magic numbers" in the code. requires many changes
     - goerr113 # don't allow dynamic errors, requires wrapped static errors. requires many changes
     - nestif # Doesn't allow too long nested if. requires complex changes
+    - forbidigo # For update to go1.20
+    - gci # For update to go1.20
+    - gochecknoinits # For update to go1.20
+    - revive # For update to go1.20
+    - asasalint # For update to go1.20
+    - containedctx # For update to go1.20
+    - contextcheck # For update to go1.20
+    - cyclop # For update to go1.20
+    - dupword # For update to go1.20
+    - revive # For update to go1.20
+    - errchkjson # For update to go1.20
+    - errorlint # For update to go1.20
+    - errname # For update to go1.20
+    - execinquery # For update to go1.20
+    - exhaustive # For update to go1.20
+    - exhaustivestruct # For update to go1.20
+    - forcetypeassert # For update to go1.20
+    - ifshort # For update to go1.20
+    - ireturn # For update to go1.20
+    - ineffassign # For update to go1.20
+    - maintidx # For update to go1.20
+    - musttag # For update to go1.20
+    - nilnil # For update to go1.20
+    - nlreturn # For update to go1.20
+    - noctx # For update to go1.20
+    - nonamedreturns # For update to go1.20
+    - paralleltest # For update to go1.20
+    - sqlclosecheck # For update to go1.20
+    - tagliatelle # For update to go1.20
+    - tenv # For update to go1.20
+    - thelper # For update to go1.20
+    - usestdlibvars # For update to go1.20
+    - varnamelen # For update to go1.20
+    - wrapcheck # For update to go1.20
 
 run:
   skip-dirs:
@@ -92,4 +126,4 @@ issues:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.27.0 # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.52.2 # use the fixed version to not introduce new linters unexpectedly
