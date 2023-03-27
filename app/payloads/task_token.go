@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-// TaskToken represents data inside a task token
+// TaskToken represents data inside a task token.
 type TaskToken struct {
 	// Nullable fields are of pointer types
 	Date               string  `json:"date" validate:"set,dmy-date"` // dd-mm-yyyy
@@ -36,7 +36,7 @@ type TaskToken struct {
 	PrivateKey *rsa.PrivateKey
 }
 
-// TaskTokenConverted contains converted field values of TaskToken payload
+// TaskTokenConverted contains converted field values of TaskToken payload.
 type TaskTokenConverted struct {
 	UserID        int64
 	LocalItemID   int64

@@ -9,7 +9,7 @@ const groups = "groups"
 // createNewAncestors inserts new rows into
 // the objectName_ancestors table (items_ancestors or groups_ancestors)
 // for all rows marked with ancestors_computation_state="todo" in objectName_propagate
-// (items_propagate or groups_propagate) and their descendants
+// (items_propagate or groups_propagate) and their descendants.
 func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /* #nosec */
 	s.mustBeInTransaction()
 

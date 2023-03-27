@@ -15,7 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// Service is the mount point for services related to `items`
+// Service is the mount point for services related to `items`.
 type Service struct {
 	*service.Base
 }
@@ -24,7 +24,7 @@ const undefined = "Undefined"
 const task = "Task"
 const skill = "Skill"
 
-// SetRoutes defines the routes for this package in a route group
+// SetRoutes defines the routes for this package in a route group.
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Base))
@@ -97,7 +97,7 @@ func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.T
 	return service.NoError
 }
 
-// Permission represents item permissions + ItemID
+// Permission represents item permissions + ItemID.
 type Permission struct {
 	ItemID                     int64
 	CanViewGeneratedValue      int
@@ -420,7 +420,7 @@ func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.
 }
 
 // insertItemsItems is used by itemCreate/itemEdit services to insert data constructed by
-// constructItemsItemsForChildren() into the DB
+// constructItemsItemsForChildren() into the DB.
 func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 	if len(spec) == 0 {
 		return

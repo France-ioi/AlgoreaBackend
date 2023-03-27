@@ -17,7 +17,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// Item represents input fields that are common to itemCreate & itemUpdate
+// Item represents input fields that are common to itemCreate & itemUpdate.
 type Item struct {
 	// Nullable
 	URL *string `json:"url"`
@@ -67,7 +67,7 @@ type Item struct {
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 }
 
-// ItemWithRequiredType represents common item fields plus the required type field
+// ItemWithRequiredType represents common item fields plus the required type field.
 type ItemWithRequiredType struct {
 	Item `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
@@ -609,7 +609,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	return itemID, service.NoError
 }
 
-// setItemRequestDefaults sets the default values of a newItemRequest which are not set
+// setItemRequestDefaults sets the default values of a newItemRequest which are not set.
 func setItemRequestDefaults(newItemRequest *NewItemRequest, formData *formdata.FormData) {
 	if !formData.IsSet("parent.category") {
 		newItemRequest.Parent.Category = undefined

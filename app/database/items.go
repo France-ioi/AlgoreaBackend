@@ -16,7 +16,7 @@ func (conn *DB) WhereUserHasPermissionOnItems(user *User, permissionKind, needed
 	return conn.WhereGroupHasPermissionOnItems(user.GroupID, permissionKind, neededPermission)
 }
 
-// WhereUserHaveStartedResultOnItem makes sure that the user have a started result on the item, whatever the attempt
+// WhereUserHaveStartedResultOnItem makes sure that the user have a started result on the item, whatever the attempt.
 func (conn *DB) WhereUserHaveStartedResultOnItem(user *User) *DB {
 	return conn.
 		Joins(`
@@ -26,7 +26,7 @@ func (conn *DB) WhereUserHaveStartedResultOnItem(user *User) *DB {
 		Where("current_user_results.started = 1")
 }
 
-// WhereItemsAreVisible returns a subview of the visible items for the given group basing on the given view
+// WhereItemsAreVisible returns a subview of the visible items for the given group basing on the given view.
 func (conn *DB) WhereItemsAreVisible(groupID int64) *DB {
 	return conn.WhereGroupHasPermissionOnItems(groupID, "view", "info")
 }
@@ -45,7 +45,7 @@ func (conn *DB) WhereGroupHasPermissionOnItems(groupID int64, permissionKind, ne
 }
 
 // JoinsUserAndDefaultItemStrings joins items_strings with the given view twice
-// (as default_strings for item's default language and as user_strings for the user's default language)
+// (as default_strings for item's default language and as user_strings for the user's default language).
 func (conn *DB) JoinsUserAndDefaultItemStrings(user *User) *DB {
 	return conn.
 		Joins(

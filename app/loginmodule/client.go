@@ -21,17 +21,17 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
-// A Client is the login module client
+// A Client is the login module client.
 type Client struct {
 	url string
 }
 
-// NewClient creates a new login module client
+// NewClient creates a new login module client.
 func NewClient(loginModuleURL string) *Client {
 	return &Client{url: loginModuleURL}
 }
 
-// GetUserProfile returns a user profile for given access token
+// GetUserProfile returns a user profile for given access token.
 func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile map[string]interface{}, err error) {
 	defer recoverPanics(&err)
 
@@ -65,7 +65,7 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	return profile, nil
 }
 
-// CreateUsersParams represents parameters for Client.CreateUsers()
+// CreateUsersParams represents parameters for Client.CreateUsers().
 type CreateUsersParams struct {
 	Prefix         string
 	Amount         int
@@ -75,14 +75,14 @@ type CreateUsersParams struct {
 	Language       *string
 }
 
-// CreateUsersResponseDataRow represents an element of the array returned by Client.CreateUsers() (id, login, password)
+// CreateUsersResponseDataRow represents an element of the array returned by Client.CreateUsers() (id, login, password).
 type CreateUsersResponseDataRow struct {
 	ID       int64  `json:"id"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-// CreateUsers creates a batch of users in the login module
+// CreateUsers creates a batch of users in the login module.
 func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey string,
 	params *CreateUsersParams) (bool, []CreateUsersResponseDataRow, error) {
 	urlParams := map[string]string{
@@ -116,7 +116,7 @@ func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey strin
 	return response.Success, resultRows, nil
 }
 
-// DeleteUsers deletes users specified by the given login prefix from the login module
+// DeleteUsers deletes users specified by the given login prefix from the login module.
 func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, loginPrefix string) (bool, error) {
 	params := map[string]string{
 		"prefix": loginPrefix,
@@ -129,7 +129,7 @@ func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, logi
 	return response.Success, nil
 }
 
-// UnlinkClient discards our client authorization for the login module user
+// UnlinkClient discards our client authorization for the login module user.
 func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey string, userLoginID int64) (bool, error) {
 	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/unlink_client",
 		map[string]string{"user_id": strconv.FormatInt(userLoginID, 10)}, clientID, clientKey)
@@ -139,7 +139,7 @@ func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey stri
 	return response.Success, nil
 }
 
-// SendLTIResult sends item score to LTI
+// SendLTIResult sends item score to LTI.
 func (client *Client) SendLTIResult(
 	ctx context.Context, clientID, clientKey string, userLoginID, itemID int64, score float32) (bool, error) {
 	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/lti_result/send",
@@ -209,7 +209,7 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	return decodedResponse, nil
 }
 
-// EncodeBody forms a request body with the given parameters for the login module: `{"client_id": ..., "data": _encoded_}`
+// EncodeBody forms a request body with the given parameters for the login module: `{"client_id": ..., "data": _encoded_}`.
 func EncodeBody(requestParams map[string]string, clientID, clientKey string) (result []byte, err error) {
 	defer recoverPanics(&err)
 	paramsJSON, err := json.Marshal(requestParams)
@@ -220,7 +220,7 @@ func EncodeBody(requestParams map[string]string, clientID, clientKey string) (re
 	return params, err
 }
 
-// Encode encodes the given bytes array using the given key for the login module (AES128ECB + BASE64)
+// Encode encodes the given bytes array using the given key for the login module (AES128ECB + BASE64).
 func Encode(data []byte, clientKey string) string {
 	encrypted := encryptAes128Ecb(data, []byte(clientKey)[:16])
 	return base64.StdEncoding.EncodeToString(encrypted)

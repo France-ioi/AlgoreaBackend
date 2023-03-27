@@ -15,7 +15,7 @@ type permissionsStruct struct {
 	CanMakeSessionOfficial bool `json:"can_make_session_official"`
 }
 
-// Permissions granted directly to the group via `origin` = 'group_membership' and `source_group_id` = `{source_group_id}`
+// Permissions granted directly to the group via `origin` = 'group_membership' and `source_group_id` = `{source_group_id}`.
 type grantedPermissionsStruct struct {
 	permissionsStruct
 	// required: true
@@ -32,23 +32,23 @@ type permissionsWithCanEnterFrom struct {
 }
 
 // Computed permissions for the group
-// (respecting permissions of its ancestors)
+// (respecting permissions of its ancestors).
 type computedPermissions struct{ permissionsWithCanEnterFrom }
 
 // Permissions granted to the group or its ancestors
-// via `origin` = 'group_membership' excluding the row from `granted`
+// via `origin` = 'group_membership' excluding the row from `granted`.
 type permissionsGrantedViaGroupMembership struct{ permissionsWithCanEnterFrom }
 
 // Permissions granted to the group or its ancestors
-// via `origin` = 'item_unlocking'
+// via `origin` = 'item_unlocking'.
 type permissionsGrantedViaItemUnlocking struct{ permissionsWithCanEnterFrom }
 
 // Permissions granted to the group or its ancestors
-// via `origin` = 'self'
+// via `origin` = 'self'.
 type permissionsGrantedViaSelf struct{ permissionsWithCanEnterFrom }
 
 // Permissions granted to the group or its ancestors
-// via `origin` = 'other'
+// via `origin` = 'other'.
 type permissionsGrantedViaOther struct{ permissionsWithCanEnterFrom }
 
 // swagger:model permissionsViewResponse

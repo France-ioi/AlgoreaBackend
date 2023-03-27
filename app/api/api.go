@@ -19,12 +19,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// Ctx is the context of the root of the API
+// Ctx is the context of the root of the API.
 type Ctx struct {
 	service *service.Base
 }
 
-// Router provides routes for the whole API
+// Router provides routes for the whole API.
 func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.ConfigItem,
 	tokenConfig *token.Config) (*Ctx, *chi.Mux) {
 	r := chi.NewRouter()

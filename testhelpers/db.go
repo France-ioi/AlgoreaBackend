@@ -29,24 +29,24 @@ func init() { // nolint:gochecknoinits
 	}
 }
 
-// SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
+// SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture.
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	mustNotBeInProdEnv()
 
-	rawDb, err := OpenRawDBConnection()
+	rawDB, err := OpenRawDBConnection()
 	if err != nil {
 		panic(err)
 	}
 
 	// Seed the DB
-	EmptyDB(rawDb)
+	EmptyDB(rawDB)
 	for _, fixtureName := range fixtureNames {
-		LoadFixture(rawDb, fixtureName)
+		LoadFixture(rawDB, fixtureName)
 	}
 
 	// Return a new db connection
 	var db *database.DB
-	db, err = database.Open(rawDb)
+	db, err = database.Open(rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -55,25 +55,25 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 }
 
 // SetupDBWithFixtureString creates a new DB connection, empties the DB,
-// and loads fixtures from the strings (yaml with a tableName->[]dataRow map)
+// and loads fixtures from the strings (yaml with a tableName->[]dataRow map).
 func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 	mustNotBeInProdEnv()
 
-	rawDb, err := OpenRawDBConnection()
+	rawDB, err := OpenRawDBConnection()
 	if err != nil {
 		panic(err)
 	}
 
 	// Seed the DB
-	EmptyDB(rawDb)
+	EmptyDB(rawDB)
 
 	for _, fixture := range fixtures {
-		loadFixtureChainFromString(rawDb, fixture)
+		loadFixtureChainFromString(rawDB, fixture)
 	}
 
 	// Return a new db connection
 	var db *database.DB
-	db, err = database.Open(rawDb)
+	db, err = database.Open(rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -81,15 +81,15 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 	return db
 }
 
-// OpenRawDBConnection creates a new connection to the DB specified in the config
+// OpenRawDBConnection creates a new connection to the DB specified in the config.
 func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
 	dbConfig, _ := app.DBConfig(app.LoadConfig())
-	rawDb, err := database.OpenRawDBConnection(dbConfig.FormatDSN())
+	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN())
 	if err != nil {
 		panic(err)
 	}
-	return rawDb, err
+	return rawDB, err
 }
 
 // LoadFixture loads fixtures from `<current_pkg_dir>/testdata/<fileName>/` directory
@@ -168,7 +168,7 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 	}
 }
 
-// InsertBatch insert the data into the table with the name given
+// InsertBatch insert the data into the table with the name given.
 func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 	mustNotBeInProdEnv()
 
@@ -221,7 +221,13 @@ func emptyDB(db *sql.DB, dbName string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() {
+		_ = rows.Close()
+
+		if rows.Err() != nil {
+			panic(rows.Err())
+		}
+	}()
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -257,7 +263,7 @@ func emptyDB(db *sql.DB, dbName string) error {
 	return tx.Commit()
 }
 
-// EmptyDB empties all tables of the database specified in the config
+// EmptyDB empties all tables of the database specified in the config.
 func EmptyDB(db *sql.DB) {
 	mustNotBeInProdEnv()
 	dbConfig, _ := app.DBConfig(app.LoadConfig())

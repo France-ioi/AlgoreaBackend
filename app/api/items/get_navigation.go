@@ -46,7 +46,7 @@ type navigationItemChild struct {
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 }
 
-// only if `{watched_group_id}` is given
+// only if `{watched_group_id}` is given.
 type itemWatchedGroupStat struct {
 	// group's view permission on this item
 	// required: true

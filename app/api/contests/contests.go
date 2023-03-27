@@ -16,7 +16,7 @@ type Service struct {
 	*service.Base
 }
 
-// SetRoutes defines the routes for this package in a route contests
+// SetRoutes defines the routes for this package in a route contests.
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Base))

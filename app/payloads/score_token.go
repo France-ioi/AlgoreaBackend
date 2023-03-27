@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// ScoreToken represents data inside a score token
+// ScoreToken represents data inside a score token.
 type ScoreToken struct {
 	// Nullable fields are of pointer types
 	Date         string  `json:"date" validate:"dmy-date"` // dd-mm-yyyy
@@ -24,14 +24,14 @@ type ScoreToken struct {
 	PrivateKey *rsa.PrivateKey
 }
 
-// ScoreTokenConverted contains converted field values of ScoreToken payload
+// ScoreTokenConverted contains converted field values of ScoreToken payload.
 type ScoreTokenConverted struct {
 	UserID       int64
 	UserAnswerID int64
 	Score        float64
 }
 
-// Bind validates a score token and converts some needed field values (called by ParseMap)
+// Bind validates a score token and converts some needed field values (called by ParseMap).
 func (tt *ScoreToken) Bind() error {
 	var err error
 	tt.Converted.UserID, err = strconv.ParseInt(tt.UserID, 10, 64)

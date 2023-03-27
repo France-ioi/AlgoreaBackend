@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// Only if valid
+// Only if valid.
 type groupCodeCheckResponseGroup struct {
 	// required: true
 	Name string `json:"name"`

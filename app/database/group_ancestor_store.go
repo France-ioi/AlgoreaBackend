@@ -1,6 +1,6 @@
 package database
 
-// GroupAncestorStore implements database operations on `groups_ancestors` (which is a precomputed cache over groups_groups)
+// GroupAncestorStore implements database operations on `groups_ancestors` (which is a precomputed cache over groups_groups).
 type GroupAncestorStore struct {
 	*DataStore
 }

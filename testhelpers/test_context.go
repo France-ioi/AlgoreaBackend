@@ -29,7 +29,7 @@ type dbquery struct {
 	values []interface{}
 }
 
-// TestContext implements context for tests
+// TestContext implements context for tests.
 type TestContext struct {
 	// nolint
 	application      *app.Application // do NOT call it directly, use `app()`

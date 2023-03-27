@@ -6,7 +6,7 @@ import (
 	"github.com/cucumber/godog"
 )
 
-// FeatureContext binds the supported steps to the verifying functions
+// FeatureContext binds the supported steps to the verifying functions.
 func FeatureContext(s *godog.Suite) {
 	ctx := &TestContext{}
 	s.BeforeScenario(ctx.SetupTestContext)

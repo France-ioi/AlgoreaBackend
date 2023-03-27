@@ -14,7 +14,7 @@ type Binder interface {
 	Bind() error
 }
 
-// ParseMap converts a map into a structure and validates fields
+// ParseMap converts a map into a structure and validates fields.
 func ParseMap(raw map[string]interface{}, target interface{}) error {
 	if err := formdata.NewFormData(target).ParseMapData(raw); err != nil {
 		typeName := reflect.TypeOf(target).Elem().Name()

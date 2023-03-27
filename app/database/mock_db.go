@@ -10,7 +10,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 )
 
-// NewDBMock generate a DB mock the database engine
+// NewDBMock generate a DB mock the database engine.
 func NewDBMock() (*DB, sqlmock.Sqlmock) {
 	dbMock, mock, err := sqlmock.New()
 	if err != nil {
@@ -27,7 +27,7 @@ func NewDBMock() (*DB, sqlmock.Sqlmock) {
 	return db, mock
 }
 
-// MockDBEnumQueries stubs all the db queries for loading permission enums
+// MockDBEnumQueries stubs all the db queries for loading permission enums.
 func MockDBEnumQueries(sqlMock sqlmock.Sqlmock) {
 	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
@@ -73,7 +73,7 @@ func MockDBEnumQueries(sqlMock sqlmock.Sqlmock) {
 			AddRow("'use_content_view_propagation','as_content_with_descendants','as_is'"))
 }
 
-// ClearAllDBEnums clears all cached permission enums
+// ClearAllDBEnums clears all cached permission enums.
 func ClearAllDBEnums() {
 	enumValueIndex2Name = nil
 	enumValueName2Index = nil

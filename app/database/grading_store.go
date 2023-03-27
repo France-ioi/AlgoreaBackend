@@ -1,6 +1,6 @@
 package database
 
-// GradingStore implements database operations on `gradings`
+// GradingStore implements database operations on `gradings`.
 type GradingStore struct {
 	*DataStore
 }

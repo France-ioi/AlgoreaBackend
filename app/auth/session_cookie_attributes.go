@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// SessionCookieAttributes represents attributes of the session cookie
+// SessionCookieAttributes represents attributes of the session cookie.
 type SessionCookieAttributes struct {
 	UseCookie bool
 	Secure    bool
@@ -16,7 +16,7 @@ type SessionCookieAttributes struct {
 	Path      string
 }
 
-// SessionCookie constructs a session cookie with the given attributes
+// SessionCookie constructs a session cookie with the given attributes.
 func (attributes *SessionCookieAttributes) SessionCookie(token string, secondsUntilExpiry int32) *http.Cookie {
 	cookieSameSiteMode := http.SameSiteNoneMode
 	if attributes.SameSite {

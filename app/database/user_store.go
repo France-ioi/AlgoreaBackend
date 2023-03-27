@@ -4,12 +4,12 @@ import (
 	"fmt"
 )
 
-// UserStore implements database operations on `users`
+// UserStore implements database operations on `users`.
 type UserStore struct {
 	*DataStore
 }
 
-// ByID returns a composable query for filtering by _table_.group_id
+// ByID returns a composable query for filtering by _table_.group_id.
 func (s *UserStore) ByID(id int64) *DB {
 	return s.Where(s.tableName+".group_id = ?", id)
 }
@@ -75,7 +75,7 @@ func (s *UserStore) executeBatchesInTransactions(f func(store *DataStore) int) {
 }
 
 // deleteWithTraps deletes the first deleteWithTrapsBatchSize users satisfying the scope's conditions
-// and all the users' stuff
+// and all the users' stuff.
 func (s *UserStore) deleteWithTraps(userScope *DB) int {
 	userScope.mustBeInTransaction()
 

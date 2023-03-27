@@ -4,12 +4,12 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// DBLogger is the logger interface for the DB logs
+// DBLogger is the logger interface for the DB logs.
 type DBLogger interface {
 	Print(v ...interface{})
 }
 
-// NewDBLogger returns a logger for the database and the `logMode` as well as the 'rawLogMode', according to the config
+// NewDBLogger returns a logger for the database and the `logMode` as well as the 'rawLogMode', according to the config.
 func (l *Logger) NewDBLogger() (DBLogger, bool, bool) {
 	if l.config == nil {
 		// if cannot parse config, log on error to stdout

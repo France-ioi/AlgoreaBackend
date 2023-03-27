@@ -10,7 +10,7 @@ import (
 
 // The request has successfully updated the object
 // swagger:response updatedResponse
-type updatedResponse struct {
+type updatedResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// "updated"
@@ -25,7 +25,7 @@ type updatedResponse struct {
 
 // The request has succeeded. The `data.changed` shows if the object has been updated.
 // swagger:response updatedOrUnchangedResponse
-type updatedOrUnchangedResponse struct {
+type updatedOrUnchangedResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// enum: updated,unchanged
@@ -44,7 +44,7 @@ type updatedOrUnchangedResponse struct {
 
 // Success
 // swagger:response successResponse
-type successResponse struct {
+type successResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// "success"
@@ -59,7 +59,7 @@ type successResponse struct {
 
 // Success or failure
 // swagger:response publishedOrFailedResponse
-type publishedOrFailedResponse struct {
+type publishedOrFailedResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// enum: published,failed
@@ -72,7 +72,7 @@ type publishedOrFailedResponse struct {
 
 // The request has successfully deleted the object
 // swagger:response deletedResponse
-type deletedResponse struct {
+type deletedResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// "deleted"
@@ -87,7 +87,7 @@ type deletedResponse struct {
 
 // The request has succeeded. The `data.changed` shows if the object has been deleted.
 // swagger:response deletedOrUnchangedResponse
-type deletedOrUnchangedResponse struct {
+type deletedOrUnchangedResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// enum: deleted,unchanged
@@ -106,7 +106,7 @@ type deletedOrUnchangedResponse struct {
 
 // Created. Success response with the created object's id.
 // swagger:response createdWithIDResponse
-type createdWithIDResponse struct {
+type createdWithIDResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// enum: created
@@ -125,7 +125,7 @@ type createdWithIDResponse struct {
 
 // The request has succeeded. The `data.changed` shows if the object has been created.
 // swagger:response createdOrUnchangedResponse
-type createdOrUnchangedResponse struct {
+type createdOrUnchangedResponse struct { //nolint:deadcode Used for documentation.
 	// in: body
 	Body struct {
 		// enum: created,unchanged
@@ -144,7 +144,7 @@ type createdOrUnchangedResponse struct {
 
 // OK. Success response with the per-group update statuses
 // swagger:response
-type updatedGroupRelationsResponse struct {
+type updatedGroupRelationsResponse struct { //nolint:deadcode Used for documentation.
 	// in:body
 	Body struct {
 		// "updated"
@@ -161,11 +161,11 @@ type updatedGroupRelationsResponse struct {
 }
 
 // enum: [cycle, invalid, success, unchanged, not_found]
-type loginTransitionResult string
+type loginTransitionResult string //nolint:deadcode Used for documentation.
 
 // Created. Success response with the per-login results
 // swagger:response createdLoginRelationsResponse
-type createdLoginRelationsResponse struct {
+type createdLoginRelationsResponse struct { //nolint:deadcode Used for documentation.
 	// in:body
 	Body struct {
 		// "created"
@@ -184,7 +184,7 @@ type createdLoginRelationsResponse struct {
 
 // OK. Success response with the requested answer
 // swagger:response itemAnswerGetResponse
-type itemAnswerGetResponse struct {
+type itemAnswerGetResponse struct { //nolint:deadcode Used for documentation.
 	// description: The returned answer
 	// in:body
 	Body struct {
@@ -220,7 +220,7 @@ type itemAnswerGetResponse struct {
 
 // Created. The group has successfully entered the contest.
 // swagger:response itemEnterResponse
-type itemEnterResponse struct {
+type itemEnterResponse struct { //nolint:deadcode Used for documentation.
 	// in:body
 	Body struct {
 		// enum: created

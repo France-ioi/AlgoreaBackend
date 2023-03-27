@@ -22,7 +22,7 @@ const (
 	envPrefix         = "algorea"
 )
 
-// Configurations keys are sub configuration that can be fetched
+// Configurations keys are sub configuration that can be fetched.
 const (
 	serverConfigKey   string = "server"
 	databaseConfigKey string = "database"
@@ -39,7 +39,7 @@ const (
 // 3) env
 // 4) config file
 // 5) key/value store
-// 6) default
+// 6) default.
 func LoadConfig() *viper.Viper {
 	return loadConfigFrom(defaultConfigName, configDirectory())
 }
@@ -139,26 +139,26 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 	return
 }
 
-// TokenConfig returns the token fixed config from the global config
+// TokenConfig returns the token fixed config from the global config.
 func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)
 	return token.Initialize(sub)
 }
 
-// AuthConfig returns an auth dynamic config from the global config
-// (env var changes impacts values)
+// AuthConfig returns an auth dynamic config from the global config.
+// (env var changes impacts values).
 func AuthConfig(globalConfig *viper.Viper) *viper.Viper {
 	return subconfig(globalConfig, authConfigKey)
 }
 
 // LoggingConfig returns a logging dynamic config from the global config
-// (env var changes impacts values)
+// (env var changes impacts values).
 func LoggingConfig(globalConfig *viper.Viper) *viper.Viper {
 	return subconfig(globalConfig, loggingConfigKey)
 }
 
 // ServerConfig returns a logging dynamic config from the global config
-// (env var changes impacts values)
+// (env var changes impacts values).
 func ServerConfig(globalConfig *viper.Viper) *viper.Viper {
 	return subconfig(globalConfig, serverConfigKey)
 }

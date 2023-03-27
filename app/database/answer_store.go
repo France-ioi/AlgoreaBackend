@@ -1,11 +1,11 @@
 package database
 
-// AnswerStore implements database operations on `answers`
+// AnswerStore implements database operations on `answers`.
 type AnswerStore struct {
 	*DataStore
 }
 
-// WithUsers creates a composable query for getting answers joined with users (via author_id)
+// WithUsers creates a composable query for getting answers joined with users (via author_id).
 func (s *AnswerStore) WithUsers() *AnswerStore {
 	return &AnswerStore{
 		NewDataStoreWithTable(
@@ -14,7 +14,7 @@ func (s *AnswerStore) WithUsers() *AnswerStore {
 	}
 }
 
-// WithResults creates a composable query for getting answers joined with results
+// WithResults creates a composable query for getting answers joined with results.
 func (s *AnswerStore) WithResults() *AnswerStore {
 	return &AnswerStore{
 		NewDataStoreWithTable(
@@ -25,7 +25,7 @@ func (s *AnswerStore) WithResults() *AnswerStore {
 	}
 }
 
-// WithItems joins `items`
+// WithItems joins `items`.
 func (s *AnswerStore) WithItems() *AnswerStore {
 	return &AnswerStore{
 		NewDataStoreWithTable(

@@ -61,12 +61,18 @@ func init() { // nolint:gochecknoinits
                               AND  table_schema = '` + dbConf.DBName + "'")
 			assertNoError(err, "Unable to query the database: ")
 
-			defer func() { _ = rows.Close() }()
+			defer func() {
+				_ = rows.Close()
+
+				if rows.Err() != nil {
+					panic(rows.Err())
+				}
+			}()
 
 			for rows.Next() {
 				var tableName string
 				assertNoError(rows.Scan(&tableName), "Unable to parse the database result: ")
-				_, err = tx.Query("DROP TABLE " + tableName)
+				_, err = tx.Query("DROP TABLE " + tableName) //nolint:rowserrcheck Checked in defer.
 				assertNoError(err, "Unable to drop table: ")
 			}
 

@@ -88,7 +88,7 @@ func Test_validateNull(t *testing.T) {
 }
 
 // FieldLevel contains all the information and helper functions
-// to validate a field
+// to validate a field.
 type FieldLevel struct {
 	FieldValue interface{}
 }

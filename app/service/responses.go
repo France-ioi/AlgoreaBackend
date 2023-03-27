@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-// Response is used for generating non-data responses, i.e. on error or on POST/PUT/PATCH/DELETE request
+// Response is used for generating non-data responses, i.e. on error or on POST/PUT/PATCH/DELETE request.
 type Response struct {
 	HTTPStatusCode int         `json:"-"`
 	Success        bool        `json:"success"`
@@ -14,7 +14,7 @@ type Response struct {
 	Data           interface{} `json:"data,omitempty"`
 }
 
-// Render generates the HTTP response from Response
+// Render generates the HTTP response from Response.
 func (resp *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	if resp.Success && resp.Message == "" {
 		resp.Message = "success"
@@ -23,7 +23,7 @@ func (resp *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// CreationSuccess generated a success response for a POST creation
+// CreationSuccess generated a success response for a POST creation.
 func CreationSuccess(data interface{}) render.Renderer {
 	return &Response{
 		HTTPStatusCode: http.StatusCreated,
@@ -33,7 +33,7 @@ func CreationSuccess(data interface{}) render.Renderer {
 	}
 }
 
-// UpdateSuccess generated a success response for a PUT updating
+// UpdateSuccess generated a success response for a PUT updating.
 func UpdateSuccess(data interface{}) render.Renderer {
 	return &Response{
 		HTTPStatusCode: http.StatusOK,
@@ -43,7 +43,7 @@ func UpdateSuccess(data interface{}) render.Renderer {
 	}
 }
 
-// DeletionSuccess generated a success response for a DELETE deletion
+// DeletionSuccess generated a success response for a DELETE deletion.
 func DeletionSuccess(data interface{}) render.Renderer {
 	return &Response{
 		HTTPStatusCode: http.StatusOK,
@@ -53,7 +53,7 @@ func DeletionSuccess(data interface{}) render.Renderer {
 	}
 }
 
-// UnchangedSuccess generated a success response for a POST/PUT/DELETE action if no data have been modified
+// UnchangedSuccess generated a success response for a POST/PUT/DELETE action if no data have been modified.
 func UnchangedSuccess(httpStatus int) render.Renderer {
 	return &Response{
 		HTTPStatusCode: httpStatus,

@@ -8,17 +8,17 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// ItemStore implements database operations on items
+// ItemStore implements database operations on items.
 type ItemStore struct {
 	*DataStore
 }
 
-// Visible returns a view of the visible items for the given participant
+// Visible returns a view of the visible items for the given participant.
 func (s *ItemStore) Visible(groupID int64) *DB {
 	return s.WhereItemsAreVisible(groupID)
 }
 
-// VisibleByID returns a view of the visible item identified by itemID, for the given participant
+// VisibleByID returns a view of the visible item identified by itemID, for the given participant.
 func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 	return s.Visible(groupID).Where("items.id = ?", itemID)
 }
@@ -263,7 +263,7 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 }
 
 // CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),
-// i.e. the item (task) exists and is not read-only and the participant has at least content:view permission on the item;
+// i.e. the item (task) exists and is not read-only and the participant has at least content:view permission on the item.
 func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAccess bool, reason, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
@@ -286,7 +286,7 @@ func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAcces
 }
 
 // ContestManagedByUser returns a composable query
-// for getting a contest with the given item id managed by the given user
+// for getting a contest with the given item id managed by the given user.
 func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 	return s.ByID(contestItemID).Where("items.duration IS NOT NULL").
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
@@ -308,7 +308,7 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 	})
 }
 
-// getAncestorsRequestHelpPropagationQuery gets all ancestors of an itemID while request_help_propagation = 1
+// getAncestorsRequestHelpPropagationQuery gets all ancestors of an itemID while request_help_propagation = 1.
 func (s *ItemStore) getAncestorsRequestHelpPropagationQuery(itemID int64) *DB {
 	return s.Raw(`
 		WITH RECURSIVE items_ancestors_request_help_propagation(item_id) AS
@@ -323,7 +323,7 @@ func (s *ItemStore) getAncestorsRequestHelpPropagationQuery(itemID int64) *DB {
 	`, itemID)
 }
 
-// GetItemIDFromTextID gets the item_id from the text_id of an item
+// GetItemIDFromTextID gets the item_id from the text_id of an item.
 func (s *ItemStore) GetItemIDFromTextID(textID string) (itemID int64, err error) {
 	err = s.Select("items.id AS id").
 		Where("text_id = ?", textID).

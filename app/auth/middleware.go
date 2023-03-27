@@ -19,13 +19,13 @@ const (
 	ctxSessionCookieAttributes
 )
 
-// GetStorer is an interface allowing to get a data store bound to the context of the given request
+// GetStorer is an interface allowing to get a data store bound to the context of the given request.
 type GetStorer interface {
 	GetStore(r *http.Request) *database.DataStore
 }
 
 // UserMiddleware is a middleware retrieving a user from the request content.
-// It takes the access token from the 'Authorization' header and loads the user info from the DB
+// It takes the access token from the 'Authorization' header and loads the user info from the DB.
 func UserMiddleware(service GetStorer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func UserMiddleware(service GetStorer) func(next http.Handler) http.Handler {
 	}
 }
 
-// ParseSessionCookie parses the 'access_token' cookie (if given) and returns the access token among with cookie attributes
+// ParseSessionCookie parses the 'access_token' cookie (if given) and returns the access token among with cookie attributes.
 func ParseSessionCookie(r *http.Request) (accessToken string, cookieAttributes SessionCookieAttributes) {
 	if cookie, cookieErr := r.Cookie("access_token"); cookieErr == nil {
 		accessToken, cookieAttributes = unmarshalSessionCookieValue(cookie.Value)

@@ -247,7 +247,7 @@ type saveGradeRequest struct {
 	AnswerToken *formdata.Anything `json:"answer_token"`
 }
 
-// UnmarshalJSON unmarshals the items/saveGrade request data from JSON
+// UnmarshalJSON unmarshals the items/saveGrade request data from JSON.
 func (requestData *saveGradeRequestParsed) UnmarshalJSON(raw []byte) error {
 	var wrapper saveGradeRequest
 	if err := json.Unmarshal(raw, &wrapper); err != nil {

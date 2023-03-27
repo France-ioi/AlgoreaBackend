@@ -319,7 +319,7 @@ func appendTableRowToResult(orderedItemIDListWithDuplicates []interface{}, reflR
 	reflResultPtr.Elem().Set(reflect.AppendSlice(reflResultPtr.Elem(), reflTableRow))
 }
 
-// resultPtr should be a pointer to a slice of pointers to table cells
+// resultPtr should be a pointer to a slice of pointers to table cells.
 func scanAndBuildProgressResults(
 	query *database.DB, orderedItemIDListWithDuplicates []interface{}, uniqueItemsCount int, resultPtr interface{}) {
 	// resultPtr is *[]*tableCellType

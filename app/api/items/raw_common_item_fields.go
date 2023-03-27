@@ -4,7 +4,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-// RawCommonItemFields represents DB data fields that are common for itemView & itemChildrenView
+// RawCommonItemFields represents DB data fields that are common for itemView & itemChildrenView.
 type RawCommonItemFields struct {
 	// items
 	ID                     int64

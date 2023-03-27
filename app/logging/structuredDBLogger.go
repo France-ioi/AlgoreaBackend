@@ -10,12 +10,12 @@ import (
 	"github.com/sirupsen/logrus" //nolint:depguard
 )
 
-// StructuredDBLogger is a database structured logger
+// StructuredDBLogger is a database structured logger.
 type StructuredDBLogger struct {
 	logger *logrus.Logger
 }
 
-// NewStructuredDBLogger created a database structured logger
+// NewStructuredDBLogger created a database structured logger.
 func NewStructuredDBLogger(logger *logrus.Logger) *StructuredDBLogger {
 	return &StructuredDBLogger{logger}
 }

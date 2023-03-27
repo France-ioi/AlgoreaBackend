@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Middleware is a middleware setting domain-specific configuration into the request context
+// Middleware is a middleware setting domain-specific configuration into the request context.
 func Middleware(domains []ConfigItem, domainOverride string) func(next http.Handler) http.Handler {
 	var defaultConfig *CtxConfig // the config that will be used (if defined) if no domain match
 

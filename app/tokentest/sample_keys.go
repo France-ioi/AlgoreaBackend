@@ -6,7 +6,7 @@ package tokentest
 import "github.com/SermoDigital/jose/crypto"
 
 // AlgoreaPlatformPublicKey represents a sample public key used to decode
-// AlgoreaPlatform tokens in tests
+// AlgoreaPlatform tokens in tests.
 var AlgoreaPlatformPublicKey = []byte(
 	"-----BEGIN PUBLIC KEY-----\n" +
 		"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDfsh3Rj/IAQ75LB7c8riFTYrgS\n" +
@@ -16,11 +16,11 @@ var AlgoreaPlatformPublicKey = []byte(
 		"-----END PUBLIC KEY-----")
 
 // AlgoreaPlatformPublicKeyParsed represents a parsed sample public key used to decode
-// AlgoreaPlatform tokens in tests
+// AlgoreaPlatform tokens in tests.
 var AlgoreaPlatformPublicKeyParsed, _ = crypto.ParseRSAPublicKeyFromPEM(AlgoreaPlatformPublicKey)
 
 // AlgoreaPlatformPrivateKey represents a sample private key used to encode
-// AlgoreaPlatform tokens in tests
+// AlgoreaPlatform tokens in tests.
 var AlgoreaPlatformPrivateKey = []byte(
 	"-----BEGIN RSA PRIVATE KEY-----\n" +
 		"MIICXAIBAAKBgQDfsh3Rj/IAQ75LB7c8riFTYrgS0FCDwZhYIPYgmqVWGPK7JX5K\n" +
@@ -39,11 +39,11 @@ var AlgoreaPlatformPrivateKey = []byte(
 		"-----END RSA PRIVATE KEY-----")
 
 // AlgoreaPlatformPrivateKeyParsed represents a parsed sample private key used to encode
-// AlgoreaPlatform tokens in tests
+// AlgoreaPlatform tokens in tests.
 var AlgoreaPlatformPrivateKeyParsed, _ = crypto.ParseRSAPrivateKeyFromPEM(AlgoreaPlatformPrivateKey)
 
 // TaskPlatformPublicKey represents a sample public key used to decode
-// TaskPlatform tokens in tests
+// TaskPlatform tokens in tests.
 var TaskPlatformPublicKey = []byte(
 	"-----BEGIN PUBLIC KEY-----\n" +
 		"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDd04UmIYbKEyiu8bxbAIwM/4qU\n" +
@@ -53,11 +53,11 @@ var TaskPlatformPublicKey = []byte(
 		"-----END PUBLIC KEY-----")
 
 // TaskPlatformPublicKeyParsed represents a parsed sample public key used to decode
-// TaskPlatform tokens in tests
+// TaskPlatform tokens in tests.
 var TaskPlatformPublicKeyParsed, _ = crypto.ParseRSAPublicKeyFromPEM(TaskPlatformPublicKey)
 
 // TaskPlatformPrivateKey represents a sample private key used to encode
-// TaskPlatform tokens in tests
+// TaskPlatform tokens in tests.
 var TaskPlatformPrivateKey = []byte(
 	"-----BEGIN RSA PRIVATE KEY-----\n" +
 		"MIICXQIBAAKBgQDd04UmIYbKEyiu8bxbAIwM/4qURLHvVZHLExomx7snKjhy5Pft\n" +
@@ -76,5 +76,5 @@ var TaskPlatformPrivateKey = []byte(
 		"-----END RSA PRIVATE KEY-----")
 
 // TaskPlatformPrivateKeyParsed represents a parsed sample private key used to encode
-// TaskPlatform tokens in tests
+// TaskPlatform tokens in tests.
 var TaskPlatformPrivateKeyParsed, _ = crypto.ParseRSAPrivateKeyFromPEM(TaskPlatformPrivateKey)

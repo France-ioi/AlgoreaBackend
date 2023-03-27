@@ -262,7 +262,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 
 // refuseSentGroupRequestsIfNeeded automatically refuses all requests to join this group
 // (removes them from group_pending_requests and inserts appropriate group_membership_changes
-// with `action` = 'join_request_refused') if is_public is changed from true to false
+// with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
 	previousIsPublicValue, previousFrozenMembershipValue bool) error {

@@ -14,7 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// ItemWithDefaultLanguageTag represents common item fields plus 'default_language_tag'
+// ItemWithDefaultLanguageTag represents common item fields plus 'default_language_tag'.
 type ItemWithDefaultLanguageTag struct {
 	Item `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
 	// new `default_language_tag` of the item can only be set to a language

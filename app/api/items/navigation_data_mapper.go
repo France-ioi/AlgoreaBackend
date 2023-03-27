@@ -7,7 +7,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// rawNavigationItem represents one row of a navigation subtree returned from the DB
+// rawNavigationItem represents one row of a navigation subtree returned from the DB.
 type rawNavigationItem struct {
 	// items
 	ID                    int64
@@ -16,16 +16,16 @@ type rawNavigationItem struct {
 	EntryParticipantType  string
 	NoScore               bool
 
-	// title (from items_strings) in the user’s default language or (if not available) default language of the item
+	// title (from items_strings) in the user’s default language or (if not available) default language of the item.
 	Title       *string
 	LanguageTag string
 
 	*RawItemResultFields
 
-	// max from results of the current participant
+	// max from results of the current participant.
 	BestScore float32
 
-	// items_items
+	// items_items.
 	ParentItemID       int64
 	HasVisibleChildren bool
 
@@ -33,7 +33,7 @@ type rawNavigationItem struct {
 	*RawWatchedGroupStatFields
 }
 
-// getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
+// getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's.
 func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemptID int64,
 	user *database.User, watchedGroupID int64, watchedGroupIDSet bool) []rawNavigationItem {
 	var result []rawNavigationItem

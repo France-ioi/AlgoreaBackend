@@ -54,7 +54,7 @@ var _ json.Marshaler = (*abstract)(nil)
 // UnmarshalStringer is the interface implemented by types
 // that can unmarshal a string description of themselves.
 // For example, a token's string description is `{ENCODED_TOKEN}`
-// while a token's JSON description is `"{ENCODED_TOKEN}"`
+// while a token's JSON description is `"{ENCODED_TOKEN}"`.
 type UnmarshalStringer interface {
 	UnmarshalString(string) error
 }
@@ -62,7 +62,7 @@ type UnmarshalStringer interface {
 // MarshalStringer is the interface implemented by types
 // that can marshal themselves into a string.
 // For example, a token's string description is `{ENCODED_TOKEN}`
-// while a token's JSON description is `"{ENCODED_TOKEN}"`
+// while a token's JSON description is `"{ENCODED_TOKEN}"`.
 type MarshalStringer interface {
 	MarshalString() (string, error)
 }

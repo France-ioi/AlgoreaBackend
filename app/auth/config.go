@@ -5,7 +5,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// GetOAuthConfig generates the OAuth2 config from a configuration
+// GetOAuthConfig generates the OAuth2 config from a configuration.
 func GetOAuthConfig(config *viper.Viper) *oauth2.Config {
 	oauthConfig := oauth2.Config{
 		ClientID:     config.GetString("clientID"),

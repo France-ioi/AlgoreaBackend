@@ -10,7 +10,7 @@ import (
 // converts it to a slice of maps for rendering JSON so that:
 // 1) all maps keys with "__" are considered as paths in JSON (converts "User__ID":... to "user":{"id": ...})
 // 2) all maps keys are converted to snake case
-// 3) prefixes are stripped, values are converted to needed types accordingly
+// 3) prefixes are stripped, values are converted to needed types accordingly.
 func ConvertSliceOfMapsFromDBToJSON(dbMaps []map[string]interface{}) []map[string]interface{} {
 	convertedResult := make([]map[string]interface{}, len(dbMaps))
 	for index := range dbMaps {
@@ -23,7 +23,7 @@ func ConvertSliceOfMapsFromDBToJSON(dbMaps []map[string]interface{}) []map[strin
 // converts it a map for rendering JSON so that:
 // 1) all map keys with "__" are considered as paths in JSON (converts "User__ID":... to "user":{"id": ...})
 // 2) all map keys are converted to snake case
-// 3) prefixes are stripped, values are converted to needed types accordingly
+// 3) prefixes are stripped, values are converted to needed types accordingly.
 func ConvertMapFromDBToJSON(dbMap map[string]interface{}) map[string]interface{} {
 	result := map[string]interface{}{}
 	for key, value := range dbMap {
@@ -88,7 +88,7 @@ func convertTimeToRFC3339IfTime(value interface{}, snakeCaseName string) interfa
 	return value
 }
 
-// ConvertDBTimeToJSONTime converts the DB datetime representation to RFC3339
+// ConvertDBTimeToJSONTime converts the DB datetime representation to RFC3339.
 func ConvertDBTimeToJSONTime(data interface{}) string {
 	parsedTime, err := time.Parse("2006-01-02 15:04:05.999", data.(string))
 	if err != nil {

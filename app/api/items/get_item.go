@@ -38,7 +38,7 @@ type itemStringRootNodeWithSolutionAccess struct {
 	EduComment *string `json:"edu_comment"`
 }
 
-// Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language
+// Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language.
 type itemStringRoot struct {
 	*itemStringCommon
 	*itemStringNotInfo
@@ -90,7 +90,7 @@ type itemRootNodeNotChapterFields struct {
 	HintsAllowed bool `json:"hints_allowed"`
 }
 
-// only if watched_group_id is given
+// only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
 	Permissions *structures.ItemPermissions `json:"permissions,omitempty"`
 	// Average score of all "end-members" within the watched group
@@ -234,7 +234,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	return service.NoError
 }
 
-// rawItem represents the getItem service data returned from the DB
+// rawItem represents the getItem service data returned from the DB.
 type rawItem struct {
 	*RawCommonItemFields
 
@@ -272,7 +272,7 @@ type rawItem struct {
 	CanWatchForGroupResults        bool
 }
 
-// getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
+// getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's.
 func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User,
 	watchedGroupID int64, watchedGroupIDSet bool) *rawItem {
 	var result rawItem

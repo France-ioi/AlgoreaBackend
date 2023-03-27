@@ -28,7 +28,7 @@ type listItemString struct {
 	*listItemStringNotInfo
 }
 
-// only for visible items
+// only for visible items.
 type visibleChildItemString struct {
 	*listItemString
 }
@@ -114,7 +114,7 @@ type childItem struct {
 	*visibleChildItemFields
 }
 
-// RawListItem contains raw fields common for itemChildrenView & itemParentsView
+// RawListItem contains raw fields common for itemChildrenView & itemParentsView.
 type RawListItem struct {
 	*RawCommonItemFields
 

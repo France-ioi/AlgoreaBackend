@@ -6,12 +6,12 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// ThreadStore implements database operations on threads
+// ThreadStore implements database operations on threads.
 type ThreadStore struct {
 	*DataStore
 }
 
-// UpdateHelperGroupID updates all occurrences of a certain helper_group_id to a new value
+// UpdateHelperGroupID updates all occurrences of a certain helper_group_id to a new value.
 func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int64) {
 	var err error
 
@@ -25,7 +25,7 @@ func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int
 	mustNotBeError(err)
 }
 
-// CanRetrieveThread checks whether a user can retrieve a thread
+// CanRetrieveThread checks whether a user can retrieve a thread.
 func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64) bool {
 	// nolint TODO: Try to make the permission checks one query with OR instead of using subqueries.
 
@@ -75,7 +75,7 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 	return currentUserCanHelp
 }
 
-// GetThreadQuery returns a query to get a thread's information
+// GetThreadQuery returns a query to get a thread's information.
 func (s *ThreadStore) GetThreadQuery(participantID, itemID int64) *DB {
 	return s.
 		Where("threads.participant_id = ?", participantID).
@@ -83,7 +83,7 @@ func (s *ThreadStore) GetThreadQuery(participantID, itemID int64) *DB {
 		Limit(1)
 }
 
-// GetThreadStatus retrieves a thread's status
+// GetThreadStatus retrieves a thread's status.
 func (s *ThreadStore) GetThreadStatus(participantID, itemID int64) string {
 	var status string
 
@@ -100,7 +100,7 @@ func (s *ThreadStore) GetThreadStatus(participantID, itemID int64) string {
 	return status
 }
 
-// GetThreadInfo retrieves a thread's information in an interface
+// GetThreadInfo retrieves a thread's information in an interface.
 func (s *ThreadStore) GetThreadInfo(participantID, itemID int64, out interface{}) error {
 	return s.
 		GetThreadQuery(participantID, itemID).
@@ -108,7 +108,7 @@ func (s *ThreadStore) GetThreadInfo(participantID, itemID int64, out interface{}
 		Error()
 }
 
-// UserCanWrite checks write permission from a user to a thread
+// UserCanWrite checks write permission from a user to a thread.
 func (s *ThreadStore) UserCanWrite(user *User, participantID, itemID int64) bool {
 	// In order to write in a thread, the thread needs to be opened and the user needs to either:
 	// (1) be the participant of the thread

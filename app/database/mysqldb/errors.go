@@ -7,11 +7,15 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+// MysqlErrorNumber represents the code number of a mysql error.
 type MysqlErrorNumber uint16
 
 const (
-	DuplicateEntryError    MysqlErrorNumber = 1062
-	LockDeadlockError      MysqlErrorNumber = 1213
+	// DuplicateEntryError represents a mysql Duplicate Entry Error.
+	DuplicateEntryError MysqlErrorNumber = 1062
+	// LockDeadlockError represents a mysql Lock Deadlock Error.
+	LockDeadlockError MysqlErrorNumber = 1213
+	// ForeignConstraintError represents a mysql Foreign Constraint Error.
 	ForeignConstraintError MysqlErrorNumber = 1452
 )
 
