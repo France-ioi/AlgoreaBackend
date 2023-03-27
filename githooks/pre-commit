@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# No tags in feature files.
 featureFiles=$(git diff --cached --name-only --diff-filter=AM  -- '*.feature')
 if [ -n "$featureFiles" ]; then
     if grep -H "^[ \t]*@" $featureFiles; then
@@ -8,6 +9,19 @@ if [ -n "$featureFiles" ]; then
     fi
 fi
 
+
+# No tags in bdd_test.go, used for debugging only.
+bddTestFiles=$(git diff --cached --name-only --diff-filter=AM  -- '*/bdd_test.go')
+echo $bddTestFiles
+if [ -n "$bddTestFiles" ]; then
+    if grep -E -H "^[ \t]*.*testhelpers.RunGodogTests\(t, \".+\"\)" $bddTestFiles; then
+        echo "Blocking commit as a tag was found."
+        exit 1
+    fi
+fi
+
+
+# Validate circleci config if modified.
 git diff --cached --name-only | if grep --quiet ".circleci/config.yml"
 then
     echo "Checking circleci config... To install circleci cli, check https://circleci.com/docs/local-cli/"
