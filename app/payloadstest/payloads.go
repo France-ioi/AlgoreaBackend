@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 // Package payloadstest contains token payloads to be used for tests.
 package payloadstest
