@@ -65,6 +65,7 @@ jobs:
           command: |
             mkdir -p test-results
             go get -u github.com/jstemmer/go-junit-report
+            go install github.com/jstemmer/go-junit-report
       - run:
           name: Run tests (make verbosity disabled)
           command: NOECHO=1 make test 2>&1 | go-junit-report > test-results/junit.xml
