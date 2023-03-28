@@ -4,7 +4,6 @@
 package testhelpers
 
 import (
-	"flag"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,7 +11,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	"github.com/stretchr/testify/assert"
+	"github.com/spf13/pflag"
 
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
@@ -20,6 +19,11 @@ import (
 var opt = godog.Options{
 	Output: colors.Colored(os.Stdout),
 	Format: "progress",
+}
+
+func InitGodogCommandLineFlags() {
+	godog.BindCommandLineFlags("godog.", &opt)
+	pflag.Parse()
 }
 
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
@@ -31,12 +35,17 @@ func RunGodogTests(t *testing.T, tags string) {
 	if tags != "" {
 		opt.Tags = tags
 	}
-	godog.BindFlags("godog.", flag.CommandLine, &opt)
 
-	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
-		FeatureContext(s)
-	}, opt)
-	assert.Zero(t, status)
+	suite := godog.TestSuite{
+		Name:                 "godogs",
+		TestSuiteInitializer: InitializeTestSuite,
+		ScenarioInitializer:  InitializeScenario,
+		Options:              &opt,
+	}
+
+	if suite.Run() != 0 {
+		t.Fatal("non-zero status returned, failed to run feature tests")
+	}
 }
 
 func featureFilesInCurrentDir() []string {

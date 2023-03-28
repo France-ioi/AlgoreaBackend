@@ -6,10 +6,13 @@ import (
 	"github.com/cucumber/godog"
 )
 
-// FeatureContext binds the supported steps to the verifying functions.
-func FeatureContext(s *godog.Suite) {
+func InitializeTestSuite(ctx *godog.TestSuiteContext) {
+	// TODO: Try to move s.Step(...) in this
+}
+
+func InitializeScenario(s *godog.ScenarioContext) {
 	ctx := &TestContext{}
-	s.BeforeScenario(ctx.SetupTestContext)
+	s.Before(ctx.SetupScenarioContext)
 
 	s.Step(`^the template constant "([^"]+)" is "(.*)"$`, ctx.TheTemplateConstantIsString)
 	s.Step(`^the template constant "([^"]+)" is:$`, ctx.TheTemplateConstantIsDocString)
@@ -94,5 +97,5 @@ func FeatureContext(s *godog.Suite) {
 			`content id "([^"]*)", score "([^"]*)" returns (\d+) with encoded body:$`,
 		ctx.TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns)
 
-	s.AfterScenario(ctx.ScenarioTeardown)
+	s.After(ctx.ScenarioTeardown)
 }

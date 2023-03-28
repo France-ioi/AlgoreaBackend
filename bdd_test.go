@@ -10,6 +10,6 @@ import (
 
 // FeatureContext is required to be able to use the `godog` command at root of the project
 // noinspection GoUnusedExportedFunction.
-func FeatureContext(s *godog.Suite) { // nolint
-	testhelpers.FeatureContext(s)
+func FeatureContext(s *godog.ScenarioContext) { // nolint
+	testhelpers.InitializeScenario(s)
 }

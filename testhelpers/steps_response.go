@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/messages-go/v16"
 	"github.com/pmezard/go-difflib/difflib"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
@@ -38,11 +38,11 @@ func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { // nolint
 	return nil
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *messages.PickleDocString) (err error) { // nolint
 	return ctx.TheResponseDecodedBodyShouldBeJSON("", body)
 }
 
-func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *messages.PickleDocString) (err error) { // nolint
 	// verify the content type
 	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
 		return
@@ -92,7 +92,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	return compareStrings(string(expected), string(actual))
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleDocString) (err error) { // nolint
 	expectedBody, err := ctx.preprocessString(body.Content)
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue
 	return nil
 }
 
-func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersValue *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersValue *messages.PickleDocString) (err error) { // nolint
 	headerValue, err := ctx.preprocessString(headersValue.Content)
 	if err != nil {
 		return err
@@ -186,7 +186,7 @@ func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
 	if err := ctx.TheResponseCodeShouldBe(expectedCode); err != nil {
 		return err
 	}
-	if err := ctx.TheResponseBodyShouldBeJSON(&messages.PickleStepArgument_PickleDocString{
+	if err := ctx.TheResponseBodyShouldBeJSON(&messages.PickleDocString{
 		Content: `
 		{
 			"message": "` + kind + `",

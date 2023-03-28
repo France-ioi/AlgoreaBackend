@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/messages-go/v16"
 	"github.com/spf13/viper"
 	"github.com/thingful/httpmock"
 
@@ -19,7 +19,7 @@ func (ctx *TestContext) appAuthConfig() *viper.Viper {
 	return app.AuthConfig(ctx.application.Config)
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, statusCode int, body *messages.PickleDocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
 	if err != nil {
@@ -43,7 +43,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, s
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns(code, codeVerifier string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns(code, codeVerifier string, statusCode int, body *messages.PickleDocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
 	if err != nil {
@@ -73,7 +73,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns(code, codeVerifier, redirectURI string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns(code, codeVerifier, redirectURI string, statusCode int, body *messages.PickleDocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
 	if err != nil {
@@ -108,7 +108,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedi
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refreshToken string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refreshToken string, statusCode int, body *messages.PickleDocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)
 	if err != nil {
@@ -132,7 +132,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refres
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token string, statusCode int, body *messages.PickleDocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedToken, err := ctx.preprocessString(token)
 	if err != nil {
@@ -150,7 +150,7 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token strin
 }
 
 func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // nolint
-	userID string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	userID string, statusCode int, body *messages.PickleDocString) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedUserID, err := ctx.preprocessString(userID)
 	if err != nil {
@@ -178,7 +178,7 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 }
 
 func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns( // nolint
-	userID, contentID, score string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	userID, contentID, score string, statusCode int, body *messages.PickleDocString) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedUserID, err := ctx.preprocessString(userID)
 	if err != nil {
@@ -219,17 +219,17 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 }
 
 func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( // nolint
-	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	params string, statusCode int, body *messages.PickleDocString) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create", params, statusCode, body)
 }
 
 func (ctx *TestContext) TheLoginModuleDeleteEndpointWithParamsReturns( // nolint
-	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	params string, statusCode int, body *messages.PickleDocString) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("delete", params, statusCode, body)
 }
 
 func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns( // nolint
-	endpoint, params string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	endpoint, params string, statusCode int, body *messages.PickleDocString) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedParams, err := ctx.preprocessString(params)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/messages-go/v16"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
@@ -21,7 +21,7 @@ const (
 	deleted
 )
 
-func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
+func (ctx *TestContext) DBHasTable(table string, data *messages.PickleTable) error { // nolint
 	db := ctx.db()
 
 	if len(data.Rows) > 1 {
@@ -88,13 +88,13 @@ func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgume
 	return nil
 }
 
-func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable) error { // nolint
+func (ctx *TestContext) DBHasUsers(data *messages.PickleTable) error { // nolint
 	if len(data.Rows) > 1 {
-		groupsToCreate := &messages.PickleStepArgument_PickleTable{
-			Rows: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow, 1, (len(data.Rows)-1)*2+1),
+		groupsToCreate := &messages.PickleTable{
+			Rows: make([]*messages.PickleTableRow, 1, (len(data.Rows)-1)*2+1),
 		}
-		groupsToCreate.Rows[0] = &messages.PickleStepArgument_PickleTable_PickleTableRow{
-			Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+		groupsToCreate.Rows[0] = &messages.PickleTableRow{
+			Cells: []*messages.PickleTableCell{
 				{Value: "id"}, {Value: "name"}, {Value: "description"}, {Value: "type"},
 			},
 		}
@@ -119,8 +119,8 @@ func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable
 			}
 
 			if groupIDColumnNumber != -1 {
-				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleStepArgument_PickleTable_PickleTableRow{
-					Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleTableRow{
+					Cells: []*messages.PickleTableCell{
 						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "User"},
 					},
 				})
@@ -148,9 +148,9 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { // nolint
 		return err
 	}
 
-	ctx.dbTableData["groups_ancestors"] = &messages.PickleStepArgument_PickleTable{
-		Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
-			{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+	ctx.dbTableData["groups_ancestors"] = &messages.PickleTable{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{
 				{Value: "ancestor_group_id"}, {Value: "child_group_id"}, {Value: "expires_at"},
 			}},
 		},
@@ -166,8 +166,8 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { // nolint
 
 	for _, row := range groupsAncestors {
 		ctx.dbTableData["groups_ancestors"].Rows = append(ctx.dbTableData["groups_ancestors"].Rows,
-			&messages.PickleStepArgument_PickleTable_PickleTableRow{
-				Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+			&messages.PickleTableRow{
+				Cells: []*messages.PickleTableCell{
 					{Value: row["ancestor_group_id"].(string)}, {Value: row["child_group_id"].(string)}, {Value: row["expires_at"].(string)},
 				},
 			})
@@ -218,15 +218,15 @@ func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(table string, column, va
 	return nil
 }
 
-func (ctx *TestContext) TableShouldBe(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
+func (ctx *TestContext) TableShouldBe(table string, data *messages.PickleTable) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(table, []string{""}, nil, unchanged, data)
 }
 
 func (ctx *TestContext) TableShouldStayUnchanged(table string) error { // nolint
 	data := ctx.dbTableData[table]
 	if data == nil {
-		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
-			{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: "1"}}}},
+		data = &messages.PickleTable{Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{{Value: "1"}}}},
 		}
 	}
 	return ctx.tableAtColumnValueShouldBe(table, []string{""}, nil, unchanged, data)
@@ -235,7 +235,7 @@ func (ctx *TestContext) TableShouldStayUnchanged(table string) error { // nolint
 func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(table, column, values string) error { // nolint
 	data := ctx.dbTableData[table]
 	if data == nil {
-		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
+		data = &messages.PickleTable{Rows: []*messages.PickleTableRow{}}
 	}
 	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), changed, data)
 }
@@ -244,25 +244,25 @@ func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(table, 
 func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted(table, columns, values string) error {
 	data := ctx.dbTableData[table]
 	if data == nil {
-		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
+		data = &messages.PickleTable{Rows: []*messages.PickleTableRow{}}
 	}
 
 	return ctx.tableAtColumnValueShouldBe(table, parseMultipleValuesString(columns), parseMultipleValuesString(values), deleted, data)
 }
 
-func (ctx *TestContext) TableAtColumnValueShouldBe(table, column, values string, data *messages.PickleStepArgument_PickleTable) error { // nolint
+func (ctx *TestContext) TableAtColumnValueShouldBe(table, column, values string, data *messages.PickleTable) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), unchanged, data)
 }
 
 func (ctx *TestContext) TableShouldNotContainColumnValue(table, column, values string) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), unchanged,
-		&messages.PickleStepArgument_PickleTable{
-			Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
-				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: column}}}},
+		&messages.PickleTable{
+			Rows: []*messages.PickleTableRow{
+				{Cells: []*messages.PickleTableCell{{Value: column}}}},
 		})
 }
 
-func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable) *messages.PickleStepArgument_PickleTable {
+func combinePickleTables(table1, table2 *messages.PickleTable) *messages.PickleTable {
 	table1FieldMap := map[string]int{}
 	combinedFieldMap := map[string]bool{}
 	columnNumber := len(table1.Rows[0].Cells)
@@ -283,14 +283,14 @@ func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable
 		}
 	}
 
-	combinedTable := &messages.PickleStepArgument_PickleTable{}
-	combinedTable.Rows = make([]*messages.PickleStepArgument_PickleTable_PickleTableRow, 0, len(table1.Rows)+len(table2.Rows)-1)
+	combinedTable := &messages.PickleTable{}
+	combinedTable.Rows = make([]*messages.PickleTableRow, 0, len(table1.Rows)+len(table2.Rows)-1)
 
-	header := &messages.PickleStepArgument_PickleTable_PickleTableRow{
-		Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, columnNumber),
+	header := &messages.PickleTableRow{
+		Cells: make([]*messages.PickleTableCell, 0, columnNumber),
 	}
 	for _, column := range combinedcolumns {
-		header.Cells = append(header.Cells, &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{Value: column})
+		header.Cells = append(header.Cells, &messages.PickleTableCell{Value: column})
 	}
 	combinedTable.Rows = append(combinedTable.Rows, header)
 
@@ -299,14 +299,14 @@ func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable
 	return combinedTable
 }
 
-func copyCellsIntoCombinedTable(sourceTable *messages.PickleStepArgument_PickleTable, combinedcolumns []string,
-	sourceTableFieldMap map[string]int, combinedTable *messages.PickleStepArgument_PickleTable) {
+func copyCellsIntoCombinedTable(sourceTable *messages.PickleTable, combinedcolumns []string,
+	sourceTableFieldMap map[string]int, combinedTable *messages.PickleTable) {
 	for rowNum := 1; rowNum < len(sourceTable.Rows); rowNum++ {
-		newRow := &messages.PickleStepArgument_PickleTable_PickleTableRow{
-			Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, len(combinedcolumns)),
+		newRow := &messages.PickleTableRow{
+			Cells: make([]*messages.PickleTableCell, 0, len(combinedcolumns)),
 		}
 		for _, column := range combinedcolumns {
-			var newCell *messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell
+			var newCell *messages.PickleTableCell
 			if sourceColumnNumber, ok := sourceTableFieldMap[column]; ok {
 				newCell = sourceTable.Rows[rowNum].Cells[sourceColumnNumber]
 			}
@@ -323,7 +323,7 @@ func parseMultipleValuesString(valuesString string) []string {
 var columnRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
 
 func (ctx *TestContext) tableAtColumnValueShouldBe(table string, columns, values []string,
-	rowTransformation rowTransformation, data *messages.PickleStepArgument_PickleTable) error { // nolint
+	rowTransformation rowTransformation, data *messages.PickleTable) error { // nolint
 	// For that, we build a SQL request with only the attributes we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
@@ -359,7 +359,7 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(table string, columns, values
 }
 
 // dataTableMatchesSQLRows checks whether the provided data table matches the database rows result.
-func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgument_PickleTable, sqlRows *sql.Rows,
+func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleTable, sqlRows *sql.Rows,
 	rowTransformation rowTransformation, tableColumns, columns, values []string) error {
 	iDataRow := 1
 	columnIndexes := getColumnIndexes(data, columns)
@@ -397,7 +397,7 @@ func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgumen
 }
 
 // dataRowMatchesSQLRow checks that a data row matches a row from database.
-func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgument_PickleTable_PickleTableRow,
+func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleTableRow,
 	values []*string, tableColumns []string, rowIndex int) error {
 	// checking that all columns of the test data table match the SQL row
 	for colIndex, dataCell := range dataRow.Cells {
@@ -429,7 +429,7 @@ func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgumen
 }
 
 // getColumnNamesFromData gets the column names from the data table.
-func getColumnNamesFromData(data *messages.PickleStepArgument_PickleTable) (columns []string) {
+func getColumnNamesFromData(data *messages.PickleTable) (columns []string) {
 	// the first row contains the column names
 	headerColumns := data.Rows[0].Cells
 	for _, cell := range headerColumns {
@@ -460,7 +460,7 @@ func getStringPtrFromSQLRow(sqlRows *sql.Rows, length int) ([]*string, error) {
 }
 
 // getColumnIndexes gets the indices of the columns referenced by columns.
-func getColumnIndexes(data *messages.PickleStepArgument_PickleTable, columns []string) []int {
+func getColumnIndexes(data *messages.PickleTable, columns []string) []int {
 	// the first row contains the column names
 	headerColumns := data.Rows[0].Cells
 
@@ -512,7 +512,7 @@ func (ctx *TestContext) getNbRowsMatching(table string, columns, values []string
 	return nbRows, err
 }
 
-func shouldSkipRow(data *messages.PickleStepArgument_PickleTable, rowIndex int, columnIndexes []int,
+func shouldSkipRow(data *messages.PickleTable, rowIndex int, columnIndexes []int,
 	values []string, rowTransformation rowTransformation) bool {
 	return rowTransformation != unchanged &&
 		rowIndex < len(data.Rows) &&
@@ -521,7 +521,7 @@ func shouldSkipRow(data *messages.PickleStepArgument_PickleTable, rowIndex int, 
 
 // rowMatchesColumnValues checks whether a column matches some values at some rows
 // we do an OR operation, thus returning if any column is match one of the values.
-func rowMatchesColumnValues(row *messages.PickleStepArgument_PickleTable_PickleTableRow, columnIndexes []int, values []string) bool {
+func rowMatchesColumnValues(row *messages.PickleTableRow, columnIndexes []int, values []string) bool {
 	// Both loops should contain 1 or 2 elements only
 	for _, columnIndex := range columnIndexes {
 		for _, value := range values {

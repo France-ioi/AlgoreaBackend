@@ -1,7 +1,7 @@
-GOCMD=env GO111MODULE=on go
+GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test
+GOTEST=$(GOCMD) test -v
 GOGET=$(GOCMD) get
 GOLIST=$(GOCMD) list
 BIN_NAME=AlgoreaBackend
@@ -15,7 +15,6 @@ ifndef BIN_DIR # to allow BIN_DIR to be given as args (see CI)
 	BIN_DIR=$(FIRSTGOPATH)/bin
 endif
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
-GODOG=$(BIN_DIR)/godog
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
@@ -33,10 +32,11 @@ ifdef FILTER
 endif
 ifdef DIRECTORY
 	TEST_DIR=$(DIRECTORY)
-	TEST_BDD_DIR =$(DIRECTORY)
 else
 	TEST_DIR=./app/...
-	TEST_BDD_DIR=.
+endif
+ifdef TAGS
+	TEST_TAGS=--godog.tags=$(TAGS)
 endif
 
 # extract AWS_PROFILE if given
@@ -91,9 +91,9 @@ test: $(TEST_REPORT_DIR)
 	$(Q)$(GOTEST) -gcflags=all=-l -race -coverpkg=$(COVER_PACKAGES) -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
-test-bdd: $(GODOG)
-	# to pass args: make ARGS="--tags=wip" test-bdd
-	$(GODOG) --format=progress $(ARGS) $(TEST_BDD_DIR)
+test-bdd:
+	# to pass a tag: make TAGS=wip test-bdd
+	$(Q)$(GOTEST) -tags=!unit $(TEST_DIR) $(TEST_FILTER) $(TEST_TAGS)
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run -v --deadline 10m0s
 
@@ -116,8 +116,6 @@ version:
 
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
-$(GODOG):
-	$(GOGET) -u github.com/cucumber/godog/cmd/godog@v0.9.0
 $(GOLANGCILINT):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.27.0
 $(MYSQL_CONNECTOR_JAVA):

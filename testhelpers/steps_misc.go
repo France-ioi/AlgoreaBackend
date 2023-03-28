@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/messages-go/v16"
 	"github.com/go-chi/chi"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
@@ -99,7 +99,7 @@ func (ctx *TestContext) TheGeneratedAuthKeysAre(generatedStrings string) error {
 	return nil
 }
 
-func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) LogsShouldContain(docString *messages.PickleDocString) error { // nolint
 	preprocessed, err := ctx.preprocessString(docString.Content)
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument
 	return nil
 }
 
-func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, docString *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, docString *messages.PickleDocString) error { // nolint
 	var privateKey *rsa.PrivateKey
 	signerName = strings.TrimSpace(signerName)
 	switch signerName {
@@ -137,7 +137,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 	return nil
 }
 
-func (ctx *TestContext) TheApplicationConfigIs(body *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) TheApplicationConfigIs(body *messages.PickleDocString) error { // nolint
 	config := viper.New()
 	config.SetConfigType("yaml")
 	preprocessedConfig, err := ctx.preprocessString(body.Content)

@@ -4,8 +4,6 @@
 
 This project requires Go >=1.13.
 
-Warning: make test-bdd doesn't work with Go 1.19
-
 ## Running the app (for development)
 
 Compile the app:
@@ -111,14 +109,10 @@ or if you want only to run bdd tests with a specific tag, in a specific director
 Note: specifying the directory **can save you a few seconds per run**:
 
 ```
-make ARGS="--tags=wip" DIRECTORY=app/api/answers/ test-bdd
+make TAGS=wip DIRECTORY=./app/api/answers/ test-bdd
 ```
 To add a tag to a test, just precede it by @wip on the line above it in the *.feature file. This is useful to only execute appropriate tests.
 
-you may also have to specify the godog directory:
-```
-make BIN_DIR=~/go/bin ARGS="--tags=wip" DIRECTORY=app/api/answers/ test-bdd
-```
 
 ## Install the git hooks
 
