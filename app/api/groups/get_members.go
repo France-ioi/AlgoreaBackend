@@ -37,54 +37,55 @@ type groupsMembersViewResponseRow struct {
 }
 
 // swagger:operation GET /groups/{group_id}/members group-memberships groupsMembersView
-// ---
-// summary: List group members
-// description: >
 //
-//   Returns a list of users that are members of the group.
-//   The output contains basic user info (`first_name` and `last_name` are only shown
-//   for the authenticated user or if the user approved access to their personal info for some group
-//   managed by the authenticated user).
+//		---
+//		summary: List group members
+//		description: >
+//
+//	  Returns a list of users that are members of the group.
+//	  The output contains basic user info (`first_name` and `last_name` are only shown
+//	  for the authenticated user or if the user approved access to their personal info for some group
+//	  managed by the authenticated user).
 //
 //
-//   The authenticated user should be a manager of `{group_id}`, otherwise the 'forbidden' error is returned.
-// parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: sort
-//   in: query
-//   default: [-member_since,id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [member_since,-member_since,user.login,-user.login,user.grade,-user.grade,id,-id]
-// - name: from.id
-//   description: Start the page from the member next to the member with `groups.id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display the first N members
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. The array of group members
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupsMembersViewResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  The authenticated user should be a manager of `{group_id}`, otherwise the 'forbidden' error is returned.
+//		parameters:
+//			- name: group_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: sort
+//				in: query
+//				default: [-member_since,id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [member_since,-member_since,user.login,-user.login,user.grade,-user.grade,id,-id]
+//			- name: from.id
+//				description: Start the page from the member next to the member with `groups.id`=`{from.id}`
+//				in: query
+//				type: integer
+//			- name: limit
+//				description: Display the first N members
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. The array of group members
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/groupsMembersViewResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

@@ -33,42 +33,43 @@ type managedGroupsGetResponseRow struct {
 }
 
 // swagger:operation GET /current-user/managed-groups groups managedGroupsView
-// ---
-// summary: List groups managed by the current user
-// description:
-//   Returns groups for which the current user is a manager (subgroups are skipped)
-// parameters:
-// - name: sort
-//   in: query
-//   default: [type,name,id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [type,-type,name,-name,id,-id]
-// - name: from.id
-//   description: Start the page from the group next to one with `id`=`{from.id}`
-//   in: query
-//   type: integer
-//   format: int64
-// - name: limit
-//   description: Display the first N groups
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. Success response with an array of managed groups
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/managedGroupsGetResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//		---
+//		summary: List groups managed by the current user
+//		description:
+//	  Returns groups for which the current user is a manager (subgroups are skipped)
+//		parameters:
+//			- name: sort
+//				in: query
+//				default: [type,name,id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [type,-type,name,-name,id,-id]
+//			- name: from.id
+//				description: Start the page from the group next to one with `id`=`{from.id}`
+//				in: query
+//				type: integer
+//				format: int64
+//			- name: limit
+//				description: Display the first N groups
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. Success response with an array of managed groups
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/managedGroupsGetResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

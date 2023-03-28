@@ -35,48 +35,49 @@ type contestAdminListRow struct {
 }
 
 // swagger:operation GET /contests/administered contests contestAdminList
-// ---
-// summary: List administered contests
-// description:   Get the contests that the user has administration rights on.
+//
+//		---
+//		summary: List administered contests
+//		description:   Get the contests that the user has administration rights on.
 //
 //
-//                For all explicit-entry items that are timed contests and for that the user is a contest admin
-//                (has `can_view` >= 'content', `can_grant_view` >= 'enter', and `can_watch` >= 'result'),
-//                returns item info (`id`, `title`, `team_only_contest`, parents' `title`-s).
-//                Only parents visible to the user are listed.
+//	               For all explicit-entry items that are timed contests and for that the user is a contest admin
+//	               (has `can_view` >= 'content', `can_grant_view` >= 'enter', and `can_watch` >= 'result'),
+//	               returns item info (`id`, `title`, `team_only_contest`, parents' `title`-s).
+//	               Only parents visible to the user are listed.
 //
 //
-//                Each title is returned in the user's default language if exists,
-//                otherwise the item's default language is used.
-// parameters:
-// - name: from.id
-//   description: Start the page from the contest next to the contest with `id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: sort
-//   in: query
-//   default: [title,id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [title,-title,id,-id]
-// - name: limit
-//   description: Display the first N contests
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. Success response with contests info
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/contestAdminListRow"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	               Each title is returned in the user's default language if exists,
+//	               otherwise the item's default language is used.
+//		parameters:
+//			- name: from.id
+//				description: Start the page from the contest next to the contest with `id`=`{from.id}`
+//				in: query
+//				type: integer
+//			- name: sort
+//				in: query
+//				default: [title,id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [title,-title,id,-id]
+//			- name: limit
+//				description: Display the first N contests
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. Success response with contests info
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/contestAdminListRow"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

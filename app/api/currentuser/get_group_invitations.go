@@ -9,54 +9,55 @@ import (
 )
 
 // swagger:operation GET /current-user/group-invitations group-memberships invitationsView
-// ---
-// summary: List current invitations and requests to groups
-// description:
-//   Returns the list of invitations that the current user received and requests sent by him
-//   (`group_membership_changes.action` is “invitation_created” or “join_request_created” or “join_request_refused”)
-//   with `group_membership_changes.at` within `within_weeks` back from now (if `within_weeks` is present).
-// parameters:
-// - name: within_weeks
-//   in: query
-//   type: integer
-// - name: sort
-//   in: query
-//   default: [-at,group_id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [at,-at,group_id,-group_id]
-// - name: from.at
-//   description: Start the page from the request/invitation next to one with `at` = `{from.at}`
-//                and `group_membership_changes.group_id` = `{from.group_id}`
-//                (`{from.group_id}` is required when `{from.at}` is present)
-//   in: query
-//   type: string
-// - name: from.group_id
-//   description: Start the page from the request/invitation next to one with `at`=`{from.at}`
-//                and `group_id`=`{from.group_id}`
-//                (`{from.at}` is required when `{from.group_id}` is present)
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display the first N requests/invitations
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. Success response with an array of invitations/requests
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/invitationsViewResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//		---
+//		summary: List current invitations and requests to groups
+//		description:
+//	  Returns the list of invitations that the current user received and requests sent by him
+//	  (`group_membership_changes.action` is “invitation_created” or “join_request_created” or “join_request_refused”)
+//	  with `group_membership_changes.at` within `within_weeks` back from now (if `within_weeks` is present).
+//		parameters:
+//			- name: within_weeks
+//				in: query
+//				type: integer
+//			- name: sort
+//				in: query
+//				default: [-at,group_id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [at,-at,group_id,-group_id]
+//			- name: from.at
+//				description: Start the page from the request/invitation next to one with `at` = `{from.at}`
+//	               and `group_membership_changes.group_id` = `{from.group_id}`
+//	               (`{from.group_id}` is required when `{from.at}` is present)
+//				in: query
+//				type: string
+//			- name: from.group_id
+//				description: Start the page from the request/invitation next to one with `at`=`{from.at}`
+//	               and `group_id`=`{from.group_id}`
+//	               (`{from.at}` is required when `{from.group_id}` is present)
+//				in: query
+//				type: integer
+//			- name: limit
+//				description: Display the first N requests/invitations
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. Success response with an array of invitations/requests
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/invitationsViewResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 

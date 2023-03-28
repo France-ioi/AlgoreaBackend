@@ -46,75 +46,76 @@ type attemptsListResponseRow struct {
 }
 
 // swagger:operation GET /items/{item_id}/attempts items attemptsList
-// ---
-// summary: List attempts/results for an item
-// description: >
-//    Returns attempts of the current participant (the current user or `{as_team_id}` team) with their results
-//    for the given item within the parent attempt.
+//
+//		---
+//		summary: List attempts/results for an item
+//		description: >
+//	   Returns attempts of the current participant (the current user or `{as_team_id}` team) with their results
+//	   for the given item within the parent attempt.
 //
 //
-//    `first_name` and `last_name` of attempt creators are only visible to attempt creators themselves and
-//    to managers of those attempt creators' groups to which they provided view access to personal data.
+//	   `first_name` and `last_name` of attempt creators are only visible to attempt creators themselves and
+//	   to managers of those attempt creators' groups to which they provided view access to personal data.
 //
 //
-//    Restrictions:
-//      * `{as_team_id}` (if given) should be the current user's team,
-//      * the participant should have at least 'content' access on the item,
-//      * if `{attempt_id}` is given, it should exist for the participant in order to determine `{parent_attempt_id}`
-//        (we assume that the 'zero attempt' always exists and it is its own parent attempt),
+//	   Restrictions:
+//	     * `{as_team_id}` (if given) should be the current user's team,
+//	     * the participant should have at least 'content' access on the item,
+//	     * if `{attempt_id}` is given, it should exist for the participant in order to determine `{parent_attempt_id}`
+//	       (we assume that the 'zero attempt' always exists and it is its own parent attempt),
 //
-//    otherwise the 'forbidden' error is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: parent_attempt_id
-//   description: "`id` of a parent attempt. This parameter is incompatible with `attempt_id`."
-//   in: query
-//   type: integer
-// - name: attempt_id
-//   description: "`id` of an attempt for the `{item_id}`.
-//                 This parameter is incompatible with `parent_attempt_id`."
-//   in: query
-//   type: integer
-// - name: as_team_id
-//   in: query
-//   type: integer
-// - name: sort
-//   in: query
-//   default: [id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [id,-id]
-// - name: from.id
-//   description: Start the page from the attempt next to the attempt with `results.attempt_id` = `{from.id}`
-//   in: query
-//   type: integer
-//   format: int64
-// - name: limit
-//   description: Display first N attempts
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. Success response with an array of attempts
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/attemptsListResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	   otherwise the 'forbidden' error is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: parent_attempt_id
+//				description: "`id` of a parent attempt. This parameter is incompatible with `attempt_id`."
+//				in: query
+//				type: integer
+//			- name: attempt_id
+//				description: "`id` of an attempt for the `{item_id}`.
+//	                This parameter is incompatible with `parent_attempt_id`."
+//				in: query
+//				type: integer
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//			- name: sort
+//				in: query
+//				default: [id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [id,-id]
+//			- name: from.id
+//				description: Start the page from the attempt next to the attempt with `results.attempt_id` = `{from.id}`
+//				in: query
+//				type: integer
+//				format: int64
+//			- name: limit
+//				description: Display first N attempts
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. Success response with an array of attempts
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/attemptsListResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, groupID, parentAttemptID, apiError := srv.resolveParametersForListAttempts(r)
 	if apiError != service.NoError {

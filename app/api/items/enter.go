@@ -13,50 +13,51 @@ import (
 )
 
 // swagger:operation POST /items/{ids}/enter items itemEnter
-// ---
-// summary: Enter the item
-// description: >
-//                Allows to enter an item requiring explicit entry as a user or as a team (if `as_team_id` is given).
+//
+//		---
+//		summary: Enter the item
+//		description: >
+//	               Allows to enter an item requiring explicit entry as a user or as a team (if `as_team_id` is given).
 //
 //
-//                Restrictions:
-//                  * the last item in `{ids}` should require explicit entry;
-//                  * `as_team_id` (if given) should be the current user's team;
-//                  * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id)
-//                    of a group the participant is a descendant of or manages;
-//                  * `{ids}` should be an ordered list of parent-child items;
-//                  * the group (the user or his team) should have at least 'content' access
-//                    on each of the items in `{ids}` except the last one and at least 'info' access for the last one;
-//                  * the group should have a started, allowing submission, not ended result for each item but the last,
-//                    with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt;
-//                  * if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero;
-//                  * the group (the user or his team) must be qualified for the last item in `{ids}` (itemGetEntryState returns "ready").
+//	               Restrictions:
+//	                 * the last item in `{ids}` should require explicit entry;
+//	                 * `as_team_id` (if given) should be the current user's team;
+//	                 * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id)
+//	                   of a group the participant is a descendant of or manages;
+//	                 * `{ids}` should be an ordered list of parent-child items;
+//	                 * the group (the user or his team) should have at least 'content' access
+//	                   on each of the items in `{ids}` except the last one and at least 'info' access for the last one;
+//	                 * the group should have a started, allowing submission, not ended result for each item but the last,
+//	                   with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt;
+//	                 * if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero;
+//	                 * the group (the user or his team) must be qualified for the last item in `{ids}` (itemGetEntryState returns "ready").
 //
-//                Otherwise, the "Forbidden" response is returned.
-// parameters:
-// - name: ids
-//   in: path
-//   type: string
-//   description: slash-separated list of item IDs
-//   required: true
-// - name: parent_attempt_id
-//   description: "`id` of an attempt which will be used as a parent attempt for the participation"
-//   in: query
-//   type: integer
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-//   format: int64
-// responses:
-//   "201":
-//     "$ref": "#/responses/itemEnterResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	               Otherwise, the "Forbidden" response is returned.
+//		parameters:
+//			- name: ids
+//				in: path
+//				type: string
+//				description: slash-separated list of item IDs
+//				required: true
+//			- name: parent_attempt_id
+//				description: "`id` of an attempt which will be used as a parent attempt for the participation"
+//				in: query
+//				type: integer
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//				format: int64
+//		responses:
+//			"201":
+//				"$ref": "#/responses/itemEnterResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIError {
 	ids, err := idsFromRequest(r)
 	if err != nil {

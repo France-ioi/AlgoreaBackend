@@ -11,49 +11,53 @@ import (
 )
 
 // swagger:operation POST /items/{item_id}/attempts/{attempt_id}/answers answers answerCreate
-// ---
-// summary: Create a "saved" answer
-// description: Creates a "saved" answer from a current snapshot.
 //
-//   * The authenticated user should have at least 'content' access to the `{item_id}`.
+//		---
+//		summary: Create a "saved" answer
+//		description: Creates a "saved" answer from a current snapshot.
 //
-//   * `{as_team_id}` (if given) should be the user's team.
+//	  - The authenticated user should have at least 'content' access to the `{item_id}`.
 //
-//   * There should be a row in the `results` table with `attempt_id` = `{attempt_id}`,
-//     `participant_id` = the user's group (or `{as_team_id}` if given), `item_id` = `{item_id}`.
+//	  - `{as_team_id}` (if given) should be the user's team.
 //
-//   If any of the preconditions fails, the 'forbidden' error is returned.
-// parameters:
-// - name: attempt_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: item_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-//   format: int64
-// - name: answer information
-//   in: body
-//   required: true
-//   schema:
-//     "$ref": "#/definitions/answerData"
-// responses:
-//   "201":
-//     description: Created. The request has successfully saved the answer.
-//     schema:
-//       "$ref": "#/definitions/createdResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  - There should be a row in the `results` table with `attempt_id` = `{attempt_id}`,
+//	    `participant_id` = the user's group (or `{as_team_id}` if given), `item_id` = `{item_id}`.
+//
+//	    If any of the preconditions fails, the 'forbidden' error is returned.
+//
+//		parameters:
+//			- name: attempt_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: item_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//				format: int64
+//			- name: answer information
+//				in: body
+//				required: true
+//				schema:
+//					"$ref": "#/definitions/answerData"
+//
+//		responses:
+//
+//			"201":
+//				description: Created. The request has successfully saved the answer.
+//				schema:
+//					"$ref": "#/definitions/createdResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) answerCreate(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	return srv.saveAnswerWithType(rw, httpReq, false)
 }

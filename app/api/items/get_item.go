@@ -149,57 +149,58 @@ type itemResponse struct {
 }
 
 // swagger:operation GET /items/{item_id} items itemView
-// ---
-// summary: Get an item
-// description: Returns data related to the specified item,
-//              and the current user's (or the team's given in `{as_team_id}`) permissions on it
-//              (from tables `items`, `items_string`, `permissions_generated`).
+//
+//		---
+//		summary: Get an item
+//		description: Returns data related to the specified item,
+//	             and the current user's (or the team's given in `{as_team_id}`) permissions on it
+//	             (from tables `items`, `items_string`, `permissions_generated`).
 //
 //
-//              * If the specified item is not visible by the current user (or the team given in `as_team_id`),
-//                the 'not found' response is returned.
+//	             * If the specified item is not visible by the current user (or the team given in `as_team_id`),
+//	               the 'not found' response is returned.
 //
-//              * If `{language_tag}` is given, but there is no items_strings row for the `{item_id}` and `{language_tag}`,
-//                the 'not found' response is returned as well.
+//	             * If `{language_tag}` is given, but there is no items_strings row for the `{item_id}` and `{language_tag}`,
+//	               the 'not found' response is returned as well.
 //
-//              * If `as_team_id` is given, it should be a user's parent team group,
-//                otherwise the "forbidden" error is returned.
+//	             * If `as_team_id` is given, it should be a user's parent team group,
+//	               otherwise the "forbidden" error is returned.
 //
-//              * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
-//                otherwise the "forbidden" error is returned. Permissions of the watched group are only shown if the current user
-//                can watch the item or grant permissions to both the watched group and the item.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-//   format: int64
-// - name: watched_group_id
-//   in: query
-//   type: integer
-//   format: int64
-// - name: language_tag
-//   in: query
-//   type: string
-// responses:
-//   "200":
-//     description: OK. Success response with item data
-//     schema:
-//       "$ref": "#/definitions/itemResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "404":
-//     "$ref": "#/responses/notFoundResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	             * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//	               otherwise the "forbidden" error is returned. Permissions of the watched group are only shown if the current user
+//	               can watch the item or grant permissions to both the watched group and the item.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//				format: int64
+//			- name: watched_group_id
+//				in: query
+//				type: integer
+//				format: int64
+//			- name: language_tag
+//				in: query
+//				type: string
+//		responses:
+//			"200":
+//				description: OK. Success response with item data
+//				schema:
+//					"$ref": "#/definitions/itemResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"404":
+//				"$ref": "#/responses/notFoundResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {

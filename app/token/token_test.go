@@ -165,7 +165,7 @@ func Test_GenerateToken_PanicsOnError(t *testing.T) {
 	privateKey := &rsa.PrivateKey{D: &big.Int{}, PublicKey: rsa.PublicKey{N: &big.Int{}}}
 	defer func() {
 		e := recover()
-		assert.Equal(t, errors.New("crypto/rsa: message too long for RSA public key size"), e)
+		assert.Equal(t, errors.New("crypto/rsa: message too long for RSA key size"), e)
 	}()
 	Generate(map[string]interface{}{}, privateKey)
 }

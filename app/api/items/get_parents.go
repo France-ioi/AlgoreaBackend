@@ -36,56 +36,57 @@ type parentItem struct {
 }
 
 // swagger:operation GET /items/{item_id}/parents items itemParentsView
-// ---
-// summary: Get item parents
-// description: Lists parents of the specified item
-//              and the current user's (or the team's given in `as_team_id`) interactions with them
-//              (from tables `items`, `items_items`, `items_string`, `results`, `permissions_generated`)
-//              within the context of the given `{attempt_id}`.
-//              Only items visible to the current user (or to the `{as_team_id}` team) are shown.
-//              If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
+//
+//		---
+//		summary: Get item parents
+//		description: Lists parents of the specified item
+//	             and the current user's (or the team's given in `as_team_id`) interactions with them
+//	             (from tables `items`, `items_items`, `items_string`, `results`, `permissions_generated`)
+//	             within the context of the given `{attempt_id}`.
+//	             Only items visible to the current user (or to the `{as_team_id}` team) are shown.
+//	             If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
 //
 //
-//              * The current user (or the team given in `as_team_id`) should have at least 'info' permissions on the specified item,
-//                otherwise the 'forbidden' response is returned.
+//	             * The current user (or the team given in `as_team_id`) should have at least 'info' permissions on the specified item,
+//	               otherwise the 'forbidden' response is returned.
 //
-//              * If `as_team_id` is given, it should be a user's parent team group,
-//                otherwise the "forbidden" error is returned.
+//	             * If `as_team_id` is given, it should be a user's parent team group,
+//	               otherwise the "forbidden" error is returned.
 //
-//              * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
-//                otherwise the "forbidden" error is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: attempt_id
-//   description: "`id` of an attempt for the item."
-//   in: query
-//   type: integer
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-// - name: watched_group_id
-//   in: query
-//   type: integer
-// responses:
-//   "200":
-//     description: OK. Success response with item parents data
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/parentItem"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	             * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//	               otherwise the "forbidden" error is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: attempt_id
+//				description: "`id` of an attempt for the item."
+//				in: query
+//				type: integer
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//			- name: watched_group_id
+//				in: query
+//				type: integer
+//		responses:
+//			"200":
+//				description: OK. Success response with item parents data
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/parentItem"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError :=
 		srv.resolveGetParentsOrChildrenServiceParams(httpReq)

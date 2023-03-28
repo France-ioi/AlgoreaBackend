@@ -36,15 +36,15 @@ type createUserBatchRequest struct {
 	// pattern: ^[a-z0-9-]{2,14}$
 	CustomPrefix string `json:"custom_prefix" validate:"set,custom_prefix"`
 	// required: true
-	// minItems: 1
+	//	minItems: 1
 	Subgroups []createUserBatchRequestSubgroup `json:"subgroups" validate:"set,min=1,dive"`
 	// required: true
-	// min: 3
-	// max: 29
+	//	min: 3
+	//	max: 29
 	PostfixLength int `json:"postfix_length" validate:"set,min=3,max=29"`
 	// required: true
-	// min: 6
-	// max: 50
+	//	min: 6
+	//	max: 50
 	PasswordLength int `json:"password_length" validate:"set,min=6,max=50"`
 }
 
@@ -57,68 +57,69 @@ type subgroupApproval struct {
 }
 
 // swagger:operation POST /user-batches groups createUserBatch
-// ---
-// summary: Create a user batch
-// description: >
 //
-//   Creates a batch of users:
+//		---
+//		summary: Create a user batch
+//		description: >
 //
-//   * creates a new row in users_batches,
+//	  Creates a batch of users:
 //
-//   * creates new users in the login module,
+//	  * creates a new row in users_batches,
 //
-//   * inserts the created users into the `users` table,
+//	  * creates new users in the login module,
 //
-//   * adds the created users into groups specified as `subgroups[...].group_id` giving all the required approvals.
+//	  * inserts the created users into the `users` table,
+//
+//	  * adds the created users into groups specified as `subgroups[...].group_id` giving all the required approvals.
 //
 //
-//   Restrictions:
+//				Restrictions:
 //
-//   * The authenticated user (or one of his group ancestors) should be a manager of the group
-//     (directly, or of one of its ancestors) linked to the `group_prefix`
-//     with at least 'can_manage:memberships', otherwise the 'forbidden' response is returned.
-//   * The 'subgroup.group_id'-s should be descendants of the group linked to the `group_prefix` or be the group itself,
-//     otherwise the 'forbidden' response is returned.
-//   * The 'subgroup.group_id'-s should not be of type 'User', otherwise the 'forbidden' response is returned.
-//   * The `group_prefix.allow_new` should be true, otherwise the 'forbidden' response is returned.
-//   * 32^`postfix_length` should be greater than 2 * sum of `subgroups.count`
-//     (to prevent being unable to generate unique logins), otherwise the 'bad request' response is returned.
-//   * Sum of `subgroups.count` + sum of sizes of existing batches under the same `group_prefix`
-//     should not be greater than `max_users` of the prefix, otherwise the 'bad request' response is returned.
-// parameters:
-// - in: body
-//   name: data
-//   required: true
-//   description: The user batch to create
-//   schema:
-//     "$ref": "#/definitions/createUserBatchRequest"
-// responses:
-//   "201":
-//     description: "Created. Success response with the newly created task token"
-//     schema:
-//       type: object
-//       required: [success, message, data]
-//       properties:
-//         success:
-//           description: "true"
-//           type: boolean
-//           enum: [true]
-//         message:
-//           description: created
-//           type: string
-//           enum: [created]
-//         data:
-//           type: array
-//           items:
-//             "$ref": "#/definitions/createUserBatchResultRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  * The authenticated user (or one of his group ancestors) should be a manager of the group
+//	    (directly, or of one of its ancestors) linked to the `group_prefix`
+//	    with at least 'can_manage:memberships', otherwise the 'forbidden' response is returned.
+//	  * The 'subgroup.group_id'-s should be descendants of the group linked to the `group_prefix` or be the group itself,
+//	    otherwise the 'forbidden' response is returned.
+//	  * The 'subgroup.group_id'-s should not be of type 'User', otherwise the 'forbidden' response is returned.
+//	  * The `group_prefix.allow_new` should be true, otherwise the 'forbidden' response is returned.
+//	  * 32^`postfix_length` should be greater than 2 * sum of `subgroups.count`
+//	    (to prevent being unable to generate unique logins), otherwise the 'bad request' response is returned.
+//	  * Sum of `subgroups.count` + sum of sizes of existing batches under the same `group_prefix`
+//	    should not be greater than `max_users` of the prefix, otherwise the 'bad request' response is returned.
+//		parameters:
+//			- in: body
+//				name: data
+//				required: true
+//				description: The user batch to create
+//				schema:
+//					"$ref": "#/definitions/createUserBatchRequest"
+//		responses:
+//			"201":
+//				description: "Created. Success response with the newly created task token"
+//				schema:
+//						type: object
+//						required: [success, message, data]
+//						properties:
+//							success:
+//								description: "true"
+//								type: boolean
+//								enum: [true]
+//							message:
+//								description: created
+//								type: string
+//								enum: [created]
+//							data:
+//								type: array
+//								items:
+//									"$ref": "#/definitions/createUserBatchResultRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

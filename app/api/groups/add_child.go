@@ -11,43 +11,44 @@ import (
 )
 
 // swagger:operation POST /groups/{parent_group_id}/relations/{child_group_id} group-memberships groupAddChild
-// ---
-// summary: Add a subgroup
-// description: >
-//   Add a group as a child to another group.
-//   Lets a group admin add another group as a child and refreshes the access rights afterwards.
+//
+//		---
+//		summary: Add a subgroup
+//		description: >
+//	  Add a group as a child to another group.
+//	  Lets a group admin add another group as a child and refreshes the access rights afterwards.
 //
 //
-//   Restrictions (otherwise the 'forbidden' error is returned):
-//     * the authenticated user should be a manager of both `parent_group_id` and `child_group_id,
-//     * the authenticated user should have `can_manage` >= 'memberships' on the `parent_group_id`,
-//     * the authenticated user should have `can_manage` = 'memberships_and_group' on the `child_group_id`,
-//     * the parent group should not be of type "User" or "Team",
-//     * the child group should not be of types "Base" or "User"
-//       (since users should join groups only by code or by invitation/request),
-//     * the action should not create cycles in the groups relations graph.
-// parameters:
-// - name: parent_group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: child_group_id
-//   in: path
-//   type: integer
-//   required: true
-// responses:
-//   "201":
-//     description: Created. The request has successfully created the group relation.
-//     schema:
-//       "$ref": "#/definitions/createdResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  Restrictions (otherwise the 'forbidden' error is returned):
+//	    * the authenticated user should be a manager of both `parent_group_id` and `child_group_id,
+//	    * the authenticated user should have `can_manage` >= 'memberships' on the `parent_group_id`,
+//	    * the authenticated user should have `can_manage` = 'memberships_and_group' on the `child_group_id`,
+//	    * the parent group should not be of type "User" or "Team",
+//	    * the child group should not be of types "Base" or "User"
+//	      (since users should join groups only by code or by invitation/request),
+//	    * the action should not create cycles in the groups relations graph.
+//		parameters:
+//			- name: parent_group_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: child_group_id
+//				in: path
+//				type: integer
+//				required: true
+//		responses:
+//			"201":
+//				description: Created. The request has successfully created the group relation.
+//				schema:
+//					"$ref": "#/definitions/createdResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {

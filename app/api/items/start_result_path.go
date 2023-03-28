@@ -12,69 +12,70 @@ import (
 )
 
 // swagger:operation POST /items/{ids}/start-result-path items resultStartPath
-// ---
-// summary: Start results for an item path
-// description: >
-//   Creates new started results (or starts not started existing ones) for an item path if needed and returns the last attempt in the chain.
 //
-//   Of all possible chains of attempts the service chooses the one having missing/not-started results located closer
-//   to the end of the path, preferring chains having less missing/not-started results and having higher values of `attempt_id`.
-//   If there is no result for the first item, the service tries to create an attempt chain starting with the zero attempt.
-//   The chain of attempts cannot have missing results for items requiring explicit entry or require to start/create results
-//   within or below ended/not-allowing-submissions attempts.
+//		---
+//		summary: Start results for an item path
+//		description: >
+//	  Creates new started results (or starts not started existing ones) for an item path if needed and returns the last attempt in the chain.
 //
-//   If `as_team_id` is given, the created/updated results are linked to the `as_team_id` group instead of the user's self group.
+//	  Of all possible chains of attempts the service chooses the one having missing/not-started results located closer
+//	  to the end of the path, preferring chains having less missing/not-started results and having higher values of `attempt_id`.
+//	  If there is no result for the first item, the service tries to create an attempt chain starting with the zero attempt.
+//	  The chain of attempts cannot have missing results for items requiring explicit entry or require to start/create results
+//	  within or below ended/not-allowing-submissions attempts.
+//
+//	  If `as_team_id` is given, the created/updated results are linked to the `as_team_id` group instead of the user's self group.
 //
 //
-//   Restrictions:
+//				Restrictions:
 //
-//     * if `as_team_id` is given, it should be a user's parent team group,
-//     * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id) of a group
-//       the participant is a descendant of or manages,
-//     * `{ids}` should be an ordered list of parent-child items,
-//     * the group starting results should have at least 'content' access on each of the items in `{ids}`,
+//	    * if `as_team_id` is given, it should be a user's parent team group,
+//	    * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id) of a group
+//	      the participant is a descendant of or manages,
+//	    * `{ids}` should be an ordered list of parent-child items,
+//	    * the group starting results should have at least 'content' access on each of the items in `{ids}`,
 //
-//   otherwise the 'forbidden' error is returned.
-// parameters:
-// - name: ids
-//   in: path
-//   type: string
-//   description: slash-separated list of item IDs
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-// responses:
-//   "201":
-//     description: "Created. Success response with the attempt id for the last item in the path"
-//     schema:
-//       type: object
-//       required: [success, message, data]
-//       properties:
-//         success:
-//           description: "true"
-//           type: boolean
-//           enum: [true]
-//         message:
-//           description: updated
-//           type: string
-//           enum: [updated]
-//         data:
-//           type: object
-//           required: [attempt_id]
-//           properties:
-//             attempt_id:
-//               description: The attempt linked to the last item in the path
-//               type: integer
-//               format: string
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  otherwise the 'forbidden' error is returned.
+//		parameters:
+//			- name: ids
+//				in: path
+//				type: string
+//				description: slash-separated list of item IDs
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//		responses:
+//			"201":
+//				description: "Created. Success response with the attempt id for the last item in the path"
+//				schema:
+//						type: object
+//						required: [success, message, data]
+//						properties:
+//							success:
+//								description: "true"
+//								type: boolean
+//								enum: [true]
+//							message:
+//								description: updated
+//								type: string
+//								enum: [updated]
+//							data:
+//								type: object
+//								required: [attempt_id]
+//								properties:
+//									attempt_id:
+//										description: The attempt linked to the last item in the path
+//										type: integer
+//										format: string
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 

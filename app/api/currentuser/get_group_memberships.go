@@ -44,41 +44,42 @@ type membershipsViewResponseRow struct {
 }
 
 // swagger:operation GET /current-user/group-memberships group-memberships membershipsView
-// ---
-// summary: List current user's groups
-// description:
-//   Returns the list of groups memberships of the current user. Groups with `type`='ContestParticipants' are not displayed.
-// parameters:
-// - name: sort
-//   in: query
-//   default: [-member_since,id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [member_since,-member_since,id,-id]
-// - name: from.id
-//   description: Start the page from the membership next to one with `groups.id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display the first N memberships
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. Success response with an array of groups memberships
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/membershipsViewResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//		---
+//		summary: List current user's groups
+//		description:
+//	  Returns the list of groups memberships of the current user. Groups with `type`='ContestParticipants' are not displayed.
+//		parameters:
+//			- name: sort
+//				in: query
+//				default: [-member_since,id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [member_since,-member_since,id,-id]
+//			- name: from.id
+//				description: Start the page from the membership next to one with `groups.id`=`{from.id}`
+//				in: query
+//				type: integer
+//			- name: limit
+//				description: Display the first N memberships
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//					description: OK. Success response with an array of groups memberships
+//					schema:
+//						type: array
+//						items:
+//							"$ref": "#/definitions/membershipsViewResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

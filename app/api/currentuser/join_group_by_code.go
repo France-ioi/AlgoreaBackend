@@ -12,67 +12,68 @@ import (
 )
 
 // swagger:operation POST /current-user/group-memberships/by-code group-memberships groupsJoinByCode
-// ---
-// summary: Join a group using a code
-// description:
-//   Lets a user to join a group by a code.
-//   On success the service inserts a row into `groups_groups`
-//   with `parent_group_id` = `id` of the group found by the code and `child_group_id` = `group_id` of the user
-//   and another row into `group_membership_changes`
-//   with `group_id` = `id` of the group, `member_id` = `group_id` of the user, `action`=`joined_by_code`,
-//   and `at` = current UTC time.
-//   It also refreshes the access rights.
 //
-//   * If there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User'
-//     or if the current user is temporary, the forbidden error is returned.
+//		---
+//		summary: Join a group using a code
+//		description:
+//	  Lets a user to join a group by a code.
+//	  On success the service inserts a row into `groups_groups`
+//	  with `parent_group_id` = `id` of the group found by the code and `child_group_id` = `group_id` of the user
+//	  and another row into `group_membership_changes`
+//	  with `group_id` = `id` of the group, `member_id` = `group_id` of the user, `action`=`joined_by_code`,
+//	  and `at` = current UTC time.
+//	  It also refreshes the access rights.
 //
-//   * If the group is a team and the user is already on a team that has attempts for same contest
-//     while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
-//     or if the group membership is frozen,
-//     the unprocessable entity error is returned.
+//	  * If there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User'
+//	    or if the current user is temporary, the forbidden error is returned.
 //
-//   * If there is already a row in `groups_groups` with the found group as a parent
-//     and the authenticated user’s selfGroup’s id as a child, the unprocessable entity error is returned.
+//	  * If the group is a team and the user is already on a team that has attempts for same contest
+//	    while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
+//	    or if the group membership is frozen,
+//	    the unprocessable entity error is returned.
 //
-//   * If the group is a team and joining breaks entry conditions of at least one of the team's participations
-//     (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
-//     the unprocessable entity error is returned.
+//	  * If there is already a row in `groups_groups` with the found group as a parent
+//	    and the authenticated user’s selfGroup’s id as a child, the unprocessable entity error is returned.
 //
-//   * If the group requires some approvals from the user and those are not given in `approval`,
-//     the unprocessable entity error is returned with a list of missing approvals.
+//	  * If the group is a team and joining breaks entry conditions of at least one of the team's participations
+//	    (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied),
+//	    the unprocessable entity error is returned.
 //
-//   * If `groups.enforce_max_participants` is true and the number of participants >= `groups.max_participants`,
-//     the conflict error is returned.
-//     (The number of participants is computed as the number of non-expired users or teams which are direct children
-//      of the group + invitations (join requests are not counted)).
-// parameters:
-// - name: code
-//   in: query
-//   type: string
-//   required: true
-// - name: approvals
-//   in: query
-//   type: array
-//   items:
-//     type: string
-//     enum: [personal_info_view,lock_membership,watch]
-// responses:
-//   "201":
-//     description: Created. The request has successfully created the group relation.
-//     schema:
-//       "$ref": "#/definitions/createdResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "409":
-//     "$ref": "#/responses/conflictResponse"
-//   "422":
-//     "$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  * If the group requires some approvals from the user and those are not given in `approval`,
+//	    the unprocessable entity error is returned with a list of missing approvals.
+//
+//	  * If `groups.enforce_max_participants` is true and the number of participants >= `groups.max_participants`,
+//	    the conflict error is returned.
+//	    (The number of participants is computed as the number of non-expired users or teams which are direct children
+//	     of the group + invitations (join requests are not counted)).
+//		parameters:
+//			- name: code
+//				in: query
+//				type: string
+//				required: true
+//			- name: approvals
+//				in: query
+//				type: array
+//				items:
+//					type: string
+//					enum: [personal_info_view,lock_membership,watch]
+//		responses:
+//			"201":
+//					description: Created. The request has successfully created the group relation.
+//					schema:
+//						"$ref": "#/definitions/createdResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"409":
+//				"$ref": "#/responses/conflictResponse"
+//			"422":
+//				"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {

@@ -92,67 +92,68 @@ type rawParticipantProgressRaw struct {
 }
 
 // swagger:operation GET /items/{item_id}/participant-progress groups groupParticipantProgress
-// ---
-// summary: Get progress of a participant
-// description: >
-//              Returns the current progress of a participant on a given item.
+//
+//		---
+//		summary: Get progress of a participant
+//		description: >
+//	             Returns the current progress of a participant on a given item.
 //
 //
-//              For `{item_id}` and all its visible children,
-//              displays the results of the given participant
-//              (current user or `as_team_id` (if given) or `watched_group_id` (if given)).
-//              Only one of `as_team_id` and `watched_group_id` can be given.
-//              The results are sorted by `items_items.child_order`.
+//	             For `{item_id}` and all its visible children,
+//	             displays the results of the given participant
+//	             (current user or `as_team_id` (if given) or `watched_group_id` (if given)).
+//	             Only one of `as_team_id` and `watched_group_id` can be given.
+//	             The results are sorted by `items_items.child_order`.
 //
 //
-//              If the participant is a user, only the result corresponding to his best score counts
-//              (across all his teams and his own results) disregarding whether or not
-//              the score was done in a team.
+//	             If the participant is a user, only the result corresponding to his best score counts
+//	             (across all his teams and his own results) disregarding whether or not
+//	             the score was done in a team.
 //
 //
-//              Restrictions:
+//	             Restrictions:
 //
-//              * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on `{item_id}`,
-//                otherwise the 'forbidden' response is returned.
+//	             * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on `{item_id}`,
+//	               otherwise the 'forbidden' response is returned.
 //
-//              * If `{as_team_id}` is given, it should be a user's parent team group,
-//                otherwise the "forbidden" error is returned.
+//	             * If `{as_team_id}` is given, it should be a user's parent team group,
+//	               otherwise the "forbidden" error is returned.
 //
-//              * If `{watched_group_id}` is given, the user should be a manager of the group with the 'can_watch_members' permission,
-//                otherwise the "forbidden" error is returned.
+//	             * If `{watched_group_id}` is given, the user should be a manager of the group with the 'can_watch_members' permission,
+//	               otherwise the "forbidden" error is returned.
 //
-//              * If `{watched_group_id}` is given, it should be a user group or a team,
-//                otherwise the "forbidden" error is returned.
+//	             * If `{watched_group_id}` is given, it should be a user group or a team,
+//	               otherwise the "forbidden" error is returned.
 //
-//              * If `{watched_group_id}` is given, the current user should have `can_watch` >= 'result' on the `{item_id}` item,
-//                otherwise the "forbidden" error is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-//   format: int64
-// - name: watched_group_id
-//   in: query
-//   type: integer
-//   format: int64
-// responses:
-//   "200":
-//     description: OK. Success response with the participant's progress on item's children
-//     schema:
-//       "$ref": "#/definitions/groupParticipantProgressResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	             * If `{watched_group_id}` is given, the current user should have `can_watch` >= 'result' on the `{item_id}` item,
+//	               otherwise the "forbidden" error is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//				format: int64
+//			- name: watched_group_id
+//				in: query
+//				type: integer
+//				format: int64
+//		responses:
+//			"200":
+//				description: OK. Success response with the participant's progress on item's children
+//				schema:
+//					"$ref": "#/definitions/groupParticipantProgressResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

@@ -25,86 +25,87 @@ import (
 const maxAllowedLoginsToInvite = 100
 
 // swagger:operation POST /groups/{parent_group_id}/invitations group-memberships groupInvitationsCreate
-// ---
-// summary: Create group invitations
-// description:
-//   Lets an admin invite users, based on list of their logins, to join a group (identified by {parent_group_id}).
-//   On success the service creates new rows in `group_pending_requests` with
 //
-//     * `type` = "invitation"
+//		---
+//		summary: Create group invitations
+//		description:
+//	  Lets an admin invite users, based on list of their logins, to join a group (identified by {parent_group_id}).
+//	  On success the service creates new rows in `group_pending_requests` with
 //
-//     * `at` = current UTC time
+//	    * `type` = "invitation"
 //
-//   and `group_membership_changes` with
+//	    * `at` = current UTC time
 //
-//     * `action` = "invitation_created"
+//	  and `group_membership_changes` with
 //
-//     * `at` = current UTC time.
+//	    * `action` = "invitation_created"
 //
-//     * `initiator_id` = `users.group_id` of the authorized user.
+//	    * `at` = current UTC time.
 //
-//
-//   It also refreshes the access rights when needed.
+//	    * `initiator_id` = `users.group_id` of the authorized user.
 //
 //
-//   * Logins not corresponding to valid users or corresponding to temporary users are ignored (result = "not_found").
-//
-//   * If the `parent_group_id` corresponds to a team, the service skips users
-//     who are members of other teams participating in same contests as `parent_group_id`
-//     (expired/ended attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
-//
-//   * Pending group requests from users listed in `logins` become accepted (result = "success")
-//     if all needed approvals are given, or replaced by invitations otherwise.
-//
-//   * Pending invitations stay unchanged (result = "unchanged).
-//
-//   * Group members (already having `groups_groups`) are skipped (result = "invalid").
+//	  It also refreshes the access rights when needed.
 //
 //
-//   The action should not create cycles in the groups relations graph, otherwise
-//   the login gets skipped with `cycle` as the result.
+//	  * Logins not corresponding to valid users or corresponding to temporary users are ignored (result = "not_found").
+//
+//	  * If the `parent_group_id` corresponds to a team, the service skips users
+//	    who are members of other teams participating in same contests as `parent_group_id`
+//	    (expired/ended attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
+//
+//	  * Pending group requests from users listed in `logins` become accepted (result = "success")
+//	    if all needed approvals are given, or replaced by invitations otherwise.
+//
+//	  * Pending invitations stay unchanged (result = "unchanged).
+//
+//	  * Group members (already having `groups_groups`) are skipped (result = "invalid").
 //
 //
-//   If `groups.enforce_max_participants` is true and the new number of participants exceeds `groups.max_participants`,
-//   all the valid logins get skipped with `full` as the result.
-//   (The number of participants is computed as the number of non-expired users or teams which are direct children
-//   of the group + invitations (join requests are not counted)).
+//	  The action should not create cycles in the groups relations graph, otherwise
+//	  the login gets skipped with `cycle` as the result.
 //
 //
-//   The response status code on success (201) doesn't depend on per-group results.
+//	  If `groups.enforce_max_participants` is true and the new number of participants exceeds `groups.max_participants`,
+//	  all the valid logins get skipped with `full` as the result.
+//	  (The number of participants is computed as the number of non-expired users or teams which are direct children
+//	  of the group + invitations (join requests are not counted)).
 //
 //
-//   The authenticated user should be a manager of the `parent_group_id` with `can_manage` >= 'memberships',
-//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
-// consumes:
-// - application/json
-// parameters:
-// - name: parent_group_id
-//   in: path
-//   type: integer
-//   required: true
-// - in: body
-//   name: logins_info
-//   required: true
-//   schema:
-//     type: object
-//     required: [logins]
-//     properties:
-//       logins:
-//         type: array
-//         items:
-//           type: string
-// responses:
-//   "201":
-//     "$ref": "#/responses/createdLoginRelationsResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  The response status code on success (201) doesn't depend on per-group results.
+//
+//
+//	  The authenticated user should be a manager of the `parent_group_id` with `can_manage` >= 'memberships',
+//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//		consumes:
+//			- application/json
+//		parameters:
+//			- name: parent_group_id
+//				in: path
+//				type: integer
+//				required: true
+//			- in: body
+//				name: logins_info
+//				required: true
+//				schema:
+//					type: object
+//					required: [logins]
+//					properties:
+//						logins:
+//							type: array
+//							items:
+//								type: string
+//		responses:
+//			"201":
+//				"$ref": "#/responses/createdLoginRelationsResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
