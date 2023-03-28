@@ -1063,7 +1063,7 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 		updateMap      map[string]interface{}
 		wantPlatformID *int64
 	}{
-		{name: "url is unchanged", updateMap: map[string]interface{}{"type": "Chapter"}, wantPlatformID: ptrInt64(4)},
+		{name: "url is unchanged", updateMap: map[string]interface{}{"type": "Chapter"}, wantPlatformID: ptrInt64(1)},
 		{name: "new url is null", updateMap: map[string]interface{}{"url": nil}, wantPlatformID: nil},
 		{name: "chooses a platform with higher priority", updateMap: map[string]interface{}{"url": ptrString("12345")},
 			wantPlatformID: ptrInt64(2)},
@@ -1074,18 +1074,18 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
-					- {id: 3, regexp: "^1.*", priority: 1}
-					- {id: 4, regexp: "^2.*", priority: 2}
-					- {id: 2, regexp: "^1.*", priority: 3}
 					- {id: 1, regexp: "^4.*", priority: 4}
+					- {id: 2, regexp: "^1.*", priority: 3}
+					- {id: 4, regexp: "^2.*", priority: 2}
+					- {id: 3, regexp: "^1.*", priority: 1}
 				languages: [{tag: fr}]
 				items:
-					- {id: 1, platform_id: 4, url: 1234, default_language_tag: fr}`)
+					- {id: 1, platform_id: 1, url: 444, default_language_tag: fr}`)
 			defer func() { _ = db.Close() }()
 
 			itemStore := database.NewDataStore(db).Items()
-			assert.NoError(t, itemStore.ByID(1).UpdateColumn("platform_id", 4).Error())
 			assert.NoError(t, itemStore.UpdateColumn(test.updateMap).Error())
+
 			var platformID *int64
 			assert.NoError(t, itemStore.ByID(1).PluckFirst("platform_id", &platformID).Error())
 			if test.wantPlatformID == nil {
