@@ -47,82 +47,83 @@ type groupUserRequestsViewResponseRow struct {
 }
 
 // swagger:operation GET /groups/user-requests group-memberships groupUserRequestsView
-// ---
-// summary: List pending requests for managed groups
-// description: >
 //
-//   Returns a list of group pending requests created by users with types listed in `{types}`
-//   (rows from the `group_pending_requests` table) with basic info on joining/leaving users
-//   for the group (if `{group_id}` is given) and
-//   its descendants (if `{group_id}` is given and `{include_descendant_groups}` is 1)
-//   or for all groups the current user can manage
-//   (`can_manage` >= 'memberships') (if `{group_id}` is not given).
+//		---
+//		summary: List pending requests for managed groups
+//		description: >
 //
-//
-//   `first_name` and `last_name` are only shown for users whose personal info is visible to the current user.
-//   A user can see personal info of his own and of those members/candidates of his managed groups
-//   who have provided view access to their personal data.
+//	  Returns a list of group pending requests created by users with types listed in `{types}`
+//	  (rows from the `group_pending_requests` table) with basic info on joining/leaving users
+//	  for the group (if `{group_id}` is given) and
+//	  its descendants (if `{group_id}` is given and `{include_descendant_groups}` is 1)
+//	  or for all groups the current user can manage
+//	  (`can_manage` >= 'memberships') (if `{group_id}` is not given).
 //
 //
-//   If `{group_id}` is given, the authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
-//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
-// parameters:
-// - name: group_id
-//   in: query
-//   type: integer
-// - name: include_descendant_groups
-//   in: query
-//   type: integer
-//   enum: [0,1]
-//   default: 0
-// - name: types
-//   in: query
-//   default: [join_request]
-//   type: array
-//   items:
-//     type: string
-//     enum: [join_request,leave_request]
-// - name: sort
-//   in: query
-//   default: [group.id,-at,user.group_id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [at,-at,user.login,-user.login,group.name,-group.name,user.group_id,-user.group_id,group.id,-group.id]
-// - name: from.group.id
-//   description: Start the page from the request next to the request with
-//                `group_pending_requests.group_id`=`{from.group.id}`
-//                (only if `{group_id}` is not given; `{from.user.group_id}` is also required when `{from.group.id}` is given)
-//   in: query
-//   type: integer
-// - name: from.user.group_id
-//   description: Start the page from the request next to the request with
-//                `group_pending_requests.member_id`=`{from.user.group_id}`
-//                (`{from.group.id}` is also required if `{from.user.group_id}` is given and
-//                 either `{group_id}` is not given or descendants are included)
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display the first N requests
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. The array of pending group requests
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupUserRequestsViewResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  `first_name` and `last_name` are only shown for users whose personal info is visible to the current user.
+//	  A user can see personal info of his own and of those members/candidates of his managed groups
+//	  who have provided view access to their personal data.
+//
+//
+//	  If `{group_id}` is given, the authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
+//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//		parameters:
+//			- name: group_id
+//				in: query
+//				type: integer
+//			- name: include_descendant_groups
+//				in: query
+//				type: integer
+//				enum: [0,1]
+//				default: 0
+//			- name: types
+//				in: query
+//				default: [join_request]
+//				type: array
+//				items:
+//					type: string
+//					enum: [join_request,leave_request]
+//			- name: sort
+//				in: query
+//				default: [group.id,-at,user.group_id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [at,-at,user.login,-user.login,group.name,-group.name,user.group_id,-user.group_id,group.id,-group.id]
+//			- name: from.group.id
+//				description: Start the page from the request next to the request with
+//	               `group_pending_requests.group_id`=`{from.group.id}`
+//	               (only if `{group_id}` is not given; `{from.user.group_id}` is also required when `{from.group.id}` is given)
+//				in: query
+//				type: integer
+//			- name: from.user.group_id
+//				description: Start the page from the request next to the request with
+//	               `group_pending_requests.member_id`=`{from.user.group_id}`
+//	               (`{from.group.id}` is also required if `{from.user.group_id}` is given and
+//	                either `{group_id}` is not given or descendants are included)
+//				in: query
+//				type: integer
+//			- name: limit
+//				description: Display the first N requests
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. The array of pending group requests
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/groupUserRequestsViewResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) service.APIError {
 	store := srv.GetStore(r)
 	groupID, groupIDSet, includeDescendantGroups, types, apiError := srv.resolveParametersForGetUserRequests(store, r)

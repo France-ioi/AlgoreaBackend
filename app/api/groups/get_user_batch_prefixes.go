@@ -22,54 +22,55 @@ type userBatchPrefix struct {
 }
 
 // swagger:operation GET /groups/{group_id}/user-batch-prefixes groups userBatchPrefixesView
-// ---
-// summary: List user-batch prefixes
-// description: >
 //
-//   Lists the user-batch prefixes  with `allow_new` = 1 matching the input group's ancestors
-//   that are managed by the current user with 'can_manage:membership' permission
-//   (i.e., the `group_id` is a descendant of `user_batch_prefixes.group_id`).
+//		---
+//		summary: List user-batch prefixes
+//		description: >
+//
+//	  Lists the user-batch prefixes  with `allow_new` = 1 matching the input group's ancestors
+//	  that are managed by the current user with 'can_manage:membership' permission
+//	  (i.e., the `group_id` is a descendant of `user_batch_prefixes.group_id`).
 //
 //
-//   The authenticated user should be a manager of `group_id` with 'can_manage:membership' permission at least,
-//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
-// parameters:
-// - name: group_id
-//   in: path
-//   required: true
-//   type: integer
-// - name: sort
-//   in: query
-//   default: [group_prefix]
-//   type: array
-//   items:
-//     type: string
-//     enum: [group_prefix,-group_prefix]
-// - name: from.group_prefix
-//   description: Start the page from the prefix next to the prefix with `user_batch_prefixes.group_prefix` = `{from.group_prefix}`
-//   in: query
-//   type: string
-// - name: limit
-//   description: Display the first N user-batch prefixes
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. The array of user-batch prefixes
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/userBatchPrefix"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  The authenticated user should be a manager of `group_id` with 'can_manage:membership' permission at least,
+//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//		parameters:
+//			- name: group_id
+//				in: path
+//				required: true
+//				type: integer
+//			- name: sort
+//				in: query
+//				default: [group_prefix]
+//				type: array
+//				items:
+//					type: string
+//					enum: [group_prefix,-group_prefix]
+//			- name: from.group_prefix
+//				description: Start the page from the prefix next to the prefix with `user_batch_prefixes.group_prefix` = `{from.group_prefix}`
+//				in: query
+//				type: string
+//			- name: limit
+//				description: Display the first N user-batch prefixes
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. The array of user-batch prefixes
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/userBatchPrefix"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

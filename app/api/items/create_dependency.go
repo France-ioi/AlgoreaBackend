@@ -22,52 +22,53 @@ type itemDependencyCreateRequest struct {
 }
 
 // swagger:operation POST /items/{dependent_item_id}/prerequisites/{prerequisite_item_id} items itemDependencyCreate
-// ---
-// summary: Create an item dependency
-// description: >
 //
-//   Creates an item dependency with parameters from the input data without any effect to access rights.
+//		---
+//		summary: Create an item dependency
+//		description: >
 //
-//   The user should have
+//	  Creates an item dependency with parameters from the input data without any effect to access rights.
 //
-//     * `can_view` >= 'info' on the `{prerequisite_item_id}` item,
-//     * `can_edit` >= 'all' on the `{dependent_item_id}` item,
-//     * if `grant_content_view` = true, the user should also have `can_grant_view` >= 'content'
-//       on the `{dependent_item_id}` item,
+//	  The user should have
 //
-//   otherwise the "forbidden" response is returned.
-// parameters:
-// - name: dependent_item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: prerequisite_item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - in: body
-//   name: data
-//   required: true
-//   description: The item dependency to create
-//   schema:
-//     "$ref": "#/definitions/itemDependencyCreateRequest"
-// responses:
-//   "201":
-//     description: Created. The request has successfully created the item dependency.
-//     schema:
-//       "$ref": "#/definitions/createdResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "422":
-//     "$ref": "#/responses/unprocessableEntityResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	    * `can_view` >= 'info' on the `{prerequisite_item_id}` item,
+//	    * `can_edit` >= 'all' on the `{dependent_item_id}` item,
+//	    * if `grant_content_view` = true, the user should also have `can_grant_view` >= 'content'
+//	      on the `{dependent_item_id}` item,
+//
+//	  otherwise the "forbidden" response is returned.
+//		parameters:
+//			- name: dependent_item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: prerequisite_item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- in: body
+//				name: data
+//				required: true
+//				description: The item dependency to create
+//				schema:
+//					"$ref": "#/definitions/itemDependencyCreateRequest"
+//		responses:
+//			"201":
+//				description: Created. The request has successfully created the item dependency.
+//				schema:
+//					"$ref": "#/definitions/createdResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"422":
+//				"$ref": "#/responses/unprocessableEntityResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) service.APIError {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(r, "dependent_item_id")
 	if err != nil {

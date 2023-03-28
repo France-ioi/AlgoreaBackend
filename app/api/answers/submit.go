@@ -18,38 +18,39 @@ import (
 )
 
 // swagger:operation POST /answers answers itemGetAnswerToken
-// ---
-// summary: Generate an answer token
-// description: Generate and return an answer token from user's answer and task token.
-//   It is used to bind an answer with task parameters so that the TaskGrader can check if they have not been altered.
 //
-//   * task_token.idUser should be the current user.
+//		---
+//		summary: Generate an answer token
+//		description: Generate and return an answer token from user's answer and task token.
+//	  It is used to bind an answer with task parameters so that the TaskGrader can check if they have not been altered.
 //
-//   * The user should have submission rights on `task_token.idItemLocal`.
+//	  * task_token.idUser should be the current user.
 //
-//   * The attempt should allow submission (`attempts.allows_submissions_until` should be a time in the future).
+//	  * The user should have submission rights on `task_token.idItemLocal`.
 //
-//   If any of the preconditions fails, the 'forbidden' error is returned.
-// parameters:
-// - name: answer information
-//   in: body
-//   required: true
-//   schema:
-//     "$ref": "#/definitions/submitRequestWrapper"
-// responses:
-//   "201":
-//     description: "Created. Success response with answer_token"
-//     in: body
-//     schema:
-//       "$ref": "#/definitions/answerSubmitResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  * The attempt should allow submission (`attempts.allows_submissions_until` should be a time in the future).
+//
+//	  If any of the preconditions fails, the 'forbidden' error is returned.
+//		parameters:
+//			- name: answer information
+//				in: body
+//				required: true
+//				schema:
+//					"$ref": "#/definitions/submitRequestWrapper"
+//		responses:
+//			"201":
+//				description: "Created. Success response with answer_token"
+//				in: body
+//				schema:
+//					"$ref": "#/definitions/answerSubmitResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	requestData := SubmitRequest{PublicKey: srv.TokenConfig.PublicKey}
 

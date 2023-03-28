@@ -10,50 +10,51 @@ import (
 )
 
 // swagger:operation POST /items/{ids}/start-result items resultStart
-// ---
-// summary: Start a result
-// description: >
-//   Creates a new started result for the given item and attempt or sets `started_at` of an existing result (if it hasn't been set).
-//   If `as_team_id` is given, the created result is linked to the `as_team_id` group instead of the user's self group.
+//
+//		---
+//		summary: Start a result
+//		description: >
+//	  Creates a new started result for the given item and attempt or sets `started_at` of an existing result (if it hasn't been set).
+//	  If `as_team_id` is given, the created result is linked to the `as_team_id` group instead of the user's self group.
 //
 //
-//   Restrictions:
+//				Restrictions:
 //
-//     * if `as_team_id` is given, it should be a user's parent team group,
-//     * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id) of a group
-//       the participant is a descendant of or manages,
-//     * the last item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
-//     * `{ids}` should be an ordered list of parent-child items,
-//     * the group starting the result should have at least 'content' access on each of the items in `{ids}`,
-//     * the participant should have a started, allowing submission, not ended result for each item but the last,
-//       with `{attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
-//     * if `{ids}` consists of only one item, the `{attempt_id}` should be zero,
+//	    * if `as_team_id` is given, it should be a user's parent team group,
+//	    * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id) of a group
+//	      the participant is a descendant of or manages,
+//	    * the last item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
+//	    * `{ids}` should be an ordered list of parent-child items,
+//	    * the group starting the result should have at least 'content' access on each of the items in `{ids}`,
+//	    * the participant should have a started, allowing submission, not ended result for each item but the last,
+//	      with `{attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//	    * if `{ids}` consists of only one item, the `{attempt_id}` should be zero,
 //
-//   otherwise the 'forbidden' error is returned.
-// parameters:
-// - name: ids
-//   in: path
-//   type: string
-//   description: slash-separated list of item IDs
-//   required: true
-// - name: attempt_id
-//   in: query
-//   type: integer
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-// responses:
-//   "201":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  otherwise the 'forbidden' error is returned.
+//		parameters:
+//			- name: ids
+//				in: path
+//				type: string
+//				description: slash-separated list of item IDs
+//				required: true
+//			- name: attempt_id
+//				in: query
+//				type: integer
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//		responses:
+//			"201":
+//				"$ref": "#/responses/updatedResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 

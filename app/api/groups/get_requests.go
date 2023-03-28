@@ -57,80 +57,81 @@ type groupRequestsViewResponseRow struct {
 }
 
 // swagger:operation GET /groups/{group_id}/requests group-memberships groupRequestsView
-// ---
-// summary: List pending requests and invitations for a group
-// description: >
 //
-//   Returns a list of group requests and invitations
-//   (rows from the `group_membership_changes` table with `group_id` = `{group_id}` and
-//   `action` = "invitation_created"/"join_request_created"/"invitation_refused"/"join_request_refused")
-//   with basic info on joining (invited/requesting) users and inviting users.
+//		---
+//		summary: List pending requests and invitations for a group
+//		description: >
 //
-//
-//   When `old_rejections_weeks` is given, only those rejected invitations/requests
-//   (`group_membership_changes.action` is "invitation_refused" or "join_request_refused") are shown
-//   that are created in the last `old_rejections_weeks` weeks.
-//   Otherwise all rejected invitations/requests are shown.
+//	  Returns a list of group requests and invitations
+//	  (rows from the `group_membership_changes` table with `group_id` = `{group_id}` and
+//	  `action` = "invitation_created"/"join_request_created"/"invitation_refused"/"join_request_refused")
+//	  with basic info on joining (invited/requesting) users and inviting users.
 //
 //
-//   `first_name` and `last_name` are only shown for joining users whose personal info is visible to the current user.
-//   A user can see personal info of his own and of those members/candidates of his managed groups
-//   who have provided view access to their personal data.
+//	  When `old_rejections_weeks` is given, only those rejected invitations/requests
+//	  (`group_membership_changes.action` is "invitation_refused" or "join_request_refused") are shown
+//	  that are created in the last `old_rejections_weeks` weeks.
+//	  Otherwise all rejected invitations/requests are shown.
 //
 //
-//   Inviting users are displayed only if `group_membership_changes.action` = "invitation_created".
+//	  `first_name` and `last_name` are only shown for joining users whose personal info is visible to the current user.
+//	  A user can see personal info of his own and of those members/candidates of his managed groups
+//	  who have provided view access to their personal data.
 //
 //
-//   The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
-//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
-// parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: old_rejections_weeks
-//   in: query
-//   type: integer
-// - name: sort
-//   in: query
-//   default: [-at,member_id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [at,-at,joining_user.login,-joining_user.login,action,-action,member_id,-member_id]
-// - name: from.at
-//   description: Start the page from the request/invitation next to the request/invitation with
-//                `group_membership_changes.at` = `{from.at}`
-//                (`{from.member_id}` is also required if `{from.at}` is given)
-//   in: query
-//   type: string
-// - name: from.member_id
-//   description: Start the page from the request/invitation next to the request/invitation with
-//                `group_membership_changes.member_id`=`{from.member_id}`
-//                (`{from.at}` is also required if `{from.member_id}` is given)
-//   in: query
-//   type: integer
-// - name: limit
-//   description: Display the first N requests/invitations
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. The array of group requests/invitations
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupRequestsViewResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  Inviting users are displayed only if `group_membership_changes.action` = "invitation_created".
+//
+//
+//	  The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
+//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//		parameters:
+//			- name: group_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: old_rejections_weeks
+//				in: query
+//				type: integer
+//			- name: sort
+//				in: query
+//				default: [-at,member_id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [at,-at,joining_user.login,-joining_user.login,action,-action,member_id,-member_id]
+//			- name: from.at
+//				description: Start the page from the request/invitation next to the request/invitation with
+//	               `group_membership_changes.at` = `{from.at}`
+//	               (`{from.member_id}` is also required if `{from.at}` is given)
+//				in: query
+//				type: string
+//			- name: from.member_id
+//				description: Start the page from the request/invitation next to the request/invitation with
+//	               `group_membership_changes.member_id`=`{from.member_id}`
+//	               (`{from.at}` is also required if `{from.member_id}` is given)
+//				in: query
+//				type: integer
+//			- name: limit
+//				description: Display the first N requests/invitations
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. The array of group requests/invitations
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/groupRequestsViewResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

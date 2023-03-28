@@ -28,45 +28,46 @@ type itemStringUpdateRequest struct {
 }
 
 // swagger:operation PUT /items/{item_id}/strings/{language_tag} items itemStringUpdate
-// ---
-// summary: Update an item string entry
-// description: >
 //
-//   Updates the corresponding `items_strings` row identified by `item_id` and `language_tag` if exists or
-//   creates a new one otherwise.
+//		---
+//		summary: Update an item string entry
+//		description: >
 //
-//
-//   If `language_tag` = 'default', uses the item’s default language.
+//	  Updates the corresponding `items_strings` row identified by `item_id` and `language_tag` if exists or
+//	  creates a new one otherwise.
 //
 //
-//   The user should have `can_view` >= 'content' and `can_edit` >= 'all' on the item, otherwise the "forbidden" response is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: language_tag
-//   in: path
-//   type: string
-//   required: true
-// - in: body
-//   name: data
-//   required: true
-//   description: New item property values
-//   schema:
-//     "$ref": "#/definitions/itemStringUpdateRequest"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  If `language_tag` = 'default', uses the item’s default language.
+//
+//
+//	  The user should have `can_view` >= 'content' and `can_edit` >= 'all' on the item, otherwise the "forbidden" response is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: language_tag
+//				in: path
+//				type: string
+//				required: true
+//			- in: body
+//				name: data
+//				required: true
+//				description: New item property values
+//				schema:
+//					"$ref": "#/definitions/itemStringUpdateRequest"
+//		responses:
+//			"200":
+//				"$ref": "#/responses/updatedResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

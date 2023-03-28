@@ -10,70 +10,71 @@ import (
 )
 
 // swagger:operation GET /contests/{item_id}/groups/{group_id}/members/additional-times contests contestListMembersAdditionalTime
-// ---
-// summary: List additional times on a contest
-// description: >
-//                For all descendant
 //
-//                  * teams if `items.entry_participant_type` = 'Team'
-//                  * end-users groups otherwise
+//		---
+//		summary: List additional times on a contest
+//		description: >
+//	               For all descendant
 //
-//                linked to the item via `attempts.root_item_id`
-//                and able to view (at least 'can_view:info') or enter (`can_enter_from` < `can_enter_until`) the item,
-//                the service returns their `group_id`, `name`, `type` and `additional_time` & `total_additional_time`.
+//	                 * teams if `items.entry_participant_type` = 'Team'
+//	                 * end-users groups otherwise
+//
+//	               linked to the item via `attempts.root_item_id`
+//	               and able to view (at least 'can_view:info') or enter (`can_enter_from` < `can_enter_until`) the item,
+//	               the service returns their `group_id`, `name`, `type` and `additional_time` & `total_additional_time`.
 //
 //
-//                * `additional_time` defaults to 0 if no such `groups_contest_items`
+//	               * `additional_time` defaults to 0 if no such `groups_contest_items`
 //
-//                * `total_additional_time` is the sum of additional times of this group on the item through all its
-//                  `groups_ancestors` (even from different branches, but each ancestors counted only once), defaulting to 0
+//	               * `total_additional_time` is the sum of additional times of this group on the item through all its
+//	                 `groups_ancestors` (even from different branches, but each ancestors counted only once), defaulting to 0
 //
-//                Restrictions:
-//                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
-//                    and `can_watch` >= 'result' on the input item;
-//                  * the authenticated user should be a manager of the `group_id`
-//                    with `can_grant_group_access` and `can_watch_members` permissions.
-// parameters:
-// - name: item_id
-//   description: "`id` of a timed contest"
-//   in: path
-//   type: integer
-//   required: true
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: from.id
-//   description: Start the page from the group next to the group with `id`=`{from.id}`
-//   in: query
-//   type: integer
-// - name: sort
-//   in: query
-//   default: [name,id]
-//   type: array
-//   items:
-//     type: string
-//     enum: [name,-name,id,-id]
-// - name: limit
-//   description: Display the first N groups
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. Success response with contests info
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/contestInfo"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	               Restrictions:
+//	                 * `item_id` should be a timed contest;
+//	                 * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
+//	                   and `can_watch` >= 'result' on the input item;
+//	                 * the authenticated user should be a manager of the `group_id`
+//	                   with `can_grant_group_access` and `can_watch_members` permissions.
+//		parameters:
+//			- name: item_id
+//				description: "`id` of a timed contest"
+//				in: path
+//				type: integer
+//				required: true
+//			- name: group_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: from.id
+//				description: Start the page from the group next to the group with `id`=`{from.id}`
+//				in: query
+//				type: integer
+//			- name: sort
+//				in: query
+//				default: [name,id]
+//				type: array
+//				items:
+//					type: string
+//					enum: [name,-name,id,-id]
+//			- name: limit
+//				description: Display the first N groups
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. Success response with contests info
+//				schema:
+//					type: array
+//					items:
+//	        	"$ref": "#/definitions/contestInfo"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 

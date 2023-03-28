@@ -22,43 +22,44 @@ type groupBreadcrumbsViewResponseRow struct {
 }
 
 // swagger:operation GET /groups/{ids}/breadcrumbs group-memberships groupBreadcrumbsView
-// ---
-// summary: Get group breadcrumbs
-// description: >
 //
-//   Returns brief information for groups listed in `ids`.
+//		---
+//		summary: Get group breadcrumbs
+//		description: >
+//
+//	  Returns brief information for groups listed in `ids`.
 //
 //
-//   Each group must be visible to the current user, so it should be either
+//	  Each group must be visible to the current user, so it should be either
 //
-//     1. an ancestor of a group the current user joined, or
-//     2. an ancestor of a non-user group he manages, or
-//     3. a descendant of a group he manages, or
-//     4. a group with is_public=1,
+//	    1. an ancestor of a group the current user joined, or
+//	    2. an ancestor of a non-user group he manages, or
+//	    3. a descendant of a group he manages, or
+//	    4. a group with is_public=1,
 //
-//   otherwise the 'forbidden' error is returned. Also, there must be no duplicates in the list.
+//	  otherwise the 'forbidden' error is returned. Also, there must be no duplicates in the list.
 //
-// parameters:
-// - name: ids
-//   in: path
-//   type: string
-//   description: slash-separated list of IDs (no more than 10 IDs allowed)
-//   required: true
-// responses:
-//   "200":
-//     description: OK. Success response with an array of group information
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/groupBreadcrumbsViewResponseRow"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//		parameters:
+//			- name: ids
+//				in: path
+//				type: string
+//				description: slash-separated list of IDs (no more than 10 IDs allowed)
+//				required: true
+//		responses:
+//			"200":
+//				description: OK. Success response with an array of group information
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/groupBreadcrumbsViewResponseRow"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
 	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", 10)
 	if err != nil {

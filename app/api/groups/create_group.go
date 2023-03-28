@@ -21,36 +21,37 @@ type createGroupRequest struct {
 }
 
 // swagger:operation POST /groups groups groupCreate
-// ---
-// summary: Create a group
-// description: >
 //
-//   Creates a group with the input `name`, `type`, `created_at` = now(), and default values in other columns.
+//		---
+//		summary: Create a group
+//		description: >
 //
-//
-//   Also, the service sets the authenticated user as a manager of the group with the highest level of permissions.
-//   After everything, it propagates group ancestors.
+//	  Creates a group with the input `name`, `type`, `created_at` = now(), and default values in other columns.
 //
 //
-//   The user should not be temporary, otherwise the "forbidden" response is returned.
-// parameters:
-// - in: body
-//   name: data
-//   required: true
-//   description: The group to create
-//   schema:
-//     "$ref": "#/definitions/createGroupRequest"
-// responses:
-//   "201":
-//     "$ref": "#/responses/createdWithIDResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  Also, the service sets the authenticated user as a manager of the group with the highest level of permissions.
+//	  After everything, it propagates group ancestors.
+//
+//
+//	  The user should not be temporary, otherwise the "forbidden" response is returned.
+//		parameters:
+//			- in: body
+//				name: data
+//				required: true
+//				description: The group to create
+//				schema:
+//					"$ref": "#/definitions/createGroupRequest"
+//		responses:
+//			"201":
+//				"$ref": "#/responses/createdWithIDResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

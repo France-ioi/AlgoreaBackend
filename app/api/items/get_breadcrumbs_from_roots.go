@@ -29,56 +29,57 @@ type breadcrumbElement struct {
 }
 
 // swagger:operation GET /items/{item_id}/breadcrumbs-from-roots items itemBreadcrumbsFromRootsGet
-// ---
-// summary: List all possible breadcrumbs for a started item using `item_id`
-// description: >
-//   Lists all paths from a root (`root_activity_id`|`root_skill_id` of groups the participant is descendant of or manages)
-//   to the given item that the participant may have used to access this item,
-//   so path for which the participant has a started attempt (possibly ended/not-allowing-submissions) on every item.
+//
+//	---
+//	summary: List all possible breadcrumbs for a started item using `item_id`
+//	description: >
+//		Lists all paths from a root (`root_activity_id`|`root_skill_id` of groups the participant is descendant of or manages)
+//		to the given item that the participant may have used to access this item,
+//		so path for which the participant has a started attempt (possibly ended/not-allowing-submissions) on every item.
 //
 //
-//   The participant is `participant_id` (if given) or the current user (otherwise).
+//		The participant is `participant_id` (if given) or the current user (otherwise).
 //
 //
-//   Paths can contain only items visible to the current user
-//   (`can_view`>='content' on every item on the path but the last one and `can_view`>='info' for the last one).
-//   The item info (`title` and `language_tag`) in the paths is in the current user's language,
-//   or the item's default language (if not available).
+//		Paths can contain only items visible to the current user
+//		(`can_view`>='content' on every item on the path but the last one and `can_view`>='info' for the last one).
+//		The item info (`title` and `language_tag`) in the paths is in the current user's language,
+//		or the item's default language (if not available).
 //
 //
-//   Restrictions:
+//		Restrictions:
 //
-//     * if `participant_id` is given, it should be a descendant of a group the current user can manage with `can_watch_members`,
-//     * at least one path should exist,
+//			* if `participant_id` is given, it should be a descendant of a group the current user can manage with `can_watch_members`,
+//			* at least one path should exist,
 //
-//   otherwise the 'forbidden' error is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: participant_id
-//   in: query
-//   type: integer
-//   format: int64
-// responses:
-//   "200":
-//     description: OK. Success response with the found item path
-//     schema:
-//       type: array
-//       items:
-//         type: array
-//         items:
-//           "$ref": "#/definitions/breadcrumbElement"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//		otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: item_id
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//		- name: participant_id
+//			in: query
+//			type: integer
+//			format: int64
+//	responses:
+//		"200":
+//			description: OK. Success response with the found item path
+//			schema:
+//				type: array
+//				items:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/breadcrumbElement"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
@@ -89,40 +90,43 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 }
 
 // swagger:operation GET /items/by-text-id/{text_id}/breadcrumbs-from-roots items itemBreadcrumbsFromRootsByTextIdGet
-// ---
-// summary: List all possible breadcrumbs for a started item using `text_id`
-// description: >
-//   Same as [/items/{item_id}/breadcrumbs-from-roots](#tag/items/operation/itemBreadcrumbsFromRootsGet)
-//   but using `text_id`.
 //
-//   * `text_id` must be URL-encoded.
+//	---
+//	summary: List all possible breadcrumbs for a started item using `text_id`
+//	description: >
 //
-// parameters:
-// - name: text_id
-//   in: path
-//   type: string
-//   required: true
-// - name: participant_id
-//   in: query
-//   type: integer
-//   format: int64
-// responses:
-//   "200":
-//     description: OK. Success response with the found item path
-//     schema:
-//       type: array
-//       items:
-//         type: array
-//         items:
-//           "$ref": "#/definitions/breadcrumbElement"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//		Same as [/items/{item_id}/breadcrumbs-from-roots](#tag/items/operation/itemBreadcrumbsFromRootsGet)
+//		but using `text_id`.
+//
+//		* `text_id` must be URL-encoded.
+//
+//	parameters:
+//		- name: text_id
+//			in: path
+//			type: string
+//			required: true
+//		- name: participant_id
+//			in: query
+//			type: integer
+//			format: int64
+//
+//	responses:
+//		"200":
+//			description: OK. Success response with the found item path
+//			schema:
+//				type: array
+//				items:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/breadcrumbElement"
+//		"400":
+//	  	"$ref": "#/responses/badRequestResponse"
+//		"401":
+//	  	"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//	  	"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//	  	"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *http.Request) service.APIError {
 	textID := chi.URLParam(r, "text_id")
 

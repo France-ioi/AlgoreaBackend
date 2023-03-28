@@ -65,47 +65,48 @@ type managerGeneratedPermissions struct {
 }
 
 // swagger:operation PUT /groups/{source_group_id}/permissions/{group_id}/{item_id} groups updatePermissions
-// ---
-// summary: Update permissions
-// description: Let a manager of a group give/withdraw permissions on an item to a group.
 //
-//   * The user giving the access must be a manager (with `can_grant_group_access` permission)
-//     of `{source_group_id}` which should be an ancestor of the `{group_id}`.
+//		---
+//		summary: Update permissions
+//		description: Let a manager of a group give/withdraw permissions on an item to a group.
 //
-//   * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
-//     for the item.
+//	  * The user giving the access must be a manager (with `can_grant_group_access` permission)
+//	    of `{source_group_id}` which should be an ancestor of the `{group_id}`.
 //
-//   * The group must already have access to one of the parents of the item or the item itself. If it does not,
-//     the item must be a root activity/skill for an ancestor of the group.
-// parameters:
-// - name: group_id
-//   in: path
-//   required: true
-//   type: integer
-// - name: source_group_id
-//   in: path
-//   required: true
-//   type: integer
-// - name: item_id
-//   in: path
-//   required: true
-//   type: integer
-// - name: access rights information
-//   in: body
-//   required: true
-//   schema:
-//     "$ref": "#/definitions/updatePermissionsInput"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
+//	    for the item.
+//
+//	  * The group must already have access to one of the parents of the item or the item itself. If it does not,
+//	    the item must be a root activity/skill for an ancestor of the group.
+//		parameters:
+//			- name: group_id
+//				in: path
+//				required: true
+//				type: integer
+//			- name: source_group_id
+//				in: path
+//				required: true
+//				type: integer
+//			- name: item_id
+//				in: path
+//				required: true
+//				type: integer
+//			- name: access rights information
+//				in: body
+//				required: true
+//				schema:
+//					"$ref": "#/definitions/updatePermissionsInput"
+//		responses:
+//			"200":
+//				"$ref": "#/responses/updatedResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) service.APIError {
 	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(r, "source_group_id")
 	if err != nil {

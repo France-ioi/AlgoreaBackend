@@ -43,42 +43,43 @@ type groupNavigationViewResponse struct {
 }
 
 // swagger:operation GET /groups/{group_id}/navigation group-memberships groupNavigationView
-// ---
-// summary: Get navigation data
-// description: >
 //
-//   Lists child groups visible to the user, so either 1) ancestors of a group he joined, or
-//   2) ancestors of a non-user group he manages, or 3) descendants of a group he manages, or
-//   4) groups with `is_public` = 1. Ordered alphabetically by name.
+//		---
+//		summary: Get navigation data
+//		description: >
+//
+//	  Lists child groups visible to the user, so either 1) ancestors of a group he joined, or
+//	  2) ancestors of a non-user group he manages, or 3) descendants of a group he manages, or
+//	  4) groups with `is_public` = 1. Ordered alphabetically by name.
 //
 //
-//   The input group should be visible to the current user with the same definition as above,
-//   otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//	  The input group should be visible to the current user with the same definition as above,
+//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 //
-// parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: limit
-//   description: Display the first N children
-//   in: query
-//   type: integer
-//   maximum: 1000
-//   default: 500
-// responses:
-//   "200":
-//     description: OK. Success response with an array root groups
-//     schema:
-//       "$ref": "#/definitions/groupNavigationViewResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//		parameters:
+//			- name: group_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: limit
+//				description: Display the first N children
+//				in: query
+//				type: integer
+//				maximum: 1000
+//				default: 500
+//		responses:
+//			"200":
+//				description: OK. Success response with an array root groups
+//				schema:
+//					"$ref": "#/definitions/groupNavigationViewResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
