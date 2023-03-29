@@ -15,22 +15,23 @@ type userDataUpdateRequest struct {
 }
 
 // swagger:operation PUT /current-user users userDataUpdate
-// ---
-// summary: Update user's data
-// description: Allows changing the user's default language
-// parameters:
-// - name: data
-//   in: body
-//   required: true
-//   schema:
-//     "$ref": "#/definitions/userDataUpdateRequest"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	---
+//	summary: Update user's data
+//	description: Allows changing the user's default language
+//	parameters:
+//		- name: data
+//			in: body
+//			required: true
+//			schema:
+//				"$ref": "#/definitions/userDataUpdateRequest"
+//	responses:
+//		"200":
+//			"$ref": "#/responses/updatedResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) update(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 

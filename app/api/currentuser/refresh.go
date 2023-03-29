@@ -12,17 +12,18 @@ import (
 )
 
 // swagger:operation PUT /current-user/refresh users userDataRefresh
-// ---
-// summary: Refresh the local user info cache
-// description: Gets the user info from the login module, updates the local user info cache stored in the `users` table
-//              and badges.
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//		---
+//		summary: Refresh the local user info cache
+//		description: Gets the user info from the login module, updates the local user info cache stored in the `users` table
+//	             and badges.
+//		responses:
+//			"200":
+//				"$ref": "#/responses/updatedResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	accessToken := auth.BearerTokenFromContext(r.Context())

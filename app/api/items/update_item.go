@@ -62,54 +62,55 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 }
 
 // swagger:operation PUT /items/{item_id} items itemUpdate
-// ---
-// summary: Update an item
-// description: >
 //
-//   Changes the given item's properties using the input data.
+//		---
+//		summary: Update an item
+//		description: >
 //
-//
-//   If the `children` array is given, the service removes relations between the item and its former children,
-//   inserts relations between the item and its new children into `items_items`, and propagates `permissions_generated`.
-//   (The only allowed parent-child relations are skills-*, chapter-task, chapter-chapter.
-//   Otherwise the "bad request" error is returned.)
+//	  Changes the given item's properties using the input data.
 //
 //
-//   If `requires_explicit_entry` is being set to true and `participants_group_id` is NULL,
-//   the service creates a participants group, links `participants_group_id` to it,
-//   and gives this group 'can_view:content' permission on the new item.
+//	  If the `children` array is given, the service removes relations between the item and its former children,
+//	  inserts relations between the item and its new children into `items_items`, and propagates `permissions_generated`.
+//	  (The only allowed parent-child relations are skills-*, chapter-task, chapter-chapter.
+//	  Otherwise the "bad request" error is returned.)
 //
 //
-//   The user should have
+//	  If `requires_explicit_entry` is being set to true and `participants_group_id` is NULL,
+//	  the service creates a participants group, links `participants_group_id` to it,
+//	  and gives this group 'can_view:content' permission on the new item.
 //
-//     * `can_view` >= 'content' on the item, otherwise the "forbidden" response is returned;
-//     * `can_edit` >= 'children' on the item to edit children or `can_edit` >= 'all' to edit the item's properties,
-//       otherwise the "forbidden" response is returned;
-//     * `can_view` != 'none' on the `children` items (if any), otherwise the "bad request"
-//       response is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - in: body
-//   name: data
-//   required: true
-//   description: New item property values
-//   schema:
-//     "$ref": "#/definitions/itemEditRequest"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	  The user should have
+//
+//	    * `can_view` >= 'content' on the item, otherwise the "forbidden" response is returned;
+//	    * `can_edit` >= 'children' on the item to edit children or `can_edit` >= 'all' to edit the item's properties,
+//	      otherwise the "forbidden" response is returned;
+//	    * `can_view` != 'none' on the `children` items (if any), otherwise the "bad request"
+//	      response is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- in: body
+//				name: data
+//				required: true
+//				description: New item property values
+//				schema:
+//					"$ref": "#/definitions/itemEditRequest"
+//		responses:
+//			"200":
+//				"$ref": "#/responses/updatedResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

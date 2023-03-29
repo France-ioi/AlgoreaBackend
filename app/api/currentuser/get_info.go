@@ -106,20 +106,21 @@ type getInfoData struct {
 }
 
 // swagger:operation GET /current-user users userData
-// ---
-// summary: Get profile info for the current user
-// description: Returns the data from the `users` table.
-// responses:
-//   "200":
-//     description: OK. Success response with user's data
-//     schema:
-//       "$ref": "#/definitions/userData"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	---
+//	summary: Get profile info for the current user
+//	description: Returns the data from the `users` table.
+//	responses:
+//		"200":
+//				description: OK. Success response with user's data
+//				schema:
+//					"$ref": "#/definitions/userData"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 

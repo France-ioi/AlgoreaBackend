@@ -151,64 +151,65 @@ type rawListChildItem struct {
 }
 
 // swagger:operation GET /items/{item_id}/children items itemChildrenView
-// ---
-// summary: Get item children
-// description: Lists children of the specified item
-//              and the current user's (or the team's given in `as_team_id`) interactions with them
-//              (from tables `items`, `items_items`, `items_string`, `results`, `permissions_generated`)
-//              within the context of the given `{attempt_id}`.
-//              Only items visible to the current user (or to the `{as_team_id}` team) are shown.
-//              If `{show_invisible_items}` = 1, items invisible to the current user (or to the `{as_team_id}` team) are shown too,
-//              but with a limited set of fields.
-//              If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
+//
+//		---
+//		summary: Get item children
+//		description: Lists children of the specified item
+//	             and the current user's (or the team's given in `as_team_id`) interactions with them
+//	             (from tables `items`, `items_items`, `items_string`, `results`, `permissions_generated`)
+//	             within the context of the given `{attempt_id}`.
+//	             Only items visible to the current user (or to the `{as_team_id}` team) are shown.
+//	             If `{show_invisible_items}` = 1, items invisible to the current user (or to the `{as_team_id}` team) are shown too,
+//	             but with a limited set of fields.
+//	             If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
 //
 //
-//              * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on the specified item
-//                and a started result for it, otherwise the 'forbidden' response is returned.
+//	             * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on the specified item
+//	               and a started result for it, otherwise the 'forbidden' response is returned.
 //
-//              * If `as_team_id` is given, it should be a user's parent team group,
-//                otherwise the "forbidden" error is returned.
+//	             * If `as_team_id` is given, it should be a user's parent team group,
+//	               otherwise the "forbidden" error is returned.
 //
-//              * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
-//                otherwise the "forbidden" error is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: attempt_id
-//   description: "`id` of an attempt for the item."
-//   in: query
-//   type: integer
-//   required: true
-// - name: show_invisible_items
-//   in: query
-//   description: If 1, show invisible items as well
-//   type: integer
-//   enum: [0,1]
-//   default: 0
-// - name: as_team_id
-//   in: query
-//   type: integer
-// - name: watched_group_id
-//   in: query
-//   type: integer
-// responses:
-//   "200":
-//     description: OK. Success response with item children data
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/definitions/childItem"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	             * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//	               otherwise the "forbidden" error is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: attempt_id
+//				description: "`id` of an attempt for the item."
+//				in: query
+//				type: integer
+//				required: true
+//			- name: show_invisible_items
+//				in: query
+//				description: If 1, show invisible items as well
+//				type: integer
+//				enum: [0,1]
+//				default: 0
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//			- name: watched_group_id
+//				in: query
+//				type: integer
+//		responses:
+//			"200":
+//				description: OK. Success response with item children data
+//				schema:
+//					type: array
+//					items:
+//						"$ref": "#/definitions/childItem"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError :=
 		srv.resolveGetParentsOrChildrenServiceParams(httpReq)

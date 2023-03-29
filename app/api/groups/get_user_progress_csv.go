@@ -16,62 +16,63 @@ import (
 const csvExportBatchSize = 500
 
 // swagger:operation GET /groups/{group_id}/user-progress-csv groups groupUserProgressCSV
-// ---
-// summary: Get group progress for users as a CSV file
-// description: >
-//              Returns the current progress of users on a subset of items.
+//
+//		---
+//		summary: Get group progress for users as a CSV file
+//		description: >
+//	             Returns the current progress of users on a subset of items.
 //
 //
-//              For each item from `{parent_item_id}` and its visible children,
-//              displays the result of all user self-groups among the descendants of the given group
-//              (including those in teams).
+//	             For each item from `{parent_item_id}` and its visible children,
+//	             displays the result of all user self-groups among the descendants of the given group
+//	             (including those in teams).
 //
 //
-//              For each user, only the result corresponding to his best score counts
-//              (across all his teams and his own results) disregarding whether or not
-//              the score was done in a team which is descendant of the input group.
+//	             For each user, only the result corresponding to his best score counts
+//	             (across all his teams and his own results) disregarding whether or not
+//	             the score was done in a team which is descendant of the input group.
 //
 //
-//              Restrictions:
+//	             Restrictions:
 //
-//              * The current user should be a manager of the group (or of one of its ancestors)
-//              with `can_watch_members` set to true,
+//	             * The current user should be a manager of the group (or of one of its ancestors)
+//	             with `can_watch_members` set to true,
 //
-//              * The current user should have `can_watch` >= 'result' on each of `{parent_item_ids}` items,
+//	             * The current user should have `can_watch` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//              otherwise the 'forbidden' error is returned.
-// parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   required: true
-// - name: parent_item_ids
-//   required: true
-//   in: query
-//   type: array
-//   items:
-//     type: integer
-// responses:
-//   "200":
-//     description: OK. Success response with users progress on items
-//     content:
-//       text/csv:
-//         schema:
-//            type: string
-//     examples:
-//            text/csv:
-//              Login;Last name;First name;Parent item;1. First child item;2. Second child item
+//	             otherwise the 'forbidden' error is returned.
+//		parameters:
+//			- name: group_id
+//				in: path
+//				type: integer
+//				required: true
+//			- name: parent_item_ids
+//				required: true
+//				in: query
+//				type: array
+//				items:
+//					type: integer
+//		responses:
+//			"200":
+//				description: OK. Success response with users progress on items
+//				content:
+//					text/csv:
+//						schema:
+//						type: string
+//				examples:
+//					text/csv:
+//						Login;Last name;First name;Parent item;1. First child item;2. Second child item
 //
-//              johnd;Doe;John;30;20;10
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//						johnd;Doe;John;30;20;10
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

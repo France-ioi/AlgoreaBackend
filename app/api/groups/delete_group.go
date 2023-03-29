@@ -12,46 +12,47 @@ import (
 )
 
 // swagger:operation DELETE /groups/{group_id} groups groupDelete
-// ---
-// summary: Delete a group
-// description: >
-//   Removes a group, its parent-child relations and other objects linked to it.
+//
+//		---
+//		summary: Delete a group
+//		description: >
+//	  Removes a group, its parent-child relations and other objects linked to it.
 //
 //
-//   The service deletes `groups_groups`, `attempts`, `results`,
-//   `group_membership_changes`, `group_pending_requests`,
-//   `permissions_granted`, `permissions_generated`, and `filters` linked to the group.
-//   Access rights are updated accordingly too.
+//	  The service deletes `groups_groups`, `attempts`, `results`,
+//	  `group_membership_changes`, `group_pending_requests`,
+//	  `permissions_granted`, `permissions_generated`, and `filters` linked to the group.
+//	  Access rights are updated accordingly too.
 //
 //
-//   If the group who is referenced in a `threads.helper_group_id`, the value of `threads.helper_group_id` will
-//   be updated to the group `AllUsers`.
+//	  If the group who is referenced in a `threads.helper_group_id`, the value of `threads.helper_group_id` will
+//	  be updated to the group `AllUsers`.
 //
 //
-//   Restrictions (otherwise the 'forbidden' error is returned):
-//     * the authenticated user should be a manager with `can_manage` = 'memberships_and_group' on the `{group_id}`,
-//     * the group should not be of type "User".
+//	  Restrictions (otherwise the 'forbidden' error is returned):
+//	    * the authenticated user should be a manager with `can_manage` = 'memberships_and_group' on the `{group_id}`,
+//	    * the group should not be of type "User".
 //
-//   Also, the group must be empty (no active subgroups of any type), otherwise the 'not found' error is returned.
-// parameters:
-// - name: group_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// responses:
-//   "201":
-//     "$ref": "#/responses/deletedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "404":
-//     "$ref": "#/responses/notFoundResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  Also, the group must be empty (no active subgroups of any type), otherwise the 'not found' error is returned.
+//		parameters:
+//			- name: group_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//		responses:
+//			"201":
+//				"$ref": "#/responses/deletedResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"404":
+//				"$ref": "#/responses/notFoundResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {

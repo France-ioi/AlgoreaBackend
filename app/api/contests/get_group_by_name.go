@@ -10,56 +10,57 @@ import (
 )
 
 // swagger:operation GET /contests/{item_id}/groups/by-name contests contestGetGroupByName
-// ---
-// summary: Get a group by name
-// description: >
-//                Return one group matching the name and satisfying:
 //
-//                  * the group can view (at least 'can_view:info') or enter (`can_enter_from` < `can_enter_until`) the item;
-//                  * the authenticated user is a manager of the group with `can_grant_group_access` and `can_watch_members` permissions;
-//                  * the `groups.name` (matching `login` if a "User" group) is matching the input `name` parameter (case-insensitive)
+//		---
+//		summary: Get a group by name
+//		description: >
+//	               Return one group matching the name and satisfying:
 //
-//                If there are several groups or users matching, returns the first one (by `id`).
+//	                 * the group can view (at least 'can_view:info') or enter (`can_enter_from` < `can_enter_until`) the item;
+//	                 * the authenticated user is a manager of the group with `can_grant_group_access` and `can_watch_members` permissions;
+//	                 * the `groups.name` (matching `login` if a "User" group) is matching the input `name` parameter (case-insensitive)
 //
-//
-//                If the contest is a team-only contest (`items.entry_participant_type` = 'Team') and the name matches an end-user,
-//                returns his team instead of user’s group.
+//	               If there are several groups or users matching, returns the first one (by `id`).
 //
 //
-//                Restrictions:
-//                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `can_view` >= 'content, `can_grant_view` >= 'enter', and `can_watch` >= 'result'
-//                    on the input item.
-//
-//                Otherwise, the "Forbidden" response is returned.
+//	               If the contest is a team-only contest (`items.entry_participant_type` = 'Team') and the name matches an end-user,
+//	               returns his team instead of user’s group.
 //
 //
-//                __NOTE__: This service is only here for transition between the former interface and the new one.
-//                      This way of searching only by `name`/`login` and getting one result is not really convenient,
-//                      but matching the former UI. This service will have to be removed as soon as
-//                      the new interface is used.
+//	               Restrictions:
+//	                 * `item_id` should be a timed contest;
+//	                 * the authenticated user should have `can_view` >= 'content, `can_grant_view` >= 'enter', and `can_watch` >= 'result'
+//	                   on the input item.
 //
-// parameters:
-// - name: item_id
-//   description: "`id` of a timed contest"
-//   in: path
-//   type: integer
-//   required: true
-// - name: name
-//   in: query
-//   type: string
-//   required: true
-// responses:
-//   "200":
-//     description: OK. Success response with the `group_id`, `additional_time`, `total_additional_time`
-//     schema:
-//       "$ref": "#/definitions/contestInfo"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	               Otherwise, the "Forbidden" response is returned.
+//
+//
+//	               __NOTE__: This service is only here for transition between the former interface and the new one.
+//	                     This way of searching only by `name`/`login` and getting one result is not really convenient,
+//	                     but matching the former UI. This service will have to be removed as soon as
+//	                     the new interface is used.
+//
+//		parameters:
+//			- name: item_id
+//				description: "`id` of a timed contest"
+//				in: path
+//				type: integer
+//				required: true
+//			- name: name
+//				in: query
+//				type: string
+//				required: true
+//		responses:
+//			"200":
+//				description: OK. Success response with the `group_id`, `additional_time`, `total_additional_time`
+//				schema:
+//					"$ref": "#/definitions/contestInfo"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 

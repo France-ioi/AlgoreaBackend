@@ -14,56 +14,57 @@ import (
 )
 
 // swagger:operation DELETE /user-batches/{group_prefix}/{custom_prefix} groups userBatchRemove
-// ---
-// summary: Remove a user batch
-// description: |
-//   Lets a group manager remove user batches and all users having "{group_prefix}_{custom_prefix}_" as login prefix.
+//
+//		---
+//		summary: Remove a user batch
+//		description: |
+//	  Lets a group manager remove user batches and all users having "{group_prefix}_{custom_prefix}_" as login prefix.
 //
 //
-//   If the preconditions are satisfied, the service
+//	  If the preconditions are satisfied, the service
 //
-//     * requests the login module to delete the users with "{group_prefix}\_{custom_prefix}\_" as prefix
-//       (/platform_api/accounts_manager/delete with the `prefix` parameter);
+//	    * requests the login module to delete the users with "{group_prefix}\_{custom_prefix}\_" as prefix
+//	      (/platform_api/accounts_manager/delete with the `prefix` parameter);
 //
-//     * deletes all users with "{group_prefix}\_{custom_prefix}\_" as prefix
-//       (ignoring the membership locks on groups that the authenticated user manages (but not others!));
+//	    * deletes all users with "{group_prefix}\_{custom_prefix}\_" as prefix
+//	      (ignoring the membership locks on groups that the authenticated user manages (but not others!));
 //
-//     * deletes the user batch entry.
+//	    * deletes the user batch entry.
 //
-//   As we do not lock the DB between the preconditions checking and the actual deletion
-//   with the call to the login module in the middle, there is possibility of deleting users
-//   that haven't been checked or haven't been removed from the login module.
+//	  As we do not lock the DB between the preconditions checking and the actual deletion
+//	  with the call to the login module in the middle, there is possibility of deleting users
+//	  that haven't been checked or haven't been removed from the login module.
 //
-//   If the local user deletion fails because of DB failure, there might be inconsistency between the DB
-//   and the login module which can be fixed by retrying the request with the same parameters.
+//	  If the local user deletion fails because of DB failure, there might be inconsistency between the DB
+//	  and the login module which can be fixed by retrying the request with the same parameters.
 //
-//   Preconditions:
+//				Preconditions:
 //
-//   * The authenticated user should be a manager of the `group_prefix`'s group (or its ancestor)
-//     with `can_manage` >= 'memberships', otherwise the 'forbidden' error is returned.
+//	  * The authenticated user should be a manager of the `group_prefix`'s group (or its ancestor)
+//	    with `can_manage` >= 'memberships', otherwise the 'forbidden' error is returned.
 //
-//   * If there are users with locked membership in groups the current user cannot manage,
-//     the 'unprocessable entity' error is returned.
-// parameters:
-// - name: group_prefix
-//   in: path
-//   type: string
-//   required: true
-// - name: custom_prefix
-//   in: path
-//   type: string
-//   required: true
-// responses:
-//   "200":
-//     "$ref": "#/responses/deletedResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "422":
-//     "$ref": "#/responses/unprocessableEntityResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  * If there are users with locked membership in groups the current user cannot manage,
+//	    the 'unprocessable entity' error is returned.
+//		parameters:
+//			- name: group_prefix
+//				in: path
+//				type: string
+//				required: true
+//			- name: custom_prefix
+//				in: path
+//				type: string
+//				required: true
+//		responses:
+//			"200":
+//				"$ref": "#/responses/deletedResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"422":
+//				"$ref": "#/responses/unprocessableEntityResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupPrefix := chi.URLParam(r, "group_prefix")
 	customPrefix := chi.URLParam(r, "custom_prefix")

@@ -73,60 +73,61 @@ type groupUpdateInput struct {
 }
 
 // swagger:operation PUT /groups/{group_id} groups groupUpdate
-// ---
-// summary: Update a group
-// description: Updates group information.
 //
-//   Requires the user to be a manager of the group, otherwise the 'forbidden' error is returned.
+//	---
+//	summary: Update a group
+//	description: Updates group information.
 //
-//
-//   The user should have `can_manage` >= 'memberships' in order to modify `code_expires_at`, `code_lifetime`,
-//   `frozen_membership`, `max_participants`, or `enforce_max_participants`, otherwise the "bad request" error is returned.
-//   In order to modify values of other fields, the user should have `can_manage` >= 'memberships_and_group'.
+//		Requires the user to be a manager of the group, otherwise the 'forbidden' error is returned.
 //
 //
-//   If the `root_activity_id` item is provided and is not null, the item should not be a skill and
-//   the user should have at least 'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
+//		The user should have `can_manage` >= 'memberships' in order to modify `code_expires_at`, `code_lifetime`,
+//		`frozen_membership`, `max_participants`, or `enforce_max_participants`, otherwise the "bad request" error is returned.
+//		In order to modify values of other fields, the user should have `can_manage` >= 'memberships_and_group'.
 //
 //
-//   If the `root_skill_id` item is provided and is not null, the item should be a skill and the user should have at least
-//  'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
+//		If the `root_activity_id` item is provided and is not null, the item should not be a skill and
+//		the user should have at least 'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 //
 //
-//   If `is_official_session` is being changed to true, the user should have at least
-//  'can_make_session_official' permission on the activity item, otherwise the 'forbidden' error is returned.
+//		If the `root_skill_id` item is provided and is not null, the item should be a skill and the user should have at least
+//		'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 //
 //
-//   Setting `is_official_session` to true while keeping `root_activity_id` not set or setting `root_activity_id` to null for
-//   an official session will cause the "bad request" error.
+//		 If `is_official_session` is being changed to true, the user should have at least
+//		'can_make_session_official' permission on the activity item, otherwise the 'forbidden' error is returned.
 //
 //
-//   Setting `enforce_max_participants` to true while keeping `max_participants` null or setting `max_participants` to null
-//   while keeping `enforce_max_participants` = true will cause the "bad request" error.
+//		Setting `is_official_session` to true while keeping `root_activity_id` not set or setting `root_activity_id` to null for
+//		an official session will cause the "bad request" error.
 //
 //
-//   Changing `require_personal_info_access_approval` to 'edit' will cause the "bad request" error.
-// parameters:
-// - name: group_id
-//   in: path
-//   required: true
-//   type: integer
-// - name: group information
-//   in: body
-//   required: true
-//   schema:
-//     "$ref": "#/definitions/groupUpdateInput"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//		Setting `enforce_max_participants` to true while keeping `max_participants` null or setting `max_participants` to null
+//		while keeping `enforce_max_participants` = true will cause the "bad request" error.
+//
+//
+//		Changing `require_personal_info_access_approval` to 'edit' will cause the "bad request" error.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: group information
+//			in: body
+//			required: true
+//			schema:
+//				"$ref": "#/definitions/groupUpdateInput"
+//	responses:
+//		"200":
+//			"$ref": "#/responses/updatedResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {

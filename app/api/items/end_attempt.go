@@ -11,39 +11,40 @@ import (
 )
 
 // swagger:operation POST /attempts/{attempt_id}/end items itemAttemptEnd
-// ---
-// summary: End an attempt
-// description: >
-//                Allows to end an attempt as a user or as a team (if `as_team_id` is given).
+//
+//		---
+//		summary: End an attempt
+//		description: >
+//	               Allows to end an attempt as a user or as a team (if `as_team_id` is given).
 //
 //
-//                Restrictions:
-//                  * `as_team_id` (if given) should be the current user's team;
-//                  * the `{attempt_id}` should not be zero (since implicit attempts cannot be ended);
-//                  * an attempt with `participant_id` = `as_team_id` (or the current user) and `id` = `attempt_id`
-//                    should exist and not be ended or expired;
+//	               Restrictions:
+//	                 * `as_team_id` (if given) should be the current user's team;
+//	                 * the `{attempt_id}` should not be zero (since implicit attempts cannot be ended);
+//	                 * an attempt with `participant_id` = `as_team_id` (or the current user) and `id` = `attempt_id`
+//	                   should exist and not be ended or expired;
 //
-//                Otherwise, the "Forbidden" response is returned.
-// parameters:
-// - name: attempt_id
-//   description: "`id` of an attempt to end"
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-//   format: int64
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	               Otherwise, the "Forbidden" response is returned.
+//		parameters:
+//			- name: attempt_id
+//				description: "`id` of an attempt to end"
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//				format: int64
+//		responses:
+//			"200":
+//				"$ref": "#/responses/updatedResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
 	if err != nil {

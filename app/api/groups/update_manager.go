@@ -11,42 +11,43 @@ import (
 )
 
 // swagger:operation PUT /groups/{group_id}/managers/{manager_id} groups groupManagerEdit
-// ---
-// summary: Change permissions of a group manager
-// description: >
 //
-//   Modifies permissions of a group manager.
+//		---
+//		summary: Change permissions of a group manager
+//		description: >
+//
+//	  Modifies permissions of a group manager.
 //
 //
-//   The authenticated user should have 'can_manage:memberships_and_group' permission on the group
-//   and the `{group_id}`-`{manager_id}` pair should exist in `group_managers,
-//   otherwise the "forbidden" error is returned.
-// parameters:
-// - name: group_id
-//   in: path
-//   required: true
-//   type: integer
-// - name: manager_id
-//   in: path
-//   required: true
-//   type: integer
-// - in: body
-//   name: data
-//   required: true
-//   description: New permissions of the manager
-//   schema:
-//     "$ref": "#/definitions/createGroupManagerRequest"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  The authenticated user should have 'can_manage:memberships_and_group' permission on the group
+//	  and the `{group_id}`-`{manager_id}` pair should exist in `group_managers,
+//	  otherwise the "forbidden" error is returned.
+//		parameters:
+//			- name: group_id
+//				in: path
+//				required: true
+//				type: integer
+//			- name: manager_id
+//				in: path
+//				required: true
+//				type: integer
+//			- in: body
+//				name: data
+//				required: true
+//				description: New permissions of the manager
+//				schema:
+//					"$ref": "#/definitions/createGroupManagerRequest"
+//		responses:
+//			"200":
+//				"$ref": "#/responses/updatedResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

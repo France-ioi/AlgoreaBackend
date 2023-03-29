@@ -28,105 +28,106 @@ type ctxKey int
 const parsedRequestData ctxKey = iota
 
 // swagger:operation POST /auth/token auth accessTokenCreate
-// ---
-// summary: Create or refresh an access token
-// description:
-//     If the `{code}` is given and the "Authorization" header is not given,
-//     the service converts the given OAuth2 authorization code into tokens,
-//     creates or updates the authenticated user in the DB with the data returned by the login module,
-//     and saves new access & refresh tokens into the DB as well.
-//     If OAuth2 authentication has used the PKCE extension, the `{code_verifier}` should be provided
-//     so it can be sent together with the `{code}` to the authentication server.
+//
+//		---
+//		summary: Create or refresh an access token
+//		description:
+//	    If the `{code}` is given and the "Authorization" header is not given,
+//	    the service converts the given OAuth2 authorization code into tokens,
+//	    creates or updates the authenticated user in the DB with the data returned by the login module,
+//	    and saves new access & refresh tokens into the DB as well.
+//	    If OAuth2 authentication has used the PKCE extension, the `{code_verifier}` should be provided
+//	    so it can be sent together with the `{code}` to the authentication server.
 //
 //
-//     If the `{code}` is not given while the "Authorization" header or/and the "access_token" is given
-//     (when both are given, the "Authorization" header is used and the cookie gets deleted),
-//     the service refreshes the access token
-//     (locally for temporary users or via the login module for normal users) and
-//     saves it into the DB keeping only the input token and the new token.
-//     Since the login module responds with both access and refresh tokens, the service updates the user's
-//     refresh token in this case as well. If there is no refresh token for the user in the DB,
-//     the 'not found' error is returned.
+//	    If the `{code}` is not given while the "Authorization" header or/and the "access_token" is given
+//	    (when both are given, the "Authorization" header is used and the cookie gets deleted),
+//	    the service refreshes the access token
+//	    (locally for temporary users or via the login module for normal users) and
+//	    saves it into the DB keeping only the input token and the new token.
+//	    Since the login module responds with both access and refresh tokens, the service updates the user's
+//	    refresh token in this case as well. If there is no refresh token for the user in the DB,
+//	    the 'not found' error is returned.
 //
 //
-//     If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
-//     the old cookie gets deleted (otherwise, just overwritten).
+//	    If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
+//	    the old cookie gets deleted (otherwise, just overwritten).
 //
 //
-//   * The "Authorization" header is not allowed when the `{code}` is given.
+//	  * The "Authorization" header is not allowed when the `{code}` is given.
 //
-//   * When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
-// security: []
-// consumes:
-//   - application/json
-//   - application/x-www-form-urlencoded
-// parameters:
-// - name: code
-//   in: query
-//   description: OAuth2 code (can also be given in form data)
-//   type: string
-// - name: code_verifier
-//   in: query
-//   description: OAuth2 PKCE code verifier  (can also be given in form data)
-//   type: string
-// - name: redirect_uri
-//   in: query
-//   description: OAuth2 redirection URI
-//   type: string
-// - name: use_cookie
-//   in: query
-//   description: If 1, set a cookie instead of returning the OAuth2 code in the data
-//   type: integer
-//   enum: [0,1]
-//   default: 0
-// - name: cookie_secure
-//   in: query
-//   description: If 1, set the cookie with the `Secure` attribute
-//   type: integer
-//   enum: [0,1]
-//   default: 0
-// - name: cookie_same_site
-//   in: query
-//   description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
-//   type: integer
-//   enum: [0,1]
-//   default: 0
-// - in: body
-//   name: parameters
-//   description: The optional parameters can be given in the body as well
-//   schema:
-//     type: object
-//     properties:
-//       code:
-//         type: string
-//         description: OAuth2 code
-//       code_verifier:
-//         type: string
-//         description: OAuth2 PKCE code verifier
-//       redirect_uri:
-//         type: string
-//         description: OAuth2 redirection URI
-//       use_cookie:
-//         type: boolean
-//         description: If true, set a cookie instead of returning the OAuth2 code in the data
-//       cookie_secure:
-//         type: boolean
-//         description: If true, set the cookie with the `Secure` attribute
-//       cookie_same_site:
-//         type: boolean
-//         description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
-// responses:
-//   "201":
-//     description: "Created. Success response with the new access token"
-//     in: body
-//     schema:
-//       "$ref": "#/definitions/userCreateTmpResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "404":
-//     "$ref": "#/responses/notFoundResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  * When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
+//		security: []
+//		consumes:
+//			- application/json
+//			- application/x-www-form-urlencoded
+//		parameters:
+//			- name: code
+//				in: query
+//				description: OAuth2 code (can also be given in form data)
+//				type: string
+//			- name: code_verifier
+//				in: query
+//				description: OAuth2 PKCE code verifier  (can also be given in form data)
+//				type: string
+//			- name: redirect_uri
+//				in: query
+//				description: OAuth2 redirection URI
+//				type: string
+//			- name: use_cookie
+//				in: query
+//				description: If 1, set a cookie instead of returning the OAuth2 code in the data
+//				type: integer
+//				enum: [0,1]
+//				default: 0
+//			- name: cookie_secure
+//				in: query
+//				description: If 1, set the cookie with the `Secure` attribute
+//				type: integer
+//				enum: [0,1]
+//				default: 0
+//			- name: cookie_same_site
+//				in: query
+//				description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
+//				type: integer
+//				enum: [0,1]
+//				default: 0
+//			- in: body
+//				name: parameters
+//				description: The optional parameters can be given in the body as well
+//				schema:
+//					type: object
+//					properties:
+//						code:
+//							type: string
+//							description: OAuth2 code
+//						code_verifier:
+//							type: string
+//							description: OAuth2 PKCE code verifier
+//						redirect_uri:
+//							type: string
+//							description: OAuth2 redirection URI
+//						use_cookie:
+//							type: boolean
+//							description: If true, set a cookie instead of returning the OAuth2 code in the data
+//						cookie_secure:
+//							type: boolean
+//							description: If true, set the cookie with the `Secure` attribute
+//						cookie_same_site:
+//							type: boolean
+//							description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
+//		responses:
+//			"201":
+//				description: "Created. Success response with the new access token"
+//				in: body
+//				schema:
+//					"$ref": "#/definitions/userCreateTmpResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"404":
+//				"$ref": "#/responses/notFoundResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	requestData, apiError := parseRequestParametersForCreateAccessToken(r)
 	if apiError != service.NoError {

@@ -12,41 +12,42 @@ import (
 )
 
 // swagger:operation DELETE /current-user users currentUserDeletion
-// ---
-// summary: Delete the current user
-// description: >
-//                Deletes all information stored in the platform related to the current user
-//                and calls the “UnlinkClient” service of the login module.
 //
-//                The data to be deleted:
+//		---
+//		summary: Delete the current user
+//		description: >
+//	               Deletes all information stored in the platform related to the current user
+//	               and calls the “UnlinkClient” service of the login module.
 //
-//                1. [`filters`, `sessions`, `refresh_tokens`]
-//                   having `user_id` = `users.group_id`;
-//                2. `answers` having `author_id` = `users.group_id`;
+//	               The data to be deleted:
 //
-//                3. [`permissions_granted`, `permissions_generated`, `attempts`]
-//                   having `group_id` = `users.group_id`;
+//	               1. [`filters`, `sessions`, `refresh_tokens`]
+//	                  having `user_id` = `users.group_id`;
+//	               2. `answers` having `author_id` = `users.group_id`;
 //
-//                4. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
-//                5. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
-//                   to `users.group_id`;
-//                6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
-//                   to `users.group_id`;
-//                7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`;
-//                8. `users` having `group_id` = `users.group_id`.
+//	               3. [`permissions_granted`, `permissions_generated`, `attempts`]
+//	                  having `group_id` = `users.group_id`;
+//
+//	               4. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
+//	               5. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
+//	                  to `users.group_id`;
+//	               6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
+//	                  to `users.group_id`;
+//	               7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`;
+//	               8. `users` having `group_id` = `users.group_id`.
 //
 //
-//                The deletion is rejected if the user is a member of at least one group with
-//                `now() < require_lock_membership_approval_until` and `groups_groups.lock_membership_approved` set.
-// responses:
-//   "200":
-//     "$ref": "#/responses/deletedResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	               The deletion is rejected if the user is a member of at least one group with
+//	               `now() < require_lock_membership_approval_until` and `groups_groups.lock_membership_approved` set.
+//		responses:
+//			"200":
+//				"$ref": "#/responses/deletedResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

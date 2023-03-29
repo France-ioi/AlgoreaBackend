@@ -12,39 +12,40 @@ import (
 )
 
 // swagger:operation GET /current-user/teams/by-item/{item_id} groups teamGetByItemID
-// ---
-// summary: Get current user's team for a contest
-// description: >
-//   The team identified by `{item_id}` i.e. a group which:
 //
-//     * has an active and unexpired attempt with `root_item_id` = `{item_id}`,
+//		---
+//		summary: Get current user's team for a contest
+//		description: >
+//	  The team identified by `{item_id}` i.e. a group which:
 //
-//     * is a direct parent (i.e. via `groups_groups`) of the authenticated user’s `selfGroup`,
+//	    * has an active and unexpired attempt with `root_item_id` = `{item_id}`,
 //
-//     * is of type "Team".
+//	    * is a direct parent (i.e. via `groups_groups`) of the authenticated user’s `selfGroup`,
+//
+//	    * is of type "Team".
 //
 //
-//   If there are several matching teams, returns the first one in the order of `groups.id`.
-// parameters:
-// - name: item_id
-//   type: integer
-//   required: true
-//   in: path
-// responses:
-//   "200":
-//     description: OK. Success response with the team's id
-//     schema:
-//       type: object
-//       properties:
-//         group_id:
-//           type: integer
-//       required: [group_id]
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "404":
-//     "$ref": "#/responses/notFoundResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  If there are several matching teams, returns the first one in the order of `groups.id`.
+//		parameters:
+//			- name: item_id
+//				type: integer
+//				required: true
+//				in: path
+//		responses:
+//			"200":
+//				description: OK. Success response with the team's id
+//				schema:
+//					type: object
+//					properties:
+//						group_id:
+//							type: integer
+//					required: [group_id]
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"404":
+//				"$ref": "#/responses/notFoundResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getCurrentUserTeamByItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {

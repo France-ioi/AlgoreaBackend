@@ -62,65 +62,66 @@ type itemWatchedGroupStat struct {
 }
 
 // swagger:operation GET /items/{item_id}/navigation items itemNavigationView
-// ---
-// summary: Get navigation data
-// description: >
 //
-//   Returns data needed to display the navigation menu (for `item_id` and its children)
-//   within the context of the given `{attempt_id}`/`{child_attempt_id}` (one of those should be given).
-//   Only items visible to the current user (or to the `{as_team_id}` team) are shown.
-//   If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
+//		---
+//		summary: Get navigation data
+//		description: >
 //
-//
-//   If `{child_attempt_id}` is given, the context-defining attempt id of the input item
-//   is either the same `{child_attempt_id}` or the `parent_attempt_id` of the given `{child_attempt_id}`
-//   (depending on the `root_item_id` of the `{child_attempt_id}`).
+//	  Returns data needed to display the navigation menu (for `item_id` and its children)
+//	  within the context of the given `{attempt_id}`/`{child_attempt_id}` (one of those should be given).
+//	  Only items visible to the current user (or to the `{as_team_id}` team) are shown.
+//	  If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
 //
 //
-//   * If the specified `{item_id}` doesn't exist or is not visible to the current user (or to the `{as_team_id}` team),
-//     of if there is no started result of the user/`{as_team_id}` for the context attempt id and the item,
-//     the 'forbidden' response is returned.
+//	  If `{child_attempt_id}` is given, the context-defining attempt id of the input item
+//	  is either the same `{child_attempt_id}` or the `parent_attempt_id` of the given `{child_attempt_id}`
+//	  (depending on the `root_item_id` of the `{child_attempt_id}`).
 //
 //
-//   * If `{as_team_id}` is given, it should be a user's parent team group,
-//     otherwise the "forbidden" error is returned.
+//	  * If the specified `{item_id}` doesn't exist or is not visible to the current user (or to the `{as_team_id}` team),
+//	    of if there is no started result of the user/`{as_team_id}` for the context attempt id and the item,
+//	    the 'forbidden' response is returned.
 //
 //
-//   * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
-//     otherwise the "forbidden" error is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: attempt_id
-//   description: "`id` of an attempt for the item. This parameter is incompatible with `{child_attempt_id}`."
-//   in: query
-//   type: integer
-// - name: child_attempt_id
-//   description: "`id` of an attempt for one of the item's children. This parameter is incompatible with `{attempt_id}`."
-//   in: query
-//   type: integer
-// - name: as_team_id
-//   in: query
-//   type: integer
-// - name: watched_group_id
-//   in: query
-//   type: integer
-// responses:
-//   "200":
-//     description: OK. Navigation data
-//     schema:
-//       "$ref": "#/definitions/itemNavigationResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  * If `{as_team_id}` is given, it should be a user's parent team group,
+//	    otherwise the "forbidden" error is returned.
+//
+//
+//	  * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
+//	    otherwise the "forbidden" error is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: attempt_id
+//				description: "`id` of an attempt for the item. This parameter is incompatible with `{child_attempt_id}`."
+//				in: query
+//				type: integer
+//			- name: child_attempt_id
+//				description: "`id` of an attempt for one of the item's children. This parameter is incompatible with `{attempt_id}`."
+//				in: query
+//				type: integer
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//			- name: watched_group_id
+//				in: query
+//				type: integer
+//		responses:
+//			"200":
+//				description: OK. Navigation data
+//				schema:
+//					"$ref": "#/definitions/itemNavigationResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {

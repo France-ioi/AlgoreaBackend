@@ -18,50 +18,51 @@ type resultUpdateRequest struct {
 }
 
 // swagger:operation PUT /items/{item_id}/attempts/{attempt_id} items resultUpdate
-// ---
-// summary: Update attempt result properties
-// description: >
-//   Modifies values of an attempt result's properties a participant is able to modify.
+//
+//		---
+//		summary: Update attempt result properties
+//		description: >
+//	  Modifies values of an attempt result's properties a participant is able to modify.
 //
 //
-//   Restrictions:
+//				Restrictions:
 //
-//     * `{as_team_id}` (if given) should be the current user's team,
-//     * the participant should have a `results` row for the `{item_id}`-`{attempt_id}` pair,
+//	    * `{as_team_id}` (if given) should be the current user's team,
+//	    * the participant should have a `results` row for the `{item_id}`-`{attempt_id}` pair,
 //
-//   otherwise the 'forbidden' error is returned.
-// parameters:
-// - name: item_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: attempt_id
-//   in: path
-//   type: integer
-//   format: int64
-//   required: true
-// - name: as_team_id
-//   in: query
-//   type: integer
-//   format: int64
-// - in: body
-//   name: data
-//   required: true
-//   description: Result properties to modify
-//   schema:
-//     "$ref": "#/definitions/resultUpdateRequest"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//	  otherwise the 'forbidden' error is returned.
+//		parameters:
+//			- name: item_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: attempt_id
+//				in: path
+//				type: integer
+//				format: int64
+//				required: true
+//			- name: as_team_id
+//				in: query
+//				type: integer
+//				format: int64
+//			- in: body
+//				name: data
+//				required: true
+//				description: Result properties to modify
+//				schema:
+//					"$ref": "#/definitions/resultUpdateRequest"
+//		responses:
+//			"200":
+//				"$ref": "#/responses/updatedResponse"
+//			"400":
+//				"$ref": "#/responses/badRequestResponse"
+//			"401":
+//				"$ref": "#/responses/unauthorizedResponse"
+//			"403":
+//				"$ref": "#/responses/forbiddenResponse"
+//			"500":
+//				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 

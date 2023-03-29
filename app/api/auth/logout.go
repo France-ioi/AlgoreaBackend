@@ -11,16 +11,17 @@ import (
 )
 
 // swagger:operation POST /auth/logout auth authLogout
-// ---
-// summary: User logout
-// description: Removes the current user’s session (all access and refresh tokens)
-// responses:
-//   "200":
-//     "$ref": "#/responses/successResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	---
+//	summary: User logout
+//	description: Removes the current user’s session (all access and refresh tokens)
+//	responses:
+//		"200":
+//			"$ref": "#/responses/successResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
