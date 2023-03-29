@@ -11,8 +11,7 @@ func IsDuplicateEntryError(err error) bool {
 	return mysqldb.IsMysqlError(err, mysqldb.DuplicateEntryError)
 }
 
-// IsDuplicateEntryErrorForKey checks whether an error corresponds to a duplicate of primary keys on insertion
-//                             for a certain key.
+// IsDuplicateEntryErrorForKey checks whether an error corresponds to a duplicate of primary keys on insertion for a certain key.
 func IsDuplicateEntryErrorForKey(err error, key string) bool {
 	return IsDuplicateEntryError(err) && mysqldb.ErrorContains(err, fmt.Sprintf("for key '%s'", key))
 }

@@ -4,10 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
-
-	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -26,7 +25,7 @@ type updatePermissionsInput struct {
 	// (or 'info' if the new value is 'enter', or 'solution' if the new value is 'solution_with_grant') and
 	// the current user should have `permissions_generated.can_grant_view_generated` = 'solution_with_grant'
 	// in order to increase level of this permission. Only owners can increase it to 'solution_with_grant'.
-	CanGrantView string `json:"can_grant_view" validate:"oneof=none enter content content_with_descendants solution solution_with_grant,can_grant_view"` // nolint:lll
+	CanGrantView string `json:"can_grant_view" validate:"oneof=none enter content content_with_descendants solution solution_with_grant,can_grant_view"`
 	// The granted `can_view` should be >= 'content' and
 	// the current user should have `permissions_generated.can_watch_generated` = 'answer_with_grant'
 	// in order to increase level of this permission. Only owners can increase it to 'answer_with_grant'.
@@ -196,7 +195,8 @@ func registerOptionalValidator(data *formdata.FormData, tag string, validatorFun
 
 func parsePermissionsInputData(s *database.DataStore, managerPermissions *managerGeneratedPermissions,
 	currentPermissions *userPermissions, r *http.Request) (
-	dataMap map[string]interface{}, modified bool, apiError service.APIError) {
+	dataMap map[string]interface{}, modified bool, apiError service.APIError,
+) {
 	data := formdata.NewFormData(&updatePermissionsInput{})
 	modifiedPtr := registerPermissionsValidators(s, managerPermissions, currentPermissions, data)
 
@@ -209,7 +209,8 @@ func parsePermissionsInputData(s *database.DataStore, managerPermissions *manage
 
 func registerPermissionsValidators(
 	s *database.DataStore, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	data *formdata.FormData) *bool {
+	data *formdata.FormData,
+) *bool {
 	var modified bool
 	registerIsOwnerValidator(data, managerPermissions, currentPermissions, &modified)
 	registerCanViewValidator(data, managerPermissions, currentPermissions, &modified, s)
@@ -223,7 +224,8 @@ func registerPermissionsValidators(
 }
 
 func registerIsOwnerValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions,
-	currentPermissions *userPermissions, modified *bool) {
+	currentPermissions *userPermissions, modified *bool,
+) {
 	registerOptionalValidator(data, "is_owner", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Bool()
 		if newValue && newValue != currentPermissions.IsOwner && !managerPermissions.IsOwnerGenerated {
@@ -237,7 +239,8 @@ func registerIsOwnerValidator(data *formdata.FormData, managerPermissions *manag
 }
 
 func registerCanViewValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore) {
+	modified *bool, s *database.DataStore,
+) {
 	registerOptionalValidator(data, "can_view", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanView(newValue, currentPermissions, managerPermissions, s) {
@@ -254,7 +257,8 @@ func registerCanViewValidator(data *formdata.FormData, managerPermissions *manag
 
 func registerCanGrantViewValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore) {
+	modified *bool, s *database.DataStore,
+) {
 	registerOptionalValidator(data, "can_grant_view", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanGrantView(newValue, currentPermissions, managerPermissions, s) {
@@ -271,7 +275,8 @@ func registerCanGrantViewValidator(
 
 func registerCanWatchValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore) {
+	modified *bool, s *database.DataStore,
+) {
 	registerOptionalValidator(data, "can_watch", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanWatch(newValue, currentPermissions, managerPermissions, s) {
@@ -288,7 +293,8 @@ func registerCanWatchValidator(
 
 func registerCanEditValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore) {
+	modified *bool, s *database.DataStore,
+) {
 	registerOptionalValidator(data, "can_edit", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanEdit(newValue, currentPermissions, managerPermissions, s) {
@@ -304,7 +310,8 @@ func registerCanEditValidator(
 }
 
 func registerCanMakeSessionOfficialValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions,
-	currentPermissions *userPermissions, modified *bool, s *database.DataStore) {
+	currentPermissions *userPermissions, modified *bool, s *database.DataStore,
+) {
 	registerOptionalValidator(data, "can_make_session_official", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Bool()
 		if !checkIfPossibleToModifyCanMakeSessionOfficial(newValue, currentPermissions, managerPermissions, s) {
@@ -319,7 +326,8 @@ func registerCanMakeSessionOfficialValidator(data *formdata.FormData, managerPer
 }
 
 func registerCanEnterFromValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions,
-	currentPermissions *userPermissions, modified *bool, s *database.DataStore) {
+	currentPermissions *userPermissions, modified *bool, s *database.DataStore,
+) {
 	registerOptionalValidator(data, "can_enter_from", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Interface().(time.Time)
 		if !checkIfPossibleToModifyCanEnterFrom(newValue, currentPermissions, managerPermissions, s) {
@@ -334,7 +342,8 @@ func registerCanEnterFromValidator(data *formdata.FormData, managerPermissions *
 
 func registerCanEnterUntilValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore) {
+	modified *bool, s *database.DataStore,
+) {
 	registerOptionalValidator(data, "can_enter_until", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Interface().(time.Time)
 		if !checkIfPossibleToModifyCanEnterUntil(newValue, currentPermissions, managerPermissions, s) {
@@ -354,13 +363,14 @@ const (
 	content           = "content"
 	solution          = "solution"
 	solutionWithGrant = "solution_with_grant"
-	answer            = "answer" // nolint:deadcode,varcheck,unused
+	answer            = "answer" //nolint:unused
 	answerWithGrant   = "answer_with_grant"
 	allWithGrant      = "all_with_grant"
 )
 
 func checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s *database.DataStore, user *database.User,
-	sourceGroupID, groupID, itemID int64) service.APIError {
+	sourceGroupID, groupID, itemID int64,
+) service.APIError {
 	apiError := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(s, user, sourceGroupID, groupID)
 	if apiError != service.NoError {
 		return apiError
@@ -370,7 +380,8 @@ func checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s *database.DataStore, 
 }
 
 func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
-	s *database.DataStore, user *database.User, sourceGroupID, groupID int64) service.APIError {
+	s *database.DataStore, user *database.User, sourceGroupID, groupID int64,
+) service.APIError {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
 	// the 'sourceGroupID' should be an ancestor of 'groupID'
 	found, err := s.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
@@ -416,7 +427,8 @@ func checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(s *database.DataSt
 }
 
 func checkIfPossibleToModifyCanView(viewPermissionToSet string, currentPermissions *userPermissions,
-	managerPermissions *managerGeneratedPermissions, store *database.DataStore) bool {
+	managerPermissions *managerGeneratedPermissions, store *database.DataStore,
+) bool {
 	permissionGrantedStore := store.PermissionsGranted()
 	if permissionGrantedStore.ViewIndexByName(viewPermissionToSet) <= currentPermissions.CanViewValue {
 		return true
@@ -432,7 +444,8 @@ func checkIfPossibleToModifyCanView(viewPermissionToSet string, currentPermissio
 }
 
 func checkIfPossibleToModifyCanGrantView(grantViewPermissionToSet string, currentPermissions *userPermissions,
-	managerPermissions *managerGeneratedPermissions, store *database.DataStore) bool {
+	managerPermissions *managerGeneratedPermissions, store *database.DataStore,
+) bool {
 	permissionGrantedStore := store.PermissionsGranted()
 	if permissionGrantedStore.GrantViewIndexByName(grantViewPermissionToSet) <= currentPermissions.CanGrantViewValue {
 		return true
@@ -459,7 +472,8 @@ func checkIfPossibleToModifyCanGrantView(grantViewPermissionToSet string, curren
 }
 
 func checkIfPossibleToModifyCanWatch(watchPermissionToSet string, currentPermissions *userPermissions,
-	managerPermissions *managerGeneratedPermissions, store *database.DataStore) bool {
+	managerPermissions *managerGeneratedPermissions, store *database.DataStore,
+) bool {
 	permissionGrantedStore := store.PermissionsGranted()
 	if permissionGrantedStore.WatchIndexByName(watchPermissionToSet) <= currentPermissions.CanWatchValue {
 		return true
@@ -477,7 +491,8 @@ func checkIfPossibleToModifyCanWatch(watchPermissionToSet string, currentPermiss
 }
 
 func checkIfPossibleToModifyCanEdit(editPermissionToSet string, currentPermissions *userPermissions,
-	managerPermissions *managerGeneratedPermissions, store *database.DataStore) bool {
+	managerPermissions *managerGeneratedPermissions, store *database.DataStore,
+) bool {
 	permissionGrantedStore := store.PermissionsGranted()
 	if permissionGrantedStore.EditIndexByName(editPermissionToSet) <= currentPermissions.CanEditValue {
 		return true
@@ -495,7 +510,8 @@ func checkIfPossibleToModifyCanEdit(editPermissionToSet string, currentPermissio
 }
 
 func checkIfPossibleToModifyCanMakeSessionOfficial(canMakeSessionOfficalToSet bool, currentPermissions *userPermissions,
-	managerPermissions *managerGeneratedPermissions, store *database.DataStore) bool {
+	managerPermissions *managerGeneratedPermissions, store *database.DataStore,
+) bool {
 	if !canMakeSessionOfficalToSet || canMakeSessionOfficalToSet == currentPermissions.CanMakeSessionOfficial {
 		return true
 	}
@@ -508,7 +524,8 @@ func checkIfPossibleToModifyCanMakeSessionOfficial(canMakeSessionOfficalToSet bo
 }
 
 func checkIfPossibleToModifyCanEnterFrom(canEnterFromToSet time.Time, currentPermissions *userPermissions,
-	managerPermissions *managerGeneratedPermissions, store *database.DataStore) bool {
+	managerPermissions *managerGeneratedPermissions, store *database.DataStore,
+) bool {
 	if !time.Time(currentPermissions.CanEnterFrom).After(canEnterFromToSet) {
 		return true
 	}
@@ -517,7 +534,8 @@ func checkIfPossibleToModifyCanEnterFrom(canEnterFromToSet time.Time, currentPer
 }
 
 func checkIfPossibleToModifyCanEnterUntil(canEnterUntilToSet time.Time, currentPermissions *userPermissions,
-	managerPermissions *managerGeneratedPermissions, store *database.DataStore) bool {
+	managerPermissions *managerGeneratedPermissions, store *database.DataStore,
+) bool {
 	if !time.Time(currentPermissions.CanEnterUntil).Before(canEnterUntilToSet) {
 		return true
 	}

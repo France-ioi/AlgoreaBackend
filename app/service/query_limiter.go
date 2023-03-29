@@ -13,8 +13,8 @@ type QueryLimiter struct {
 }
 
 // NewQueryLimiter creates a QueryLimiter with default settings:
-//  * default limit is 500,
-//  * maximum allowed limit is 1000.
+//   - default limit is 500,
+//   - maximum allowed limit is 1000.
 func NewQueryLimiter() *QueryLimiter {
 	return &QueryLimiter{
 		defaultLimit:    500,

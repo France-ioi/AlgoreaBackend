@@ -322,8 +322,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				expectedGroupManagers = append(expectedGroupManagers, tt.userID, groupID)
 			}
 
-			expectedGroupsGroups :=
-				make([]int64, 0, len(tt.existingGroupGroups)*2+len(tt.shouldMakeMemberOf)*2+len(tt.shouldCreateBadgeGroupRelations)*2)
+			expectedGroupsGroups := make([]int64, 0, len(tt.existingGroupGroups)*2+len(tt.shouldMakeMemberOf)*2+len(tt.shouldCreateBadgeGroupRelations)*2)
 			for _, idsPair := range tt.existingGroupGroups {
 				parentGroupID, childGroupID := idsPair[0], idsPair[1]
 				expectedGroupsGroups = append(expectedGroupsGroups, parentGroupID, childGroupID)

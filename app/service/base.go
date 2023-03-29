@@ -4,12 +4,12 @@ package service
 import (
 	"net/http"
 
+	"github.com/spf13/viper"
+
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
-
-	"github.com/spf13/viper"
 )
 
 // Base is the common service context data.

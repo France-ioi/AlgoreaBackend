@@ -308,7 +308,8 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 }
 
 func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http.Request, itemID *int64,
-	user *database.User, fromValues map[string]interface{}) (*database.DB, service.APIError) {
+	user *database.User, fromValues map[string]interface{},
+) (*database.DB, service.APIError) {
 	participantID := service.ParticipantIDFromContext(r.Context())
 	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
@@ -527,7 +528,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 func (srv *Service) generateSubQueriesForPagination(
 	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
 	answersQuery *database.DB, fromValues map[string]interface{}) (
-	startFromRowSubQuery, startFromRowCTESubQuery interface{}) {
+	startFromRowSubQuery, startFromRowCTESubQuery interface{},
+) {
 	startFromRowSubQuery = store.Table("start_from_row").SubQuery()
 	var startFromRowQuery *database.DB
 	switch activityTypeIndex {

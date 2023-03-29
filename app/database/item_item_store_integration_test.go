@@ -21,8 +21,13 @@ func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	}))
 
 	assertResultsMarkedAsChanged(t, dataStore, []resultPrimaryKey{
-		{101, 1, 2}, {102, 1, 2}, {103, 1, 2},
-		{104, 1, 2}, {105, 1, 2}, {106, 1, 2},
-		{107, 1, 2}, {108, 1, 2},
+		{101, 1, 2},
+		{102, 1, 2},
+		{103, 1, 2},
+		{104, 1, 2},
+		{105, 1, 2},
+		{106, 1, 2},
+		{107, 1, 2},
+		{108, 1, 2},
 	})
 }

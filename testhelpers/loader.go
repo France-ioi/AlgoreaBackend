@@ -21,6 +21,7 @@ var opt = godog.Options{
 	Format: "progress",
 }
 
+// InitGodogCommandLineFlags takes the --godog.* options passed on the command line and fill them into the options.
 func InitGodogCommandLineFlags() {
 	godog.BindCommandLineFlags("godog.", &opt)
 	pflag.Parse()

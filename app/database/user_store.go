@@ -18,16 +18,16 @@ const deleteWithTrapsBatchSize = 1000
 
 // DeleteTemporaryWithTraps deletes temporary users who don't have active sessions.
 // It also removes linked rows in the tables:
-// 1. [`filters`, `sessions`, `refresh_tokens`]
-//    having `user_id` = `users.group_id`;
-// 2. `answers` having `author_id`/`participant_id` = `users.group_id`;
-// 3. [`permissions_granted`, `permissions_generated`, `attempts`]
-//    having `group_id` = `users.group_id`;
-// 4. [`attempts`, `results`]
-//    having `participant_id` = `users.group_id`;
-// 5. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
-// 6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal to `users.group_id`;
-// 7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`.
+//  1. [`filters`, `sessions`, `refresh_tokens`]
+//     having `user_id` = `users.group_id`;
+//  2. `answers` having `author_id`/`participant_id` = `users.group_id`;
+//  3. [`permissions_granted`, `permissions_generated`, `attempts`]
+//     having `group_id` = `users.group_id`;
+//  4. [`attempts`, `results`]
+//     having `participant_id` = `users.group_id`;
+//  5. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
+//  6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal to `users.group_id`;
+//  7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`.
 func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 	defer recoverPanics(&err)
 
@@ -109,5 +109,5 @@ func deleteOneBatchOfUsers(db *DB, userIDs []int64) {
 
 func executeDeleteQuery(s *DB, table, condition string, args ...interface{}) {
 	mustNotBeError(
-		s.Exec(fmt.Sprintf("DELETE %[1]s FROM %[1]s ", QuoteName(table))+condition, args...).Error()) //nolint:gosec
+		s.Exec(fmt.Sprintf("DELETE %[1]s FROM %[1]s ", QuoteName(table))+condition, args...).Error())
 }

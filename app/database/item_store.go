@@ -25,15 +25,16 @@ func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
-//    of a group the `groupID` is a descendant of or manages,
-//  * `ids` is an ordered list of parent-child items,
-//  * the `groupID` group has at least 'content' access on each of the items in `ids`,
-//  * the `groupID` group has a started, allowing submission, not ended result for each item but the last,
-//    with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
-//  * if `ids` consists of only one item, the `parentAttemptID` is zero.
+//   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
+//     of a group the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids`,
+//   - the `groupID` group has a started, allowing submission, not ended result for each item but the last,
+//     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//   - if `ids` consists of only one item, the `parentAttemptID` is zero.
 func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
-	ids []int64, groupID, parentAttemptID int64, requireContentAccessToTheLastItem, withWriteLock bool) (bool, error) {
+	ids []int64, groupID, parentAttemptID int64, requireContentAccessToTheLastItem, withWriteLock bool,
+) (bool, error) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
 		return false, nil
 	}
@@ -44,7 +45,8 @@ func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
 
 func (s *ItemStore) participationHierarchyForParentAttempt(
 	ids []int64, groupID, parentAttemptID int64, requireAttemptsToBeActive, requireContentAccessToTheLastItem bool,
-	columnsList string, withWriteLock bool) *DB {
+	columnsList string, withWriteLock bool,
+) *DB {
 	subQuery := s.itemAttemptChainWithoutAttemptForTail(
 		ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock)
 
@@ -67,7 +69,8 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 }
 
 func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID int64,
-	requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock bool) *DB {
+	requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock bool,
+) *DB {
 	participantAncestors := s.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
 	groupsManagedByParticipant := s.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
@@ -124,16 +127,17 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids (but the last item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
-//  * the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
-//    of a group the `groupID` is a descendant of or manages,
-//  * `ids` is an ordered list of parent-child items,
-//  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//    at least 'info' access on the last one,
-//  * the `groupID` group has a started result for each item but the last,
-//    with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
-//  * if `ids` consists of only one item, the `parentAttemptID` is zero.
+//   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
+//     of a group the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
+//     at least 'info' access on the last one,
+//   - the `groupID` group has a started result for each item but the last,
+//     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//   - if `ids` consists of only one item, the `parentAttemptID` is zero.
 func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, parentAttemptID int64, withWriteLock bool) (
-	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error) {
+	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
+) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
 		return nil, nil, nil
 	}
@@ -156,15 +160,16 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 // BreadcrumbsHierarchyForAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids if it is a valid participation hierarchy
 // for the given `attemptID` which means all the following statements are true:
-//  * the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
-//    the `groupID` is a descendant of or manages,
-//  * `ids` is an ordered list of parent-child items,
-//  * the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//    at least 'info' access on the last one,
-//  * the `groupID` group has a started result for each item,
-//    with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
+//   - the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
+//     the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
+//     at least 'info' access on the last one,
+//   - the `groupID` group has a started result for each item,
+//     with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
 func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (
-	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error) {
+	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
+) {
 	if len(ids) == 0 {
 		return nil, nil, nil
 	}
@@ -211,7 +216,8 @@ func columnsListForBreadcrumbsHierarchy(ids []int64) string {
 }
 
 func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
-	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int) {
+	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int,
+) {
 	attemptIDMap = make(map[int64]int64, len(ids))
 	attemptNumberMap = make(map[int64]int, len(ids))
 	for idIndex := 0; idIndex < len(ids); idIndex++ {
@@ -226,7 +232,8 @@ func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
 
 func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 	ids []int64, groupID, attemptID int64, requireContentAccessToTheLastItem bool,
-	columnsList string, withWriteLock bool) *DB {
+	columnsList string, withWriteLock bool,
+) *DB {
 	lastItemIndex := len(ids) - 1
 	subQuery := s.
 		itemAttemptChainWithoutAttemptForTail(ids, groupID, false, requireContentAccessToTheLastItem, withWriteLock).

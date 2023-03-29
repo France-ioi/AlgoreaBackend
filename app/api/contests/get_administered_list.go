@@ -139,11 +139,10 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			if _, ok := parentTitlesMap[parents[index].ChildID]; !ok {
 				parentTitlesMap[parents[index].ChildID] = make([]parentTitle, 0, 1)
 			}
-			parentTitlesMap[parents[index].ChildID] =
-				append(parentTitlesMap[parents[index].ChildID], parentTitle{
-					Title:       parents[index].ParentTitle,
-					LanguageTag: parents[index].ParentLanguageTag,
-				})
+			parentTitlesMap[parents[index].ChildID] = append(parentTitlesMap[parents[index].ChildID], parentTitle{
+				Title:       parents[index].ParentTitle,
+				LanguageTag: parents[index].ParentLanguageTag,
+			})
 		}
 		for index := range rows {
 			rows[index].Parents = parentTitlesMap[rows[index].ItemID]

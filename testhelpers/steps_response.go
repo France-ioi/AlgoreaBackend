@@ -17,7 +17,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { // nolint
+func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nolint
 	var objmap []map[string]*json.RawMessage
 
 	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &objmap); err != nil {
@@ -31,18 +31,18 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { // no
 	return nil
 }
 
-func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { // nolint
+func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint
 	if code != ctx.lastResponse.StatusCode {
 		return fmt.Errorf("expected http response code: %d, actual is: %d. \n Data: %s", code, ctx.lastResponse.StatusCode, ctx.lastResponseBody)
 	}
 	return nil
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *messages.PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *messages.PickleDocString) (err error) { //nolint
 	return ctx.TheResponseDecodedBodyShouldBeJSON("", body)
 }
 
-func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *messages.PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *messages.PickleDocString) (err error) { //nolint
 	// verify the content type
 	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
 		return
@@ -92,7 +92,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	return compareStrings(string(expected), string(actual))
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleDocString) (err error) { //nolint
 	expectedBody, err := ctx.preprocessString(body.Content)
 	if err != nil {
 		return err
@@ -122,7 +122,7 @@ func compareStrings(expected, actual string) error {
 
 const nullHeaderValue = "[NULL]"
 
-func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
+func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { //nolint
 	headerValue, err = ctx.preprocessString(headerValue)
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue
 	return nil
 }
 
-func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersValue *messages.PickleDocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersValue *messages.PickleDocString) (err error) { //nolint
 	headerValue, err := ctx.preprocessString(headersValue.Content)
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersVal
 	return ctx.TheResponseHeaderShouldBe(headerName, headerValue)
 }
 
-func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { // nolint
+func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { //nolint
 	errorResp := service.ErrorResponse{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
@@ -173,7 +173,7 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	return nil
 }
 
-func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
+func (ctx *TestContext) TheResponseShouldBe(kind string) error { //nolint
 	var expectedCode int
 	switch kind {
 	case "updated", "deleted":
@@ -191,7 +191,8 @@ func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
 		{
 			"message": "` + kind + `",
 			"success": true
-		}`}); err != nil {
+		}`,
+	}); err != nil {
 		return err
 	}
 	return nil

@@ -9,7 +9,7 @@ import (
 	"github.com/cucumber/messages-go/v16"
 )
 
-func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
+func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
 	value, err := ctx.preprocessString(value)
 	if err != nil {
 		return err
@@ -27,11 +27,11 @@ func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
 	return nil
 }
 
-func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *messages.PickleDocString) error { // nolint
+func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *messages.PickleDocString) error { //nolint
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 
-func (ctx *TestContext) ISendrequestTo(method string, path string) error { // nolint
+func (ctx *TestContext) ISendrequestTo(method string, path string) error { //nolint
 	return ctx.iSendrequestGeneric(method, path, "")
 }
 
@@ -70,6 +70,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 
 	// do request
 	response, body, err := testRequest(testServer, method, path, headers, strings.NewReader(reqBody))
+	defer func() { _ = response.Body.Close() }()
 	if err != nil {
 		return err
 	}

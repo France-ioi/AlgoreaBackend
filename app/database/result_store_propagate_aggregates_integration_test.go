@@ -75,20 +75,32 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 			assert.NoError(t, err)
 
 			expected := []aggregatesResultRow{
-				{ParticipantID: 101, AttemptID: 1, ItemID: 1, LatestActivityAt: database.Time(oldDate), TasksTried: 1, TasksWithHelp: 2,
-					ScoreComputed: 10, State: "done"},
-				{ParticipantID: 101, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(currentDate), TasksTried: 1 + 5 + 9,
+				{
+					ParticipantID: 101, AttemptID: 1, ItemID: 1, LatestActivityAt: database.Time(oldDate), TasksTried: 1, TasksWithHelp: 2,
+					ScoreComputed: 10, State: "done",
+				},
+				{
+					ParticipantID: 101, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(currentDate), TasksTried: 1 + 5 + 9,
 					TasksWithHelp: 2 + 6 + 10,
 					ScoreComputed: 23.3333, /* (10*1 + 20*2 + 30*3) / (1 + 2 + 3) */
-					State:         "done"}, // from 1, 3, 4
-				{ParticipantID: 101, AttemptID: 1, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
-					ScoreComputed: 20, State: "done"},
-				{ParticipantID: 101, AttemptID: 1, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
-					ScoreComputed: 30, State: "done"},
-				{ParticipantID: 101, AttemptID: 2, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
-					ScoreComputed: 20, State: "done"},
-				{ParticipantID: 101, AttemptID: 2, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
-					ScoreComputed: 30, State: "done"},
+					State:         "done",
+				}, // from 1, 3, 4
+				{
+					ParticipantID: 101, AttemptID: 1, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
+					ScoreComputed: 20, State: "done",
+				},
+				{
+					ParticipantID: 101, AttemptID: 1, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
+					ScoreComputed: 30, State: "done",
+				},
+				{
+					ParticipantID: 101, AttemptID: 2, ItemID: 3, LatestActivityAt: database.Time(currentDate), TasksTried: 5, TasksWithHelp: 6,
+					ScoreComputed: 20, State: "done",
+				},
+				{
+					ParticipantID: 101, AttemptID: 2, ItemID: 4, LatestActivityAt: database.Time(oldDate), TasksTried: 9, TasksWithHelp: 10,
+					ScoreComputed: 30, State: "done",
+				},
 				// another user
 				{ParticipantID: 102, AttemptID: 1, ItemID: 2, LatestActivityAt: database.Time(oldDate), State: "done"},
 			}
@@ -186,12 +198,18 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 			expectedLatestActivityAt2 := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
 
 			expected := []aggregatesResultRow{
-				{ParticipantID: 101, AttemptID: 1, ItemID: 1, ScoreComputed: 10, State: "done",
-					LatestActivityAt: expectedLatestActivityAt1},
-				{ParticipantID: 101, AttemptID: 1, ItemID: 2, ScoreComputed: test.expectedComputedScore,
-					State: "done", LatestActivityAt: expectedLatestActivityAt1},
-				{ParticipantID: 102, AttemptID: 1, ItemID: 2, State: "done",
-					LatestActivityAt: expectedLatestActivityAt2},
+				{
+					ParticipantID: 101, AttemptID: 1, ItemID: 1, ScoreComputed: 10, State: "done",
+					LatestActivityAt: expectedLatestActivityAt1,
+				},
+				{
+					ParticipantID: 101, AttemptID: 1, ItemID: 2, ScoreComputed: test.expectedComputedScore,
+					State: "done", LatestActivityAt: expectedLatestActivityAt1,
+				},
+				{
+					ParticipantID: 102, AttemptID: 1, ItemID: 2, State: "done",
+					LatestActivityAt: expectedLatestActivityAt2,
+				},
 			}
 			assertAggregatesEqual(t, resultStore, expected)
 		})

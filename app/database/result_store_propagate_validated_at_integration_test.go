@@ -32,6 +32,7 @@ func constructExpectedResultsForValidatedAtTests(t11, t12, t13, t14, t23, t24 *t
 		{ParticipantID: 102, AttemptID: 1, ItemID: 2, ValidatedAt: nil, State: "done"},
 	}
 }
+
 func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
@@ -71,8 +72,9 @@ func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValid
 			&oldestForItem4AndWinner, &skippedInItem3, &skippedInItem4), result)
 }
 
-func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren( // nolint:lll
-	t *testing.T) {
+func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren(
+	t *testing.T,
+) {
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -102,7 +104,8 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 }
 
 func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategoriesAreNotValidated(
-	t *testing.T) {
+	t *testing.T,
+) {
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -134,7 +137,8 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 }
 
 func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithCategoryValidation_IfAllAreValidated(
-	t *testing.T) {
+	t *testing.T,
+) {
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -170,8 +174,9 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 		constructExpectedResultsForValidatedAtTests(&oldDate, &expectedDate, &oldDate, nil, nil, &expectedDate), result)
 }
 
-func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems( // nolint:lll
-	t *testing.T) {
+func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems(
+	t *testing.T,
+) {
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 

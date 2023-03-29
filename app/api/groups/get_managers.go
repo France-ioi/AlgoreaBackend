@@ -186,8 +186,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		if !includeManagersOfAncestorGroups {
 			result[index].GroupManagersViewResponseRowThroughAncestorGroups = nil
 		} else {
-			result[index].CanManageThroughAncestorGroups =
-				store.GroupManagers().CanManageNameByIndex(result[index].CanManageThroughAncestorGroupsValue)
+			result[index].CanManageThroughAncestorGroups = store.GroupManagers().CanManageNameByIndex(result[index].CanManageThroughAncestorGroupsValue)
 		}
 	}
 

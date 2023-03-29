@@ -241,7 +241,8 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 }
 
 func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64, user *database.User) (
-	orderedItemIDListWithDuplicates []interface{}, uniqueItemIDs []string, itemOrder []int, itemsSubQuery interface{}) {
+	orderedItemIDListWithDuplicates []interface{}, uniqueItemIDs []string, itemOrder []int, itemsSubQuery interface{},
+) {
 	itemParentIDsAsIntSlice := make([]interface{}, len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
 		itemParentIDsAsIntSlice[i] = parentID
@@ -322,7 +323,8 @@ func appendTableRowToResult(orderedItemIDListWithDuplicates []interface{}, reflR
 
 // resultPtr should be a pointer to a slice of pointers to table cells.
 func scanAndBuildProgressResults(
-	query *database.DB, orderedItemIDListWithDuplicates []interface{}, uniqueItemsCount int, resultPtr interface{}) {
+	query *database.DB, orderedItemIDListWithDuplicates []interface{}, uniqueItemsCount int, resultPtr interface{},
+) {
 	// resultPtr is *[]*tableCellType
 	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
 	reflDecodedTableCell := reflect.New(reflTableCellType).Elem()

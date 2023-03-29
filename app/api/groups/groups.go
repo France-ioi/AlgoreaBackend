@@ -120,7 +120,8 @@ const (
 
 func checkThatUserHasRightsForDirectRelation(
 	store *database.DataStore, user *database.User,
-	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation) service.APIError {
+	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation,
+) service.APIError {
 	groupStore := store.Groups()
 
 	var groupData []struct {
@@ -167,12 +168,15 @@ const (
 	withdrawInvitationsAction bulkMembershipAction = "withdrawInvitations"
 )
 
-const inAnotherTeam = "in_another_team"
-const notFound = "not_found"
-const team = "Team"
+const (
+	inAnotherTeam = "in_another_team"
+	notFound      = "not_found"
+	team          = "Team"
+)
 
 func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.Request,
-	action bulkMembershipAction) service.APIError {
+	action bulkMembershipAction,
+) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -209,7 +213,8 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 }
 
 func performBulkMembershipActionTransition(store *database.DataStore, action bulkMembershipAction, parentGroupID int64,
-	groupIDs []int64, groupType string, user *database.User) (database.GroupGroupTransitionResults, error) {
+	groupIDs []int64, groupType string, user *database.User,
+) (database.GroupGroupTransitionResults, error) {
 	groupID := groupIDs[0]
 	if groupType == team {
 		if action == acceptJoinRequestsAction && isOtherTeamMember(store, parentGroupID, groupID) {
@@ -238,7 +243,8 @@ func performBulkMembershipActionTransition(store *database.DataStore, action bul
 }
 
 func checkPreconditionsForBulkMembershipAction(action bulkMembershipAction, user *database.User, store *database.DataStore,
-	parentGroupID int64, groupIDs []int64) (groupType string, apiError service.APIError) {
+	parentGroupID int64, groupIDs []int64,
+) (groupType string, apiError service.APIError) {
 	if apiError = checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiError != service.NoError {
 		return "", apiError
 	}

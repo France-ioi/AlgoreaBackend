@@ -95,7 +95,8 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	user := srv.GetUser(r)
-	apiError := service.NoError
+
+	var apiError service.APIError
 	if apiError = checkHintOrScoreTokenRequiredFields(user, requestData.TaskToken, "hint_requested",
 		requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
 		requestData.HintToken.ItemURL, requestData.HintToken.AttemptID); apiError != service.NoError {
@@ -169,7 +170,8 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 }
 
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
-	r *http.Request) ([]formdata.Anything, error) {
+	r *http.Request,
+) ([]formdata.Anything, error) {
 	hintsInfo, err := store.Results().
 		GetHintsInfoForActiveAttempt(taskToken.Converted.ParticipantID, taskToken.Converted.AttemptID, taskToken.Converted.LocalItemID)
 	var hintsRequestedParsed []formdata.Anything

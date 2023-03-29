@@ -52,8 +52,8 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
-			mock.ExpectQuery("SELECT \\* FROM " + tt.wantTable). // nolint:gosec
-										WithArgs().WillReturnRows(mock.NewRows([]string{"id"}))
+			mock.ExpectQuery("SELECT \\* FROM " + tt.wantTable).
+				WithArgs().WillReturnRows(mock.NewRows([]string{"id"}))
 
 			var result []interface{}
 			assert.NoError(t, tt.function(NewDataStore(db)).Scan(&result).Error())
@@ -282,7 +282,8 @@ func TestDataStore_WithNamedLock(t *testing.T) {
 }
 
 func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeout int, expectedTableName string,
-	funcToTestGenerator func(store *DataStore) func(func(store *DataStore) error) error) {
+	funcToTestGenerator func(store *DataStore) func(func(store *DataStore) error) error,
+) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

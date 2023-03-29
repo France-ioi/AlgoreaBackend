@@ -19,9 +19,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-// nolint:gosec
-func init() { // nolint:gochecknoinits,gocyclo,gocognit
-	var dbGenLoadCmd = &cobra.Command{
+//nolint:gosec
+func init() { //nolint:gochecknoinits,gocyclo,gocognit
+	dbGenLoadCmd := &cobra.Command{
 		Use:   "db-gen-load  [environment]",
 		Short: "generate data for load tests",
 		Run: func(cmd *cobra.Command, args []string) {

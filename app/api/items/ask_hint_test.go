@@ -18,7 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
-func TestAskHintRequest_UnmarshalJSON(t *testing.T) { //nolint:gocognit Should be refactored.
+func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	expectedTaskToken := token.Task{}
 	_ = payloads.ParseMap(payloadstest.TaskPayloadFromAlgoreaPlatform, &expectedTaskToken)
 	expectedTaskToken.Converted.UserID = 556371821693219925

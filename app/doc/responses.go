@@ -10,7 +10,7 @@ import (
 
 // The request has successfully updated the object
 // swagger:response updatedResponse
-type updatedResponse struct { //nolint:deadcode Used for documentation.
+type updatedResponse struct {
 	// in: body
 	Body struct {
 		// "updated"
@@ -25,7 +25,7 @@ type updatedResponse struct { //nolint:deadcode Used for documentation.
 
 // The request has succeeded. The `data.changed` shows if the object has been updated.
 // swagger:response updatedOrUnchangedResponse
-type updatedOrUnchangedResponse struct { //nolint:deadcode Used for documentation.
+type updatedOrUnchangedResponse struct {
 	// in: body
 	Body struct {
 		// enum: updated,unchanged
@@ -44,7 +44,7 @@ type updatedOrUnchangedResponse struct { //nolint:deadcode Used for documentatio
 
 // Success
 // swagger:response successResponse
-type successResponse struct { //nolint:deadcode Used for documentation.
+type successResponse struct {
 	// in: body
 	Body struct {
 		// "success"
@@ -59,7 +59,7 @@ type successResponse struct { //nolint:deadcode Used for documentation.
 
 // Success or failure
 // swagger:response publishedOrFailedResponse
-type publishedOrFailedResponse struct { //nolint:deadcode Used for documentation.
+type publishedOrFailedResponse struct {
 	// in: body
 	Body struct {
 		// enum: published,failed
@@ -72,7 +72,7 @@ type publishedOrFailedResponse struct { //nolint:deadcode Used for documentation
 
 // The request has successfully deleted the object
 // swagger:response deletedResponse
-type deletedResponse struct { //nolint:deadcode Used for documentation.
+type deletedResponse struct {
 	// in: body
 	Body struct {
 		// "deleted"
@@ -87,7 +87,7 @@ type deletedResponse struct { //nolint:deadcode Used for documentation.
 
 // The request has succeeded. The `data.changed` shows if the object has been deleted.
 // swagger:response deletedOrUnchangedResponse
-type deletedOrUnchangedResponse struct { //nolint:deadcode Used for documentation.
+type deletedOrUnchangedResponse struct {
 	// in: body
 	Body struct {
 		// enum: deleted,unchanged
@@ -106,7 +106,7 @@ type deletedOrUnchangedResponse struct { //nolint:deadcode Used for documentatio
 
 // Created. Success response with the created object's id.
 // swagger:response createdWithIDResponse
-type createdWithIDResponse struct { //nolint:deadcode Used for documentation.
+type createdWithIDResponse struct {
 	// in: body
 	Body struct {
 		// enum: created
@@ -125,7 +125,7 @@ type createdWithIDResponse struct { //nolint:deadcode Used for documentation.
 
 // The request has succeeded. The `data.changed` shows if the object has been created.
 // swagger:response createdOrUnchangedResponse
-type createdOrUnchangedResponse struct { //nolint:deadcode Used for documentation.
+type createdOrUnchangedResponse struct {
 	// in: body
 	Body struct {
 		// enum: created,unchanged
@@ -144,7 +144,7 @@ type createdOrUnchangedResponse struct { //nolint:deadcode Used for documentatio
 
 // OK. Success response with the per-group update statuses
 // swagger:response
-type updatedGroupRelationsResponse struct { //nolint:deadcode Used for documentation.
+type updatedGroupRelationsResponse struct {
 	// in:body
 	Body struct {
 		// "updated"
@@ -161,11 +161,11 @@ type updatedGroupRelationsResponse struct { //nolint:deadcode Used for documenta
 }
 
 // enum: [cycle, invalid, success, unchanged, not_found]
-type loginTransitionResult string //nolint:deadcode Used for documentation.
+type loginTransitionResult string
 
 // Created. Success response with the per-login results
 // swagger:response createdLoginRelationsResponse
-type createdLoginRelationsResponse struct { //nolint:deadcode Used for documentation.
+type createdLoginRelationsResponse struct {
 	// in:body
 	Body struct {
 		// "created"
@@ -184,7 +184,7 @@ type createdLoginRelationsResponse struct { //nolint:deadcode Used for documenta
 
 // OK. Success response with the requested answer
 // swagger:response itemAnswerGetResponse
-type itemAnswerGetResponse struct { //nolint:deadcode Used for documentation.
+type itemAnswerGetResponse struct {
 	// description: The returned answer
 	// in:body
 	Body struct {
@@ -220,7 +220,7 @@ type itemAnswerGetResponse struct { //nolint:deadcode Used for documentation.
 
 // Created. The group has successfully entered the contest.
 // swagger:response itemEnterResponse
-type itemEnterResponse struct { //nolint:deadcode Used for documentation.
+type itemEnterResponse struct {
 	// in:body
 	Body struct {
 		// enum: created

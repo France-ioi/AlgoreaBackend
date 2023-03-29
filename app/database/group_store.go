@@ -27,8 +27,9 @@ func (s *GroupStore) ManagedBy(user *User) *DB {
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team that
-//  1) the given user is a member of
-//  2) has an unexpired attempt with root_item_id = `itemID`.
+//  1. the given user is a member of
+//  2. has an unexpired attempt with root_item_id = `itemID`.
+//
 // If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
 func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
@@ -88,7 +89,8 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 // (for more info see description of the itemGetEntryState service).
 // The isAdding parameter specifies if we are going to add or remove a user.
 func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
-	teamGroupID, userID int64, isAdding, withLock bool) (bool, error) {
+	teamGroupID, userID int64, isAdding, withLock bool,
+) (bool, error) {
 	found, err := s.GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
 		gorm.Expr("?", teamGroupID), userID, isAdding, withLock).HasRows()
 	return !found, err
@@ -104,7 +106,8 @@ func (s *GroupStore) CheckIfEntryConditionsStillSatisfiedForAllActiveParticipati
 // (for more info see description of the itemGetEntryState service).
 // The isAdding parameter specifies if we are going to add or remove a user.
 func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
-	teamGroupIDExpr *gorm.SqlExpr, userID int64, isAdding, withLock bool) *DB {
+	teamGroupIDExpr *gorm.SqlExpr, userID int64, isAdding, withLock bool,
+) *DB {
 	activeTeamParticipationsQuery := s.Attempts().
 		Joins(`
 			JOIN results ON results.participant_id = attempts.participant_id AND results.attempt_id = attempts.id AND

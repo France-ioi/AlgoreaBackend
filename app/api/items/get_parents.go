@@ -88,8 +88,7 @@ type parentItem struct {
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError :=
-		srv.resolveGetParentsOrChildrenServiceParams(httpReq)
+	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -117,7 +116,8 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 }
 
 func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Request) (
-	itemID, attemptID, participantID int64, user *database.User, watchedGroupID int64, watchedGroupIDSet bool, apiError service.APIError) {
+	itemID, attemptID, participantID int64, user *database.User, watchedGroupID int64, watchedGroupIDSet bool, apiError service.APIError,
+) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return 0, 0, 0, nil, 0, false, service.ErrInvalidRequest(err)
@@ -136,7 +136,8 @@ func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Reque
 }
 
 func constructItemParentsQuery(dataStore *database.DataStore, childItemID, groupID, attemptID int64,
-	watchedGroupIDSet bool, watchedGroupID int64) *database.DB {
+	watchedGroupIDSet bool, watchedGroupID int64,
+) *database.DB {
 	return constructItemListQuery(
 		dataStore, groupID, "info", watchedGroupIDSet, watchedGroupID,
 		`items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
@@ -169,7 +170,8 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 }
 
 func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDSet bool,
-	permissionGrantedStore *database.PermissionGrantedStore) []parentItem {
+	permissionGrantedStore *database.PermissionGrantedStore,
+) []parentItem {
 	result := make([]parentItem, 0, len(rawData))
 	for index := range rawData {
 		item := parentItem{

@@ -6,7 +6,7 @@ import (
 	"github.com/cucumber/messages-go/v16"
 )
 
-func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { // nolint
+func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { //nolint
 	value, err := ctx.preprocessString(value)
 	if err != nil {
 		return err
@@ -16,7 +16,7 @@ func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { 
 	return nil
 }
 
-func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *messages.PickleDocString) error { // nolint
+func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *messages.PickleDocString) error { //nolint
 	preprocessedValue, err := ctx.preprocessString(value.Content)
 	if err != nil {
 		return err

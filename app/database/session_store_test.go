@@ -18,11 +18,12 @@ func TestSessionStore_InsertNewOAuth(t *testing.T) {
 		{name: "success", issuer: "some issuer"},
 		{name: "error", dbError: errors.New("some error")},
 	}
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
 	for _, test := range tests {
 		test := test
-
-		db, mock := NewDBMock()
-		defer func() { _ = db.Close() }()
 
 		userID := int64(123456)
 		token := "accesstoken"

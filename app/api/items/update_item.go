@@ -4,10 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
-
-	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -16,7 +15,7 @@ import (
 
 // ItemWithDefaultLanguageTag represents common item fields plus 'default_language_tag'.
 type ItemWithDefaultLanguageTag struct {
-	Item `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+	Item `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
 	// minLength: 1
@@ -27,7 +26,7 @@ type ItemWithDefaultLanguageTag struct {
 // updateItemRequest is the expected input for item updating
 // swagger:model itemEditRequest
 type updateItemRequest struct {
-	ItemWithDefaultLanguageTag `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+	ItemWithDefaultLanguageTag `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 	Children                   []itemChild          `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 
 	childrenIDsCache []int64
@@ -224,7 +223,8 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 
 func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.DataStore, itemID int64,
 	input *updateItemRequest, childrenPermissionMap map[int64]permissionAndType,
-	oldPropagationLevelsMap map[int64]*itemsRelationData) (apiError service.APIError, err error) {
+	oldPropagationLevelsMap map[int64]*itemsRelationData,
+) (apiError service.APIError, err error) {
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			deleteStatement := lockedStore.ItemItems().DB
@@ -262,7 +262,8 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 // constructUpdateItemChildTypeNonSkillValidator constructs a validator for the Children field that checks
 // if a child's type is not 'Skill' when the items's type is not 'Skill'.
 func constructUpdateItemChildTypeNonSkillValidator(itemType string,
-	childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+	childrenInfoMap *map[int64]permissionAndType,
+) validator.Func { // nolint:gocritic
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 		if itemType == skill {
@@ -283,7 +284,8 @@ func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator
 // The validator checks that when the duration is given and is not null or is not given while its previous value is not null,
 // the field is true.
 func constructUpdateItemDurationRequiresExplicitEntryValidator(
-	formData *formdata.FormData, duration *string, requiresExplicitEntry bool) validator.Func { // nolint:gocritic
+	formData *formdata.FormData, duration *string, requiresExplicitEntry bool,
+) validator.Func { // nolint:gocritic
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		data := fl.Parent().Addr().Interface().(*Item)
 		var changed bool

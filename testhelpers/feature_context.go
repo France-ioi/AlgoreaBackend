@@ -6,10 +6,11 @@ import (
 	"github.com/cucumber/godog"
 )
 
+// InitializeTestSuite is called before we start the execution of the Gherkin tests.
 func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	// TODO: Try to move s.Step(...) in this
 }
 
+// InitializeScenario is called before each scenario to initialize the test context.
 func InitializeScenario(s *godog.ScenarioContext) {
 	ctx := &TestContext{}
 	s.Before(ctx.SetupScenarioContext)

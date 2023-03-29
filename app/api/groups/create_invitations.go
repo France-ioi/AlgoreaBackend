@@ -176,7 +176,8 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 }
 
 func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupID int64, groupsToCheck []int64,
-	results map[string]string, groupIDToLoginMap map[int64]string) []int64 {
+	results map[string]string, groupIDToLoginMap map[int64]string,
+) []int64 {
 	groupsToCheckMap := make(map[int64]bool, len(groupsToCheck))
 	for _, id := range groupsToCheck {
 		groupsToCheckMap[id] = true

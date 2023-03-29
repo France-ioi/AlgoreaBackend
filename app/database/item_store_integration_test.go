@@ -66,12 +66,18 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 		wantError     error
 	}{
 		{name: "normal", participantID: 10, attemptID: 1, itemID: 13, wantHasAccess: true, wantReason: nil, wantError: nil},
-		{name: "read-only", participantID: 10, attemptID: 2, itemID: 12, wantHasAccess: false,
-			wantReason: errors.New("item is read-only"), wantError: nil},
-		{name: "no access", participantID: 11, attemptID: 1, itemID: 10, wantHasAccess: false,
-			wantReason: errors.New("no access to the task item"), wantError: nil},
-		{name: "info access", participantID: 11, attemptID: 2, itemID: 10, wantHasAccess: false,
-			wantReason: errors.New("no access to the task item"), wantError: nil},
+		{
+			name: "read-only", participantID: 10, attemptID: 2, itemID: 12, wantHasAccess: false,
+			wantReason: errors.New("item is read-only"), wantError: nil,
+		},
+		{
+			name: "no access", participantID: 11, attemptID: 1, itemID: 10, wantHasAccess: false,
+			wantReason: errors.New("no access to the task item"), wantError: nil,
+		},
+		{
+			name: "info access", participantID: 11, attemptID: 2, itemID: 10, wantHasAccess: false,
+			wantReason: errors.New("no access to the task item"), wantError: nil,
+		},
 	}
 	for _, test := range tests {
 		test := test
@@ -106,10 +112,14 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 		wantError  error
 	}{
 		{name: "Should retrieve the corresponding item", textID: "id12", wantItemID: 12, wantError: nil},
-		{name: "Should return an error if textID is empty", textID: "", wantItemID: 0,
-			wantError: errors.New("record not found")},
-		{name: "Should return an error if no corresponding item", textID: "doesn't exist", wantItemID: 0,
-			wantError: errors.New("record not found")},
+		{
+			name: "Should return an error if textID is empty", textID: "", wantItemID: 0,
+			wantError: errors.New("record not found"),
+		},
+		{
+			name: "Should return an error if no corresponding item", textID: "doesn't exist", wantItemID: 0,
+			wantError: errors.New("record not found"),
+		},
 	}
 	for _, test := range tests {
 		test := test
@@ -573,7 +583,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 
 func assertBreadcrumbsHierarchy(t *testing.T,
 	wantAttemptIDMap, gotIDs map[int64]int64,
-	wantAttemptNumberMap, gotNumbers map[int64]int, err error) {
+	wantAttemptNumberMap, gotNumbers map[int64]int, err error,
+) {
 	assert.Equal(t, wantAttemptIDMap, gotIDs)
 	assert.Equal(t, wantAttemptNumberMap, gotNumbers)
 	assert.NoError(t, err)
@@ -845,7 +856,8 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 		wantAttemptNumberMap map[int64]int
 	}{
 		{name: "empty list of ids", args: args{ids: []int64{}, groupID: 100, attemptID: 0}},
-		{name: "one item",
+		{
+			name:                 "one item",
 			args:                 args{ids: []int64{2}, groupID: 100, attemptID: 200},
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
@@ -1065,8 +1077,10 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 	}{
 		{name: "url is unchanged", updateMap: map[string]interface{}{"type": "Chapter"}, wantPlatformID: ptrInt64(1)},
 		{name: "new url is null", updateMap: map[string]interface{}{"url": nil}, wantPlatformID: nil},
-		{name: "chooses a platform with higher priority", updateMap: map[string]interface{}{"url": ptrString("12345")},
-			wantPlatformID: ptrInt64(2)},
+		{
+			name: "chooses a platform with higher priority", updateMap: map[string]interface{}{"url": ptrString("12345")},
+			wantPlatformID: ptrInt64(2),
+		},
 		{name: "new url doesn't match any regexp", updateMap: map[string]interface{}{"url": ptrString("34")}, wantPlatformID: nil},
 	}
 	for _, test := range tests {
@@ -1107,15 +1121,18 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 		priority        int
 		wantPlatformIDs []*int64
 	}{
-		{name: "recalculates items linked to platforms with lower priority or no platform",
+		{
+			name:   "recalculates items linked to platforms with lower priority or no platform",
 			regexp: "1", priority: 3,
 			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(1), ptrInt64(2), ptrInt64(2)},
 		},
-		{name: "recalculates items linked to platforms with lower priority or no platform (higher priority)",
+		{
+			name:   "recalculates items linked to platforms with lower priority or no platform (higher priority)",
 			regexp: "1", priority: 6,
 			wantPlatformIDs: []*int64{ptrInt64(5), ptrInt64(4), ptrInt64(5), nil},
 		},
-		{name: "recalculates only item without a platform when the new platform has the lowest priority",
+		{
+			name:   "recalculates only item without a platform when the new platform has the lowest priority",
 			regexp: "1", priority: -1,
 			wantPlatformIDs: []*int64{ptrInt64(4), ptrInt64(1), ptrInt64(2), ptrInt64(2)},
 		},
@@ -1158,23 +1175,28 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 		priority        int
 		wantPlatformIDs []*int64
 	}{
-		{name: "recalculates items linked to platforms with lower priority or no platform or the modified platform (only priority is changed)",
+		{
+			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (only priority is changed)",
 			regexp: "^1.*", priority: 3,
 			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(1), ptrInt64(2), nil},
 		},
-		{name: "recalculates items linked to platforms with lower priority or no platform or the modified platform (only regexp is changed)",
+		{
+			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (only regexp is changed)",
 			regexp: "1", priority: 4,
 			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(1), ptrInt64(2), nil},
 		},
-		{name: "recalculates items linked to platforms with lower priority or no platform or the modified platform (higher priority)",
+		{
+			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (higher priority)",
 			regexp: "1", priority: 6,
 			wantPlatformIDs: []*int64{ptrInt64(2), ptrInt64(4), ptrInt64(2), nil},
 		},
-		{name: "recalculates only item without a platform when the new platform has the lowest priority",
+		{
+			name:   "recalculates only item without a platform when the new platform has the lowest priority",
 			regexp: "1", priority: -1,
 			wantPlatformIDs: []*int64{ptrInt64(4), ptrInt64(1), ptrInt64(3), nil},
 		},
-		{name: "doesn't recalculate anything when regexp & priority stays unchanged",
+		{
+			name:   "doesn't recalculate anything when regexp & priority stays unchanged",
 			regexp: "^1.*", priority: 4,
 			wantPlatformIDs: []*int64{ptrInt64(4), ptrInt64(1), nil, ptrInt64(2)},
 		},

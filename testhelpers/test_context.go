@@ -53,6 +53,7 @@ var db *sql.DB
 
 const testAccessToken = "testsessiontestsessiontestsessio"
 
+// SetupScenarioContext initialiazes the context to execute a scenario.
 func (ctx *TestContext) SetupScenarioContext(godogCtx context.Context, sc *godog.Scenario) (context.Context, error) {
 	log.WithField("type", "test").Infof("Starting test scenario: %s", sc.Name)
 
@@ -99,6 +100,7 @@ func (ctx *TestContext) tearDownApp() {
 	ctx.application = nil
 }
 
+// ScenarioTeardown is executed after each scenario.
 func (ctx *TestContext) ScenarioTeardown(godogCtx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()

@@ -7,10 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
-
-	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -69,7 +68,7 @@ type Item struct {
 
 // ItemWithRequiredType represents common item fields plus the required type field.
 type ItemWithRequiredType struct {
-	Item `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+	Item `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
 	// enum: Chapter,Task,Skill
@@ -101,7 +100,7 @@ type itemParent struct {
 	ContentViewPropagation string `json:"content_view_propagation" validate:"oneof=none as_info as_content"`
 	// default: as_is
 	// enum: use_content_view_propagation,as_content_with_descendants,as_is
-	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` // nolint:lll
+	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"`
 	// default: true
 	GrantViewPropagation bool `json:"grant_view_propagation"`
 	// default: true
@@ -116,13 +115,13 @@ type NewItemRequest struct {
 	// `default_language_tag` of the item
 	// required: true
 	LanguageTag   string                 `json:"language_tag" validate:"set,language_tag"`
-	newItemString `json:"string,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+	newItemString `json:"string,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 
 	Parent          itemParent `json:"parent"`
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
 	// Nullable fields are of pointer types
-	ItemWithRequiredType `json:"item,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+	ItemWithRequiredType `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
@@ -285,7 +284,8 @@ func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formda
 // constructParentItemIDValidator constructs a validator for the Parent.ItemID field.
 // The validator checks that the user has rights to manage the parent item's children (can_view >= content & can_edit >= children).
 func constructParentItemIDValidator(
-	store *database.DataStore, user *database.User, parentInfo *parentItemInfo) validator.Func {
+	store *database.DataStore, user *database.User, parentInfo *parentItemInfo,
+) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		err := store.Items().
 			JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
@@ -303,7 +303,8 @@ func constructParentItemIDValidator(
 // constructAsRootOfGroupIDValidator constructs a validator for the AsRootOfGroupID field.
 // The validator checks that the user has rights to manage the group (can_manage = memberships_and_group).
 func constructAsRootOfGroupIDValidator(
-	store *database.DataStore, user *database.User, formData *formdata.FormData) validator.Func {
+	store *database.DataStore, user *database.User, formData *formdata.FormData,
+) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		if !formData.IsSet("as_root_of_group_id") {
 			return true
@@ -371,7 +372,8 @@ func constructItemOptionsValidator() validator.Func {
 // all the children items are visible to the user (can_view != 'none').
 func constructChildrenValidator(store *database.DataStore, user *database.User,
 	childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
-	itemID *int64) validator.Func {
+	itemID *int64,
+) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
 
@@ -454,7 +456,8 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 
 // constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task).
 func constructChildrenAllowedValidator(
-	defaultItemType string, childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+	defaultItemType string, childrenInfoMap *map[int64]permissionAndType,
+) validator.Func { // nolint:gocritic
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		if len(*childrenInfoMap) == 0 {
 			return true
@@ -471,7 +474,7 @@ func constructChildrenAllowedValidator(
 }
 
 // constructChildTypeNonSkillValidator constructs a validator for the Children field that check
-// if a child's type is not 'Skill' when the items's type is not 'Skill'.
+// if a child's type is not 'Skill' when the item's type is not 'Skill'.
 func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
@@ -489,7 +492,8 @@ type parentItemInfo struct {
 }
 
 func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	parentInfo *parentItemInfo, childrenInfoMap *map[int64]permissionAndType) { // nolint:gocritic
+	parentInfo *parentItemInfo, childrenInfoMap *map[int64]permissionAndType,
+) { // nolint:gocritic
 	formData.RegisterValidation("parent_item_id",
 		formData.ValidatorSkippingUnsetFields(constructParentItemIDValidator(store, user, parentInfo)))
 	formData.RegisterTranslation("parent_item_id",
@@ -521,7 +525,8 @@ func registerLanguageTagValidator(formData *formdata.FormData, store *database.D
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
 	itemType string, childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
-	itemID *int64) {
+	itemID *int64,
+) {
 	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenInfoMap, oldPropagationLevelsMap, itemID))
 	formData.RegisterTranslation("children",
 		"children IDs should be unique and each should be visible to the user")
@@ -531,7 +536,8 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
-	newItemRequest *NewItemRequest) (itemID int64, apiError service.APIError) {
+	newItemRequest *NewItemRequest,
+) (itemID int64, apiError service.APIError) {
 	itemMap := formData.ConstructPartialMapForDB("ItemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 

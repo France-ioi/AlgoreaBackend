@@ -78,7 +78,7 @@ func doRequest(forcePanic bool) {
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL+"/a_path", nil)
+	mainRequest, _ := http.NewRequest("GET", mainSrv.URL+"/a_path", http.NoBody)
 	client := mainSrv.Client()
 	response, err := client.Do(mainRequest)
 	if err == nil {

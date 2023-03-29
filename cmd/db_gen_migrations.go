@@ -22,8 +22,8 @@ const (
 )
 
 // nolint:gosec
-func init() { // nolint:gochecknoinits,gocyclo,gocognit
-	var dbGenMigrationsCmd = &cobra.Command{
+func init() { //nolint:gochecknoinits,gocyclo,gocognit
+	dbGenMigrationsCmd := &cobra.Command{
 		Use:   "db-gen-migrations  [environment]",
 		Short: "generate migrations",
 		Long: `This script was used to generate the huge migration renaming most of the DB columns.
@@ -230,7 +230,7 @@ func fullTextReplace(renamedColumns map[string]string, text string) string {
 	return text
 }
 
-// nolint:gosec
+//nolint:gosec
 func getTables(db *sql.DB, dbName string) []string {
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables

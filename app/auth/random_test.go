@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"bou.ke/monkey"
-
 	"github.com/stretchr/testify/assert"
 )
 

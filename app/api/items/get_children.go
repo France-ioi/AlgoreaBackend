@@ -211,8 +211,7 @@ type rawListChildItem struct {
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError :=
-		srv.resolveGetParentsOrChildrenServiceParams(httpReq)
+	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -276,7 +275,8 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 
 func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, groupID int64, requiredViewPermissionOnItems string,
 	attemptID int64, watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
-	externalColumnList string) *database.DB {
+	externalColumnList string,
+) *database.DB {
 	return constructItemListQuery(
 		dataStore, groupID, requiredViewPermissionOnItems, watchedGroupIDSet, watchedGroupID, columnList, columnListValues,
 		externalColumnList,
@@ -296,7 +296,8 @@ func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, gro
 }
 
 func childItemsFromRawData(
-	rawData []rawListChildItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore) []childItem {
+	rawData []rawListChildItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore,
+) []childItem {
 	result := make([]childItem, 0, len(rawData))
 	var currentChild *childItem
 	for index := range rawData {

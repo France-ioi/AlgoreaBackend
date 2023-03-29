@@ -13,8 +13,8 @@ import (
 )
 
 // nolint:gosec
-func init() { // nolint:gochecknoinits,gocyclo
-	var deleteTempUsersCmd = &cobra.Command{
+func init() { //nolint:gochecknoinits,gocyclo
+	deleteTempUsersCmd := &cobra.Command{
 		Use:   "delete-temp-users [environment]",
 		Short: "delete all temporary users with expired sessions",
 		Run: func(cmd *cobra.Command, args []string) {

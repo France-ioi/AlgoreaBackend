@@ -13,13 +13,12 @@ import (
 	"strings"
 	"time"
 
-	english "github.com/go-playground/locales/en"
-	ut "github.com/go-playground/universal-translator"
-	"github.com/jinzhu/gorm"
-
 	"github.com/France-ioi/mapstructure"
 	"github.com/France-ioi/validator"
 	"github.com/France-ioi/validator/translations/en"
+	english "github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
@@ -38,9 +37,11 @@ type FormData struct {
 	trans    ut.Translator
 }
 
-const set = "set"
-const null = "null"
-const squash = "squash"
+const (
+	set    = "set"
+	null   = "null"
+	squash = "squash"
+)
 
 // NewFormData creates a new FormData object for given definitions.
 func NewFormData(definitionStructure interface{}) *FormData {
@@ -48,8 +49,8 @@ func NewFormData(definitionStructure interface{}) *FormData {
 	validate := validator.New()
 
 	// Initialize go-playground/validator's default error messages in English
-	var eng = english.New()
-	var uni = ut.New(eng, eng)
+	eng := english.New()
+	uni := ut.New(eng, eng)
 	trans, _ := uni.GetTranslator("en")
 	_ = en.RegisterDefaultTranslations(validate, trans)
 
@@ -210,8 +211,10 @@ func (f *FormData) ValidatorSkippingUnchangedFields(nestedValidator validator.Fu
 	})
 }
 
-var mapstructTypeErrorRegexp = regexp.MustCompile(`^'([^']*)'\s+(.*)$`)
-var mapstructDecodingErrorRegexp = regexp.MustCompile(`^error decoding '([^']*)':\s+(.*)$`)
+var (
+	mapstructTypeErrorRegexp     = regexp.MustCompile(`^'([^']*)'\s+(.*)$`)
+	mapstructDecodingErrorRegexp = regexp.MustCompile(`^error decoding '([^']*)':\s+(.*)$`)
+)
 
 func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	var rawData map[string]interface{}
@@ -245,7 +248,6 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 		ZeroFields:       true, // this marks keys with null values as used
 		WeaklyTypedInput: false,
 	})
-
 	if err != nil {
 		panic(err) // this error can only be caused by bugs in the code
 	}
@@ -365,7 +367,8 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 }
 
 func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.StructField, jsonName string) bool,
-	reflValue reflect.Value, prefix string) {
+	reflValue reflect.Value, prefix string,
+) {
 	for reflValue.Kind() == reflect.Ptr {
 		reflValue = reflValue.Elem()
 	}
@@ -449,7 +452,8 @@ func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 	return func(
 		f reflect.Type,
 		t reflect.Type,
-		data interface{}) (interface{}, error) {
+		data interface{},
+	) (interface{}, error) {
 		if t.Name() != "Anything" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/formdata" {
 			return data, nil
 		}
@@ -468,7 +472,8 @@ func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 	return func(
 		f reflect.Type,
 		t reflect.Type,
-		data interface{}) (interface{}, error) {
+		data interface{},
+	) (interface{}, error) {
 		if t.Kind() != reflect.Int64 || f.Kind() != reflect.String {
 			return data, nil
 		}
@@ -483,7 +488,8 @@ func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc 
 	return func(
 		f reflect.Type,
 		t reflect.Type,
-		data interface{}) (interface{}, error) {
+		data interface{},
+	) (interface{}, error) {
 		if f.Kind() != reflect.String || t.Name() != "Time" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/database" {
 			return data, nil
 		}

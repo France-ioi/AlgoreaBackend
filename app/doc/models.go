@@ -3,7 +3,7 @@ package doc
 import "time"
 
 // swagger:model createdResponse
-type CreatedResponse struct { //nolint:deadcode Used for documentation.
+type CreatedResponse struct {
 	// "created"
 	// enum: created
 	// required: true
@@ -14,7 +14,7 @@ type CreatedResponse struct { //nolint:deadcode Used for documentation.
 }
 
 // swagger:model userCreateTmpResponse
-type userCreateTmpResponse struct { //nolint:deadcode Used for documentation.
+type userCreateTmpResponse struct {
 	// description
 	// swagger:allOf
 	CreatedResponse
@@ -30,7 +30,7 @@ type userCreateTmpResponse struct { //nolint:deadcode Used for documentation.
 }
 
 // swagger:model groupsMembershipHistoryResponseRow
-type groupsMembershipHistoryResponseRow struct { //nolint:deadcode Used for documentation.
+type groupsMembershipHistoryResponseRow struct {
 	// `group_membership_changes.at`
 	// required: true
 	At time.Time `json:"at"`
@@ -53,7 +53,7 @@ type groupsMembershipHistoryResponseRow struct { //nolint:deadcode Used for docu
 }
 
 // swagger:model invitationsViewResponseRow
-type invitationsViewResponseRow struct { //nolint:deadcode Used for documentation.
+type invitationsViewResponseRow struct {
 	// `group_membership_changes.group_id`
 	// required: true
 	GroupID int64 `json:"group_id"`

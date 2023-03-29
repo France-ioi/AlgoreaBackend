@@ -101,7 +101,8 @@ func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.R
 
 func (srv *Service) getItemPrerequisitesOrDependencies(
 	rw http.ResponseWriter, httpReq *http.Request,
-	givenColumn, joinToColumn string) service.APIError {
+	givenColumn, joinToColumn string,
+) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -163,7 +164,8 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 
 func prerequisiteOrDependencyItemsFromRawData(
 	rawData []rawPrerequisiteOrDependencyItem, watchedGroupIDSet bool,
-	permissionGrantedStore *database.PermissionGrantedStore) []prerequisiteOrDependencyItem {
+	permissionGrantedStore *database.PermissionGrantedStore,
+) []prerequisiteOrDependencyItem {
 	result := make([]prerequisiteOrDependencyItem, 0, len(rawData))
 	for index := range rawData {
 		item := prerequisiteOrDependencyItem{

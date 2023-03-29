@@ -206,7 +206,8 @@ func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.
 }
 
 func fillNavigationWithChildren(
-	store *database.DataStore, rawData []rawNavigationItem, watchedGroupIDSet bool, target *[]navigationItemChild) {
+	store *database.DataStore, rawData []rawNavigationItem, watchedGroupIDSet bool, target *[]navigationItemChild,
+) {
 	*target = make([]navigationItemChild, 0, len(rawData)-1)
 	var currentChild *navigationItemChild
 	if len(rawData) > 0 && rawData[0].CanViewGeneratedValue == store.PermissionsGranted().ViewIndexByName("info") {

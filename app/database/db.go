@@ -41,7 +41,7 @@ func newDB(ctx context.Context, db *gorm.DB) *DB {
 func Open(source interface{}) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
-	var driverName = "mysql"
+	driverName := "mysql"
 	logger, logMode, _ := log.SharedLogger.NewDBLogger()
 
 	var rawConnection gorm.SQLCommon
@@ -92,8 +92,10 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	return conn.inTransactionWithCount(txFunc, 0)
 }
 
-const transactionRetriesLimit = 30
-const transactionDelayBetweenRetries = 1000 * time.Millisecond
+const (
+	transactionRetriesLimit        = 30
+	transactionDelayBetweenRetries = 1000 * time.Millisecond
+)
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err error) {
 	if count > transactionRetriesLimit {
@@ -104,7 +106,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
 	}
 
-	var txDB = conn.db.Begin()
+	txDB := conn.db.Begin()
 	if txDB.Error != nil {
 		return txDB.Error
 	}
@@ -136,7 +138,8 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 }
 
 func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle, rollbackErr error,
-	returnErr *error) bool { //nolint:gocritic
+	returnErr *error,
+) bool {
 	// Error 1213: Deadlock found when trying to get lock; try restarting transaction
 	if errToHandle != nil && IsLockDeadlockError(errToHandle) {
 		if rollbackErr != nil {
@@ -193,7 +196,8 @@ func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
 }
 
 // Joins specifies Joins conditions
-//     db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
+//
+//	db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
 func (conn *DB) Joins(query string, args ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Joins(query, args...))
 }
@@ -215,9 +219,10 @@ func (conn *DB) Group(query string) *DB {
 }
 
 // Order specifies order when retrieve records from database, set reorder to `true` to overwrite defined conditions
-//     db.Order("name DESC")
-//     db.Order("name DESC", true) // reorder
-//     db.Order(gorm.SqlExpr("name = ? DESC", "first")) // sql expression
+//
+//	db.Order("name DESC")
+//	db.Order("name DESC", true) // reorder
+//	db.Order(gorm.SqlExpr("name = ? DESC", "first")) // sql expression
 func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
 	return newDB(conn.ctx, conn.db.Order(value, reorder...))
 }
@@ -238,7 +243,8 @@ func (conn *DB) UnionAll(query interface{}) *DB {
 }
 
 // Raw uses raw sql as conditions
-//    db.Raw("SELECT name, age FROM users WHERE name = ?", 3).Scan(&result)
+//
+//	db.Raw("SELECT name, age FROM users WHERE name = ?", 3).Scan(&result)
 func (conn *DB) Raw(query string, args ...interface{}) *DB {
 	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
 	return newDB(conn.ctx, conn.db.Raw("").Joins(query, args...))
@@ -297,7 +303,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 	}
 
 	for rows.Next() {
-		if err := rows.Scan(valuesPointers...); conn.db.AddError(err) != nil {
+		if err := rows.Scan(valuesPointers...); conn.db.AddError(err) != nil { //nolint:gocritic Err is checked with AddError.
 			return conn
 		}
 		for index, valuePointer := range valuesPointers {
@@ -360,14 +366,14 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interfa
 		columnPointers[i] = &columns[i]
 	}
 
-	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil {
+	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil { //nolint:gocritic Err is checked with AddError.
 		return nil
 	}
 
 	rowMap := make(map[string]interface{})
 	for i, columnName := range cols {
 		if value, ok := columns[i].([]byte); ok {
-			columns[i] = *(*string)(unsafe.Pointer(&value)) // nolint:gosec
+			columns[i] = *(*string)(unsafe.Pointer(&value)) //nolint:gosec
 		}
 		rowMap[columnName] = columns[i]
 	}
@@ -383,8 +389,10 @@ func (conn *DB) Count(dest interface{}) *DB {
 }
 
 // Pluck is used to query a single column into a slice of values
-//     var ids []int64
-//     db.Table("users").Pluck("id", &ids)
+//
+//	var ids []int64
+//	db.Table("users").Pluck("id", &ids)
+//
 // The 'values' parameter should be a pointer to a slice.
 func (conn *DB) Pluck(column string, values interface{}) *DB {
 	if conn.db.Error != nil {
@@ -404,8 +412,10 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 }
 
 // PluckFirst is used to query a single column and take the first value
-//     var id int64
-//     db.Table("users").PluckFirst("id", &id)
+//
+//	var id int64
+//	db.Table("users").PluckFirst("id", &id)
+//
 // The 'values' parameter should be a pointer to a value.
 func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 	valuesReflValue := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(value).Elem()), 0, 1)
@@ -481,7 +491,8 @@ func (conn *DB) InsertIgnoreMaps(tableName string, dataMaps []map[string]interfa
 }
 
 func (conn *DB) constructInsertMapsStatement(
-	dataMaps []map[string]interface{}, tableName string, ignore bool) (query string, values []interface{}) {
+	dataMaps []map[string]interface{}, tableName string, ignore bool,
+) (query string, values []interface{}) {
 	// data for the building the SQL request
 	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...), ...", values...
 	values = make([]interface{}, 0, len(dataMaps)*len(dataMaps[0]))
@@ -676,5 +687,5 @@ func EscapeLikeString(v string, escapeCharacter byte) string {
 	}
 
 	result := buf[:pos]
-	return *(*string)(unsafe.Pointer(&result)) // nolint:gosec
+	return *(*string)(unsafe.Pointer(&result)) //nolint:gosec
 }

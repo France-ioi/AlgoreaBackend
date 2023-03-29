@@ -35,13 +35,17 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 		wantError     error
 	}{
 		{name: "empty info", participantID: 11, attemptID: 1, itemID: 12, wantHintsInfo: &database.HintsInfo{}},
-		{name: "with info", participantID: 11, attemptID: 2, itemID: 12,
+		{
+			name: "with info", participantID: 11, attemptID: 2, itemID: 12,
 			wantHintsInfo: &database.HintsInfo{
 				HintsRequested: ptrString(`[0,1,"hint",null]`),
 				HintsCached:    4,
-			}},
-		{name: "finished", participantID: 12, attemptID: 2, itemID: 14, wantHintsInfo: nil,
-			wantError: gorm.ErrRecordNotFound},
+			},
+		},
+		{
+			name: "finished", participantID: 12, attemptID: 2, itemID: 14, wantHintsInfo: nil,
+			wantError: gorm.ErrRecordNotFound,
+		},
 	}
 	for _, test := range tests {
 		test := test

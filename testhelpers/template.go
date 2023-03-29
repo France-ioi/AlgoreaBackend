@@ -23,7 +23,6 @@ var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
 
 func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
 	tmpl, err := ctx.templateSet.Parse("template", jsonBody)
-
 	if err != nil {
 		return "", err
 	}
@@ -39,7 +38,7 @@ func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
 
 func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	set := jet.NewSet(jet.SafeWriter(func(w io.Writer, b []byte) {
-		w.Write(b) // nolint:gosec,errcheck
+		w.Write(b) //nolint:gosec,errcheck
 	}))
 
 	set.AddGlobalFunc("currentTimeInFormat", func(a jet.Arguments) reflect.Value {

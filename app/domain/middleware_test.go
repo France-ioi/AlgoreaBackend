@@ -99,7 +99,8 @@ func TestMiddleware(t *testing.T) {
 }
 
 func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string, shouldEnterService bool,
-	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig, expectedDomain string) {
+	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig, expectedDomain string,
+) {
 	// dummy server using the middleware
 	middleware := Middleware(domains, domainOverride)
 	enteredService := false // used to log if the service has been reached
@@ -115,7 +116,7 @@ func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string,
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, nil)
+	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
 	client := &http.Client{}
 	response, err := client.Do(mainRequest)
 	var body string

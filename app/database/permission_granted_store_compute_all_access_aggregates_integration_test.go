@@ -252,46 +252,76 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 		upperViewLevelsPropagation string
 		expectedCanView            string
 	}{
-		{canView: "none", contentViewPropagation: "as_content",
+		{
+			canView: "none", contentViewPropagation: "as_content",
 			upperViewLevelsPropagation: "as_is",
-			expectedCanView:            "none"},
-		{canView: "info", contentViewPropagation: "as_content",
+			expectedCanView:            "none",
+		},
+		{
+			canView: "info", contentViewPropagation: "as_content",
 			upperViewLevelsPropagation: "as_is",
-			expectedCanView:            "none"},
-		{canView: "content", contentViewPropagation: "none",
+			expectedCanView:            "none",
+		},
+		{
+			canView: "content", contentViewPropagation: "none",
 			upperViewLevelsPropagation: "as_is",
-			expectedCanView:            "none"},
-		{canView: "content", contentViewPropagation: "as_info",
+			expectedCanView:            "none",
+		},
+		{
+			canView: "content", contentViewPropagation: "as_info",
 			upperViewLevelsPropagation: "as_is",
-			expectedCanView:            "info"},
-		{canView: "content", contentViewPropagation: "as_content",
+			expectedCanView:            "info",
+		},
+		{
+			canView: "content", contentViewPropagation: "as_content",
 			upperViewLevelsPropagation: "as_is",
-			expectedCanView:            "content"},
-		{canView: "content_with_descendants", contentViewPropagation: "none",
+			expectedCanView:            "content",
+		},
+		{
+			canView: "content_with_descendants", contentViewPropagation: "none",
 			upperViewLevelsPropagation: "use_content_view_propagation",
-			expectedCanView:            "none"},
-		{canView: "content_with_descendants", contentViewPropagation: "as_info",
+			expectedCanView:            "none",
+		},
+		{
+			canView: "content_with_descendants", contentViewPropagation: "as_info",
 			upperViewLevelsPropagation: "use_content_view_propagation",
-			expectedCanView:            "info"},
-		{canView: "content_with_descendants", contentViewPropagation: "as_content",
+			expectedCanView:            "info",
+		},
+		{
+			canView: "content_with_descendants", contentViewPropagation: "as_content",
 			upperViewLevelsPropagation: "use_content_view_propagation",
-			expectedCanView:            "content"},
-		{canView: "content_with_descendants", contentViewPropagation: "none",
+			expectedCanView:            "content",
+		},
+		{
+			canView: "content_with_descendants", contentViewPropagation: "none",
 			upperViewLevelsPropagation: "as_content_with_descendants",
-			expectedCanView:            "content_with_descendants"},
-		{canView: "content_with_descendants", contentViewPropagation: "none",
+			expectedCanView:            "content_with_descendants",
+		},
+		{
+			canView: "content_with_descendants", contentViewPropagation: "none",
 			upperViewLevelsPropagation: "as_is",
-			expectedCanView:            "content_with_descendants"},
-		{canView: "solution", contentViewPropagation: "none",
-			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "none"},
-		{canView: "solution", contentViewPropagation: "as_info",
-			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "info"},
-		{canView: "solution", contentViewPropagation: "as_content",
-			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "content"},
-		{canView: "solution", contentViewPropagation: "none",
-			upperViewLevelsPropagation: "as_content_with_descendants", expectedCanView: "content_with_descendants"},
-		{canView: "solution", contentViewPropagation: "none",
-			upperViewLevelsPropagation: "as_is", expectedCanView: "solution"},
+			expectedCanView:            "content_with_descendants",
+		},
+		{
+			canView: "solution", contentViewPropagation: "none",
+			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "none",
+		},
+		{
+			canView: "solution", contentViewPropagation: "as_info",
+			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "info",
+		},
+		{
+			canView: "solution", contentViewPropagation: "as_content",
+			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "content",
+		},
+		{
+			canView: "solution", contentViewPropagation: "none",
+			upperViewLevelsPropagation: "as_content_with_descendants", expectedCanView: "content_with_descendants",
+		},
+		{
+			canView: "solution", contentViewPropagation: "none",
+			upperViewLevelsPropagation: "as_is", expectedCanView: "solution",
+		},
 	} {
 		testcase := testcase
 		t.Run(testcase.canView+" as "+testcase.expectedCanView, func(t *testing.T) {

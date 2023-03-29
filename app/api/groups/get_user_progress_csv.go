@@ -178,7 +178,8 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 
 func printTableHeader(
 	store *database.DataStore, user *database.User, uniqueItemIDs []string, orderedItemIDListWithDuplicates []interface{},
-	itemOrder []int, csvWriter *csv.Writer, firstColumns []string) {
+	itemOrder []int, csvWriter *csv.Writer, firstColumns []string,
+) {
 	var items []struct {
 		ID           int64  `json:"id"`
 		ParentItemID int64  `json:"parent_item_id"`
@@ -210,7 +211,8 @@ func processCSVResultRow(
 	uniqueItemsCount int,
 	groupNumber *int,
 	generateGroupNamesFunc func(groupID int64) []string,
-	csvWriter *csv.Writer) func(m map[string]interface{}) error {
+	csvWriter *csv.Writer,
+) func(m map[string]interface{}) error {
 	var rowArray []string
 	var cellsMap map[int64]string
 	currentRowNumber := 0

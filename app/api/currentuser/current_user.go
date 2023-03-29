@@ -147,7 +147,8 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 }
 
 func performUserGroupRelationAction(action userGroupRelationAction, store *database.DataStore, user *database.User,
-	groupID int64, approvals database.GroupApprovals) (service.APIError, database.GroupGroupTransitionResult, database.GroupApprovals) {
+	groupID int64, approvals database.GroupApprovals,
+) (service.APIError, database.GroupGroupTransitionResult, database.GroupApprovals) {
 	var err error
 	apiError := service.NoError
 
@@ -198,7 +199,8 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 }
 
 func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
-	groupID int64, action userGroupRelationAction) service.APIError {
+	groupID int64, action userGroupRelationAction,
+) service.APIError {
 	// The group should exist (and optionally should have `is_public` = 1)
 	query := store.Groups().ByID(groupID).
 		Where("type != 'User'").Select("type, frozen_membership").WithWriteLock()

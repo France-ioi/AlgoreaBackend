@@ -183,7 +183,8 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 }
 
 func checkCreateUserBatchRequestParameters(store *database.DataStore, user *database.User, input createUserBatchRequest) (
-	numberOfUsersToBeCreated int, subgroupsApprovals []subgroupApproval, apiError service.APIError) {
+	numberOfUsersToBeCreated int, subgroupsApprovals []subgroupApproval, apiError service.APIError,
+) {
 	var prefixInfo struct {
 		GroupID  int64
 		MaxUsers int
@@ -253,7 +254,8 @@ type resultRow struct {
 }
 
 func createBatchUsersInDB(store *database.DataStore, input createUserBatchRequest, r *http.Request, numberOfUsersToBeCreated int,
-	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User) []*resultRow {
+	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User,
+) []*resultRow {
 	result := make([]*resultRow, 0, len(subgroupsApprovals))
 
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
@@ -305,13 +307,15 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 				map[string]interface{}{
 					"parent_group_id":                domainConfig.AllUsersGroupID,
 					"child_group_id":                 userGroupID,
-					"personal_info_view_approved_at": nil, "lock_membership_approved_at": nil, "watch_approved_at": nil},
+					"personal_info_view_approved_at": nil, "lock_membership_approved_at": nil, "watch_approved_at": nil,
+				},
 				map[string]interface{}{
 					"parent_group_id":                input.Subgroups[currentSubgroupIndex].GroupID,
 					"child_group_id":                 userGroupID,
 					"personal_info_view_approved_at": personalInfoApprovedAt,
 					"lock_membership_approved_at":    lockMembershipApprovedAt,
-					"watch_approved_at":              watchApprovedAt},
+					"watch_approved_at":              watchApprovedAt,
+				},
 			)
 
 			usersToCreate = append(usersToCreate, map[string]interface{}{

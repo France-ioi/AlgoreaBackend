@@ -11,7 +11,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -19,9 +18,9 @@ import (
 type threadUpdateFields struct {
 	// Optional
 	// enum: waiting_for_participant,waiting_for_trainer,closed
-	Status string `json:"status" validate:"helper_group_id_set_if_non_open_to_open_status,oneof=waiting_for_participant waiting_for_trainer closed"` // nolint
+	Status string `json:"status" validate:"helper_group_id_set_if_non_open_to_open_status,oneof=waiting_for_participant waiting_for_trainer closed"` //nolint
 	// Optional
-	HelperGroupID *int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=user_id,group_visible_by=participant_id,can_request_help_to_when_own_thread"` // nolint
+	HelperGroupID *int64 `json:"helper_group_id" validate:"helper_group_id_not_set_when_set_or_keep_closed,group_visible_by=user_id,group_visible_by=participant_id,can_request_help_to_when_own_thread"` //nolint
 	// Optional
 	MessageCount *int `json:"message_count" validate:"omitempty,gte=0,exclude_increment_if_message_count_set"`
 }
@@ -29,7 +28,7 @@ type threadUpdateFields struct {
 // updateThreadRequest is the expected input for thread updating
 // swagger:model threadEditRequest
 type updateThreadRequest struct {
-	threadUpdateFields `json:"thread,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+	threadUpdateFields `json:"thread,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 
 	ItemID        int64
 	ParticipantID int64
@@ -174,7 +173,8 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 }
 
 func computeNewThreadData(formData *formdata.FormData, oldMessageCount int, oldHelperGroupID int64,
-	input updateThreadRequest) map[string]interface{} {
+	input updateThreadRequest,
+) map[string]interface{} {
 	threadData := formData.ConstructPartialMapForDB("threadUpdateFields")
 	if formData.IsSet("message_count_increment") && input.MessageCountIncrement != nil {
 		threadData["message_count"] = newMessageCountWithIncrement(oldMessageCount, *input.MessageCountIncrement)
@@ -197,7 +197,8 @@ func computeNewThreadData(formData *formdata.FormData, oldMessageCount int, oldH
 }
 
 func checkUpdateThreadPermissions(user *database.User, store *database.DataStore, oldThreadStatus string,
-	input updateThreadRequest) service.APIError {
+	input updateThreadRequest,
+) service.APIError {
 	if input.Status == "" {
 		if input.HelperGroupID == nil && input.MessageCount == nil && input.MessageCountIncrement == nil {
 			return service.ErrInvalidRequest(
@@ -226,7 +227,8 @@ func newMessageCountWithIncrement(oldMessageCount, increment int) int {
 }
 
 func constructValidateCanRequestHelpToWhenOwnThread(user *database.User, store *database.DataStore,
-	participantID, itemID int64) validator.Func {
+	participantID, itemID int64,
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		if user.GroupID != participantID {
 			return true

@@ -175,10 +175,10 @@ func TestFormData_fieldPathInValidator(t *testing.T) {
 		Field *string `json:"field" validate:"custom|custom1"`
 	}
 	type TestNestedStruct struct {
-		TestNestedNestedStruct `json:"nested_nested,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+		TestNestedNestedStruct `json:"nested_nested,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 	}
 	type testStruct struct {
-		TestNestedStruct `json:"nested,squash"` // nolint:staticcheck SA5008: unknown JSON option "squash"
+		TestNestedStruct `json:"nested,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 	}
 
 	var path, path1 string

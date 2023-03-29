@@ -66,58 +66,60 @@ type transitionTest struct {
 	shouldRunListeners          bool
 }
 
-var allTheIDs = []int64{1, 2, 3, 4, 5, 6, 7, 10, 11, 20, 30}
-var allPossibleGroupsAncestors = []groupAncestor{
-	{AncestorGroupID: 1, ChildGroupID: 1, IsSelf: true},
-	{AncestorGroupID: 2, ChildGroupID: 2, IsSelf: true},
-	{AncestorGroupID: 3, ChildGroupID: 3, IsSelf: true},
-	{AncestorGroupID: 4, ChildGroupID: 4, IsSelf: true},
-	{AncestorGroupID: 5, ChildGroupID: 5, IsSelf: true},
-	{AncestorGroupID: 6, ChildGroupID: 6, IsSelf: true},
-	{AncestorGroupID: 7, ChildGroupID: 7, IsSelf: true},
-	{AncestorGroupID: 10, ChildGroupID: 10, IsSelf: true},
-	{AncestorGroupID: 11, ChildGroupID: 11, IsSelf: true},
-	{AncestorGroupID: 20, ChildGroupID: 1},
-	{AncestorGroupID: 20, ChildGroupID: 2},
-	{AncestorGroupID: 20, ChildGroupID: 3},
-	{AncestorGroupID: 20, ChildGroupID: 4},
-	{AncestorGroupID: 20, ChildGroupID: 5},
-	{AncestorGroupID: 20, ChildGroupID: 6},
-	{AncestorGroupID: 20, ChildGroupID: 7},
-	{AncestorGroupID: 20, ChildGroupID: 10},
-	{AncestorGroupID: 20, ChildGroupID: 11},
-	{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
-	{AncestorGroupID: 20, ChildGroupID: 50},
-	{AncestorGroupID: 20, ChildGroupID: 51},
-	{AncestorGroupID: 20, ChildGroupID: 52},
-	{AncestorGroupID: 20, ChildGroupID: 53},
-	{AncestorGroupID: 20, ChildGroupID: 54},
-	{AncestorGroupID: 20, ChildGroupID: 55},
-	{AncestorGroupID: 30, ChildGroupID: 1},
-	{AncestorGroupID: 30, ChildGroupID: 2},
-	{AncestorGroupID: 30, ChildGroupID: 3},
-	{AncestorGroupID: 30, ChildGroupID: 4},
-	{AncestorGroupID: 30, ChildGroupID: 5},
-	{AncestorGroupID: 30, ChildGroupID: 6},
-	{AncestorGroupID: 30, ChildGroupID: 7},
-	{AncestorGroupID: 30, ChildGroupID: 10},
-	{AncestorGroupID: 30, ChildGroupID: 11},
-	{AncestorGroupID: 30, ChildGroupID: 20},
-	{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
-	{AncestorGroupID: 30, ChildGroupID: 50},
-	{AncestorGroupID: 30, ChildGroupID: 51},
-	{AncestorGroupID: 30, ChildGroupID: 52},
-	{AncestorGroupID: 30, ChildGroupID: 53},
-	{AncestorGroupID: 30, ChildGroupID: 54},
-	{AncestorGroupID: 30, ChildGroupID: 55},
-	{AncestorGroupID: 50, ChildGroupID: 50, IsSelf: true},
-	{AncestorGroupID: 51, ChildGroupID: 51, IsSelf: true},
-	{AncestorGroupID: 52, ChildGroupID: 52, IsSelf: true},
-	{AncestorGroupID: 53, ChildGroupID: 53, IsSelf: true},
-	{AncestorGroupID: 54, ChildGroupID: 54, IsSelf: true},
-	{AncestorGroupID: 55, ChildGroupID: 55, IsSelf: true},
-	{AncestorGroupID: 111, ChildGroupID: 111, IsSelf: true},
-}
+var (
+	allTheIDs                  = []int64{1, 2, 3, 4, 5, 6, 7, 10, 11, 20, 30}
+	allPossibleGroupsAncestors = []groupAncestor{
+		{AncestorGroupID: 1, ChildGroupID: 1, IsSelf: true},
+		{AncestorGroupID: 2, ChildGroupID: 2, IsSelf: true},
+		{AncestorGroupID: 3, ChildGroupID: 3, IsSelf: true},
+		{AncestorGroupID: 4, ChildGroupID: 4, IsSelf: true},
+		{AncestorGroupID: 5, ChildGroupID: 5, IsSelf: true},
+		{AncestorGroupID: 6, ChildGroupID: 6, IsSelf: true},
+		{AncestorGroupID: 7, ChildGroupID: 7, IsSelf: true},
+		{AncestorGroupID: 10, ChildGroupID: 10, IsSelf: true},
+		{AncestorGroupID: 11, ChildGroupID: 11, IsSelf: true},
+		{AncestorGroupID: 20, ChildGroupID: 1},
+		{AncestorGroupID: 20, ChildGroupID: 2},
+		{AncestorGroupID: 20, ChildGroupID: 3},
+		{AncestorGroupID: 20, ChildGroupID: 4},
+		{AncestorGroupID: 20, ChildGroupID: 5},
+		{AncestorGroupID: 20, ChildGroupID: 6},
+		{AncestorGroupID: 20, ChildGroupID: 7},
+		{AncestorGroupID: 20, ChildGroupID: 10},
+		{AncestorGroupID: 20, ChildGroupID: 11},
+		{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
+		{AncestorGroupID: 20, ChildGroupID: 50},
+		{AncestorGroupID: 20, ChildGroupID: 51},
+		{AncestorGroupID: 20, ChildGroupID: 52},
+		{AncestorGroupID: 20, ChildGroupID: 53},
+		{AncestorGroupID: 20, ChildGroupID: 54},
+		{AncestorGroupID: 20, ChildGroupID: 55},
+		{AncestorGroupID: 30, ChildGroupID: 1},
+		{AncestorGroupID: 30, ChildGroupID: 2},
+		{AncestorGroupID: 30, ChildGroupID: 3},
+		{AncestorGroupID: 30, ChildGroupID: 4},
+		{AncestorGroupID: 30, ChildGroupID: 5},
+		{AncestorGroupID: 30, ChildGroupID: 6},
+		{AncestorGroupID: 30, ChildGroupID: 7},
+		{AncestorGroupID: 30, ChildGroupID: 10},
+		{AncestorGroupID: 30, ChildGroupID: 11},
+		{AncestorGroupID: 30, ChildGroupID: 20},
+		{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
+		{AncestorGroupID: 30, ChildGroupID: 50},
+		{AncestorGroupID: 30, ChildGroupID: 51},
+		{AncestorGroupID: 30, ChildGroupID: 52},
+		{AncestorGroupID: 30, ChildGroupID: 53},
+		{AncestorGroupID: 30, ChildGroupID: 54},
+		{AncestorGroupID: 30, ChildGroupID: 55},
+		{AncestorGroupID: 50, ChildGroupID: 50, IsSelf: true},
+		{AncestorGroupID: 51, ChildGroupID: 51, IsSelf: true},
+		{AncestorGroupID: 52, ChildGroupID: 52, IsSelf: true},
+		{AncestorGroupID: 53, ChildGroupID: 53, IsSelf: true},
+		{AncestorGroupID: 54, ChildGroupID: 54, IsSelf: true},
+		{AncestorGroupID: 55, ChildGroupID: 55, IsSelf: true},
+		{AncestorGroupID: 111, ChildGroupID: 111, IsSelf: true},
+	}
+)
 
 var groupAncestorsUnchanged = []groupAncestor{
 	{AncestorGroupID: 1, ChildGroupID: 1, IsSelf: true},
@@ -210,15 +212,18 @@ var generatedPermissionsUnchanged = []permissionsGeneratedResultRow{
 	{GroupID: 11, ItemID: 2, CanViewGenerated: "solution"},
 }
 
-var currentTimePtr = (*database.Time)(ptrTime(time.Now().UTC()))
-var userID = int64(111)
-var userIDPtr = &userID
+var (
+	currentTimePtr = (*database.Time)(ptrTime(time.Now().UTC()))
+	userID         = int64(111)
+	userIDPtr      = &userID
+)
 
 const maxDateTime = "9999-12-31 23:59:59"
 
 func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action database.GroupGroupTransitionAction,
 	expectedGroupMembershipAction database.GroupMembershipAction,
-	doNotEnforceMaxParticipants bool, maxParticipants *int) transitionTest {
+	doNotEnforceMaxParticipants bool, maxParticipants *int,
+) transitionTest {
 	resultForDirectRelations := database.Invalid
 	return transitionTest{
 		name:                        name,
@@ -268,7 +273,8 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 }
 
 func testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(name string, action database.GroupGroupTransitionAction,
-	acceptDirectRelations bool) transitionTest {
+	acceptDirectRelations bool,
+) transitionTest {
 	resultForDirectRelations := database.Invalid
 	if acceptDirectRelations {
 		resultForDirectRelations = database.Unchanged
@@ -296,7 +302,8 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipan
 
 func testTransitionAcceptingPendingRequest(name string, action database.GroupGroupTransitionAction,
 	acceptedID int64, pendingType, expectedGroupMembershipAction database.GroupMembershipAction,
-	doNotEnforceMaxParticipants bool, maxParticipants *int) transitionTest {
+	doNotEnforceMaxParticipants bool, maxParticipants *int,
+) transitionTest {
 	return transitionTest{
 		name:                        name,
 		action:                      action,
@@ -326,7 +333,8 @@ func testTransitionAcceptingPendingRequest(name string, action database.GroupGro
 }
 
 func testTransitionAcceptingPendingRequestEnforcingMaxParticipants(name string, action database.GroupGroupTransitionAction,
-	acceptedID int64, pendingType database.GroupMembershipAction) transitionTest {
+	acceptedID int64, pendingType database.GroupMembershipAction,
+) transitionTest {
 	return transitionTest{
 		name:                       name + " (enforcing max participants)",
 		action:                     action,
@@ -346,7 +354,8 @@ func testTransitionAcceptingPendingRequestEnforcingMaxParticipants(name string, 
 }
 
 func testTransitionRemovingUserFromGroup(name string, action database.GroupGroupTransitionAction,
-	expectedGroupMembershipAction database.GroupMembershipAction) transitionTest {
+	expectedGroupMembershipAction database.GroupMembershipAction,
+) transitionTest {
 	return transitionTest{
 		name:              name,
 		action:            action,
@@ -994,7 +1003,7 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 }
 
 func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoinRequests(t *testing.T) {
-	var expectedTime = (*database.Time)(ptrTime(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
+	expectedTime := (*database.Time)(ptrTime(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
 	for _, tt := range generateApprovalsTests(expectedTime) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -1100,7 +1109,8 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 }
 
 func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEnoughApprovalsInJoinRequestOnCreatingInvitation(
-	t *testing.T) {
+	t *testing.T,
+) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups:
 			- {id: 3}
@@ -1204,7 +1214,8 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 }
 
 func patchGroupGroups(old []groupGroup, diff map[string]*groupGroup,
-	added []groupGroup) []groupGroup {
+	added []groupGroup,
+) []groupGroup {
 	result := make([]groupGroup, 0, len(old)+len(added))
 	for _, relation := range old {
 		if patch, ok := diff[fmt.Sprintf("%d_%d", relation.ParentGroupID, relation.ChildGroupID)]; ok {
@@ -1220,7 +1231,8 @@ func patchGroupGroups(old []groupGroup, diff map[string]*groupGroup,
 }
 
 func patchGroupPendingRequests(old []groupPendingRequest, cycleWithType string, diff map[string]*groupPendingRequest,
-	added []groupPendingRequest) []groupPendingRequest {
+	added []groupPendingRequest,
+) []groupPendingRequest {
 	result := make([]groupPendingRequest, 0, len(old)+len(added))
 	for _, relation := range old {
 		if patch, ok := diff[fmt.Sprintf("%d_%d", relation.GroupID, relation.MemberID)]; ok {
@@ -1277,7 +1289,8 @@ func patchGrantedPermissions(old []grantedPermission, deleteIDs []string) []gran
 }
 
 func patchGeneratedPermissions(
-	old []permissionsGeneratedResultRow, canViewGeneratedChangeMap map[string]string) []permissionsGeneratedResultRow {
+	old []permissionsGeneratedResultRow, canViewGeneratedChangeMap map[string]string,
+) []permissionsGeneratedResultRow {
 	result := make([]permissionsGeneratedResultRow, 0, len(old))
 	for _, permission := range old {
 		result = append(result, permission)
@@ -1336,7 +1349,8 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 }
 
 func assertGroupPendingRequestsEqual(t *testing.T, groupPendingRequestStore *database.GroupPendingRequestStore,
-	expected []groupPendingRequest) {
+	expected []groupPendingRequest,
+) {
 	var groupPendingRequests []groupPendingRequest
 	assert.NoError(t, groupPendingRequestStore.Select(`
 			group_id, member_id, `+"`type`"+`, personal_info_view_approved,
@@ -1365,7 +1379,8 @@ func assertGroupPendingRequestsEqual(t *testing.T, groupPendingRequestStore *dat
 }
 
 func assertGroupMembershipChangesEqual(
-	t *testing.T, groupMembershipChangeStore *database.GroupMembershipChangeStore, expected []groupMembershipChange) {
+	t *testing.T, groupMembershipChangeStore *database.GroupMembershipChangeStore, expected []groupMembershipChange,
+) {
 	var groupMembershipChanges []groupMembershipChange
 	assert.NoError(t, groupMembershipChangeStore.Select("group_id, member_id, initiator_id, action, at").
 		Order("group_id, member_id, at").Scan(&groupMembershipChanges).Error())
@@ -1399,7 +1414,8 @@ func assertGrantedPermissionsEqual(t *testing.T, grantedPermissionStore *databas
 }
 
 func assertGeneratedPermissionsEqual(
-	t *testing.T, permissionGeneratedStore *database.PermissionGeneratedStore, expected []permissionsGeneratedResultRow) {
+	t *testing.T, permissionGeneratedStore *database.PermissionGeneratedStore, expected []permissionsGeneratedResultRow,
+) {
 	if expected == nil {
 		expected = make([]permissionsGeneratedResultRow, 0)
 	}

@@ -28,7 +28,7 @@ import (
 //	    * `as_team_id` (if given) should be the current user's team,
 //	    * the participant should have at least 'content' access on each listed item except the last one through that path,
 //	      and at least 'info' access on the last item,
-//	    * all the results within the ancestry of `attempt_id`/`parent_attempt_id` on the items path
+//	    * all the results within the ancestry of `attempt_id`/`parent_attempt_id` on the items' path
 //	      (except for the last item if `parent_attempt_id` is given) should be started (`started_at` is not null),
 //
 //	    otherwise the 'forbidden' error is returned.
@@ -140,7 +140,8 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 }
 
 func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
-	ids []int64, participantID, attemptID, parentAttemptID int64, attemptIDSet bool, user *database.User, apiError service.APIError) {
+	ids []int64, participantID, attemptID, parentAttemptID int64, attemptIDSet bool, user *database.User, apiError service.APIError,
+) {
 	var err error
 	ids, err = idsFromRequest(r)
 	if err != nil {
@@ -158,7 +159,8 @@ func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
 }
 
 func attemptIDOrParentAttemptID(r *http.Request) (
-	attemptID, parentAttemptID int64, attemptIDSet bool, apiError service.APIError) {
+	attemptID, parentAttemptID int64, attemptIDSet bool, apiError service.APIError,
+) {
 	var err error
 	attemptIDSet = len(r.URL.Query()["attempt_id"]) != 0
 	parentAttemptIDSet := len(r.URL.Query()["parent_attempt_id"]) != 0

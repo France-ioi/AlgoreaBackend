@@ -10,7 +10,8 @@ func (conn *DB) WhereUsersAreDescendantsOfGroup(groupID int64) *DB {
 // CheckIfTeamParticipationsConflictWithExistingUserMemberships returns true if the given team
 // has at least one active participation conflicting with active participations of the given user's teams.
 func (s *DataStore) CheckIfTeamParticipationsConflictWithExistingUserMemberships(
-	teamID, userGroupID int64, withLock bool) (bool, error) {
+	teamID, userGroupID int64, withLock bool,
+) (bool, error) {
 	contestsQuery := s.Attempts().
 		Where("attempts.participant_id = ?", teamID).Where("root_item_id IS NOT NULL").
 		Group("root_item_id")

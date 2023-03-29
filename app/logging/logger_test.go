@@ -31,7 +31,7 @@ func TestConfigure_FormatText(t *testing.T) {
 	conf := viper.New()
 	conf.Set("Format", "text")
 	conf.Set("Output", "file")
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.IsType(&logrus.TextFormatter{}, logger.Formatter)
 }
@@ -41,7 +41,7 @@ func TestConfigure_FormatJson(t *testing.T) {
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "file")
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.IsType(&logrus.JSONFormatter{}, logger.Formatter)
 }
@@ -51,7 +51,7 @@ func TestConfigure_FormatInvalid(t *testing.T) {
 	conf := viper.New()
 	conf.Set("Format", "yml")
 	conf.Set("Output", "file")
-	logger := new()
+	logger := createLogger()
 	assert.Panics(func() { logger.Configure(conf) })
 }
 
@@ -60,7 +60,7 @@ func TestConfigure_OutputStdout(t *testing.T) {
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.Equal(os.Stdout, logger.Out)
 }
@@ -70,7 +70,7 @@ func TestConfigure_OutputStderr(t *testing.T) {
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stderr")
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.Equal(os.Stderr, logger.Out)
 }
@@ -84,12 +84,12 @@ func TestConfigure_OutputFile(t *testing.T) {
 	// will append time to make sure not to match a prev exec of the test
 	timestamp := time.Now().UnixNano()
 
-	logger1 := new()
+	logger1 := createLogger()
 	logger1.Configure(conf)
 	logger1.Errorf("logexec1 %d", timestamp)
 
 	// redo another init to check it will not override
-	logger2 := new()
+	logger2 := createLogger()
 	logger2.Configure(conf)
 	logger2.Warnf("logexec2 %d", timestamp)
 
@@ -109,7 +109,7 @@ func TestConfigure_OutputFileError(t *testing.T) {
 	}
 	patch := monkey.Patch(os.OpenFile, fakeFunc)
 	defer patch.Unpatch()
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.Equal(os.Stdout, logger.Out)
 }
@@ -119,7 +119,7 @@ func TestConfigure_OutputInvalid(t *testing.T) {
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "S3")
-	logger := new()
+	logger := createLogger()
 	assert.Panics(func() { logger.Configure(conf) })
 }
 
@@ -129,7 +129,7 @@ func TestConfigure_LevelDefault(t *testing.T) {
 	conf.Set("Format", "text")
 	conf.Set("Output", "file")
 	conf.Set("Level", "")
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.Equal(logrus.InfoLevel, logger.Level)
 }
@@ -140,7 +140,7 @@ func TestConfigure_LevelParsed(t *testing.T) {
 	conf.Set("Format", "text")
 	conf.Set("Output", "file")
 	conf.Set("Level", "warn")
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.Equal(logrus.WarnLevel, logger.Level)
 }
@@ -151,7 +151,7 @@ func TestConfigure_LevelInvalid(t *testing.T) {
 	conf.Set("Format", "text")
 	conf.Set("Output", "file")
 	conf.Set("Level", "invalid_level")
-	logger := new()
+	logger := createLogger()
 	logger.Configure(conf)
 	assert.Equal(logrus.InfoLevel, logger.Level)
 }
