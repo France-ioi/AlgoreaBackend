@@ -27,7 +27,8 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	}
 
 	if count != len(objmap) {
-		return fmt.Errorf("the result does not have the expected length. Expected: %d, received: %d", count, len(objmap))
+		return fmt.Errorf("the result does not have the expected length. Expected: %d, received: %d on %v",
+			count, len(objmap), ctx.lastResponseBody)
 	}
 
 	return nil
@@ -50,12 +51,12 @@ func (ctx *TestContext) TheResponseShouldMatchFollowingJSONPath(dataTable *messa
 			case "value":
 				value = ctx.replaceReferencesByIDs(cell.Value)
 			default:
-				return fmt.Errorf("TheResponseShouldMatchFollowingJSONPath: unrecognized column name: %v", headerRow.Cells[j].Value)
+				return fmt.Errorf("call TheResponseShouldMatchFollowingJSONPath: unrecognized column name: %v", headerRow.Cells[j].Value)
 			}
 		}
 
 		if JSONPath == "" || value == "" {
-			return errors.New("TheResponseShouldMatchFollowingJSONPath: undefined JSONPath or value")
+			return errors.New("call TheResponseShouldMatchFollowingJSONPath: undefined JSONPath or value")
 		}
 
 		match, err := ctx.responseMatchesJSONPath(JSONPath, value)
@@ -72,7 +73,7 @@ func (ctx *TestContext) TheResponseShouldMatchFollowingJSONPath(dataTable *messa
 }
 
 // responseMatchesJSONPath checks whether the response matches a value at a JSONPath.
-func (ctx *TestContext) responseMatchesJSONPath(JSONPath, value string) (bool, error) {
+func (ctx *TestContext) responseMatchesJSONPath(JsonPath, value string) (bool, error) {
 	// Note: Unmarshal could be cached.
 	// Note: When XPath returns an array, it could be possible to use cache/sort to make if more efficient
 
@@ -82,7 +83,7 @@ func (ctx *TestContext) responseMatchesJSONPath(JSONPath, value string) (bool, e
 		return false, err
 	}
 
-	res, err := jsonpath.Get(JSONPath, JSONResponse)
+	res, err := jsonpath.Get(JsonPath, JSONResponse)
 	if err != nil {
 		return false, err
 	}

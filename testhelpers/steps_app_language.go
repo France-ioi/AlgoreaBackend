@@ -70,7 +70,8 @@ func (ctx *TestContext) populateDatabase() error {
 		return err
 	}
 
-	return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+	// add all the defined table rows in the database.
+	err = database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
@@ -84,6 +85,14 @@ func (ctx *TestContext) populateDatabase() error {
 		}
 
 		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// compute the group ancestors.
+	return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+		return store.GroupGroups().After()
 	})
 }
 
@@ -119,14 +128,6 @@ func (ctx *TestContext) addGroup(groupID, name, groupType string) {
 		"id":   groupID,
 		"name": name,
 		"type": groupType,
-	})
-}
-
-// addGroupAncestor adds a group in database.
-func (ctx *TestContext) addGroupAncestor(ancestorGroupID, childGroupID string) {
-	ctx.addInDatabase("groups_ancestors", ancestorGroupID+","+childGroupID, map[string]interface{}{
-		"ancestor_group_id": ancestorGroupID,
-		"child_group_id":    childGroupID,
 	})
 }
 
@@ -330,8 +331,8 @@ func (ctx *TestContext) IAmTheManagerOfTheGroupWith(parameters string) error {
 	return nil
 }
 
-// IAmTheManagerOfTheGroupWithId sets the user as a manager of a group with an id.
-func (ctx *TestContext) IAmTheManagerOfTheGroupWithId(groupID int64) error {
+// IAmTheManagerOfTheGroupWithID sets the user as a manager of a group with an id.
+func (ctx *TestContext) IAmTheManagerOfTheGroupWithID(groupID int64) error {
 	return ctx.IAmTheManagerOfTheGroupWith(getParametersString(map[string]string{
 		"id":                strconv.FormatInt(groupID, 10),
 		"can_watch_members": "false",
