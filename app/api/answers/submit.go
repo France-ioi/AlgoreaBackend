@@ -185,13 +185,11 @@ func (requestData *SubmitRequest) Bind(r *http.Request) error {
 	return nil
 }
 
-var (
-	_ render.Binder = (*SubmitRequest)(nil)
-)
+var _ render.Binder = (*SubmitRequest)(nil)
 
 // Created. Success response with answer_token
 // swagger:model answerSubmitResponse
-type answerSubmitResponse struct { //nolint:deadcode Used for documentation.
+type answerSubmitResponse struct {
 	// description
 	// swagger:allOf
 	doc.CreatedResponse

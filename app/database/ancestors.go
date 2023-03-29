@@ -132,6 +132,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	for i := 0; i < len(recomputeQueries); i++ {
 		recomputeAncestors[i], err = s.db.CommonDB().Prepare(recomputeQueries[i])
 		mustNotBeError(err)
+
 		defer func(i int) { mustNotBeError(recomputeAncestors[i].Close()) }(i)
 	}
 

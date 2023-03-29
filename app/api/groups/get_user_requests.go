@@ -200,7 +200,8 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 }
 
 func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, r *http.Request) (
-	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, apiError service.APIError) {
+	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, apiError service.APIError,
+) {
 	user := srv.GetUser(r)
 
 	var err error

@@ -46,7 +46,7 @@ func validateHMSForDuration(hms []string) bool {
 	return hours >= 0 && hours <= 838 && minutes >= 0 && minutes <= 59 && seconds >= 0 && seconds <= 59
 }
 
-var dmyDateRegexp = regexp.MustCompile(`^[0-3][0-9]-[0-1][0-9]-[\d]{4}$`)
+var dmyDateRegexp = regexp.MustCompile(`^[0-3]\d-[01]\d-\d{4}$`)
 
 func validateDMYDate(fl validator.FieldLevel) bool {
 	field := fl.Field()

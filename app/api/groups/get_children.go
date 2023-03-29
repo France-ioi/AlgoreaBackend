@@ -185,8 +185,8 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			result[index].ManagerPermissionsPart = nil
 			result[index].UserCountPart = nil
 		} else {
-			result[index].ManagerPermissionsPart.CurrentUserCanManage =
-				groupManagerStore.CanManageNameByIndex(result[index].CurrentUserCanManageValue)
+			result[index].ManagerPermissionsPart.CurrentUserCanManage = groupManagerStore.
+				CanManageNameByIndex(result[index].CurrentUserCanManageValue)
 		}
 	}
 

@@ -99,7 +99,7 @@ func TestServer_StartHandlesShutdownError(t *testing.T) {
 		exitCode = code
 		lock.Unlock()
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "Shutdown",
+	monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{ReadTimeout: 1 * time.Second}), "Shutdown",
 		func(*http.Server, context.Context) error { return errors.New("some errror") })
 	defer monkey.UnpatchAll()
 

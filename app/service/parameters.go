@@ -67,13 +67,14 @@ func ResolveURLQueryGetStringSliceField(req *http.Request, paramName string) ([]
 
 // ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters extracts a list of values
 // out from '<fieldName>_include'/'<fieldName>_exclude' request parameters:
-//   1. If none of '<fieldName>_include'/'<fieldName>_exclude' is present, all the known values are returned.
-//   2. If '<fieldName>_include' is present, then it becomes the result list.
-//   3. If '<fieldName>_exclude' is present, then we exclude all its values from the result list.
+//  1. If none of '<fieldName>_include'/'<fieldName>_exclude' is present, all the known values are returned.
+//  2. If '<fieldName>_include' is present, then it becomes the result list.
+//  3. If '<fieldName>_exclude' is present, then we exclude all its values from the result list.
 //
 // All values from both the request parameters are checked against the list of known values.
 func ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(
-	r *http.Request, fieldName string, knownValuesMap map[string]bool) ([]string, error) {
+	r *http.Request, fieldName string, knownValuesMap map[string]bool,
+) ([]string, error) {
 	var valuesMap map[string]bool
 	valuesToInclude, err := ResolveURLQueryGetStringSliceField(r, fieldName+"_include")
 	if err == nil {

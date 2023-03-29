@@ -11,14 +11,14 @@ package doc
 
 // BadRequest. There is an error in the input data which was provided (path or body) to this service.
 // swagger:response badRequestResponse
-type badRequestResponse struct { //nolint:deadcode Used for documentation.
+type badRequestResponse struct {
 	// in: body
 	Body struct{ badRequest }
 }
 
 // Unauthorized. The authorization token has not been provided or is invalid.
 // swagger:response unauthorizedResponse
-type unauthorizedResponse struct { //nolint:deadcode Used for documentation.
+type unauthorizedResponse struct {
 	// in: body
 	Body struct{ unauthorized }
 }
@@ -26,14 +26,14 @@ type unauthorizedResponse struct { //nolint:deadcode Used for documentation.
 // Forbidden. One of the permission requirements (cfr service description) is not met.
 // (note that some permission error may end up in not-found or bad-request errors)
 // swagger:response forbiddenResponse
-type forbiddenResponse struct { //nolint:deadcode Used for documentation.
+type forbiddenResponse struct {
 	// in: body
 	Body struct{ forbidden }
 }
 
 // Conflict. Wrong resource state is not allowing to perform the operation
 // swagger:response conflictResponse
-type conflictResponse struct { //nolint:deadcode Used for documentation.
+type conflictResponse struct {
 	// in: body
 	Body struct{ forbidden }
 }
@@ -41,7 +41,7 @@ type conflictResponse struct { //nolint:deadcode Used for documentation.
 // Not Found. The requested object (or its scope) is not found
 // (note that this error may be caused by insufficient access rights)
 // swagger:response notFoundResponse
-type notFoundResponse struct { //nolint:deadcode Used for documentation.
+type notFoundResponse struct {
 	// in: body
 	Body struct{ notFound }
 }
@@ -49,7 +49,7 @@ type notFoundResponse struct { //nolint:deadcode Used for documentation.
 // Unprocessable Entity. Returned by services performing groups relations transitions to indicate
 // that the transition is impossible.
 // swagger:response unprocessableEntityResponse
-type unprocessableEntityResponse struct { //nolint:deadcode Used for documentation.
+type unprocessableEntityResponse struct {
 	// in: body
 	Body struct{ unprocessableEntity }
 }
@@ -57,7 +57,7 @@ type unprocessableEntityResponse struct { //nolint:deadcode Used for documentati
 // Unprocessable Entity. Returned by services performing groups relations transitions to indicate
 // that the transition is impossible because of missing approvals.
 // swagger:response unprocessableEntityResponseWithMissingApprovals
-type unprocessableEntityResponseWithMissingApprovals struct { //nolint:deadcode Used for documentation.
+type unprocessableEntityResponseWithMissingApprovals struct {
 	// in:body
 	Body struct {
 		unprocessableEntityWithMissingApprovals
@@ -67,7 +67,7 @@ type unprocessableEntityResponseWithMissingApprovals struct { //nolint:deadcode 
 // Internal Error. An unexpected error has happened on the server (e.g., uncaught database error).
 // If the problem persists, it should be reported.
 // swagger:response internalErrorResponse
-type internalErrorResponse struct { //nolint:deadcode Used for documentation.
+type internalErrorResponse struct {
 	// in: body
 	Body struct{ internalError }
 }

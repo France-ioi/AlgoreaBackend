@@ -16,10 +16,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-var canViewValues = [...]string{"none", "info", "content", "content_with_descendants", "solution"}
-var canGrantViewValues = [...]string{"none", "enter", "content", "content_with_descendants", "solution", "solution_with_grant"}
-var canWatchValues = [...]string{"none", "result", "answer", "answer_with_grant"}
-var canEditValues = [...]string{"none", "children", "all", "all_with_grant"}
+var (
+	canViewValues      = [...]string{"none", "info", "content", "content_with_descendants", "solution"}
+	canGrantViewValues = [...]string{"none", "enter", "content", "content_with_descendants", "solution", "solution_with_grant"}
+	canWatchValues     = [...]string{"none", "result", "answer", "answer_with_grant"}
+	canEditValues      = [...]string{"none", "children", "all", "all_with_grant"}
+)
 
 func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 	type args struct {
@@ -96,7 +98,8 @@ func Test_checkIfPossibleToModifyCanGrantView_AllowsSettingLowerOrSameValue(t *t
 
 func testCheckerAllowsSettingLowerOrSameValue(
 	t *testing.T, values []string,
-	funcToCheck interface{}, currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions) {
+	funcToCheck interface{}, currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
+) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -238,7 +241,8 @@ func testCheckerRequiresManagerToHaveSpecificPermission(
 	t *testing.T, values []string, requiredPermission, userCanViewValue string,
 	funcToCheck func(string, *userPermissions, *managerGeneratedPermissions, *database.DataStore) bool,
 	managerPermissionsGenerator func(
-		newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions) {
+		newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
+) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -292,7 +296,8 @@ func testCheckerRequiresCanViewBeGreaterOrEqualToContent(
 	currentPermissionsGenerator func(
 		value interface{}, viewValue string, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions,
 	managerPermissionsGenerator func(
-		permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions) {
+		permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
+) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -560,7 +565,8 @@ func Test_checkIfPossibleToModifyCanEnterFrom_RequiresManagerToHaveCanGrantViewG
 }
 
 func testCheckerRequiresManagerToHaveCanGrantViewGreaterOrEqualToEnter(
-	t *testing.T, value, funcToCheck interface{}, currentPermissionsGenerator func() *userPermissions) {
+	t *testing.T, value, funcToCheck interface{}, currentPermissionsGenerator func() *userPermissions,
+) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -688,7 +694,8 @@ func Test_CanViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testi
 func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 	t *testing.T, values interface{}, fieldName string, checkFunc interface{},
 	currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
-	mockEnums bool) {
+	mockEnums bool,
+) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	if mockEnums {
@@ -714,7 +721,7 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 				currentPermissions := currentPermissionsGenerator(currentValue, permissionGrantedStore)
 				dataMap, modified, apiError := parsePermissionsInputData(dataStore,
 					&managerGeneratedPermissions{}, currentPermissions,
-					&http.Request{Body: ioutil.NopCloser(strings.NewReader(fmt.Sprintf(`{"%s":%#v}`, fieldName, newValue)))})
+					&http.Request{Body: ioutil.NopCloser(strings.NewReader(fmt.Sprintf(`{%q:%#v}`, fieldName, newValue)))})
 				assert.Equal(t, service.NoError, apiError)
 				assert.Equal(t, newValue != currentValue, modified)
 				assert.Equal(t, map[string]interface{}{fieldName: newValue}, dataMap)
@@ -812,7 +819,7 @@ func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
 	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions,
 		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_from":"%s"}`, "2019-05-30T11:00:00Z")))})
+			fmt.Sprintf(`{"can_enter_from":%q}`, "2019-05-30T11:00:00Z")))})
 	assert.Equal(t, service.NoError, apiError)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"can_enter_from": tm}, dataMap)
@@ -820,7 +827,7 @@ func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
 	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions,
 		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_from":"%s"}`, "2019-05-30T11:00:01Z")))})
+			fmt.Sprintf(`{"can_enter_from":%q}`, "2019-05-30T11:00:01Z")))})
 	assert.Equal(t, service.NoError, apiError)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{"can_enter_from": tmPlus}, dataMap)
@@ -847,7 +854,7 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions,
 		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_until":"%s"}`, "2019-05-30T11:00:00Z")))})
+			fmt.Sprintf(`{"can_enter_until":%q}`, "2019-05-30T11:00:00Z")))})
 	assert.Equal(t, service.NoError, apiError)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{
@@ -857,7 +864,7 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions,
 		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_until":"%s"}`, "2019-05-30T11:00:01Z")))})
+			fmt.Sprintf(`{"can_enter_until":%q}`, "2019-05-30T11:00:01Z")))})
 	assert.Equal(t, service.NoError, apiError)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{
@@ -935,12 +942,13 @@ func Test_correctPermissionsDataMap(t *testing.T) {
 		userPermissionsFunc func(value interface{}, canView string) *userPermissions
 		tests               []correctPermissionsDataMapTest
 	}{
-		{"can_grant_view", func(value interface{}, canView string) *userPermissions {
-			return &userPermissions{
-				CanViewValue:      permissionGrantedStore.ViewIndexByName(canView),
-				CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string)),
-			}
-		},
+		{
+			"can_grant_view", func(value interface{}, canView string) *userPermissions {
+				return &userPermissions{
+					CanViewValue:      permissionGrantedStore.ViewIndexByName(canView),
+					CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string)),
+				}
+			},
 			[]correctPermissionsDataMapTest{
 				{"none", "none", map[string]interface{}{}},
 				{"none", "enter", map[string]interface{}{"can_grant_view": "none"}},
@@ -986,12 +994,13 @@ func Test_correctPermissionsDataMap(t *testing.T) {
 				CanEditValue: permissionGrantedStore.EditIndexByName(value.(string)),
 			}
 		}, generateCorrectPermissionsDataMapTestsForWatchOrEdit("can_edit")},
-		{"can_make_session_official", func(value interface{}, canView string) *userPermissions {
-			return &userPermissions{
-				CanViewValue:           permissionGrantedStore.ViewIndexByName(canView),
-				CanMakeSessionOfficial: value.(bool),
-			}
-		},
+		{
+			"can_make_session_official", func(value interface{}, canView string) *userPermissions {
+				return &userPermissions{
+					CanViewValue:           permissionGrantedStore.ViewIndexByName(canView),
+					CanMakeSessionOfficial: value.(bool),
+				}
+			},
 			[]correctPermissionsDataMapTest{
 				{"none", false, map[string]interface{}{}},
 				{"none", true, map[string]interface{}{"can_make_session_official": false}},

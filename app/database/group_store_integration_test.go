@@ -1,4 +1,4 @@
-// +build !unit
+//go:build !unit
 
 package database_test
 
@@ -64,8 +64,10 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			var expectedAttempts []map[string]interface{}
 			if test.shouldCreateAttempts {
 				expectedAttempts = []map[string]interface{}{
-					{"participant_id": strconv.FormatInt(newID, 10), "id": "0", "creator_id": nil, "parent_attempt_id": nil,
-						"root_item_id": nil, "created_at_set": "1"},
+					{
+						"participant_id": strconv.FormatInt(newID, 10), "id": "0", "creator_id": nil, "parent_attempt_id": nil,
+						"root_item_id": nil, "created_at_set": "1",
+					},
 				}
 			}
 			assert.Equal(t, expectedAttempts, attempts)
@@ -330,9 +332,8 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					store.GroupGroups().CreateNewAncestors()
-					got, err :=
-						store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
-							tt.args.teamGroupID, tt.args.userID, tt.args.isAddition, withLock)
+					got, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
+						tt.args.teamGroupID, tt.args.userID, tt.args.isAddition, withLock)
 					if (err != nil) != tt.wantErr {
 						t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 						return nil

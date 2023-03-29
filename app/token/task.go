@@ -30,8 +30,10 @@ func (tt *Task) Sign(privateKey *rsa.PrivateKey) (string, error) {
 	return tt.MarshalString()
 }
 
-var _ json.Unmarshaler = (*Task)(nil)
-var _ json.Marshaler = (*Task)(nil)
-var _ UnmarshalStringer = (*Task)(nil)
-var _ MarshalStringer = (*Task)(nil)
-var _ Signer = (*Task)(nil)
+var (
+	_ json.Unmarshaler  = (*Task)(nil)
+	_ json.Marshaler    = (*Task)(nil)
+	_ UnmarshalStringer = (*Task)(nil)
+	_ MarshalStringer   = (*Task)(nil)
+	_ Signer            = (*Task)(nil)
+)

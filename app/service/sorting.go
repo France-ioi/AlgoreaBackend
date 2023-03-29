@@ -142,7 +142,8 @@ func chooseSortingRules(r *http.Request, defaultRules string, ignoreSortParamete
 // parseSortingRules returns a slice with used fields and a map fieldName -> sortingType
 // It also checks that there are no unallowed fields in the rules.
 func parseSortingRules(sortingRules string, configuredFields map[string]*FieldSortingParams, tieBreakerFields map[string]FieldType) (
-	usedFields []string, fieldsSortingTypes map[string]sortingType, err error) {
+	usedFields []string, fieldsSortingTypes map[string]sortingType, err error,
+) {
 	sortStatements := strings.Split(sortingRules, ",")
 	usedFields = make([]string, 0, len(sortStatements)+1)
 	fieldsSortingTypes = make(map[string]sortingType, len(sortStatements)+1)
@@ -190,7 +191,8 @@ func mustHaveValidTieBreakerFieldsList(configuredFields map[string]*FieldSorting
 }
 
 func validateSortingField(
-	fieldsSortingTypes map[string]sortingType, fieldName string, configuredFields map[string]*FieldSortingParams, sorting sortingType) error {
+	fieldsSortingTypes map[string]sortingType, fieldName string, configuredFields map[string]*FieldSortingParams, sorting sortingType,
+) error {
 	if _, ok := fieldsSortingTypes[fieldName]; ok {
 		return fmt.Errorf("a field cannot be a sorting parameter more than once: %q", fieldName)
 	}
@@ -228,7 +230,8 @@ func getFieldNameAndSortingTypeFromSortStatement(sortStatement string) (string, 
 // applyOrder appends the "ORDER BY" statement to given query according to the given list of used fields,
 // the fields configuration (configuredFields) and sorting types.
 func applyOrder(query *database.DB, usedFields []string, configuredFields map[string]*FieldSortingParams,
-	fieldsSortingTypes map[string]sortingType) *database.DB {
+	fieldsSortingTypes map[string]sortingType,
+) *database.DB {
 	usedFieldsNumber := len(usedFields)
 	orderStrings := make([]string, 0, usedFieldsNumber)
 	for _, field := range usedFields {
@@ -311,7 +314,8 @@ var safeColumnNameRegexp = regexp.MustCompile("[^a-zA-Z_0-9]")
 
 // applyPagingConditions adds filtering on paging values into the query.
 func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortingTypes map[string]sortingType,
-	configuredFields map[string]*FieldSortingParams, fromValues map[string]interface{}, startFromRowSubQuery interface{}) *database.DB {
+	configuredFields map[string]*FieldSortingParams, fromValues map[string]interface{}, startFromRowSubQuery interface{},
+) *database.DB {
 	if startFromRowSubQuery == nil && len(fromValues) == 0 || startFromRowSubQuery == FromFirstRow {
 		return query
 	}
@@ -336,7 +340,8 @@ func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortin
 
 func constructPagingConditions(usedFields []string, configuredFields map[string]*FieldSortingParams,
 	subQueryNeeded bool, fieldsSortingTypes map[string]sortingType, fromValues map[string]interface{}) (
-	conditions []string, queryValues []interface{}, safeColumnNames []string) {
+	conditions []string, queryValues []interface{}, safeColumnNames []string,
+) {
 	usedFieldsNumber := len(usedFields)
 	safeColumnNames = make([]string, usedFieldsNumber)
 	conditions = make([]string, 0, usedFieldsNumber)
@@ -379,7 +384,8 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 }
 
 func joinSubQueryForPaging(query *database.DB, usedFields []string, configuredFields map[string]*FieldSortingParams,
-	startFromRowSubQuery interface{}, safeColumnNames []string, fromValues map[string]interface{}, conditions []string) *database.DB {
+	startFromRowSubQuery interface{}, safeColumnNames []string, fromValues map[string]interface{}, conditions []string,
+) *database.DB {
 	if startFromRowSubQuery == nil {
 		startFromRowQuery := query
 		fieldsToSelect := make([]string, 0, len(fromValues))

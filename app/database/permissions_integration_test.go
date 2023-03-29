@@ -1,4 +1,4 @@
-// +build !unit
+//go:build !unit
 
 package database_test
 
@@ -52,31 +52,41 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 		{
 			ids: []int64{1, 2, 3}, permissionKind: "view", neededPermission: "info",
 			expectedResult: []map[string]interface{}{
-				{"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
-					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0)},
-				{"id": int64(3), "item_id": int64(3), "can_view_generated_value": int64(3), "can_grant_view_generated_value": int64(1),
-					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(2), "is_owner_generated": int64(0)},
+				{
+					"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
+					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0),
+				},
+				{
+					"id": int64(3), "item_id": int64(3), "can_view_generated_value": int64(3), "can_grant_view_generated_value": int64(1),
+					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(2), "is_owner_generated": int64(0),
+				},
 			},
 		},
 		{
 			ids: []int64{1, 2, 3}, permissionKind: "view", neededPermission: "solution",
 			expectedResult: []map[string]interface{}{
-				{"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
-					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0)},
+				{
+					"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
+					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0),
+				},
 			},
 		},
 		{
 			ids: []int64{1, 2, 3}, permissionKind: "edit", neededPermission: "all",
 			expectedResult: []map[string]interface{}{
-				{"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
-					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0)},
+				{
+					"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
+					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0),
+				},
 			},
 		},
 		{
 			ids: []int64{1, 4, 5}, permissionKind: "edit", neededPermission: "children",
 			expectedResult: []map[string]interface{}{
-				{"id": int64(4), "item_id": int64(4), "can_view_generated_value": int64(1), "can_grant_view_generated_value": int64(2),
-					"can_watch_generated_value": int64(1), "can_edit_generated_value": int64(2), "is_owner_generated": int64(1)},
+				{
+					"id": int64(4), "item_id": int64(4), "can_view_generated_value": int64(1), "can_grant_view_generated_value": int64(2),
+					"can_watch_generated_value": int64(1), "can_edit_generated_value": int64(2), "is_owner_generated": int64(1),
+				},
 			},
 		},
 	} {

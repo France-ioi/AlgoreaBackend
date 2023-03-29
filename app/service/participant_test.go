@@ -92,7 +92,8 @@ func TestParticipantMiddleware(t *testing.T) {
 }
 
 func callThroughParticipantMiddleware(userID, asTeamID int64, apiError APIError) (
-	called, enteredService bool, actualUserID int64, resp *http.Response, mock sqlmock.Sqlmock) {
+	called, enteredService bool, actualUserID int64, resp *http.Response, mock sqlmock.Sqlmock,
+) {
 	dbmock, mock := database.NewDBMock()
 	defer func() { _ = dbmock.Close() }()
 	userGuard := monkey.Patch(auth.UserFromContext, func(context.Context) *database.User {
@@ -124,7 +125,7 @@ func callThroughParticipantMiddleware(userID, asTeamID int64, apiError APIError)
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, nil)
+	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
 	mainRequest.Header.Add("Authorization", "Bearer 1234567")
 	client := &http.Client{}
 	resp, _ = client.Do(mainRequest)

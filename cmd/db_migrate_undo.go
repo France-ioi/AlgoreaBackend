@@ -13,8 +13,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
-func init() { // nolint:gochecknoinits
-	var migrateUndoCmd = &cobra.Command{
+func init() { //nolint:gochecknoinits
+	migrateUndoCmd := &cobra.Command{
 		Use:   "db-migrate-undo [environment]",
 		Short: "undo the last schema-change migration applied to the database",
 		Args:  cobra.MaximumNArgs(1),

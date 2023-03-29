@@ -11,9 +11,8 @@ import "database/sql"
 // 3. Then the loop repeats from step 1 for all children (from items_items) of the processed permissions_generated.
 //
 // Notes:
-//  - The function may loop endlessly if items_items is a cyclic graph.
-//  - Processed group-item pairs are removed from permissions_propagate.
-//
+//   - The function may loop endlessly if items_items is a cyclic graph.
+//   - Processed group-item pairs are removed from permissions_propagate.
 func (s *PermissionGrantedStore) computeAllAccess() {
 	s.mustBeInTransaction()
 

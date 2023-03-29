@@ -186,7 +186,8 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 }
 
 func generateGroupNameAndWriteEmptyRowsForSkippedGroups(
-	groupNumber *int, groups []idName, numberOfItems int, csvWriter *csv.Writer) func(groupID int64) []string {
+	groupNumber *int, groups []idName, numberOfItems int, csvWriter *csv.Writer,
+) func(groupID int64) []string {
 	return func(groupID int64) []string {
 		for ; groups[*groupNumber].ID != groupID; *groupNumber++ {
 			writeEmptyGroupProgressResultRow(csvWriter, groups[*groupNumber].Name, numberOfItems)

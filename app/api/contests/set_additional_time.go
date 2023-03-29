@@ -136,7 +136,8 @@ func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, 
 }
 
 func setAdditionalTimeForGroupInContest(
-	store *database.DataStore, groupID, itemID, participantsGroupID, durationInSeconds, additionalTimeInSeconds int64) {
+	store *database.DataStore, groupID, itemID, participantsGroupID, durationInSeconds, additionalTimeInSeconds int64,
+) {
 	groupContestItemStore := store.GroupContestItems()
 	scope := groupContestItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
 	found, err := scope.WithWriteLock().HasRows()

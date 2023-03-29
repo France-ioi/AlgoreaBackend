@@ -134,7 +134,8 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 }
 
 func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed) (validated, ok bool) {
+	requestData *saveGradeRequestParsed,
+) (validated, ok bool) {
 	score := requestData.ScoreToken.Converted.Score
 
 	gotFullScore := score == 100
@@ -194,7 +195,8 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 }
 
 func saveNewScoreIntoGradings(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed, score float64) bool {
+	requestData *saveGradeRequestParsed, score float64,
+) bool {
 	answerID := requestData.ScoreToken.Converted.UserAnswerID
 	gradingStore := store.Gradings()
 

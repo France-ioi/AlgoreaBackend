@@ -236,7 +236,8 @@ func (sp *storeProvider) GetStore(*http.Request) *database.DataStore { return sp
 var _ GetStorer = &storeProvider{}
 
 func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, cookieHeaders []string,
-	userID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
+	userID int64, dbError error,
+) (bool, *http.Response, sqlmock.Sqlmock) {
 	dbmock, mock := database.NewDBMock()
 	defer func() { _ = dbmock.Close() }()
 	if expectedSessionID != "" {
@@ -251,8 +252,10 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, c
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
-			neededRows := mock.NewRows([]string{"group_id", "login", "login_id", "is_admin", "access_group_id", "temp_user",
-				"notifications_read_at", "default_language"})
+			neededRows := mock.NewRows([]string{
+				"group_id", "login", "login_id", "is_admin", "access_group_id", "temp_user",
+				"notifications_read_at", "default_language",
+			})
 			if userID != 0 {
 				neededRows = neededRows.AddRow(userID, "login", "12345", int64(1), int64(23456), int64(1),
 					[]byte("2019-05-30 11:00:00"), "fr")
@@ -279,7 +282,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, c
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, nil)
+	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
 	for _, header := range authorizationHeaders {
 		mainRequest.Header.Add("Authorization", header)
 	}

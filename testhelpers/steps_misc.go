@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 package testhelpers
 
@@ -27,7 +27,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
-func (ctx *TestContext) IAmUserWithID(userID int64) error { // nolint
+func (ctx *TestContext) IAmUserWithID(userID int64) error { //nolint
 	ctx.userID = userID
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -45,7 +45,7 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error { // nolint
 	})
 }
 
-func (ctx *TestContext) TimeNow(timeStr string) error { // nolint
+func (ctx *TestContext) TimeNow(timeStr string) error { //nolint
 	testTime, err := time.Parse(time.RFC3339Nano, timeStr)
 	if err == nil {
 		monkey.Patch(time.Now, func() time.Time { return testTime })
@@ -53,20 +53,20 @@ func (ctx *TestContext) TimeNow(timeStr string) error { // nolint
 	return err
 }
 
-func (ctx *TestContext) TimeIsFrozen() error { // nolint
+func (ctx *TestContext) TimeIsFrozen() error { //nolint
 	currentTime := time.Now()
 	monkey.Patch(time.Now, func() time.Time { return currentTime })
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error { // nolint
+func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error { //nolint
 	monkey.Patch(groups.GenerateGroupCode, func() (string, error) { return generatedCode, nil }) // nolint:unparam
 	return nil
 }
 
 var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
 
-func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error { // nolint
+func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error { //nolint
 	currentIndex := 0
 	monkey.Patch(groups.GenerateGroupCode, func() (string, error) {
 		currentIndex++
@@ -80,12 +80,12 @@ func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error {
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedString string) error { // nolint
+func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedString string) error { //nolint
 	monkey.Patch(auth.GenerateKey, func() (string, error) { return generatedString, nil }) // nolint:unparam
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAuthKeysAre(generatedStrings string) error { // nolint
+func (ctx *TestContext) TheGeneratedAuthKeysAre(generatedStrings string) error { //nolint
 	currentIndex := 0
 	monkey.Patch(auth.GenerateKey, func() (string, error) {
 		currentIndex++
@@ -160,7 +160,7 @@ func (ctx *TestContext) TheApplicationConfigIs(body *messages.PickleStepArgument
 	return nil
 }
 
-func (ctx *TestContext) TheContextVariableIs(variableName, value string) error { // nolint
+func (ctx *TestContext) TheContextVariableIs(variableName, value string) error { //nolint
 	preprocessed, err := ctx.preprocessString(value)
 	if err != nil {
 		return err
@@ -169,7 +169,7 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	oldHTTPHandler := ctx.application.HTTPHandler
 	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			// nolint: golint,staticcheck SA1029: should not use built-in type string as key for value; define your own type to avoid collisions (staticcheck)
+			//nolint:lll,golint,staticcheck SA1029: should not use built-in type string as key for value; define your own type to avoid collisions (staticcheck)
 			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
 		})
 	}).(*chi.Mux)

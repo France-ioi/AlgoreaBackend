@@ -28,7 +28,8 @@ func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasV
 // (as *_generated_value) and item ids (as item_id)
 // for all the items on that the given group has 'permissionKind' >= `neededPermission`.
 func (s *PermissionGeneratedStore) AggregatedPermissionsForItemsOnWhichGroupHasPermission(
-	groupID int64, permissionKind, neededPermission string) *DB {
+	groupID int64, permissionKind, neededPermission string,
+) *DB {
 	return s.AggregatedPermissionsForItems(groupID).
 		HavingMaxPermissionAtLeast(permissionKind, neededPermission)
 }

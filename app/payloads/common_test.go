@@ -12,7 +12,7 @@ import (
 )
 
 func TestPayloads_ParseMap(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		name      string
 		raw       map[string]interface{}
 		want      interface{}
@@ -118,7 +118,7 @@ func TestConvertIntoMap(t *testing.T) {
 		Field string `json:"field"`
 	}
 	type testStruct struct {
-		notExported   string `json:"not_exported"` // nolint:govet
+		notExported   string `json:"not_exported"` //nolint:govet
 		Normal        string `json:"normal"`
 		WithoutTag    string
 		Skipped       string        `json:"-"`

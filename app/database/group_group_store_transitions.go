@@ -10,43 +10,43 @@ import (
 type GroupMembershipAction string
 
 const (
-	// InvitationCreated means a pending group admin's invitation for user to join a group was created
+	// InvitationCreated means a pending group admin's invitation for user to join a group was created.
 	InvitationCreated GroupMembershipAction = "invitation_created"
-	// JoinRequestCreated means a pending user's request to join a group was created
+	// JoinRequestCreated means a pending user's request to join a group was created.
 	JoinRequestCreated GroupMembershipAction = "join_request_created"
-	// InvitationAccepted means a user became a member of a group by accepting an invitation
+	// InvitationAccepted means a user became a member of a group by accepting an invitation.
 	InvitationAccepted GroupMembershipAction = "invitation_accepted"
-	// JoinRequestAccepted means a user became a member of a group since a group admin accepted his request
+	// JoinRequestAccepted means a user became a member of a group since a group admin accepted his request.
 	JoinRequestAccepted GroupMembershipAction = "join_request_accepted"
-	// LeaveRequestAccepted means a user left a group since a group admin accepted his leave request
+	// LeaveRequestAccepted means a user left a group since a group admin accepted his leave request.
 	LeaveRequestAccepted GroupMembershipAction = "leave_request_accepted"
-	// InvitationRefused means a user refused an invitation to join a group
+	// InvitationRefused means a user refused an invitation to join a group.
 	InvitationRefused GroupMembershipAction = "invitation_refused"
-	// InvitationWithdrawn means an admin withdrew his invitation to join a group
+	// InvitationWithdrawn means an admin withdrew his invitation to join a group.
 	InvitationWithdrawn GroupMembershipAction = "invitation_withdrawn"
-	// JoinedByBadge means a user has been added into a group because of a badge returned by the login module
+	// JoinedByBadge means a user has been added into a group because of a badge returned by the login module.
 	JoinedByBadge GroupMembershipAction = "joined_by_badge"
-	// JoinedByCode means a user joined a group by the group's code
+	// JoinedByCode means a user joined a group by the group's code.
 	JoinedByCode GroupMembershipAction = "joined_by_code"
-	// JoinRequestRefused means an admin refused a user's request to join a group
+	// JoinRequestRefused means an admin refused a user's request to join a group.
 	JoinRequestRefused GroupMembershipAction = "join_request_refused"
-	// JoinRequestWithdrawn means a user withdrew his request to join a group
+	// JoinRequestWithdrawn means a user withdrew his request to join a group.
 	JoinRequestWithdrawn GroupMembershipAction = "join_request_withdrawn"
-	// Removed means a user was removed from a group
+	// Removed means a user was removed from a group.
 	Removed GroupMembershipAction = "removed"
-	// Left means a user left a group
+	// Left means a user left a group.
 	Left GroupMembershipAction = "left"
-	// IsMember means a user is a member of a group
+	// IsMember means a user is a member of a group.
 	IsMember GroupMembershipAction = "is_member"
-	// LeaveRequestCreated means a pending user's request to leave a group was created
+	// LeaveRequestCreated means a pending user's request to leave a group was created.
 	LeaveRequestCreated GroupMembershipAction = "is_member,leave_request_created"
-	// LeaveRequestExpired means a pending user's leave request for an expired membership
+	// LeaveRequestExpired means a pending user's leave request for an expired membership.
 	LeaveRequestExpired GroupMembershipAction = "leave_request_created"
-	// LeaveRequestRefused means a manager refused a user's request to leave a group
+	// LeaveRequestRefused means a manager refused a user's request to leave a group.
 	LeaveRequestRefused GroupMembershipAction = "leave_request_refused"
-	// LeaveRequestWithdrawn means a user withdrew his request to leave a group
+	// LeaveRequestWithdrawn means a user withdrew his request to leave a group.
 	LeaveRequestWithdrawn GroupMembershipAction = "leave_request_withdrawn"
-	// NoRelation means there is no row for the group pair in the groups_groups/group_pending_requests tables
+	// NoRelation means there is no row for the group pair in the groups_groups/group_pending_requests tables.
 	NoRelation GroupMembershipAction = ""
 )
 
@@ -88,48 +88,48 @@ func (groupMembershipAction GroupMembershipAction) PendingType() string {
 type GroupGroupTransitionAction int
 
 const (
-	// AdminCreatesInvitation means a group admin invites new users to the group
+	// AdminCreatesInvitation means a group admin invites new users to the group.
 	AdminCreatesInvitation GroupGroupTransitionAction = iota
-	// UserCreatesJoinRequest means a user creates a request to become a group member
+	// UserCreatesJoinRequest means a user creates a request to become a group member.
 	UserCreatesJoinRequest
 	// UserCreatesAcceptedJoinRequest means a user adds himself into a group that he owns
-	// It doesn't check if the user owns the group / all needed approvals are given (a calling service should check that)
+	// It doesn't check if the user owns the group / all needed approvals are given (a calling service should check that).
 	UserCreatesAcceptedJoinRequest
-	// UserAcceptsInvitation means a user accepts a group invitation
+	// UserAcceptsInvitation means a user accepts a group invitation.
 	UserAcceptsInvitation
 	// AdminAcceptsJoinRequest means a group admin accepts a request to join a group.
 	// For this action we check that all the approvals required by the group are given in the join request
 	// and set groups_groups.*_approved_at to group_pending_requests.at for each.
 	AdminAcceptsJoinRequest
-	// AdminAcceptsLeaveRequest means a group admin accepts a request to leave a group
+	// AdminAcceptsLeaveRequest means a group admin accepts a request to leave a group.
 	AdminAcceptsLeaveRequest
-	// AdminRefusesLeaveRequest means a group admin refuses a request to leave a group
+	// AdminRefusesLeaveRequest means a group admin refuses a request to leave a group.
 	AdminRefusesLeaveRequest
-	// UserRefusesInvitation means a user refuses a group invitation
+	// UserRefusesInvitation means a user refuses a group invitation.
 	UserRefusesInvitation
-	// AdminRefusesJoinRequest means a group admin refuses a request to join the group
+	// AdminRefusesJoinRequest means a group admin refuses a request to join the group.
 	AdminRefusesJoinRequest
 	// AdminRemovesUser means a group admin removes a user from a group. It marks relations as "removed".
 	// It doesn't check if a child is a user or not.
 	AdminRemovesUser
-	// AdminWithdrawsInvitation means a group admin withdraws an invitation
+	// AdminWithdrawsInvitation means a group admin withdraws an invitation.
 	AdminWithdrawsInvitation
-	// UserLeavesGroup means a user leaves a group
+	// UserLeavesGroup means a user leaves a group.
 	UserLeavesGroup
 	// UserCreatesLeaveRequest means a user creates a request to leave a group
 	// We don't check that groups.require_lock_membership_approval_until & groups_groups.lock_membership_approved_at
-	// are not null (a calling service should check that by itself)
+	// are not null (a calling service should check that by itself).
 	UserCreatesLeaveRequest
-	// UserCancelsJoinRequest means a user cancels his request to join a group
+	// UserCancelsJoinRequest means a user cancels his request to join a group.
 	UserCancelsJoinRequest
-	// UserCancelsLeaveRequest means a user cancels his request to leave a group
+	// UserCancelsLeaveRequest means a user cancels his request to leave a group.
 	UserCancelsLeaveRequest
-	// AdminRemovesDirectRelation removes a direct relation
+	// AdminRemovesDirectRelation removes a direct relation.
 	AdminRemovesDirectRelation
-	// UserJoinsGroupByBadge means we add a user into a group because of his badge returned by the login module
+	// UserJoinsGroupByBadge means we add a user into a group because of his badge returned by the login module.
 	UserJoinsGroupByBadge
 	// UserJoinsGroupByCode means a user joins a group using a group's code
-	// We don't check the code here (a calling service should check the code by itself)
+	// We don't check the code here (a calling service should check the code by itself).
 	UserJoinsGroupByCode
 )
 
@@ -149,7 +149,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestCreated:  JoinRequestAccepted,
 			LeaveRequestExpired: InvitationCreated,
 		},
-		IfNotEnoughApprovalsDowngradeTo: InvitationCreated, // only JoinRequestAccepted requires approvals
+		IfNotEnoughApprovalsDowngradeTo: InvitationCreated, // only JoinRequestAccepted requires approvals.
 	},
 	UserCreatesJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
@@ -258,19 +258,19 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 type GroupGroupTransitionResult string
 
 const (
-	// Cycle means that the transition wasn't performed because it would create a cycle in groups_groups graph
+	// Cycle means that the transition wasn't performed because it would create a cycle in groups_groups graph.
 	Cycle GroupGroupTransitionResult = "cycle"
-	// Invalid means that the transition is impossible
+	// Invalid means that the transition is impossible.
 	Invalid GroupGroupTransitionResult = "invalid"
-	// ApprovalsMissing means that one or more approvals required by the transition are missing
+	// ApprovalsMissing means that one or more approvals required by the transition are missing.
 	ApprovalsMissing GroupGroupTransitionResult = "approvals_missing"
 	// Full means that the parent group is full (in terms of `groups.max_participants`) when `enforce_max_participants` is true
 	// (The number of participants is computed as the number of non-expired users or teams which are direct children
-	//  of the group + invitations (join requests are not counted).)
+	//  of the group + invitations (join requests are not counted)).
 	Full GroupGroupTransitionResult = "full"
-	// Success means that the transition was performed successfully
+	// Success means that the transition was performed successfully.
 	Success GroupGroupTransitionResult = "success"
-	// Unchanged means that the transition has been already performed
+	// Unchanged means that the transition has been already performed.
 	Unchanged GroupGroupTransitionResult = "unchanged"
 )
 
@@ -334,7 +334,8 @@ type requiredApprovalsAndLimits struct {
 // Transition performs a groups_groups relation transition according to groupGroupTransitionRules.
 func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	parentGroupID int64, childGroupIDs []int64, approvals map[int64]GroupApprovals,
-	performedByUserID int64) (results GroupGroupTransitionResults, approvalsToRequest map[int64]GroupApprovals, err error) {
+	performedByUserID int64,
+) (results GroupGroupTransitionResults, approvalsToRequest map[int64]GroupApprovals, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
@@ -439,8 +440,9 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
 			values := make([]interface{}, 0, len(idsToInsertRelation)*6)
 			for id := range idsToInsertRelation {
-				personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt :=
-					resolveApprovalTimesForGroupsGroups(oldActionsMap, id, approvals)
+				personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt := resolveApprovalTimesForGroupsGroups(
+					oldActionsMap, id, approvals,
+				)
 				values = append(values, parentGroupID, id,
 					personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt)
 			}
@@ -464,7 +466,8 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, parentGroupID int64,
 	limits *requiredApprovalsAndLimits, results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupMembershipAction,
-	idsToInsertRelation, idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	idsToInsertRelation, idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction,
+) {
 	if !limits.EnforceMaxParticipants || !map[GroupGroupTransitionAction]bool{
 		UserJoinsGroupByBadge: true, UserJoinsGroupByCode: true, UserCreatesJoinRequest: true, UserCreatesAcceptedJoinRequest: true,
 		AdminCreatesInvitation: true, AdminAcceptsJoinRequest: true,
@@ -500,7 +503,8 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 }
 
 func resolveApprovalTimesForGroupsGroups(oldActionsMap map[int64]stateInfo, id int64, approvals map[int64]GroupApprovals) (
-	personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{}) {
+	personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{},
+) {
 	personalInfoViewApprovedAt = gorm.Expr("NULL")
 	lockMembershipApprovedAt = gorm.Expr("NULL")
 	watchApprovedAt = gorm.Expr("NULL")
@@ -523,7 +527,8 @@ func resolveApprovalTimesForGroupsGroups(oldActionsMap map[int64]stateInfo, id i
 }
 
 func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int64]GroupMembershipAction,
-	parentGroupID int64, approvals map[int64]GroupApprovals) {
+	parentGroupID int64, approvals map[int64]GroupApprovals,
+) {
 	if len(idsToInsertPending) > 0 {
 		insertQuery := `
 			INSERT INTO group_pending_requests
@@ -544,7 +549,8 @@ func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int
 }
 
 func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]GroupMembershipAction,
-	parentGroupID, performedByUserID int64) {
+	parentGroupID, performedByUserID int64,
+) {
 	if len(idsChanged) > 0 {
 		insertQuery := "INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)"
 		valuesTemplate := "(?, ?, ?, NOW(3), ?)"
@@ -564,7 +570,8 @@ func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]Gro
 
 func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentGroupID int64,
 	results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation,
-	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction,
+) {
 	if len(idsToCheckCycle) > 0 {
 		idsToCheckCycleSlice := make([]int64, 0, len(idsToCheckCycle))
 		for id := range idsToCheckCycle {
@@ -583,7 +590,8 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 
 func deleteIDsFromTransitionPlan(ids []int64, status GroupGroupTransitionResult,
 	results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation,
-	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction,
+) {
 	for _, groupID := range ids {
 		results[groupID] = status
 		delete(idsToInsertRelation, groupID)
@@ -598,7 +606,8 @@ func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results Gr
 	oldActionsMap map[int64]stateInfo, groupRequiredApprovals *requiredApprovalsAndLimits,
 	approvals, approvalsToRequest map[int64]GroupApprovals, action GroupGroupTransitionAction,
 ) (idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation, idsToCheckCycle,
-	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction,
+) {
 	idsToCheckCycle = make(map[int64]bool, len(childGroupIDs))
 	idsToDeletePending = make(map[int64]bool, len(childGroupIDs))
 	idsToDeleteRelation = make(map[int64]bool, len(childGroupIDs))
@@ -638,7 +647,8 @@ func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results Gr
 func buildOneTransition(id int64, oldAction stateInfo, toAction GroupMembershipAction,
 	results GroupGroupTransitionResults,
 	idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
-	idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction,
+) {
 	if toAction != oldAction.Action {
 		if toAction != NoRelation {
 			idsChanged[id] = toAction
@@ -668,7 +678,8 @@ func buildOneTransition(id int64, oldAction stateInfo, toAction GroupMembershipA
 }
 
 func approvalsOK(oldAction *stateInfo, groupRequiredApprovals *requiredApprovalsAndLimits, approvals GroupApprovals) (
-	ok bool, approvalsToRequest GroupApprovals) {
+	ok bool, approvalsToRequest GroupApprovals,
+) {
 	var approvalsToCheck GroupApprovals
 	if oldAction.Action.hasApprovals() {
 		approvalsToCheck.PersonalInfoViewApproval = oldAction.PersonalInfoViewApprovedAt != nil
@@ -677,11 +688,10 @@ func approvalsOK(oldAction *stateInfo, groupRequiredApprovals *requiredApprovals
 	} else {
 		approvalsToCheck = approvals
 	}
-	approvalsToRequest.PersonalInfoViewApproval =
-		groupRequiredApprovals.RequirePersonalInfoAccessApproval && !approvalsToCheck.PersonalInfoViewApproval
-	approvalsToRequest.LockMembershipApproval =
-		groupRequiredApprovals.RequireLockMembershipApproval && !approvalsToCheck.LockMembershipApproval
-	approvalsToRequest.WatchApproval =
-		groupRequiredApprovals.RequireWatchApproval && !approvalsToCheck.WatchApproval
+	approvalsToRequest.PersonalInfoViewApproval = groupRequiredApprovals.RequirePersonalInfoAccessApproval &&
+		!approvalsToCheck.PersonalInfoViewApproval
+	approvalsToRequest.LockMembershipApproval = groupRequiredApprovals.RequireLockMembershipApproval &&
+		!approvalsToCheck.LockMembershipApproval
+	approvalsToRequest.WatchApproval = groupRequiredApprovals.RequireWatchApproval && !approvalsToCheck.WatchApproval
 	return approvalsToRequest == GroupApprovals{}, approvalsToRequest
 }

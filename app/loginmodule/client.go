@@ -35,7 +35,7 @@ func NewClient(loginModuleURL string) *Client {
 func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile map[string]interface{}, err error) {
 	defer recoverPanics(&err)
 
-	request, err := http.NewRequest("GET", client.url+"/user_api/account", nil)
+	request, err := http.NewRequest("GET", client.url+"/user_api/account", http.NoBody)
 	mustNotBeError(err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	request = request.WithContext(ctx)
@@ -84,7 +84,8 @@ type CreateUsersResponseDataRow struct {
 
 // CreateUsers creates a batch of users in the login module.
 func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey string,
-	params *CreateUsersParams) (bool, []CreateUsersResponseDataRow, error) {
+	params *CreateUsersParams,
+) (bool, []CreateUsersResponseDataRow, error) {
 	urlParams := map[string]string{
 		"prefix":          params.Prefix,
 		"amount":          strconv.Itoa(params.Amount),
@@ -141,7 +142,8 @@ func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey stri
 
 // SendLTIResult sends item score to LTI.
 func (client *Client) SendLTIResult(
-	ctx context.Context, clientID, clientKey string, userLoginID, itemID int64, score float32) (bool, error) {
+	ctx context.Context, clientID, clientKey string, userLoginID, itemID int64, score float32,
+) (bool, error) {
 	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/lti_result/send",
 		map[string]string{
 			"user_id":    strconv.FormatInt(userLoginID, 10),
@@ -161,7 +163,8 @@ type accountManagerResponse struct {
 }
 
 func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPath string, requestParams map[string]string,
-	clientID, clientKey string) (decodedResponse *accountManagerResponse, err error) {
+	clientID, clientKey string,
+) (decodedResponse *accountManagerResponse, err error) {
 	defer recoverPanics(&err)
 
 	apiURL, err := url.Parse(client.url + urlPath)

@@ -31,14 +31,14 @@ type Badge struct {
 // a manager or member of badge groups if needed.
 //
 // For each badge:
-// 1) if the badge's group exists and the user is already a member (or a manager if badge.Manager is true) of it: does nothing;
-// 2) if the badge's group exists and the user is not already member (or a manager if badge.Manager is true) of it:
-//    makes him a member (or a manager) of the group;
-// 3) if the badge's group does not exist, creates a group with badge.BadgeInfo.Name as its name and type "Other" and
-//    adds it into the group identified by an url of the last element from badge.BadgeInfo.GroupPath. If this latter group does not exist,
-//    creates it (with the given name, and current user managership if `manager`=true) and puts it into the previous group from
-//    badge.BadgeInfo.GroupPath, etc.
-// 4) for every existing badge group or badge.BadgeInfo.GroupPath group makes the user a manager of the group (if he is not a manager yet).
+//  1. if the badge's group exists and the user is already a member (or a manager if badge.Manager is true) of it: does nothing;
+//  2. if the badge's group exists and the user is not already member (or a manager if badge.Manager is true) of it:
+//     makes him a member (or a manager) of the group;
+//  3. if the badge's group does not exist, creates a group with badge.BadgeInfo.Name as its name and type "Other" and
+//     adds it into the group identified by an url of the last element from badge.BadgeInfo.GroupPath. If this latter group does not exist,
+//     creates it (with the given name, and current user managership if `manager`=true) and puts it into the previous group from
+//     badge.BadgeInfo.GroupPath, etc.
+//  4. for every existing badge group or badge.BadgeInfo.GroupPath group makes the user a manager of the group (if he is not a manager yet).
 func (s *GroupStore) StoreBadges(badges []Badge, userID int64, newUser bool) (err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
@@ -88,7 +88,8 @@ func (s *GroupStore) loadKnownBadgeGroups(badges []Badge) map[string]int64 {
 
 func (s *GroupStore) storeBadge(
 	ancestorsCalculationNeeded *bool, badge *Badge, userID int64, newUser bool,
-	managedBadgeGroups map[int64]struct{}, knownBadgeGroups map[string]int64) {
+	managedBadgeGroups map[int64]struct{}, knownBadgeGroups map[string]int64,
+) {
 	badgeGroupID, groupCreated := s.findOrCreateBadgeGroup(ancestorsCalculationNeeded, badge.URL, badge.BadgeInfo.Name, knownBadgeGroups)
 
 	if badge.Manager {
@@ -113,7 +114,8 @@ func (s *GroupStore) storeBadge(
 
 func (s *GroupStore) storeBadgeGroupPath(
 	ancestorsCalculationNeeded *bool, badge *Badge, badgeGroupID int64,
-	managedBadgeGroups map[int64]struct{}, knownBadgeGroups map[string]int64) {
+	managedBadgeGroups map[int64]struct{}, knownBadgeGroups map[string]int64,
+) {
 	createGroupsAndRelations := true
 	for ancestorBadgeIndex := len(badge.BadgeInfo.GroupPath) - 1; ancestorBadgeIndex >= 0; ancestorBadgeIndex-- {
 		childBadgeGroupID := badgeGroupID
@@ -138,7 +140,8 @@ func (s *GroupStore) storeBadgeGroupPath(
 }
 
 func (s *GroupStore) createBadgeGroupRelation(
-	ancestorsCalculationNeeded *bool, badgeGroupID, childBadgeGroupID int64, badgeURL string) bool {
+	ancestorsCalculationNeeded *bool, badgeGroupID, childBadgeGroupID int64, badgeURL string,
+) bool {
 	err := s.GroupGroups().CreateRelation(badgeGroupID, childBadgeGroupID)
 	if err == ErrRelationCycle {
 		logging.Warnf("Cannot add badge group %d into badge group %d (%s) because it would create a cycle",
@@ -179,7 +182,8 @@ func (s *GroupStore) makeUserMemberOfBadgeGroup(ancestorsCalculationNeeded *bool
 }
 
 func (s *GroupStore) findOrCreateBadgeGroup(
-	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64) (int64, bool) {
+	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64,
+) (int64, bool) {
 	var groupCreated bool
 
 	badgeGroupID, found := knownBadgeGroups[badgeURL]
@@ -208,7 +212,8 @@ func (s *GroupStore) createBadgeGroup(badgeURL, badgeName string) int64 {
 }
 
 func (s *GroupStore) createAndCacheBadgeGroup(
-	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64) int64 {
+	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64,
+) int64 {
 	badgeGroupID := s.createBadgeGroup(badgeURL, badgeName)
 	knownBadgeGroups[badgeURL] = badgeGroupID
 	*ancestorsCalculationNeeded = true

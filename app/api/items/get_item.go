@@ -275,7 +275,8 @@ type rawItem struct {
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's.
 func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User,
-	watchedGroupID int64, watchedGroupIDSet bool) *rawItem {
+	watchedGroupID int64, watchedGroupIDSet bool,
+) *rawItem {
 	var result rawItem
 
 	columnsBuffer := bytes.NewBufferString(`
@@ -326,9 +327,11 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 			"LEFT JOIN LATERAL ? AS watched_group_permissions ON watched_group_permissions.item_id = items.id",
 			watchedGroupPermissionsQuery.SubQuery())
 
-		currentUserCanGrantAccessToTheWatchedGroupQuery :=
-			s.GroupAncestors().ManagedByUser(user).Where("groups_ancestors.child_group_id = ?", watchedGroupID).
-				Where("can_grant_group_access").Select("1").Limit(1)
+		currentUserCanGrantAccessToTheWatchedGroupQuery := s.
+			GroupAncestors().
+			ManagedByUser(user).
+			Where("groups_ancestors.child_group_id = ?", watchedGroupID).
+			Where("can_grant_group_access").Select("1").Limit(1)
 
 		_, err := columnsBuffer.WriteString(`,
 			IFNULL(watched_group_permissions.can_view_generated_value, 1) AS watched_group_permissions_can_view_generated_value,
@@ -418,7 +421,8 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 }
 
 func constructItemResponseFromDBData(
-	rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore, watchedGroupIDSet bool) *itemResponse {
+	rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore, watchedGroupIDSet bool,
+) *itemResponse {
 	result := &itemResponse{
 		commonItemFields: rawData.asItemCommonFields(permissionGrantedStore),
 		String: itemStringRoot{

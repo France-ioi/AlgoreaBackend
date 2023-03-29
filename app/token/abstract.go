@@ -73,8 +73,10 @@ type Signer interface {
 	Sign(*rsa.PrivateKey) (string, error)
 }
 
-var _ UnmarshalStringer = (*abstract)(nil)
-var _ MarshalStringer = (*abstract)(nil)
+var (
+	_ UnmarshalStringer = (*abstract)(nil)
+	_ MarshalStringer   = (*abstract)(nil)
+)
 
 func marshalJSON(payload interface{}) ([]byte, error) {
 	return (&abstract{Payload: payload}).MarshalJSON()

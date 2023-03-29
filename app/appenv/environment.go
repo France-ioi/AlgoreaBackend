@@ -3,10 +3,12 @@ package appenv
 
 import "os"
 
-const envVarName = "ALGOREA_ENV"
-const productionEnv = "prod"
-const developmentEnv = "dev"
-const testEnv = "test"
+const (
+	envVarName     = "ALGOREA_ENV"
+	productionEnv  = "prod"
+	developmentEnv = "dev"
+	testEnv        = "test"
+)
 
 // Env returns the deployment environment set for this app ("prod", "dev", or "test"). Default to "dev".
 func Env() string {

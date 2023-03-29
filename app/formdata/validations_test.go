@@ -104,6 +104,7 @@ func (fl *FieldLevel) Param() string           { return "" }
 func (fl *FieldLevel) ExtractType(reflect.Value) (reflect.Value, reflect.Kind, bool) {
 	return reflect.ValueOf(nil), reflect.Ptr, true
 }
+
 func (fl *FieldLevel) GetStructFieldOK() (reflect.Value, reflect.Kind, bool) {
 	return reflect.ValueOf(nil), reflect.Ptr, true
 }

@@ -167,7 +167,8 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 }
 
 func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
-	itemID, participantID, parentAttemptID int64, apiError service.APIError) {
+	itemID, participantID, parentAttemptID int64, apiError service.APIError,
+) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)

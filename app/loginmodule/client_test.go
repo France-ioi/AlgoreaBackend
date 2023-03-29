@@ -400,7 +400,8 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 			params:       "user_id=123456",
 			action: func(client *Client) (bool, error) {
 				return client.UnlinkClient(context.Background(), "clientID", "clientKeyclientKey", 123456)
-			}},
+			},
+		},
 		{
 			endpoint:     "accounts_manager/delete",
 			errorMessage: "can't delete users",

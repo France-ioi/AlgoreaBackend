@@ -1,4 +1,4 @@
-// +build !unit
+//go:build !unit
 
 package database_test
 
@@ -182,7 +182,8 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 }
 
 func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
-	remainingGroupIDs []int64, remainingGroupsGroups, remainingGroupsAncestors []map[string]interface{}) {
+	remainingGroupIDs []int64, remainingGroupsGroups, remainingGroupsAncestors []map[string]interface{},
+) {
 	var rows []map[string]interface{}
 	var ids []int64
 
@@ -211,7 +212,8 @@ type grantedPermission struct {
 }
 
 func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remainingGroupIDs []int64,
-	expectedGrantedPermissions []grantedPermission, expectedGeneratedPermissions []permissionsGeneratedResultRow) {
+	expectedGrantedPermissions []grantedPermission, expectedGeneratedPermissions []permissionsGeneratedResultRow,
+) {
 	var ids []int64
 	assert.NoError(t, dataStore.Table("filters").Order("group_id").
 		Pluck("group_id", &ids).Error())
@@ -250,8 +252,9 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.Zero(t, cnt)
 }
 
-const done = "done"
-const groupGroupMarksResultsAsChangedFixture = `
+const (
+	done                                   = "done"
+	groupGroupMarksResultsAsChangedFixture = `
 	items:
 		- {id: 1, default_language_tag: fr}
 		- {id: 2, default_language_tag: fr}
@@ -311,6 +314,7 @@ const groupGroupMarksResultsAsChangedFixture = `
 		- {attempt_id: 1, participant_id: 106, item_id: 3}
 		- {attempt_id: 1, participant_id: 107, item_id: 3}
 		- {attempt_id: 1, participant_id: 108, item_id: 3}`
+)
 
 func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	for _, test := range []struct {
@@ -326,8 +330,10 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 			childGroupID:  104,
 			expiresAt:     "9999-12-31 23:59:59",
 			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2}, {104, 1, 3},
-				{105, 1, 2}, {105, 1, 3},
+				{104, 1, 2},
+				{104, 1, 3},
+				{105, 1, 2},
+				{105, 1, 3},
 			},
 		},
 		{
@@ -394,8 +400,10 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			childGroupID:  104,
 			expiresAt:     "9999-12-31 23:59:59",
 			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2}, {104, 1, 3},
-				{105, 1, 2}, {105, 1, 3},
+				{104, 1, 2},
+				{104, 1, 3},
+				{105, 1, 2},
+				{105, 1, 3},
 			},
 		},
 		{

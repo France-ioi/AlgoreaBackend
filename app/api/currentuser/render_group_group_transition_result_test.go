@@ -120,7 +120,7 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 					return RenderGroupGroupTransitionResult(respW, req, tt.result, tt.approvalsToRequest, action)
 				}
 				handler := http.HandlerFunc(fn.ServeHTTP)
-				req, _ := http.NewRequest("GET", "/dummy", nil)
+				req, _ := http.NewRequest("GET", "/dummy", http.NoBody)
 				recorder := httptest.NewRecorder()
 				handler.ServeHTTP(recorder, req)
 

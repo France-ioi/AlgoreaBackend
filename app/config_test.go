@@ -18,7 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-func init() { // nolint:gochecknoinits
+func init() { //nolint:gochecknoinits
 	appenv.SetDefaultEnvToTest()
 }
 
@@ -44,7 +44,7 @@ func TestLoadConfigFrom(t *testing.T) {
 	configName := fileName[:len(fileName)-5] // strip the ".yaml"
 
 	tmpTestFileName := tmpDir + "/" + configName + ".test.yaml"
-	err = ioutil.WriteFile(tmpTestFileName, []byte("server:\n  rootpath: '/test/'"), 0600)
+	err = ioutil.WriteFile(tmpTestFileName, []byte("server:\n  rootpath: '/test/'"), 0o600)
 	assert.NoError(err)
 	defer func() {
 		_ = os.Remove(tmpTestFileName)

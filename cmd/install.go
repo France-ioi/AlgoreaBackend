@@ -12,8 +12,8 @@ import (
 )
 
 // nolint:gosec
-func init() { // nolint:gochecknoinits,gocyclo
-	var installCmd = &cobra.Command{
+func init() { //nolint:gochecknoinits,gocyclo
+	installCmd := &cobra.Command{
 		Use:   "install [environment]",
 		Short: "fill the database with required data",
 		Long: `If the root group IDs specified in the config file

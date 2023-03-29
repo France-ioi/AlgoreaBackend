@@ -189,7 +189,8 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 
 func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
 	rendererGenerator func(interface{}) render.Renderer, token string, expiresIn time.Time,
-	cookieAttributes *auth.SessionCookieAttributes) {
+	cookieAttributes *auth.SessionCookieAttributes,
+) {
 	secondsUntilExpiry := int32(time.Until(expiresIn).Round(time.Second) / time.Second)
 	response := map[string]interface{}{
 		"expires_in": secondsUntilExpiry,
@@ -211,7 +212,8 @@ func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWr
 }
 
 func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[string]interface{}) (
-	cookieAttributes *auth.SessionCookieAttributes, apiError service.APIError) {
+	cookieAttributes *auth.SessionCookieAttributes, apiError service.APIError,
+) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
 	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
 		cookieAttributes.UseCookie = true

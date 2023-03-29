@@ -74,7 +74,7 @@ func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetInt64SliceField(req, "ids")
 			if testCase.expectedErrMsg != "" {
 				assert.EqualError(t, err, testCase.expectedErrMsg)
@@ -148,7 +148,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 			r.Get(testCase.routeString, handler)
 
 			ts := httptest.NewServer(r)
-			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, nil)
+			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, http.NoBody)
 			response, err := http.DefaultClient.Do(request)
 			if err == nil {
 				_ = response.Body.Close()
@@ -227,7 +227,7 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 			}
 			r.Get(`/{ids:.*}something`, handler)
 			ts := httptest.NewServer(r)
-			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, nil)
+			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, http.NoBody)
 			response, err := http.DefaultClient.Do(request)
 			if err == nil {
 				_ = response.Body.Close()
@@ -267,7 +267,7 @@ func TestResolveURLQueryGetStringField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringField(req, "name")
 			if testCase.expectedErrMsg != "" {
 				assert.EqualError(t, err, testCase.expectedErrMsg)
@@ -320,7 +320,7 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetBoolField(req, "flag")
 			if testCase.expectedErrMsg != "" {
 				assert.EqualError(t, err, testCase.expectedErrMsg)
@@ -359,7 +359,7 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, http.NoBody)
 			dateTime, err := ResolveURLQueryGetTimeField(req, "time")
 			if testCase.expectedErrMsg != "" {
 				assert.EqualError(t, err, testCase.expectedErrMsg)
@@ -418,7 +418,7 @@ func TestResolveURLQueryGetStringSliceField(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringSliceField(req, "values")
 			if testCase.expectedErrMsg != "" {
 				assert.EqualError(t, err, testCase.expectedErrMsg)
@@ -495,7 +495,7 @@ func TestResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(t *testi
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(req, "fruits",
 				map[string]bool{"apple": true, "orange": true, "pear": true})
 			if testCase.expectedErrMsg != "" {

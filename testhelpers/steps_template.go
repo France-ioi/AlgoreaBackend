@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 package testhelpers
 
@@ -6,7 +6,7 @@ import (
 	"github.com/cucumber/messages-go/v10"
 )
 
-func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { // nolint
+func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { //nolint
 	value, err := ctx.preprocessString(value)
 	if err != nil {
 		return err

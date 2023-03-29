@@ -17,18 +17,20 @@ type Logger struct {
 	config *viper.Viper
 }
 
-var (
-	// SharedLogger is the global scope logger
-	// It should not be used directly by other packages (except for testing) which should prefer shorthands functions
-	SharedLogger = new()
+// SharedLogger is the global scope logger
+// It should not be used directly by other packages (except for testing) which should prefer shorthands functions.
+var SharedLogger = createLogger()
+
+const (
+	formatJSON = "json"
+	formatText = "text"
 )
 
-const formatJSON = "json"
-const formatText = "text"
-
-const outputStdout = "stdout"
-const outputStderr = "stderr"
-const outputFile = "file"
+const (
+	outputStdout = "stdout"
+	outputStderr = "stderr"
+	outputFile   = "file"
+)
 
 // Configure applies the given logging configuration to the logger
 // (may panic if the configuration is invalid).
@@ -60,7 +62,7 @@ func (l *Logger) Configure(config *viper.Viper) {
 	case outputFile:
 		_, codeFilePath, _, _ := runtime.Caller(0)
 		codeDir := filepath.Dir(codeFilePath)
-		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600) //nolint:gosec,gosec No user input.
 		if err != nil {
 			l.SetOutput(os.Stdout)
 			l.Errorf("Unable to open file for logs, fallback to stdout: %v\n", err)
@@ -83,9 +85,9 @@ func (l *Logger) Configure(config *viper.Viper) {
 
 // ResetShared reset the global logger to its default settings before its configuration.
 func ResetShared() {
-	SharedLogger = new()
+	SharedLogger = createLogger()
 }
 
-func new() *Logger {
+func createLogger() *Logger { //nolint:gosec
 	return &Logger{logrus.New(), nil}
 }

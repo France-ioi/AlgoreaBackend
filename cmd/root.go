@@ -34,7 +34,7 @@ func Execute() {
 	}
 }
 
-func init() { // nolint:gochecknoinits
+func init() { //nolint:gochecknoinits
 	// persistent flags will be available for every sub-commands
 	// here you can bind command line flags to variables
 }

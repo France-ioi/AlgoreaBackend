@@ -51,10 +51,10 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, participantID, attemptID, itemID
 
 // Visible returns a composable query for getting answers with the following access rights
 // restrictions:
-// 1) the user should have at least 'content' access rights to the answers.item_id item,
-// 2) the user is able to see answers related to his group's attempts, so
-//    the user should be a member of the answers.participant_id team or
-//    answers.participant_id should be equal to the user's self group
+//  1. the user should have at least 'content' access rights to the answers.item_id item,
+//  2. the user is able to see answers related to his group's attempts, so
+//     the user should be a member of the answers.participant_id team or
+//     answers.participant_id should be equal to the user's self group
 func (s *AnswerStore) Visible(user *User) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
