@@ -22,6 +22,7 @@ import (
 var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
 
 func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
+	jsonBody = ctx.replaceReferencesByIDs(jsonBody)
 	tmpl, err := ctx.templateSet.Parse("template", jsonBody)
 	if err != nil {
 		return "", err
