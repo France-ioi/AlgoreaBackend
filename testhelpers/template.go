@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io"
+	"math/rand"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -15,21 +16,60 @@ import (
 	"github.com/CloudyKit/jet"
 	"github.com/SermoDigital/jose/crypto"
 
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
-var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
-var replaceReferencesRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
+var (
+	dbPathRegexp            = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
+	replaceReferencesRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
+)
 
-// getReferenceFor gets the ID from a reference, or set it if it doesn't exist.
-func (ctx *TestContext) getReferenceFor(name string) int64 {
-	if _, ok := ctx.identifierReferences[name]; !ok {
-		ctx.identifierReferences[name] = rand.Int63()
+// setReference sets a reference id.
+func (ctx *TestContext) setReference(reference, value string) {
+	referenceName := reference
+	if referenceName[0] != ReferencePrefix {
+		referenceName = string(ReferencePrefix) + reference
 	}
 
-	return ctx.identifierReferences[name]
+	id, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.identifierReferences[referenceName] = id
+}
+
+// getReferenceFor gets the ID from a reference.
+func (ctx *TestContext) getReferenceFor(name string) int64 {
+	id, err := strconv.ParseInt(name, 10, 64)
+	if err == nil {
+		return id
+	}
+
+	if name[0] != ReferencePrefix {
+		name = string(ReferencePrefix) + name
+	}
+
+	value, ok := ctx.identifierReferences[name]
+	if !ok {
+		panic(fmt.Errorf("getReferenceFor: %s reference not found", name))
+	}
+
+	return value
+}
+
+// getOrCreateReferenceFor gets the ID from a reference, or create the reference if it doesn't exist.
+func (ctx *TestContext) getOrCreateReferenceFor(name string) int64 {
+	reference := string(ReferencePrefix) + name
+	if value, ok := ctx.identifierReferences[reference]; ok {
+		return value
+	}
+
+	id := rand.Int63()
+	ctx.identifierReferences[reference] = id
+
+	return id
 }
 
 // replaceReferencesByIDs changes the references (@ref) in a string by the referenced identifiers (ID).
@@ -41,7 +81,7 @@ func (ctx *TestContext) replaceReferencesByIDs(str string) string {
 		// - @Reference
 		// - /@Reference (or another non-alphanum character in front)
 
-		if capture[0] == '@' {
+		if capture[0] == ReferencePrefix {
 			return strconv.FormatInt(ctx.getReferenceFor(capture[1:]), 10)
 		} else {
 			return string(capture[0]) + strconv.FormatInt(ctx.getReferenceFor(capture[2:]), 10)

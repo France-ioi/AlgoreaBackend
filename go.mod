@@ -16,6 +16,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.3.2
 	github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003
 	github.com/France-ioi/validator v9.29.2-0.20220110032854-1b7299b1a4db+incompatible
+	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
 	github.com/akrylysov/algnhsa v0.12.1
 	github.com/aws/aws-lambda-go v1.28.0
@@ -43,6 +44,7 @@ require (
 
 require (
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
+	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/cucumber/gherkin-go/v11 v11.0.0 // indirect

@@ -87,7 +87,7 @@ func (s *ThreadStore) GetThreadQuery(participantID, itemID int64) *DB {
 func (s *ThreadStore) GetThreadStatus(participantID, itemID int64) string {
 	var status string
 
-	err := s.Threads().
+	err := s.
 		GetThreadQuery(participantID, itemID).
 		Select("threads.status AS status").
 		PluckFirst("status", &status).
@@ -181,4 +181,12 @@ func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus, newStatus strin
 	}
 
 	return false
+}
+
+// WhereParticipantIsInGroup filters the threads on the participant.
+func (s *ThreadStore) WhereParticipantIsInGroup(groupID int64) *DB {
+	return s.Joins(`
+		JOIN groups_ancestors ON
+				 	threads.participant_id = groups_ancestors.child_group_id AND
+					groups_ancestors.ancestor_group_id = ?`, groupID)
 }

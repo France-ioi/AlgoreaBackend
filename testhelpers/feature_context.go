@@ -1,5 +1,4 @@
 //go:build !prod
-// +build !prod
 
 package testhelpers
 
@@ -20,9 +19,11 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the database has the following users:$`, ctx.DBHasUsers)
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
 
-	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
 	s.Step(`^I am (\w+)$`, ctx.IAm)
+	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
 	s.Step(`^there is a user (\w+)$`, ctx.ThereIsAUser)
+	s.Step(`^there is a user (\w+) referenced by @(\w+)$`, ctx.ThereIsAUserReferencedBy)
+	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
 	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group code is "([^"]*)"$`, ctx.TheGeneratedGroupCodeIs)
@@ -33,16 +34,26 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the context variable "([^"]*)" is "([^"]*)"$`, ctx.TheContextVariableIs)
 
 	s.Step(`^there is a group with "([^"]*)"$`, ctx.ThereIsAGroupWith)
-	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmTheManagerOfTheGroup)
-	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchParticipantWithID)
+	s.Step(`^there is a group (\w+)$`, ctx.ThereIsAGroup)
+	s.Step(`^there is a group (\w+) referenced by @(\w+)$`, ctx.ThereIsAGroupReferencedBy)
+	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
+	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
+	s.Step(`^(\w+) the (?:\w+) is a member of the group (\w+)$`, ctx.UserIsAMemberOfTheGroup)
+	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmTheManagerOfTheGroupWithID)
+	s.Step(`^I am a manager of the group (\w+)$`, ctx.IAmTheManagerOfTheGroup)
+	s.Step(`^the group (\w+) is a descendant of the group (\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
+	s.Step(`^I can watch the group (\w+)$`, ctx.ICanWatchGroup)
+	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
 		ctx.ICanViewOnItemWithID)
 	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
-	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
-	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
+	s.Step(`^(\w+) has approved access to his personal info for the group (\w+)`, ctx.HasApprovedAccessPersonalInfoForGroup)
+
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
+
+	s.Step(`^there are the following threads:$`, ctx.ThereAreThreads)
 	s.Step(`^there is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
 	s.Step(`^there is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
 	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
@@ -60,6 +71,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
 
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
+	s.Step(`^the response should match the following JSONPath:$`,
+		ctx.TheResponseShouldMatchFollowingJSONPath)
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)
