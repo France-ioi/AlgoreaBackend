@@ -24,7 +24,7 @@ VERSION_FETCHING_CMD=git describe --always --dirty
 GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
 
 # Don't cover the packages ending by test, and separate the packages by a comma
-COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | sed 's/github.com\/France-ioi\/AlgoreaBackend/./g' | tr '\n' ',')
+COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | tr '\n' ',')
 
 # Filter for tests
 ifdef FILTER
