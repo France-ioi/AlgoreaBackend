@@ -1,11 +1,5 @@
 # Algorea Backend
 
-## Requirements
-
-This project requires Go >=1.13.
-
-Warning: make test-bdd doesn't work with Go 1.19
-
 ## Running the app (for development)
 
 Compile the app:

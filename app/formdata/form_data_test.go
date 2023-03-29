@@ -151,7 +151,7 @@ func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 				Value:      "2019-05-30T14:00:00ZZ",
 				LayoutElem: "",
 				ValueElem:  "Z",
-				Message:    ": extra text: Z",
+				Message:    ": extra text: \"Z\"",
 			},
 		},
 	}

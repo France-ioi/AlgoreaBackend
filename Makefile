@@ -1,4 +1,4 @@
-GOCMD=env GO111MODULE=on go
+GOCMD=env GO111MODULE=auto go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
@@ -117,7 +117,7 @@ version:
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
 $(GODOG):
-	$(GOGET) -u github.com/cucumber/godog/cmd/godog@v0.9.0
+	$(GOGET) -u github.com/cucumber/godog/cmd/godog@v0.12.6
 $(GOLANGCILINT):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.52.2
 $(MYSQL_CONNECTOR_JAVA):
