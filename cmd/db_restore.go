@@ -14,9 +14,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
-// nolint:gosec
-func init() { // nolint:gochecknoinits
-	var restoreCmd = &cobra.Command{
+//nolint:gosec
+func init() { //nolint:gochecknoinits
+	restoreCmd := &cobra.Command{
 		Use:   "db-restore [environment]",
 		Short: "load the last db schema",
 		Args:  cobra.MaximumNArgs(1),
@@ -72,7 +72,7 @@ func init() { // nolint:gochecknoinits
 			for rows.Next() {
 				var tableName string
 				assertNoError(rows.Scan(&tableName), "Unable to parse the database result: ")
-				_, err = tx.Query("DROP TABLE " + tableName) //nolint:rowserrcheck Checked in defer.
+				_, err = tx.Exec("DROP TABLE " + tableName)
 				assertNoError(err, "Unable to drop table: ")
 			}
 

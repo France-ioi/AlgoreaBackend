@@ -14,8 +14,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-func init() { // nolint:gochecknoinits
-	var migrateCmd = &cobra.Command{
+func init() { //nolint:gochecknoinits
+	migrateCmd := &cobra.Command{
 		Use:   "db-migrate [environment]",
 		Short: "apply schema-change migrations to the database",
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,

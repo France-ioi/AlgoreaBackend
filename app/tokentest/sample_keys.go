@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 // Package tokentest provides cryptographic keys to be used for tests.
 package tokentest

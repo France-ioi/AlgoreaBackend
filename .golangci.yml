@@ -46,7 +46,7 @@ linters-settings:
       - experimental
     disabled-checks:
       - wrapperFunc
-      - whyNoLint # requires an explanation for each nolint. requires many changes
+      - whyNoLint # Requires an explanation for each nolint. requires many changes
 
 linters:
   enable-all: true
@@ -54,12 +54,57 @@ linters:
     - maligned
     - prealloc
     - gochecknoglobals
-    - testpackage # requires that go test files are in a different package, but current tests are on private functions
-    - wsl # requires whitelines between blocks. requires many changes, enable it later
-    - nolintlint # requires explanation for each "nolint" directive. requires many changes
-    - gomnd # flags all "magic numbers" in the code. requires many changes
-    - goerr113 # don't allow dynamic errors, requires wrapped static errors. requires many changes
-    - nestif # Doesn't allow too long nested if. requires complex changes
+    - varcheck         # Deprecated.
+    - golint           # Deprecated.
+    - structcheck      # Deprecated.
+    - deadcode         # Deprecated.
+    - scopelint        # Deprecated.
+    - nosnakecase      # Deprecated.
+    - interfacer       # Deprecated.
+    - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
+    - wsl              # Requires whitelines between blocks. requires many changes, enable it later
+    - nolintlint       # Requires explanation for each "nolint" directive. requires many changes
+    - gomnd            # Flags all "magic numbers" in the code. requires many changes
+    - goerr113         # Don't allow dynamic errors, requires wrapped static errors. requires many changes
+    - nestif           # Doesn't allow too long nested if. requires complex changes
+    - forbidigo        # For update to go1.20
+    - gci              # For update to go1.20
+    - gochecknoinits   # For update to go1.20
+    - revive           # For update to go1.20
+    - asasalint        # For update to go1.20
+    - containedctx     # For update to go1.20
+    - contextcheck     # For update to go1.20
+    - cyclop           # For update to go1.20
+    - dupword          # For update to go1.20
+    - revive           # For update to go1.20
+    - errchkjson       # For update to go1.20
+    - errorlint        # For update to go1.20
+    - errname          # For update to go1.20
+    - execinquery      # For update to go1.20
+    - exhaustive       # For update to go1.20
+    - exhaustivestruct # For update to go1.20
+    - forcetypeassert  # For update to go1.20
+    - ifshort          # For update to go1.20
+    - ireturn          # For update to go1.20
+    - ineffassign      # For update to go1.20
+    - maintidx         # For update to go1.20
+    - musttag          # For update to go1.20
+    - nilnil           # For update to go1.20
+    - nlreturn         # For update to go1.20
+    - noctx            # For update to go1.20
+    - nonamedreturns   # For update to go1.20
+    - paralleltest     # For update to go1.20
+    - sqlclosecheck    # For update to go1.20
+    - tagliatelle      # For update to go1.20
+    - tenv             # For update to go1.20
+    - thelper          # For update to go1.20
+    - usestdlibvars    # For update to go1.20
+    - varnamelen       # For update to go1.20
+    - wrapcheck        # For update to go1.20
+    - exhaustruct      # For update to go1.20
+    - gomoddirectives  # For update to go1.20
+    - typecheck        # For update to go1.20
+    - dupl             # For update to go1.20
 
 run:
   skip-dirs:
@@ -72,6 +117,11 @@ run:
 issues:
   exclude-use-default: false
   exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gosec
+        - gocognit
     - text: "weak cryptographic primitive"
       linters:
         - gosec
@@ -84,12 +134,48 @@ issues:
     - text: "has too many statements"
       linters:
         - funlen
+    - text: "unknown JSON option" # requires update of package "mapstructure"
+      linters:
+        - staticcheck
+    - text: "function has more than 5 results, consider to simplify the function"
+      linters:
+        - gocritic
+    - text: "to be of non-pointer type"
+      linters:
+        - gocritic
+    - text: "SA1019:" # io/util has been deprecated since Go 1.19
+      linters:
+        - staticcheck
+    - text: "SA1029:" # should not use built'in type string as key for value; define your own type to avoid collisions
+      linters:
+        - staticcheck
+    - text: "ptrToRefParam:"
+      linters:
+        - gocritic
+    - text: "G404:" # Use of weak random number generator (math/rang instead of crypto/rand)
+      linters:
+        - gosec
+    - text: "deferInLoop:" # Possible resource leak, 'defer' is called in the 'for' loop.
+      linters:
+        - gocritic
+    - text: "type .answerSubmitResponse. is unused"
+      linters:
+        - unused
+    - text: "uncheckedInlineErr: err error is unchecked, maybe intended to check it instead of conn.db.AddError.err."
+      linters:
+        - gocritic
+    - text: "timeCmpSimplify:"
+      linters:
+        - gocritic
 
   exclude:
     - "not declared by package utf8"
     - "unicode/utf8/utf8.go"
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  #fix: true # Enable to try auto fix.
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.27.0 # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.52.2 # use the fixed version to not introduce new linters unexpectedly

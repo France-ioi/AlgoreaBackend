@@ -24,7 +24,7 @@ func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string)
 
 // PermissionIsAtLeastSQLExpr returns a gorm.SqlExpr for filtering by `can_*_generated_value` >= indexOf(`permissionName`)
 // depending on the given permission kind.
-func (s *PermissionGrantedStore) PermissionIsAtLeastSQLExpr(permissionKind, permissionName string) *gorm.SqlExpr { // nolint:golint
+func (s *PermissionGrantedStore) PermissionIsAtLeastSQLExpr(permissionKind, permissionName string) *gorm.SqlExpr {
 	return gorm.Expr("IFNULL("+permissionColumnByKind(permissionKind)+", 1) >= ?",
 		s.PermissionIndexByKindAndName(permissionKind, permissionName))
 }

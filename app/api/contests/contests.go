@@ -48,7 +48,8 @@ type contestInfo struct {
 const team = "Team"
 
 func getParticipantTypeForContestManagedByUser(
-	store *database.DataStore, itemID int64, user *database.User) (string, error) {
+	store *database.DataStore, itemID int64, user *database.User,
+) (string, error) {
 	var participantType string
 	err := store.Items().ContestManagedByUser(itemID, user).
 		PluckFirst("items.entry_participant_type", &participantType).Error()

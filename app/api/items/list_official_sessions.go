@@ -232,7 +232,8 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 }
 
 func (srv *Service) fillOfficialSessionsWithParents(
-	rawData []rawOfficialSession, target *[]officialSessionsListResponseRow) {
+	rawData []rawOfficialSession, target *[]officialSessionsListResponseRow,
+) {
 	*target = make([]officialSessionsListResponseRow, 0, len(rawData))
 	var currentRow *officialSessionsListResponseRow
 	for index := range rawData {

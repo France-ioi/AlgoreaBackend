@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 package testhelpers
 
@@ -150,7 +150,8 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token strin
 }
 
 func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // nolint
-	userID string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	userID string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedUserID, err := ctx.preprocessString(userID)
 	if err != nil {
@@ -178,7 +179,8 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 }
 
 func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns( // nolint
-	userID, contentID, score string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+	userID, contentID, score string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedUserID, err := ctx.preprocessString(userID)
 	if err != nil {
@@ -218,18 +220,21 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( // nolint
-	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( //nolint
+	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create", params, statusCode, body)
 }
 
-func (ctx *TestContext) TheLoginModuleDeleteEndpointWithParamsReturns( // nolint
-	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) TheLoginModuleDeleteEndpointWithParamsReturns( //nolint
+	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("delete", params, statusCode, body)
 }
 
-func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns( // nolint
-	endpoint, params string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns( //nolint
+	endpoint, params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedParams, err := ctx.preprocessString(params)
 	if err != nil {

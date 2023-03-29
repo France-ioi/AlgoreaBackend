@@ -35,7 +35,7 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 			defer func() { _ = db.Close() }()
 			database.ClearAllDBEnums()
 			database.MockDBEnumQueries(mock)
-			defer func() { database.ClearAllDBEnums() }()
+			defer database.ClearAllDBEnums()
 			store := database.NewDataStore(db)
 			r, _ := http.NewRequest("PUT", "/", strings.NewReader(tt.json))
 			_, err := validateUpdateGroupInput(r, &groupUpdateInput{

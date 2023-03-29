@@ -58,7 +58,7 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 	}
 }
 
-var spacesRegexp = regexp.MustCompile(`[\s\r\n]+`)
+var spacesRegexp = regexp.MustCompile(`\s+`)
 
 func fillSQLPlaceholders(query string, values []interface{}) string {
 	var sql string

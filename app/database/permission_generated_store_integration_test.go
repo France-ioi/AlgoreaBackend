@@ -1,4 +1,4 @@
-// +build !unit
+//go:build !unit
 
 package database_test
 
@@ -70,8 +70,10 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 			itemID:  1,
 			canView: "info",
 			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2}, {104, 1, 3},
-				{105, 1, 2}, {105, 1, 3},
+				{104, 1, 2},
+				{104, 1, 3},
+				{105, 1, 2},
+				{105, 1, 3},
 			},
 		},
 		{
@@ -140,8 +142,10 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			itemID:  1,
 			canView: "info",
 			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2}, {104, 1, 3},
-				{105, 1, 2}, {105, 1, 3},
+				{104, 1, 2},
+				{104, 1, 3},
+				{105, 1, 2},
+				{105, 1, 3},
 			},
 		},
 		{
@@ -166,8 +170,10 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			canView:        "info",
 			updateExisting: true,
 			expectedChanged: []resultPrimaryKey{
-				{105, 1, 2}, {105, 1, 3},
-				{107, 1, 2}, {107, 1, 3},
+				{105, 1, 2},
+				{105, 1, 3},
+				{107, 1, 2},
+				{107, 1, 3},
 			},
 		},
 		{

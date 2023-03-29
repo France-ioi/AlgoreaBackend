@@ -11,8 +11,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
-func init() { // nolint:gochecknoinits
-	var recomputeCmd = &cobra.Command{
+func init() { //nolint:gochecknoinits
+	recomputeCmd := &cobra.Command{
 		Use:   "db-recompute [environment]",
 		Short: "recompute db caches",
 		Long:  `recompute runs recalculation of db caches (groups ancestors, items ancestors, cached permissions, attempt results)`,

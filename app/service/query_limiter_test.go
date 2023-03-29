@@ -91,7 +91,7 @@ func TestQueryLimiter_Apply(t *testing.T) {
 			r.Get("/", handler)
 
 			ts := httptest.NewServer(r)
-			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, nil)
+			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, http.NoBody)
 			response, err := http.DefaultClient.Do(request)
 			if err == nil {
 				_ = response.Body.Close()

@@ -157,8 +157,7 @@ type rawParticipantProgressRaw struct {
 func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
-	itemID, participantID, checkPermissionsForGroupID, participantType, apiError :=
-		srv.parseParticipantProgressParameters(r, store, user)
+	itemID, participantID, checkPermissionsForGroupID, participantType, apiError := srv.parseParticipantProgressParameters(r, store, user)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -273,7 +272,8 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 }
 
 func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *database.DataStore, user *database.User) (
-	itemID, participantID, checkPermissionsForGroupID int64, participantType string, apiError service.APIError) {
+	itemID, participantID, checkPermissionsForGroupID int64, participantType string, apiError service.APIError,
+) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return 0, 0, 0, "", service.ErrInvalidRequest(err)

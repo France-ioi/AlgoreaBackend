@@ -35,7 +35,8 @@ type rawNavigationItem struct {
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's.
 func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemptID int64,
-	user *database.User, watchedGroupID int64, watchedGroupIDSet bool) []rawNavigationItem {
+	user *database.User, watchedGroupID int64, watchedGroupIDSet bool,
+) []rawNavigationItem {
 	var result []rawNavigationItem
 	items := dataStore.Items()
 
@@ -104,7 +105,8 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 
 func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
 	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
-	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc func(*database.DB) *database.DB) *database.DB {
+	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc func(*database.DB) *database.DB,
+) *database.DB {
 	watchedGroupCanViewQuery := interface{}(gorm.Expr("NULL"))
 	watchedGroupAvgScoreQuery := interface{}(gorm.Expr("(SELECT NULL AS avg_score, NULL AS all_validated)"))
 	if watchedGroupIDSet {
@@ -157,7 +159,8 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 func constructItemListQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
 	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	externalColumnList string,
-	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB) *database.DB {
+	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB,
+) *database.DB {
 	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, requiredViewPermissionOnItems,
 		watchedGroupIDSet, watchedGroupID, columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
 
@@ -166,16 +169,15 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64, requir
 	}
 
 	// nolint:gosec
-	itemsQuery :=
-		filterAttemptsFunc(dataStore.Raw(`
+	itemsQuery := filterAttemptsFunc(dataStore.Raw(`
 			SELECT items.*, `+externalColumnList+`results.attempt_id,
 				results.score_computed, results.validated, results.started_at, results.latest_activity_at,
 				attempts.allows_submissions_until AS attempt_allows_submissions_until, attempts.ended_at
 			FROM ? AS items
 			LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id
 			LEFT JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id`,
-			itemsWithoutResultsQuery.SubQuery(), groupID)).
-			Order("child_order, items.id, attempt_id")
+		itemsWithoutResultsQuery.SubQuery(), groupID)).
+		Order("child_order, items.id, attempt_id")
 	service.MustNotBeError(itemsQuery.Error())
 	return itemsQuery
 }

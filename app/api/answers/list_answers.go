@@ -208,7 +208,8 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 }
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
-	store *database.DataStore, attemptID int64, user *database.User) service.APIError {
+	store *database.DataStore, attemptID int64, user *database.User,
+) service.APIError {
 	var count int64
 	groupsManagedByUser := store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
 	groupsWhereUserIsMember := store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
@@ -226,7 +227,8 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
 }
 
 func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(
-	store *database.DataStore, authorID int64, user *database.User) service.APIError {
+	store *database.DataStore, authorID int64, user *database.User,
+) service.APIError {
 	if authorID != user.GroupID {
 		found, err := store.GroupAncestors().ManagedByUser(user).
 			Where("groups_ancestors.child_group_id=?", authorID).HasRows()

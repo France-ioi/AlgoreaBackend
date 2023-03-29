@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 // Package servicetest provides utilities to test services.
 package servicetest
@@ -25,7 +25,8 @@ import (
 func GetResponseForRouteWithMockedDBAndUser(
 	method, path, requestBody string, user *database.User,
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
-	setRouterFunc func(router *chi.Mux, baseService *service.Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
+	setRouterFunc func(router *chi.Mux, baseService *service.Base),
+) (*http.Response, sqlmock.Sqlmock, string, error) {
 	logger, hook := loggingtest.NewNullLogger()
 
 	db, mock := database.NewDBMock()

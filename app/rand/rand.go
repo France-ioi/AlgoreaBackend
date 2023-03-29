@@ -6,8 +6,10 @@ import (
 	"sync"
 )
 
-var globalRand = mr.New(mr.NewSource(1))
-var globalLock sync.Mutex
+var (
+	globalRand = mr.New(mr.NewSource(1))
+	globalLock sync.Mutex
+)
 
 // Seed uses the provided seed value to initialize the generator to a deterministic state.
 func Seed(s int64) {
@@ -42,7 +44,7 @@ func String(n int) string {
 	globalLock.Lock()
 	defer globalLock.Unlock()
 
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	s := make([]rune, n)
 	for i := range s {

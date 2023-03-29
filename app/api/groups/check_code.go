@@ -143,7 +143,8 @@ const (
 )
 
 func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code string) (
-	valid bool, reason groupCodeFailReason, groupID int64) {
+	valid bool, reason groupCodeFailReason, groupID int64,
+) {
 	info, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
 	service.MustNotBeError(err)
 	if info == nil {

@@ -156,7 +156,8 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 }
 
 func generateRootItemListFromRawData(
-	store *database.DataStore, rawData []rawRootItem, getActivities bool) ([]activitiesViewResponseRow, []skillsViewResponseRow) {
+	store *database.DataStore, rawData []rawRootItem, getActivities bool,
+) ([]activitiesViewResponseRow, []skillsViewResponseRow) {
 	var activitiesResult []activitiesViewResponseRow
 	var skillsResult []skillsViewResponseRow
 	if getActivities {
@@ -229,7 +230,8 @@ func generateRootItemInfoFromRawData(store *database.DataStore, rawData *rawRoot
 
 func getRootItemsFromDB(
 	store *database.DataStore, watcherID, watchedGroupID int64, watchedGroupIDSet bool,
-	user *database.User, selectActivities bool) []rawRootItem {
+	user *database.User, selectActivities bool,
+) []rawRootItem {
 	hasVisibleChildrenQuery := store.Permissions().
 		MatchingGroupAncestors(watcherID).
 		WherePermissionIsAtLeast("view", "info").

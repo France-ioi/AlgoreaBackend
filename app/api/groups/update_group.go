@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
-
-	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -45,14 +44,14 @@ type groupUpdateInput struct {
 	// Nullable; cannot be set to null when enforce_max_participant is true
 	MaxParticipants *int `json:"max_participants" validate:"changing_requires_can_manage_at_least=memberships,max_participants"`
 	// Cannot be set to true when max_participants is null
-	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` // nolint:lll
+	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll
 
 	// enum: none,view,edit
 	// Cannot be changed to 'edit'
-	RequirePersonalInfoAccessApproval  string         `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,require_personal_info_access_approval,oneof=none view edit"` // nolint:lll
-	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                           // nolint:lll
-	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                           // nolint:lll
-	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                   // nolint:lll
+	RequirePersonalInfoAccessApproval  string         `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,require_personal_info_access_approval,oneof=none view edit"` //nolint:lll
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                           //nolint:lll
+	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                           //nolint:lll
+	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                   //nolint:lll
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
@@ -201,7 +200,8 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 func validateRootActivityIDAndIsOfficial(
 	store *database.DataStore, user *database.User, oldRootActivityID *int64, oldIsOfficialSession bool,
-	dbMap map[string]interface{}) service.APIError {
+	dbMap map[string]interface{},
+) service.APIError {
 	rootActivityIDToCheck := oldRootActivityID
 	rootActivityID, rootActivityIDSet := dbMap["root_activity_id"]
 	rootActivityIDChanged := rootActivityIDSet && !int64PtrEqualValues(oldRootActivityID, rootActivityID.(*int64))
@@ -247,7 +247,8 @@ func validateRootActivityID(store *database.DataStore, user *database.User, root
 }
 
 func validateRootSkillID(store *database.DataStore, user *database.User, oldRootSkillID *int64,
-	dbMap map[string]interface{}) service.APIError {
+	dbMap map[string]interface{},
+) service.APIError {
 	rootSkillID, rootSkillIDSet := dbMap["root_skill_id"]
 	rootSkillIDChanged := rootSkillIDSet && !int64PtrEqualValues(oldRootSkillID, rootSkillID.(*int64))
 	if rootSkillIDChanged && rootSkillID != nil {
@@ -266,7 +267,8 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 // with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
-	previousIsPublicValue, previousFrozenMembershipValue bool) error {
+	previousIsPublicValue, previousFrozenMembershipValue bool,
+) error {
 	var shouldRefusePending bool
 
 	pendingTypesToHandle := make([]string, 0, 3)
@@ -304,7 +306,8 @@ func refuseSentGroupRequestsIfNeeded(
 }
 
 func validateUpdateGroupInput(
-	r *http.Request, currentGroupData *groupUpdateInput, store *database.DataStore) (*formdata.FormData, error) {
+	r *http.Request, currentGroupData *groupUpdateInput, store *database.DataStore,
+) (*formdata.FormData, error) {
 	input := &groupUpdateInput{}
 	formData := formdata.NewFormData(input)
 	formData.SetOldValues(currentGroupData)
@@ -349,7 +352,8 @@ func constructFrozenMembershipValidator(formData *formdata.FormData) validator.F
 }
 
 func constructChangingRequiresCanManageAtLeastValidator(formData *formdata.FormData, store *database.DataStore,
-	currentGroupData *groupUpdateInput) validator.Func {
+	currentGroupData *groupUpdateInput,
+) validator.Func {
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
 		return currentGroupData.CanManageValue >= store.GroupManagers().CanManageIndexByName(fl.Param())
 	})

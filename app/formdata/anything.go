@@ -39,5 +39,7 @@ func (a Anything) MarshalJSON() ([]byte, error) {
 	return a.raw, nil
 }
 
-var _ = json.Unmarshaler(&Anything{})
-var _ = json.Marshaler(Anything{})
+var (
+	_ = json.Unmarshaler(&Anything{})
+	_ = json.Marshaler(Anything{})
+)

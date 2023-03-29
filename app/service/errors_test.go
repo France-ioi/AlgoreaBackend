@@ -20,7 +20,7 @@ func responseForError(e service.APIError) *httptest.ResponseRecorder {
 }
 
 func responseForHTTPHandler(handler http.Handler) *httptest.ResponseRecorder {
-	req, _ := http.NewRequest("GET", "/dummy", nil)
+	req, _ := http.NewRequest("GET", "/dummy", http.NoBody)
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, req)

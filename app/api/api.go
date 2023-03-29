@@ -26,7 +26,8 @@ type Ctx struct {
 
 // Router provides routes for the whole API.
 func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.ConfigItem,
-	tokenConfig *token.Config) (*Ctx, *chi.Mux) {
+	tokenConfig *token.Config,
+) (*Ctx, *chi.Mux) {
 	r := chi.NewRouter()
 
 	srv := &service.Base{

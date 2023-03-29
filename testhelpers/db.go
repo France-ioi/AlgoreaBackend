@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 package testhelpers
 
@@ -21,7 +21,7 @@ import (
 
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
-func init() { // nolint:gochecknoinits
+func init() { //nolint:gochecknoinits
 	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
 		appenv.SetDefaultEnvToTest()
 		// Apply the config to the global logger
@@ -122,7 +122,7 @@ func LoadFixture(db *sql.DB, fileName string) {
 		var err error
 		var data []byte
 		filename := f.Name()
-		data, err = ioutil.ReadFile(filepath.Join(filePath, filename)) // nolint: gosec
+		data, err = ioutil.ReadFile(filepath.Join(filePath, filename)) //nolint: gosec
 		if err != nil {
 			panic(err)
 		}
@@ -190,7 +190,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 			valueMarks = append(valueMarks, "?")
 			values = append(values, v)
 		}
-		// nolint:gosec
+		//nolint:gosec
 		query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)",
 			tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", "))
 		_, err = tx.Exec(query, values...)

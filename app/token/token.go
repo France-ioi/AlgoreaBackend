@@ -144,7 +144,8 @@ func IsUnexpectedError(err error) bool {
 // using a platforms's public key for given itemID.
 // The function returns if the platform doesn't use tokens.
 func UnmarshalDependingOnItemPlatform(store *database.DataStore, itemID int64,
-	target interface{}, token []byte, tokenFieldName string) (err error) {
+	target interface{}, token []byte, tokenFieldName string,
+) (err error) {
 	targetRefl := reflect.ValueOf(target)
 	defer recoverPanics(&err)
 

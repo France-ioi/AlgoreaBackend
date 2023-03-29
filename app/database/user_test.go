@@ -12,7 +12,8 @@ func TestUser_Clone(t *testing.T) {
 	ts := time.Now()
 	user := &User{
 		Login: "login", LoginID: ptrInt64(5), DefaultLanguage: "fr",
-		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: ptrInt64(4), NotificationsReadAt: (*Time)(&ts)}
+		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: ptrInt64(4), NotificationsReadAt: (*Time)(&ts),
+	}
 	userClone := user.Clone()
 	assert.False(t, userClone == user)
 	assert.False(t, user.NotificationsReadAt == userClone.NotificationsReadAt)

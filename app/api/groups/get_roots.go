@@ -77,7 +77,8 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 }
 
 func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *database.User,
-	otherColumns string, otherColumnValues ...interface{}) *database.DB {
+	otherColumns string, otherColumnValues ...interface{},
+) *database.DB {
 	usersAncestorsQuery := store.ActiveGroupAncestors().
 		Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
 

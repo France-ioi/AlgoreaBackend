@@ -1,4 +1,4 @@
-// +build !prod
+//go:build !prod
 
 // Package loggingtest provides functions to test the content of the logs.
 package loggingtest

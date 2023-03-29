@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // SessionCookieAttributes represents attributes of the session cookie.
@@ -59,7 +60,8 @@ func unmarshalSessionCookieValue(cookieValue string) (token string, attributes S
 	if len(parts) != 4 || len(parts[0]) != 1 {
 		return
 	}
-	kind := []rune(parts[0])[0] - '0'
+	r, _ := utf8.DecodeRuneInString(parts[0])
+	kind := r - '0'
 	attributes.UseCookie = true
 	// | secure | same_site | code |
 	// | 0      | 1         | 1    |

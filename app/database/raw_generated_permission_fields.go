@@ -15,7 +15,8 @@ type RawGeneratedPermissionFields struct {
 
 // AsItemPermissions converts RawGeneratedPermissionFields into structures.ItemPermissions.
 func (raw *RawGeneratedPermissionFields) AsItemPermissions(
-	permissionGrantedStore *PermissionGrantedStore) *structures.ItemPermissions {
+	permissionGrantedStore *PermissionGrantedStore,
+) *structures.ItemPermissions {
 	return &structures.ItemPermissions{
 		CanView:      permissionGrantedStore.ViewNameByIndex(raw.CanViewGeneratedValue),
 		CanGrantView: permissionGrantedStore.GrantViewNameByIndex(raw.CanGrantViewGeneratedValue),

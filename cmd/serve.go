@@ -10,10 +10,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
-func init() { // nolint:gochecknoinits
+func init() { //nolint:gochecknoinits
 	var skipChecks bool
 
-	var serveCmd = &cobra.Command{
+	serveCmd := &cobra.Command{
 		Use:   "serve [environment]",
 		Short: "start http server",
 		Args:  cobra.MaximumNArgs(1),

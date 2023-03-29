@@ -10,7 +10,7 @@ import (
 
 func TestNotFound(t *testing.T) {
 	assert := assertlib.New(t)
-	req, _ := http.NewRequest("GET", "/dummy", nil)
+	req, _ := http.NewRequest("GET", "/dummy", http.NoBody)
 	recorder := httptest.NewRecorder()
 
 	NotFound(recorder, req)

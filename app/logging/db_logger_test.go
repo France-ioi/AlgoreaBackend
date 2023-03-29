@@ -11,7 +11,7 @@ import (
 
 func TestNewDBLogger_ErrorFallback(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := new() // no config
+	logger := createLogger() // no config
 	dbLogger, logMode, rawLogMode := logger.NewDBLogger()
 	assert.IsType(gorm.Logger{}, dbLogger)
 	assert.False(logMode)
@@ -20,7 +20,7 @@ func TestNewDBLogger_ErrorFallback(t *testing.T) {
 
 func TestLoggerFromConfig_TextLog(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := new()
+	logger := createLogger()
 	config := viper.New()
 	config.Set("Format", "text")
 	config.Set("Output", "file")
@@ -31,7 +31,7 @@ func TestLoggerFromConfig_TextLog(t *testing.T) {
 
 func TestLoggerFromConfig_JSONLog(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := new()
+	logger := createLogger()
 	config := viper.New()
 	config.Set("Format", "json")
 	config.Set("Output", "file")
@@ -42,7 +42,7 @@ func TestLoggerFromConfig_JSONLog(t *testing.T) {
 
 func TestLoggerFromConfig_WrongFormat(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := new()
+	logger := createLogger()
 	config := viper.New()
 	config.Set("Format", "yml")
 	config.Set("Output", "file")
@@ -70,7 +70,7 @@ func TestNewDBLogger_LogMode(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			assert := assertlib.New(t)
-			logger := new()
+			logger := createLogger()
 			config := viper.New()
 			config.Set("LogSQLQueries", test.logSQLQueries)
 			config.Set("LogRawSQLQueries", test.logRawSQLQueries)

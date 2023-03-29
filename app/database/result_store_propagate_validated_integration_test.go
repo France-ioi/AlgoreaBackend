@@ -1,4 +1,4 @@
-// +build !unit
+//go:build !unit
 
 package database_test
 
@@ -29,7 +29,8 @@ func (r validatedResultRow) LessThan(other validatedResultRow) bool {
 
 func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 	validationType string,
-	prepareFunc func(*testing.T, *database.ResultStore), expectedResults []validatedResultRow) {
+	prepareFunc func(*testing.T, *database.ResultStore), expectedResults []validatedResultRow,
+) {
 	db := testhelpers.SetupDBWithFixture(fixtures...)
 	defer func() { _ = db.Close() }()
 
@@ -78,7 +79,8 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 }
 
 func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(
-	t *testing.T) {
+	t *testing.T,
+) {
 	testResultStorePropagateValidated(t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
@@ -92,7 +94,8 @@ func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhe
 }
 
 func TestResultStore_Propagate_ValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(
-	t *testing.T) {
+	t *testing.T,
+) {
 	testResultStorePropagateValidated(t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",

@@ -1,4 +1,4 @@
-// +build !unit
+//go:build !unit
 
 package items_test
 
@@ -141,7 +141,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2}},
 			want: []map[string]interface{}{
-				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)}},
+				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)},
+			},
 		},
 		{
 			name: "supports permissions given directly",
@@ -152,7 +153,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2}},
 			want: []map[string]interface{}{
-				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)}},
+				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)},
+			},
 		},
 		{
 			name: "steps into child attempts for items requiring explicit entry",
@@ -176,8 +178,11 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2, 22}},
 			want: []map[string]interface{}{
-				{"attempt_id0": int64(0), "attempt_id1": int64(0), "attempt_id2": int64(1),
-					"has_started_result0": int64(0), "has_started_result1": int64(1), "has_started_result2": int64(0)}},
+				{
+					"attempt_id0": int64(0), "attempt_id1": int64(0), "attempt_id2": int64(1),
+					"has_started_result0": int64(0), "has_started_result1": int64(1), "has_started_result2": int64(0),
+				},
+			},
 		},
 		{
 			name: "supports paths starting with an item requiring explicit entry",
@@ -193,7 +198,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			`,
 			args: args{participantID: 103, ids: []int64{22}},
 			want: []map[string]interface{}{
-				{"attempt_id0": int64(1), "has_started_result0": int64(0)}},
+				{"attempt_id0": int64(1), "has_started_result0": int64(0)},
+			},
 		},
 		{
 			name: "can find attempt chains without a result for the first item",
@@ -208,7 +214,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			`,
 			args: args{participantID: 101, ids: []int64{1, 2}},
 			want: []map[string]interface{}{
-				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)}},
+				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)},
+			},
 		},
 		{
 			name: "prefers the last (by id) existing attempt chain with started results",
@@ -241,7 +248,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					"attempt_id0": int64(1), "has_started_result0": int64(1),
 					"attempt_id1": int64(1), "has_started_result1": int64(1),
 					"attempt_id2": int64(3), "has_started_result2": int64(1),
-				}},
+				},
+			},
 		},
 		{
 			name: "prefers the attempt chain with the highest score",
@@ -273,7 +281,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(0),
 					"attempt_id2": int64(5), "has_started_result2": int64(1),
-				}},
+				},
+			},
 		},
 		{
 			name: "prefers the last (by id) attempt chain among all chains with started results for the same items",
@@ -305,7 +314,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					"attempt_id0": int64(1), "has_started_result0": int64(1),
 					"attempt_id1": int64(1), "has_started_result1": int64(0),
 					"attempt_id2": int64(3), "has_started_result2": int64(1),
-				}},
+				},
+			},
 		},
 		{
 			name: "ignores attempt chains with missing results for items requiring explicit entry",
@@ -377,7 +387,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					"attempt_id0": int64(1), "has_started_result0": int64(1),
 					"attempt_id1": int64(1), "has_started_result1": int64(1),
 					"attempt_id2": int64(2), "has_started_result2": int64(1),
-				}},
+				},
+			},
 		},
 		{
 			name: "ignores attempt chains with not started results for an attempt not allowing submissions",

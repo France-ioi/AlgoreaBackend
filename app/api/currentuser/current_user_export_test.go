@@ -6,6 +6,7 @@ import (
 )
 
 func CheckPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
-	groupID int64, action userGroupRelationAction) service.APIError {
+	groupID int64, action userGroupRelationAction,
+) service.APIError {
 	return checkPreconditionsForGroupRequests(store, user, groupID, action)
 }
