@@ -1,4 +1,5 @@
 //go:build !prod
+// +build !prod
 
 package testhelpers
 
@@ -20,7 +21,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
 
 	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
-	s.Step(`^I am ([^ ]*)$`, ctx.IAm)
+	s.Step(`^I am (\w+)$`, ctx.IAm)
+	s.Step(`^there is a user (\w+)$`, ctx.ThereIsAUser)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
 	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group code is "([^"]*)"$`, ctx.TheGeneratedGroupCodeIs)
@@ -36,6 +38,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
 		ctx.ICanViewOnItemWithID)
 	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
+	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)

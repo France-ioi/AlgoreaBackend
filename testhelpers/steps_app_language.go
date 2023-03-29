@@ -12,12 +12,16 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
-// getParametersMap parses parameters in format key1=val1,key2=val2,... into a map.
-func getParametersMap(parameters string) map[string]string {
+// ctx.getParametersMap parses parameters in format key1=val1,key2=val2,... into a map.
+func (ctx *TestContext) getParametersMap(parameters string) map[string]string {
 	parametersMap := make(map[string]string)
 	arrayParameters := strings.Split(parameters, ",")
 	for _, paramKeyValue := range arrayParameters {
 		keyVal := strings.Split(paramKeyValue, "=")
+		if keyVal[1][0] == '@' {
+			keyVal[1] = ctx.replaceReferencesByIDs(keyVal[1])
+		}
+
 		parametersMap[keyVal[0]] = keyVal[1]
 	}
 
@@ -37,7 +41,6 @@ func getParametersString(parameters map[string]string) string {
 	return str
 }
 
-// populateDatabase populate the database with all the initialized data.
 func (ctx *TestContext) populateDatabase() error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -186,22 +189,27 @@ func (ctx *TestContext) addThread(itemID, participantID, helperGroupID, status, 
 
 // IAm Sets the current user.
 func (ctx *TestContext) IAm(name string) error {
-	userID := rand.Int63()
-
-	err := ctx.ThereIsAUserWith(getParametersString(map[string]string{
-		"id":   strconv.FormatInt(userID, 10),
-		"name": name,
-	}))
+	err := ctx.ThereIsAUser(name)
 	if err != nil {
 		return err
 	}
 
-	return ctx.IAmUserWithID(userID)
+	return ctx.IAmUserWithID(ctx.getReferenceFor(name))
+}
+
+// ThereIsAUser create a user.
+func (ctx *TestContext) ThereIsAUser(name string) error {
+	userID := ctx.getReferenceFor(name)
+
+	return ctx.ThereIsAUserWith(getParametersString(map[string]string{
+		"id":   strconv.FormatInt(userID, 10),
+		"name": name,
+	}))
 }
 
 // ThereIsAUserWith creates a new user.
 func (ctx *TestContext) ThereIsAUserWith(parameters string) error {
-	user := getParametersMap(parameters)
+	user := ctx.getParametersMap(parameters)
 
 	ctx.addUser(user["id"], user["name"])
 
@@ -214,7 +222,7 @@ func (ctx *TestContext) ThereIsAUserWith(parameters string) error {
 
 // ThereIsAGroupWith creates a new group.
 func (ctx *TestContext) ThereIsAGroupWith(parameters string) error {
-	group := getParametersMap(parameters)
+	group := ctx.getParametersMap(parameters)
 
 	ctx.addGroup(group["id"], "Group "+group["id"])
 	ctx.addGroupAncestor(group["id"], group["id"])
@@ -268,6 +276,11 @@ func (ctx *TestContext) IAmAMemberOfTheGroupWithID(groupID int64) error {
 	return nil
 }
 
+// IAmAMemberOfTheGroup puts a user in a group.
+func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
+	return ctx.IAmAMemberOfTheGroupWithID(ctx.getReferenceFor(name))
+}
+
 // ICanOnItemWithID gives the user a permission on an item.
 func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue string, itemID int64) error {
 	ctx.addPermissionGenerated(strconv.FormatInt(ctx.userID, 10), strconv.FormatInt(itemID, 10), watchType, watchValue)
@@ -302,7 +315,7 @@ func (ctx *TestContext) IHaveValidatedItemWithID(itemID int64) error {
 
 // ThereIsAThreadWith creates a thread.
 func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
-	thread := getParametersMap(parameters)
+	thread := ctx.getParametersMap(parameters)
 
 	// add item
 	ctx.addItem(thread["item_id"], "en", "Task")
@@ -341,7 +354,7 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 
 // ThereIsNoThreadWith states that a given thread doesn't exist.
 func (ctx *TestContext) ThereIsNoThreadWith(parameters string) error {
-	thread := getParametersMap(parameters)
+	thread := ctx.getParametersMap(parameters)
 
 	ctx.addItem(thread["item_id"], "en", "Task")
 
