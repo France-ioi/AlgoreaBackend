@@ -4,11 +4,13 @@ package testhelpers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
 
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/cucumber/messages-go/v10"
 	"github.com/pmezard/go-difflib/difflib"
 
@@ -29,6 +31,76 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	}
 
 	return nil
+}
+
+// TheResponseShouldMatchFollowingJSONPath checks whether the response contains the right JSONPath values.
+func (ctx *TestContext) TheResponseShouldMatchFollowingJSONPath(dataTable *messages.PickleStepArgument_PickleTable) error {
+	headerRow := dataTable.Rows[0]
+	for i := 1; i < len(dataTable.Rows); i++ {
+		JSONPath := ""
+		value := ""
+
+		row := dataTable.Rows[i]
+		for j := 0; j < len(row.Cells); j++ {
+			cell := row.Cells[j]
+
+			switch headerRow.Cells[j].Value {
+			case "JSONPath":
+				JSONPath = cell.Value
+			case "value":
+				value = ctx.replaceReferencesByIDs(cell.Value)
+			default:
+				return fmt.Errorf("TheResponseShouldMatchFollowingJSONPath: unrecognized column name: %v", headerRow.Cells[j].Value)
+			}
+		}
+
+		if JSONPath == "" || value == "" {
+			return errors.New("TheResponseShouldMatchFollowingJSONPath: undefined JSONPath or value")
+		}
+
+		match, err := ctx.responseMatchesJSONPath(JSONPath, value)
+		if err != nil {
+			return fmt.Errorf("error while trying to match JSONPath %v with response %v: %v",
+				JSONPath, ctx.lastResponseBody, err)
+		} else if !match {
+			return fmt.Errorf("the response's JSONPath %v doesn't match the value %v for response %v",
+				JSONPath, value, ctx.lastResponseBody)
+		}
+	}
+
+	return nil
+}
+
+// responseMatchesJSONPath checks whether the response matches a value at a JSONPath.
+func (ctx *TestContext) responseMatchesJSONPath(JSONPath, value string) (bool, error) {
+	// Note: Unmarshal could be cached.
+	// Note: When XPath returns an array, it could be possible to use cache/sort to make if more efficient
+
+	var JSONResponse interface{}
+	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
+	if err != nil {
+		return false, err
+	}
+
+	res, err := jsonpath.Get(JSONPath, JSONResponse)
+	if err != nil {
+		return false, err
+	}
+
+	switch result := res.(type) {
+	case []interface{}:
+		for _, val := range result {
+			if val == value {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	case interface{}:
+		return result == value, nil
+	default:
+		return false, fmt.Errorf("type %v from jsonpath.Get not handled", result)
+	}
 }
 
 func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint
@@ -122,7 +194,7 @@ func compareStrings(expected, actual string) error {
 
 const nullHeaderValue = "[NULL]"
 
-func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { //nolint
+func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
 	headerValue, err = ctx.preprocessString(headerValue)
 	if err != nil {
 		return err
@@ -160,7 +232,7 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersVal
 	return ctx.TheResponseHeaderShouldBe(headerName, headerValue)
 }
 
-func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { //nolint
+func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { // nolint
 	errorResp := service.ErrorResponse{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
@@ -173,7 +245,7 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	return nil
 }
 
-func (ctx *TestContext) TheResponseShouldBe(kind string) error { //nolint
+func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
 	var expectedCode int
 	switch kind {
 	case "updated", "deleted":
