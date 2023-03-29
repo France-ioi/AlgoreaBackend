@@ -1,7 +1,7 @@
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test -v
+GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOLIST=$(GOCMD) list
 BIN_NAME=AlgoreaBackend

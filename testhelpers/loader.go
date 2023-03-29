@@ -32,6 +32,8 @@ func RunGodogTests(t *testing.T, tags string) {
 	appenv.SetDefaultEnvToTest()
 
 	opt.Paths = featureFilesInCurrentDir()
+	opt.TestingT = t
+
 	if tags != "" {
 		opt.Tags = tags
 	}
