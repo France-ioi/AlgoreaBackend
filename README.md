@@ -1,11 +1,5 @@
 # Algorea Backend
 
-## Requirements
-
-This project requires Go >=1.13.
-
-Warning: make test-bdd doesn't work with Go 1.19
-
 ## Running the app (for development)
 
 Compile the app:
@@ -101,24 +95,16 @@ You can also use the filters:
 ```
 make DIRECTORY=./app/database FILTER=TestItemStore_TriggerBeforeInsert_SetsPlatformID test-unit
 ```
-Only Gherkin tests defined in *.feature files (cucumber using `godog`), using the database connection:
+Only Gherkin tests defined in *.feature files, using the database connection:
 ```
 make test-bdd
 ```
-
-or if you want only to run bdd tests with a specific tag, in a specific directory.
-
-Note: specifying the directory **can save you a few seconds per run**:
+or if you want only to run bdd tests with a specific tag, in a specific directory. Specifying the directory is mandatory when using tags.
 
 ```
-make ARGS="--tags=wip" DIRECTORY=app/api/answers/ test-bdd
+DIRECTORY=./app/api/answers/ TAGS=wip make test-bdd
 ```
 To add a tag to a test, just precede it by @wip on the line above it in the *.feature file. This is useful to only execute appropriate tests.
-
-you may also have to specify the godog directory:
-```
-make BIN_DIR=~/go/bin ARGS="--tags=wip" DIRECTORY=app/api/answers/ test-bdd
-```
 
 ## Install the git hooks
 

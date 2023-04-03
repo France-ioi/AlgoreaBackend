@@ -22,6 +22,11 @@ var opt = godog.Options{
 	Format: "progress",
 }
 
+// BindGodogCmdFlags binds the command arguments into the Godog options.
+func BindGodogCmdFlags() {
+	godog.BindFlags("godog.", flag.CommandLine, &opt)
+}
+
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package).
 func RunGodogTests(t *testing.T, tags string) {
@@ -31,7 +36,6 @@ func RunGodogTests(t *testing.T, tags string) {
 	if tags != "" {
 		opt.Tags = tags
 	}
-	godog.BindFlags("godog.", flag.CommandLine, &opt)
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
 		FeatureContext(s)

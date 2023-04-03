@@ -1,4 +1,4 @@
-FROM golang:1.13
+FROM golang:1.20
 
 WORKDIR /go/src/AlgoreaBackend
 
