@@ -40,37 +40,39 @@ type participant struct {
 // summary: Service to list the visible threads for a user.
 // description: >
 //
-//   Service to list the visible threads for a user.
+//	Service to list the visible threads for a user.
 //
-//   * If `watched_group_id` is given, only threads in which the participant is descendant (including self)
-//     of the `watched_group_id` are returned.
-//   * `first_name` and `last_name` are only returned for the current user or if the user approved access to their personal
-//     info for some group managed by the current user
+//	* If `watched_group_id` is given, only threads in which the participant is descendant (including self)
+//	  of the `watched_group_id` are returned.
+//	* `first_name` and `last_name` are only returned for the current user or if the user approved access to their personal
+//	  info for some group managed by the current user
 //
-//   Validations:
-//     * if `watched_group_id` is given: the current-user must be (implicitly or explicitly) a manager
-//       with `can_watch_members` on `watched_group_id`.
+//	Validations:
+//	  * if `watched_group_id` is given: the current-user must be (implicitly or explicitly) a manager
+//	    with `can_watch_members` on `watched_group_id`.
 //
 // parameters:
 //   - name: watched_group_id
 //     in: query
 //     type: integer
 //     format: int64
+//
 // responses:
-//   "200":
-//     description: OK. Threads data
-//     schema:
-//       type: array
-//       items:
-//         "$ref": "#/responses/thread"
-//   "400":
-//     "$ref": "#/responses/badRequestResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
+//
+//	"200":
+//	  description: OK. Threads data
+//	  schema:
+//	    type: array
+//	    items:
+//	      "$ref": "#/responses/thread"
+//	"400":
+//	  "$ref": "#/responses/badRequestResponse"
+//	"401":
+//	  "$ref": "#/responses/unauthorizedResponse"
+//	"403":
+//	  "$ref": "#/responses/forbiddenResponse"
+//	"500":
+//	  "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service.APIError {
 	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {

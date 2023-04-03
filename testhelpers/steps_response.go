@@ -73,7 +73,7 @@ func (ctx *TestContext) TheResponseShouldMatchFollowingJSONPath(dataTable *messa
 }
 
 // responseMatchesJSONPath checks whether the response matches a value at a JSONPath.
-func (ctx *TestContext) responseMatchesJSONPath(JsonPath, value string) (bool, error) {
+func (ctx *TestContext) responseMatchesJSONPath(jsonPath, value string) (bool, error) {
 	// Note: Unmarshal could be cached.
 	// Note: When XPath returns an array, it could be possible to use cache/sort to make if more efficient
 
@@ -83,7 +83,7 @@ func (ctx *TestContext) responseMatchesJSONPath(JsonPath, value string) (bool, e
 		return false, err
 	}
 
-	res, err := jsonpath.Get(JsonPath, JSONResponse)
+	res, err := jsonpath.Get(jsonPath, JSONResponse)
 	if err != nil {
 		return false, err
 	}
