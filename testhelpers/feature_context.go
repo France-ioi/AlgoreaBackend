@@ -33,21 +33,19 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^there is a group with "([^"]*)"$`, ctx.ThereIsAGroupWith)
 	s.Step(`^There is a group (\w+)$`, ctx.ThereIsAGroup)
-	s.Step(`^I am in the group with id "([^"]*)"$`, ctx.IAmInTheGroupWithID)
+	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
+	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^(\w+) the (?:\w+) is in the group (\w+)$`, ctx.UserIsInTheGroup)
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmTheManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (\w+)$`, ctx.IAmTheManagerOfTheGroup)
 	s.Step(`^the group (\w+) is a descendant of the group (\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
 	s.Step(`^I can watch the group (\w+)$`, ctx.ICanWatchGroup)
-	s.Step(`^I can watch the group/participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
+	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
 		ctx.ICanViewOnItemWithID)
 	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
-	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
-	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
-	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
 	s.Step(`^(\w+) has approved access to his personal info for the group (\w+)`, ctx.HasApprovedAccessPersonalInfoForGroup)
 
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
@@ -55,6 +53,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^there are the following threads:$`, ctx.ThereAreThreads)
 	s.Step(`^there is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
 	s.Step(`^there is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
+	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
 
 	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
