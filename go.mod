@@ -50,7 +50,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/gobuffalo/packr v1.21.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
-	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/goware/urlx v0.2.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -66,8 +66,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd // indirect
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
