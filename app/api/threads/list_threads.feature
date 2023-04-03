@@ -1,7 +1,7 @@
 Feature: Get threads
   Background:
     Given there are the following users:
-      | name           | @reference      |
+      | login          | @reference      |
       | RichardFeynman | @RichardFeynman |
       | StevenHawking  | @StevenHawking  |
       | DavidBowie     | @DavidBowie     |
@@ -12,17 +12,19 @@ Feature: Get threads
       | @ClaireStudent  |
       | @StevenHawking  |
       | @DavidBowie     |
-
+    
   Scenario: Should have all the fields properly set
     Given I am MarieCurie
     And there is a group Laboratory referenced by @Laboratory
     And I am a manager of the group Laboratory
     And I can watch the group Laboratory
-    And there is a user AlbertEinstein referenced by @AlbertEinstein
-    And AlbertEinstein the scientist is in the group Laboratory
+    And there are the following users:
+      | @reference      | login          | first_name | last_name |
+      | @AlbertEinstein | AlbertEinstein | Albert     | Einstein  |
+      | @PaulDirac      | PaulDirac      | Paul       | Dirac     |
+      And AlbertEinstein the scientist is a member of the group Laboratory
     And AlbertEinstein has approved access to his personal info for the group Laboratory
-    And there is a user PaulDirac referenced by @PaulDirac
-    And PaulDirac the scientist is in the group Laboratory
+    And PaulDirac the scientist is a member of the group Laboratory
     And the database has the following table 'items':
       | id | type | default_language_tag |
       | 1  | Task | fr                   |
@@ -84,8 +86,8 @@ Feature: Get threads
     And I am a manager of the group University
     And I can watch the group University
     And the group FirstYear is a descendant of the group University
-    And ClaireStudent the student is in the group FirstYear
-    And StevenHawking the professor is in the group University
+    And ClaireStudent the student is a member of the group FirstYear
+    And StevenHawking the professor is a member of the group University
     When I send a GET request to "/threads?watched_group_id=@University"
     Then the response code should be 200
     And it should be a JSON array with 2 entries

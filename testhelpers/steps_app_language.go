@@ -1,5 +1,4 @@
 //go:build !prod
-// +build !prod
 
 package testhelpers
 
@@ -8,12 +7,16 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/cucumber/messages-go/v10"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
+)
+
+const (
+	ReferenceHeader = "@reference"
+	ReferencePrefix = '@'
 )
 
 // ctx.getParametersMap parses parameters in format key1=val1,key2=val2,... into a map.
@@ -22,7 +25,7 @@ func (ctx *TestContext) getParametersMap(parameters string) map[string]string {
 	arrayParameters := strings.Split(parameters, ",")
 	for _, paramKeyValue := range arrayParameters {
 		keyVal := strings.Split(paramKeyValue, "=")
-		if keyVal[1][0] == '@' {
+		if keyVal[1][0] == ReferencePrefix && keyVal[0] != ReferenceHeader {
 			keyVal[1] = ctx.replaceReferencesByIDs(keyVal[1])
 		}
 
@@ -53,8 +56,10 @@ func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgume
 	rowMap := map[string]string{}
 	for i := 0; i < len(rowHeader.Cells); i++ {
 		value := sourceRow.Cells[i].Value
-		if value[0] == '@' { // when the value in the cell is a reference to an identifier.
-			value = strconv.FormatInt(ctx.getReferenceFor(value[1:]), 10)
+
+		// when the value in the cell is a reference to an identifier.
+		if value[0] == ReferencePrefix && rowHeader.Cells[i].Value != ReferenceHeader {
+			value = strconv.FormatInt(ctx.getOrCreateReferenceFor(value[1:]), 10)
 		}
 
 		rowMap[rowHeader.Cells[i].Value] = value
@@ -63,7 +68,7 @@ func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgume
 	return rowMap
 }
 
-// populateDatabase populate the database with all the initialized data
+// populateDatabase populate the database with all the initialized data.
 func (ctx *TestContext) populateDatabase() error {
 	db, err := database.Open(ctx.db())
 	if err != nil {
@@ -77,9 +82,16 @@ func (ctx *TestContext) populateDatabase() error {
 
 		for tableName, tableRows := range ctx.dbTables {
 			for _, tableRow := range tableRows {
-				err = database.NewDataStoreWithTable(store.DB, tableName).InsertMap(tableRow)
+				SQLRow := make(map[string]interface{})
+				for field, value := range tableRow {
+					if field != ReferenceHeader {
+						SQLRow[field] = value
+					}
+				}
+
+				err = database.NewDataStoreWithTable(store.DB, tableName).InsertOrUpdateMap(SQLRow, nil)
 				if err != nil {
-					return fmt.Errorf("populateDatabase %s %+v: %v", tableName, tableRow, err)
+					return fmt.Errorf("populateDatabase %s %+v: %v", tableName, SQLRow, err)
 				}
 			}
 		}
@@ -105,21 +117,43 @@ func (ctx *TestContext) isInDatabase(tableName, key string) bool {
 	return ok
 }
 
+func mergeFields(row1, row2 map[string]interface{}) map[string]interface{} {
+	merged := row1
+	for key, value := range row2 {
+		merged[key] = value
+	}
+
+	return merged
+}
+
 func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]interface{}) {
 	if ctx.dbTables[tableName] == nil {
 		ctx.dbTables[tableName] = make(map[string]map[string]interface{})
 	}
+
+	if oldRow, ok := ctx.dbTables[tableName][key]; ok {
+		row = mergeFields(oldRow, row)
+	}
+
 	ctx.dbTables[tableName][key] = row
 }
 
+func (ctx *TestContext) getUserKey(fields map[string]string) string {
+	if _, ok := fields["group_id"]; !ok {
+		panic(fmt.Errorf("getUserKey: %v must have a group_id", fields))
+	}
+
+	return fields["group_id"]
+}
+
 // addUser adds a user in database.
-func (ctx *TestContext) addUser(groupID, login, firstName, lastName string) {
-	ctx.addInDatabase("users", groupID, map[string]interface{}{
-		"group_id":   groupID,
-		"login":      login,
-		"first_name": firstName,
-		"last_name":  lastName,
-	})
+func (ctx *TestContext) addUser(fields map[string]string) {
+	dbFields := make(map[string]interface{})
+	for key, value := range fields {
+		dbFields[key] = value
+	}
+
+	ctx.addInDatabase("users", ctx.getUserKey(fields), dbFields)
 }
 
 // addGroup adds a group in database.
@@ -131,7 +165,7 @@ func (ctx *TestContext) addGroup(groupID, name, groupType string) {
 	})
 }
 
-// addPermissionGenerated adds a permission generated in database
+// addPermissionGenerated adds a permission generated in database.
 func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroupID, parentGroupID string) {
 	groupGroupTable := "groups_groups"
 	key := parentGroupID + "," + childGroupID
@@ -233,16 +267,27 @@ func (ctx *TestContext) IAm(name string) error {
 		return err
 	}
 
-	return ctx.IAmUserWithID(ctx.getReferenceFor(name))
+	return ctx.IAmUserWithID(ctx.getOrCreateReferenceFor(name))
 }
 
 // ThereIsAUser create a user.
 func (ctx *TestContext) ThereIsAUser(name string) error {
-	userID := ctx.getReferenceFor(name)
+	userID := ctx.getOrCreateReferenceFor(name)
 
 	return ctx.ThereIsAUserWith(getParametersString(map[string]string{
-		"id":   strconv.FormatInt(userID, 10),
-		"name": name,
+		"group_id": strconv.FormatInt(userID, 10),
+		"login":    name,
+	}))
+}
+
+// ThereIsAUserReferencedBy create a user with a reference.
+func (ctx *TestContext) ThereIsAUserReferencedBy(name, reference string) error {
+	userID := rand.Int63()
+
+	return ctx.ThereIsAUserWith(getParametersString(map[string]string{
+		ReferenceHeader: reference,
+		"group_id":      strconv.FormatInt(userID, 10),
+		"login":         name,
 	}))
 }
 
@@ -250,22 +295,19 @@ func (ctx *TestContext) ThereIsAUser(name string) error {
 func (ctx *TestContext) ThereIsAUserWith(parameters string) error {
 	user := ctx.getParametersMap(parameters)
 
-	firstName := user["name"]
-	lastName := ""
-
-	for i, character := range user["name"] {
-		if i > 0 && unicode.IsUpper(character) {
-			firstName = user["name"][0:i]
-			lastName = user["name"][i:]
-			break
-		}
+	if _, ok := user["group_id"]; !ok {
+		user["group_id"] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
-	ctx.addUser(user["id"], user["name"], firstName, lastName)
+	ctx.addUser(user)
+
+	if reference, ok := user[ReferenceHeader]; ok {
+		ctx.setReference(reference, user["group_id"])
+	}
 
 	return ctx.ThereIsAGroupWith(getParametersString(map[string]string{
-		"id":   user["id"],
-		"name": user["name"],
+		"id":   user["group_id"],
+		"name": user["login"],
 		"type": "User",
 	}))
 }
@@ -283,16 +325,50 @@ func (ctx *TestContext) ThereIsAGroupWith(parameters string) error {
 
 	ctx.addGroup(group["id"], group["name"], group["type"])
 
+	if reference, ok := group[ReferenceHeader]; ok {
+		ctx.setReference(reference, group["id"])
+	}
+
+	return nil
+}
+
+// ThereAreTheFollowingUsers defines users.
+func (ctx *TestContext) ThereAreTheFollowingUsers(users *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(users.Rows); i++ {
+		user := ctx.getRowMap(i, users)
+
+		err := ctx.ThereIsAUserWith(getParametersString(user))
+		if err != nil {
+			return err
+		}
+
+		err = ctx.ThereIsAGroup(user["login"])
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // ThereIsAGroup creates a new group.
 func (ctx *TestContext) ThereIsAGroup(groupName string) error {
-	groupID := strconv.FormatInt(ctx.getReferenceFor(groupName), 10)
+	groupID := strconv.FormatInt(ctx.getOrCreateReferenceFor(groupName), 10)
 
 	return ctx.ThereIsAGroupWith(getParametersString(map[string]string{
 		"id":   groupID,
 		"name": groupName,
+	}))
+}
+
+// ThereIsAGroupReferencedBy creates a new group and assigns it a reference.
+func (ctx *TestContext) ThereIsAGroupReferencedBy(groupName, reference string) error {
+	groupID := rand.Int63()
+
+	return ctx.ThereIsAGroupWith(getParametersString(map[string]string{
+		ReferenceHeader: reference,
+		"id":            strconv.FormatInt(groupID, 10),
+		"name":          groupName,
 	}))
 }
 
@@ -324,7 +400,7 @@ func (ctx *TestContext) IAmTheManagerOfTheGroupWith(parameters string) error {
 	}
 
 	groupID, _ := strconv.ParseInt(group["id"], 10, 64)
-	ctx.IsInGroup(groupID, watchedGroupID)
+	ctx.IsAMemberOfTheGroup(groupID, watchedGroupID)
 
 	ctx.addGroupManager(strconv.FormatInt(ctx.userID, 10), strconv.FormatInt(watchedGroupID, 10), canWatchMembersValue)
 
@@ -341,7 +417,7 @@ func (ctx *TestContext) IAmTheManagerOfTheGroupWithID(groupID int64) error {
 
 // IAmTheManagerOfTheGroup sets the user as a manager of a group with an id.
 func (ctx *TestContext) IAmTheManagerOfTheGroup(groupName string) error {
-	groupID := ctx.getReferenceFor(groupName)
+	groupID := ctx.getOrCreateReferenceFor(groupName)
 
 	return ctx.IAmTheManagerOfTheGroupWith(getParametersString(map[string]string{
 		"id":                strconv.FormatInt(groupID, 10),
@@ -353,9 +429,9 @@ func (ctx *TestContext) IAmTheManagerOfTheGroup(groupName string) error {
 // theGroupIsADescendantOfTheGroup sets a group as a descendant of another.
 func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent string) error {
 	// we add another group in between to increase the robustness of the tests.
-	descendantID := ctx.getReferenceFor(descendant)
+	descendantID := ctx.getOrCreateReferenceFor(descendant)
 	middleGroupID := rand.Int63()
-	parentID := ctx.getReferenceFor(parent)
+	parentID := ctx.getOrCreateReferenceFor(parent)
 
 	groupsIDs := []int64{descendantID, middleGroupID, parentID}
 	for _, groupID := range groupsIDs {
@@ -367,8 +443,8 @@ func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent strin
 		}
 	}
 
-	ctx.IsInGroup(middleGroupID, parentID)
-	ctx.IsInGroup(descendantID, middleGroupID)
+	ctx.IsAMemberOfTheGroup(middleGroupID, parentID)
+	ctx.IsAMemberOfTheGroup(descendantID, middleGroupID)
 
 	return nil
 }
@@ -383,7 +459,7 @@ func (ctx *TestContext) ICanWatchGroupWithID(groupID int64) error {
 
 // ICanWatchGroup adds the permission for the user to watch a group.
 func (ctx *TestContext) ICanWatchGroup(groupName string) error {
-	groupID := ctx.getReferenceFor(groupName)
+	groupID := ctx.getOrCreateReferenceFor(groupName)
 
 	return ctx.IAmTheManagerOfTheGroupWith(getParametersString(map[string]string{
 		"id":                strconv.FormatInt(groupID, 10),
@@ -392,8 +468,8 @@ func (ctx *TestContext) ICanWatchGroup(groupName string) error {
 	}))
 }
 
-// IsInGroup Puts a group in a group.
-func (ctx *TestContext) IsInGroup(childGroupID, parentGroupID int64) {
+// IsAMemberOfTheGroup Puts a group in a group.
+func (ctx *TestContext) IsAMemberOfTheGroup(childGroupID, parentGroupID int64) {
 	ctx.addGroupGroup(strconv.FormatInt(parentGroupID, 10), strconv.FormatInt(childGroupID, 10))
 }
 
@@ -404,23 +480,23 @@ func (ctx *TestContext) IAmAMemberOfTheGroupWithID(groupID int64) error {
 		return err
 	}
 
-	ctx.IsInGroup(ctx.userID, groupID)
+	ctx.IsAMemberOfTheGroup(ctx.userID, groupID)
 
 	return nil
 }
 
-// UserIsInTheGroup puts a user in a group.
-func (ctx *TestContext) UserIsInTheGroup(userName, groupName string) error {
-	userID := ctx.getReferenceFor(userName)
+// UserIsAMemberOfTheGroup puts a user in a group.
+func (ctx *TestContext) UserIsAMemberOfTheGroup(userName, groupName string) error {
+	userID := ctx.getOrCreateReferenceFor(userName)
 	err := ctx.ThereIsAUserWith(getParametersString(map[string]string{
-		"id":   strconv.FormatInt(userID, 10),
-		"name": userName,
+		"group_id": strconv.FormatInt(userID, 10),
+		"login":    userName,
 	}))
 	if err != nil {
 		return err
 	}
 
-	groupID := ctx.getReferenceFor(groupName)
+	groupID := ctx.getOrCreateReferenceFor(groupName)
 	err = ctx.ThereIsAGroupWith(getParametersString(map[string]string{
 		"id":   strconv.FormatInt(groupID, 10),
 		"name": groupName,
@@ -429,14 +505,14 @@ func (ctx *TestContext) UserIsInTheGroup(userName, groupName string) error {
 		return err
 	}
 
-	ctx.IsInGroup(userID, groupID)
+	ctx.IsAMemberOfTheGroup(userID, groupID)
 
 	return nil
 }
 
 // IAmAMemberOfTheGroup puts a user in a group.
 func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
-	return ctx.IAmAMemberOfTheGroupWithID(ctx.getReferenceFor(name))
+	return ctx.IAmAMemberOfTheGroupWithID(ctx.getOrCreateReferenceFor(name))
 }
 
 // ICanOnItemWithID gives the user a permission on an item.
@@ -541,20 +617,20 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 	threadHelperGroupID := ctx.dbTables["threads"][ctx.currentThreadKey]["helper_group_id"]
 
 	threadHelperGroupIDInt, _ := strconv.ParseInt(threadHelperGroupID.(string), 10, 64)
-	ctx.IsInGroup(ctx.userID, threadHelperGroupIDInt)
+	ctx.IsAMemberOfTheGroup(ctx.userID, threadHelperGroupIDInt)
 
 	return nil
 }
 
 // HasApprovedAccessPersonalInfoForGroup states that a user has approved the access of his personnal infos for a group.
 func (ctx *TestContext) HasApprovedAccessPersonalInfoForGroup(userName, groupName string) error {
-	err := ctx.UserIsInTheGroup(userName, groupName)
+	err := ctx.UserIsAMemberOfTheGroup(userName, groupName)
 	if err != nil {
 		return err
 	}
 
-	groupID := ctx.getReferenceFor(groupName)
-	userID := ctx.getReferenceFor(userName)
+	groupID := ctx.getOrCreateReferenceFor(groupName)
+	userID := ctx.getOrCreateReferenceFor(userName)
 
 	ctx.addPersonalInfoViewApprovedFor(strconv.FormatInt(userID, 10), strconv.FormatInt(groupID, 10))
 

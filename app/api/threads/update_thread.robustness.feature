@@ -74,26 +74,26 @@ Feature: Update thread - robustness
       | item_id | participant_id | status | helper_group_id | latest_update_at |
 
   Scenario: Should be logged in
-    When I send a PUT request to "/items/@SomeItem/participant/@RichardFeynman/thread"
+    When I send a PUT request to "/items/10/participant/1/thread"
     Then the response code should be 401
     And the response error message should contain "No access token provided"
 
   Scenario: The item_id parameter should be an int64
-    Given I am RichardFeynman
-    When I send a PUT request to "/items/aaa/participant/@RichardFeynman/thread"
+    Given I am the user with id "1"
+    When I send a PUT request to "/items/aaa/participant/1/thread"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: The participant_id parameter should be an int64
-    Given I am RichardFeynman
-    When I send a PUT request to "/items/@SomeItem/participant/aaa/thread"
+    Given I am the user with id "1"
+    When I send a PUT request to "/items/10/participant/aaa/thread"
     Then the response code should be 400
     And the response error message should contain "Wrong value for participant_id (should be int64)"
 
   Scenario: Either status, helper_group_id, message_count or message_count_increment must be given
-    Given I am RichardFeynman
-    And there is a thread with "item_id=@SomeItem,participant_id=@RichardFeynman"
-    When I send a PUT request to "/items/@SomeItem/participant/@RichardFeynman/thread" with the following body:
+    Given I am the user with id "1"
+    And there is a thread with "item_id=10,participant_id=1"
+    When I send a PUT request to "/items/10/participant/1/thread" with the following body:
       """
       {}
       """
@@ -101,8 +101,8 @@ Feature: Update thread - robustness
     And the response error message should contain "Either status, helper_group_id, message_count or message_count_increment must be given"
 
   Scenario: The item should exist
-    Given I am RichardFeynman
-    When I send a PUT request to "/items/@NonExistentItem/participant/@RichardFeynman/thread" with the following body:
+    Given I am the user with id "1"
+    When I send a PUT request to "/items/404/participant/1/thread" with the following body:
       """
       {
         "message_count": 42
@@ -112,12 +112,12 @@ Feature: Update thread - robustness
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The participant should exist
-    Given I am RichardFeynman
-    When I send a PUT request to "/items/@SomeItem/participant/@NonExistentParticipant/thread" with the following body:
+    Given I am the user with id "1"
+    When I send a PUT request to "/items/5/participant/404/thread" with the following body:
       """
       {
         "status": "waiting_for_trainer",
-        "helper_group_id": @SomeItem
+        "helper_group_id": 10
       }
       """
     Then the response code should be 400
@@ -199,7 +199,7 @@ Feature: Update thread - robustness
   Scenario: >
   Should return access error when the status is not set and
   "can write to thread" condition (3) is not met: user is not part of the help group
-    Given I am RichardFeynman
+    Given I am the user with id "1"
     And I have validated the item with id "40"
     And I can watch answer on item with id "40"
     And there is a thread with "item_id=40,participant_id=3"
@@ -227,8 +227,8 @@ Feature: Update thread - robustness
     And the response error message should contain "Insufficient access rights"
 
   Scenario: message_count should be positive
-    Given I am RichardFeynman
-    And there is a thread with "item_id=60,participant_id=@RichardFeynman"
+    Given I am the user with id "1"
+    And there is a thread with "item_id=60,participant_id=1"
     When I send a PUT request to "/items/60/participant/3/thread" with the following body:
       """
       {
@@ -249,9 +249,9 @@ Feature: Update thread - robustness
     """
 
   Scenario: Should not contain both message_count and message_count_increment
-    Given I am RichardFeynman
-    And there is a thread with "item_id=60,participant_id=@RichardFeynman"
-    When I send a PUT request to "/items/60/participant/@RichardFeynman/thread" with the following body:
+    Given I am the user with id "1"
+    And there is a thread with "item_id=60,participant_id=1"
+    When I send a PUT request to "/items/60/participant/1/thread" with the following body:
       """
       {
         "message_count": 1,
@@ -406,7 +406,7 @@ Feature: Update thread - robustness
       | 140     | answer_with_grant | waiting_for_participant |
 
   Scenario: Cannot switch between open status if only can_watch>answer but not a part of the helper group, and cannot watch participant
-    Given I am RichardFeynman
+    Given I am the user with id "1"
     And I can watch answer on item with id "150"
     And there is a thread with "item_id=150,participant_id=3,status=waiting_for_participant"
     When I send a PUT request to "/items/150/participant/3/thread" with the following body:
@@ -419,7 +419,7 @@ Feature: Update thread - robustness
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Cannot switch between open status if only item validated but not a part of the helper group, and cannot watch participant
-    Given I am RichardFeynman
+    Given I am the user with id "1"
     And I have validated the item with id "160"
     And there is a thread with "item_id=160,participant_id=3,status=waiting_for_trainer"
     When I send a PUT request to "/items/160/participant/3/thread" with the following body:
@@ -432,9 +432,9 @@ Feature: Update thread - robustness
     And the response error message should contain "Insufficient access rights"
 
   Scenario Outline: If switching to an open status from a non-open status, helper_group_id must be given when thread exists
-    Given I am RichardFeynman
-    And there is a thread with "item_id=<item_id>,participant_id=@RichardFeynman,status=closed"
-    When I send a PUT request to "/items/<item_id>/participant/@RichardFeynman/thread" with the following body:
+    Given I am the user with id "1"
+    And there is a thread with "item_id=<item_id>,participant_id=1,status=closed"
+    When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
       """
       {
         "status": "<status>"
@@ -458,8 +458,8 @@ Feature: Update thread - robustness
       | 210     | waiting_for_participant |
 
   Scenario Outline: If switching to an open status from a non-open status, helper_group_id must be given when thread doesn't exists
-    Given I am RichardFeynman
-    When I send a PUT request to "/items/<item_id>/participant/@RichardFeynman/thread" with the following body:
+    Given I am the user with id "1"
+    When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
       """
       {
         "status": "<status>"
@@ -485,7 +485,7 @@ Feature: Update thread - robustness
   Scenario Outline: If status is already "closed" and not changing status OR if switching to status "closed": helper_group_id must not be given when thread exists
     Given I am the user with id "1"
     And there is a thread with "item_id=<item_id>,participant_id=1,status=<old_status>"
-    When I send a PUT request to "/items/<item_id>/participant/@RichardFeynman/thread" with the following body:
+    When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
       """
       {
         "status": "<status>",
@@ -558,7 +558,7 @@ Feature: Update thread - robustness
     """
 
   Scenario: helper_group_id is visible to participant but not to current-user
-    Given I am RichardFeynman
+    Given I am the user with id "1"
     And there is a thread with "item_id=310,participant_id=3"
     When I send a PUT request to "/items/310/participant/3/thread" with the following body:
       """
