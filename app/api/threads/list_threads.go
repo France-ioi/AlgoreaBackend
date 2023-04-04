@@ -101,6 +101,7 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	switch {
 	case watchedGroupID != 0:
 		query = query.WhereParticipantIsInGroup(watchedGroupID)
+
 	case isMine:
 		query = query.NewThreadStore(query.
 			WhereGroupHasPermissionOnItems(user.GroupID, "view", "content").

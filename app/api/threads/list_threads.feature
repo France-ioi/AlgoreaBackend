@@ -28,6 +28,8 @@ Feature: List threads
       | @B_UniversityMember_CanWatchAnswer2             |
       | @B_UniversityMember_CanWatchAnswer3             |
       | @B_UniversityMember_CanWatchAnswer4             |
+      | @B_UniversityMember_CanWatchAnswer5             |
+      | @B_UniversityMember_CanWatchAnswer6             |
       | @Item1                                          |
       | @Item2                                          |
       | @Item3                                          |
@@ -39,6 +41,12 @@ Feature: List threads
       | @B_SectionMember2_CanViewContent2               | @B_SectionMember2   | content                  |           |
       | @B_SectionMember2_CanViewContentWithDescendants | @B_SectionMember2   | content_with_descendants |           |
       | @B_UniversityMember_HasNotValidated             | @B_UniversityMember | info                     |           |
+      | @B_UniversityMember_HasValidated1               | @B_UniversityMember | info                     |           |
+      | @B_UniversityMember_HasValidated2               | @B_UniversityMember | info                     |           |
+      | @B_UniversityMember_HasValidated3               | @B_UniversityMember | info                     |           |
+      | @B_UniversityMember_HasValidated4               | @B_UniversityMember | info                     |           |
+      | @B_UniversityMember_HasValidated5               | @B_UniversityMember | info                     |           |
+      | @B_UniversityMember_HasValidated6               | @B_UniversityMember | info                     |           |
       | @B_UniversityMember_CanWatchAnswer1             | @B_UniversityMember | info                     | answer    |
       | @B_UniversityMember_CanWatchAnswer2             | @B_UniversityMember | info                     | answer    |
       | @B_UniversityMember_CanWatchAnswer3             | @B_UniversityMember | info                     | answer    |

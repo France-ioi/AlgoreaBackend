@@ -669,6 +669,7 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 	if err != nil {
 		return err
 	}
+
 	ctx.addPersonalInfoViewApprovedFor(user, group)
 
 	return nil
