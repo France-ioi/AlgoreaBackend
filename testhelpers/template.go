@@ -83,9 +83,9 @@ func (ctx *TestContext) replaceReferencesByIDs(str string) string {
 
 		if capture[0] == ReferencePrefix {
 			return strconv.FormatInt(ctx.getReferenceFor(capture[1:]), 10)
-		} else {
-			return string(capture[0]) + strconv.FormatInt(ctx.getReferenceFor(capture[2:]), 10)
 		}
+
+		return string(capture[0]) + strconv.FormatInt(ctx.getReferenceFor(capture[2:]), 10)
 	})
 }
 

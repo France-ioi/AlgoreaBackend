@@ -56,6 +56,9 @@ func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgume
 	rowMap := map[string]string{}
 	for i := 0; i < len(rowHeader.Cells); i++ {
 		value := sourceRow.Cells[i].Value
+		if value == "" {
+			continue
+		}
 
 		// when the value in the cell is a reference to an identifier.
 		if value[0] == ReferencePrefix && rowHeader.Cells[i].Value != ReferenceHeader {
@@ -233,11 +236,11 @@ func (ctx *TestContext) addResult(attemptID, participantID, itemID string, valid
 }
 
 // addItem adds an item in database.
-func (ctx *TestContext) addItem(id, defaultLanguageTag, itemType string) {
+func (ctx *TestContext) addItem(id string) {
 	ctx.addInDatabase("items", id, map[string]interface{}{
 		"id":                   id,
-		"default_language_tag": defaultLanguageTag,
-		"type":                 itemType,
+		"default_language_tag": "en",
+		"type":                 "Task",
 	})
 }
 
@@ -279,7 +282,7 @@ func (ctx *TestContext) ThereIsAUser(name string) error {
 
 // ThereIsAUserReferencedBy create a user with a reference.
 func (ctx *TestContext) ThereIsAUserReferencedBy(name, reference string) error {
-	userID := rand.Int63()
+	userID := ctx.getOrCreateReferenceFor(name)
 
 	return ctx.ThereIsAUserWith(getParametersString(map[string]string{
 		ReferenceHeader: reference,
@@ -293,7 +296,8 @@ func (ctx *TestContext) ThereIsAUserWith(parameters string) error {
 	user := ctx.getParametersMap(parameters)
 
 	if _, ok := user["group_id"]; !ok {
-		user["group_id"] = strconv.FormatInt(rand.Int63(), 10)
+		userID := ctx.getOrCreateReferenceFor(user["login"])
+		user["group_id"] = strconv.FormatInt(userID, 10)
 	}
 
 	ctx.addUser(user)
@@ -307,6 +311,27 @@ func (ctx *TestContext) ThereIsAUserWith(parameters string) error {
 		"name": user["login"],
 		"type": "User",
 	}))
+}
+
+// ThereAreTheFollowingGroups defines groups.
+func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(groups.Rows); i++ {
+		group := ctx.getRowMap(i, groups)
+
+		err := ctx.ThereIsAGroup(group["name"])
+		if err != nil {
+			return err
+		}
+
+		if _, ok := group["parent"]; ok {
+			err = ctx.GroupIsAChildOfTheGroup(group["name"], group["parent"])
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // ThereIsAGroupWith creates a new group.
@@ -360,7 +385,7 @@ func (ctx *TestContext) ThereIsAGroup(groupName string) error {
 
 // ThereIsAGroupReferencedBy creates a new group and assigns it a reference.
 func (ctx *TestContext) ThereIsAGroupReferencedBy(groupName, reference string) error {
-	groupID := rand.Int63()
+	groupID := ctx.getOrCreateReferenceFor(groupName)
 
 	return ctx.ThereIsAGroupWith(getParametersString(map[string]string{
 		ReferenceHeader: reference,
@@ -454,6 +479,41 @@ func (ctx *TestContext) ICanWatchGroupWithID(groupID int64) error {
 	}))
 }
 
+// ThereAreTheFollowingItemsWithPermissions defines items with permissions.
+func (ctx *TestContext) ThereAreTheFollowingItemsWithPermissions(itemPermissions *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(itemPermissions.Rows); i++ {
+		itemPermission := ctx.getRowMap(i, itemPermissions)
+
+		userID := ctx.getReferenceFor(itemPermission["group"])
+
+		itemID := ctx.getOrCreateReferenceFor(itemPermission["item"])
+		ctx.addItem(strconv.FormatInt(itemID, 10))
+
+		if itemPermission["validated"] == "1" {
+			err := ctx.UserHaveValidatedItemWithID(userID, itemID)
+			if err != nil {
+				return err
+			}
+		}
+
+		if itemPermission["can_view"] != "" {
+			err := ctx.UserCanViewOnItemWithID(itemPermission["can_view"], userID, itemID)
+			if err != nil {
+				return err
+			}
+		}
+
+		if itemPermission["can_watch"] != "" {
+			err := ctx.UserCanWatchOnItemWithID(itemPermission["can_watch"], userID, itemID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // ICanWatchGroup adds the permission for the user to watch a group.
 func (ctx *TestContext) ICanWatchGroup(groupName string) error {
 	groupID := ctx.getOrCreateReferenceFor(groupName)
@@ -482,6 +542,31 @@ func (ctx *TestContext) IAmAMemberOfTheGroupWithID(groupID int64) error {
 	return nil
 }
 
+// GroupIsAChildOfTheGroup puts a group as a child of another group.
+func (ctx *TestContext) GroupIsAChildOfTheGroup(childGroupName, parentGroupName string) error {
+	childGroupID := ctx.getOrCreateReferenceFor(childGroupName)
+	err := ctx.ThereIsAGroupWith(getParametersString(map[string]string{
+		"id":   strconv.FormatInt(childGroupID, 10),
+		"name": childGroupName,
+	}))
+	if err != nil {
+		return err
+	}
+
+	parentGroupID := ctx.getOrCreateReferenceFor(parentGroupName)
+	err = ctx.ThereIsAGroupWith(getParametersString(map[string]string{
+		"id":   strconv.FormatInt(parentGroupID, 10),
+		"name": parentGroupName,
+	}))
+	if err != nil {
+		return err
+	}
+
+	ctx.IsAMemberOfTheGroup(childGroupID, parentGroupID)
+
+	return nil
+}
+
 // UserIsAMemberOfTheGroup puts a user in a group.
 func (ctx *TestContext) UserIsAMemberOfTheGroup(userName, groupName string) error {
 	userID := ctx.getOrCreateReferenceFor(userName)
@@ -494,16 +579,19 @@ func (ctx *TestContext) UserIsAMemberOfTheGroup(userName, groupName string) erro
 		return err
 	}
 
-	groupID := ctx.getOrCreateReferenceFor(groupName)
-	err = ctx.ThereIsAGroupWith(getParametersString(map[string]string{
-		"id":   strconv.FormatInt(groupID, 10),
-		"name": groupName,
-	}))
-	if err != nil {
-		return err
-	}
+	return ctx.GroupIsAChildOfTheGroup(userName, groupName)
+}
 
-	ctx.IsAMemberOfTheGroup(userID, groupID)
+// ThereAreTheFollowingGroupMembers defines group memberships.
+func (ctx *TestContext) ThereAreTheFollowingGroupMembers(groupMembers *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(groupMembers.Rows); i++ {
+		groupMember := ctx.getRowMap(i, groupMembers)
+
+		err := ctx.GroupIsAChildOfTheGroup(groupMember["member"], groupMember["group"])
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -513,31 +601,44 @@ func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 	return ctx.IAmAMemberOfTheGroupWithID(ctx.getOrCreateReferenceFor(name))
 }
 
-// ICanOnItemWithID gives the user a permission on an item.
-func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue string, itemID int64) error {
-	ctx.addPermissionGenerated(strconv.FormatInt(ctx.userID, 10), strconv.FormatInt(itemID, 10), watchType, watchValue)
+// UserCanOnItemWithID gives a user a permission on an item.
+func (ctx *TestContext) UserCanOnItemWithID(watchType, watchValue string, userID, itemID int64) error {
+	ctx.addPermissionGenerated(strconv.FormatInt(userID, 10), strconv.FormatInt(itemID, 10), watchType, watchValue)
 
 	return nil
 }
 
+// ICanOnItemWithID gives the user a permission on an item.
+func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue string, itemID int64) error {
+	return ctx.UserCanOnItemWithID(watchType, watchValue, ctx.userID, itemID)
+}
+
+func (ctx *TestContext) UserCanViewOnItemWithID(watchValue string, userID, itemID int64) error {
+	return ctx.UserCanOnItemWithID("view", watchValue, userID, itemID)
+}
+
 // ICanViewOnItemWithID gives the user a "view" permission on an item.
 func (ctx *TestContext) ICanViewOnItemWithID(watchValue string, itemID int64) error {
-	return ctx.ICanOnItemWithID("view", watchValue, itemID)
+	return ctx.UserCanOnItemWithID("view", watchValue, ctx.userID, itemID)
+}
+
+// UserCanWatchOnItemWithID gives a user a "watch" permission on an item.
+func (ctx *TestContext) UserCanWatchOnItemWithID(watchValue string, userID, itemID int64) error {
+	return ctx.UserCanOnItemWithID("watch", watchValue, userID, itemID)
 }
 
 // ICanWatchOnItemWithID gives the user a "watch" permission on an item.
 func (ctx *TestContext) ICanWatchOnItemWithID(watchValue string, itemID int64) error {
-	return ctx.ICanOnItemWithID("watch", watchValue, itemID)
+	return ctx.UserCanOnItemWithID("watch", watchValue, ctx.userID, itemID)
 }
 
-// IHaveValidatedItemWithID states that user has validated an item.
-func (ctx *TestContext) IHaveValidatedItemWithID(itemID int64) error {
+func (ctx *TestContext) UserHaveValidatedItemWithID(userID, itemID int64) error {
 	attemptID := rand.Int63()
 
-	ctx.addAttempt(strconv.FormatInt(attemptID, 10), strconv.FormatInt(ctx.userID, 10))
+	ctx.addAttempt(strconv.FormatInt(attemptID, 10), strconv.FormatInt(userID, 10))
 	ctx.addResult(
 		strconv.FormatInt(attemptID, 10),
-		strconv.FormatInt(ctx.userID, 10),
+		strconv.FormatInt(userID, 10),
 		strconv.FormatInt(itemID, 10),
 		time.Now(),
 	)
@@ -545,11 +646,58 @@ func (ctx *TestContext) IHaveValidatedItemWithID(itemID int64) error {
 	return nil
 }
 
-// ThereAreThreads create threads.
-func (ctx *TestContext) ThereAreThreads(dataTable *messages.PickleStepArgument_PickleTable) error {
-	if len(dataTable.Rows) > 1 {
-		for i := 1; i < len(dataTable.Rows); i++ {
-			err := ctx.ThereIsAThreadWith(getParametersString(ctx.getRowMap(i, dataTable)))
+func (ctx *TestContext) ThereAreTheFollowingResults(results *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(results.Rows); i++ {
+		result := ctx.getRowMap(i, results)
+
+		userID := ctx.getReferenceFor(result["participant"])
+
+		itemID := ctx.getOrCreateReferenceFor(result["item"])
+		ctx.addItem(strconv.FormatInt(itemID, 10))
+
+		err := ctx.UserHaveValidatedItemWithID(userID, itemID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// IHaveValidatedItemWithID states that user has validated an item.
+func (ctx *TestContext) IHaveValidatedItemWithID(itemID int64) error {
+	return ctx.UserHaveValidatedItemWithID(ctx.userID, itemID)
+}
+
+// ThereAreTheFollowingThreads create threads.
+func (ctx *TestContext) ThereAreTheFollowingThreads(threads *messages.PickleStepArgument_PickleTable) error {
+	if len(threads.Rows) > 1 {
+		for i := 1; i < len(threads.Rows); i++ {
+			thread := ctx.getRowMap(i, threads)
+			threadParameters := make(map[string]string)
+
+			participantID := ctx.getOrCreateReferenceFor(thread["participant"])
+			threadParameters["participant_id"] = strconv.FormatInt(participantID, 10)
+
+			if thread["item"] != "" {
+				itemID := ctx.getOrCreateReferenceFor(thread["item"])
+				threadParameters["item_id"] = strconv.FormatInt(itemID, 10)
+			}
+
+			if thread["helper_group"] != "" {
+				helperGroupID := ctx.getOrCreateReferenceFor(thread["helper_group"])
+				threadParameters["helper_group_id"] = strconv.FormatInt(helperGroupID, 10)
+			}
+
+			if thread["status"] != "" {
+				threadParameters["status"] = thread["status"]
+			}
+
+			if thread["latest_update_at"] != "" {
+				threadParameters["latest_update_at"] = thread["latest_update_at"]
+			}
+
+			err := ctx.ThereIsAThreadWith(getParametersString(threadParameters))
 			if err != nil {
 				return err
 			}
@@ -567,7 +715,7 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	if _, ok := thread["item_id"]; !ok {
 		thread["item_id"] = strconv.FormatInt(rand.Int63(), 10)
 	}
-	ctx.addItem(thread["item_id"], "en", "Task")
+	ctx.addItem(thread["item_id"])
 
 	// add helper_group_id
 	if _, ok := thread["helper_group_id"]; !ok {
@@ -605,7 +753,7 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 func (ctx *TestContext) ThereIsNoThreadWith(parameters string) error {
 	thread := ctx.getParametersMap(parameters)
 
-	ctx.addItem(thread["item_id"], "en", "Task")
+	ctx.addItem(thread["item_id"])
 
 	return nil
 }

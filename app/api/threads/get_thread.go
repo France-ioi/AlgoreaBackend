@@ -8,8 +8,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model threadInfo
-type threadInfo struct {
+// swagger:model threadGetResponse
+type threadGetResponse struct {
 	// required: true
 	ParticipantID int64 `json:"participant_id"`
 	// required: true
@@ -19,7 +19,7 @@ type threadInfo struct {
 	Status string `json:"status"`
 }
 
-// swagger:operation GET /items/{item_id}/participant/{participant_id}/thread threads getThread
+// swagger:operation GET /items/{item_id}/participant/{participant_id}/thread threads threadGet
 //
 //		---
 //		summary: Retrieve a thread information
@@ -28,7 +28,7 @@ type threadInfo struct {
 //
 //	  The `status` is `not_started` if the thread hasn't been started
 //
-//				Restrictions:
+//	  Restrictions:
 //	    * one of these conditions matches:
 //	      - the current-user is the thread participant and allowed to "can_view >= content" the item
 //	      - the current-user has the "can_watch >= answer" permission on the item
@@ -52,7 +52,7 @@ type threadInfo struct {
 //			"200":
 //				description: OK. Success response with thread data
 //				schema:
-//					"$ref": "#/definitions/threadInfo"
+//					"$ref": "#/definitions/threadGetResponse"
 //			"400":
 //				"$ref": "#/responses/badRequestResponse"
 //			"401":
@@ -80,11 +80,11 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 		return service.InsufficientAccessRightsError
 	}
 
-	threadInfo := new(threadInfo)
-	threadInfo.ItemID = itemID
-	threadInfo.ParticipantID = participantID
-	threadInfo.Status = store.Threads().GetThreadStatus(participantID, itemID)
+	threadGetResponse := new(threadGetResponse)
+	threadGetResponse.ItemID = itemID
+	threadGetResponse.ParticipantID = participantID
+	threadGetResponse.Status = store.Threads().GetThreadStatus(participantID, itemID)
 
-	render.Respond(rw, r, threadInfo)
+	render.Respond(rw, r, threadGetResponse)
 	return service.NoError
 }

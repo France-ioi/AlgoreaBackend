@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:response thread
+// swagger:model thread
 type thread struct {
 	Item        item        `json:"item" gorm:"embedded;embedded_prefix:item__"`
 	Participant participant `json:"participant" gorm:"embedded;embedded_prefix:participant__"`
@@ -35,44 +35,45 @@ type participant struct {
 	LastName  string `json:"last_name"`
 }
 
-// swagger:operation GET /items/{item_id}/participant/{participant_id}/thread threads listThreads
-// ---
-// summary: Service to list the visible threads for a user.
-// description: >
+// swagger:operation GET /thread threads listThreads
 //
-//	Service to list the visible threads for a user.
+//	---
+//	summary: Service to list the visible threads for a user.
+//	description: >
 //
-//	* If `watched_group_id` is given, only threads in which the participant is descendant (including self)
-//	  of the `watched_group_id` are returned.
-//	* `first_name` and `last_name` are only returned for the current user or if the user approved access to their personal
-//	  info for some group managed by the current user
+//		Service to list the visible threads for a user.
 //
-//	Validations:
-//	  * if `watched_group_id` is given: the current-user must be (implicitly or explicitly) a manager
-//	    with `can_watch_members` on `watched_group_id`.
+//		* If `watched_group_id` is given, only threads in which the participant is descendant (including self)
+//		  of the `watched_group_id` are returned.
+//		* `first_name` and `last_name` are only returned for the current user or if the user approved access to their personal
+//		  info for some group managed by the current user
 //
-// parameters:
-//   - name: watched_group_id
-//     in: query
-//     type: integer
-//     format: int64
+//		Validations:
+//		  * if `watched_group_id` is given: the current-user must be (implicitly or explicitly) a manager
+//		    with `can_watch_members` on `watched_group_id`.
 //
-// responses:
+//	parameters:
+//		- name: watched_group_id
+//			in: query
+//			type: integer
+//			format: int64
 //
-//	"200":
-//	  description: OK. Threads data
-//	  schema:
-//	    type: array
-//	    items:
-//	      "$ref": "#/responses/thread"
-//	"400":
-//	  "$ref": "#/responses/badRequestResponse"
-//	"401":
-//	  "$ref": "#/responses/unauthorizedResponse"
-//	"403":
-//	  "$ref": "#/responses/forbiddenResponse"
-//	"500":
-//	  "$ref": "#/responses/internalErrorResponse"
+//	responses:
+//
+//		"200":
+//			description: OK. Threads data
+//			schema:
+//				type: array
+//				items:
+//					"$ref": "#/definitions/thread"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service.APIError {
 	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
