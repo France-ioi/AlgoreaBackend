@@ -93,6 +93,9 @@ test-bdd:
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run -v --deadline 10m0s
 
+validate-swagger:
+	swagger generate spec --scan-models -o ./swagger.yaml && swagger validate ./swagger.yaml
+
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)
 	$(call check_defined, DBHOST)
