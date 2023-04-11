@@ -4,7 +4,6 @@ package testhelpers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -34,41 +33,28 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	return nil
 }
 
-// TheResponseShouldMatchFollowingJSONPath checks whether the response contains the right JSONPath values.
-func (ctx *TestContext) TheResponseShouldMatchFollowingJSONPath(dataTable *messages.PickleStepArgument_PickleTable) error {
-	headerRow := dataTable.Rows[0]
-	for i := 1; i < len(dataTable.Rows); i++ {
-		JSONPath := ""
-		value := ""
+// TheResponseAtShouldBeTheValue checks that the response at a JSONPath is a certain value.
+func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
+	value = ctx.replaceReferencesByIDs(value)
 
-		row := dataTable.Rows[i]
-		for j := 0; j < len(row.Cells); j++ {
-			cell := row.Cells[j]
-
-			switch headerRow.Cells[j].Value {
-			case "JSONPath":
-				JSONPath = cell.Value
-			case "value":
-				value = ctx.replaceReferencesByIDs(cell.Value)
-			default:
-				return fmt.Errorf("call TheResponseShouldMatchFollowingJSONPath: unrecognized column name: %v", headerRow.Cells[j].Value)
-			}
-		}
-
-		if JSONPath == "" || value == "" {
-			return errors.New("call TheResponseShouldMatchFollowingJSONPath: undefined JSONPath or value")
-		}
-
-		match, err := ctx.responseMatchesJSONPath(JSONPath, value)
-		if err != nil {
-			return fmt.Errorf("error while trying to match JSONPath %v with response %v: %v",
-				JSONPath, ctx.lastResponseBody, err)
-		} else if !match {
-			return fmt.Errorf("the response's JSONPath %v doesn't match the value %v for response %v",
-				JSONPath, value, ctx.lastResponseBody)
-		}
+	match, err := ctx.responseMatchesJSONPath(jsonPath, value)
+	if err != nil {
+		return fmt.Errorf("JSONPath %v doesn't match value %v: %v", jsonPath, ctx.lastResponseBody, err)
+	} else if !match {
+		return fmt.Errorf("the JSONPath %v doesn't match the value %v for response %v", jsonPath, value, ctx.lastResponseBody)
 	}
 
+	return nil
+}
+
+// TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
+func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, table *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(table.Rows); i++ {
+		err := ctx.TheResponseAtShouldBeTheValue(jsonPath, table.Rows[i].Cells[0].Value)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

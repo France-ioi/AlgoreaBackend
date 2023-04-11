@@ -1,58 +1,36 @@
-Feature: Get threads
+Feature: List threads
   Background:
-    Given there are the following users:
-      | login               |
-      | PresidentConsortium |
-      | PresidentUniversity |
-      | RichardFeynman      |
-      | Mary                |
-      | EtienneKlein        |
-      | Charlotte           |
-      | Baptiste            |
-      | Thibaut             |
-      | DavidBowie          |
     And there are the following groups:
-      | parent               | name                 |
-      |                      | UniversityConsortium |
-      | UniversityConsortium | University           |
-      | University           | PresidentUniversity  |
-      | University           | FirstYear            |
-      | FirstYear            | Classroom            |
-      | UniversityConsortium | Université           |
-      | Université           | PremièreAnnée        |
-      | PremièreAnnée        | Classe               |
-      |                      | Superstar            |
-    And there are the following group members:
-      | group                | member              |
-      | UniversityConsortium | PresidentConsortium |
-      | University           | RichardFeynman      |
-      | Classroom            | Mary                |
-      | Université           | EtienneKlein        |
-      | PremièreAnnée        | Charlotte           |
-      | PremièreAnnée        | Baptiste            |
-      | PremièreAnnée        | Thibaut             |
-      | Superstar            | DavidBowie          |
+      | name                 | parent               | members                            |
+      | UniversityConsortium |                      | ConsortiumPresident                |
+      | University           | UniversityConsortium | UniversityPresident,RichardFeynman |
+      | FirstYear            | University           |                                    |
+      | Classroom            | FirstYear            | Mary                               |
+      | Université           | UniversityConsortium | EtienneKlein                       |
+      | PremièreAnnée        | Université           | Charlotte,Baptiste,Thibaut         |
+      | Classe               | PremièreAnnée        |                                    |
+      | Superstar            |                      | DavidBowie                         |
     And there are the following items with permissions:
-      | group        | item                                  | has_validated | can_view                 | can_watch |
-      | Baptiste     | BaptisteCanViewInfo                   |               | info                     |           |
-      | Baptiste     | BaptisteCanViewContent1               |               | content                  |           |
-      | Baptiste     | BaptisteCanViewContent2               |               | content                  |           |
-      | Baptiste     | BaptisteCanViewContentWithDescendants |               | content_with_descendants |           |
-      | EtienneKlein | EtienneKleinHasValidated1             | 1             |                          |           |
-      | EtienneKlein | EtienneKleinHasValidated2             | 1             |                          |           |
-      | EtienneKlein | EtienneKleinHasValidated3             | 1             |                          |           |
-      | EtienneKlein | EtienneKleinHasValidated4             | 1             |                          |           |
-      | EtienneKlein | EtienneKleinHasValidated5             | 1             |                          |           |
-      | EtienneKlein | EtienneKleinHasValidated6             | 1             |                          |           |
-      | EtienneKlein | EtienneKleinHasNotValidated           |               |                          | answer    |
-      | EtienneKlein | EtienneKleinCanWatchAnswer1           |               |                          | answer    |
-      | EtienneKlein | EtienneKleinCanWatchAnswer2           |               |                          | answer    |
-      | EtienneKlein | EtienneKleinCanWatchAnswer3           |               |                          | answer    |
-      | EtienneKlein | EtienneKleinCanWatchAnswer4           |               |                          | answer    |
+      | item                                  | group        | has_validated | can_view                 | can_watch |
+      | BaptisteCanViewInfo                   | Baptiste     |               | info                     |           |
+      | BaptisteCanViewContent1               | Baptiste     |               | content                  |           |
+      | BaptisteCanViewContent2               | Baptiste     |               | content                  |           |
+      | BaptisteCanViewContentWithDescendants | Baptiste     |               | content_with_descendants |           |
+      | EtienneKleinHasValidated1             | EtienneKlein | 1             |                          |           |
+      | EtienneKleinHasValidated2             | EtienneKlein | 1             |                          |           |
+      | EtienneKleinHasValidated3             | EtienneKlein | 1             |                          |           |
+      | EtienneKleinHasValidated4             | EtienneKlein | 1             |                          |           |
+      | EtienneKleinHasValidated5             | EtienneKlein | 1             |                          |           |
+      | EtienneKleinHasValidated6             | EtienneKlein | 1             |                          |           |
+      | EtienneKleinHasNotValidated           | EtienneKlein |               |                          | answer    |
+      | EtienneKleinCanWatchAnswer1           | EtienneKlein |               |                          | answer    |
+      | EtienneKleinCanWatchAnswer2           | EtienneKlein |               |                          | answer    |
+      | EtienneKleinCanWatchAnswer3           | EtienneKlein |               |                          | answer    |
+      | EtienneKleinCanWatchAnswer4           | EtienneKlein |               |                          | answer    |
     Given there are the following threads:
       | participant         | item                                  | helper_group         | status                  | latest_update_at     | comment                                                                                                                |
-      | PresidentConsortium |                                       |                      |                         |                      |                                                                                                                        |
-      | PresidentUniversity |                                       |                      |                         |                      |                                                                                                                        |
+      | ConsortiumPresident |                                       |                      |                         |                      |                                                                                                                        |
+      | UniversityPresident |                                       |                      |                         |                      |                                                                                                                        |
       | Mary                |                                       |                      |                         |                      |                                                                                                                        |
       | EtienneKlein        | EtienneKleinCanWatchAnswer1           |                      |                         |                      | EtienneKlein is_mine=0 -> notok: must not be the participant                                                           |
       | Charlotte           | EtienneKleinHasValidated1             | PremièreAnnée        | waiting_for_trainer     |                      | EtienneKlein is_mine=0 -> List thread notok: not part of helper group                                                  |
@@ -76,15 +54,13 @@ Feature: Get threads
   Scenario: Should have all the fields properly set, including first_name and last_name when the access is approved
     Given I am MarieCurie
     And there is a group Laboratory referenced by @Laboratory
-    And I am a manager of the group Laboratory
-    And I can watch the group Laboratory
+    And I am a manager of the group Laboratory and can watch its members
     And there are the following users:
       | @reference      | login          | first_name | last_name |
       | @AlbertEinstein | AlbertEinstein | Albert     | Einstein  |
       | @PaulDirac      | PaulDirac      | Paul       | Dirac     |
-    And AlbertEinstein the scientist is a member of the group Laboratory
-    And AlbertEinstein has approved access to his personal info for the group Laboratory
-    And PaulDirac the scientist is a member of the group Laboratory
+    And AlbertEinstein is a member of the group Laboratory who has approved access to his personal info
+    And PaulDirac is a member of the group Laboratory
     And the database has the following table 'items':
       | id | type | default_language_tag |
       | 1  | Task | fr                   |
@@ -144,14 +120,13 @@ Feature: Get threads
     Given I am RichardFeynman
     And I can watch the group University
     And the user Mary is referenced by @Mary
-    And the user PresidentUniversity is referenced by @PresidentUniversity
+    And the user UniversityPresident is referenced by @UniversityPresident
     And the group University is referenced by @University
     When I send a GET request to "/threads?watched_group_id=@University"
     And it should be a JSON array with 2 entries
-    And the response should match the following JSONPath:
-      | JSONPath            | value                |
-      | $[*].participant.id | @PresidentUniversity |
-      | $[*].participant.id | @Mary                |
+    And the response at $[*].participant.id should be:
+      | @UniversityPresident |
+      | @Mary                |
 
   Scenario: Should get the threads whose the participant is equal to the watched_group_id
     Given I am RichardFeynman
@@ -159,9 +134,7 @@ Feature: Get threads
     And the user Mary is referenced by @Mary
     When I send a GET request to "/threads?watched_group_id=@Mary"
     And it should be a JSON array with 1 entries
-    And the response should match the following JSONPath:
-      | JSONPath            | value |
-      | $[0].participant.id | @Mary |
+    And the response at $[0].participant.id should be "@Mary"
 
   Scenario: Should return only the threads in which the participant is the current user and the item is visible when is_mine=1
     # Baptiste can see BaptisteCanViewContent and BaptisteCanViewContentWithDescendants

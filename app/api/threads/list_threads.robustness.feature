@@ -1,5 +1,5 @@
-Feature: Get threads - robustness
-  Scenario: Should be logged
+Feature: List threads - robustness
+  Scenario: Should be logged in
     Given there is a group Classroom referenced by @Classroom
     When I send a GET request to "/threads?watched_group_id=@Classroom"
     Then the response code should be 401

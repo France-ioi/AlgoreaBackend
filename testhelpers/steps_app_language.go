@@ -329,6 +329,27 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepAr
 				return err
 			}
 		}
+
+		if _, ok := group["members"]; ok {
+			members := strings.Split(group["members"], ",")
+
+			for _, member := range members {
+				err = ctx.ThereIsAUser(member)
+				if err != nil {
+					return err
+				}
+
+				err = ctx.ThereIsAGroup(member)
+				if err != nil {
+					return err
+				}
+
+				err = ctx.GroupIsAChildOfTheGroup(member, group["name"])
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil
@@ -445,6 +466,17 @@ func (ctx *TestContext) IAmTheManagerOfTheGroup(groupName string) error {
 		"id":                strconv.FormatInt(groupID, 10),
 		"name":              groupName,
 		"can_watch_members": "false",
+	}))
+}
+
+// IAmTheManagerOfTheGroupAndCanWatchItsMembers sets the user as a mamanger of a group with can_watch permission.
+func (ctx *TestContext) IAmTheManagerOfTheGroupAndCanWatchItsMembers(groupName string) error {
+	groupID := ctx.getOrCreateReferenceFor(groupName)
+
+	return ctx.IAmTheManagerOfTheGroupWith(getParametersString(map[string]string{
+		"id":                strconv.FormatInt(groupID, 10),
+		"name":              groupName,
+		"can_watch_members": "true",
 	}))
 }
 
@@ -582,16 +614,17 @@ func (ctx *TestContext) UserIsAMemberOfTheGroup(userName, groupName string) erro
 	return ctx.GroupIsAChildOfTheGroup(userName, groupName)
 }
 
-// ThereAreTheFollowingGroupMembers defines group memberships.
-func (ctx *TestContext) ThereAreTheFollowingGroupMembers(groupMembers *messages.PickleStepArgument_PickleTable) error {
-	for i := 1; i < len(groupMembers.Rows); i++ {
-		groupMember := ctx.getRowMap(i, groupMembers)
-
-		err := ctx.GroupIsAChildOfTheGroup(groupMember["member"], groupMember["group"])
-		if err != nil {
-			return err
-		}
+// UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo puts a user in a group with approved access to his personnel info.
+func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo(userName, groupName string) error {
+	err := ctx.UserIsAMemberOfTheGroup(userName, groupName)
+	if err != nil {
+		return err
 	}
+
+	groupID := ctx.getOrCreateReferenceFor(groupName)
+	userID := ctx.getOrCreateReferenceFor(userName)
+
+	ctx.addPersonalInfoViewApprovedFor(strconv.FormatInt(userID, 10), strconv.FormatInt(groupID, 10))
 
 	return nil
 }
@@ -764,21 +797,6 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 
 	threadHelperGroupIDInt, _ := strconv.ParseInt(threadHelperGroupID.(string), 10, 64)
 	ctx.IsAMemberOfTheGroup(ctx.userID, threadHelperGroupIDInt)
-
-	return nil
-}
-
-// HasApprovedAccessPersonalInfoForGroup states that a user has approved the access of his personnal infos for a group.
-func (ctx *TestContext) HasApprovedAccessPersonalInfoForGroup(userName, groupName string) error {
-	err := ctx.UserIsAMemberOfTheGroup(userName, groupName)
-	if err != nil {
-		return err
-	}
-
-	groupID := ctx.getOrCreateReferenceFor(groupName)
-	userID := ctx.getOrCreateReferenceFor(userName)
-
-	ctx.addPersonalInfoViewApprovedFor(strconv.FormatInt(userID, 10), strconv.FormatInt(groupID, 10))
 
 	return nil
 }

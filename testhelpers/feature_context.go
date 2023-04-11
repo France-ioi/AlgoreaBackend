@@ -39,12 +39,16 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^there is a group (\w+)$`, ctx.ThereIsAGroup)
 	s.Step(`^there is a group (\w+) referenced by @(\w+)$`, ctx.ThereIsAGroupReferencedBy)
 	s.Step(`^the group (\w+) is referenced by @(\w+)`, ctx.ThereIsAGroupReferencedBy)
-	s.Step(`^there are the following group members:$`, ctx.ThereAreTheFollowingGroupMembers)
 	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
-	s.Step(`^(\w+) the (?:\w+) is a member of the group (\w+)$`, ctx.UserIsAMemberOfTheGroup)
+	s.Step(`^(\w+) is a member of the group (\w+)$`, ctx.UserIsAMemberOfTheGroup)
+	s.Step(
+		`^(\w+) is a member of the group (\w+) who has approved access to his personal info$`,
+		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
+	)
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmTheManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (\w+)$`, ctx.IAmTheManagerOfTheGroup)
+	s.Step(`^I am a manager of the group (\w+) and can watch its members$`, ctx.IAmTheManagerOfTheGroupAndCanWatchItsMembers)
 	s.Step(`^the group (\w+) is a descendant of the group (\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
 	s.Step(`^there are the following items with permissions:$`, ctx.ThereAreTheFollowingItemsWithPermissions)
 	s.Step(`^I can watch the group (\w+)$`, ctx.ICanWatchGroup)
@@ -54,7 +58,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
-	s.Step(`^(\w+) has approved access to his personal info for the group (\w+)`, ctx.HasApprovedAccessPersonalInfoForGroup)
 
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
 
@@ -76,8 +79,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
 
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
-	s.Step(`^the response should match the following JSONPath:$`,
-		ctx.TheResponseShouldMatchFollowingJSONPath)
+	s.Step(`^the response at ([^ ]+) should be "([^"]+)"$`, ctx.TheResponseAtShouldBeTheValue)
+	s.Step("^the response at ([^ ]+) should be:$", ctx.TheResponseAtShouldBe)
+	s.Step(`^the response should match the following JSONPath:$`, ctx.TheResponseAtShouldBe)
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)
