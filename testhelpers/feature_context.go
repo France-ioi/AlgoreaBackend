@@ -19,11 +19,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the database has the following users:$`, ctx.DBHasUsers)
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
 
-	s.Step(`^I am (\w+)$`, ctx.IAm)
+	s.Step(`^I am (@\w+)$`, ctx.IAm)
 	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
-	s.Step(`^there is a user (\w+)$`, ctx.ThereIsAUser)
-	s.Step(`^there is a user (\w+) referenced by @(\w+)$`, ctx.ThereIsAUserReferencedBy)
-	s.Step(`^the user (\w+) is referenced by @(\w+)$`, ctx.ThereIsAUserReferencedBy)
+	s.Step(`^there is a user (@\w+)$`, ctx.ThereIsAUser)
 	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
 	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
@@ -36,22 +34,22 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
 	s.Step(`^there is a group with "([^"]*)"$`, ctx.ThereIsAGroupWith)
-	s.Step(`^there is a group (\w+)$`, ctx.ThereIsAGroup)
-	s.Step(`^there is a group (\w+) referenced by @(\w+)$`, ctx.ThereIsAGroupReferencedBy)
-	s.Step(`^the group (\w+) is referenced by @(\w+)`, ctx.ThereIsAGroupReferencedBy)
-	s.Step(`^I am a member of the group (\w+)$`, ctx.IAmAMemberOfTheGroup)
+	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
+	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
-	s.Step(`^(\w+) is a member of the group (\w+)$`, ctx.UserIsAMemberOfTheGroup)
+	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
 	s.Step(
-		`^(\w+) is a member of the group (\w+) who has approved access to his personal info$`,
+		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
 		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
 	)
-	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmTheManagerOfTheGroupWithID)
-	s.Step(`^I am a manager of the group (\w+)$`, ctx.IAmTheManagerOfTheGroup)
-	s.Step(`^I am a manager of the group (\w+) and can watch its members$`, ctx.IAmTheManagerOfTheGroupAndCanWatchItsMembers)
-	s.Step(`^the group (\w+) is a descendant of the group (\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
-	s.Step(`^there are the following items with permissions:$`, ctx.ThereAreTheFollowingItemsWithPermissions)
-	s.Step(`^I can watch the group (\w+)$`, ctx.ICanWatchGroup)
+	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)
+	s.Step(`^I am a manager of the group (@\w+)$`, ctx.IAmAManagerOfTheGroup)
+	s.Step(`^(@\w+) is a manager of the group (@\w+) and can watch its members$`, ctx.UserIsAManagerOfTheGroupAndCanWatchItsMembers)
+	s.Step(`^I am a manager of the group (@\w+) and can watch its members$`, ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
+	s.Step(`^the group (@\w+) is a descendant of the group (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
+	s.Step(`^there are the following item tasks:$`, ctx.ThereAreTheFollowingItemTasks)
+	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
+	s.Step(`^I can watch the group (@\w+)$`, ctx.ICanWatchGroup)
 	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
 		ctx.ICanViewOnItemWithID)
@@ -59,6 +57,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
 
+	s.Step(`^there are the following results:$`, ctx.ThereAreTheFollowingResults)
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
 
 	s.Step(`^there are the following threads:$`, ctx.ThereAreTheFollowingThreads)
