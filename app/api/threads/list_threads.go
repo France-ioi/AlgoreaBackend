@@ -132,8 +132,6 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 			Where("threads.participant_id != ?", user.GroupID).
 			Where("threads.item_id IN (?) OR (threads.item_id, threads.participant_id) IN (?)", canWatchAnswerQuery, userCanHelpQuery),
 		)
-	default:
-		return service.ErrNotFound(errors.New("not implemented"))
 	}
 
 	err := query.
