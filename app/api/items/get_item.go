@@ -24,9 +24,6 @@ type itemStringCommon struct {
 	// Nullable
 	// required: true
 	ImageURL *string `json:"image_url"`
-}
-
-type itemStringNotInfo struct {
 	// Nullable; only if `can_view` >= 'content'
 	Subtitle *string `json:"subtitle"`
 	// Nullable; only if `can_view` >= 'content'
@@ -41,7 +38,6 @@ type itemStringRootNodeWithSolutionAccess struct {
 // Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language.
 type itemStringRoot struct {
 	*itemStringCommon
-	*itemStringNotInfo
 	*itemStringRootNodeWithSolutionAccess
 }
 
@@ -443,7 +439,6 @@ func constructItemResponseFromDBData(
 		BestScore:                    rawData.BestScore,
 		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
 	}
-	result.String.itemStringNotInfo = constructStringNotInfo(rawData, permissionGrantedStore)
 
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
 		result.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
@@ -476,14 +471,6 @@ func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
 		LanguageTag: rawData.StringLanguageTag,
 		Title:       rawData.StringTitle,
 		ImageURL:    rawData.StringImageURL,
-	}
-}
-
-func constructStringNotInfo(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemStringNotInfo {
-	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("info") {
-		return nil
-	}
-	return &itemStringNotInfo{
 		Subtitle:    rawData.StringSubtitle,
 		Description: rawData.StringDescription,
 	}

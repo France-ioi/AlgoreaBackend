@@ -398,7 +398,9 @@ Feature: Get item view information
       "string": {
         "language_tag": "en",
         "title": "Chapter A",
-        "image_url": "http://example.com/my1.jpg"
+        "image_url": "http://example.com/my1.jpg",
+        "subtitle": "Subtitle 1",
+        "description": "Description 1"
       },
 
       "permissions": {
