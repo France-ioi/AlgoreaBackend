@@ -51,16 +51,18 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - maligned
-    - prealloc
-    - gochecknoglobals
-    - varcheck         # Deprecated.
-    - golint           # Deprecated.
-    - structcheck      # Deprecated.
     - deadcode         # Deprecated.
-    - scopelint        # Deprecated.
-    - nosnakecase      # Deprecated.
+    - exhaustivestruct # Deprecated.
+    - golint           # Deprecated.
+    - ifshort          # Deprecated.
     - interfacer       # Deprecated.
+    - maligned         # Deprecated.
+    - nosnakecase      # Deprecated.
+    - scopelint        # Deprecated.
+    - structcheck      # Deprecated.
+    - varcheck         # Deprecated.
+    - prealloc         # Note from authors: For most programs usage of prealloc will be a premature optimization.
+    - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
     - wsl              # Requires whitelines between blocks. requires many changes, enable it later
     - nolintlint       # Requires explanation for each "nolint" directive. requires many changes
@@ -82,11 +84,8 @@ linters:
     - errname          # For update to go1.20
     - execinquery      # For update to go1.20
     - exhaustive       # For update to go1.20
-    - exhaustivestruct # For update to go1.20
     - forcetypeassert  # For update to go1.20
-    - ifshort          # For update to go1.20
     - ireturn          # For update to go1.20
-    - ineffassign      # For update to go1.20
     - maintidx         # For update to go1.20
     - musttag          # For update to go1.20
     - nilnil           # For update to go1.20
@@ -103,7 +102,6 @@ linters:
     - wrapcheck        # For update to go1.20
     - exhaustruct      # For update to go1.20
     - gomoddirectives  # For update to go1.20
-    - typecheck        # For update to go1.20
     - dupl             # For update to go1.20
 
 run:
