@@ -38,11 +38,13 @@ Feature: List threads
       | @B_SectionMember2_CanViewContent1               | @B_SectionMember2   | content                  |           |
       | @B_SectionMember2_CanViewContent2               | @B_SectionMember2   | content                  |           |
       | @B_SectionMember2_CanViewContentWithDescendants | @B_SectionMember2   | content_with_descendants |           |
-      | @B_UniversityMember_HasNotValidated             | @B_UniversityMember |                          | answer    |
-      | @B_UniversityMember_CanWatchAnswer1             | @B_UniversityMember |                          | answer    |
-      | @B_UniversityMember_CanWatchAnswer2             | @B_UniversityMember |                          | answer    |
-      | @B_UniversityMember_CanWatchAnswer3             | @B_UniversityMember |                          | answer    |
-      | @B_UniversityMember_CanWatchAnswer4             | @B_UniversityMember |                          | answer    |
+      | @B_UniversityMember_HasNotValidated             | @B_UniversityMember | info                     |           |
+      | @B_UniversityMember_CanWatchAnswer1             | @B_UniversityMember | info                     | answer    |
+      | @B_UniversityMember_CanWatchAnswer2             | @B_UniversityMember | info                     | answer    |
+      | @B_UniversityMember_CanWatchAnswer3             | @B_UniversityMember | info                     | answer    |
+      | @B_UniversityMember_CanWatchAnswer4             | @B_UniversityMember | info                     | answer    |
+      | @B_UniversityMember_CanWatchAnswer5             | @B_UniversityMember | info                     | answer    |
+      | @B_UniversityMember_CanWatchAnswer6             | @B_UniversityMember | none                     | answer    |
     And there are the following results:
       | item                              | participant         | validated |
       | @B_UniversityMember_HasValidated1 | @B_UniversityMember | 1         |
@@ -52,27 +54,28 @@ Feature: List threads
       | @B_UniversityMember_HasValidated5 | @B_UniversityMember | 1         |
       | @B_UniversityMember_HasValidated6 | @B_UniversityMember | 1         |
     Given there are the following threads:
-      | participant         | item                                            | helper_group  | status                  | latest_update_at     | comment                                                                                                                       |
-      | @ConsortiumMember   | @Item1                                          |               |                         |                      |                                                                                                                               |
-      | @A_UniversityMember | @Item2                                          |               |                         |                      |                                                                                                                               |
-      | @A_ClassMember      | @Item3                                          |               |                         |                      |                                                                                                                               |
-      | @B_UniversityMember | @B_UniversityMember_CanWatchAnswer1             |               |                         |                      | @B_UniversityMember is_mine=0 -> notok: must not be the participant                                                           |
-      | @B_SectionMember1   | @B_UniversityMember_HasValidated1               | @B_Section    | waiting_for_trainer     |                      | @B_UniversityMember is_mine=0 -> List thread notok: not part of helper group                                                  |
-      | @B_SectionMember1   | @B_UniversityMember_HasNotValidated             | @B_University | waiting_for_trainer     |                      | @B_UniversityMember is_mine=0 -> List thread notok: Has not validated                                                         |
-      | @B_SectionMember1   | @B_UniversityMember_HasValidated2               | @B_University | waiting_for_trainer     |                      | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, open thread and validated item                         |
-      | @B_SectionMember1   | @B_UniversityMember_HasValidated3               | @Consortium   | waiting_for_trainer     |                      | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, open thread and validated item                         |
-      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer2             | @B_University | waiting_for_trainer     |                      | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
-      | @B_SectionMember1   | @B_UniversityMember_HasValidated4               | @B_University | waiting_for_participant |                      | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, open thread and validated item                         |
-      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer3             | @B_University | waiting_for_participant |                      | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
-      | @B_SectionMember1   | @B_UniversityMember_HasValidated5               | @B_University | closed                  | 2021-12-20T00:00:00Z | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, closed thread for less than 2 weeks and validated item |
-      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer4             | @B_University | closed                  | 2021-12-20T00:00:00Z | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
-      | @B_SectionMember1   | @B_UniversityMember_HasValidated6               | @B_University | closed                  | 2021-11-00T00:00:00Z | @B_UniversityMember is_mine=0 -> List thread notok: closed for more than 2 weeks                                              |
-      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer5             | @B_University | closed                  | 2021-11-00T00:00:00Z | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
-      | @B_SectionMember2   | @B_SectionMember2_CanViewInfo                   |               |                         |                      | @B_SectionMember2 is_mine=1 -> notok: can_view < content                                                                      |
-      | @B_SectionMember2   | @B_SectionMember2_CanViewContent1               |               |                         |                      | @B_SectionMember2 is_mine=1 -> ok: can_view >= content                                                                        |
-      | @B_SectionMember3   | @B_SectionMember2_CanViewContent2               |               |                         |                      | @B_SectionMember2 is_mine=1 -> notok: not the participant                                                                     |
-      | @B_SectionMember2   | @B_SectionMember2_CanViewContentWithDescendants |               |                         |                      | @B_SectionMember2 is_mine=1 -> ok: can_view >= content                                                                        |
-      | @OtherGroupMember   | @Item4                                          |               |                         |                      |                                                                                                                               |
+      | participant         | item                                            | helper_group  | status                  | latest_update_at    | message_count | comment                                                                                                                       |
+      | @ConsortiumMember   | @Item1                                          |               |                         |                     | 0             |                                                                                                                               |
+      | @A_UniversityMember | @Item2                                          |               |                         |                     | 1             |                                                                                                                               |
+      | @A_ClassMember      | @Item3                                          |               |                         |                     | 2             |                                                                                                                               |
+      | @B_UniversityMember | @B_UniversityMember_CanWatchAnswer1             |               |                         |                     | 3             | @B_UniversityMember is_mine=0 -> notok: must not be the participant                                                           |
+      | @B_SectionMember1   | @B_UniversityMember_HasValidated1               | @B_Section    | waiting_for_trainer     |                     | 4             | @B_UniversityMember is_mine=0 -> List thread notok: not part of helper group                                                  |
+      | @B_SectionMember1   | @B_UniversityMember_HasNotValidated             | @B_University | waiting_for_trainer     |                     | 5             | @B_UniversityMember is_mine=0 -> List thread notok: Has not validated                                                         |
+      | @B_SectionMember1   | @B_UniversityMember_HasValidated2               | @B_University | waiting_for_trainer     |                     | 6             | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, open thread and validated item                         |
+      | @B_SectionMember1   | @B_UniversityMember_HasValidated3               | @Consortium   | waiting_for_trainer     |                     | 7             | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, open thread and validated item                         |
+      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer2             | @B_University | waiting_for_trainer     |                     | 8             | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
+      | @B_SectionMember1   | @B_UniversityMember_HasValidated4               | @B_University | waiting_for_participant |                     | 9             | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, open thread and validated item                         |
+      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer3             | @B_University | waiting_for_participant |                     | 10            | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
+      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer6             | @B_University | waiting_for_participant |                     | 11            | @B_UniversityMember is_mine=0 -> List thread notok: cannot view the item                                                      |
+      | @B_SectionMember1   | @B_UniversityMember_HasValidated5               | @B_University | closed                  | 2021-12-20 00:00:00 | 12            | @B_UniversityMember is_mine=0 -> List thread ok: part of helper group, closed thread for less than 2 weeks and validated item |
+      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer4             | @B_University | closed                  | 2021-12-20 00:00:00 | 13            | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
+      | @B_SectionMember1   | @B_UniversityMember_HasValidated6               | @B_University | closed                  | 2021-11-01 00:00:00 | 14            | @B_UniversityMember is_mine=0 -> List thread notok: closed for more than 2 weeks                                              |
+      | @B_SectionMember1   | @B_UniversityMember_CanWatchAnswer5             | @B_University | closed                  | 2021-11-01 00:00:00 | 15            | @B_UniversityMember is_mine=0 -> List thread ok: can_watch >= answer                                                          |
+      | @B_SectionMember2   | @B_SectionMember2_CanViewInfo                   |               |                         |                     | 16            | @B_SectionMember2 is_mine=1 -> notok: can_view < content                                                                      |
+      | @B_SectionMember2   | @B_SectionMember2_CanViewContent1               |               |                         |                     | 17            | @B_SectionMember2 is_mine=1 -> ok: can_view >= content                                                                        |
+      | @B_SectionMember3   | @B_SectionMember2_CanViewContent2               |               |                         |                     | 18            | @B_SectionMember2 is_mine=1 -> notok: not the participant                                                                     |
+      | @B_SectionMember2   | @B_SectionMember2_CanViewContentWithDescendants |               |                         |                     | 19            | @B_SectionMember2 is_mine=1 -> ok: can_view >= content                                                                        |
+      | @OtherGroupMember   | @Item4                                          |               |                         |                     | 20            |                                                                                                                               |
     And the time now is "2022-01-01T00:00:00Z"
 
   Scenario: Should have all the fields properly set, including first_name and last_name when the access is approved
@@ -153,9 +156,23 @@ Feature: List threads
     And the response at $[0].participant.id should be "@A_ClassMember"
 
   Scenario: Should return only the threads in which the participant is the current user and the item is visible when is_mine=1
-    # @B_SectionMember2 can see @B_SectionMember2_CanViewContent and @B_SectionMember2_CanViewContentWithDescendants
-    # Waiting for implementation of is_mine
+    Given I am @B_SectionMember2
+    When I send a GET request to "/threads?is_mine=1"
+    Then the response code should be 200
+    And the response at $[*].item.id should be:
+      | @B_SectionMember2_CanViewContent1               |
+      | @B_SectionMember2_CanViewContentWithDescendants |
 
   Scenario: Should return only the threads that the current-user can list and in which he is not the participant when is_mine=0
-    # @B_UniversityMember can see @B_UniversityMember_HasValidated2, @B_UniversityMember_HasValidated3, @B_UniversityMember_CanWatchAnswer2, @B_UniversityMember_HasValidated4, @B_UniversityMember_CanWatchAnswer3, @B_UniversityMember_HasValidated5, @B_UniversityMember_CanWatchAnswer4, @B_UniversityMember_CanWatchAnswer5
-    # Waiting for implementation of is_mine
+    Given I am @B_UniversityMember
+    When I send a GET request to "/threads?is_mine=0"
+    Then the response code should be 200
+    And the response at $[*].item.id should be:
+      | @B_UniversityMember_HasValidated2   |
+      | @B_UniversityMember_HasValidated3   |
+      | @B_UniversityMember_CanWatchAnswer2 |
+      | @B_UniversityMember_HasValidated4   |
+      | @B_UniversityMember_CanWatchAnswer3 |
+      | @B_UniversityMember_HasValidated5   |
+      | @B_UniversityMember_CanWatchAnswer4 |
+      | @B_UniversityMember_CanWatchAnswer5 |

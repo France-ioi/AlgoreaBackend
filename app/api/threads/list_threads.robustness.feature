@@ -11,12 +11,6 @@ Feature: List threads - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for watched_group_id (should be int64)"
 
-  Scenario: watched_group_id should be given because the alternative is not implemented yet
-    Given I am @John
-    When I send a GET request to "/threads"
-    Then the response code should be 400
-    And the response error message should contain "Not implemented yet: watchedGroupID must be given"
-
   Scenario: The user should be a manager of watched_group_id group
     Given I am @John
     And there is a group @Classroom
@@ -31,3 +25,21 @@ Feature: List threads - robustness
     When I send a GET request to "/threads?watched_group_id=@Classroom"
     Then the response code should be 403
     And the response error message should contain "No rights to watch for watched_group_id"
+
+  Scenario: Should have one of watched_group_id and is_mine given
+    Given I am @John
+    When I send a GET request to "/threads"
+    Then the response code should be 400
+    And the response error message should contain "One of watched_group_id or is_mine must be given"
+
+  Scenario Outline: Should not have watched_group_id and is_mine set a the same time
+    Given I am @John
+    And there is a group @Classroom
+    And I am a manager of the group @Classroom and can watch its members
+    When I send a GET request to "/threads?watched_group_id=@Classroom&is_mine=<is_mine>"
+    Then the response code should be 400
+    And the response error message should contain "Must not provide watched_group_id and is_mine at the same time"
+    Examples:
+      | is_mine |
+      | 0       |
+      | 1       |
