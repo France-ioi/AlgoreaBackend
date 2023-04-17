@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
@@ -35,59 +36,67 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 
 // TheResponseAtShouldBeTheValue checks that the response at a JSONPath is a certain value.
 func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
-	value = ctx.replaceReferencesByIDs(value)
-
-	match, err := ctx.responseMatchesJSONPath(jsonPath, value)
+	var JSONResponse interface{}
+	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
 	if err != nil {
-		return fmt.Errorf("JSONPath %v doesn't match value %v: %v", jsonPath, ctx.lastResponseBody, err)
-	} else if !match {
-		return fmt.Errorf("the JSONPath %v doesn't match the value %v for response %v", jsonPath, value, ctx.lastResponseBody)
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Unmarshal response: %v", err)
+	}
+
+	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
+	if err != nil {
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Cannot get JsonPath: %v", err)
+	}
+
+	value = ctx.replaceReferencesByIDs(value)
+	if jsonPathRes != value {
+		return fmt.Errorf("JSONPath %v doesn't match value %v: %v", jsonPath, ctx.lastResponseBody, value)
 	}
 
 	return nil
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
-func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, table *messages.PickleStepArgument_PickleTable) error {
-	for i := 1; i < len(table.Rows); i++ {
-		err := ctx.TheResponseAtShouldBeTheValue(jsonPath, table.Rows[i].Cells[0].Value)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// responseMatchesJSONPath checks whether the response matches a value at a JSONPath.
-func (ctx *TestContext) responseMatchesJSONPath(jsonPath, value string) (bool, error) {
-	// Note: Unmarshal could be cached.
-	// Note: When XPath returns an array, it could be possible to use cache/sort to make if more efficient
-
+func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.PickleStepArgument_PickleTable) error {
 	var JSONResponse interface{}
 	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
 	if err != nil {
-		return false, err
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Unmarshal response: %v", err)
 	}
 
-	res, err := jsonpath.Get(jsonPath, JSONResponse)
+	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
 	if err != nil {
-		return false, err
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Cannot get JsonPath: %v", err)
 	}
 
-	switch result := res.(type) {
-	case []interface{}:
-		for _, val := range result {
-			if val == value {
-				return true, nil
-			}
+	jsonPathResArr := jsonPathRes.([]interface{})
+	if len(jsonPathResArr) != len(wants.Rows) {
+		return fmt.Errorf(
+			"TheResponseAtShouldBe: The JsonPath result %v length should be %v but is %v",
+			jsonPathResArr,
+			len(wants.Rows),
+			len(jsonPathResArr),
+		)
+	}
+
+	// Sort the jsonPath and the wants values so that we can check them sequentially.
+	// This also makes sure that the values are checked one to one, and are not just present in the "wants".
+
+	sortedResults := make([]string, len(wants.Rows))
+	sortedWants := make([]string, len(wants.Rows))
+	for i := 0; i < len(wants.Rows); i++ {
+		sortedResults[i] = jsonPathResArr[i].(string)
+		sortedWants[i] = ctx.replaceReferencesByIDs(wants.Rows[i].Cells[0].Value)
+	}
+
+	sort.Strings(sortedResults)
+	sort.Strings(sortedWants)
+
+	for i := 0; i < len(wants.Rows); i++ {
+		if sortedResults[i] != sortedWants[i] {
+			return fmt.Errorf("TheResponseAtShouldBe: The values (sorted) are %v but should have been: %v", sortedResults, sortedWants)
 		}
-
-		return false, nil
-	case interface{}:
-		return result == value, nil
-	default:
-		return false, fmt.Errorf("type %v from jsonpath.Get not handled", result)
 	}
+	return nil
 }
 
 func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint

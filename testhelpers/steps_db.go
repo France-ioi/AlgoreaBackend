@@ -21,6 +21,11 @@ const (
 	deleted
 )
 
+const (
+	UserGroupID = "group_id"
+	UserLogin   = "login"
+)
+
 func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	db := ctx.db()
 
@@ -110,11 +115,11 @@ func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable
 		groupIDColumnNumber := -1
 		loginColumnNumber := -1
 		for number, cell := range head {
-			if cell.Value == "group_id" {
+			if cell.Value == UserGroupID {
 				groupIDColumnNumber = number
 				continue
 			}
-			if cell.Value == "login" {
+			if cell.Value == UserLogin {
 				loginColumnNumber = number
 				continue
 			}

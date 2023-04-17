@@ -1,7 +1,7 @@
 Feature: List threads
   Background:
     And there are the following groups:
-      | name          | parent        | members                                               |
+      | group         | parent        | members                                               |
       | @Consortium   |               | @ConsortiumMember                                     |
       | @A_University | @Consortium   | @A_UniversityMember,@A_UniversityManagerCanWatch      |
       | @B_University | @Consortium   | @B_UniversityMember                                   |
@@ -11,7 +11,7 @@ Feature: List threads
       | @B_Class      | @B_Section    |                                                       |
       | @OtherGroup   |               | @OtherGroupMember                                     |
     And @A_UniversityManagerCanWatch is a manager of the group @A_University and can watch its members
-    And there are the following item tasks:
+    And there are the following tasks:
       | item                                            |
       | @B_SectionMember2_CanViewInfo                   |
       | @B_SectionMember2_CanViewContent1               |
@@ -38,12 +38,6 @@ Feature: List threads
       | @B_SectionMember2_CanViewContent1               | @B_SectionMember2   | content                  |           |
       | @B_SectionMember2_CanViewContent2               | @B_SectionMember2   | content                  |           |
       | @B_SectionMember2_CanViewContentWithDescendants | @B_SectionMember2   | content_with_descendants |           |
-      | @B_UniversityMember_HasValidated1               | @B_UniversityMember |                          |           |
-      | @B_UniversityMember_HasValidated2               | @B_UniversityMember |                          |           |
-      | @B_UniversityMember_HasValidated3               | @B_UniversityMember |                          |           |
-      | @B_UniversityMember_HasValidated4               | @B_UniversityMember |                          |           |
-      | @B_UniversityMember_HasValidated5               | @B_UniversityMember |                          |           |
-      | @B_UniversityMember_HasValidated6               | @B_UniversityMember |                          |           |
       | @B_UniversityMember_HasNotValidated             | @B_UniversityMember |                          | answer    |
       | @B_UniversityMember_CanWatchAnswer1             | @B_UniversityMember |                          | answer    |
       | @B_UniversityMember_CanWatchAnswer2             | @B_UniversityMember |                          | answer    |
@@ -85,7 +79,7 @@ Feature: List threads
     Given I am @LaboratoryManagerCanWatch
     And I am a manager of the group @Laboratory and can watch its members
     And there are the following users:
-      | login                                               | first_name            | last_name            |
+      | user                                                | first_name            | last_name            |
       | @LaboratoryMember_WithApprovedAccessPersonalInfo    | FirstName_Approved    | LastName_Approved    |
       | @LaboratoryMember_WithoutApprovedAccessPersonalInfo | FirstName_NotApproved | LastName_NotApproved |
     And @LaboratoryMember_WithApprovedAccessPersonalInfo is a member of the group @Laboratory who has approved access to his personal info
@@ -148,15 +142,14 @@ Feature: List threads
   Scenario: Should get the threads whose the participant is a descendant of the watched_group_id
     Given I am @A_UniversityManagerCanWatch
     When I send a GET request to "/threads?watched_group_id=@A_University"
-    And it should be a JSON array with 2 entries
     And the response at $[*].participant.id should be:
       | @A_UniversityMember |
-      | @A_ClassMember              |
+      | @A_ClassMember      |
 
   Scenario: Should get the threads whose the participant is equal to the watched_group_id
     Given I am @A_UniversityManagerCanWatch
     When I send a GET request to "/threads?watched_group_id=@A_ClassMember"
-    And it should be a JSON array with 1 entries
+    And the response should be a JSON array with 1 entries
     And the response at $[0].participant.id should be "@A_ClassMember"
 
   Scenario: Should return only the threads in which the participant is the current user and the item is visible when is_mine=1

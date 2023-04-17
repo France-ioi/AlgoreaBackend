@@ -34,6 +34,7 @@ type TestContext struct {
 	// nolint
 	application          *app.Application // do NOT call it directly, use `app()`
 	userID               int64            // userID that will be used for the next requests
+	user                 string           // user reference of the logged user
 	featureQueries       []dbquery
 	lastResponse         *http.Response
 	lastResponseBody     string

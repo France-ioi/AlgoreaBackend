@@ -25,43 +25,12 @@ var (
 	replaceReferencesRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
 )
 
-// setReference sets a reference id.
-func (ctx *TestContext) setReference(reference, value string) {
-	referenceName := reference
-	if referenceName[0] != ReferencePrefix {
-		referenceName = string(ReferencePrefix) + reference
-	}
-
-	id, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.identifierReferences[referenceName] = id
-}
-
-// getReferenceFor gets the ID from a reference.
-func (ctx *TestContext) getReferenceFor(name string) int64 {
-	id, err := strconv.ParseInt(name, 10, 64)
-	if err == nil {
+// getOrCreateReferenceFor gets the ID from a reference, or create the reference if it doesn't exist.
+func (ctx *TestContext) getReference(reference string) int64 {
+	if id, err := strconv.ParseInt(reference, 10, 64); err == nil {
 		return id
 	}
 
-	if name[0] != ReferencePrefix {
-		name = string(ReferencePrefix) + name
-	}
-
-	value, ok := ctx.identifierReferences[name]
-	if !ok {
-		panic(fmt.Errorf("getReferenceFor: %s reference not found", name))
-	}
-
-	return value
-}
-
-// getOrCreateReferenceFor gets the ID from a reference, or create the reference if it doesn't exist.
-func (ctx *TestContext) getOrCreateReferenceFor(name string) int64 {
-	reference := string(ReferencePrefix) + name
 	if value, ok := ctx.identifierReferences[reference]; ok {
 		return value
 	}
@@ -82,10 +51,10 @@ func (ctx *TestContext) replaceReferencesByIDs(str string) string {
 		// - /@Reference (or another non-alphanum character in front)
 
 		if capture[0] == ReferencePrefix {
-			return strconv.FormatInt(ctx.getReferenceFor(capture[1:]), 10)
+			return strconv.FormatInt(ctx.getReference(capture), 10)
 		}
 
-		return string(capture[0]) + strconv.FormatInt(ctx.getReferenceFor(capture[2:]), 10)
+		return string(capture[0]) + strconv.FormatInt(ctx.getReference(capture[1:]), 10)
 	})
 }
 
