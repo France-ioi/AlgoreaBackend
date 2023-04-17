@@ -642,6 +642,20 @@ func (ctx *TestContext) UserIsAMemberOfTheGroup(user, group string) error {
 	return ctx.GroupIsAChildOfTheGroup(user, group)
 }
 
+// ThereAreTheFollowingGroupMembers defines group memberships.
+func (ctx *TestContext) ThereAreTheFollowingGroupMembers(groupMembers *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(groupMembers.Rows); i++ {
+		groupMember := ctx.getRowMap(i, groupMembers)
+
+		err := ctx.GroupIsAChildOfTheGroup(groupMember["member"], groupMember["group"])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo puts a user in a group with approved access to his personnel info.
 func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo(user, group string) error {
 	err := ctx.UserIsAMemberOfTheGroup(user, group)
