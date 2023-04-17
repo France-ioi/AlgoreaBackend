@@ -1,6 +1,7 @@
 package answers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -11,48 +12,52 @@ import (
 
 // swagger:operation GET /items/{item_id}/best-answer answers bestAnswerGet
 //
-//		---
-//		summary: Get the best answer
-//		description: >
-//	  Returns the best answer of the user on the given `{item_id}` among all attempts. The best answer is
-//	  defined as the one which gives the highest score. If there are several, it is the most recent one
-//	  by `created_at`.
+//	---
+//	summary: Get the best answer
+//	description: >
+//		Returns the best answer of the user on the given `item_id` among all attempts.
+//		The best answer is defined as the one which gives the highest score.
+//		If there are several, it is the most recent one by `created_at`.
 //
-//	  * if `watched_group_id` is given, the current user must be allowed to watch "answer" of the item identified by `item_id`
-//	  * if `watched_group_id` is given, it must be a participant (= team or user)
-//	  * if `watched_group_id` is given, the current user must be allowed to watch the participant
+//		* if `watched_group_id` is given, the current user must be allowed to watch "answer" of the item identified by `item_id`
+//		* if `watched_group_id` is given, it must be a participant (= team or user)
+//		* if `watched_group_id` is given, the current user must be allowed to watch the participant
 //
-//	  If any of the preconditions fails, the 'forbidden' error is returned.
-//		parameters:
-//			- name: item_id
-//				in: path
-//				type: integer
-//				format: int64
-//				required: true
-//			- name: watched_group_id
-//				in: query
-//				type: integer
-//				description: >
-//	      A participant (`team_id` or user). If given, get the best answer of the participant instead
-//	      of the one of the user.
-//		responses:
-//			"200":
-//				"$ref": "#/responses/itemAnswerGetResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		If any of the preconditions fails, the 'forbidden' error is returned.
+//
+//		If the preconditions pass but there is no answer for the user on the given `item_id`, returns a `404`.
+//	parameters:
+//		- name: item_id
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//		- name: watched_group_id
+//			in: query
+//			type: integer
+//			description: >
+//				A participant (`team_id` or user).
+//				If given, get the best answer of the participant instead of the one of the user.
+//	responses:
+//		"200":
+//			"$ref": "#/responses/itemAnswerGetResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"404":
+//			"$ref": "#/responses/notFoundResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	watchedGroupID, ok, apiError := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupOK, apiError := srv.ResolveWatchedGroupID(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -62,35 +67,25 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 	var result []map[string]interface{}
 
 	var bestAnswerQuery *database.DB
-	if ok {
-		// check 'can_watch'>='answer' permission on the answers.item_id
-		itemPerms := store.Permissions().MatchingUserAncestors(user).
-			WherePermissionIsAtLeast("watch", "answer").
-			Where("permissions.item_id = answers.item_id").
-			Select("1").
-			Limit(1)
+	if watchedGroupOK {
+		// the following checks were made by ResolveWatchedGroupID:
+		// - watched_group_id must be a participant
+		// - the current user is able to watch the participant
 
-		// check if able to watch the participant
-		participantPerms := store.ActiveGroupAncestors().ManagedByUser(user).
-			Where("groups_ancestors_active.child_group_id = answers.participant_id").
-			Where("can_watch_members").
-			Select("1").
-			Limit(1)
+		// check 'can_watch'>='answer' permission on the answers.item_id
+		if !user.CanWatchItemAnswer(store, itemID) {
+			return service.InsufficientAccessRightsError
+		}
 
 		bestAnswerQuery = store.Answers().
-			Where(`?`, itemPerms.SubQuery()).
-			Where(`?`, participantPerms.SubQuery()).
 			Where("participant_id = ?", watchedGroupID)
 	} else {
 		// check 'can_view'>='content' permission on the answers.item_id
-		itemPerms := store.Permissions().MatchingUserAncestors(user).
-			WherePermissionIsAtLeast("view", "content").
-			Where("permissions.item_id = answers.item_id").
-			Select("1").
-			Limit(1)
+		if !user.CanViewItemContent(store, itemID) {
+			return service.InsufficientAccessRightsError
+		}
 
 		bestAnswerQuery = store.Answers().
-			Where(`?`, itemPerms.SubQuery()).
 			Where("participant_id = ?", user.GroupID)
 	}
 
@@ -104,7 +99,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {
-		return service.InsufficientAccessRightsError
+		return service.ErrNotFound(errors.New("no answer found"))
 	}
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
 

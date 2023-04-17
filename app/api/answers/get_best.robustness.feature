@@ -75,12 +75,6 @@ Feature: Get the best answer - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: No answer for the item
-    Given I am the user with id "11"
-    When I send a GET request to "/items/210/best-answer"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
   Scenario: The user is not allowed to watch the participant
     Given I am the user with id "11"
     When I send a GET request to "/items/210/best-answer?watched_group_id=13"

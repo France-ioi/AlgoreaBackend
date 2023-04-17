@@ -1,27 +1,32 @@
 Feature: Get a current answer
 Background:
   Given the database has the following table 'groups':
-    | id  | name    | type  |
-    | 11  | jdoe    | User  |
-    | 13  | Team    | Team  |
-    | 14  | Group B | Class |
-    | 21  | manager | User  |
-    | 23  | Group C | Class |
-    | 100 | top     | User  |
+    | id  | name         | type  |
+    | 11  | jdoe         | User  |
+    | 12  | jdoenoanswer | User  |
+    | 13  | Team         | Team  |
+    | 14  | Group B      | Class |
+    | 15  | TeamNoAnswer | Team     |
+    | 21  | manager      | User  |
+    | 23  | Group C      | Class |
+    | 100 | top          | User  |
   And the database has the following table 'users':
-    | login   | group_id | first_name | last_name |
-    | jdoe    | 11       | John       | Doe       |
-    | manager | 21       | Man        | Ager      |
-    | top     | 100      | Top        | Score     |
+    | login        | group_id | first_name   | last_name |
+    | jdoe         | 11       | John         | Doe       |
+    | jdoenoanswer | 12       | JohnNoAnswer | Doe       |
+    | manager      | 21       | Man          | Ager      |
+    | top          | 100      | Top          | Score     |
   And the database has the following table 'groups_groups':
     | parent_group_id | child_group_id |
     | 14              | 11             |
     | 13              | 21             |
+    | 15              | 21             |
     | 23              | 21             |
   And the groups ancestors are computed
   And the database has the following table 'group_managers':
     | group_id | manager_id | can_watch_members |
     | 13       | 21         | true              |
+    | 15       | 21         | true              |
   And the groups ancestors are computed
   And the database has the following table 'items':
     | id  | default_language_tag |
@@ -29,8 +34,10 @@ Background:
     | 210 | fr                   |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       | can_watch_generated |
+    | 12       | 200     | content                  | answer              |
     | 13       | 200     | content                  | answer              |
     | 14       | 200     | content                  | none                |
+    | 15       | 200     | content                  | answer              |
     | 23       | 210     | content_with_descendants | answer              |
   And the database has the following table 'results':
     | attempt_id | participant_id | item_id |
@@ -90,6 +97,11 @@ Background:
     }
     """
 
+  Scenario: Should return a 404 when user has access to the item but has no answer
+    Given I am the user with id "12"
+    When I send a GET request to "/items/200/best-answer"
+    Then the response code should be 404
+
   Scenario: User has access to the item and retrieves the best answer given by watched_group_id
     Given I am the user with id "21"
     When I send a GET request to "/items/210/best-answer?watched_group_id=13"
@@ -110,3 +122,8 @@ Background:
       "graded_at": "2020-01-01T12:00:01Z"
     }
     """
+
+  Scenario: Should return a 404 when user has access to the item but the watched_group_id has no answer
+    Given I am the user with id "21"
+    When I send a GET request to "/items/210/best-answer?watched_group_id=15"
+    Then the response code should be 404
