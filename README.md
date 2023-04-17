@@ -140,6 +140,11 @@ Open it in a browser:
 swagger serve ./swagger.yaml
 ```
 
+Once swagger is installed, you can validate swagger annotations project-wide with:
+```
+make validate-swagger
+```
+
 ## Create a release
 
 In order to create a release:
