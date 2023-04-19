@@ -54,6 +54,7 @@ type participant struct {
 //			the current-user is NOT the participant are returned.
 //		* If `watched_group_id` is given, only threads in which the participant is descendant (including self)
 //			of the `watched_group_id` are returned.
+//		* If `item_id` is given, only threads for which the `item_id` is or is descendant of the given `item_id` are returned.
 //		* `first_name` and `last_name` are only returned for the current user or if the user approved access to their personal
 //			info for some group managed by the current user.
 //
@@ -87,7 +88,7 @@ type participant struct {
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service.APIError {
-	watchedGroupID, isMine, apiError := srv.resolveListThreadParameters(r)
+	watchedGroupID, itemID, isMine, apiError := srv.resolveListThreadParameters(r)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -99,6 +100,12 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	query := store.Threads().
 		JoinsItem().
 		JoinsUserParticipant()
+
+	if itemID != 0 {
+		query = query.NewThreadStore(query.
+			WhereItemsAreSelfOrDescendantsOf(itemID),
+		)
+	}
 
 	switch {
 	case watchedGroupID != 0:
@@ -161,22 +168,30 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
-func (srv *Service) resolveListThreadParameters(r *http.Request) (watchedGroupID int64, isMine bool, apiError service.APIError) {
+func (srv *Service) resolveListThreadParameters(r *http.Request) (watchedGroupID, itemID int64, isMine bool, apiError service.APIError) {
 	var watchedGroupOK bool
 	watchedGroupID, watchedGroupOK, apiError = srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
-		return 0, false, apiError
+		return 0, 0, false, apiError
 	}
 
 	var isMineError error
 	isMine, isMineError = service.ResolveURLQueryGetBoolField(r, "is_mine")
 
 	if watchedGroupOK && isMineError == nil {
-		return 0, false, service.ErrInvalidRequest(errors.New("must not provide watched_group_id and is_mine at the same time"))
+		return 0, 0, false, service.ErrInvalidRequest(errors.New("must not provide watched_group_id and is_mine at the same time"))
 	}
 	if !watchedGroupOK && isMineError != nil {
-		return 0, false, service.ErrInvalidRequest(errors.New("one of watched_group_id or is_mine must be given"))
+		return 0, 0, false, service.ErrInvalidRequest(errors.New("one of watched_group_id or is_mine must be given"))
 	}
 
-	return watchedGroupID, isMine, service.NoError
+	if len(r.URL.Query()["item_id"]) > 0 {
+		var err error
+		itemID, err = service.ResolveURLQueryGetInt64Field(r, "item_id")
+		if err != nil {
+			return 0, 0, false, service.ErrInvalidRequest(err)
+		}
+	}
+
+	return watchedGroupID, itemID, isMine, service.NoError
 }

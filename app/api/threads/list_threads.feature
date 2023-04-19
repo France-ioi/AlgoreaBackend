@@ -195,3 +195,37 @@ Feature: List threads
       | @B_UniversityMember_HasValidated5   |
       | @B_UniversityMember_CanWatchAnswer4 |
       | @B_UniversityMember_CanWatchAnswer5 |
+
+    Scenario: Should return only thread from item or descendant when item_id is given
+      Given I am @John
+      And there are the following items:
+        | item              | parent      | type    |
+        | @Root_Task        |             | Task    |
+        | @Chapter1         |             | Chapter |
+        | @Chapter1_Task    | @Chapter1   | Task    |
+        | @Chapter2         |             | Chapter |
+        | @Chapter2_Task    | @Chapter2   | Task    |
+        | @Chapter2_1       | @Chapter2   | Chapter |
+        | @Chapter2_1_Task1 | @Chapter2_1 | Task    |
+        | @Chapter2_1_Task2 | @Chapter2_1 | Task    |
+        | @Chapter3         |             | Chapter |
+      And there are the following threads:
+        | participant | item              | visible_by_participant | message_count |
+        | @John       | @Root_Task        | 1                      | 100           |
+        | @John       | @Chapter1         | 1                      | 101           |
+        | @John       | @Chapter1_Task    | 1                      | 102           |
+        | @John       | @Chapter2         | 1                      | 103           |
+        | @John       | @Chapter2_Task    | 1                      | 104           |
+        | @John       | @Chapter3         | 1                      | 105           |
+        | @John       | @Chapter2_1       | 1                      | 106           |
+        | @John       | @Chapter2_1_Task1 | 1                      | 107           |
+        | @John       | @Chapter2_1_Task2 | 1                      | 108           |
+      And I am @John
+      When I send a GET request to "/threads?is_mine=1&item_id=@Chapter2"
+      Then the response code should be 200
+      And the response at $[*].item.id should be:
+        | @Chapter2         |
+        | @Chapter2_Task    |
+        | @Chapter2_1       |
+        | @Chapter2_1_Task1 |
+        | @Chapter2_1_Task2 |
