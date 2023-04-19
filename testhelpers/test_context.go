@@ -32,19 +32,21 @@ type dbquery struct {
 // TestContext implements context for tests.
 type TestContext struct {
 	// nolint
-	application      *app.Application // do NOT call it directly, use `app()`
-	userID           int64            // userID that will be used for the next requests
-	featureQueries   []dbquery
-	lastResponse     *http.Response
-	lastResponseBody string
-	logsHook         *loggingtest.Hook
-	logsRestoreFunc  func()
-	inScenario       bool
-	dbTableData      map[string]*messages.PickleStepArgument_PickleTable
-	templateSet      *jet.Set
-	requestHeaders   map[string][]string
-	dbTables         map[string]map[string]map[string]interface{}
-	currentThreadKey string
+	application          *app.Application // do NOT call it directly, use `app()`
+	userID               int64            // userID that will be used for the next requests
+	user                 string           // user reference of the logged user
+	featureQueries       []dbquery
+	lastResponse         *http.Response
+	lastResponseBody     string
+	logsHook             *loggingtest.Hook
+	logsRestoreFunc      func()
+	inScenario           bool
+	dbTableData          map[string]*messages.PickleStepArgument_PickleTable
+	templateSet          *jet.Set
+	requestHeaders       map[string][]string
+	identifierReferences map[string]int64
+	dbTables             map[string]map[string]map[string]interface{}
+	currentThreadKey     string
 }
 
 var db *sql.DB
@@ -66,6 +68,7 @@ func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) { // nolint
 	ctx.requestHeaders = map[string][]string{}
 	ctx.dbTableData = make(map[string]*messages.PickleStepArgument_PickleTable)
 	ctx.templateSet = ctx.constructTemplateSet()
+	ctx.identifierReferences = make(map[string]int64)
 	ctx.dbTables = make(map[string]map[string]map[string]interface{})
 
 	// reset the seed to get predictable results on PRNG for tests

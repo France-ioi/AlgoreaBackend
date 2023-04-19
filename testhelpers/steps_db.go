@@ -21,14 +21,25 @@ const (
 	deleted
 )
 
+const (
+	UserGroupID = "group_id"
+	UserLogin   = "login"
+)
+
 func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	db := ctx.db()
 
 	if len(data.Rows) > 1 {
+		referenceColumnIndex := -1
 		head := data.Rows[0].Cells
 		fields := make([]string, 0, len(head))
 		marks := make([]string, 0, len(head))
-		for _, cell := range head {
+
+		for i, cell := range head {
+			if cell.Value == "@reference" {
+				referenceColumnIndex = i
+			}
+
 			fields = append(fields, database.QuoteName(cell.Value))
 			marks = append(marks, "?")
 		}
@@ -42,10 +53,12 @@ func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgume
 			" (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
-			for _, cell := range data.Rows[i].Cells {
-				var err error
-				if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
-					return err
+			for j, cell := range data.Rows[i].Cells {
+				if j != referenceColumnIndex {
+					var err error
+					if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
+						return err
+					}
 				}
 				vals = append(vals, dbDataTableValue(cell.Value))
 			}
@@ -102,11 +115,11 @@ func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable
 		groupIDColumnNumber := -1
 		loginColumnNumber := -1
 		for number, cell := range head {
-			if cell.Value == "group_id" {
+			if cell.Value == UserGroupID {
 				groupIDColumnNumber = number
 				continue
 			}
-			if cell.Value == "login" {
+			if cell.Value == UserLogin {
 				loginColumnNumber = number
 				continue
 			}

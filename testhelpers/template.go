@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io"
+	"math/rand"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -19,9 +20,46 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
-var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
+var (
+	dbPathRegexp            = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
+	replaceReferencesRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
+)
+
+// getOrCreateReferenceFor gets the ID from a reference, or create the reference if it doesn't exist.
+func (ctx *TestContext) getReference(reference string) int64 {
+	if id, err := strconv.ParseInt(reference, 10, 64); err == nil {
+		return id
+	}
+
+	if value, ok := ctx.identifierReferences[reference]; ok {
+		return value
+	}
+
+	id := rand.Int63()
+	ctx.identifierReferences[reference] = id
+
+	return id
+}
+
+// replaceReferencesByIDs changes the references (@ref) in a string by the referenced identifiers (ID).
+func (ctx *TestContext) replaceReferencesByIDs(str string) string {
+	// a reference should either be at the beginning of the string (^), or after a non alpha-num character (\W).
+	// we don't want to rewrite email addresses.
+	return replaceReferencesRegexp.ReplaceAllStringFunc(str, func(capture string) string {
+		// capture is either:
+		// - @Reference
+		// - /@Reference (or another non-alphanum character in front)
+
+		if capture[0] == ReferencePrefix {
+			return strconv.FormatInt(ctx.getReference(capture), 10)
+		}
+
+		return string(capture[0]) + strconv.FormatInt(ctx.getReference(capture[1:]), 10)
+	})
+}
 
 func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
+	jsonBody = ctx.replaceReferencesByIDs(jsonBody)
 	tmpl, err := ctx.templateSet.Parse("template", jsonBody)
 	if err != nil {
 		return "", err

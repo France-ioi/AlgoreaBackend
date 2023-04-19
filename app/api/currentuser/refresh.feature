@@ -79,7 +79,6 @@ Feature: Update the local user info cache
     | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | I'm Jane Doe | http://jane.freepages.com | Female | true           | Europe/London | true        | true           | true              |
     | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | null         | null                      | null   | false          | null          | false       | false          | false             |
 
-
   Scenario: Update an existing user with badges
     Given the time now is "2019-07-16T22:02:29Z"
     And the DB time now is "2019-07-16 22:02:28"

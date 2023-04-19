@@ -370,6 +370,7 @@ Feature: Update thread
       | 2010    | waiting_for_participant | 11              | In chapter |
 
   Scenario: Participant who can request help on region can request help on class
+  Scenario: Participant who can request help on region can request help on class
     Given I am the user with id "3"
     And there is no thread with "item_id=270,participant_id=3"
     And I can request help to the group with id "12" on the item with id "270"

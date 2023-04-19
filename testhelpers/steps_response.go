@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"sort"
 	"strings"
 
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/cucumber/messages-go/v10"
 	"github.com/pmezard/go-difflib/difflib"
 
@@ -25,9 +27,75 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	}
 
 	if count != len(objmap) {
-		return fmt.Errorf("the result does not have the expected length. Expected: %d, received: %d", count, len(objmap))
+		return fmt.Errorf("the result does not have the expected length. Expected: %d, received: %d on %v",
+			count, len(objmap), ctx.lastResponseBody)
 	}
 
+	return nil
+}
+
+// TheResponseAtShouldBeTheValue checks that the response at a JSONPath is a certain value.
+func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
+	var JSONResponse interface{}
+	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
+	if err != nil {
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Unmarshal response: %v", err)
+	}
+
+	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
+	if err != nil {
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Cannot get JsonPath: %v", err)
+	}
+
+	value = ctx.replaceReferencesByIDs(value)
+	if jsonPathRes != value {
+		return fmt.Errorf("JSONPath %v doesn't match value %v: %v", jsonPath, ctx.lastResponseBody, value)
+	}
+
+	return nil
+}
+
+// TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
+func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.PickleStepArgument_PickleTable) error {
+	var JSONResponse interface{}
+	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
+	if err != nil {
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Unmarshal response: %v", err)
+	}
+
+	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
+	if err != nil {
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: Cannot get JsonPath: %v", err)
+	}
+
+	jsonPathResArr := jsonPathRes.([]interface{})
+	if len(jsonPathResArr) != len(wants.Rows) {
+		return fmt.Errorf(
+			"TheResponseAtShouldBe: The JsonPath result %v length should be %v but is %v",
+			jsonPathResArr,
+			len(wants.Rows),
+			len(jsonPathResArr),
+		)
+	}
+
+	// Sort the jsonPath and the wants values so that we can check them sequentially.
+	// This also makes sure that the values are checked one to one, and are not just present in the "wants".
+
+	sortedResults := make([]string, len(wants.Rows))
+	sortedWants := make([]string, len(wants.Rows))
+	for i := 0; i < len(wants.Rows); i++ {
+		sortedResults[i] = jsonPathResArr[i].(string)
+		sortedWants[i] = ctx.replaceReferencesByIDs(wants.Rows[i].Cells[0].Value)
+	}
+
+	sort.Strings(sortedResults)
+	sort.Strings(sortedWants)
+
+	for i := 0; i < len(wants.Rows); i++ {
+		if sortedResults[i] != sortedWants[i] {
+			return fmt.Errorf("TheResponseAtShouldBe: The values (sorted) are %v but should have been: %v", sortedResults, sortedWants)
+		}
+	}
 	return nil
 }
 
@@ -122,7 +190,7 @@ func compareStrings(expected, actual string) error {
 
 const nullHeaderValue = "[NULL]"
 
-func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { //nolint
+func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
 	headerValue, err = ctx.preprocessString(headerValue)
 	if err != nil {
 		return err
@@ -160,7 +228,7 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersVal
 	return ctx.TheResponseHeaderShouldBe(headerName, headerValue)
 }
 
-func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { //nolint
+func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { // nolint
 	errorResp := service.ErrorResponse{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
@@ -173,7 +241,7 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	return nil
 }
 
-func (ctx *TestContext) TheResponseShouldBe(kind string) error { //nolint
+func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
 	var expectedCode int
 	switch kind {
 	case "updated", "deleted":
