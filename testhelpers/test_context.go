@@ -47,6 +47,7 @@ type TestContext struct {
 	identifierReferences map[string]int64
 	dbTables             map[string]map[string]map[string]interface{}
 	currentThreadKey     string
+	needPopulateDatabase bool
 }
 
 var db *sql.DB
@@ -70,6 +71,7 @@ func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) { // nolint
 	ctx.templateSet = ctx.constructTemplateSet()
 	ctx.identifierReferences = make(map[string]int64)
 	ctx.dbTables = make(map[string]map[string]map[string]interface{})
+	ctx.needPopulateDatabase = false
 
 	// reset the seed to get predictable results on PRNG for tests
 	rand.Seed(1)

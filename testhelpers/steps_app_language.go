@@ -72,6 +72,15 @@ func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgume
 
 // populateDatabase populate the database with all the initialized data.
 func (ctx *TestContext) populateDatabase() error {
+	// We cannot run this for older tests because we're computing the tables permissions_generated and item_ancestors.
+	// Older tests define those tables manually with inconsistencies, and then check that the content of those tables is
+	// still in the same inconsistent state.
+	// If we want this to be run everywhere, we would have to fix those tests first.
+	// We would then just have to remove the ctx.needPopulateDatabase boolean completely.
+	if !ctx.needPopulateDatabase {
+		return nil
+	}
+
 	db, err := database.Open(ctx.db())
 	if err != nil {
 		return err
@@ -97,16 +106,10 @@ func (ctx *TestContext) populateDatabase() error {
 		return err
 	}
 
-	// Compute items_ancestors.
-	// This also computes permissions_generated.
-	err = database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		// We can consider keeping foreign_key_checks,
-		// but it'll break all tests that didn't define items while having permissions.
-		store.Exec("SET FOREIGN_KEY_CHECKS=0")
-		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-
-		return store.ItemItems().After()
-	})
+	err = ctx.DBItemsAncestorsAndPermissionsAreComputed()
+	if err != nil {
+		return err
+	}
 
 	return ctx.DBGroupsAncestorsAreComputed()
 }
@@ -130,6 +133,8 @@ func mergeFields(oldValues, newValues map[string]interface{}) map[string]interfa
 }
 
 func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]interface{}) {
+	ctx.needPopulateDatabase = true
+
 	if ctx.dbTables[tableName] == nil {
 		ctx.dbTables[tableName] = make(map[string]map[string]interface{})
 	}
