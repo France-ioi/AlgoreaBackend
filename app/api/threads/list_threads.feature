@@ -7,7 +7,7 @@ Feature: List threads
       | @B_University | @Consortium   | @B_UniversityMember                                   |
       | @A_Section    | @A_University |                                                       |
       | @B_Section    | @B_University | @B_SectionMember1,@B_SectionMember2,@B_SectionMember3 |
-      | @A_Class      | @A_Section    | @A_ClassMember                                        |
+      | @A_Class      | @A_Section    | @A_ClassMember1,@A_ClassMember2                       |
       | @B_Class      | @B_Section    |                                                       |
       | @OtherGroup   |               | @OtherGroupMember                                     |
     And @A_UniversityManagerCanWatch is a manager of the group @A_University and can watch its members
@@ -31,28 +31,34 @@ Feature: List threads
       | @B_UniversityMember_CanWatchAnswer5             |
       | @B_UniversityMember_CanWatchAnswer6             |
       | @Item1                                          |
+      | @A_UniversityManagerCanWatch_CanViewContent1                                          |
+      | @A_UniversityManagerCanWatch_CanViewContent2     |
       | @Item2                                          |
-      | @Item3                                          |
-      | @Item3                                          |
+      | @A_UniversityManagerCanWatch_CanViewInfo        |
     And there are the following item permissions:
-      | item                                            | group               | can_view                 | can_watch |
-      | @B_SectionMember2_CanViewInfo                   | @B_SectionMember2   | info                     |           |
-      | @B_SectionMember2_CanViewContent1               | @B_SectionMember2   | content                  |           |
-      | @B_SectionMember2_CanViewContent2               | @B_SectionMember2   | content                  |           |
-      | @B_SectionMember2_CanViewContentWithDescendants | @B_SectionMember2   | content_with_descendants |           |
-      | @B_UniversityMember_HasNotValidated             | @B_UniversityMember | info                     |           |
-      | @B_UniversityMember_HasValidated1               | @B_UniversityMember | info                     |           |
-      | @B_UniversityMember_HasValidated2               | @B_UniversityMember | info                     |           |
-      | @B_UniversityMember_HasValidated3               | @B_UniversityMember | info                     |           |
-      | @B_UniversityMember_HasValidated4               | @B_UniversityMember | info                     |           |
-      | @B_UniversityMember_HasValidated5               | @B_UniversityMember | info                     |           |
-      | @B_UniversityMember_HasValidated6               | @B_UniversityMember | info                     |           |
-      | @B_UniversityMember_CanWatchAnswer1             | @B_UniversityMember | info                     | answer    |
-      | @B_UniversityMember_CanWatchAnswer2             | @B_UniversityMember | info                     | answer    |
-      | @B_UniversityMember_CanWatchAnswer3             | @B_UniversityMember | info                     | answer    |
-      | @B_UniversityMember_CanWatchAnswer4             | @B_UniversityMember | info                     | answer    |
-      | @B_UniversityMember_CanWatchAnswer5             | @B_UniversityMember | info                     | answer    |
-      | @B_UniversityMember_CanWatchAnswer6             | @B_UniversityMember | none                     | answer    |
+      | item                                            | group                        | can_view                 | can_watch |
+      | @B_SectionMember2_CanViewInfo                   | @B_SectionMember2            | info                     |           |
+      | @B_SectionMember2_CanViewContent1               | @B_SectionMember2            | content                  |           |
+      | @B_SectionMember2_CanViewContent2               | @B_SectionMember2            | content                  |           |
+      | @B_SectionMember2_CanViewContentWithDescendants | @B_SectionMember2            | content_with_descendants |           |
+      | @B_UniversityMember_HasNotValidated             | @B_UniversityMember          | content                  |           |
+      | @B_UniversityMember_HasValidated1               | @B_UniversityMember          | content                  |           |
+      | @B_UniversityMember_HasValidated2               | @B_UniversityMember          | content                  |           |
+      | @B_UniversityMember_HasValidated3               | @B_UniversityMember          | content                  |           |
+      | @B_UniversityMember_HasValidated4               | @B_UniversityMember          | content                  |           |
+      | @B_UniversityMember_HasValidated5               | @B_UniversityMember          | content                  |           |
+      | @B_UniversityMember_HasValidated6               | @B_UniversityMember          | content                  |           |
+      | @B_UniversityMember_CanWatchAnswer1             | @B_UniversityMember          | content                  | answer    |
+      | @B_UniversityMember_CanWatchAnswer2             | @B_UniversityMember          | content                  | answer    |
+      | @B_UniversityMember_CanWatchAnswer3             | @B_UniversityMember          | content                  | answer    |
+      | @B_UniversityMember_CanWatchAnswer4             | @B_UniversityMember          | content                  | answer    |
+      | @B_UniversityMember_CanWatchAnswer5             | @B_UniversityMember          | content                  | answer    |
+      | @B_UniversityMember_CanWatchAnswer6             | @B_UniversityMember          | none                     | answer    |
+      | @A_UniversityManagerCanWatch_CanViewContent1    | @A_UniversityManagerCanWatch | content                  |           |
+      | @A_UniversityManagerCanWatch_CanViewContent2    | @A_UniversityManagerCanWatch | content                  |           |
+      | @A_UniversityManagerCanWatch_CanViewInfo        | @A_UniversityManagerCanWatch | info                     |           |
+      | @Item1                                          | @A_UniversityManagerCanWatch | content                  |           |
+      | @Item2                                          | @A_UniversityManagerCanWatch | content                  |           |
     And there are the following results:
       | item                              | participant         | validated |
       | @B_UniversityMember_HasValidated1 | @B_UniversityMember | 1         |
@@ -64,8 +70,9 @@ Feature: List threads
     Given there are the following threads:
       | participant         | item                                            | helper_group  | status                  | latest_update_at    | message_count | comment                                                                                                                       |
       | @ConsortiumMember   | @Item1                                          |               |                         |                     | 0             |                                                                                                                               |
-      | @A_UniversityMember | @Item2                                          |               |                         |                     | 1             |                                                                                                                               |
-      | @A_ClassMember      | @Item3                                          |               |                         |                     | 2             |                                                                                                                               |
+      | @A_UniversityMember | @A_UniversityManagerCanWatch_CanViewContent1    |               |                         |                     | 1             |                                                                                                                               |
+      | @A_ClassMember1     | @A_UniversityManagerCanWatch_CanViewContent2    |               |                         |                     | 2             | @A_UniversityManagerCanWatch watched_group_id -> ok, manager can_view=content                                                 |
+      | @A_ClassMember2     | @A_UniversityManagerCanWatch_CanViewInfo        |               |                         |                     | 2             | @A_UniversityManagerCanWatch watched_group_id -> notok, manager can_view=info only                                            |
       | @B_UniversityMember | @B_UniversityMember_CanWatchAnswer1             |               |                         |                     | 3             | @B_UniversityMember is_mine=0 -> notok: must not be the participant                                                           |
       | @B_SectionMember1   | @B_UniversityMember_HasValidated1               | @B_Section    | waiting_for_trainer     |                     | 4             | @B_UniversityMember is_mine=0 -> List thread notok: not part of helper group                                                  |
       | @B_SectionMember1   | @B_UniversityMember_HasNotValidated             | @B_University | waiting_for_trainer     |                     | 5             | @B_UniversityMember is_mine=0 -> List thread notok: Has not validated                                                         |
@@ -83,7 +90,7 @@ Feature: List threads
       | @B_SectionMember2   | @B_SectionMember2_CanViewContent1               |               |                         |                     | 17            | @B_SectionMember2 is_mine=1 -> ok: can_view >= content                                                                        |
       | @B_SectionMember3   | @B_SectionMember2_CanViewContent2               |               |                         |                     | 18            | @B_SectionMember2 is_mine=1 -> notok: not the participant                                                                     |
       | @B_SectionMember2   | @B_SectionMember2_CanViewContentWithDescendants |               |                         |                     | 19            | @B_SectionMember2 is_mine=1 -> ok: can_view >= content                                                                        |
-      | @OtherGroupMember   | @Item4                                          |               |                         |                     | 20            |                                                                                                                               |
+      | @OtherGroupMember   | @Item2                                          |               |                         |                     | 20            |                                                                                                                               |
     And the time now is "2022-01-01T00:00:00Z"
 
   Scenario: Should have all the fields properly set, including first_name and last_name when the access is approved
@@ -99,6 +106,10 @@ Feature: List threads
       | id | type | default_language_tag |
       | 1  | Task | fr                   |
       | 2  | Task | en                   |
+    And the database has the following table 'permissions_generated':
+      | group_id                   | item_id | can_view_generated |
+      | @LaboratoryManagerCanWatch | 1       | content            |
+      | @LaboratoryManagerCanWatch | 2       | content            |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title      |
       | 1       | en           | Beginning  |
@@ -155,13 +166,13 @@ Feature: List threads
     When I send a GET request to "/threads?watched_group_id=@A_University"
     And the response at $[*].participant.id should be:
       | @A_UniversityMember |
-      | @A_ClassMember      |
+      | @A_ClassMember1     |
 
   Scenario: Should get the threads whose the participant is equal to the watched_group_id
     Given I am @A_UniversityManagerCanWatch
-    When I send a GET request to "/threads?watched_group_id=@A_ClassMember"
+    When I send a GET request to "/threads?watched_group_id=@A_ClassMember1"
     And the response should be a JSON array with 1 entries
-    And the response at $[0].participant.id should be "@A_ClassMember"
+    And the response at $[0].participant.id should be "@A_ClassMember1"
 
   Scenario: Should return only the threads in which the participant is the current user and the item is visible when is_mine=1
     Given I am @B_SectionMember2

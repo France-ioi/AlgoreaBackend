@@ -31,6 +31,11 @@ func (conn *DB) WhereItemsAreVisible(groupID int64) *DB {
 	return conn.WhereGroupHasPermissionOnItems(groupID, "view", "info")
 }
 
+// WhereItemsContentAreVisible returns a subview of the content visible items for the given group.
+func (conn *DB) WhereItemsContentAreVisible(groupID int64) *DB {
+	return conn.WhereGroupHasPermissionOnItems(groupID, "view", "content")
+}
+
 // WhereGroupHasPermissionOnItems returns a subview of the items
 // on that the given group has `can_[permissionKind]_generated` >= `neededPermission`
 // basing on the given view.
