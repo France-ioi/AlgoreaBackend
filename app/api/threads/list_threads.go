@@ -62,6 +62,9 @@ type participant struct {
 //			* if `watched_group_id` is given: the current-user must be (implicitly or explicitly) a manager
 //				with `can_watch_members` on `watched_group_id`.
 //
+//		Extra:
+//			* By default, ordering is by `latest_update_at` DESC.
+//
 //	parameters:
 //		- name: watched_group_id
 //			in: query
@@ -70,7 +73,31 @@ type participant struct {
 //		- name: is_mine
 //			in: query
 //			type: boolean
-//
+//		- name: sort
+//			in: query
+//			default: [-latest_update_at]
+//			type: array
+//			items:
+//				type: string
+//				enum: [latest_update_at,-latest_update_at]
+//		- name: from.item_id
+//			description: >
+//				Start the page from the thread next to the thread with `threads.item.id`=`{from.item_id}`.
+//				When provided, from.participant_id should be provided too.
+//			in: query
+//			type: integer
+//		- name: from.participant_id
+//			description: >
+//				Start the page from the thread next to the thread with `threads.participant.id`=`{from.participant_id}`.
+//				When provided, from.item_id should be provided too.
+//			in: query
+//			type: integer
+//		- name: limit
+//			description: Display the first N threads
+//			in: query
+//			type: integer
+//			maximum: 1000
+//			default: 500
 //	responses:
 //
 //		"200":
@@ -142,11 +169,10 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 		)
 	}
 
-	err := query.
+	queryDB := query.
 		WhereItemsContentAreVisible(user.GroupID).
 		JoinsUserAndDefaultItemStrings(user).
 		WithPersonalInfoViewApprovals(user).
-		Order("items.id ASC"). // Default to make the result deterministic.
 		Select(`
 			items.id AS item__id,
 			items.type AS item__type,
@@ -159,9 +185,26 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 			threads.status AS status,
 			threads.message_count AS message_count,
 			threads.latest_update_at AS latest_update_at
-		`, user.GroupID, user.GroupID).
-		Scan(&threads).
-		Error()
+		`, user.GroupID, user.GroupID)
+
+	queryDB = service.NewQueryLimiter().Apply(r, queryDB)
+	queryDB, apiError = service.ApplySortingAndPaging(r, queryDB, &service.SortingAndPagingParameters{
+		Fields: service.SortingAndPagingFields{
+			"latest_update_at": {ColumnName: "threads.latest_update_at"},
+			"item_id":          {ColumnName: "items.id"},
+			"participant_id":   {ColumnName: "threads.participant_id"},
+		},
+		DefaultRules: "-latest_update_at",
+		TieBreakers: service.SortingAndPagingTieBreakers{
+			"item_id":        service.FieldTypeInt64,
+			"participant_id": service.FieldTypeInt64,
+		},
+	})
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	err := queryDB.Scan(&threads).Error()
 	service.MustNotBeError(err)
 
 	render.Respond(rw, r, threads)
