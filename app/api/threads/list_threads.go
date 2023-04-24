@@ -35,6 +35,13 @@ type participant struct {
 	LastName  string `json:"last_name"`
 }
 
+type listThreadParameters struct {
+	WatchedGroupID int64
+	IsMine         bool
+	ItemID         int64
+	Status         string
+}
+
 // swagger:operation GET /thread threads listThreads
 //
 //	---
@@ -55,7 +62,7 @@ type participant struct {
 //		* If `watched_group_id` is given, only threads in which the participant is descendant (including self)
 //			of the `watched_group_id` are returned.
 //		* If `item_id` is given, only threads for which the `item_id` is or is descendant of the given `item_id` are returned.
-//		* `first_name` and `last_name` are only returned for the current user or if the user approved access to their personal
+//		* `first_name` and `last_name` are only returned for the current user, or if the user approved access to their personal
 //			info for some group managed by the current user.
 //
 //		Validations:
@@ -64,6 +71,7 @@ type participant struct {
 //
 //		Extra:
 //			* By default, ordering is by `latest_update_at` DESC.
+//			* Filter by `status` by providing the `status` parameter with the filter value.
 //
 //	parameters:
 //		- name: watched_group_id
@@ -73,6 +81,11 @@ type participant struct {
 //		- name: is_mine
 //			in: query
 //			type: boolean
+//		- name: status
+//			description: Filter by status
+//			in: query
+//			type: string
+//			enum: [waiting_for_participant,waiting_for_trainer,closed]
 //		- name: sort
 //			in: query
 //			default: [-latest_update_at]
@@ -115,7 +128,7 @@ type participant struct {
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service.APIError {
-	watchedGroupID, itemID, isMine, apiError := srv.resolveListThreadParameters(r)
+	params, apiError := srv.resolveListThreadParameters(r)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -128,22 +141,28 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 		JoinsItem().
 		JoinsUserParticipant()
 
-	if itemID != 0 {
+	if params.ItemID != 0 {
 		query = query.NewThreadStore(query.
-			WhereItemsAreSelfOrDescendantsOf(itemID),
+			WhereItemsAreSelfOrDescendantsOf(params.ItemID),
+		)
+	}
+
+	if params.Status != "" {
+		query = query.NewThreadStore(query.
+			Where("threads.status = ?", params.Status),
 		)
 	}
 
 	switch {
-	case watchedGroupID != 0:
-		query = query.WhereParticipantIsInGroup(watchedGroupID)
+	case params.WatchedGroupID != 0:
+		query = query.WhereParticipantIsInGroup(params.WatchedGroupID)
 
-	case isMine:
+	case params.IsMine:
 		query = query.NewThreadStore(query.
 			Where("threads.participant_id = ?", user.GroupID),
 		)
 
-	case !isMine:
+	case !params.IsMine:
 		// The user needs to:
 		// - be allowed to view the item, AND
 		// - not be the participant of the thread, AND
@@ -152,7 +171,7 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 		//		* [userCanHelpQuery] The conditions of "WhereUserCanHelp"
 
 		// It doesn't seem to be very efficient to do this. We could try to leverage the fact that MatchingGroupAncestors
-		// is used in both canWatchAnswerQuery and WhereItemsAreVisible, if we measure perf issues.
+		// is used in both canWatchAnswerQuery and WhereItemsAreVisible if we measure perf issues.
 		canWatchAnswerQuery := store.Threads().
 			Select("items.id").
 			WhereUserHasPermissionOnItems(user, "watch", "answer").
@@ -211,30 +230,38 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
-func (srv *Service) resolveListThreadParameters(r *http.Request) (watchedGroupID, itemID int64, isMine bool, apiError service.APIError) {
+func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThreadParameters, apiError service.APIError) {
 	var watchedGroupOK bool
-	watchedGroupID, watchedGroupOK, apiError = srv.ResolveWatchedGroupID(r)
+	params.WatchedGroupID, watchedGroupOK, apiError = srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
-		return 0, 0, false, apiError
+		return params, apiError
 	}
 
 	var isMineError error
-	isMine, isMineError = service.ResolveURLQueryGetBoolField(r, "is_mine")
+	params.IsMine, isMineError = service.ResolveURLQueryGetBoolField(r, "is_mine")
 
 	if watchedGroupOK && isMineError == nil {
-		return 0, 0, false, service.ErrInvalidRequest(errors.New("must not provide watched_group_id and is_mine at the same time"))
+		return params, service.ErrInvalidRequest(errors.New("must not provide watched_group_id and is_mine at the same time"))
 	}
 	if !watchedGroupOK && isMineError != nil {
-		return 0, 0, false, service.ErrInvalidRequest(errors.New("one of watched_group_id or is_mine must be given"))
+		return params, service.ErrInvalidRequest(errors.New("one of watched_group_id or is_mine must be given"))
 	}
 
+	var err error
+
 	if len(r.URL.Query()["item_id"]) > 0 {
-		var err error
-		itemID, err = service.ResolveURLQueryGetInt64Field(r, "item_id")
+		params.ItemID, err = service.ResolveURLQueryGetInt64Field(r, "item_id")
 		if err != nil {
-			return 0, 0, false, service.ErrInvalidRequest(err)
+			return params, service.ErrInvalidRequest(err)
 		}
 	}
 
-	return watchedGroupID, itemID, isMine, service.NoError
+	if len(r.URL.Query()["status"]) > 0 {
+		params.Status, err = service.ResolveURLQueryGetStringField(r, "status")
+		if err != nil {
+			return params, service.ErrInvalidRequest(err)
+		}
+	}
+
+	return params, service.NoError
 }

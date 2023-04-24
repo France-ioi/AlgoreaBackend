@@ -276,3 +276,25 @@ Feature: List threads
       | from.item_id     | from.participant_id | nb_results | result_item      |
       | @TaskMinUpdateAt | @John               | 1          | @TaskMaxUpdateAt |
       | @TaskMaxUpdateAt | @John               | 0          |                  |
+
+  Scenario Outline: Should filter by status if parameter status is given
+    Given I am @John
+    And there are the following items:
+      | item                             | type |
+      | @TaskWaitingForParticipantThread | Task |
+      | @TaskWaitingForTrainerThread     | Task |
+      | @TaskClosedThread                | Task |
+    And there are the following threads:
+      | participant | item                             | status                  | visible_by_participant |
+      | @John       | @TaskWaitingForParticipantThread | waiting_for_participant | 1                      |
+      | @John       | @TaskWaitingForTrainerThread     | waiting_for_trainer     | 1                      |
+      | @John       | @TaskClosedThread                | closed                  | 1                      |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&status=<status>"
+    Then the response code should be 200
+    And the response should be a JSON array with 1 entries
+    And the response at $[0].item.id should be "<result_item>"
+    Examples:
+      | status              | result_item                  |
+      | waiting_for_trainer | @TaskWaitingForTrainerThread |
+      | closed              | @TaskClosedThread            |
