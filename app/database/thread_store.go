@@ -11,6 +11,11 @@ type ThreadStore struct {
 	*DataStore
 }
 
+// NewThreadStore returns a new thread store.
+func (s *DataStore) NewThreadStore(db *DB) *ThreadStore {
+	return &ThreadStore{NewDataStoreWithTable(db, s.tableName)}
+}
+
 // UpdateHelperGroupID updates all occurrences of a certain helper_group_id to a new value.
 func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int64) {
 	var err error
@@ -53,21 +58,9 @@ func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64)
 		return true
 	}
 
-	// the following rules all matches:
-	// the current-user is descendant of the thread helper_group
-	// the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
-	// the current-user has validated the item
-
-	now := time.Now()
-	twoWeeksAgo := now.AddDate(0, 0, -14)
 	currentUserCanHelp, err := s.Threads().
-		Joins("JOIN results ON results.item_id = threads.item_id").
-		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", user.GroupID).
-		Where("threads.helper_group_id = groups_ancestors_active.ancestor_group_id").
+		WhereUserCanHelp(user).
 		Where("threads.item_id = ?", itemID).
-		Where("threads.status != 'closed' OR threads.latest_update_at > ?", twoWeeksAgo).
-		Where("results.participant_id = ?", user.GroupID).
-		Where("results.validated").
 		Limit(1).
 		HasRows()
 	mustNotBeError(err)
@@ -184,27 +177,44 @@ func (s *ThreadStore) UserCanChangeStatus(user *User, oldStatus, newStatus strin
 }
 
 // WhereParticipantIsInGroup filters the threads on the participant.
-func (s *ThreadStore) WhereParticipantIsInGroup(groupID int64) *DB {
-	return s.Joins(`
-		JOIN groups_ancestors_active ON
-				 	threads.participant_id = groups_ancestors_active.child_group_id AND
-					groups_ancestors_active.ancestor_group_id = ?`, groupID)
+func (s *ThreadStore) WhereParticipantIsInGroup(groupID int64) *ThreadStore {
+	return s.NewThreadStore(
+		s.Joins(`
+			JOIN groups_ancestors_active ON
+						threads.participant_id = groups_ancestors_active.child_group_id AND
+						groups_ancestors_active.ancestor_group_id = ?`, groupID),
+	)
+}
+
+// WhereUserCanHelp filters the thread where the user can help.
+func (s *ThreadStore) WhereUserCanHelp(user *User) *ThreadStore {
+	// the following rules all matches:
+	// the current-user is descendant of the thread helper_group
+	// the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
+	// the current-user has validated the item
+
+	now := time.Now()
+	twoWeeksAgo := now.AddDate(0, 0, -14)
+
+	return s.NewThreadStore(
+		s.Joins("JOIN results ON results.item_id = threads.item_id AND results.participant_id = ?", user.GroupID).
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", user.GroupID).
+			Where("threads.helper_group_id = groups_ancestors_active.ancestor_group_id").
+			Where("threads.status != 'closed' OR threads.latest_update_at > ?", twoWeeksAgo).
+			Where("results.validated"),
+	)
 }
 
 // JoinsItem joins the items table in the query.
 func (s *ThreadStore) JoinsItem() *ThreadStore {
-	return &ThreadStore{
-		NewDataStoreWithTable(
-			s.Joins("JOIN items ON	items.id = threads.item_id"), s.tableName,
-		),
-	}
+	return s.NewThreadStore(
+		s.Joins("JOIN items ON	items.id = threads.item_id"),
+	)
 }
 
 // JoinsUserParticipant joins the user participant in the query.
 func (s *ThreadStore) JoinsUserParticipant() *ThreadStore {
-	return &ThreadStore{
-		NewDataStoreWithTable(
-			s.Joins("JOIN users ON	users.group_id = threads.participant_id"), s.tableName,
-		),
-	}
+	return s.NewThreadStore(
+		s.Joins("JOIN users ON	users.group_id = threads.participant_id"),
+	)
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 const ReferencePrefix = '@'
@@ -299,17 +300,23 @@ func (ctx *TestContext) getThreadKey(itemID, participantID int64) string {
 }
 
 // addThread adds a thread in database.
-func (ctx *TestContext) addThread(item, participant, helperGroup, status, messageCount string) {
+func (ctx *TestContext) addThread(item, participant, helperGroup, status, messageCount, latestUpdateAt string) {
 	itemID := ctx.getReference(item)
 	participantID := ctx.getReference(participant)
 	helperGroupID := ctx.getReference(helperGroup)
 
+	latestUpdateAtDate, err := time.Parse(utils.DateTimeFormat, latestUpdateAt)
+	if err != nil {
+		panic(err)
+	}
+
 	ctx.addInDatabase("threads", ctx.getThreadKey(itemID, participantID), map[string]interface{}{
-		"item_id":         itemID,
-		"participant_id":  participantID,
-		"helper_group_id": helperGroupID,
-		"status":          status,
-		"message_count":   messageCount,
+		"item_id":          itemID,
+		"participant_id":   participantID,
+		"helper_group_id":  helperGroupID,
+		"status":           status,
+		"message_count":    messageCount,
+		"latest_update_at": latestUpdateAtDate,
 	})
 }
 
@@ -648,6 +655,7 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 	if err != nil {
 		return err
 	}
+
 	ctx.addPersonalInfoViewApprovedFor(user, group)
 
 	return nil
@@ -748,6 +756,10 @@ func (ctx *TestContext) ThereAreTheFollowingThreads(threads *messages.PickleStep
 				threadParameters["latest_update_at"] = thread["latest_update_at"]
 			}
 
+			if thread["message_count"] != "" {
+				threadParameters["message_count"] = thread["message_count"]
+			}
+
 			err := ctx.ThereIsAThreadWith(getParameterString(threadParameters))
 			if err != nil {
 				return err
@@ -793,12 +805,24 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 		thread["message_count"] = "0"
 	}
 
+	// add latest update at
+	if _, ok := thread["latest_update_at"]; !ok {
+		thread["latest_update_at"] = time.Now().Format(utils.DateTimeFormat)
+	}
+
 	ctx.currentThreadKey = ctx.getThreadKey(
 		ctx.getReference(thread["item_id"]),
 		ctx.getReference(thread["participant_id"]),
 	)
 
-	ctx.addThread(thread["item_id"], thread["participant_id"], thread["helper_group_id"], thread["status"], thread["message_count"])
+	ctx.addThread(
+		thread["item_id"],
+		thread["participant_id"],
+		thread["helper_group_id"],
+		thread["status"],
+		thread["message_count"],
+		thread["latest_update_at"],
+	)
 
 	return nil
 }
