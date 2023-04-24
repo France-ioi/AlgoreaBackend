@@ -122,8 +122,9 @@ func ResolveURLQueryGetTimeField(httpReq *http.Request, name string) (time.Time,
 
 // ResolveURLQueryGetBoolField extracts a get-parameter of type bool (0 or 1) from the query, fails if the value is empty.
 func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, error) {
-	if len(httpReq.URL.Query()[name]) == 0 {
-		return false, fmt.Errorf("missing %s", name)
+	err := checkQueryGetFieldIsNotMissing(httpReq, name)
+	if err != nil {
+		return false, err
 	}
 	strValue := httpReq.URL.Query().Get(name)
 	if strValue == "0" {
@@ -148,10 +149,16 @@ func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, e
 	return int64Value, nil
 }
 
+// URLQueryPathHasField checks whether a field is present in the query.
+func URLQueryPathHasField(httpReq *http.Request, name string) bool {
+	return len(httpReq.URL.Query()[name]) > 0
+}
+
 func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
-	if len(httpReq.URL.Query()[name]) == 0 {
+	if !URLQueryPathHasField(httpReq, name) {
 		return fmt.Errorf("missing %s", name)
 	}
+
 	return nil
 }
 

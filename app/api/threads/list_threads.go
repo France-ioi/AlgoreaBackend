@@ -3,6 +3,7 @@ package threads
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
 
@@ -40,6 +41,7 @@ type listThreadParameters struct {
 	IsMine         bool
 	ItemID         int64
 	Status         string
+	LatestUpdateGt *time.Time
 }
 
 // swagger:operation GET /thread threads listThreads
@@ -72,6 +74,7 @@ type listThreadParameters struct {
 //		Extra:
 //			* By default, ordering is by `latest_update_at` DESC.
 //			* Filter by `status` by providing the `status` parameter with the filter value.
+//			* Filter by greater than `latest_update_at` by providing the `latest_update_gt` with a datetime in UTC8601 format.
 //
 //	parameters:
 //		- name: watched_group_id
@@ -86,13 +89,18 @@ type listThreadParameters struct {
 //			in: query
 //			type: string
 //			enum: [waiting_for_participant,waiting_for_trainer,closed]
+//		- name: latest_update_gt
+//			description: Only threads where `latest_update_at`>`latest_update_gt`.
+//			in: query
+//			type: string
+//			format: date-time
 //		- name: sort
 //			in: query
-//			default: [-latest_update_at]
+//			default: [-latest_update_at,item_id,participant_id]
 //			type: array
 //			items:
 //				type: string
-//				enum: [latest_update_at,-latest_update_at]
+//				enum: [latest_update_at,-latest_update_at,item_id,-item_id,participant_id,-participant_id]
 //		- name: from.item_id
 //			description: >
 //				Start the page from the thread next to the thread with `threads.item.id`=`{from.item_id}`.
@@ -133,10 +141,24 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 		return apiError
 	}
 
+	var queryDB *database.DB
+	queryDB, apiError = srv.constructListThreadsQuery(r, params)
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	var threads []thread
+	err := queryDB.Scan(&threads).Error()
+	service.MustNotBeError(err)
+
+	render.Respond(rw, r, threads)
+	return service.NoError
+}
+
+func (srv *Service) constructListThreadsQuery(r *http.Request, params listThreadParameters) (*database.DB, service.APIError) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	var threads []thread
 	query := store.Threads().
 		JoinsItem().
 		JoinsUserParticipant()
@@ -150,6 +172,12 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	if params.Status != "" {
 		query = query.NewThreadStore(query.
 			Where("threads.status = ?", params.Status),
+		)
+	}
+
+	if params.LatestUpdateGt != nil {
+		query = query.NewThreadStore(query.
+			Where("threads.latest_update_at > ?", params.LatestUpdateGt),
 		)
 	}
 
@@ -206,7 +234,19 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 			threads.latest_update_at AS latest_update_at
 		`, user.GroupID, user.GroupID)
 
+	var apiError service.APIError
+	queryDB, apiError = applySortingAndPaging(r, queryDB)
+	if apiError != service.NoError {
+		return queryDB, apiError
+	}
+
+	return queryDB, service.NoError
+}
+
+func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB, service.APIError) {
 	queryDB = service.NewQueryLimiter().Apply(r, queryDB)
+
+	var apiError service.APIError
 	queryDB, apiError = service.ApplySortingAndPaging(r, queryDB, &service.SortingAndPagingParameters{
 		Fields: service.SortingAndPagingFields{
 			"latest_update_at": {ColumnName: "threads.latest_update_at"},
@@ -219,15 +259,8 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 			"participant_id": service.FieldTypeInt64,
 		},
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 
-	err := queryDB.Scan(&threads).Error()
-	service.MustNotBeError(err)
-
-	render.Respond(rw, r, threads)
-	return service.NoError
+	return queryDB, apiError
 }
 
 func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThreadParameters, apiError service.APIError) {
@@ -249,18 +282,36 @@ func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThr
 
 	var err error
 
-	if len(r.URL.Query()["item_id"]) > 0 {
+	if service.URLQueryPathHasField(r, "item_id") {
 		params.ItemID, err = service.ResolveURLQueryGetInt64Field(r, "item_id")
 		if err != nil {
 			return params, service.ErrInvalidRequest(err)
 		}
 	}
 
-	if len(r.URL.Query()["status"]) > 0 {
-		params.Status, err = service.ResolveURLQueryGetStringField(r, "status")
+	params, apiError = resolveFilterParameters(r, params)
+	if apiError != service.NoError {
+		return params, apiError
+	}
+
+	return params, service.NoError
+}
+
+func resolveFilterParameters(r *http.Request, params listThreadParameters) (listThreadParameters, service.APIError) {
+	var err error
+
+	params.Status, err = service.ResolveURLQueryGetStringField(r, "status")
+	if err != nil {
+		params.Status = ""
+	}
+
+	if service.URLQueryPathHasField(r, "latest_update_gt") {
+		latestUpdateGt, err := service.ResolveURLQueryGetTimeField(r, "latest_update_gt")
 		if err != nil {
 			return params, service.ErrInvalidRequest(err)
 		}
+
+		params.LatestUpdateGt = &latestUpdateGt
 	}
 
 	return params, service.NoError

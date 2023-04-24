@@ -159,7 +159,7 @@ Feature: List threads
           "status": "waiting_for_trainer"
         }
       ]
-    """
+      """
 
   Scenario: Should get the threads whose the participant is a descendant of the watched_group_id
     Given I am @A_UniversityManagerCanWatch
@@ -266,7 +266,7 @@ Feature: List threads
     And there are the following threads:
       | participant | item             | visible_by_participant | latest_update_at    |
       | @John       | @TaskMinUpdateAt | 1                      | 2023-01-01 00:00:01 |
-      | @John       | @TaskMaxUpdateAt | 1                      | 2023-01-01 00:00:02  |
+      | @John       | @TaskMaxUpdateAt | 1                      | 2023-01-01 00:00:02 |
     And I am @John
     When I send a GET request to "/threads?is_mine=1&limit=1&sort=latest_update_at&from.item_id=<from.item_id>&from.participant_id=<from.participant_id>"
     Then the response code should be 200
@@ -298,3 +298,26 @@ Feature: List threads
       | status              | result_item                  |
       | waiting_for_trainer | @TaskWaitingForTrainerThread |
       | closed              | @TaskClosedThread            |
+
+  Scenario Outline: Should return only the thread with latest_update_at>latest_update_gt if parameter latest_update_gt is given
+    Given I am @John
+    And there are the following items:
+      | item   | type |
+      | @Task1 | Task |
+      | @Task2 | Task |
+      | @Task3 | Task |
+    And there are the following threads:
+      | participant | item   | visible_by_participant | latest_update_at    |
+      | @John       | @Task1 | 1                      | 2023-01-01 00:00:01 |
+      | @John       | @Task2 | 1                      | 2023-01-01 00:00:02 |
+      | @John       | @Task3 | 1                      | 2023-01-01 00:00:03 |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&latest_update_gt=<latest_update_gt>&sort=latest_update_at"
+    Then the response code should be 200
+    And the response should be a JSON array with <nb_results> entries
+    And the response at $[0].item.id should be "<first_result_item>"
+    Examples:
+      | latest_update_gt     | first_result_item | nb_results |
+      | 2023-01-01T00:00:00Z | @Task1            | 3          |
+      | 2023-01-01T00:00:02Z | @Task3            | 1          |
+      | 2023-01-01T00:00:03Z |                   | 0          |
