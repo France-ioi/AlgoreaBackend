@@ -43,7 +43,9 @@ type participant struct {
 //
 //		Service to list the visible threads for a user.
 //
-//		Exactly one of [`watched_group_id`, `is_mine`] is given
+//		Exactly one of [`watched_group_id`, `is_mine`] is given.
+//
+//		Only thread for which the item has can_view>=content for the current user are returned.
 //
 //		* If `is_mine` = 1, only threads for which the participant is the current-user and for which the current-user has
 //			`can_view >= content` on the item are returned.
@@ -104,7 +106,6 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 
 	case isMine:
 		query = query.NewThreadStore(query.
-			WhereGroupHasPermissionOnItems(user.GroupID, "view", "content").
 			Where("threads.participant_id = ?", user.GroupID),
 		)
 
@@ -129,13 +130,13 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 			SubQuery()
 
 		query = query.NewThreadStore(query.
-			WhereItemsAreVisible(user.GroupID).
 			Where("threads.participant_id != ?", user.GroupID).
 			Where("threads.item_id IN (?) OR (threads.item_id, threads.participant_id) IN (?)", canWatchAnswerQuery, userCanHelpQuery),
 		)
 	}
 
 	err := query.
+		WhereItemsContentAreVisible(user.GroupID).
 		JoinsUserAndDefaultItemStrings(user).
 		WithPersonalInfoViewApprovals(user).
 		Order("items.id ASC"). // Default to make the result deterministic.
