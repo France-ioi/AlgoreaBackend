@@ -72,6 +72,15 @@ func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgume
 
 // populateDatabase populate the database with all the initialized data.
 func (ctx *TestContext) populateDatabase() error {
+	// We cannot run this for older tests because we're computing the tables permissions_generated and item_ancestors.
+	// Older tests define those tables manually with inconsistencies, and then check that the content of those tables is
+	// still in the same inconsistent state.
+	// If we want this to be run everywhere, we would have to fix those tests first.
+	// We would then just have to remove the ctx.needPopulateDatabase boolean completely.
+	if !ctx.needPopulateDatabase {
+		return nil
+	}
+
 	db, err := database.Open(ctx.db())
 	if err != nil {
 		return err
@@ -97,6 +106,11 @@ func (ctx *TestContext) populateDatabase() error {
 		return err
 	}
 
+	err = ctx.DBItemsAncestorsAndPermissionsAreComputed()
+	if err != nil {
+		return err
+	}
+
 	return ctx.DBGroupsAncestorsAreComputed()
 }
 
@@ -109,33 +123,23 @@ func (ctx *TestContext) isInDatabase(tableName, key string) bool {
 	return ok
 }
 
-func mergeFields(row1, row2 map[string]interface{}) map[string]interface{} {
-	merged := row1
-	for key, value := range row2 {
-		merged[key] = value
+func mergeFields(oldValues, newValues map[string]interface{}) map[string]interface{} {
+	merged := oldValues
+	for key, newValue := range newValues {
+		merged[key] = newValue
 	}
 
 	return merged
 }
 
 func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]interface{}) {
+	ctx.needPopulateDatabase = true
+
 	if ctx.dbTables[tableName] == nil {
 		ctx.dbTables[tableName] = make(map[string]map[string]interface{})
 	}
 
-	if oldRow, ok := ctx.dbTables[tableName][key]; ok {
-		row = mergeFields(oldRow, row)
-	}
-
 	ctx.dbTables[tableName][key] = row
-}
-
-func (ctx *TestContext) getUserKey(fields map[string]string) string {
-	if _, ok := fields["group_id"]; !ok {
-		panic(fmt.Errorf("getUserKey: %v must have a group_id", fields))
-	}
-
-	return fields["group_id"]
 }
 
 // addUser adds a user in database.
@@ -156,7 +160,13 @@ func (ctx *TestContext) addUser(fields map[string]string) {
 		}
 	}
 
-	ctx.addInDatabase("users", ctx.getUserKey(fields), dbFields)
+	userKey := strconv.FormatInt(dbFields["group_id"].(int64), 10)
+
+	if oldFields, ok := ctx.dbTables["users"][userKey]; ok {
+		dbFields = mergeFields(oldFields, dbFields)
+	}
+
+	ctx.addInDatabase("users", userKey, dbFields)
 }
 
 // addGroup adds a group in database.
@@ -170,7 +180,7 @@ func (ctx *TestContext) addGroup(group, name, groupType string) {
 	})
 }
 
-// addPermissionGenerated adds a permission generated in the database.
+// addPersonalInfoViewApprovedFor adds a permission generated in the database.
 func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroup, parentGroup string) {
 	parentGroupID := ctx.getReference(parentGroup)
 	childGroupID := ctx.getReference(childGroup)
@@ -216,39 +226,27 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers string) 
 	)
 }
 
-// addPermissionGenerated adds a permission generated in the database.
-func (ctx *TestContext) addPermissionGenerated(group, item, watchType, watchValue string) {
+// addPermissionsGranted adds a permission granted in the database.
+func (ctx *TestContext) addPermissionGranted(group, item, permission, permissionValue string) {
 	groupID := ctx.getReference(group)
 	itemID := ctx.getReference(item)
 
-	permissionsGeneratedTable := "permissions_generated"
+	permissionsGrantedTable := "permissions_granted"
 	key := strconv.FormatInt(groupID, 10) + "," + strconv.FormatInt(itemID, 10)
-	if !ctx.isInDatabase(permissionsGeneratedTable, key) {
-		ctx.addInDatabase(permissionsGeneratedTable, key, map[string]interface{}{
-			"group_id": groupID,
-			"item_id":  itemID,
+
+	if !ctx.isInDatabase(permissionsGrantedTable, key) {
+		ctx.addInDatabase(permissionsGrantedTable, key, map[string]interface{}{
+			"group_id":        groupID,
+			"source_group_id": groupID,
+			"item_id":         itemID,
 		})
 	}
 
-	ctx.dbTables[permissionsGeneratedTable][key]["can_"+watchType+"_generated"] = watchValue
-}
+	if permission == "can_request_help_to" {
+		permissionValue = strconv.FormatInt(ctx.getReference(permissionValue), 10)
+	}
 
-// addPermissionsGranted adds a permission granted in the database.
-func (ctx *TestContext) addPermissionGranted(group, sourceGroup, item, canRequestHelpTo string) {
-	groupID := ctx.getReference(group)
-	sourceGroupID := ctx.getReference(sourceGroup)
-	itemID := ctx.getReference(item)
-
-	ctx.addInDatabase(
-		"permissions_granted",
-		strconv.FormatInt(groupID, 10)+","+strconv.FormatInt(itemID, 10),
-		map[string]interface{}{
-			"group_id":            groupID,
-			"source_group_id":     sourceGroupID,
-			"item_id":             itemID,
-			"can_request_help_to": canRequestHelpTo,
-		},
-	)
+	ctx.dbTables[permissionsGrantedTable][key][permission] = permissionValue
 }
 
 // addAttempt adds an attempt in database.
@@ -283,15 +281,57 @@ func (ctx *TestContext) addResult(attemptID, participant, item string, validated
 	)
 }
 
-// addItem adds an item in the database.
-func (ctx *TestContext) addItem(item string) {
-	itemID := ctx.getReference(item)
+// addItemItem adds an item-item in the database.
+func (ctx *TestContext) addItemItem(parentItem, childItem string) {
+	parentItemID := ctx.getReference(parentItem)
+	childItemID := ctx.getReference(childItem)
 
-	ctx.addInDatabase("items", strconv.FormatInt(itemID, 10), map[string]interface{}{
-		"id":                   itemID,
-		"default_language_tag": "en",
-		"type":                 "Task",
-	})
+	ctx.addInDatabase(
+		"items_items",
+		strconv.FormatInt(parentItemID, 10)+","+strconv.FormatInt(childItemID, 10),
+		map[string]interface{}{
+			"parent_item_id": parentItemID,
+			"child_item_id":  childItemID,
+			"child_order":    rand.Int31n(1000),
+		},
+	)
+}
+
+// addItem adds an item in the database.
+func (ctx *TestContext) addItem(fields map[string]string) {
+	dbFields := make(map[string]interface{})
+	for key, value := range fields {
+		if key == "item" {
+			key = "id"
+		}
+
+		switch {
+		case strings.HasSuffix(key, "id"):
+			dbFields[key] = ctx.getReference(value)
+		case value[0] == ReferencePrefix:
+			dbFields[key] = value[1:]
+		default:
+			dbFields[key] = value
+		}
+	}
+
+	itemKey := strconv.FormatInt(dbFields["id"].(int64), 10)
+
+	if oldFields, ok := ctx.dbTables["items"][itemKey]; ok {
+		dbFields = mergeFields(oldFields, dbFields)
+	}
+
+	if _, ok := dbFields["type"]; !ok {
+		dbFields["type"] = "Task"
+	}
+	if _, ok := dbFields["default_language_tag"]; !ok {
+		dbFields["default_language_tag"] = "en"
+	}
+	if _, ok := dbFields["text_id"]; !ok && fields["item"][0] == ReferencePrefix {
+		dbFields["text_id"] = fields["item"][1:]
+	}
+
+	ctx.addInDatabase("items", itemKey, dbFields)
 }
 
 // getThreadKey gets a thread unique key for the thread's map.
@@ -549,12 +589,33 @@ func (ctx *TestContext) ICanWatchGroupWithID(group string) error {
 	}))
 }
 
+// ThereAreTheFollowingItems defines items.
+func (ctx *TestContext) ThereAreTheFollowingItems(items *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(items.Rows); i++ {
+		item := ctx.getRowMap(i, items)
+
+		ctx.addItem(map[string]string{
+			"item": item["item"],
+			"type": item["type"],
+		})
+
+		if _, ok := item["parent"]; ok {
+			ctx.addItemItem(item["parent"], item["item"])
+		}
+	}
+
+	return nil
+}
+
 // ThereAreTheFollowingTasks defines item tasks.
 func (ctx *TestContext) ThereAreTheFollowingTasks(tasks *messages.PickleStepArgument_PickleTable) error {
 	for i := 1; i < len(tasks.Rows); i++ {
 		task := ctx.getRowMap(i, tasks)
 
-		ctx.addItem(task["item"])
+		ctx.addItem(map[string]string{
+			"item": task["item"],
+			"type": "Task",
+		})
 	}
 
 	return nil
@@ -668,7 +729,7 @@ func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 
 // UserCanOnItemWithID gives a user a permission on an item.
 func (ctx *TestContext) UserCanOnItemWithID(watchType, watchValue, user, item string) error {
-	ctx.addPermissionGenerated(user, item, watchType, watchValue)
+	ctx.addPermissionGranted(user, item, "can_"+watchType, watchValue)
 
 	return nil
 }
@@ -678,13 +739,13 @@ func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue, item string) err
 	return ctx.UserCanOnItemWithID(watchType, watchValue, ctx.user, item)
 }
 
-func (ctx *TestContext) UserCanViewOnItemWithID(watchValue, user, item string) error {
-	return ctx.UserCanOnItemWithID("view", watchValue, user, item)
+func (ctx *TestContext) UserCanViewOnItemWithID(viewValue, user, item string) error {
+	return ctx.UserCanOnItemWithID("view", viewValue, user, item)
 }
 
 // ICanViewOnItemWithID gives the user a "view" permission on an item.
-func (ctx *TestContext) ICanViewOnItemWithID(watchValue, item string) error {
-	return ctx.UserCanOnItemWithID("view", watchValue, ctx.user, item)
+func (ctx *TestContext) ICanViewOnItemWithID(viewValue, item string) error {
+	return ctx.UserCanOnItemWithID("view", viewValue, ctx.user, item)
 }
 
 // UserCanWatchOnItemWithID gives a user a "watch" permission on an item.
@@ -715,7 +776,9 @@ func (ctx *TestContext) ThereAreTheFollowingResults(results *messages.PickleStep
 	for i := 1; i < len(results.Rows); i++ {
 		result := ctx.getRowMap(i, results)
 
-		ctx.addItem(result["item"])
+		ctx.addItem(map[string]string{
+			"item": result["item"],
+		})
 
 		err := ctx.UserHaveValidatedItemWithID(result["participant"], result["item"])
 		if err != nil {
@@ -733,37 +796,42 @@ func (ctx *TestContext) IHaveValidatedItemWithID(item string) error {
 
 // ThereAreTheFollowingThreads create threads.
 func (ctx *TestContext) ThereAreTheFollowingThreads(threads *messages.PickleStepArgument_PickleTable) error {
-	if len(threads.Rows) > 1 {
-		for i := 1; i < len(threads.Rows); i++ {
-			thread := ctx.getRowMap(i, threads)
-			threadParameters := make(map[string]string)
+	for i := 1; i < len(threads.Rows); i++ {
+		thread := ctx.getRowMap(i, threads)
+		threadParameters := make(map[string]string)
 
-			threadParameters["participant_id"] = thread["participant"]
+		threadParameters["participant_id"] = thread["participant"]
 
-			if thread["item"] != "" {
-				threadParameters["item_id"] = thread["item"]
-			}
+		if thread["item"] != "" {
+			threadParameters["item_id"] = thread["item"]
+		}
 
-			if thread["helper_group"] != "" {
-				threadParameters["helper_group_id"] = thread["helper_group"]
-			}
+		if thread["helper_group"] != "" {
+			threadParameters["helper_group_id"] = thread["helper_group"]
+		}
 
-			if thread["status"] != "" {
-				threadParameters["status"] = thread["status"]
-			}
+		if thread["status"] != "" {
+			threadParameters["status"] = thread["status"]
+		}
 
-			if thread["latest_update_at"] != "" {
-				threadParameters["latest_update_at"] = thread["latest_update_at"]
-			}
+		if thread["latest_update_at"] != "" {
+			threadParameters["latest_update_at"] = thread["latest_update_at"]
+		}
 
-			if thread["message_count"] != "" {
-				threadParameters["message_count"] = thread["message_count"]
-			}
+		if thread["message_count"] != "" {
+			threadParameters["message_count"] = thread["message_count"]
+		}
 
-			err := ctx.ThereIsAThreadWith(getParameterString(threadParameters))
+		if thread["visible_by_participant"] == "1" {
+			err := ctx.UserCanViewOnItemWithID("content", thread["participant"], thread["item"])
 			if err != nil {
 				return err
 			}
+		}
+
+		err := ctx.ThereIsAThreadWith(getParameterString(threadParameters))
+		if err != nil {
+			return err
 		}
 	}
 
@@ -778,7 +846,10 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	if _, ok := thread["item_id"]; !ok {
 		thread["item_id"] = strconv.FormatInt(rand.Int63(), 10)
 	}
-	ctx.addItem(thread["item_id"])
+
+	ctx.addItem(map[string]string{
+		"item": thread["item_id"],
+	})
 
 	// add helper_group_id
 	if _, ok := thread["helper_group_id"]; !ok {
@@ -831,7 +902,9 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 func (ctx *TestContext) ThereIsNoThreadWith(parameters string) error {
 	thread := ctx.getParameterMap(parameters)
 
-	ctx.addItem(thread["item_id"])
+	ctx.addItem(map[string]string{
+		"item": thread["item_id"],
+	})
 
 	return nil
 }
@@ -853,8 +926,8 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 func (ctx *TestContext) ICanRequestHelpToTheGroupWithIDOnTheItemWithID(group, item string) error {
 	ctx.addPermissionGranted(
 		ctx.user,
-		ctx.user,
 		item,
+		"can_request_help_to",
 		group,
 	)
 

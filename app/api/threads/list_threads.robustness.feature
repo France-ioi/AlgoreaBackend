@@ -11,6 +11,12 @@ Feature: List threads - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for watched_group_id (should be int64)"
 
+  Scenario: item_id should be an integer
+    Given I am @John
+    When I send a GET request to "/threads?is_mine=1&item_id=aaa"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for item_id (should be int64)"
+
   Scenario: The user should be a manager of watched_group_id group
     Given I am @John
     And there is a group @Classroom

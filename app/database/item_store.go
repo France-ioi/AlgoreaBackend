@@ -23,6 +23,13 @@ func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 	return s.Visible(groupID).Where("items.id = ?", itemID)
 }
 
+// WhereItemsAreSelfOrDescendantsOf filters items who are self or descendant of a given item.
+func (conn *DB) WhereItemsAreSelfOrDescendantsOf(itemAncestorID int64) *DB {
+	return conn.
+		Joins("LEFT JOIN items_ancestors ON items_ancestors.child_item_id = items.id").
+		Where("(items_ancestors.ancestor_item_id = ? OR items.id = ?)", itemAncestorID, itemAncestorID)
+}
+
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
 //   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)

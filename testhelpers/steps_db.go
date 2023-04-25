@@ -148,7 +148,47 @@ func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable
 	return ctx.DBHasTable("users", data)
 }
 
-func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { //nolint
+// saveTableFromDatabase saves the content of a table in database for some columns, in order to later check if the table
+// had changed after some manipulations.
+func (ctx *TestContext) saveTableFromDatabase(gormDB *database.DB, table string, columns []string) error {
+	headerCells := make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, len(columns))
+	for i, column := range columns {
+		headerCells[i] = &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+			Value: column,
+		}
+	}
+
+	ctx.dbTableData[table] = &messages.PickleStepArgument_PickleTable{
+		Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
+			{Cells: headerCells},
+		},
+	}
+
+	var rows []map[string]interface{}
+	err := gormDB.Table(table).Select(strings.Join(columns, ",")).
+		Order(strings.Join(columns, ",")).ScanIntoSliceOfMaps(&rows).Error()
+	if err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		rowCells := make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, len(columns))
+		for j, column := range columns {
+			rowCells[j] = &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
+				Value: row[column].(string),
+			}
+		}
+
+		ctx.dbTableData[table].Rows = append(ctx.dbTableData[table].Rows, &messages.PickleStepArgument_PickleTable_PickleTableRow{
+			Cells: rowCells,
+		})
+	}
+
+	return nil
+}
+
+// DBGroupsAncestorsAreComputed computes the groups_ancestors table.
+func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 	gormDB, err := database.Open(ctx.db())
 	if err != nil {
 		return err
@@ -161,30 +201,62 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error { //nolint
 		return err
 	}
 
-	ctx.dbTableData["groups_ancestors"] = &messages.PickleStepArgument_PickleTable{
-		Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
-			{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
-				{Value: "ancestor_group_id"}, {Value: "child_group_id"}, {Value: "expires_at"},
-			}},
-		},
-	}
-
-	var groupsAncestors []map[string]interface{}
-	err = gormDB.Table("groups_ancestors").Select("ancestor_group_id, child_group_id, expires_at").
-		Order("ancestor_group_id, child_group_id, expires_at").ScanIntoSliceOfMaps(&groupsAncestors).Error()
-
+	err = ctx.saveTableFromDatabase(gormDB, "groups_ancestors", []string{
+		"ancestor_group_id",
+		"child_group_id",
+		"expires_at",
+	})
 	if err != nil {
 		return err
 	}
 
-	for _, row := range groupsAncestors {
-		ctx.dbTableData["groups_ancestors"].Rows = append(ctx.dbTableData["groups_ancestors"].Rows,
-			&messages.PickleStepArgument_PickleTable_PickleTableRow{
-				Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
-					{Value: row["ancestor_group_id"].(string)}, {Value: row["child_group_id"].(string)}, {Value: row["expires_at"].(string)},
-				},
-			})
+	return nil
+}
+
+// DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
+func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
+	gormDB, err := database.Open(ctx.db())
+	if err != nil {
+		return err
 	}
+
+	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+		// We can consider keeping foreign_key_checks,
+		// but it'll break all tests that didn't define items while having permissions.
+		store.Exec("SET FOREIGN_KEY_CHECKS=0")
+		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
+
+		return store.ItemItems().After()
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ctx.saveTableFromDatabase(gormDB, "items_ancestors", []string{
+		"ancestor_item_id",
+		"child_item_id",
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ctx.saveTableFromDatabase(gormDB, "permissions_generated", []string{
+		"group_id",
+		"item_id",
+		"can_view_generated",
+		"can_grant_view_generated",
+		"can_watch_generated",
+		"can_edit_generated",
+		"is_owner_generated",
+		"can_view_generated_value",
+		"can_grant_view_generated_value",
+		"can_watch_generated_value",
+		"can_edit_generated_value",
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
