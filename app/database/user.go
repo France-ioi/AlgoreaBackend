@@ -48,6 +48,11 @@ func (u *User) CanWatchItemAnswer(s *DataStore, itemID int64) bool {
 	return u.HasItemPermission(s, itemID, "watch", "answer")
 }
 
+// CanWatchItemResult checks whether the user has can_watch >= result on an item.
+func (u *User) CanWatchItemResult(s *DataStore, itemID int64) bool {
+	return u.HasItemPermission(s, itemID, "watch", "result")
+}
+
 // CanViewItemContent checks whether the user has can_view >= content on an item.
 func (u *User) CanViewItemContent(s *DataStore, itemID int64) bool {
 	return u.HasItemPermission(s, itemID, "view", "content")
@@ -55,7 +60,7 @@ func (u *User) CanViewItemContent(s *DataStore, itemID int64) bool {
 
 // CanRequestHelpTo checks whether the user can request help on an item to a group.
 func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool {
-	// in order to verify that the user “can request help to” a group on an item we need to verify whether
+	// in order to verify that the user “can request help to” a group on an item, we need to verify whether
 	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
 	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
 
@@ -102,6 +107,18 @@ func (u *User) CanWatchGroupMembers(s *DataStore, groupID int64) bool {
 	mustNotBeError(err)
 
 	return userCanWatchGroupMembers
+}
+
+// HasStartedResultOnItem checks whether the user has a started result on an item.
+func (u *User) HasStartedResultOnItem(s *DataStore, itemID int64) bool {
+	hasStartedResultOntem, err := s.Items().
+		Where("items.id = ?", itemID).
+		WhereUserHaveStartedResultOnItem(u).
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return hasStartedResultOntem
 }
 
 // HasValidatedItem checks whether the user has validated an item.

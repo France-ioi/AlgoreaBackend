@@ -80,8 +80,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
 
 	s.Step(`^the response should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
-	s.Step(`^the response at ([^ ]+) should be "([^"]+)"$`, ctx.TheResponseAtShouldBeTheValue)
+	s.Step(`^the response at ([^ ]+) should be "([^"]*)"$`, ctx.TheResponseAtShouldBeTheValue)
 	s.Step("^the response at ([^ ]+) should be:$", ctx.TheResponseAtShouldBe)
+	s.Step("^the response should not be defined at ([^ ]+)$", ctx.TheResponseShouldNotBeDefinedAt)
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)

@@ -49,6 +49,17 @@ func (conn *DB) WhereGroupHasPermissionOnItems(groupID int64, permissionKind, ne
 	return conn.Where("EXISTS(?)", itemsPerms.QueryExpr())
 }
 
+// GroupHasPermissionOnItem checks if a group has a certain permission on an item.
+func (s *ItemStore) GroupHasPermissionOnItem(groupID, itemID int64, permissionKind, neededPermission string) bool {
+	hasPermission, err := s.
+		Where("items.id = ?", itemID).
+		WhereGroupHasPermissionOnItems(groupID, permissionKind, neededPermission).
+		HasRows()
+	mustNotBeError(err)
+
+	return hasPermission
+}
+
 // JoinsUserAndDefaultItemStrings joins items_strings with the given view twice
 // (as default_strings for item's default language and as user_strings for the user's default language).
 func (conn *DB) JoinsUserAndDefaultItemStrings(user *User) *DB {

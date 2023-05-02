@@ -48,11 +48,28 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 	}
 
 	value = ctx.replaceReferencesByIDs(value)
-	if jsonPathRes != value {
+
+	switch jsonPathResultTyped := jsonPathRes.(type) {
+	case []interface{}:
+		// When the result is an empty array, matches if we're looking for an empty value.
+		if len(jsonPathResultTyped) == 0 && value == "" {
+			return nil
+		}
+	case interface{}:
+		if jsonPathRes == value {
+			return nil
+		}
+
 		return fmt.Errorf("JSONPath %v doesn't match value %v: %v", jsonPath, ctx.lastResponseBody, value)
 	}
 
-	return nil
+	return fmt.Errorf(
+		"TheResponseAtShouldBeTheValue: Unhandled case for JSONPath %v=%v and value %v in %v",
+		jsonPath,
+		jsonPathRes,
+		value,
+		ctx.lastResponseBody,
+	)
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
@@ -97,6 +114,23 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 		}
 	}
 	return nil
+}
+
+// TheResponseShouldNotBeDefinedAt checks that the provided jsonPath doesn't exist.
+func (ctx *TestContext) TheResponseShouldNotBeDefinedAt(jsonPath string) error {
+	var JSONResponse interface{}
+	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
+	if err != nil {
+		return fmt.Errorf("TheResponseShouldNotBeDefinedAt: Unmarshal response: %v", err)
+	}
+
+	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
+	if err != nil {
+		//nolint:nilerr // We want jsonpath.Get to return an error.
+		return nil
+	}
+
+	return fmt.Errorf("TheResponseShouldNotBeDefinedAt: JsonPath: %v is defined with value %v", jsonPath, jsonPathRes)
 }
 
 func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint

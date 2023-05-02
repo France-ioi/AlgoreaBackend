@@ -16,6 +16,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 19 | Club    | Another Club   |
       | 20 | Friends | My Friends     |
       | 21 | User    | owner          |
+      | 22 | User    | owner2         |
       | 51 | User    | johna          |
       | 53 | User    | johnb          |
       | 55 | User    | johnc          |
@@ -27,21 +28,23 @@ Feature: Display the current progress of a participant on children of an item (g
       | 67 | User    | janed          |
       | 69 | User    | janee          |
     And the database has the following table 'users':
-      | login | group_id | default_language |
-      | owner | 21       | en               |
-      | johna | 51       | fr               |
-      | johnb | 53       | fr               |
-      | johnc | 55       | fr               |
-      | johnd | 57       | fr               |
-      | johne | 59       | fr               |
-      | janea | 61       | fr               |
-      | janeb | 63       | fr               |
-      | janec | 65       | fr               |
-      | janed | 67       | fr               |
-      | janee | 69       | fr               |
+      | login  | group_id | default_language |
+      | owner  | 21       | en               |
+      | owner2 | 22       | en               |
+      | johna  | 51       | fr               |
+      | johnb  | 53       | fr               |
+      | johnc  | 55       | fr               |
+      | johnd  | 57       | fr               |
+      | johne  | 59       | fr               |
+      | janea  | 61       | fr               |
+      | janeb  | 63       | fr               |
+      | janec  | 65       | fr               |
+      | janed  | 67       | fr               |
+      | janee  | 69       | fr               |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_watch_members |
       | 1        | 21         | true              |
+      | 1        | 22         | true              |
       | 19       | 4          | true              |
       | 51       | 4          | true              |
     And the database has the following table 'groups_groups':
@@ -50,6 +53,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 1               | 67             |
       | 3               | 13             |
       | 4               | 21             |
+      | 4               | 22             |
       | 11              | 14             |
       | 11              | 17             |
       | 11              | 18             |
@@ -117,6 +121,8 @@ Feature: Display the current progress of a participant on children of an item (g
       | 418  | Task    | fr                   | false    |
       | 419  | Task    | fr                   | false    |
       | 1010 | Chapter | fr                   | false    |
+      | 1020 | Chapter | fr                   | false    |
+      | 1030 | Task    | fr                   | false    |
     And the database has the following table 'items_strings':
       | item_id | language_tag | title    |
       | 214     | fr           | Tâche 14 |
@@ -164,28 +170,39 @@ Feature: Display the current progress of a participant on children of an item (g
       | 410            | 417           | 6           |
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
+      | 1020           | 1030          | 0           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       | can_watch_generated |
       | 4        | 210     | content                  | none                |
       | 21       | 210     | none                     | result              |
+      | 22       | 210     | none                     | result              |
       | 21       | 211     | info                     | none                |
+      | 22       | 211     | info                     | none                |
       | 20       | 212     | content                  | none                |
       | 21       | 213     | content_with_descendants | none                |
+      | 22       | 213     | content_with_descendants | none                |
       | 20       | 214     | info                     | none                |
       | 21       | 215     | content                  | none                |
+      | 22       | 215     | content                  | none                |
       | 20       | 216     | none                     | none                |
       | 21       | 217     | none                     | none                |
+      | 22       | 217     | none                     | none                |
       | 20       | 218     | none                     | none                |
       | 21       | 219     | none                     | none                |
+      | 22       | 219     | none                     | none                |
       | 20       | 220     | none                     | answer              |
       | 20       | 221     | info                     | none                |
       | 21       | 222     | content                  | none                |
+      | 22       | 222     | content                  | none                |
       | 20       | 223     | content_with_descendants | none                |
       | 21       | 224     | info                     | none                |
+      | 22       | 224     | info                     | none                |
       | 20       | 225     | content                  | none                |
       | 21       | 226     | none                     | none                |
+      | 22       | 226     | none                     | none                |
       | 20       | 227     | none                     | none                |
       | 21       | 228     | none                     | none                |
+      | 22       | 228     | none                     | none                |
       | 20       | 229     | none                     | none                |
       | 4        | 310     | none                     | none                |
       | 20       | 310     | none                     | result              |
@@ -213,6 +230,8 @@ Feature: Display the current progress of a participant on children of an item (g
       | 14       | 213     | info                     | none                |
       | 14       | 215     | info                     | none                |
       | 14       | 1010    | content                  | none                |
+      | 14       | 1020    | content_with_descendants | none                |
+      | 14       | 1030    | info                     | none                |
       | 51       | 210     | content                  | result              |
       | 51       | 211     | info                     | none                |
       | 51       | 212     | content                  | none                |
@@ -221,6 +240,8 @@ Feature: Display the current progress of a participant on children of an item (g
       | 51       | 215     | content                  | none                |
       | 51       | 216     | none                     | none                |
       | 51       | 217     | none                     | none                |
+      | 51       | 1020    | content                  | result              |
+      | 51       | 1030    | content                  | result              |
     And the database has the following table 'attempts':
       | id | participant_id | created_at          |
       | 0  | 14             | 2017-05-29 06:38:38 |
@@ -234,6 +255,8 @@ Feature: Display the current progress of a participant on children of an item (g
       | 4  | 14             | 2017-05-29 06:38:38 |
       | 1  | 15             | 2017-03-29 06:38:38 |
       | 5  | 14             | 2017-05-29 06:38:38 |
+      | 0  | 21             | 2017-05-29 06:38:38 |
+      | 0  | 51             | 2017-05-29 06:38:38 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
       | 0          | 14             | 211     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38 | 2018-05-30 06:38:48 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
@@ -255,6 +278,9 @@ Feature: Display the current progress of a participant on children of an item (g
       | 0          | 14             | 212     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 1            | 2           | null                | 2018-05-30 06:38:58 |
       | 0          | 14             | 213     | 2030-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2030-05-29 06:38:38 |
       | 0          | 14             | 215     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38 | 2018-05-30 06:38:58 |
+      | 0          | 21             | 210     | 2020-01-21 00:00:00 | 0              | 2020-01-21 00:00:00 | 0            | 0           | null                | 2020-01-21 00:00:00 |
+      | 0          | 51             | 210     | 2020-01-21 00:00:00 | 0              | 2020-01-21 00:00:00 | 0            | 0           | null                | 2020-01-21 00:00:00 |
+      | 0          | 51             | 1010    | 2020-01-21 00:00:00 | 0              | 2020-01-21 00:00:00 | 0            | 0           | null                | 2020-01-21 00:00:00 |
 
   Scenario: Get progress of a user
     Given I am the user with id "21"
@@ -356,7 +382,7 @@ Feature: Display the current progress of a participant on children of an item (g
       "item": {
         "hints_requested": 0,
         "item_id": "210",
-        "latest_activity_at": null,
+        "latest_activity_at": "2020-01-21T00:00:00Z",
         "score": 0,
         "submissions": 0,
         "time_spent": 0,
@@ -507,7 +533,7 @@ Feature: Display the current progress of a participant on children of an item (g
     }
     """
 
-  Scenario: No visible child items
+  Scenario: No visible child items but the children key should be present because the current user have a started result on the requested item
     Given I am the user with id "51"
     When I send a GET request to "/items/1010/participant-progress?as_team_id=14"
     Then the response code should be 200
@@ -526,3 +552,17 @@ Feature: Display the current progress of a participant on children of an item (g
       "children": []
     }
     """
+
+  Scenario: Should not return the children when the current user doesn't have a started result on the requested item with as_team_id
+    Given I am the user with id "51"
+    When I send a GET request to "/items/1020/participant-progress?as_team_id=14"
+    Then the response code should be 200
+    And the response at $.item.item_id should be "1020"
+    And the response should not be defined at $.children
+
+  Scenario: Should not return the children when the current user doesn't have a started result on the requested item with watched_group_id
+    Given I am the user with id "22"
+    When I send a GET request to "/items/210/participant-progress?watched_group_id=67"
+    Then the response code should be 200
+    And the response at $.item.item_id should be "210"
+    And the response should not be defined at $.children
