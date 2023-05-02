@@ -1,5 +1,5 @@
-// Package doc provides data structures definitions used by swagger to generate documentation.
-// AlgoreaBackend API.
+// Package doc AlgoreaBackend API
+//
 // API for the Algorea backend.
 //
 //	Schemes: http, https
