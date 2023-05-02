@@ -30,17 +30,27 @@ func (u *User) Clone() *User {
 	return &result
 }
 
-// CanWatchItemAnswer checks whether the user has can_watch >= answer on an item.
-func (u *User) CanWatchItemAnswer(s *DataStore, itemID int64) bool {
-	userCanWatchAnswer, err := s.Permissions().MatchingUserAncestors(u).
+// HasItemPermission checks whether the user have a certain permission on an item.
+func (u *User) HasItemPermission(s *DataStore, itemID int64, permissionType, permissionValue string) bool {
+	userHasPermission, err := s.Permissions().MatchingUserAncestors(u).
 		Where("permissions.item_id = ?", itemID).
-		WherePermissionIsAtLeast("watch", "answer").
+		WherePermissionIsAtLeast(permissionType, permissionValue).
 		Select("1").
 		Limit(1).
 		HasRows()
 	mustNotBeError(err)
 
-	return userCanWatchAnswer
+	return userHasPermission
+}
+
+// CanWatchItemAnswer checks whether the user has can_watch >= answer on an item.
+func (u *User) CanWatchItemAnswer(s *DataStore, itemID int64) bool {
+	return u.HasItemPermission(s, itemID, "watch", "answer")
+}
+
+// CanViewItemContent checks whether the user has can_view >= content on an item.
+func (u *User) CanViewItemContent(s *DataStore, itemID int64) bool {
+	return u.HasItemPermission(s, itemID, "view", "content")
 }
 
 // CanRequestHelpTo checks whether the user can request help on an item to a group.
