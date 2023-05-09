@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"github.com/go-sql-driver/mysql"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"

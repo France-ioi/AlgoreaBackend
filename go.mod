@@ -8,8 +8,6 @@ exclude github.com/thingful/httpmock v0.0.2
 
 exclude github.com/thingful/httpmock v0.0.1
 
-replace github.com/jinzhu/gorm v1.9.6 => github.com/France-ioi/gorm v0.0.0-20200829222212-0373d329b88b
-
 require (
 	bou.ke/monkey v1.0.1
 	github.com/CloudyKit/jet v2.1.3-0.20180809161101-62edd43e4f88+incompatible
@@ -28,7 +26,7 @@ require (
 	github.com/go-playground/locales v0.12.1
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/jinzhu/gorm v1.9.6
+	github.com/jinzhu/gorm v1.9.16
 	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/pmezard/go-difflib v1.0.0
@@ -40,6 +38,12 @@ require (
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/yaml.v2 v2.2.8
+)
+
+require (
+	github.com/jinzhu/now v1.1.2 // indirect
+	github.com/lib/pq v1.10.9 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 )
 
 require (
@@ -77,4 +81,6 @@ require (
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
+	gorm.io/driver/mysql v1.1.1
+	gorm.io/gorm v1.21.11
 )
