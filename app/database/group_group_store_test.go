@@ -68,7 +68,7 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	mock.ExpectQuery("^"+
 		regexp.QuoteMeta("SELECT 1 FROM `groups_ancestors`  "+
-			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
+			"WHERE child_group_id = ? AND ancestor_group_id = ? LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnRows(sqlmock.NewRows([]string{"1"}))
 	mock.ExpectExec("^"+

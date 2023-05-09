@@ -117,7 +117,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			WithWriteLock().
 			Threads().
 			GetThreadInfo(participantID, itemID, &oldThread)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			service.MustNotBeError(err)
 		}
 

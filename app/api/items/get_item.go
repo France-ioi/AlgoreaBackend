@@ -263,7 +263,7 @@ type rawItem struct {
 	StringDescription *string `gorm:"column:description"`
 	StringEduComment  *string `gorm:"column:edu_comment"`
 
-	WatchedGroupPermissions        *database.RawGeneratedPermissionFields `gorm:"embedded;embedded_prefix:watched_group_permissions_"`
+	WatchedGroupPermissions        *database.RawGeneratedPermissionFields `gorm:"embedded;embeddedPrefix:watched_group_permissions_"`
 	CanViewWatchedGroupPermissions bool
 	WatchedGroupAverageScore       float32
 	CanWatchForGroupResults        bool
