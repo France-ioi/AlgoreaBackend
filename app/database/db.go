@@ -23,7 +23,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
-// TODO:
+// TODO: GORM update
 // 1) wait until
 //      https://github.com/go-gorm/gorm/issues/4525,
 //      https://github.com/go-gorm/gorm/issues/4533,
@@ -77,7 +77,6 @@ func newDB(ctx context.Context, db *gorm.DB) *DB {
 func Open(source interface{}) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
-	driverName := "mysql"
 	logger, _ := log.SharedLogger.NewDBLogger()
 
 	var rawConnection gorm.ConnPool
@@ -265,7 +264,7 @@ func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
 		newSelectClause.BeforeExpression = oldSelectClause.BeforeExpression
 		newGormDB.Statement.Clauses["SELECT"] = newSelectClause
 	}
-	return newDB(newGormDB)
+	return newDB(conn.ctx, newGormDB)
 }
 
 // AddSelect appends fields that you want to retrieve from database when querying
@@ -279,7 +278,7 @@ func (conn *DB) AddSelect(query interface{}, args ...interface{}) *DB {
 
 // With adds a CTE
 func (conn *DB) With(query interface{}, args ...interface{}) *DB {
-	if conditions := conn.ctx, conn.db.Statement.BuildCondition(query, args...); len(conditions) > 0 {
+	if conditions := conn.db.Statement.BuildCondition(query, args...); len(conditions) > 0 {
 		return conn.Clauses(&withClause{expressions: conditions})
 	}
 	return conn
@@ -305,7 +304,7 @@ func (conn *DB) Order(value interface{}) *DB {
 
 // Clauses adds clauses
 func (conn *DB) Clauses(conds ...clause.Expression) *DB {
-	return newDB(conn.db.Clauses(conds...).Session(&gorm.Session{}))
+	return newDB(conn.ctx, conn.db.Clauses(conds...).Session(&gorm.Session{}))
 }
 
 // Having specifies HAVING conditions for GROUP BY.
@@ -335,7 +334,7 @@ func (conn *DB) Raw(query string, args ...interface{}) *DB {
 
 // Updates update attributes with callbacks, refer: https://gorm.io/docs/update.html#Update-Changed-Fields
 func (conn *DB) Updates(values interface{}) *DB {
-	return newDB(conn.db.Updates(values))
+	return newDB(conn.ctx, conn.db.Updates(values))
 }
 
 // UpdateColumn updates one attribute without callbacks
@@ -348,7 +347,8 @@ func (conn *DB) UpdateColumns(values interface{}) *DB {
 	return newDB(conn.ctx, conn.db.UpdateColumns(values))
 }
 
-// SubQuery returns the query as sub query.
+// SubQuery returns the query as sub query
+// Passing a query as an argument require passing the internal *gorm.db.
 func (conn *DB) SubQuery() interface{} {
 	mustNotBeError(conn.Error())
 	return conn.db
@@ -679,7 +679,7 @@ func (conn *DB) mustBeInTransaction() {
 // WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
 func (conn *DB) WithWriteLock() *DB {
 	conn.mustBeInTransaction()
-	return newDB(conn.db.Clauses(clause.Locking{Strength: "UPDATE"}).Session(&gorm.Session{}))
+	return newDB(conn.ctx, conn.db.Clauses(clause.Locking{Strength: "UPDATE"}).Session(&gorm.Session{}))
 }
 
 const keyTriesCount = 10

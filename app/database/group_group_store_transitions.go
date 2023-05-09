@@ -3,7 +3,7 @@ package database
 import (
 	"strings"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // GroupMembershipAction represents an action that changes relation between two groups.
