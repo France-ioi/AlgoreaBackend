@@ -28,7 +28,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
-func (ctx *TestContext) IAmUserWithID(userID int64) error { //nolint
+// IAmUserWithID sets the current logged user to the one with the provided ID.
+func (ctx *TestContext) IAmUserWithID(userID int64) error {
 	ctx.userID = userID
 	ctx.user = strconv.FormatInt(userID, 10)
 
@@ -48,7 +49,8 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error { //nolint
 	})
 }
 
-func (ctx *TestContext) TimeNow(timeStr string) error { //nolint
+// TimeNow stubs time.Now to the provided time.
+func (ctx *TestContext) TimeNow(timeStr string) error {
 	testTime, err := time.Parse(time.RFC3339Nano, timeStr)
 	if err == nil {
 		monkey.Patch(time.Now, func() time.Time { return testTime })
@@ -56,20 +58,26 @@ func (ctx *TestContext) TimeNow(timeStr string) error { //nolint
 	return err
 }
 
-func (ctx *TestContext) TimeIsFrozen() error { //nolint
+// TimeIsFrozen stubs time.Now to the current time.
+func (ctx *TestContext) TimeIsFrozen() error {
 	currentTime := time.Now()
 	monkey.Patch(time.Now, func() time.Time { return currentTime })
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error { //nolint
-	monkey.Patch(groups.GenerateGroupCode, func() (string, error) { return generatedCode, nil }) // nolint:unparam
+// TheGeneratedGroupCodeIs stubs groups.GenerateGroupCode to return the provided code instead of a random one.
+func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error {
+	monkey.Patch(groups.GenerateGroupCode, func() (string, error) { return generatedCode, nil })
 	return nil
 }
 
 var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
 
-func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error { //nolint
+// TheGeneratedGroupCodesAre stubs groups.GenerateGroupCode to generate the provided codes instead of random ones.
+// generatedCodes is in the following form:
+// example for three codes: "code1","code2","code3"
+// with an arbitrary number of codes.
+func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error {
 	currentIndex := 0
 	monkey.Patch(groups.GenerateGroupCode, func() (string, error) {
 		currentIndex++
@@ -83,26 +91,14 @@ func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error {
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedString string) error { //nolint
-	monkey.Patch(auth.GenerateKey, func() (string, error) { return generatedString, nil }) // nolint:unparam
+// TheGeneratedAuthKeyIs stubs auth.GenerateKey to return the provided auth key instead of a random one.
+func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedKey string) error {
+	monkey.Patch(auth.GenerateKey, func() (string, error) { return generatedKey, nil })
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAuthKeysAre(generatedStrings string) error { //nolint
-	currentIndex := 0
-	monkey.Patch(auth.GenerateKey, func() (string, error) {
-		currentIndex++
-		randomString := multipleStringsRegexp.FindStringSubmatch(generatedStrings)
-		if randomString == nil {
-			return "", errors.New("not enough generated random strings")
-		}
-		generatedStrings = generatedStrings[len(randomString[1]):]
-		return randomString[2], nil
-	})
-	return nil
-}
-
-func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument_PickleDocString) error { // nolint
+// LogsShouldContain checks that the logs contain a provided string.
+func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument_PickleDocString) error {
 	preprocessed, err := ctx.preprocessString(docString.Content)
 	if err != nil {
 		return err
@@ -155,10 +151,11 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 	return nil
 }
 
-func (ctx *TestContext) TheApplicationConfigIs(body *messages.PickleStepArgument_PickleDocString) error { // nolint
+// TheApplicationConfigIs specifies variables of the app configuration given in YAML format.
+func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *messages.PickleStepArgument_PickleDocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
-	preprocessedConfig, err := ctx.preprocessString(body.Content)
+	preprocessedConfig, err := ctx.preprocessString(yamlConfig.Content)
 	if err != nil {
 		return err
 	}
@@ -178,7 +175,9 @@ func (ctx *TestContext) TheApplicationConfigIs(body *messages.PickleStepArgument
 	return nil
 }
 
-func (ctx *TestContext) TheContextVariableIs(variableName, value string) error { //nolint
+// TheContextVariableIs sets a context variable in the request http.Request as the provided value.
+// Can be retrieved from the request with r.Context().Value("variableName").
+func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	preprocessed, err := ctx.preprocessString(value)
 	if err != nil {
 		return err
@@ -187,7 +186,6 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	oldHTTPHandler := ctx.application.HTTPHandler
 	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			//nolint:lll,golint,staticcheck SA1029: should not use built-in type string as key for value; define your own type to avoid collisions (staticcheck)
 			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
 		})
 	}).(*chi.Mux)

@@ -28,7 +28,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the generated group code is "([^"]*)"$`, ctx.TheGeneratedGroupCodeIs)
 	s.Step(`^the generated group codes are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupCodesAre)
 	s.Step(`^the generated auth key is "([^"]*)"$`, ctx.TheGeneratedAuthKeyIs)
-	s.Step(`^the generated auth keys are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedAuthKeysAre)
 	s.Step(`^the application config is:$`, ctx.TheApplicationConfigIs)
 	s.Step(`^the context variable "([^"]*)" is "([^"]*)"$`, ctx.TheContextVariableIs)
 
