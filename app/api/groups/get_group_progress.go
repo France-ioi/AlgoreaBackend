@@ -8,6 +8,7 @@ import (
 
 	"github.com/France-ioi/mapstructure"
 	"github.com/go-chi/render"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -233,12 +234,12 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			Clauses(
 				clause.OrderBy{
 					Expression: clause.Expr{
-						SQL:                "FIELD(groups_ancestors_active.ancestor_group_id, ?), FIELD(member_stats.item_id, ?)",
-						Vars:               []interface{}{ancestorGroupIDs, itemIDs},
+						SQL:                "FIELD(groups_ancestors_active.ancestor_group_id, ?)",
+						Vars:               []interface{}{ancestorGroupIDs},
 						WithoutParentheses: true,
 					},
-				}).
-			Scan(&result).Error(),
+				},
+			),
 		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 

@@ -91,7 +91,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 
 	store := srv.GetStore(r)
 	participantType, err := getParticipantTypeForContestManagedByUser(store, itemID, user)
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)

@@ -3,7 +3,6 @@
 package testhelpers
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -14,7 +13,6 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
-	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
 	_ "github.com/go-sql-driver/mysql"      // use to force database/sql to use mysql
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
@@ -56,8 +54,9 @@ var db *sql.DB
 
 const testAccessToken = "testsessiontestsessiontestsessio"
 
-func (ctx *TestContext) SetupScenarioContext(godogCtx context.Context, sc *godog.Scenario) (context.Context, error) {
-	log.WithField("type", "test").Infof("Starting test scenario: %s", sc.Name)
+// SetupTestContext setups the test context, called before each scenario.
+func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
+	log.WithField("type", "test").Infof("Starting test scenario: %s", pickle.Name)
 
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
@@ -83,8 +82,6 @@ func (ctx *TestContext) SetupScenarioContext(godogCtx context.Context, sc *godog
 		fmt.Println("Unable to empty db")
 		panic(err)
 	}
-
-	return godogCtx, nil
 }
 
 func (ctx *TestContext) setupApp() {
@@ -104,7 +101,8 @@ func (ctx *TestContext) tearDownApp() {
 	ctx.application = nil
 }
 
-func (ctx *TestContext) ScenarioTeardown(godogCtx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
+// ScenarioTeardown is called after each scenario to clean to stubs and close the db connection.
+func (ctx *TestContext) ScenarioTeardown(*messages.Pickle, error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()
 	ctx.logsRestoreFunc()
@@ -117,8 +115,6 @@ func (ctx *TestContext) ScenarioTeardown(godogCtx context.Context, _ *godog.Scen
 	}()
 
 	ctx.tearDownApp()
-
-	return godogCtx, nil
 }
 
 func testRequest(ts *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (*http.Response, string, error) {

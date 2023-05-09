@@ -65,7 +65,7 @@ func TestNewRawDBLogger_TextLog_WithQuery(t *testing.T) {
 	rawLogMode := ourLogger.GetRawSQLLogMode()
 
 	rawLogger := NewRawDBLogger(nulllogger, rawLogMode)
-	rawLogger.Log(nil, "some message", "err", nil, "query", "SELECT 1") //lint:ignore SA1012 sql often uses nil context
+	rawLogger.Log(context.TODO(), "some message", "err", nil, "query", "SELECT 1")
 	assert.Contains(t, hook.GetAllStructuredLogs(), "msg=\"some message\\nSELECT 1\\n\" err=\"<nil>\" type=rawsql")
 }
 

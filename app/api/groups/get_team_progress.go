@@ -191,8 +191,9 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Where("groups.id IN (?)", teamIDs).
 		Clauses(clause.OrderBy{
 			Expression: clause.Expr{SQL: "FIELD(groups.id, ?), items.id", Vars: []interface{}{teamIDs}, WithoutParentheses: true},
-		}).
-		Scan(&result).Error())
+		}),
+		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
+	)
 
 	render.Respond(w, r, result)
 	return service.NoError

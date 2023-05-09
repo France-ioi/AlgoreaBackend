@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
-	"gorm.io/gorm/clause"
+	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"

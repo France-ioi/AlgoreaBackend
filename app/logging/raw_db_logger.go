@@ -14,7 +14,7 @@ import (
 
 var (
 	rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[(?:<nil>|[\w.]+) )|$)`)
-	spaceRegexp   = regexp.MustCompile(`[\t\s\r\n]+`)
+	spaceRegexp   = regexp.MustCompile(`\s+`)
 )
 
 // NewRawDBLogger returns a logger for raw database actions using an existing dblogger and rawLogMode setting.

@@ -6,7 +6,6 @@ import (
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
-	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"

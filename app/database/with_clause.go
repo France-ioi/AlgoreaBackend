@@ -20,6 +20,7 @@ func (m *withClause) Build(builder clause.Builder) {
 		expr.Build(builder)
 	}
 }
+
 func (m *withClause) ModifyStatement(statement *gorm.Statement) {
 	selectClause := statement.Clauses["SELECT"]
 	if beforeExpression := selectClause.BeforeExpression; beforeExpression != nil {
@@ -32,5 +33,7 @@ func (m *withClause) ModifyStatement(statement *gorm.Statement) {
 	statement.Clauses["SELECT"] = selectClause
 }
 
-var _ clause.Expression = &withClause{}
-var _ gorm.StatementModifier = &withClause{}
+var (
+	_ clause.Expression      = &withClause{}
+	_ gorm.StatementModifier = &withClause{}
+)

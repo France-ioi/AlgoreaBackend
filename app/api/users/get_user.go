@@ -135,7 +135,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
 			LEFT JOIN LATERAL (?) AS manager_access ON 1`,
-			srv.Store.GroupAncestors().ManagedByUser(user).
+			store.GroupAncestors().ManagedByUser(user).
 				Select(`
 					1 AS found,
 					MAX(can_manage_value) AS can_manage_value,

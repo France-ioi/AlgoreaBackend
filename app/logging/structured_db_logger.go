@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm/utils"
 )
 
-// NewStructuredDBLogger creates a database structured logger
+// NewStructuredDBLogger creates a database structured logger.
 func NewStructuredDBLogger(logrusLogger *logrus.Logger, config logger.Config) logger.Interface {
 	return &StructuredDBLogger{
 		logrusLogger: logrusLogger,
@@ -20,20 +20,20 @@ func NewStructuredDBLogger(logrusLogger *logrus.Logger, config logger.Config) lo
 	}
 }
 
-// StructuredDBLogger is a database structured logger
+// StructuredDBLogger is a database structured logger.
 type StructuredDBLogger struct {
 	logrusLogger *logrus.Logger
 	logger.Config
 }
 
-// LogMode log mode
+// LogMode log mode.
 func (l *StructuredDBLogger) LogMode(level logger.LogLevel) logger.Interface {
 	newlogger := *l
 	newlogger.LogLevel = level
 	return &newlogger
 }
 
-// Info print info
+// Info print info.
 func (l *StructuredDBLogger) Info(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel >= logger.Info {
 		l.logrusLogger.
@@ -42,7 +42,7 @@ func (l *StructuredDBLogger) Info(ctx context.Context, msg string, data ...inter
 	}
 }
 
-// Warn print warn messages
+// Warn print warn messages.
 func (l *StructuredDBLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel >= logger.Warn {
 		l.logrusLogger.
@@ -51,7 +51,7 @@ func (l *StructuredDBLogger) Warn(ctx context.Context, msg string, data ...inter
 	}
 }
 
-// Error print error messages
+// Error print error messages.
 func (l *StructuredDBLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel >= logger.Error {
 		l.logrusLogger.
@@ -60,7 +60,7 @@ func (l *StructuredDBLogger) Error(ctx context.Context, msg string, data ...inte
 	}
 }
 
-// Trace print sql message
+// Trace print sql message.
 func (l *StructuredDBLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()

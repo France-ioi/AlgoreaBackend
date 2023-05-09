@@ -498,7 +498,13 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		})
 
 	query := store.
-		With("items_to_show AS (?), participants AS (?), start_from_row AS (?), un AS (?)", visibleItemDescendants.SubQuery(), participantsQuery.SubQuery(), startFromRowCTESubQuery, unionQuery.SubQuery()).
+		With(
+			"items_to_show AS (?), participants AS (?), start_from_row AS (?), un AS (?)",
+			visibleItemDescendants.SubQuery(),
+			participantsQuery.SubQuery(),
+			startFromRowCTESubQuery,
+			unionQuery.SubQuery(),
+		).
 		Table("(?) AS activities", unionQuery.SubQuery()).
 		Select(`STRAIGHT_JOIN
 			CASE activity_type_int

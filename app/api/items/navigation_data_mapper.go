@@ -141,6 +141,7 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 	copy(values, columnListValues)
 	canWatchResultEnumIndex := dataStore.PermissionsGranted().WatchIndexByName("result")
 	values = append(values, watchedGroupCanViewQuery, canWatchResultEnumIndex, canWatchResultEnumIndex, canWatchResultEnumIndex)
+
 	return joinItemRelationsToItemsFunc(
 		dataStore.Items().
 			Joins("LEFT JOIN (?) AS permissions ON items.id = permissions.item_id",
@@ -156,7 +157,6 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 				IF(can_watch_generated_value >= ?, watched_group_stats.all_validated, 0) AS watched_group_all_validated`,
 			values...).
 		Joins("JOIN LATERAL (?) AS watched_group_stats", watchedGroupAvgScoreQuery)
-	With("watched_group_participants AS (?)", watchedGroupParticipantsQuery)
 }
 
 func constructItemListQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,

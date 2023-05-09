@@ -34,7 +34,7 @@ func (l *Logger) NewDBLogger() (logger.Interface, bool) {
 	}
 }
 
-// GetRawSQLLogMode returns whether the raw sql logging is enabled
+// GetRawSQLLogMode returns whether the raw sql logging is enabled.
 func (l *Logger) GetRawSQLLogMode() bool {
 	if l.config == nil {
 		return false

@@ -23,15 +23,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
-// TODO: GORM update
-// 1) wait until
-//      https://github.com/go-gorm/gorm/issues/4525,
-//      https://github.com/go-gorm/gorm/issues/4533,
-//      https://github.com/go-gorm/gorm/issues/4534
-//    are fixed
-// 2) make everything work,
-// 3) take full advantage of AddSelect() chaining (appending columns to the list)
-
 // DB contains information for current db connection (wraps *gorm.DB).
 type DB struct {
 	db  *gorm.DB
@@ -249,7 +240,7 @@ func (conn *DB) Joins(query string, args ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Joins(query, args...).Session(&gorm.Session{}))
 }
 
-// Or filters records that match before conditions or this one, similar to `Where`
+// Or filters records that match before conditions or this one, similar to `Where`.
 func (conn *DB) Or(query interface{}, args ...interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Or(query, args...).Session(&gorm.Session{}))
 }
@@ -267,7 +258,7 @@ func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
 	return newDB(conn.ctx, newGormDB)
 }
 
-// AddSelect appends fields that you want to retrieve from database when querying
+// AddSelect appends fields that you want to retrieve from the database when querying.
 func (conn *DB) AddSelect(query interface{}, args ...interface{}) *DB {
 	previousSelects := conn.db.Statement.Selects
 	newDB := conn.Select(query, args...)
@@ -276,7 +267,7 @@ func (conn *DB) AddSelect(query interface{}, args ...interface{}) *DB {
 	return newDB
 }
 
-// With adds a CTE
+// With adds a CTE.
 func (conn *DB) With(query interface{}, args ...interface{}) *DB {
 	if conditions := conn.db.Statement.BuildCondition(query, args...); len(conditions) > 0 {
 		return conn.Clauses(&withClause{expressions: conditions})
@@ -302,7 +293,7 @@ func (conn *DB) Order(value interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Order(value).Session(&gorm.Session{}))
 }
 
-// Clauses adds clauses
+// Clauses adds clauses.
 func (conn *DB) Clauses(conds ...clause.Expression) *DB {
 	return newDB(conn.ctx, conn.db.Clauses(conds...).Session(&gorm.Session{}))
 }
@@ -337,12 +328,12 @@ func (conn *DB) Updates(values interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Updates(values))
 }
 
-// UpdateColumn updates one attribute without callbacks
+// UpdateColumn updates one attribute without callbacks.
 func (conn *DB) UpdateColumn(column string, value interface{}) *DB {
 	return newDB(conn.ctx, conn.db.UpdateColumn(column, value))
 }
 
-// UpdateColumns updates attributes without callbacks
+// UpdateColumns updates attributes without callbacks.
 func (conn *DB) UpdateColumns(values interface{}) *DB {
 	return newDB(conn.ctx, conn.db.UpdateColumns(values))
 }
@@ -667,7 +658,7 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Set(name, value))
 }
 
-// ErrNoTransaction means that a called method/function cannot work outside of a transaction.
+// ErrNoTransaction means that a called method/function cannot work outside a transaction.
 var ErrNoTransaction = errors.New("should be executed in a transaction")
 
 func (conn *DB) mustBeInTransaction() {

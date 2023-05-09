@@ -14,21 +14,21 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.3.2
 	github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003
 	github.com/France-ioi/validator v9.29.2-0.20220110032854-1b7299b1a4db+incompatible
+	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
 	github.com/akrylysov/algnhsa v0.12.1
 	github.com/aws/aws-lambda-go v1.28.0
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
-	github.com/cucumber/messages-go/v16 v16.0.1
 	github.com/go-chi/chi v3.3.4+incompatible
 	github.com/go-chi/cors v1.2.1
 	github.com/go-chi/render v1.0.2
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-sql-driver/mysql v1.7.0
-	github.com/jinzhu/gorm v1.9.16
 	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/rubenv/sql-migrate v0.0.0-20181213081019-5a8808c14925
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.3
@@ -49,6 +49,7 @@ require (
 
 require (
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
+	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/ajg/form v1.5.1 // indirect
@@ -68,7 +69,6 @@ require (
 	github.com/magiconair/properties v1.8.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/afero v1.1.2 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect

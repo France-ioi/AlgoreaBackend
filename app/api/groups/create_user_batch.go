@@ -9,7 +9,7 @@ import (
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -195,7 +195,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 		Where("group_managers.can_manage != 'none'").
 		Select("user_batch_prefixes.group_id, user_batch_prefixes.max_users").
 		Take(&prefixInfo).Error()
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, nil, service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)

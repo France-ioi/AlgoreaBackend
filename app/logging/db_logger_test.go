@@ -4,57 +4,56 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
-	gormLogger "gorm.io/gorm/logger"
+	"gorm.io/gorm/logger"
 )
 
 func TestNewDBLogger_ErrorFallback(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := createLogger() // no config
-	dbLogger, logMode := logger.NewDBLogger()
-	assert.IsType(gorm.Logger{}, dbLogger)
+	ourLogger := createLogger() // no config
+	dbLogger, logMode := ourLogger.NewDBLogger()
+	assert.IsType(Logger{}, dbLogger)
 	assert.False(logMode)
 }
 
 func TestLogger_GetRawSQLLogMode_ErrorFallback(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := createLogger() // no config
-	rawLogMode := logger.GetRawSQLLogMode()
+	ourLogger := createLogger() // no config
+	rawLogMode := ourLogger.GetRawSQLLogMode()
 	assert.False(rawLogMode)
 }
 
 func TestLoggerFromConfig_TextLog(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := createLogger()
+	ourLogger := createLogger()
 	config := viper.New()
 	config.Set("Format", "text")
 	config.Set("Output", "file")
-	logger.Configure(config)
-	dbLogger, _ := logger.NewDBLogger()
-	assert.Implements((*gormLogger.Interface)(nil), dbLogger)
+	ourLogger.Configure(config)
+	dbLogger, _ := ourLogger.NewDBLogger()
+	assert.Implements((*logger.Interface)(nil), dbLogger)
 }
 
 func TestLoggerFromConfig_JSONLog(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := createLogger()
+	ourLogger := createLogger()
 	config := viper.New()
 	config.Set("Format", "json")
 	config.Set("Output", "file")
-	logger.Configure(config)
-	dbLogger, _ := logger.NewDBLogger()
+	ourLogger.Configure(config)
+	dbLogger, _ := ourLogger.NewDBLogger()
 	assert.IsType(&StructuredDBLogger{}, dbLogger)
 }
 
 func TestLoggerFromConfig_WrongFormat(t *testing.T) {
 	assert := assertlib.New(t)
-	logger := createLogger()
+	ourLogger := createLogger()
 	config := viper.New()
 	config.Set("Format", "yml")
 	config.Set("Output", "file")
-	logger.config = config
-	assert.Panics(func() { logger.NewDBLogger() })
+	ourLogger.config = config
+	assert.Panics(func() { ourLogger.NewDBLogger() })
 }
 
 func TestNewDBLogger_LogMode(t *testing.T) {
@@ -76,13 +75,13 @@ func TestNewDBLogger_LogMode(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			assert := assertlib.New(t)
-			logger := createLogger()
+			ourLogger := createLogger()
 			config := viper.New()
 			config.Set("LogSQLQueries", test.logSQLQueries)
 			config.Set("Format", test.format)
 			config.Set("Output", "file")
-			logger.Configure(config)
-			_, logMode := logger.NewDBLogger()
+			ourLogger.Configure(config)
+			_, logMode := ourLogger.NewDBLogger()
 			assert.Equal(test.logSQLQueries, logMode)
 		})
 	}

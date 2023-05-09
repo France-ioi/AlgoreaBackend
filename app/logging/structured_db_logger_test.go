@@ -21,7 +21,7 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
-	defer func() { logging.ResetShared() }()
+	defer logging.ResetShared()
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
@@ -50,7 +50,7 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
-	defer func() { logging.ResetShared() }()
+	defer logging.ResetShared()
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
@@ -71,7 +71,7 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
-	defer func() { logging.ResetShared() }()
+	defer logging.ResetShared()
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")

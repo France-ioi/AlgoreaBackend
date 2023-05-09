@@ -77,7 +77,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 
 	store := srv.GetStore(r)
 	participantType, err := getParticipantTypeForContestManagedByUser(store, itemID, user)
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
