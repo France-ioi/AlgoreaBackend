@@ -52,7 +52,7 @@ Feature: Save grading result - robustness
 
   Scenario: User not found
     Given I am the user with id "404"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "404",
@@ -62,7 +62,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "404",
@@ -87,7 +87,7 @@ Feature: Save grading result - robustness
 
   Scenario: idUser in task_token doesn't match the user's id
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "20",
@@ -97,7 +97,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -122,7 +122,7 @@ Feature: Save grading result - robustness
 
   Scenario: idUser in score_token doesn't match the user's id
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -132,7 +132,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "20",
@@ -157,7 +157,7 @@ Feature: Save grading result - robustness
 
   Scenario: idAttempt in score_token and task_token don't match
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -167,7 +167,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -192,7 +192,7 @@ Feature: Save grading result - robustness
 
   Scenario: idItemLocal in score_token and task_token don't match
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -202,7 +202,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -227,7 +227,7 @@ Feature: Save grading result - robustness
 
   Scenario: itemUrl of score_token doesn't match itemUrl of task_token
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -237,7 +237,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -262,7 +262,7 @@ Feature: Save grading result - robustness
 
   Scenario: Missing task_token
     Given I am the user with id "101"
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -286,7 +286,7 @@ Feature: Save grading result - robustness
 
   Scenario: Invalid task_token
     Given I am the user with id "101"
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -311,7 +311,7 @@ Feature: Save grading result - robustness
 
   Scenario: Invalid score_token
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -335,7 +335,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and answer_token is missing
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -359,7 +359,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -384,7 +384,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and idUser in answer_token is wrong
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -394,7 +394,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "20",
@@ -420,7 +420,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and idItemLocal in answer_token is wrong
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -430,7 +430,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -456,7 +456,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and itemUrl in answer_token is wrong
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -466,7 +466,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -492,7 +492,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -502,7 +502,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -527,7 +527,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should be equal)
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -537,7 +537,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -563,7 +563,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and score is missing
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -573,7 +573,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -598,7 +598,7 @@ Feature: Save grading result - robustness
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -608,7 +608,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -646,7 +646,7 @@ Feature: Save grading result - robustness
     And the database has the following table 'gradings':
       | answer_id | score | graded_at           |
       | 124       | 0     | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -657,7 +657,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -686,7 +686,7 @@ Feature: Save grading result - robustness
 
   Scenario: The answer is not found
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -697,7 +697,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",

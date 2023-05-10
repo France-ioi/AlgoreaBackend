@@ -51,7 +51,7 @@ Feature: Get thread
     Given I am the user with id "1"
     When I send a GET request to "/items/21/participant/1/thread"
     Then the response code should be 200
-    And the following token "threadToken" signed by the app is distributed:
+    And "threadToken" is a token signed by the app with the following payload:
       """
         {
           "can_watch": false,

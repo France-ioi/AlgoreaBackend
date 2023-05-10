@@ -50,7 +50,7 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -61,7 +61,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -127,7 +127,7 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 1          | 60      | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -137,7 +137,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -209,7 +209,7 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 1          | 60      | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -219,7 +219,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -267,7 +267,7 @@ Feature: Save grading result
       | 101            | 0          | 50      | 0              | 0           | 0         | 2019-05-30 11:00:00 | null                 | 2017-04-29 06:38:38 | null         |
       | 101            | 1          | 60      | 99             | 1           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
     And the table "results_propagate" should be empty
-
+  
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
     And the database has the following table 'answers':
@@ -287,7 +287,7 @@ Feature: Save grading result
       | 101            | 0          | 10      | 20             | 2018-05-29 06:38:38 | null              | null               |
       | 101            | 0          | 50      | 20             | 2018-05-29 06:38:38 | <score_edit_rule> | <score_edit_value> |
       | 101            | 0          | 60      | 20             | 2018-05-29 06:38:38 | null              | null               |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -297,7 +297,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -365,7 +365,7 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -375,7 +375,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -432,7 +432,7 @@ Feature: Save grading result
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -443,7 +443,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -494,7 +494,7 @@ Feature: Save grading result
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -505,7 +505,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "scoreToken" signed by the task platform is distributed:
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -556,7 +556,7 @@ Feature: Save grading result
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -566,7 +566,7 @@ Feature: Save grading result
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "answerToken" signed by the app is distributed:
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
