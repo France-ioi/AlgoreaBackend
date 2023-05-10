@@ -31,7 +31,6 @@ type dbquery struct {
 
 // TestContext implements context for tests.
 type TestContext struct {
-	// nolint
 	application          *app.Application // do NOT call it directly, use `app()`
 	userID               int64            // userID that will be used for the next requests
 	user                 string           // user reference of the logged user
@@ -54,7 +53,8 @@ var db *sql.DB
 
 const testAccessToken = "testsessiontestsessiontestsessio"
 
-func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) { // nolint
+// SetupTestContext initializes the test context. Called before each scenario.
+func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
 	log.WithField("type", "test").Infof("Starting test scenario: %s", pickle.Name)
 
 	var logHook *test.Hook
@@ -95,12 +95,13 @@ func (ctx *TestContext) setupApp() {
 
 func (ctx *TestContext) tearDownApp() {
 	if ctx.application != nil {
-		_ = ctx.application.Database.Close() // nolint:gosec
+		_ = ctx.application.Database.Close()
 	}
 	ctx.application = nil
 }
 
-func (ctx *TestContext) ScenarioTeardown(*messages.Pickle, error) { // nolint
+// ScenarioTeardown is called after each scenario to remove stubs.
+func (ctx *TestContext) ScenarioTeardown(*messages.Pickle, error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()
 	ctx.logsRestoreFunc()
@@ -159,7 +160,6 @@ func (ctx *TestContext) db() *sql.DB {
 	return db
 }
 
-// nolint: gosec
 func (ctx *TestContext) emptyDB() error {
 	db := ctx.db()
 	config, _ := app.DBConfig(ctx.application.Config)

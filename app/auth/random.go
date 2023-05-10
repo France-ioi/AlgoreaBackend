@@ -6,7 +6,7 @@ import (
 )
 
 // GenerateKey generate a random string that can be used as an access token for a temporary user's session.
-// Entropy of the generated string (assuming "crypto/rand" is well implemented) is 36^32, so ~165 bits.
+// The entropy of the generated string (assuming "crypto/rand" is well implemented) is 36^32, so ~165 bits.
 func GenerateKey() (string, error) {
 	const allowedCharacters = "0123456789abcdefghijklmnopqrstuvwxyz"
 	const allowedCharactersLength = len(allowedCharacters)

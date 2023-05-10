@@ -19,7 +19,13 @@ func (ctx *TestContext) appAuthConfig() *viper.Viper {
 	return app.AuthConfig(ctx.application.Config)
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+// TheLoginModuleTokenEndpointForCodeReturns mocks the return of the login module /oauth/token,
+// called with a provided code.
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(
+	code string,
+	statusCode int,
+	body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
 	if err != nil {
@@ -43,7 +49,13 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, s
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns(code, codeVerifier string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+// TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns mocks the return of the login module /oauth/token,
+// called with the provided code and code_verifier.
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns(
+	code, codeVerifier string,
+	statusCode int,
+	body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
 	if err != nil {
@@ -73,7 +85,13 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns(code, codeVerifier, redirectURI string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+// TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns mocks the return of the login module /oauth/token,
+// called with the provided code, code_verifier, and redirect_uri.
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns(
+	code, codeVerifier, redirectURI string,
+	statusCode int,
+	body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
 	if err != nil {
@@ -108,7 +126,13 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedi
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refreshToken string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+// TheLoginModuleTokenEndpointForRefreshTokenReturns mocks the return of the login module /oauth/token,
+// called with the provided refresh_token.
+func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(
+	refreshToken string,
+	statusCode int,
+	body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)
 	if err != nil {
@@ -132,9 +156,15 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refres
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token string, statusCode int, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+// TheLoginModuleAccountEndpointForTokenReturns mocks the return of the login module /user_api/account with
+// the provided authorization token.
+func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(
+	authToken string,
+	statusCode int,
+	body *messages.PickleStepArgument_PickleDocString,
+) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedToken, err := ctx.preprocessString(token)
+	preprocessedToken, err := ctx.preprocessString(authToken)
 	if err != nil {
 		return err
 	}
@@ -149,7 +179,9 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token strin
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // nolint
+// TheLoginModuleUnlinkClientEndpointForUserIDReturns mocks the return of the login module /platform_api/accounts_manager/unlink_client
+// with the provided user_id.
+func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns(
 	userID string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
@@ -178,7 +210,9 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // n
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns( // nolint
+// TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns mocks the return of the login module
+// /platform_api/lti_result/send with the provided user_id, content_id, and score.
+func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns(
 	userID, contentID, score string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
@@ -186,7 +220,7 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 	if err != nil {
 		return err
 	}
-	preprocessedConentID, err := ctx.preprocessString(contentID)
+	preprocessedContentID, err := ctx.preprocessString(contentID)
 	if err != nil {
 		return err
 	}
@@ -206,7 +240,7 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 	requestBody, err := loginmodule.EncodeBody(
 		map[string]string{
 			"user_id":    preprocessedUserID,
-			"content_id": preprocessedConentID,
+			"content_id": preprocessedContentID,
 			"score":      preprocessedScore,
 		},
 		ctx.appAuthConfig().GetString("clientID"), clientSecret)
@@ -220,19 +254,23 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 	return nil
 }
 
-func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns( //nolint
+// TheLoginModuleCreateEndpointWithParamsReturns mocks the return of the login module
+// /platform_api/accounts_manager/create with the provided parameters, return status, and body.
+func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns(
 	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
 ) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create", params, statusCode, body)
 }
 
-func (ctx *TestContext) TheLoginModuleDeleteEndpointWithParamsReturns( //nolint
+// TheLoginModuleDeleteEndpointWithParamsReturns mocks the return of the login module
+// /platform_api/accounts_manager/delete with the provided parameters, return status, and body.
+func (ctx *TestContext) TheLoginModuleDeleteEndpointWithParamsReturns(
 	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
 ) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("delete", params, statusCode, body)
 }
 
-func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns( //nolint
+func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns(
 	endpoint, params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))

@@ -211,7 +211,8 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	return compareStrings(string(expected), string(actual))
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+// TheResponseBodyShouldBe checks that the response is the same as the one provided.
+func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleStepArgument_PickleDocString) (err error) {
 	expectedBody, err := ctx.preprocessString(body.Content)
 	if err != nil {
 		return err
@@ -241,7 +242,8 @@ func compareStrings(expected, actual string) error {
 
 const nullHeaderValue = "[NULL]"
 
-func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
+// TheResponseHeaderShouldBe checks that the response header matches the provided value.
+func (ctx *TestContext) TheResponseHeaderShouldBe(headerName, headerValue string) (err error) {
 	headerValue, err = ctx.preprocessString(headerValue)
 	if err != nil {
 		return err
@@ -262,7 +264,11 @@ func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue
 	return nil
 }
 
-func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersValue *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+// TheResponseHeadersShouldBe checks that the response header matches the multiline provided value.
+func (ctx *TestContext) TheResponseHeadersShouldBe(
+	headerName string,
+	headersValue *messages.PickleStepArgument_PickleDocString,
+) (err error) {
 	headerValue, err := ctx.preprocessString(headersValue.Content)
 	if err != nil {
 		return err
@@ -279,7 +285,8 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(headerName string, headersVal
 	return ctx.TheResponseHeaderShouldBe(headerName, headerValue)
 }
 
-func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { // nolint
+// TheResponseErrorMessageShouldContain checks that the response contains the provided string.
+func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) {
 	errorResp := service.ErrorResponse{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
@@ -292,7 +299,8 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	return nil
 }
 
-func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
+// TheResponseShouldBe checks that the response status of the response is of the given kind.
+func (ctx *TestContext) TheResponseShouldBe(kind string) error {
 	var expectedCode int
 	switch kind {
 	case "updated", "deleted":
