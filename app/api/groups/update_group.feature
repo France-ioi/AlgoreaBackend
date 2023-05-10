@@ -323,6 +323,38 @@ Feature: Update a group (groupEdit)
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
 
+  Scenario: Should be able to update the description, root_activity_id and root_skill_id from a value to null
+    Given I am the user with id "100"
+    And the database has the following table 'users':
+      | login   | group_id |
+      | manager | 100      |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage            |
+      | 101      | 100        | memberships_and_group |
+    And the database has the following table 'groups':
+      | id  | name    | description       | root_activity_id | root_skill_id |
+      | 100 | manager |                   | null             | null          |
+      | 101 | Group   | Group description | 200              | 100           |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 101             | 100            |
+    And the groups ancestors are computed
+    And the database has the following table 'items':
+      | id  | default_language_tag | type  |
+      | 100 | fr                   | Skill |
+    When I send a PUT request to "/groups/101" with the following body:
+      """
+      {
+        "description": null,
+        "root_activity_id": null,
+        "root_skill_id": null
+      }
+      """
+    Then the response should be "updated"
+    And the table "groups" at id "101" should be:
+      | description | root_activity_id | root_skill_id |
+      | null        | null             | null          |
+
   Scenario: User is a manager of the group with can_manage=none: allows setting all the fields to the previous values (mostly nulls)
     Given I am the user with id "25"
     When I send a PUT request to "/groups/17" with the following body:

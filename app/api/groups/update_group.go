@@ -82,14 +82,14 @@ type groupUpdateInput struct {
 //
 //		The user should have `can_manage` >= 'memberships' in order to modify `code_expires_at`, `code_lifetime`,
 //		`frozen_membership`, `max_participants`, or `enforce_max_participants`, otherwise the "bad request" error is returned.
-//		In order to modify values of other fields, the user should have `can_manage` >= 'memberships_and_group'.
+//		In order to modify the values of other fields, the user should have `can_manage` >= 'memberships_and_group'.
 //
 //
-//		If the `root_activity_id` item is provided and is not null, the item should not be a skill and
+//		If the `root_activity_id` item is provided and is not null, the item should not be a skill, and
 //		the user should have at least 'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 //
 //
-//		If the `root_skill_id` item is provided and is not null, the item should be a skill and the user should have at least
+//		If the `root_skill_id` item is provided and is not null, the item should be a skill, and the user should have at least
 //		'can_view:info' permission on it, otherwise the 'forbidden' error is returned.
 //
 //
@@ -249,16 +249,25 @@ func validateRootActivityID(store *database.DataStore, user *database.User, root
 func validateRootSkillID(store *database.DataStore, user *database.User, oldRootSkillID *int64,
 	dbMap map[string]interface{},
 ) service.APIError {
-	rootSkillID, rootSkillIDSet := dbMap["root_skill_id"]
-	rootSkillIDChanged := rootSkillIDSet && !int64PtrEqualValues(oldRootSkillID, rootSkillID.(*int64))
-	if rootSkillIDChanged && rootSkillID != nil {
-		found, errorInTransaction := store.Items().ByID(*rootSkillID.(*int64)).Where("type = 'Skill'").WithWriteLock().
-			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
-		service.MustNotBeError(errorInTransaction)
-		if !found {
-			return service.ErrForbidden(errors.New("no access to the root skill or it is not a skill"))
+	newRootSkillIDInterface, newRootSkillIDSet := dbMap["root_skill_id"]
+	if newRootSkillIDSet && newRootSkillIDInterface != nil {
+		newRootSkillID := newRootSkillIDInterface.(*int64)
+
+		rootSkillIDChanged := !int64PtrEqualValues(oldRootSkillID, newRootSkillID)
+		if rootSkillIDChanged && newRootSkillID != nil {
+			found, errorInTransaction := store.Items().
+				ByID(*newRootSkillID).
+				Where("type = 'Skill'").
+				WithWriteLock().
+				WhereUserHasViewPermissionOnItems(user, "info").
+				HasRows()
+			service.MustNotBeError(errorInTransaction)
+			if !found {
+				return service.ErrForbidden(errors.New("no access to the root skill or it is not a skill"))
+			}
 		}
 	}
+
 	return service.NoError
 }
 
