@@ -59,7 +59,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: Missing answer
     Given I am the user with id "101"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -80,7 +80,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: Wrong idUser
     Given I am the user with id "101"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "",
@@ -102,7 +102,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: Wrong idItemLocal
     Given I am the user with id "101"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -123,7 +123,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: Wrong idAttempt
     Given I am the user with id "101"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -145,7 +145,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: idUser doesn't match the user's group id
     Given I am the user with id "101"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "20",
@@ -167,7 +167,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: User not found
     Given I am the user with id "404"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "404",
@@ -189,7 +189,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: No submission rights
     Given I am the user with id "101"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -211,7 +211,7 @@ Feature: Submit a new answer - robustness
 
   Scenario: The attempt is expired (doesn't allow submissions anymore)
     Given I am the user with id "101"
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",

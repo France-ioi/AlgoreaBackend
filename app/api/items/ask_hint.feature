@@ -34,7 +34,7 @@ Feature: Ask for a hint
       | attempt_id | participant_id | item_id | hints_requested        | hints_cached | started_at          |
       | 0          | 101            | 50      | [0,  1, "hint" , null] | 4            | 2019-05-30 11:00:00 |
       | 0          | 101            | 10      | null                   | 0            | 2019-05-30 11:00:00 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -44,7 +44,7 @@ Feature: Ask for a hint
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -98,7 +98,7 @@ Feature: Ask for a hint
       | attempt_id | participant_id | item_id | hints_requested        | started_at          |
       | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
       | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -108,7 +108,7 @@ Feature: Ask for a hint
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -162,7 +162,7 @@ Feature: Ask for a hint
       | attempt_id | participant_id | item_id | hints_requested        | started_at          |
       | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
       | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -172,7 +172,7 @@ Feature: Ask for a hint
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -226,7 +226,7 @@ Feature: Ask for a hint
       | attempt_id | participant_id | item_id | hints_requested | started_at          |
       | 0          | 101            | 50      | not an array    | 2019-05-30 11:00:00 |
       | 0          | 101            | 10      | null            | 2019-05-30 11:00:00 |
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -236,7 +236,7 @@ Feature: Ask for a hint
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",

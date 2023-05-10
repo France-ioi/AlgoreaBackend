@@ -31,7 +31,7 @@ Feature: Submit a new answer
   Scenario: User is able to submit a new answer
     Given I am the user with id "101"
     And time is frozen
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -83,7 +83,7 @@ Feature: Submit a new answer
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with id "101"
     And time is frozen
-    And the following token "userTaskToken" signed by the app is distributed:
+    And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idItem": "50",

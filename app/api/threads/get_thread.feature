@@ -47,57 +47,54 @@ Feature: Get thread
       | 50      | 3              | closed                  | 20              | 2020-01-10 00:00:00 |
     And the time now is "2020-01-20T00:00:00Z"
 
+  Scenario: Should return all fields when the thread exists
+    Given I am the user with id "1"
+    When I send a GET request to "/items/21/participant/1/thread"
+    Then the response code should be 200
+    And "threadToken" is a token signed by the app with the following payload:
+      """
+        {
+          "can_watch": false,
+          "can_write": true,
+          "date": "20-01-2020",
+          "exp": "1579485600",
+          "is_mine": true,
+          "item_id": "21",
+          "participant_id": "1",
+          "user_id": "1"
+        }
+      """
+    And the response body should be, in JSON:
+      """
+        {
+          "participant_id": 1,
+          "item_id": 21,
+          "status": "waiting_for_trainer",
+          "token": "{{threadToken}}"
+        }
+      """
+
   Scenario: Status should be not_started if the thread doesn't exists
     Given I am the user with id "1"
     When I send a GET request to "/items/10/participant/1/thread"
     Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "participant_id": 1,
-      "item_id": 10,
-      "status": "not_started"
-    }
-    """
-
-  Scenario: Should return the corresponding status if the thread exists
-    Given I am the user with id "1"
-    When I send a GET request to "/items/21/participant/1/thread"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "participant_id": 1,
-      "item_id": 21,
-      "status": "waiting_for_trainer"
-    }
-    """
+    And the response at $.status should be "not_started"
 
   Scenario: The current-user is not the thread participant but has "can_watch >= answer" permission on the item
     Given I am the user with id "2"
     When I send a GET request to "/items/30/participant/1/thread"
     Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "participant_id": 1,
-      "item_id": 30,
-      "status": "waiting_for_trainer"
-    }
-    """
+    And the response at $.participant_id should be "1"
+    And the response at $.item_id should be "30"
+    And the response at $.status should be "waiting_for_trainer"
 
   Scenario: The current-user is descendant of the thread helper group and the thread is open and user has validated the item
     Given I am the user with id "4"
     When I send a GET request to "/items/40/participant/3/thread"
     Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "participant_id": 3,
-      "item_id": 40,
-      "status": "waiting_for_participant"
-    }
-    """
+    And the response at $.participant_id should be "3"
+    And the response at $.item_id should be "40"
+    And the response at $.status should be "waiting_for_participant"
 
   Scenario: >
       The current-user is descendant of the thread helper group
@@ -106,12 +103,6 @@ Feature: Get thread
     Given I am the user with id "4"
     When I send a GET request to "/items/50/participant/3/thread"
     Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "participant_id": 3,
-      "item_id": 50,
-      "status": "closed"
-    }
-    """
-
+    And the response at $.participant_id should be "3"
+    And the response at $.item_id should be "50"
+    And the response at $.status should be "closed"

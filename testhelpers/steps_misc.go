@@ -115,7 +115,8 @@ func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument
 	return nil
 }
 
-func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, docString *messages.PickleStepArgument_PickleDocString) error { // nolint
+// getPrivateKeyOf gets the test private key  of the app or the task platform.
+func (ctx *TestContext) getPrivateKeyOf(signerName string) *rsa.PrivateKey {
 	var privateKey *rsa.PrivateKey
 	signerName = strings.TrimSpace(signerName)
 	switch signerName {
@@ -125,18 +126,32 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 	case "the task platform":
 		privateKey = tokentest.TaskPlatformPrivateKeyParsed
 	default:
-		return fmt.Errorf("unknown signer: %q. Only \"the app\" and \"the task platform\" are supported", signerName)
+		panic(fmt.Errorf("unknown signer: %q. Only \"the app\" and \"the task platform\" are supported", signerName))
 	}
 
-	data, err := ctx.preprocessString(docString.Content)
+	return privateKey
+}
+
+// SignedTokenIsDistributed declares a signed token and puts it in a global variable.
+// This allows later use inside a request, or a comparison with a response.
+func (ctx *TestContext) SignedTokenIsDistributed(
+	varName, signerName string,
+	jsonPayload *messages.PickleStepArgument_PickleDocString,
+) error {
+	privateKey := ctx.getPrivateKeyOf(signerName)
+
+	data, err := ctx.preprocessString(jsonPayload.Content)
 	if err != nil {
 		return err
 	}
+
 	var payload map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &payload); err != nil {
 		return err
 	}
+
 	ctx.templateSet.AddGlobal(varName, token.Generate(payload, privateKey))
+
 	return nil
 }
 

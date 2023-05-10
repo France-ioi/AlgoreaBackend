@@ -111,12 +111,49 @@ func (resp *saveGradeResponse) UnmarshalJSON(raw []byte) error {
 	return nil
 }
 
+type threadGetResponse struct {
+	ParticipantID int64  `json:"participant_id"`
+	ItemID        int64  `json:"item_id"`
+	Status        string `json:"status"`
+
+	ThreadToken token.Thread `json:"token"`
+
+	PublicKey *rsa.PublicKey
+}
+
+type threadGetResponseWrapper struct {
+	ParticipantID int64  `json:"participant_id"`
+	ItemID        int64  `json:"item_id"`
+	Status        string `json:"status"`
+
+	ThreadToken *string `json:"token"`
+}
+
+func (resp *threadGetResponse) UnmarshalJSON(raw []byte) error {
+	wrapper := threadGetResponseWrapper{}
+	if err := json.Unmarshal(raw, &wrapper); err != nil {
+		return err
+	}
+
+	resp.ItemID = wrapper.ItemID
+	resp.ParticipantID = wrapper.ParticipantID
+	resp.Status = wrapper.Status
+
+	if wrapper.ThreadToken != nil {
+		resp.ThreadToken.PublicKey = resp.PublicKey
+		return (&resp.ThreadToken).UnmarshalString(*wrapper.ThreadToken)
+	}
+
+	return nil
+}
+
 var knownTypes = map[string]reflect.Type{
 	"AnswersSubmitRequest":      reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
 	"AnswersSubmitResponse":     reflect.TypeOf(&answersSubmitResponse{}).Elem(),
 	"AskHintResponse":           reflect.TypeOf(&responseWithTaskToken{}).Elem(),
 	"SaveGradeResponse":         reflect.TypeOf(&saveGradeResponse{}).Elem(),
 	"GenerateTaskTokenResponse": reflect.TypeOf(&responseWithTaskToken{}).Elem(),
+	"ThreadTokenResponse":       reflect.TypeOf(&threadGetResponse{}).Elem(),
 }
 
 func getZeroStructPtr(typeName string) (interface{}, error) {

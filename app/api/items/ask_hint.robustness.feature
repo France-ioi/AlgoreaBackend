@@ -47,7 +47,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: User not found
     Given I am the user with id "404"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "404",
@@ -57,7 +57,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "404",
@@ -80,7 +80,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: idUser in task_token doesn't match the user's id
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "20",
@@ -90,7 +90,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -113,7 +113,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: itemUrls of task_token and hint_requested don't match
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -123,7 +123,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -146,7 +146,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: idUser in hint_requested doesn't match the user's id
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -156,7 +156,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "20",
@@ -179,7 +179,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: idAttempt in hint_requested & task_token don't match
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -189,7 +189,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -212,7 +212,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: idItemLocal in hint_requested & task_token don't match
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -222,7 +222,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -245,7 +245,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: No submission rights
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -255,7 +255,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -278,7 +278,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: idAttempt not found
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -288,7 +288,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -311,7 +311,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: missing askedHint
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -321,7 +321,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -343,7 +343,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: The attempt is expired (doesn't allow submissions anymore)
     Given I am the user with id "101"
-    And the following token "priorUserTaskToken" signed by the app is distributed:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -353,7 +353,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    And the following token "hintRequestToken" signed by the task platform is distributed:
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
