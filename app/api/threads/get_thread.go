@@ -2,10 +2,14 @@ package threads
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // swagger:model threadGetResponse
@@ -16,7 +20,8 @@ type threadGetResponse struct {
 	ItemID int64 `json:"item_id"`
 	// required: true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
-	Status string `json:"status"`
+	Status      string `json:"status"`
+	ThreadToken string `json:"token"`
 }
 
 // swagger:operation GET /items/{item_id}/participant/{participant_id}/thread threads threadGet
@@ -85,6 +90,26 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 	threadGetResponse.ParticipantID = participantID
 	threadGetResponse.Status = store.Threads().GetThreadStatus(participantID, itemID)
 
+	threadGetResponse.ThreadToken, err = srv.generateThreadToken(itemID, participantID, user, store)
+	service.MustNotBeError(err)
+
 	render.Respond(rw, r, threadGetResponse)
+
 	return service.NoError
+}
+
+func (srv *Service) generateThreadToken(itemID, participantID int64, user *database.User, store *database.DataStore) (string, error) {
+	twoHoursLater := time.Now().Add(time.Hour * 2)
+
+	threadToken, err := (&token.Thread{
+		ItemID:        strconv.FormatInt(itemID, 10),
+		ParticipantID: strconv.FormatInt(participantID, 10),
+		UserID:        strconv.FormatInt(user.GroupID, 10),
+		IsMine:        participantID == user.GroupID,
+		CanWatch:      user.CanWatchItemAnswer(store, itemID) && user.CanWatchGroupMembers(store, participantID),
+		CanWrite:      store.Threads().UserCanWrite(user, participantID, itemID),
+		Exp:           strconv.FormatInt(twoHoursLater.Unix(), 10),
+	}).Sign(srv.TokenConfig.PrivateKey)
+
+	return threadToken, err
 }

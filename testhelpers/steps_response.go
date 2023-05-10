@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
@@ -34,57 +35,71 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	return nil
 }
 
-// TheResponseAtShouldBeTheValue checks that the response at a JSONPath is a certain value.
-func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
+func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, error) {
 	var JSONResponse interface{}
 	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
 	if err != nil {
-		return fmt.Errorf("TheResponseAtShouldBeTheValue: Unmarshal response: %v", err)
+		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %v", err)
 	}
 
 	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
-	if err != nil && value == "" {
-		return nil
-	} else if err != nil {
-		return fmt.Errorf("TheResponseAtShouldBeTheValue: Cannot get JsonPath: %v", err)
+	if err != nil {
+		return nil, fmt.Errorf("getJSONPathOnResponse: Cannot get JsonPath: %v", err)
+	}
+
+	return jsonPathRes, nil
+}
+
+// TheResponseAtShouldBeTheValue checks that the response at a JSONPath is a certain value.
+func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
+	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
+	if err != nil {
+		// When an empty value is provided, not finding the jsonPath because it doesn't exist is a success.
+		if value == "" {
+			return nil
+		}
+
+		return err
 	}
 
 	value = ctx.replaceReferencesByIDs(value)
-
-	switch jsonPathResultTyped := jsonPathRes.(type) {
-	case []interface{}:
-		// When the result is an empty array, matches if we're looking for an empty value.
-		if len(jsonPathResultTyped) == 0 && value == "" {
-			return nil
-		}
-	case interface{}:
-		if jsonPathRes == value {
-			return nil
-		}
-
-		return fmt.Errorf("JSONPath %v doesn't match value %v: %v", jsonPath, ctx.lastResponseBody, value)
+	if jsonPathResultMatchesValue(jsonPathRes, value) {
+		return nil
 	}
 
 	return fmt.Errorf(
-		"TheResponseAtShouldBeTheValue: Unhandled case for JSONPath %v=%v and value %v in %v",
+		"TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %v != %v",
 		jsonPath,
+		ctx.lastResponseBody,
 		jsonPathRes,
 		value,
-		ctx.lastResponseBody,
 	)
+}
+
+func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
+	switch jsonPathResultTyped := jsonPathRes.(type) {
+	case string:
+	case float64:
+		valueFloat, _ := strconv.ParseFloat(value, 64)
+		if valueFloat == jsonPathResultTyped {
+			return true
+		}
+	case []interface{}:
+		// When the result is an empty array, matches if we're looking for an empty value.
+		if len(jsonPathResultTyped) == 0 && value == "" {
+			return true
+		}
+	case interface{}:
+	}
+
+	return jsonPathRes == value
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
 func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.PickleStepArgument_PickleTable) error {
-	var JSONResponse interface{}
-	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
+	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
 	if err != nil {
-		return fmt.Errorf("TheResponseAtShouldBeTheValue: Unmarshal response: %v", err)
-	}
-
-	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
-	if err != nil {
-		return fmt.Errorf("TheResponseAtShouldBeTheValue: Cannot get JsonPath: %v", err)
+		return err
 	}
 
 	jsonPathResArr := jsonPathRes.([]interface{})
@@ -206,7 +221,7 @@ func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleStepArgumen
 
 func compareStrings(expected, actual string) error {
 	if expected != actual {
-		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{ // nolint: gosec
+		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
 			A:        difflib.SplitLines(expected),
 			B:        difflib.SplitLines(actual),
 			FromFile: "Expected",
