@@ -122,25 +122,8 @@ Feature: List threads
     When I send a GET request to "/threads?watched_group_id=@Laboratory"
     Then the response code should be 200
     And the response body should be, in JSON:
-    """
+      """
       [
-        {
-          "item": {
-            "id": "1",
-            "language_tag": "fr",
-            "title": "Debut",
-            "type": "Task"
-          },
-          "latest_update_at": "2023-01-01T00:00:01Z",
-          "message_count": 0,
-          "participant": {
-            "id": "@LaboratoryMember_WithApprovedAccessPersonalInfo",
-            "login": "LaboratoryMember_WithApprovedAccessPersonalInfo",
-            "first_name": "FirstName_Approved",
-            "last_name": "LastName_Approved"
-          },
-          "status": "waiting_for_trainer"
-        },
         {
           "item": {
             "id": "2",
@@ -157,9 +140,26 @@ Feature: List threads
             "last_name": ""
           },
           "status": "waiting_for_participant"
+        },
+        {
+          "item": {
+            "id": "1",
+            "language_tag": "fr",
+            "title": "Debut",
+            "type": "Task"
+          },
+          "latest_update_at": "2023-01-01T00:00:01Z",
+          "message_count": 0,
+          "participant": {
+            "id": "@LaboratoryMember_WithApprovedAccessPersonalInfo",
+            "login": "LaboratoryMember_WithApprovedAccessPersonalInfo",
+            "first_name": "FirstName_Approved",
+            "last_name": "LastName_Approved"
+          },
+          "status": "waiting_for_trainer"
         }
       ]
-    """
+      """
 
   Scenario: Should get the threads whose the participant is a descendant of the watched_group_id
     Given I am @A_UniversityManagerCanWatch
@@ -196,36 +196,128 @@ Feature: List threads
       | @B_UniversityMember_CanWatchAnswer4 |
       | @B_UniversityMember_CanWatchAnswer5 |
 
-    Scenario: Should return only thread from item or descendant when item_id is given
-      Given I am @John
-      And there are the following items:
-        | item              | parent      | type    |
-        | @Root_Task        |             | Task    |
-        | @Chapter1         |             | Chapter |
-        | @Chapter1_Task    | @Chapter1   | Task    |
-        | @Chapter2         |             | Chapter |
-        | @Chapter2_Task    | @Chapter2   | Task    |
-        | @Chapter2_1       | @Chapter2   | Chapter |
-        | @Chapter2_1_Task1 | @Chapter2_1 | Task    |
-        | @Chapter2_1_Task2 | @Chapter2_1 | Task    |
-        | @Chapter3         |             | Chapter |
-      And there are the following threads:
-        | participant | item              | visible_by_participant | message_count |
-        | @John       | @Root_Task        | 1                      | 100           |
-        | @John       | @Chapter1         | 1                      | 101           |
-        | @John       | @Chapter1_Task    | 1                      | 102           |
-        | @John       | @Chapter2         | 1                      | 103           |
-        | @John       | @Chapter2_Task    | 1                      | 104           |
-        | @John       | @Chapter3         | 1                      | 105           |
-        | @John       | @Chapter2_1       | 1                      | 106           |
-        | @John       | @Chapter2_1_Task1 | 1                      | 107           |
-        | @John       | @Chapter2_1_Task2 | 1                      | 108           |
+  Scenario: Should return only thread from item or descendant when item_id is given
+    Given I am @John
+    And there are the following items:
+      | item              | parent      | type    |
+      | @Root_Task        |             | Task    |
+      | @Chapter1         |             | Chapter |
+      | @Chapter1_Task    | @Chapter1   | Task    |
+      | @Chapter2         |             | Chapter |
+      | @Chapter2_Task    | @Chapter2   | Task    |
+      | @Chapter2_1       | @Chapter2   | Chapter |
+      | @Chapter2_1_Task1 | @Chapter2_1 | Task    |
+      | @Chapter2_1_Task2 | @Chapter2_1 | Task    |
+      | @Chapter3         |             | Chapter |
+    And there are the following threads:
+      | participant | item              | visible_by_participant | message_count |
+      | @John       | @Root_Task        | 1                      | 100           |
+      | @John       | @Chapter1         | 1                      | 101           |
+      | @John       | @Chapter1_Task    | 1                      | 102           |
+      | @John       | @Chapter2         | 1                      | 103           |
+      | @John       | @Chapter2_Task    | 1                      | 104           |
+      | @John       | @Chapter3         | 1                      | 105           |
+      | @John       | @Chapter2_1       | 1                      | 106           |
+      | @John       | @Chapter2_1_Task1 | 1                      | 107           |
+      | @John       | @Chapter2_1_Task2 | 1                      | 108           |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&item_id=@Chapter2"
+    Then the response code should be 200
+    And the response at $[*].item.id should be:
+      | @Chapter2         |
+      | @Chapter2_Task    |
+      | @Chapter2_1       |
+      | @Chapter2_1_Task1 |
+      | @Chapter2_1_Task2 |
+
+  Scenario Outline: Should support sort and limit parameters
+    Given I am @John
+    And there are the following items:
+      | item   | type |
+      | @Task1 | Task |
+      | @Task2 | Task |
+      | @Task3 | Task |
+      | @Task4 | Task |
+    And there are the following threads:
+      | participant | item                   | visible_by_participant | message_count | latest_update_at    |
+      | @John       | @TaskSecondMaxUpdateAt | 1                      | 100           | 2023-01-01 00:00:10 |
+      | @John       | @TaskMinUpdateAt       | 1                      | 101           | 2023-01-01 00:00:01 |
+      | @John       | @TaskMaxUpdateAt       | 1                      | 102           | 2023-01-01 00:00:11 |
+      | @John       | @TaskSecondMinUpdateAt | 1                      | 103           | 2023-01-01 00:00:02 |
       And I am @John
-      When I send a GET request to "/threads?is_mine=1&item_id=@Chapter2"
-      Then the response code should be 200
-      And the response at $[*].item.id should be:
-        | @Chapter2         |
-        | @Chapter2_Task    |
-        | @Chapter2_1       |
-        | @Chapter2_1_Task1 |
-        | @Chapter2_1_Task2 |
+    When I send a GET request to "/threads?is_mine=1&limit=<limit>&sort=<sort>"
+    Then the response code should be 200
+    And the response should be a JSON array with <nb_results> entries
+    And the response at $[<result_item_index>].item.id should be "<result_item>"
+    Examples:
+      | sort              | limit | nb_results | result_item_index | result_item            |
+      | latest_update_at  | 1     | 1          | 0                 | @TaskMinUpdateAt       |
+      | latest_update_at  | 1     | 1          | 0                 | @TaskMinUpdateAt       |
+      | -latest_update_at | 1     | 1          | 0                 | @TaskMaxUpdateAt       |
+      | -latest_update_at | 2     | 2          | 0                 | @TaskMaxUpdateAt       |
+      | -latest_update_at | 2     | 2          | 1                 | @TaskSecondMaxUpdateAt |
+
+  Scenario Outline: Should support pagination parameters
+    Given I am @John
+    And there are the following items:
+      | item             | type |
+      | @TaskMinUpdateAt | Task |
+      | @TaskMaxUpdateAt | Task |
+    And there are the following threads:
+      | participant | item             | visible_by_participant | latest_update_at    |
+      | @John       | @TaskMinUpdateAt | 1                      | 2023-01-01 00:00:01 |
+      | @John       | @TaskMaxUpdateAt | 1                      | 2023-01-01 00:00:02 |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&limit=1&sort=latest_update_at&from.item_id=<from.item_id>&from.participant_id=<from.participant_id>"
+    Then the response code should be 200
+    And the response should be a JSON array with <nb_results> entries
+    And the response at $[0].item.id should be "<result_item>"
+    Examples:
+      | from.item_id     | from.participant_id | nb_results | result_item      |
+      | @TaskMinUpdateAt | @John               | 1          | @TaskMaxUpdateAt |
+      | @TaskMaxUpdateAt | @John               | 0          |                  |
+
+  Scenario Outline: Should filter by status if parameter status is given
+    Given I am @John
+    And there are the following items:
+      | item                             | type |
+      | @TaskWaitingForParticipantThread | Task |
+      | @TaskWaitingForTrainerThread     | Task |
+      | @TaskClosedThread                | Task |
+    And there are the following threads:
+      | participant | item                             | status                  | visible_by_participant |
+      | @John       | @TaskWaitingForParticipantThread | waiting_for_participant | 1                      |
+      | @John       | @TaskWaitingForTrainerThread     | waiting_for_trainer     | 1                      |
+      | @John       | @TaskClosedThread                | closed                  | 1                      |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&status=<status>"
+    Then the response code should be 200
+    And the response should be a JSON array with 1 entries
+    And the response at $[0].item.id should be "<result_item>"
+    Examples:
+      | status              | result_item                  |
+      | waiting_for_trainer | @TaskWaitingForTrainerThread |
+      | closed              | @TaskClosedThread            |
+
+  Scenario Outline: Should return only the thread with latest_update_at>latest_update_gt if parameter latest_update_gt is given
+    Given I am @John
+    And there are the following items:
+      | item   | type |
+      | @Task1 | Task |
+      | @Task2 | Task |
+      | @Task3 | Task |
+    And there are the following threads:
+      | participant | item   | visible_by_participant | latest_update_at    |
+      | @John       | @Task1 | 1                      | 2023-01-01 00:00:01 |
+      | @John       | @Task2 | 1                      | 2023-01-01 00:00:02 |
+      | @John       | @Task3 | 1                      | 2023-01-01 00:00:03 |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&latest_update_gt=<latest_update_gt>&sort=latest_update_at"
+    Then the response code should be 200
+    And the response should be a JSON array with <nb_results> entries
+    And the response at $[0].item.id should be "<first_result_item>"
+    Examples:
+      | latest_update_gt     | first_result_item | nb_results |
+      | 2023-01-01T00:00:00Z | @Task1            | 3          |
+      | 2023-01-01T00:00:02Z | @Task3            | 1          |
+      | 2023-01-01T00:00:03Z |                   | 0          |

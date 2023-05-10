@@ -49,3 +49,15 @@ Feature: List threads - robustness
       | is_mine |
       | 0       |
       | 1       |
+
+  Scenario: Should return an error if sort parameter is invalid
+    Given I am @John
+    When I send a GET request to "/threads?is_mine=1&sort=invalid"
+    Then the response code should be 400
+    And the response error message should contain "Unallowed field in sorting parameters"
+
+  Scenario: Should return an error if latest_update_gt isn't in the right format
+    Given I am @John
+    When I send a GET request to "/threads?is_mine=1&latest_update_gt=2023-01-01T00:00:99"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for latest_update_gt (should be time (rfc3339))"

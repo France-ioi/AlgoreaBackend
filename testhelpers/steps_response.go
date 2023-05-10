@@ -43,7 +43,9 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 	}
 
 	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
-	if err != nil {
+	if err != nil && value == "" {
+		return nil
+	} else if err != nil {
 		return fmt.Errorf("TheResponseAtShouldBeTheValue: Cannot get JsonPath: %v", err)
 	}
 
