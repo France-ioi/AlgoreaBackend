@@ -8,8 +8,8 @@ Feature: Ask for a hint - robustness
       | 22              | 13             |
     And the groups ancestors are computed
     And the database has the following table 'platforms':
-      | id | regexp                                            | public_key                |
-      | 10 | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
+      | id | regexp                     | public_key                | priority |
+      | 10 | https://platformwithkey    | {{taskPlatformPublicKey}} | 0        |
     And the database has the following table 'items':
       | id | platform_id | url                                                                     | read_only | default_language_tag |
       | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         | fr                   |
@@ -53,7 +53,7 @@ Feature: Ask for a hint - robustness
         "idUser": "404",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -63,7 +63,7 @@ Feature: Ask for a hint - robustness
         "idUser": "404",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemUrl": "https://platformwithkey/50",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -86,7 +86,7 @@ Feature: Ask for a hint - robustness
         "idUser": "20",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -96,7 +96,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemUrl": "https://platformwithkey/50",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -119,7 +119,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -129,7 +129,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=555555555555555555",
+        "itemUrl": "https://platformwithkey/404",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -152,7 +152,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -162,7 +162,7 @@ Feature: Ask for a hint - robustness
         "idUser": "20",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -185,7 +185,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -195,7 +195,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/1",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -218,7 +218,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -251,7 +251,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -261,7 +261,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -284,7 +284,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "10",
         "idAttempt": "101/2",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/10",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -294,7 +294,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "10",
         "idAttempt": "101/2",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/10",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -317,7 +317,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/50",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -327,7 +327,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936"
+        "itemURL": "https://platformwithkey/50"
       }
       """
     When I send a POST request to "/items/ask-hint" with the following body:
@@ -349,7 +349,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "10",
         "idAttempt": "101/1",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/10",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
@@ -359,7 +359,7 @@ Feature: Ask for a hint - robustness
         "idUser": "101",
         "idItemLocal": "10",
         "idAttempt": "101/1",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/10",
         "askedHint": {"rotorIndex":1}
       }
       """
