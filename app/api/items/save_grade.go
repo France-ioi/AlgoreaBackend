@@ -267,7 +267,7 @@ func (requestData *saveGradeRequestParsed) UnmarshalJSON(raw []byte) error {
 }
 
 func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGradeRequest) error {
-	_, err := token.UnmarshalDependingOnItemPlatform(
+	hasPlatformKey, err := token.UnmarshalDependingOnItemPlatform(
 		requestData.store,
 		requestData.TaskToken.Converted.LocalItemID,
 		&requestData.ScoreToken,
@@ -279,7 +279,7 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 	}
 	service.MustNotBeError(err)
 
-	if requestData.ScoreToken == nil {
+	if !hasPlatformKey {
 		err = requestData.reconstructScoreTokenData(wrapper)
 		if err != nil {
 			return err
