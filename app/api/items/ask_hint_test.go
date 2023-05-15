@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
@@ -115,44 +114,14 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			},
 		},
 		{
-			name: "plain hint_requested is not a map",
-			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": []}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
-			)),
-			mockDB:   true,
-			itemID:   901756573345831409,
-			platform: &platform{},
-			wantErr: errors.New("invalid hint_requested: " +
-				"json: cannot unmarshal array into Go value of type map[string]formdata.Anything"),
-		},
-		{
-			name: "invalid plain hint_requested",
-			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": {"someField":"value"}}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
-			)),
-			mockDB:   true,
-			itemID:   901756573345831409,
-			platform: &platform{},
-			wantErr:  errors.New("invalid hint_requested: invalid HintToken: invalid input data"),
-		},
-		{
-			name: "plain hint_requested is okay",
+			name: "plain hint_requested should not be accepted",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": {"idUser":"556371821693219925","askedHint":"123"}}`,
 				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
 			)),
 			mockDB:   true,
 			itemID:   901756573345831409,
-			platform: &platform{},
-			expected: AskHintRequest{
-				TaskToken: &expectedTaskToken,
-				HintToken: &token.Hint{
-					UserID:    "556371821693219925",
-					AskedHint: *formdata.AnythingFromString(`"123"`),
-					Converted: payloads.HintTokenConverted{
-						UserID: 556371821693219925,
-					},
-				},
-			},
+			platform: &platform{publicKey: string(tokentest.AlgoreaPlatformPublicKey)},
+			wantErr:  errors.New("invalid hint_requested: json: cannot unmarshal object into Go value of type string"),
 		},
 	}
 	for _, tt := range tests {
@@ -163,7 +132,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 
 			if tt.mockDB {
 				mockQuery := mock.ExpectQuery(regexp.QuoteMeta("SELECT public_key " +
-					"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?)")).
+					"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?) LIMIT 1")).
 					WithArgs(tt.itemID)
 
 				if tt.platform != nil {

@@ -24,20 +24,22 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedParsedPayload)
 	expectedToken := (*token.Hint)(&expectedParsedPayload)
 	tests := []struct {
-		name           string
-		itemID         int64
-		token          []byte
-		tokenFieldName string
-		fixtures       []string
-		target         interface{}
-		expected       interface{}
-		expectedErr    error
+		name                   string
+		itemID                 int64
+		token                  []byte
+		tokenFieldName         string
+		fixtures               []string
+		target                 interface{}
+		expected               interface{}
+		expectedHasPlatformKey bool
+		expectedErr            error
 	}{
 		{
-			name:        "no platform",
-			itemID:      404,
-			token:       []byte(""),
-			expectedErr: errors.New("cannot find the platform for item 404"),
+			name:                   "no platform",
+			itemID:                 404,
+			token:                  []byte(""),
+			expectedHasPlatformKey: false,
+			expectedErr:            errors.New("cannot find the platform for item 404"),
 		},
 		{
 			name:   "missing token",
@@ -48,11 +50,12 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 				`items: [{id: 50, platform_id: 11, url: "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183936",
 				          default_language_tag: fr}]`,
 			},
-			token:          nil,
-			tokenFieldName: "hint_requested",
-			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
-			expected:       nil,
-			expectedErr:    errors.New("missing hint_requested"),
+			token:                  nil,
+			tokenFieldName:         "hint_requested",
+			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			expected:               nil,
+			expectedHasPlatformKey: true,
+			expectedErr:            errors.New("missing hint_requested"),
 		},
 		{
 			name:   "invalid token",
@@ -63,11 +66,12 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 				`items: [{id: 50, platform_id: 10, url: "http://taskplatform2.mblockelet.info/task.html?taskId=403449543672183936",
 				          default_language_tag: fr}]`,
 			},
-			token:          []byte(""),
-			tokenFieldName: "hint_requested",
-			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
-			expected:       nil,
-			expectedErr:    errors.New("invalid hint_requested: unexpected end of JSON input"),
+			token:                  []byte(""),
+			tokenFieldName:         "hint_requested",
+			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			expected:               nil,
+			expectedHasPlatformKey: true,
+			expectedErr:            errors.New("invalid hint_requested: unexpected end of JSON input"),
 		},
 		{
 			name:   "invalid public key",
@@ -78,11 +82,12 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 				`items: [{id: 50, platform_id: 10, url: "http://taskplatform3.mblockelet.info/task.html?taskId=403449543672183936",
 				          default_language_tag: fr}]`,
 			},
-			token:          []byte("dsafafd"),
-			tokenFieldName: "score_token",
-			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
-			expected:       nil,
-			expectedErr:    errors.New("invalid score_token: wrong platform's key"),
+			token:                  []byte("dsafafd"),
+			tokenFieldName:         "score_token",
+			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			expected:               nil,
+			expectedHasPlatformKey: true,
+			expectedErr:            errors.New("invalid score_token: wrong platform's key"),
 		},
 		{
 			name:   "everything is okay",
@@ -95,10 +100,11 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform,
 				tokentest.TaskPlatformPrivateKeyParsed))),
-			tokenFieldName: "hint_requested",
-			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
-			expected:       expectedToken,
-			expectedErr:    nil,
+			tokenFieldName:         "hint_requested",
+			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			expected:               expectedToken,
+			expectedHasPlatformKey: true,
+			expectedErr:            nil,
 		},
 		{
 			name:   "platform doesn't use tokens",
@@ -108,11 +114,12 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 				`items: [{id: 50, platform_id: 10, url: "http://taskplatform5.mblockelet.info/task.html?taskId=403449543672183936",
 				          default_language_tag: fr}]`,
 			},
-			token:          []byte(`{}`),
-			tokenFieldName: "hint_requested",
-			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
-			expected:       (*token.Hint)(nil),
-			expectedErr:    nil,
+			token:                  []byte(`{}`),
+			tokenFieldName:         "hint_requested",
+			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			expected:               (*token.Hint)(nil),
+			expectedHasPlatformKey: false,
+			expectedErr:            nil,
 		},
 	}
 	for _, tt := range tests {
@@ -121,7 +128,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(tt.fixtures...)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
-			err := token.UnmarshalDependingOnItemPlatform(store, tt.itemID, tt.target, tt.token, tt.tokenFieldName)
+			hasPlatformKey, err := token.UnmarshalDependingOnItemPlatform(store, tt.itemID, tt.target, tt.token, tt.tokenFieldName)
+			assert.Equal(t, tt.expectedHasPlatformKey, hasPlatformKey)
 			assert.Equal(t, tt.expectedErr, err)
 			if err == nil {
 				if tt.expected != nil && tt.target != nil && !reflect.ValueOf(tt.target).Elem().IsNil() {

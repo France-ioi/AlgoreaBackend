@@ -10,10 +10,12 @@ Feature: Ask for a hint - robustness
     And the database has the following table 'platforms':
       | id | regexp                     | public_key                | priority |
       | 10 | https://platformwithkey    | {{taskPlatformPublicKey}} | 0        |
+      | 11 | https://nokeyplatform.test |                           | 1        |
     And the database has the following table 'items':
-      | id | platform_id | url                                                                     | read_only | default_language_tag |
-      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         | fr                   |
-      | 10 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 0         | fr                   |
+      | id | platform_id | url                           | read_only | default_language_tag |
+      | 50 | 10          | https://platformwithkey/50    | 1         | fr                   |
+      | 10 | 10          | https://platformwithkey/10    | 0         | fr                   |
+      | 51 | 11          | https://nokeyplatform.test/51 | 1         | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 0           |
@@ -24,6 +26,7 @@ Feature: Ask for a hint - robustness
       | group_id | item_id | can_view_generated |
       | 101      | 10      | content            |
       | 101      | 50      | content            |
+      | 101      | 51      | content            |
     And the database has the following table 'attempts':
       | id | participant_id | allows_submissions_until |
       | 0  | 101            | 9999-12-31 23:59:59      |
@@ -31,6 +34,7 @@ Feature: Ask for a hint - robustness
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | hints_requested        |
       | 0          | 101            | 50      | [0,  1, "hint" , null] |
+      | 0          | 101            | 51      | [0,  1, "hint" , null] |
       | 0          | 101            | 10      | null                   |
       | 1          | 101            | 10      | null                   |
     And time is frozen
@@ -226,9 +230,9 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "101",
-        "idItemLocal": "51",
+        "idItemLocal": "10",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "itemURL": "https://platformwithkey/10",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -373,3 +377,59 @@ Feature: Ask for a hint - robustness
     Then the response code should be 404
     And the response error message should contain "No result or the attempt is expired"
     And the table "attempts" should stay unchanged
+
+  Scenario: Should return an error if there is a public key and the hint token's content is sent in clear JSON
+    Given I am the user with id "101"
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemURL": "https://platformwithkey/50",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    When I send a POST request to "/items/ask-hint" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": {
+          "idUser": "101",
+          "idItemLocal": "50",
+          "idAttempt": "101/0",
+          "itemURL": "https://platformwithkey/50",
+          "askedHint": {"rotorIndex":1}
+        }
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid hint_requested: json: cannot unmarshal object into Go value of type string"
+
+  Scenario: Should return an error if there is no public key and the hint token's content is sent in clear JSON
+    Given I am the user with id "101"
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "51",
+        "idAttempt": "101/0",
+        "itemURL": "https://nokeyplatform.test/51",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    When I send a POST request to "/items/ask-hint" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": {
+          "idUser": "101",
+          "idItemLocal": "51",
+          "idAttempt": "101/0",
+          "itemURL": "https://nokeyplatform.test/51",
+          "askedHint": {"rotorIndex":1}
+        }
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "No public key available for item 51"
