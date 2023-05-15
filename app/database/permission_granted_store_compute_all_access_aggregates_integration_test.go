@@ -501,11 +501,12 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantV
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsSolutionWithGrantForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1, default_language_tag: fr}]
-		groups: [{id: 1}, {id: 2}]
+		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
+		groups: [{id: 1}, {id: 2}, {id: 3}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_grant_view: content}
-			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content_with_descendants, is_owner: 1}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content_with_descendants, is_owner: 1}
+			- {group_id: 3, item_id: 2, source_group_id: 3, can_grant_view: none, is_owner: 1}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -513,6 +514,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsSolutio
 	}))
 	var result string
 	assert.NoError(t, permissionStore.Where("group_id = 1 AND item_id = 1").
+		PluckFirst("can_grant_view_generated", &result).Error())
+	assert.Equal(t, "solution_with_grant", result)
+
+	assert.NoError(t, permissionStore.Where("group_id = 3 AND item_id = 2").
 		PluckFirst("can_grant_view_generated", &result).Error())
 	assert.Equal(t, "solution_with_grant", result)
 }
