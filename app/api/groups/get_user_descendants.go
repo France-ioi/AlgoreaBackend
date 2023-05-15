@@ -11,53 +11,53 @@ import (
 
 // swagger:operation GET /groups/{group_id}/user-descendants group-memberships groupUserDescendantView
 //
-//		---
-//		summary: List group's user descendants
-//		description: Return all users (`type` = "User") among the descendants of the given group
+//	---
+//	summary: List group's user descendants
+//	description: Return all users (`type` = "User") among the descendants of the given group
 //
 //
-//	  `first_name` and `last_name` of descendant users are only visible to the users themselves and
-//	  to managers of those groups to which those users provided view access to personal data.
+//		`first_name` and `last_name` of descendant users are only visible to the users themselves and
+//		to managers of those groups to which those users provided view access to personal data.
 //
 //
-//	  * The authenticated user should be a manager of the parent group.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: from.id
-//				description: Start the page from the user next to the user with `group_id`=`{from.id}`
-//				in: query
-//				type: integer
-//			- name: sort
-//				in: query
-//				default: [name,id]
+//		* The authenticated user should be a manager of the parent group.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: from.id
+//			description: Start the page from the user next to the user with `group_id`=`{from.id}`
+//			in: query
+//			type: integer
+//		- name: sort
+//			in: query
+//			default: [name,id]
+//			type: array
+//			items:
+//				type: string
+//				enum: [name,-name,id,-id]
+//		- name: limit
+//			description: Display the first N teams
+//			in: query
+//			type: integer
+//			maximum: 1000
+//			default: 500
+//	responses:
+//		"200":
+//			description: OK. Success response with an array of users
+//			schema:
 //				type: array
 //				items:
-//					type: string
-//					enum: [name,-name,id,-id]
-//			- name: limit
-//				description: Display the first N teams
-//				in: query
-//				type: integer
-//				maximum: 1000
-//				default: 500
-//		responses:
-//			"200":
-//				description: OK. Success response with an array of users
-//				schema:
-//					type: array
-//					items:
-//						"$ref": "#/definitions/userDescendant"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					"$ref": "#/definitions/userDescendant"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

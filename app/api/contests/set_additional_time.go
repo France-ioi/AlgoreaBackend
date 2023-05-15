@@ -13,56 +13,56 @@ import (
 
 // swagger:operation PUT /contests/{item_id}/groups/{group_id}/additional-times contests contestSetAdditionalTime
 //
-//		---
-//		summary: Set additional time for a contest
-//		description: >
-//	               For the input group and item, sets the `groups_contest_items.additional_time` to the `time` value.
-//	               If there is no `groups_contest_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
-//	               (with default values in other columns).
-//	               If no `groups_contest_items` and `seconds` == 0, succeed without doing any change.
+//	---
+//	summary: Set additional time for a contest
+//	description: >
+//							 For the input group and item, sets the `groups_contest_items.additional_time` to the `time` value.
+//							 If there is no `groups_contest_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
+//							 (with default values in other columns).
+//							 If no `groups_contest_items` and `seconds` == 0, succeed without doing any change.
 //
 //
-//	               `groups_groups.expires_at` & `attempts.allows_submissions_until` (for the latest attempt) of affected
-//	               `items.participants_group_id` members is set to
-//	               `results.started_at` + `items.duration` + total additional time.
+//							 `groups_groups.expires_at` & `attempts.allows_submissions_until` (for the latest attempt) of affected
+//							 `items.participants_group_id` members is set to
+//							 `results.started_at` + `items.duration` + total additional time.
 //
 //
-//	               Restrictions:
-//	                 * `item_id` should be a timed contest;
-//	                 * the authenticated user should have `can_view` >= 'content' on the input item;
-//	                 * the authenticated user should have `can_grant_view` >= 'enter' on the input item;
-//	                 * the authenticated user should have `can_watch` >= 'result' on the input item;
-//	                 * the authenticated user should be a manager of the `group_id`
-//	                   with `can_grant_group_access` and `can_watch_members` permissions;
-//	                 * if the contest is team-only (`items.entry_participant_type` = 'Team'), then the group should not be a user.
+//							 Restrictions:
+//								 * `item_id` should be a timed contest;
+//								 * the authenticated user should have `can_view` >= 'content' on the input item;
+//								 * the authenticated user should have `can_grant_view` >= 'enter' on the input item;
+//								 * the authenticated user should have `can_watch` >= 'result' on the input item;
+//								 * the authenticated user should be a manager of the `group_id`
+//									 with `can_grant_group_access` and `can_watch_members` permissions;
+//								 * if the contest is team-only (`items.entry_participant_type` = 'Team'), then the group should not be a user.
 //
-//	               Otherwise, the "Forbidden" response is returned.
-//		parameters:
-//			- name: item_id
-//				description: "`id` of a timed contest"
-//				in: path
-//				type: integer
-//				required: true
-//			- name: group_id
-//				in: path
-//				type: integer
-//				required: true
-//			- name: seconds
-//				description: additional time in seconds (can be negative)
-//				in: query
-//				type: integer
-//				minimum: -3020399
-//				maximum: 3020399
-//				required: true
-//		responses:
-//			"200":
-//				"$ref": "#/responses/updatedResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//							 Otherwise, the "Forbidden" response is returned.
+//	parameters:
+//		- name: item_id
+//			description: "`id` of a timed contest"
+//			in: path
+//			type: integer
+//			required: true
+//		- name: group_id
+//			in: path
+//			type: integer
+//			required: true
+//		- name: seconds
+//			description: additional time in seconds (can be negative)
+//			in: query
+//			type: integer
+//			minimum: -3020399
+//			maximum: 3020399
+//			required: true
+//	responses:
+//		"200":
+//			"$ref": "#/responses/updatedResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

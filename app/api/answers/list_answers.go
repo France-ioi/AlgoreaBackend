@@ -13,67 +13,68 @@ import (
 
 // swagger:operation GET /items/{item_id}/answers answers answersList
 //
-//		---
-//		summary: List answers
-//		description: Return answers (i.e., saved answers, current answer and submissions)
-//	  for a given item and user, or from a given attempt.
+//	---
+//	summary: List answers
+//	description: >
+//		Return answers (i.e., saved answers, current answer and submissions)
+//		for a given item and user, or from a given attempt.
 //
-//	  * One of `author_id` or `attempt_id` is required.
+//		* One of `author_id` or `attempt_id` is required.
 //
-//	  * The user should have at least 'content' access to the item.
+//		* The user should have at least 'content' access to the item.
 //
-//	  * If `author_id` is given, the authenticated user should be the input `author_id`
-//	    or a manager of a group containing the input `author_id`.
+//		* If `author_id` is given, the authenticated user should be the input `author_id`
+//			or a manager of a group containing the input `author_id`.
 //
-//	  * If `attempt_id` is given, the authenticated user should be a member
-//	  or a manager of the group attached to the attempt.
+//		* If `attempt_id` is given, the authenticated user should be a member
+//		or a manager of the group attached to the attempt.
 //
 //
-//	  Users' `first_name` and `last_name` are only shown for the authenticated user or if the user
-//	  approved access to their personal info for some group managed by the authenticated user.
-//		parameters:
-//			- name: item_id
-//				in: path
-//				type: integer
-//				required: true
-//			- name: author_id
-//				in: query
-//				type: integer
-//			- name: attempt_id
-//				in: query
-//				type: integer
-//			- name: sort
-//				in: query
-//				default: [-created_at,id]
+//		Users' `first_name` and `last_name` are only shown for the authenticated user or if the user
+//		approved access to their personal info for some group managed by the authenticated user.
+//	parameters:
+//		- name: item_id
+//			in: path
+//			type: integer
+//			required: true
+//		- name: author_id
+//			in: query
+//			type: integer
+//		- name: attempt_id
+//			in: query
+//			type: integer
+//		- name: sort
+//			in: query
+//			default: [-created_at,id]
+//			type: array
+//			items:
+//				type: string
+//				enum: [created_at,-created_at,id,-id]
+//		- name: from.id
+//			description: Start the page from the answer next to the answer with `answers.id`=`{from.id}`
+//			in: query
+//			type: integer
+//		- name: limit
+//			description: Display the first N answers
+//			in: query
+//			type: integer
+//			maximum: 1000
+//			default: 500
+//	responses:
+//		"200":
+//			description: OK. Success response with an array of answers
+//			schema:
 //				type: array
 //				items:
-//					type: string
-//					enum: [created_at,-created_at,id,-id]
-//			- name: from.id
-//				description: Start the page from the answer next to the answer with `answers.id`=`{from.id}`
-//				in: query
-//				type: integer
-//			- name: limit
-//				description: Display the first N answers
-//				in: query
-//				type: integer
-//				maximum: 1000
-//				default: 500
-//		responses:
-//			"200":
-//				description: OK. Success response with an array of answers
-//				schema:
-//					type: array
-//					items:
-//						"$ref": "#/definitions/answersResponseAnswer"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					"$ref": "#/definitions/answersResponseAnswer"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 	store := srv.GetStore(httpReq)

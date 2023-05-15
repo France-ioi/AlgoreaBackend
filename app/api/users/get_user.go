@@ -82,30 +82,31 @@ type userViewResponse struct {
 
 // swagger:operation GET /users/by-login/{login} users userViewByLogin
 //
-//		---
-//		summary: Get profile info for a user by login
-//		description: Returns data from the `users` table for the given `{login}`
-//	             (`first_name` and `last_name` are only shown for the authenticated user or
-//	              if the user approved access to their personal info for some group
-//	              managed by the authenticated user) along with some permissions if the current user is a manager.
-//		parameters:
-//			- name: login
-//				in: path
-//				type: string
-//				required: true
-//		responses:
-//			"200":
-//				description: OK. Success response with user's data
-//				schema:
-//					"$ref": "#/definitions/userViewResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"404":
-//				"$ref": "#/responses/notFoundResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//	---
+//	summary: Get profile info for a user by login
+//	description: >
+//		Returns data from the `users` table for the given `{login}`
+//		(`first_name` and `last_name` are only shown for the authenticated user or
+//		if the user approved access to their personal info for some group
+//		managed by the authenticated user) along with some permissions if the current user is a manager.
+//	parameters:
+//		- name: login
+//			in: path
+//			type: string
+//			required: true
+//	responses:
+//		"200":
+//			description: OK. Success response with user's data
+//			schema:
+//				"$ref": "#/definitions/userViewResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"404":
+//			"$ref": "#/responses/notFoundResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 

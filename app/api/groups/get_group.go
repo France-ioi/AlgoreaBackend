@@ -95,39 +95,39 @@ type groupGetResponse struct {
 
 // swagger:operation GET /groups/{group_id} groups groupGet
 //
-//		---
-//		summary: Get a group
-//		description: >
+//	---
+//	summary: Get a group
+//	description: >
 //
-//	  Returns the group identified by the given `group_id`.
-//
-//
-//	  The `group_id` group should be visible to the current user, so it should be either
-//	  an ancestor of a group he joined, or an ancestor of a non-user group he manages, or
-//	  a descendant of a group he manages, or a public group,
-//	  otherwise the 'forbidden' error is returned. If the group is a user or a contest participants group,
-//	  the 'forbidden' error is returned as well.
+//		Returns the group identified by the given `group_id`.
 //
 //
-//				Note: `code*` and `current_user_can_*` fields are omitted when the user is not a manager of the group.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				type: integer
-//				required: true
-//		responses:
-//			"200":
-//				description: OK. The group info
-//				schema:
-//					"$ref": "#/definitions/groupGetResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		The `group_id` group should be visible to the current user, so it should be either
+//		an ancestor of a group he joined, or an ancestor of a non-user group he manages, or
+//		a descendant of a group he manages, or a public group,
+//		otherwise the 'forbidden' error is returned. If the group is a user or a contest participants group,
+//		the 'forbidden' error is returned as well.
+//
+//
+//		Note: `code*` and `current_user_can_*` fields are omitted when the user is not a manager of the group.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			type: integer
+//			required: true
+//	responses:
+//		"200":
+//			description: OK. The group info
+//			schema:
+//				"$ref": "#/definitions/groupGetResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {

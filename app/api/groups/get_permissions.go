@@ -69,41 +69,41 @@ type permissionsViewResponse struct {
 
 // swagger:operation GET /groups/{source_group_id}/permissions/{group_id}/{item_id} groups permissionsView
 //
-//		---
-//		summary: View permissions
-//		description: Lets a manager of a group view permissions on an item for the group.
+//	---
+//	summary: View permissions
+//	description: Lets a manager of a group view permissions on an item for the group.
 //
-//	  * The current user must be a manager (with `can_grant_group_access` permission)
-//	    of `{source_group_id}` which should be an ancestor of the `{group_id}`.
+//		* The current user must be a manager (with `can_grant_group_access` permission)
+//			of `{source_group_id}` which should be an ancestor of the `{group_id}`.
 //
-//	  * The current user must have `can_grant_view` > 'none' or
-//	    `can_watch` = 'answer_with_grant' or `can_edit` = 'all_with_grant' on `{item_id}` on the item.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: source_group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: item_id
-//				in: path
-//				required: true
-//				type: integer
-//		responses:
-//			"200":
-//				description: OK. Permissions for the group
-//				schema:
-//					"$ref": "#/definitions/permissionsViewResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		* The current user must have `can_grant_view` > 'none' or
+//			`can_watch` = 'answer_with_grant' or `can_edit` = 'all_with_grant' on `{item_id}` on the item.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: source_group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: item_id
+//			in: path
+//			required: true
+//			type: integer
+//	responses:
+//		"200":
+//			description: OK. Permissions for the group
+//			schema:
+//				"$ref": "#/definitions/permissionsViewResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) service.APIError {
 	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(r, "source_group_id")
 	if err != nil {

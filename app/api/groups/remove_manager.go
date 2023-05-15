@@ -11,37 +11,37 @@ import (
 
 // swagger:operation DELETE /groups/{group_id}/managers/{manager_id} groups groupManagerDelete
 //
-//		---
-//		summary: Remove a group manager
-//		description: >
+//	---
+//	summary: Remove a group manager
+//	description: >
 //
-//	  Removes a group manager.
+//		Removes a group manager.
 //
 //
-//	  The authenticated user should be the manager represented by `{manager_id}` or
-//	  have 'can_manage:memberships_and_group' permission on the group
-//	  and the `{group_id}`-`{manager_id}` pair should exist in `group_managers,
-//	  otherwise the "forbidden" error is returned.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: manager_id
-//				in: path
-//				required: true
-//				type: integer
-//		responses:
-//			"200":
-//				"$ref": "#/responses/deletedResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		The authenticated user should be the manager represented by `{manager_id}` or
+//		have 'can_manage:memberships_and_group' permission on the group
+//		and the `{group_id}`-`{manager_id}` pair should exist in `group_managers,
+//		otherwise the "forbidden" error is returned.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: manager_id
+//			in: path
+//			required: true
+//			type: integer
+//	responses:
+//		"200":
+//			"$ref": "#/responses/deletedResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

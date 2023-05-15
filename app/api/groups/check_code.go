@@ -55,46 +55,46 @@ type groupCodeCheckResponse struct {
 
 // swagger:operation GET /groups/is-code-valid groups groupsCodeCheck
 //
-//		---
-//		summary: Check if the group code is valid
-//		description: >
-//	  Checks if it is possible for the current user (or for a new user if the current user is temporary)
-//	  to join a group with the given code.
-//	  The service returns false:
+//	---
+//	summary: Check if the group code is valid
+//	description: >
+//		Checks if it is possible for the current user (or for a new user if the current user is temporary)
+//		to join a group with the given code.
+//		The service returns false:
 //
-//	  * if there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User'
-//	    (`reason` = 'no_group');
+//		* if there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User'
+//			(`reason` = 'no_group');
 //
-//	  * if the group is a team and the user is already on a team that has attempts for same contest
-//	    while the contest doesn't allow multiple attempts or that has active attempts for the same contest
-//	    (`reason` = 'conflicting_team_participation'),
+//		* if the group is a team and the user is already on a team that has attempts for same contest
+//			while the contest doesn't allow multiple attempts or that has active attempts for the same contest
+//			(`reason` = 'conflicting_team_participation'),
 //
-//	  * if the group membership is frozen (`reason` = 'frozen_membership');
+//		* if the group membership is frozen (`reason` = 'frozen_membership');
 //
-//	  * if there is already an active row in `groups_groups` with the found group as a parent
-//	    and the user’s id as a child (`reason` = 'already_member');
+//		* if there is already an active row in `groups_groups` with the found group as a parent
+//			and the user’s id as a child (`reason` = 'already_member');
 //
-//	  * if the group is a team and joining breaks entry conditions of at least one of the team's participations
-//	    (i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied)
-//	    (`reason` = 'team_conditions_not_met').
+//		* if the group is a team and joining breaks entry conditions of at least one of the team's participations
+//			(i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied)
+//			(`reason` = 'team_conditions_not_met').
 //
-//	  Otherwise, the service returns true.
-//		parameters:
-//			- name: code
-//				in: query
-//				type: string
-//				required: true
-//		responses:
-//			"200":
-//				description: OK. Validity of the code and additional info
-//				schema:
-//					"$ref": "#/definitions/groupCodeCheckResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		Otherwise, the service returns true.
+//	parameters:
+//		- name: code
+//			in: query
+//			type: string
+//			required: true
+//	responses:
+//		"200":
+//			description: OK. Validity of the code and additional info
+//			schema:
+//				"$ref": "#/definitions/groupCodeCheckResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {

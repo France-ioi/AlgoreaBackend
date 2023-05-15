@@ -14,37 +14,37 @@ import (
 
 // swagger:operation GET /current-user/dump-full users currentUserFullDataExport
 //
-//		---
-//		summary: Export the current user's data
-//		description: >
-//	  Returns a downloadable JSON file with all the current user's data.
-//	  The content returned is just the dump of raw entries of each table related to the user
+//	---
+//	summary: Export the current user's data
+//	description: >
+//		Returns a downloadable JSON file with all the current user's data.
+//		The content returned is just the dump of raw entries of each table related to the user
 //
-//	    * `current_user` (from `users`): all attributes;
-//	    * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”;
-//	    * `managed_groups`: `id` and `name` for every descendant of groups managed by the user;
-//	    * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
-//	    * `answers`: all attributes;
-//	    * `attempts`: the user's or his teams' attempts, all attributes;
-//	    * `results`: the user's or his teams' attempt results, all attributes;
-//	    * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
-//	    * `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;
-//	    * `group_pending_requests`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`;
-//	    * `group_membership_changes`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`.
+//		* `current_user` (from `users`): all attributes;
+//		* `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”;
+//		* `managed_groups`: `id` and `name` for every descendant of groups managed by the user;
+//		* `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
+//		* `answers`: all attributes;
+//		* `attempts`: the user's or his teams' attempts, all attributes;
+//		* `results`: the user's or his teams' attempt results, all attributes;
+//		* `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
+//		* `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;
+//		* `group_pending_requests`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`;
+//		* `group_membership_changes`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`.
 //
-//	  In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
-//	  ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
-//		produces:
-//			- application/json
-//		responses:
-//			"200":
-//					description: The returned data dump file
-//					schema:
-//						type: file
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
+//		```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
+//	produces:
+//		- application/json
+//	responses:
+//		"200":
+//				description: The returned data dump file
+//				schema:
+//					type: file
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getFullDump(w http.ResponseWriter, r *http.Request) service.APIError {
 	return srv.getDumpCommon(r, w, true)
 }

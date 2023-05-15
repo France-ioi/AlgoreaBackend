@@ -146,56 +146,56 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 
 // swagger:operation POST /items items itemCreate
 //
-//		---
-//		summary: Create an item
-//		description: >
+//	---
+//	summary: Create an item
+//	description: >
 //
-//	  Creates an item with parameters from the input data with `items.default_language_tag` = `language_tag`.
-//	  Also it
+//		Creates an item with parameters from the input data with `items.default_language_tag` = `language_tag`.
+//		Also it
 //
-//	    * inserts a row into `items_strings` with given `language_tag`, `title`, `image_url`, `subtitle`, `description`,
+//			* inserts a row into `items_strings` with given `language_tag`, `title`, `image_url`, `subtitle`, `description`,
 //
-//	    * gives full access to the item for the current user (creates a new `permissions_granted` row with: `item_id` = `items.id`,
-//	      `group_id` = `group_id` of the current user, `source_group_id` = `users.group_id` of the current user, `origin` = 'self',
-//	      `is_owner` = 1).
+//			* gives full access to the item for the current user (creates a new `permissions_granted` row with: `item_id` = `items.id`,
+//				`group_id` = `group_id` of the current user, `source_group_id` = `users.group_id` of the current user, `origin` = 'self',
+//				`is_owner` = 1).
 //
-//	    * adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
-//	      (The only allowed parent-child relations are skills-*, chapter-task, chapter-chapter.
-//	      Otherwise the "bad request" error is returned.)
+//			* adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
+//				(The only allowed parent-child relations are skills-*, chapter-task, chapter-chapter.
+//				Otherwise the "bad request" error is returned.)
 //
-//	    * (if `requires_explicit_entry` is true) creates a participants group, links `participants_group_id` to it,
-//	      and gives this group 'can_view:content' permission on the new item.
+//			* (if `requires_explicit_entry` is true) creates a participants group, links `participants_group_id` to it,
+//				and gives this group 'can_view:content' permission on the new item.
 //
-//	  The user should have
+//		The user should have
 //
-//	    * `can_view` >= 'content' and `can_edit` >= 'children' on the `parent.item_id`,
-//	    * `can_view` != 'none' on the `children` items (if any),
+//			* `can_view` >= 'content' and `can_edit` >= 'children' on the `parent.item_id`,
+//			* `can_view` != 'none' on the `children` items (if any),
 //
-//	  otherwise the "bad request" response is returned.
-//
-//
-//	  The current user should not be temporary, otherwise the "forbidden" error response is returned.
+//		otherwise the "bad request" response is returned.
 //
 //
-//	  At least one of `parent` and `as_root_of_group_id` should be given, otherwise the "bad request" error response is returned.
-//		parameters:
-//			- in: body
-//				name: data
-//				required: true
-//				description: The item to create
-//				schema:
-//					"$ref": "#/definitions/itemCreateRequest"
-//		responses:
-//			"201":
-//				"$ref": "#/responses/createdWithIDResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		The current user should not be temporary, otherwise the "forbidden" error response is returned.
+//
+//
+//		At least one of `parent` and `as_root_of_group_id` should be given, otherwise the "bad request" error response is returned.
+//	parameters:
+//		- in: body
+//			name: data
+//			required: true
+//			description: The item to create
+//			schema:
+//				"$ref": "#/definitions/itemCreateRequest"
+//	responses:
+//		"201":
+//			"$ref": "#/responses/createdWithIDResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	if user.IsTempUser {

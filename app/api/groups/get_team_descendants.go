@@ -11,53 +11,53 @@ import (
 
 // swagger:operation GET /groups/{group_id}/team-descendants group-memberships groupTeamDescendantView
 //
-//		---
-//		summary: List group's team descendants
-//		description: Returns all teams (`type` = "Team") among the descendants of the given group
+//	---
+//	summary: List group's team descendants
+//	description: Returns all teams (`type` = "Team") among the descendants of the given group
 //
 //
-//	  `first_name` and `last_name` of descendant team members are only visible to the members themselves and
-//	  to managers of those groups to which those members provided view access to personal data.
+//		`first_name` and `last_name` of descendant team members are only visible to the members themselves and
+//		to managers of those groups to which those members provided view access to personal data.
 //
 //
-//	  * The authenticated user should be a manager of the parent group.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: from.id
-//				description: Start the page from the team next to the team with `id`=`{from.id}`
-//				in: query
-//				type: integer
-//			- name: sort
-//				in: query
-//				default: [name,id]
+//		* The authenticated user should be a manager of the parent group.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: from.id
+//			description: Start the page from the team next to the team with `id`=`{from.id}`
+//			in: query
+//			type: integer
+//		- name: sort
+//			in: query
+//			default: [name,id]
+//			type: array
+//			items:
+//				type: string
+//				enum: [name,-name,id,-id]
+//		- name: limit
+//			description: Display the first N teams
+//			in: query
+//			type: integer
+//			maximum: 1000
+//			default: 500
+//	responses:
+//		"200":
+//			description: OK. Success response with an array of teams
+//			schema:
 //				type: array
 //				items:
-//					type: string
-//					enum: [name,-name,id,-id]
-//			- name: limit
-//				description: Display the first N teams
-//				in: query
-//				type: integer
-//				maximum: 1000
-//				default: 500
-//		responses:
-//			"200":
-//				description: OK. Success response with an array of teams
-//				schema:
-//					type: array
-//					items:
-//						"$ref": "#/definitions/teamDescendant"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					"$ref": "#/definitions/teamDescendant"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

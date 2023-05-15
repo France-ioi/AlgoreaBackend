@@ -13,44 +13,44 @@ import (
 
 // swagger:operation POST /items/{item_id}/attempts/{attempt_id}/publish items resultPublish
 //
-//		---
-//		summary: Publish a result to LTI
-//		description: >
-//	  Publishes score (divided by 100) obtained for the item within the attempt to LTI (via the login module).
+//	---
+//	summary: Publish a result to LTI
+//	description: >
+//		Publishes score (divided by 100) obtained for the item within the attempt to LTI (via the login module).
 //
 //
-//				Restrictions:
+//			Restrictions:
 //
-//	    * if `as_team_id` is given, it should be a user's parent team group,
-//	    * the current user should have at least 'content' access on each of the `{item_id}` item,
-//	    * the current user should have non-empty `login_id`,
+//		* if `as_team_id` is given, it should be a user's parent team group,
+//		* the current user should have at least 'content' access on each of the `{item_id}` item,
+//		* the current user should have non-empty `login_id`,
 //
-//	  otherwise the 'forbidden' error is returned.
-//		parameters:
-//			- name: item_id
-//				in: path
-//				type: integer
-//				format: int64
-//				required: true
-//			- name: attempt_id
-//				in: path
-//				type: integer
-//				required: true
-//			- name: as_team_id
-//				description: fails with 'bad request' error if given, this service does not currently support team work
-//				in: query
-//				type: integer
-//		responses:
-//			"200":
-//				"$ref": "#/responses/publishedOrFailedResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: item_id
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//		- name: attempt_id
+//			in: path
+//			type: integer
+//			required: true
+//		- name: as_team_id
+//			description: fails with 'bad request' error if given, this service does not currently support team work
+//			in: query
+//			type: integer
+//	responses:
+//		"200":
+//			"$ref": "#/responses/publishedOrFailedResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 

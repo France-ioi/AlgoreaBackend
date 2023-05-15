@@ -20,43 +20,43 @@ type createGroupManagerRequest struct {
 
 // swagger:operation POST /groups/{group_id}/managers/{manager_id} groups groupManagerCreate
 //
-//		---
-//		summary: Make user a group manager
-//		description: >
+//	---
+//	summary: Make user a group manager
+//	description: >
 //
-//	  Makes a user a group manager with given permissions.
+//		Makes a user a group manager with given permissions.
 //
 //
-//	  The authenticated user should have 'can_manage:memberships_and_group' permission on the group
-//	  and `{manager_id}` should exist, otherwise the "forbidden" error is returned.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: manager_id
-//				in: path
-//				required: true
-//				type: integer
-//			- in: body
-//				name: data
-//				required: true
-//				description: Permissions of the new manager
-//				schema:
-//					"$ref": "#/definitions/createGroupManagerRequest"
-//		responses:
-//			"201":
-//				description: Created. The request has successfully added a user as a manager.
-//				schema:
-//					"$ref": "#/definitions/createdResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		The authenticated user should have 'can_manage:memberships_and_group' permission on the group
+//		and `{manager_id}` should exist, otherwise the "forbidden" error is returned.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: manager_id
+//			in: path
+//			required: true
+//			type: integer
+//		- in: body
+//			name: data
+//			required: true
+//			description: Permissions of the new manager
+//			schema:
+//				"$ref": "#/definitions/createGroupManagerRequest"
+//	responses:
+//		"201":
+//			description: Created. The request has successfully added a user as a manager.
+//			schema:
+//				"$ref": "#/definitions/createdResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
