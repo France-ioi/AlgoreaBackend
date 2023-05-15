@@ -58,6 +58,11 @@ func (u *User) CanViewItemContent(s *DataStore, itemID int64) bool {
 	return u.HasItemPermission(s, itemID, "view", "content")
 }
 
+// CanViewItemInfo checks whether the user has can_view >= info on an item.
+func (u *User) CanViewItemInfo(s *DataStore, itemID int64) bool {
+	return u.HasItemPermission(s, itemID, "view", "info")
+}
+
 // CanRequestHelpTo checks whether the user can request help on an item to a group.
 func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool {
 	// in order to verify that the user “can request help to” a group on an item, we need to verify whether
