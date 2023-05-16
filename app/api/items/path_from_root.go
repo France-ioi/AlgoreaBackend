@@ -100,53 +100,92 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 	canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 
 	var pathStrings []string
-	service.MustNotBeError(store.Raw(`
-			WITH RECURSIVE paths (path, last_item_id, last_attempt_id, score, attempts, is_active) AS (
-				WITH groups_with_root_items AS ?,
-					visible_items AS ?,
-					root_items AS (
-						SELECT visible_items.id AS id FROM groups_with_root_items JOIN visible_items ON visible_items.id = root_activity_id
-						UNION
-						SELECT visible_items.id FROM groups_with_root_items JOIN visible_items ON visible_items.id = root_skill_id),
-					item_ancestors AS (
-						SELECT visible_items.id, requires_explicit_entry, can_view_generated_value
-						FROM items_ancestors
-						JOIN visible_items ON visible_items.id = items_ancestors.ancestor_item_id WHERE child_item_id = ?
-						UNION
-						SELECT id, requires_explicit_entry, can_view_generated_value FROM visible_items WHERE id = ?),
-					root_ancestors AS (
-						SELECT item_ancestors.id, requires_explicit_entry, can_view_generated_value
-						FROM item_ancestors
-						JOIN root_items ON root_items.id = item_ancestors.id)
-				(SELECT CAST(root_ancestors.id AS CHAR(1024)), root_ancestors.id, attempts.id, results.started_at IS NULL,
-				        CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)), attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
-				FROM root_ancestors
-				JOIN attempts ON attempts.participant_id = ? AND
-					(NOT root_ancestors.requires_explicit_entry OR attempts.root_item_id = root_ancestors.id)
-				LEFT JOIN results ON results.participant_id = attempts.participant_id AND
-					attempts.id = results.attempt_id AND results.item_id = root_ancestors.id
-				WHERE (root_ancestors.id = ? OR root_ancestors.can_view_generated_value >= ?) AND
-					(NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
-					(results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until) AND
-					(results.attempt_id IS NOT NULL OR attempts.id = 0))
-				UNION
-				(SELECT CONCAT(paths.path, '/', item_ancestors.id), item_ancestors.id, attempts.id, (paths.score << 1) + (results.started_at IS NULL),
-				        CONCAT(paths.attempts, '/', LPAD(attempts.id, 20, 0)),
-				        paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
-				FROM paths
-				JOIN items_items ON items_items.parent_item_id = paths.last_item_id
-				JOIN item_ancestors ON item_ancestors.id = items_items.child_item_id
-				JOIN attempts ON attempts.participant_id = ? AND
-					(NOT item_ancestors.requires_explicit_entry OR attempts.root_item_id = item_ancestors.id) AND
-					IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.last_attempt_id
-				LEFT JOIN results ON results.participant_id = attempts.participant_id AND
-						attempts.id = results.attempt_id AND results.item_id = item_ancestors.id
-				WHERE paths.last_item_id <> ? AND (item_ancestors.id = ? OR item_ancestors.can_view_generated_value >= ?) AND
-					(NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
-					(results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until AND paths.is_active)))
-			SELECT path FROM paths WHERE paths.last_item_id = ? ORDER BY score, attempts DESC LIMIT 1`,
-		groupsWithRootItems.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, itemID, canViewContentIndex,
-		participantID, itemID, itemID, canViewContentIndex, itemID).
+	service.MustNotBeError(store.Raw(
+		`
+			WITH RECURSIVE
+				groups_with_root_items AS ?,
+				visible_items AS ?,
+				root_items AS (
+					(SELECT visible_items.id AS id
+						 FROM groups_with_root_items
+									JOIN visible_items
+									ON (visible_items.id = root_activity_id OR visible_items.id = root_skill_id))
+				),
+				item_ancestors AS (
+					(SELECT visible_items.id, requires_explicit_entry, can_view_generated_value
+						 FROM items_ancestors
+									JOIN visible_items ON visible_items.id = items_ancestors.ancestor_item_id
+						WHERE child_item_id = ?)
+					UNION
+					(SELECT id,	requires_explicit_entry, can_view_generated_value
+						 FROM visible_items
+						WHERE id = ?)
+				),
+				root_ancestors AS (
+					(SELECT item_ancestors.id, requires_explicit_entry, can_view_generated_value
+						 FROM item_ancestors
+									JOIN root_items ON root_items.id = item_ancestors.id)
+				),
+				paths (path, last_item_id, last_attempt_id, score, attempts, is_active) AS (
+					(SELECT CAST(root_ancestors.id AS CHAR(1024)),
+								  root_ancestors.id,
+							 	  attempts.id,
+								  results.started_at IS NULL,
+								  CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)),
+								  attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
+						 FROM root_ancestors
+								  JOIN attempts
+									ON attempts.participant_id = ?
+									   AND (NOT root_ancestors.requires_explicit_entry OR attempts.root_item_id = root_ancestors.id)
+								  LEFT JOIN results
+									ON results.participant_id = attempts.participant_id
+									   AND attempts.id = results.attempt_id
+										 AND results.item_id = root_ancestors.id
+					  WHERE (root_ancestors.id = ? OR root_ancestors.can_view_generated_value >= ?)
+						  AND (NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
+						  AND (results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until)
+						  AND (results.attempt_id IS NOT NULL OR attempts.id = 0))
+				 	UNION
+				 	(SELECT CONCAT(paths.path, '/', item_ancestors.id),
+								  item_ancestors.id,
+								  attempts.id,
+								  (paths.score << 1) + (results.started_at IS NULL),
+								  CONCAT(paths.attempts, '/', LPAD(attempts.id, 20, 0)),
+								  paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
+						 FROM paths
+								  JOIN items_items ON items_items.parent_item_id = paths.last_item_id
+								  JOIN item_ancestors ON item_ancestors.id = items_items.child_item_id
+								  JOIN attempts
+									ON attempts.participant_id = ?
+									   AND (NOT item_ancestors.requires_explicit_entry OR attempts.root_item_id = item_ancestors.id)
+									   AND IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.last_attempt_id
+								  LEFT JOIN results
+									ON results.participant_id = attempts.participant_id
+									   AND attempts.id = results.attempt_id
+										 AND results.item_id = item_ancestors.id
+					 WHERE paths.last_item_id <> ?
+						 AND (item_ancestors.id = ? OR item_ancestors.can_view_generated_value >= ?)
+						 AND (NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
+						 AND (results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until AND paths.is_active)
+				  )
+				)
+			SELECT path FROM paths
+			 WHERE paths.last_item_id = ?
+			 ORDER BY score, attempts DESC
+			 LIMIT 1`,
+		groupsWithRootItems.SubQuery(),
+		visibleItems.SubQuery(),
+		itemID,
+		itemID,
+		participantID,
+		itemID,
+		canViewContentIndex,
+		participantID,
+		itemID,
+		itemID,
+		canViewContentIndex,
+		itemID,
+	).
 		ScanIntoSlices(&pathStrings).Error())
 
 	if len(pathStrings) == 0 {
