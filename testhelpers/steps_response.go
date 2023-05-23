@@ -118,7 +118,12 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 	sortedResults := make([]string, len(wants.Rows))
 	sortedWants := make([]string, len(wants.Rows))
 	for i := 0; i < len(wants.Rows); i++ {
-		sortedResults[i] = jsonPathResArr[i].(string)
+		switch result := jsonPathResArr[i].(type) {
+		case bool:
+			sortedResults[i] = strconv.FormatBool(result)
+		default:
+			sortedResults[i] = result.(string)
+		}
 		sortedWants[i] = ctx.replaceReferencesByIDs(wants.Rows[i].Cells[0].Value)
 	}
 
