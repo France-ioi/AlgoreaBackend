@@ -283,8 +283,8 @@ func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, gro
 		dataStore, groupID, requiredViewPermissionOnItems, watchedGroupIDSet, watchedGroupID, columnList, columnListValues,
 		externalColumnList,
 		func(db *database.DB) *database.DB {
-			return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", parentItemID).
-				Joins("JOIN items AS parent_item ON parent_item.id = ?", parentItemID).
+			return db.Joins("JOIN items AS parent_item ON parent_item.id = ?", parentItemID).
+				Joins("JOIN items_items ON items_items.parent_item_id = parent_item.id AND items_items.child_item_id = items.id").
 				Where("(parent_item.type = 'Skill' AND items.type = 'Skill') OR parent_item.type <> 'Skill'")
 		},
 		func(db *database.DB) *database.DB {

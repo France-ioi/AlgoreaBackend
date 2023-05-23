@@ -292,14 +292,11 @@ Feature: Get navigation for an item
     Given I am the user with id "1000"
     When I send a GET request to "/items/1000/navigation?attempt_id=0"
     Then the response code should be 200
-    And the response at $.children[*].string.title should be:
-      | Child lvl1 Skill 1 |
-      | Child lvl1 Skill 2 |
-      | Child lvl1 Skill 3 |
-    And the response at $.children[*].has_visible_children should be:
-      | false |
-      | true  |
-      | false |
+    And the response at $.children[*] should be:
+      | string.title       | has_visible_children |
+      | Child lvl1 Skill 1 | false                |
+      | Child lvl1 Skill 2 | true                 |
+      | Child lvl1 Skill 3 | false                |
 
   Scenario Outline: Get navigation (with child_attempt_id)
     Given I am the user with id "11"

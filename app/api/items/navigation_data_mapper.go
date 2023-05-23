@@ -68,8 +68,8 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		Joins(`
 			JOIN items AS child_items
 			  ON child_items.id = items_items.child_item_id
-			 AND (items.type = "Skill" AND child_items.type = "Skill")
-				OR items.type <> "Skill"
+			 AND ((items.type = "Skill" AND child_items.type = "Skill")
+					 OR items.type <> "Skill")
 		`).
 		Where("items_items.parent_item_id = items.id").
 		Select("1").

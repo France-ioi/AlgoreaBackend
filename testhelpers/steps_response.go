@@ -13,6 +13,7 @@ import (
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/cucumber/messages-go/v10"
+	"github.com/google/go-cmp/cmp"
 	"github.com/pmezard/go-difflib/difflib"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
@@ -102,41 +103,128 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 		return err
 	}
 
+	wantsHasHeader := len(wants.Rows[0].Cells) > 1
+
+	wantLength := len(wants.Rows)
+	if wantsHasHeader {
+		wantLength--
+	}
+
 	jsonPathResArr := jsonPathRes.([]interface{})
-	if len(jsonPathResArr) != len(wants.Rows) {
+	if len(jsonPathResArr) != wantLength {
 		return fmt.Errorf(
-			"TheResponseAtShouldBe: The JsonPath result %v length should be %v but is %v",
-			jsonPathResArr,
-			len(wants.Rows),
+			"TheResponseAtShouldBe: The JsonPath result length should be %v but is %v for %v",
+			wantLength,
 			len(jsonPathResArr),
+			jsonPathResArr,
 		)
 	}
 
-	// Sort the jsonPath and the wants values so that we can check them sequentially.
+	if wantsHasHeader {
+		return ctx.wantRowsMatchesJSONPathResult(wants, jsonPathResArr)
+	}
+
+	return ctx.wantValuesMatchesJSONPathResult(wants, jsonPathResArr)
+}
+
+func (ctx *TestContext) wantRowsMatchesJSONPathResult(
+	wants *messages.PickleStepArgument_PickleTable,
+	jsonPathResArr []interface{},
+) error {
+	// The jsonPathResult and want rows are put in a slice of maps with the fields that are wanted.
+	// Those slices are then sorted, so they can be easily compared element by element.
+
+	headerCells := wants.Rows[0].Cells
+
+	sortedResults := make([]map[string]string, len(wants.Rows)-1)
+	sortedWants := make([]map[string]string, len(wants.Rows)-1)
+
+	for i := 1; i < len(wants.Rows); i++ {
+		curWant := make(map[string]string)
+		curResult := make(map[string]string)
+
+		wantRow := wants.Rows[i]
+		for j := 0; j < len(headerCells); j++ {
+			curHeader := headerCells[j].Value
+
+			curWant[curHeader] = ctx.replaceReferencesByIDs(wantRow.Cells[j].Value)
+			sortedWants[i-1] = curWant
+
+			// The header is a JSONPath (e.g. "title", "strings.title").
+			curJSONPathResult, err := jsonpath.Get(curHeader, jsonPathResArr[i-1])
+			if err != nil {
+				return fmt.Errorf("wantRowsMatchesJSONPathResult: Couldn't retrieve JSONPath %v at %v", curHeader, jsonPathResArr[i-1])
+			}
+
+			curResult[curHeader] = stringifyJSONPathResultValue(curJSONPathResult)
+			sortedResults[i-1] = curResult
+		}
+	}
+
+	sortedWants = sortSliceForEasyComparison(sortedWants, headerCells)
+	sortedResults = sortSliceForEasyComparison(sortedResults, headerCells)
+
+	if !cmp.Equal(sortedResults, sortedWants) {
+		return fmt.Errorf("wantRowsMatchesJSONPathResult: The values (sorted) are %v but should have been: %v", sortedResults, sortedWants)
+	}
+
+	return nil
+}
+
+func sortSliceForEasyComparison(
+	slice []map[string]string,
+	headerCells []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell,
+) []map[string]string {
+	sort.Slice(slice, func(i, j int) bool {
+		for curHeader := 0; curHeader < len(headerCells); curHeader++ {
+			header := headerCells[curHeader].Value
+
+			curComparison := strings.Compare(slice[i][header], slice[j][header])
+			if curComparison < 0 {
+				return true
+			} else if curComparison > 0 {
+				return false
+			}
+		}
+
+		return true
+	})
+
+	return slice
+}
+
+func (ctx *TestContext) wantValuesMatchesJSONPathResult(
+	wants *messages.PickleStepArgument_PickleTable,
+	jsonPathResArr []interface{},
+) error {
+	// Sort the jsonPath and wants values so that we can check them sequentially.
 	// This also makes sure that the values are checked one to one, and are not just present in the "wants".
 
 	sortedResults := make([]string, len(wants.Rows))
 	sortedWants := make([]string, len(wants.Rows))
 	for i := 0; i < len(wants.Rows); i++ {
-		switch result := jsonPathResArr[i].(type) {
-		case bool:
-			// Convert boolean results to strings because the values we check are coming from Gherkin as strings.
-			sortedResults[i] = strconv.FormatBool(result)
-		default:
-			sortedResults[i] = result.(string)
-		}
+		sortedResults[i] = stringifyJSONPathResultValue(jsonPathResArr[i])
 		sortedWants[i] = ctx.replaceReferencesByIDs(wants.Rows[i].Cells[0].Value)
 	}
 
 	sort.Strings(sortedResults)
 	sort.Strings(sortedWants)
 
-	for i := 0; i < len(wants.Rows); i++ {
-		if sortedResults[i] != sortedWants[i] {
-			return fmt.Errorf("TheResponseAtShouldBe: The values (sorted) are %v but should have been: %v", sortedResults, sortedWants)
-		}
+	if !cmp.Equal(sortedResults, sortedWants) {
+		return fmt.Errorf("wantValuesMatchesJSONPathResult: The values (sorted) are %v but should have been: %v", sortedResults, sortedWants)
 	}
+
 	return nil
+}
+
+func stringifyJSONPathResultValue(value interface{}) string {
+	switch typedValue := value.(type) {
+	case bool:
+		// Convert boolean results to strings because the values we check are coming from Gherkin as strings.
+		return strconv.FormatBool(typedValue)
+	default:
+		return typedValue.(string)
+	}
 }
 
 // TheResponseShouldNotBeDefinedAt checks that the provided jsonPath doesn't exist.
