@@ -221,6 +221,86 @@ Feature: Get navigation for an item
       }
       """
 
+  Scenario: Should only return Skills and compute has_visible children on Skills only when we get navigation on a Skill
+    Given the database has the following table 'groups':
+      | id   | name | type |
+      | 1000 | user | User |
+    And the database has the following table 'users':
+      | login | temp_user | group_id |
+      | user  | 0         | 1000     |
+    And the groups ancestors are computed
+    And the database has the following table 'items':
+      | id   | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
+      | 1000 | Skill   | en                   | false    | false                   | User                   |
+      | 1100 | Skill   | en                   | false    | false                   | User                   |
+      | 1110 | Skill   | en                   | false    | false                   | User                   |
+      | 1120 | Task    | en                   | false    | false                   | User                   |
+      | 1200 | Skill   | en                   | false    | false                   | User                   |
+      | 1210 | Skill   | en                   | false    | false                   | User                   |
+      | 1220 | Task    | en                   | false    | false                   | User                   |
+      | 1300 | Skill   | en                   | false    | false                   | User                   |
+      | 1400 | Chapter | en                   | false    | false                   | User                   |
+      | 1500 | Task    | en                   | false    | false                   | User                   |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 1000     | 1000    | solution           | solution_with_grant      | none                | none               | false              |
+      | 1000     | 1100    | solution           | solution_with_grant      | none                | none               | false              |
+      | 1000     | 1110    | none               | none                     | none                | none               | false              |
+      | 1000     | 1120    | solution           | solution_with_grant      | none                | none               | false              |
+      | 1000     | 1200    | solution           | solution_with_grant      | none                | none               | false              |
+      | 1000     | 1210    | solution           | solution_with_grant      | none                | none               | false              |
+      | 1000     | 1220    | none               | none                     | none                | none               | false              |
+      | 1000     | 1300    | solution           | solution_with_grant      | none                | none               | false              |
+      | 1000     | 1400    | solution           | solution_with_grant      | none                | none               | false              |
+      | 1000     | 1500    | solution           | solution_with_grant      | none                | none               | false              |
+      And the database has the following table 'items_items':
+      | parent_item_id | child_item_id | child_order | content_view_propagation |
+      | 1000           | 1100          | 1           | none                     |
+      | 1100           | 1110          | 1           | none                     |
+      | 1100           | 1120          | 2           | none                     |
+      | 1000           | 1200          | 2           | as_info                  |
+      | 1200           | 1210          | 1           | as_info                  |
+      | 1200           | 1220          | 2           | as_info                  |
+      | 1000           | 1300          | 3           | as_content               |
+      | 1000           | 1400          | 4           | as_content               |
+      | 1000           | 1500          | 5           | as_content               |
+    And the database has the following table 'items_strings':
+      | item_id | language_tag | title              |
+      | 1000    | en           | Parent Skill       |
+      | 1100    | en           | Child lvl1 Skill 1 |
+      | 1110    | en           | Child lvl2 Skill   |
+      | 1120    | en           | Child lvl2 Task    |
+      | 1200    | en           | Child lvl1 Skill 2 |
+      | 1210    | en           | Child lvl2 Skill 2 |
+      | 1220    | en           | Child lvl1 Task 2  |
+      | 1300    | en           | Child lvl1 Skill 3 |
+      | 1400    | en           | Child lvl1 Chapter |
+      | 1500    | en           | Child lvl1 Task    |
+    And the database has the following table 'attempts':
+      | id | participant_id | created_at          | root_item_id | parent_attempt_id | ended_at |
+      | 0  | 1000           | 2020-01-01 00:00:00 | null         | null              | null     |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | score_computed | submissions | started_at          | validated_at        | latest_activity_at  |
+      | 0          | 1000           | 1000    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+      | 0          | 1000           | 1100    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+      | 0          | 1000           | 1120    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+      | 0          | 1000           | 1200    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+      | 0          | 1000           | 1210    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+      | 0          | 1000           | 1300    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+      | 0          | 1000           | 1400    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+      | 0          | 1000           | 1500    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
+    Given I am the user with id "1000"
+    When I send a GET request to "/items/1000/navigation?attempt_id=0"
+    Then the response code should be 200
+    And the response at $.children[*].string.title should be:
+      | Child lvl1 Skill 1 |
+      | Child lvl1 Skill 2 |
+      | Child lvl1 Skill 3 |
+    And the response at $.children[*].has_visible_children should be:
+      | false |
+      | true  |
+      | false |
+
   Scenario Outline: Get navigation (with child_attempt_id)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/navigation?child_attempt_id=<child_attempt_id>"

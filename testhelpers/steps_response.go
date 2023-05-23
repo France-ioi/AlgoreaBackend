@@ -120,6 +120,7 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 	for i := 0; i < len(wants.Rows); i++ {
 		switch result := jsonPathResArr[i].(type) {
 		case bool:
+			// Convert boolean results to strings because the values we check are coming from Gherkin as strings.
 			sortedResults[i] = strconv.FormatBool(result)
 		default:
 			sortedResults[i] = result.(string)

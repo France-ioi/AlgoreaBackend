@@ -69,6 +69,10 @@ type itemWatchedGroupStat struct {
 //
 //		Returns data needed to display the navigation menu (for `item_id` and its children)
 //		within the context of the given `{attempt_id}`/`{child_attempt_id}` (one of those should be given).
+//
+//		If the given `item_id` is a Skill, the children returned are only Skills.
+//		If it is a Chapter, the children returned are Tasks and Chapters.
+//
 //		Only items visible to the current user (or to the `{as_team_id}` team) are shown.
 //		If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
 //

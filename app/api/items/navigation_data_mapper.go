@@ -54,15 +54,27 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 				NULL AS score_computed, NULL AS validated, NULL AS started_at, NULL AS latest_activity_at,
 				NULL AS allows_submissions_until, NULL AS ended_at`).
 		Joins(`
-			JOIN results ON results.participant_id = ? AND results.attempt_id = ? AND
-				results.item_id = items.id AND results.started`, groupID, attemptID)
+			JOIN results
+				ON results.participant_id = ?
+			 AND results.attempt_id = ?
+			 AND results.item_id = items.id
+			 AND results.started
+		`, groupID, attemptID)
 	service.MustNotBeError(itemsQuery.Error())
 
 	hasVisibleChildrenQuery := dataStore.Permissions().MatchingGroupAncestors(groupID).
 		WherePermissionIsAtLeast("view", "info").
 		Joins("JOIN items_items ON items_items.child_item_id = permissions.item_id").
+		Joins(`
+			JOIN items AS child_items
+			  ON child_items.id = items_items.child_item_id
+			 AND (items.type = "Skill" AND child_items.type = "Skill")
+				OR items.type <> "Skill"
+		`).
 		Where("items_items.parent_item_id = items.id").
-		Select("1").Limit(1).SubQuery()
+		Select("1").
+		Limit(1).
+		SubQuery()
 
 	childrenQuery := constructItemChildrenQuery(dataStore, rootID, groupID, "info", attemptID, watchedGroupIDSet, watchedGroupID,
 		commonAttributes+
