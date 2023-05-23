@@ -12,60 +12,60 @@ import (
 
 // swagger:operation GET /items/{item_id}/path-from-root items itemPathFromRootFind
 //
-//		---
-//		summary: Find an item path
-//		description: >
-//	  Finds a path from any of root items to a given item.
+//	---
+//	summary: Find an item path
+//	description: >
+//		Finds a path from any of root items to a given item.
 //
 //
-//	  The path consists only of the items visible to the participant
-//	  (`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
-//	  Of all possible paths the service chooses the one having missing/not-started results located closer
-//	  to the end of the path, preferring paths having less missing/not-started results and having higher values of `attempt_id`.
-//	  The chain of attempts of the path cannot have missing results for items requiring explicit entry or not started results
-//	  within or below ended/not-allowing-submissions attempts.
+//		The path consists only of the items visible to the participant
+//		(`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
+//		Of all possible paths the service chooses the one having missing/not-started results located closer
+//		to the end of the path, preferring paths having less missing/not-started results and having higher values of `attempt_id`.
+//		The chain of attempts of the path cannot have missing results for items requiring explicit entry or not started results
+//		within or below ended/not-allowing-submissions attempts.
 //
 //
-//	  If `as_team_id` is given, the attempts/results of the path are linked to the `as_team_id` group instead of the user's self group.
+//		If `as_team_id` is given, the attempts/results of the path are linked to the `as_team_id` group instead of the user's self group.
 //
 //
-//				Restrictions:
+//			Restrictions:
 //
-//	    * if `as_team_id` is given, it should be a user's parent team group,
-//	    * at least one path should exist,
+//		* if `as_team_id` is given, it should be a user's parent team group,
+//		* at least one path should exist,
 //
-//	  otherwise the 'forbidden' error is returned.
-//		parameters:
-//			- name: item_id
-//				in: path
-//				type: integer
-//				format: int64
-//				required: true
-//			- name: as_team_id
-//				in: query
-//				type: integer
-//		responses:
-//			"200":
-//				description: OK. Success response with the found item path
-//				schema:
-//					type: object
-//					properties:
-//						path:
-//							type: array
-//							items:
-//								type: string
-//								format: int64
-//							example: ["1", "2", "3"]
-//					required:
-//						- path
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: item_id
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//		- name: as_team_id
+//			in: query
+//			type: integer
+//	responses:
+//		"200":
+//			description: OK. Success response with the found item path
+//			schema:
+//				type: object
+//				properties:
+//					path:
+//						type: array
+//						items:
+//							type: string
+//							format: int64
+//						example: ["1", "2", "3"]
+//				required:
+//					- path
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {

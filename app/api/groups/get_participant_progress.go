@@ -124,20 +124,20 @@ type participantProgressParameters struct {
 //		Restrictions:
 //
 //		* The current user (or the team given in `as_team_id`) should have at least 'content' permissions on `{item_id}`,
-//		  otherwise the 'forbidden' response is returned.
+//			otherwise the 'forbidden' response is returned.
 //
 //		* If `{as_team_id}` is given, it should be a user's parent team group.
-//		  Otherwise, the "forbidden" error is returned.
+//			Otherwise, the "forbidden" error is returned.
 //
 //		* If `{watched_group_id}` is given,
 //			the user should be a manager of the group with the 'can_watch_members' permission.
-//		  Otherwise, the "forbidden" error is returned.
+//			Otherwise, the "forbidden" error is returned.
 //
 //		* If `{watched_group_id}` is given, it should be a user group or a team.
-//		  Otherwise, the "forbidden" error is returned.
+//			Otherwise, the "forbidden" error is returned.
 //
 //		* If `{watched_group_id}` is given, the current user should have `can_watch` >= 'result' on the `{item_id}` item.
-//		  Otherwise, the "forbidden" error is returned.
+//			Otherwise, the "forbidden" error is returned.
 //	parameters:
 //		- name: item_id
 //			in: path

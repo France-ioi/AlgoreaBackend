@@ -54,77 +54,77 @@ type grantedPermissionsViewResultRow struct {
 
 // swagger:operation GET /groups/{group_id}/granted_permissions groups grantedPermissionsView
 //
-//		---
-//		summary: View granted permissions
-//		description:
-//	  List all permissions granted to a group and its ancestors or to its descendants.
-//	  Only permissions granted on items for which the current user has
-//	  `can_grant_view` > 'none' or `can_watch` = 'answer_with_grant' or `can_edit` = 'all_with_grant' are displayed.
+//	---
+//	summary: View granted permissions
+//	description:
+//		List all permissions granted to a group and its ancestors or to its descendants.
+//		Only permissions granted on items for which the current user has
+//		`can_grant_view` > 'none' or `can_watch` = 'answer_with_grant' or `can_edit` = 'all_with_grant' are displayed.
 //
 //
-//	  When `{descendants}` is 0, source groups of permissions are ancestors of the `group_id` group (including the group itself)
-//	  managed by the current user with `can_grant_group_access` permission.
+//		When `{descendants}` is 0, source groups of permissions are ancestors of the `group_id` group (including the group itself)
+//		managed by the current user with `can_grant_group_access` permission.
 //
-//	  When `{descendants}` is 1, source groups of permissions are ancestors of the `group_id` group (including the group itself)
-//	  or descendants of the `group_id` group managed by the current user with `can_grant_group_access` permission.
+//		When `{descendants}` is 1, source groups of permissions are ancestors of the `group_id` group (including the group itself)
+//		or descendants of the `group_id` group managed by the current user with `can_grant_group_access` permission.
 //
-//	  * The current user must be a manager (with `can_grant_group_access` permission) of `{group_id}`.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: descendants
-//				description: If equal to 1, the results are permissions granted to the group's descendants (not including the group itself),
-//	               otherwise the results are permissions granted to the group's ancestors (including the group itself).
-//				in: query
-//				type: integer
-//				enum: [0,1]
-//				default: 0
-//			- name: sort
-//				in: query
-//				default: [item.title,source_group.name,group.name]
+//		* The current user must be a manager (with `can_grant_group_access` permission) of `{group_id}`.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: descendants
+//			description: If equal to 1, the results are permissions granted to the group's descendants (not including the group itself),
+//							 otherwise the results are permissions granted to the group's ancestors (including the group itself).
+//			in: query
+//			type: integer
+//			enum: [0,1]
+//			default: 0
+//		- name: sort
+//			in: query
+//			default: [item.title,source_group.name,group.name]
+//			type: array
+//			items:
+//				type: string
+//				enum: [source_group.name,-source_group.name,group.name,-group.name,
+//					 item.title,-item.title,source_group.id,-source_group.id,group.id,-group.id,item.id,-item.id]
+//		- name: from.source_group.id
+//			description: Start the page from permissions next to the permissions with `source_group_id`=`{from.source_group.id}`
+//							 (`{from.item.id}` and `{from.group.id}` should be given too when `{from.source_group.id}` is given)
+//			in: query
+//			type: integer
+//		- name: from.group.id
+//			description: Start the page from permissions next to the permissions with `group_id`=`{from.group.id}`
+//							 (`{from.item.id}` and `{from.source_group.id}` should be given too when `{from.group.id}` is given)
+//			in: query
+//			type: integer
+//		- name: from.item.id
+//			description: Start the page from permissions next to the permissions with `item_id`=`{from.item.id}`
+//							 (`{from.group.id}` and `{from.source_group.id}` should be given too when `{from.item.id}` is given)
+//			in: query
+//			type: integer
+//		- name: limit
+//			description: Display the first N permissions
+//			in: query
+//			type: integer
+//			maximum: 1000
+//			default: 500
+//	responses:
+//		"200":
+//			description: OK. Granted permissions
+//			schema:
 //				type: array
 //				items:
-//					type: string
-//					enum: [source_group.name,-source_group.name,group.name,-group.name,
-//	           item.title,-item.title,source_group.id,-source_group.id,group.id,-group.id,item.id,-item.id]
-//			- name: from.source_group.id
-//				description: Start the page from permissions next to the permissions with `source_group_id`=`{from.source_group.id}`
-//	               (`{from.item.id}` and `{from.group.id}` should be given too when `{from.source_group.id}` is given)
-//				in: query
-//				type: integer
-//			- name: from.group.id
-//				description: Start the page from permissions next to the permissions with `group_id`=`{from.group.id}`
-//	               (`{from.item.id}` and `{from.source_group.id}` should be given too when `{from.group.id}` is given)
-//				in: query
-//				type: integer
-//			- name: from.item.id
-//				description: Start the page from permissions next to the permissions with `item_id`=`{from.item.id}`
-//	               (`{from.group.id}` and `{from.source_group.id}` should be given too when `{from.item.id}` is given)
-//				in: query
-//				type: integer
-//			- name: limit
-//				description: Display the first N permissions
-//				in: query
-//				type: integer
-//				maximum: 1000
-//				default: 500
-//		responses:
-//			"200":
-//				description: OK. Granted permissions
-//				schema:
-//					type: array
-//					items:
-//						"$ref": "#/definitions/grantedPermissionsViewResultRow"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					"$ref": "#/definitions/grantedPermissionsViewResultRow"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {

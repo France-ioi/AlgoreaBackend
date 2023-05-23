@@ -23,55 +23,55 @@ type userBatch struct {
 
 // swagger:operation GET /user-batches/by-group/{group_id} groups userBatchesView
 //
-//		---
-//		summary: List user batches
-//		description: >
+//	---
+//	summary: List user batches
+//	description: >
 //
-//	  Lists the batches of users whose prefix can be used in the given group
-//	  (i.e., the `group_id` is a descendant of the prefix group).
-//	  Only those user batches are shown for which the authenticated user (or one of his group ancestors) is a manager of
-//	  the prefix group (or its ancestor) with at least 'can_manage:memberships'.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				required: true
-//				type: integer
-//			- name: sort
-//				in: query
-//				default: [group_prefix,custom_prefix]
+//		Lists the batches of users whose prefix can be used in the given group
+//		(i.e., the `group_id` is a descendant of the prefix group).
+//		Only those user batches are shown for which the authenticated user (or one of his group ancestors) is a manager of
+//		the prefix group (or its ancestor) with at least 'can_manage:memberships'.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			required: true
+//			type: integer
+//		- name: sort
+//			in: query
+//			default: [group_prefix,custom_prefix]
+//			type: array
+//			items:
+//				type: string
+//				enum: [group_prefix,-group_prefix,custom_prefix,-custom_prefix,size,-size]
+//		- name: from.group_prefix
+//			description: Start the page from the batch next to the batch with `user_batches.group_prefix` = `{from.group_prefix}`
+//							 (`{from.custom_prefix}` is required when `{from.group_prefix}` is given)
+//			in: query
+//			type: string
+//		- name: from.custom_prefix
+//			description: Start the page from the batch next to the batch with `user_batches.custom_prefix` = `{from.custom_prefix}`
+//							 (`{from.group_prefix}` is required when `{from.custom_prefix}` is given)
+//			in: query
+//			type: string
+//		- name: limit
+//			description: Display the first N user batches
+//			in: query
+//			type: integer
+//			maximum: 1000
+//			default: 500
+//	responses:
+//		"200":
+//			description: OK. The array of user batches
+//			schema:
 //				type: array
 //				items:
-//					type: string
-//					enum: [group_prefix,-group_prefix,custom_prefix,-custom_prefix,size,-size]
-//			- name: from.group_prefix
-//				description: Start the page from the batch next to the batch with `user_batches.group_prefix` = `{from.group_prefix}`
-//	               (`{from.custom_prefix}` is required when `{from.group_prefix}` is given)
-//				in: query
-//				type: string
-//			- name: from.custom_prefix
-//				description: Start the page from the batch next to the batch with `user_batches.custom_prefix` = `{from.custom_prefix}`
-//	               (`{from.group_prefix}` is required when `{from.custom_prefix}` is given)
-//				in: query
-//				type: string
-//			- name: limit
-//				description: Display the first N user batches
-//				in: query
-//				type: integer
-//				maximum: 1000
-//				default: 500
-//		responses:
-//			"200":
-//				description: OK. The array of user batches
-//				schema:
-//					type: array
-//					items:
-//						"$ref": "#/definitions/userBatch"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					"$ref": "#/definitions/userBatch"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

@@ -108,56 +108,56 @@ type rawOfficialSession struct {
 
 // swagger:operation GET /items/{item_id}/official-sessions items officialSessionsList
 //
-//		---
-//		summary: List all official sessions for an item
-//		description: >
-//	   Lists the groups having `type`='Session', `is_official_session`=true, `is_public`=true, `root_activity_id`=`{item_id}`
-//	   along with their parent groups (public or managed by the current user or having the current user as a member).
+//	---
+//	summary: List all official sessions for an item
+//	description: >
+//	 Lists the groups having `type`='Session', `is_official_session`=true, `is_public`=true, `root_activity_id`=`{item_id}`
+//	 along with their parent groups (public or managed by the current user or having the current user as a member).
 //
 //
-//	   Restrictions:
-//	     * the current user should have at least 'info' permission on the item,
+//	 Restrictions:
+//		 * the current user should have at least 'info' permission on the item,
 //
-//	   otherwise the 'forbidden' error is returned.
-//		parameters:
-//			- name: item_id
-//				in: path
-//				type: integer
-//				format: int64
-//				required: true
-//			- name: sort
-//				in: query
-//				default: [expected_start$,name,group_id]
+//	 otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: item_id
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//		- name: sort
+//			in: query
+//			default: [expected_start$,name,group_id]
+//			type: array
+//			items:
+//				type: string
+//				enum: [group_id,-group_id,expected_start,-expected_start,expected_start$,-expected_start$,name,-name]
+//		- name: from.group_id
+//			description: Start the page from the official session next to the official session with `groups.id` = `{from.group_id}`
+//			in: query
+//			type: integer
+//			format: int64
+//		- name: limit
+//			description: Display first N official sessions
+//			in: query
+//			type: integer
+//			maximum: 1000
+//			default: 500
+//	responses:
+//		"200":
+//			description: OK. Success response with an array of official sessions
+//			schema:
 //				type: array
 //				items:
-//					type: string
-//					enum: [group_id,-group_id,expected_start,-expected_start,expected_start$,-expected_start$,name,-name]
-//			- name: from.group_id
-//				description: Start the page from the official session next to the official session with `groups.id` = `{from.group_id}`
-//				in: query
-//				type: integer
-//				format: int64
-//			- name: limit
-//				description: Display first N official sessions
-//				in: query
-//				type: integer
-//				maximum: 1000
-//				default: 500
-//		responses:
-//			"200":
-//				description: OK. Success response with an array of official sessions
-//				schema:
-//					type: array
-//					items:
-//						"$ref": "#/definitions/officialSessionsListResponseRow"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					"$ref": "#/definitions/officialSessionsListResponseRow"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {

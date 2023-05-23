@@ -11,65 +11,65 @@ import (
 
 // swagger:operation DELETE /groups/{group_id}/members group-memberships groupRemoveMembers
 //
-//		---
-//		summary: Remove members from a group
-//		description: >
+//	---
+//	summary: Remove members from a group
+//	description: >
 //
-//	  Lets an admin remove users from a group.
-//	  On success the service removes relations from `groups_groups` and creates `group_membership_changes` rows
-//	  with `action` = 'removed and `at` = current UTC time
-//	  for each of `user_ids`. It also refreshes the access rights.
-//
-//
-//	  The authenticated user should be a manager of the `group_id` with `can_manage` >= 'memberships',
-//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//		Lets an admin remove users from a group.
+//		On success the service removes relations from `groups_groups` and creates `group_membership_changes` rows
+//		with `action` = 'removed and `at` = current UTC time
+//		for each of `user_ids`. It also refreshes the access rights.
 //
 //
-//	  Each of the input `user_ids` should have the input `group_id` as a parent in `groups_groups`,
-//	  otherwise the `user_id` gets skipped with `invalid` as the result.
+//		The authenticated user should be a manager of the `group_id` with `can_manage` >= 'memberships',
+//		otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
 //
 //
-//	  The response status code on success (200) doesn't depend on per-group results.
-//		parameters:
-//			- name: group_id
-//				in: path
+//		Each of the input `user_ids` should have the input `group_id` as a parent in `groups_groups`,
+//		otherwise the `user_id` gets skipped with `invalid` as the result.
+//
+//
+//		The response status code on success (200) doesn't depend on per-group results.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			type: integer
+//			required: true
+//		- name: user_ids
+//			in: query
+//			type: array
+//			items:
 //				type: integer
-//				required: true
-//			- name: user_ids
-//				in: query
-//				type: array
-//				items:
-//					type: integer
-//					format: int64
-//				required: true
-//		responses:
-//			"200":
-//				description: OK. Success response with the per-user deletion statuses
-//				schema:
-//						type: object
-//						required: [message, success, data]
-//						properties:
-//							message:
+//				format: int64
+//			required: true
+//	responses:
+//		"200":
+//			description: OK. Success response with the per-user deletion statuses
+//			schema:
+//					type: object
+//					required: [message, success, data]
+//					properties:
+//						message:
+//							type: string
+//							description: success
+//							enum: [success]
+//						success:
+//							type: string
+//							description: "true"
+//						data:
+//							description: "`user_id` -> `result`"
+//							type: object
+//							additionalProperties:
 //								type: string
-//								description: success
-//								enum: [success]
-//							success:
-//								type: string
-//								description: "true"
-//							data:
-//								description: "`user_id` -> `result`"
-//								type: object
-//								additionalProperties:
-//									type: string
-//									enum: [invalid, success, unchanged, not_found]
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//								enum: [invalid, success, unchanged, not_found]
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {

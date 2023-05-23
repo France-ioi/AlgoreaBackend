@@ -10,31 +10,31 @@ import (
 
 // swagger:operation DELETE /groups/{group_id}/code groups groupCodeRemove
 //
-//		---
-//		summary: Remove a group code
-//		description: >
+//	---
+//	summary: Remove a group code
+//	description: >
 //
-//	  Removes the code of the given group (which prevents joining by code)
+//		Removes the code of the given group (which prevents joining by code)
 //
 //
-//	  The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
-//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				type: integer
-//				required: true
-//		responses:
-//			"200":
-//				"$ref": "#/responses/deletedResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
+//		otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			type: integer
+//			required: true
+//	responses:
+//		"200":
+//			"$ref": "#/responses/deletedResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

@@ -59,80 +59,80 @@ type itemGetEntryStateResponse struct {
 
 // swagger:operation GET /items/{item_id}/entry-state items itemGetEntryState
 //
-//		---
-//		summary: Get entry state
-//		description: >
-//	               For the given item requiring explicit entry and the given participant
-//	               (the current user or his team if `as_team_id` is set),
-//	               returns the entry state, i.e. whether the participant can enter the item, and info on each team member.
+//	---
+//	summary: Get entry state
+//	description: >
+//							 For the given item requiring explicit entry and the given participant
+//							 (the current user or his team if `as_team_id` is set),
+//							 returns the entry state, i.e. whether the participant can enter the item, and info on each team member.
 //
 //
-//	               `first_name` and `last_name` of other members are only visible to managers of
-//	               those members' groups to which they provided view access to personal data.
+//							 `first_name` and `last_name` of other members are only visible to managers of
+//							 those members' groups to which they provided view access to personal data.
 //
 //
-//	               The entry state is one of:
-//	                 * 'already_started' if the participant has an `attempts` row for the item
-//	                   (with `attempts.root_item_id` = `{item_id}`) allowing submissions;
+//							 The entry state is one of:
+//								 * 'already_started' if the participant has an `attempts` row for the item
+//									 (with `attempts.root_item_id` = `{item_id}`) allowing submissions;
 //
-//	                 * 'not_ready' if the team itself cannot enter the item
-//	                   while there are more members than `entry_max_team_size` or
-//	                   the team/user doesn't satisfy the item's entry condition which is computed
-//	                   in accordance with `items.entry_min_admitted_members_ratio` as follows:
+//								 * 'not_ready' if the team itself cannot enter the item
+//									 while there are more members than `entry_max_team_size` or
+//									 the team/user doesn't satisfy the item's entry condition which is computed
+//									 in accordance with `items.entry_min_admitted_members_ratio` as follows:
 //
-//	                     * "None": no additional conditions (the team/user can enter the item);
+//										 * "None": no additional conditions (the team/user can enter the item);
 //
-//	                     * "One": the current time needs to be between
-//	                       `permissions_granted.can_enter_from` and `permissions_granted.can_enter_until`
-//	                       and between `items.entering_time_min` and `items.entering_time_max`
-//	                       for the item and one of the group ancestors of either the user (if participating alone)
-//	                       or at least one member of the team;
+//										 * "One": the current time needs to be between
+//											 `permissions_granted.can_enter_from` and `permissions_granted.can_enter_until`
+//											 and between `items.entering_time_min` and `items.entering_time_max`
+//											 for the item and one of the group ancestors of either the user (if participating alone)
+//											 or at least one member of the team;
 //
-//	                     * "All": same but all members of the team;
+//										 * "All": same but all members of the team;
 //
-//	                     * "Half": same but half of the members (ceil-rounded) of the team;
+//										 * "Half": same but half of the members (ceil-rounded) of the team;
 //
-//	                 * 'not_ready' if the participant has an `attempts` row for the item (with `attempts.root_item_id` = `{item_id}`)
-//	                   while the item's `allows_multiple_attempts` is false;
+//								 * 'not_ready' if the participant has an `attempts` row for the item (with `attempts.root_item_id` = `{item_id}`)
+//									 while the item's `allows_multiple_attempts` is false;
 //
-//	                 * 'not_ready' if at least one of the team's members as a member of another team
-//	                   has an `attempts` row for the item (with `attempts.root_item_id` = `{item_id}`)
-//	                   while the item's `allows_multiple_attempts` is false or an active (not expired) attempt;
+//								 * 'not_ready' if at least one of the team's members as a member of another team
+//									 has an `attempts` row for the item (with `attempts.root_item_id` = `{item_id}`)
+//									 while the item's `allows_multiple_attempts` is false or an active (not expired) attempt;
 //
-//	                 * 'not_ready' if the item's `items.entry_frozen_teams` = 1,
-//	                   but the team membership is not frozen (`groups.frozen_membership` = 0);
+//								 * 'not_ready' if the item's `items.entry_frozen_teams` = 1,
+//									 but the team membership is not frozen (`groups.frozen_membership` = 0);
 //
-//	                 * 'ready' otherwise.
+//								 * 'ready' otherwise.
 //
-//	               Restrictions:
-//	                 * `item_id` should require explicit entry;
-//	                 * `as_team_id` (if given) should be one of the current user's teams;
-//	                 * `as_team_id` should be given if the item is team-only and should not be given if the item is user-only;
-//	                 * the authenticated user (or his team) should have at least 'info' access to the item.
+//							 Restrictions:
+//								 * `item_id` should require explicit entry;
+//								 * `as_team_id` (if given) should be one of the current user's teams;
+//								 * `as_team_id` should be given if the item is team-only and should not be given if the item is user-only;
+//								 * the authenticated user (or his team) should have at least 'info' access to the item.
 //
-//	               Otherwise, the "Forbidden" response is returned.
-//		parameters:
-//			- name: item_id
-//				description: "`id` of an item to enter"
-//				in: path
-//				type: integer
-//				format: int64
-//				required: true
-//			- name: as_team_id
-//				in: query
-//				type: integer
-//				format: int64
-//		responses:
-//			"200":
-//				description: OK. Success response with the entry state info
-//				schema:
-//					"$ref": "#/definitions/itemGetEntryStateResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//							 Otherwise, the "Forbidden" response is returned.
+//	parameters:
+//		- name: item_id
+//			description: "`id` of an item to enter"
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//		- name: as_team_id
+//			in: query
+//			type: integer
+//			format: int64
+//	responses:
+//		"200":
+//			description: OK. Success response with the entry state info
+//			schema:
+//				"$ref": "#/definitions/itemGetEntryStateResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {

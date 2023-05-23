@@ -14,56 +14,56 @@ import (
 
 // swagger:operation GET /groups/{group_id}/team-progress-csv groups groupTeamProgressCSV
 //
-//		---
-//		summary: Get group progress for teams as a CSV file
-//		description: >
-//	             Returns the current progress of teams on a subset of items.
+//	---
+//	summary: Get group progress for teams as a CSV file
+//	description: >
+//						 Returns the current progress of teams on a subset of items.
 //
 //
-//	             For each item from `{parent_item_id}` and its visible children,
-//	             displays the result of each team among the descendants of the group.
+//						 For each item from `{parent_item_id}` and its visible children,
+//						 displays the result of each team among the descendants of the group.
 //
 //
-//	             Restrictions:
+//						 Restrictions:
 //
-//	             * The current user should be a manager of the group (or of one of its ancestors)
-//	             with `can_watch_members` set to true,
+//						 * The current user should be a manager of the group (or of one of its ancestors)
+//						 with `can_watch_members` set to true,
 //
-//	             * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
+//						 * The current user should have `can_watch_members` >= 'result' on each of `{parent_item_ids}` items,
 //
 //
-//	             otherwise the 'forbidden' error is returned.
-//		parameters:
-//			- name: group_id
-//				in: path
+//						 otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			type: integer
+//			required: true
+//		- name: parent_item_ids
+//			in: query
+//			required: true
+//			type: array
+//			items:
 //				type: integer
-//				required: true
-//			- name: parent_item_ids
-//				in: query
-//				required: true
-//				type: array
-//				items:
-//					type: integer
-//		responses:
-//			"200":
-//				description: OK. Success response with users progress on items
-//				content:
-//					text/csv:
-//						schema:
-//						type: string
-//				examples:
-//					text/csv:
-//						Team name;Parent item;1. First child item;2. Second child item
+//	responses:
+//		"200":
+//			description: OK. Success response with users progress on items
+//			content:
+//				text/csv:
+//					schema:
+//					type: string
+//			examples:
+//				text/csv:
+//					Team name;Parent item;1. First child item;2. Second child item
 //
-//						Our team;30;20;10
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					Our team;30;20;10
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

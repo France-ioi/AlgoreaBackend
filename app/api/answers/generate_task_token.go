@@ -15,64 +15,64 @@ import (
 
 // swagger:operation POST /answers/{answer_id}/generate-task-token answers answerTaskTokenGenerate
 //
-//		---
-//		summary: Generate a task token
-//		description: >
-//	  Generate a read-only task token from an answer
+//	---
+//	summary: Generate a task token
+//	description: >
+//		Generate a read-only task token from an answer
 //
 //
-//	  * Then the service returns a task token for the attempt for the given item.
+//		* Then the service returns a task token for the attempt for the given item.
 //
-//	  * `bAccessSolutions` of the token is true if either the participant has `can_view` >= 'solution' on the item or
-//	    the item has been validated by the participant.
+//		* `bAccessSolutions` of the token is true if either the participant has `can_view` >= 'solution' on the item or
+//			the item has been validated by the participant.
 //
-//				Restrictions:
+//		Restrictions:
 //
-//	    * the answer should exist
-//	    * the item of the answer should be a "Task"
-//	    * the current user must have a started result on the item (whatever the attempt)
-//	    * if the participant of the answer is either the current-user or a team which the current-user is member of,
-//	      the current user must be allowed to "view >= 'content'" the item
-//	    * otherwise:
-//	      the current user must be allowed to "watch" the participant of the answer
-//	      the current user must be allowed to "watch answer" for the item
+//			* the answer should exist
+//			* the item of the answer should be a "Task"
+//			* the current user must have a started result on the item (whatever the attempt)
+//			* if the participant of the answer is either the current-user or a team which the current-user is member of,
+//				the current user must be allowed to "view >= 'content'" the item
+//			* otherwise:
+//				the current user must be allowed to "watch" the participant of the answer
+//				the current user must be allowed to "watch answer" for the item
 //
 //
-//	  otherwise the 'forbidden' error is returned.
-//		parameters:
-//			- name: answer_id
-//				in: path
-//				type: integer
-//				required: true
-//		responses:
-//			"200":
-//				description: "OK. Success response with the task token"
-//				schema:
-//						type: object
-//						required: [success, message, data]
-//						properties:
-//							success:
-//								description: "true"
-//								type: boolean
-//								enum: [true]
-//							message:
-//								description: updated
-//								type: string
-//								enum: [updated]
-//							data:
-//								type: object
-//								required: [task_token]
-//								properties:
-//									task_token:
-//										type: string
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: answer_id
+//			in: path
+//			type: integer
+//			required: true
+//	responses:
+//		"200":
+//			description: "OK. Success response with the task token"
+//			schema:
+//					type: object
+//					required: [success, message, data]
+//					properties:
+//						success:
+//							description: "true"
+//							type: boolean
+//							enum: [true]
+//						message:
+//							description: updated
+//							type: string
+//							enum: [updated]
+//						data:
+//							type: object
+//							required: [task_token]
+//							properties:
+//								task_token:
+//									type: string
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	answerID, err := service.ResolveURLQueryPathInt64Field(r, "answer_id")
 	if err != nil {

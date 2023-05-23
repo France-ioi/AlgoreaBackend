@@ -16,72 +16,72 @@ import (
 
 // swagger:operation POST /items/{item_id}/attempts/{attempt_id}/generate-task-token items itemTaskTokenGenerate
 //
-//		---
-//		summary: Generate a task token
-//		description: >
-//	  Generate a task token with the refreshed attempt.
+//	---
+//	summary: Generate a task token
+//	description: >
+//		Generate a task token with the refreshed attempt.
 //
 //
-//	  * `latest_activity_at` of `results` is set to the current time.
+//		* `latest_activity_at` of `results` is set to the current time.
 //
-//	  * Then the service returns a task token with fresh data for the attempt for the given item.
+//		* Then the service returns a task token with fresh data for the attempt for the given item.
 //
-//	  * `bAccessSolutions` of the token is true if ether the participant has `can_view` >= 'solution' on the item or
-//	    the item has been validated for the participant in the given attempt.
+//		* `bAccessSolutions` of the token is true if ether the participant has `can_view` >= 'solution' on the item or
+//			the item has been validated for the participant in the given attempt.
 //
 //
-//				Restrictions:
+//			Restrictions:
 //
-//	    * if `{as_team_id}` is given, it should be a team and the current user should be a member of this team,
-//	    * the user (or `{as_team_id}`) should have at least 'content' access to the item,
-//	    * the item should be a 'Task',
-//	    * there should be a row in the `results` table with `participant_id` equal to the user's group (or `{as_team_id}`),
-//	      `attempt_id` = `{attempt_id}`, `item_id` = `{item_id}`, `started_at` set,
-//	    * the attempt with (`participant_id`, `{attempt_id}`) should have allows_submissions_until in the future,
+//			* if `{as_team_id}` is given, it should be a team and the current user should be a member of this team,
+//			* the user (or `{as_team_id}`) should have at least 'content' access to the item,
+//			* the item should be a 'Task',
+//			* there should be a row in the `results` table with `participant_id` equal to the user's group (or `{as_team_id}`),
+//				`attempt_id` = `{attempt_id}`, `item_id` = `{item_id}`, `started_at` set,
+//			* the attempt with (`participant_id`, `{attempt_id}`) should have allows_submissions_until in the future,
 //
-//	  otherwise the 'forbidden' error is returned.
-//		parameters:
-//			- name: attempt_id
-//				in: path
-//				type: integer
-//				required: true
-//			- name: item_id
-//				in: path
-//				type: integer
-//				required: true
-//			- name: as_team_id
-//				in: query
-//				type: integer
-//				format: int64
-//		responses:
-//			"200":
-//				description: "OK. Success response with the fresh task token"
-//				schema:
-//					type: object
-//					required: [success, message, data]
-//					properties:
-//						success:
-//							description: "true"
-//							type: boolean
-//							enum: [true]
-//						message:
-//							description: updated
-//							type: string
-//							enum: [updated]
-//						data:
-//							type: object
-//							required: [task_token]
-//							properties:
-//								task_token:
-//									type: string
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: attempt_id
+//			in: path
+//			type: integer
+//			required: true
+//		- name: item_id
+//			in: path
+//			type: integer
+//			required: true
+//		- name: as_team_id
+//			in: query
+//			type: integer
+//			format: int64
+//	responses:
+//		"200":
+//			description: "OK. Success response with the fresh task token"
+//			schema:
+//				type: object
+//				required: [success, message, data]
+//				properties:
+//					success:
+//						description: "true"
+//						type: boolean
+//						enum: [true]
+//					message:
+//						description: updated
+//						type: string
+//						enum: [updated]
+//					data:
+//						type: object
+//						required: [task_token]
+//						properties:
+//							task_token:
+//								type: string
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 

@@ -12,42 +12,42 @@ import (
 
 // swagger:operation POST /items/{dependent_item_id}/prerequisites/{prerequisite_item_id}/apply items itemDependencyApply
 //
-//		---
-//		summary: (re)Apply a specific existing item-dependency rule on existing results
-//		description: Applies the rule, i.e. grants the content access, for all existing participants which meet
-//	             the condition defined by this dependency.
-//	             The action doesn't affect access rights of those who doesn't meet the condition anymore.
+//	---
+//	summary: (re)Apply a specific existing item-dependency rule on existing results
+//	description: Applies the rule, i.e. grants the content access, for all existing participants which meet
+//						 the condition defined by this dependency.
+//						 The action doesn't affect access rights of those who doesn't meet the condition anymore.
 //
 //
-//	             * The item dependency between `{dependent_item_id}` and `{prerequisite_item_id}`
-//	               must exist with `grant_content_view` = 1, otherwise the 'not found' error is returned.
+//						 * The item dependency between `{dependent_item_id}` and `{prerequisite_item_id}`
+//							 must exist with `grant_content_view` = 1, otherwise the 'not found' error is returned.
 //
-//	             * The current-user must have `can_edit` = 'all' and `can_grant_view` >= 'content' on the `{dependent_item_id}`,
-//	               otherwise the 'forbidden' error is returned.
-//		parameters:
-//			- name: dependent_item_id
-//				in: path
-//				type: integer
-//				format: int64
-//				required: true
-//			- name: prerequisite_item_id
-//				in: path
-//				type: integer
-//				format: int64
-//				required: true
-//		responses:
-//			"200":
-//				"$ref": "#/responses/updatedResponse"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"404":
-//				"$ref": "#/responses/notFoundResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//						 * The current-user must have `can_edit` = 'all' and `can_grant_view` >= 'content' on the `{dependent_item_id}`,
+//							 otherwise the 'forbidden' error is returned.
+//	parameters:
+//		- name: dependent_item_id
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//		- name: prerequisite_item_id
+//			in: path
+//			type: integer
+//			format: int64
+//			required: true
+//	responses:
+//		"200":
+//			"$ref": "#/responses/updatedResponse"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"404":
+//			"$ref": "#/responses/notFoundResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
 	if err != nil {

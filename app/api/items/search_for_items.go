@@ -40,50 +40,50 @@ type itemSearchResponseRowRaw struct {
 
 // swagger:operation GET /items/search items itemSearch
 //
-//		---
-//		summary: Search for items
-//		description: >
-//	  Searches for visible (`can_view` >= 'info') items, basing on a substring of their titles
-//	  in the current user's (if exists, otherwise default) language.
-//		parameters:
-//			- name: search
-//				in: query
+//	---
+//	summary: Search for items
+//	description: >
+//		Searches for visible (`can_view` >= 'info') items, basing on a substring of their titles
+//		in the current user's (if exists, otherwise default) language.
+//	parameters:
+//		- name: search
+//			in: query
+//			type: string
+//			minLength: 3
+//			required: true
+//		- name: types_include
+//			in: query
+//			default: [Chapter,Task,Skill]
+//			type: array
+//			items:
 //				type: string
-//				minLength: 3
-//				required: true
-//			- name: types_include
-//				in: query
-//				default: [Chapter,Task,Skill]
+//				enum: [Chapter,Task,Skill]
+//		- name: types_exclude
+//			in: query
+//			default: []
+//			type: array
+//			items:
+//				type: string
+//				enum: [Chapter,Task,Skill]
+//		- name: limit
+//			description: Display the first N items
+//			in: query
+//			type: integer
+//			maximum: 20
+//			default: 20
+//	responses:
+//		"200":
+//			description: OK. Success response with an array of items
+//			schema:
 //				type: array
 //				items:
-//					type: string
-//					enum: [Chapter,Task,Skill]
-//			- name: types_exclude
-//				in: query
-//				default: []
-//				type: array
-//				items:
-//					type: string
-//					enum: [Chapter,Task,Skill]
-//			- name: limit
-//				description: Display the first N items
-//				in: query
-//				type: integer
-//				maximum: 20
-//				default: 20
-//		responses:
-//			"200":
-//				description: OK. Success response with an array of items
-//				schema:
-//					type: array
-//					items:
-//						"$ref": "#/definitions/itemSearchResponseRow"
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//					"$ref": "#/definitions/itemSearchResponseRow"
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) service.APIError {
 	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
 	if err != nil {

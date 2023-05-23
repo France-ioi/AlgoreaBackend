@@ -16,39 +16,39 @@ import (
 
 // swagger:operation POST /groups/{group_id}/code groups groupCodeCreate
 //
-//		---
-//		summary: Create a new group code
-//		description: >
+//	---
+//	summary: Create a new group code
+//	description: >
 //
-//	  Creates a new code using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
-//	  Makes sure it doesn’t correspond to any existing group code. Saves it for the given group and returns it.
+//		Creates a new code using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
+//		Makes sure it doesn’t correspond to any existing group code. Saves it for the given group and returns it.
 //
 //
-//	  The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
-//	  otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
-//		parameters:
-//			- name: group_id
-//				in: path
-//				type: integer
-//				required: true
-//		responses:
-//			"200":
-//				description: OK. The new code has been set.
-//				schema:
-//					type: object
-//					properties:
-//						code:
-//							type: string
-//					required:
-//						- code
-//			"400":
-//				"$ref": "#/responses/badRequestResponse"
-//			"401":
-//				"$ref": "#/responses/unauthorizedResponse"
-//			"403":
-//				"$ref": "#/responses/forbiddenResponse"
-//			"500":
-//				"$ref": "#/responses/internalErrorResponse"
+//		The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
+//		otherwise the 'forbidden' error is returned. If the group is a user, the 'forbidden' error is returned as well.
+//	parameters:
+//		- name: group_id
+//			in: path
+//			type: integer
+//			required: true
+//	responses:
+//		"200":
+//			description: OK. The new code has been set.
+//			schema:
+//				type: object
+//				properties:
+//					code:
+//						type: string
+//				required:
+//					- code
+//		"400":
+//			"$ref": "#/responses/badRequestResponse"
+//		"401":
+//			"$ref": "#/responses/unauthorizedResponse"
+//		"403":
+//			"$ref": "#/responses/forbiddenResponse"
+//		"500":
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)

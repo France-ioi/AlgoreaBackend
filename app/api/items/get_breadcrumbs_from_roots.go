@@ -120,13 +120,13 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 //					items:
 //						"$ref": "#/definitions/breadcrumbElement"
 //		"400":
-//	  	"$ref": "#/responses/badRequestResponse"
+//			"$ref": "#/responses/badRequestResponse"
 //		"401":
-//	  	"$ref": "#/responses/unauthorizedResponse"
+//			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
-//	  	"$ref": "#/responses/forbiddenResponse"
+//			"$ref": "#/responses/forbiddenResponse"
 //		"500":
-//	  	"$ref": "#/responses/internalErrorResponse"
+//			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *http.Request) service.APIError {
 	textID := chi.URLParam(r, "text_id")
 
