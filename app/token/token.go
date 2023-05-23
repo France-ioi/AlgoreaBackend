@@ -122,74 +122,44 @@ func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte
 	return token
 }
 
-// UnexpectedError represents an unexpected error so that we could differentiate it from expected errors.
-type UnexpectedError struct {
-	err error
-}
-
-// Error returns a string representation for an unexpected error.
-func (ue *UnexpectedError) Error() string {
-	return ue.err.Error()
-}
-
-// IsUnexpectedError returns true if its argument is an unexpected error.
-func IsUnexpectedError(err error) bool {
-	if _, unexpected := err.(*UnexpectedError); unexpected {
-		return true
-	}
-	return false
-}
-
 // UnmarshalDependingOnItemPlatform unmarshals a token from JSON representation
-// using a platforms's public key for given itemID.
-// The function returns if the platform doesn't use tokens.
-func UnmarshalDependingOnItemPlatform(store *database.DataStore, itemID int64,
-	target interface{}, token []byte, tokenFieldName string,
-) (err error) {
+// using a platform's public key for given itemID.
+// The function returns nil (success) if the platform doesn't use tokens.
+func UnmarshalDependingOnItemPlatform(
+	store *database.DataStore,
+	itemID int64,
+	target interface{},
+	token []byte,
+	tokenFieldName string,
+) (platformHasKey bool, err error) {
 	targetRefl := reflect.ValueOf(target)
-	defer recoverPanics(&err)
 
-	var platformInfo struct {
-		PublicKey *string
+	publicKey, err := store.Platforms().GetPublicKeyByItemID(itemID)
+	if gorm.IsRecordNotFoundError(err) {
+		return false, fmt.Errorf("cannot find the platform for item %d", itemID)
 	}
-	if err = store.Platforms().Select("public_key").
-		Joins("JOIN items ON items.platform_id = platforms.id").
-		Where("items.id = ?", itemID).
-		Scan(&platformInfo).Error(); gorm.IsRecordNotFoundError(err) {
-		return fmt.Errorf("cannot find the platform for item %d", itemID)
+	if publicKey == "" {
+		return false, nil
 	}
-	mustNotBeError(err)
 
-	if platformInfo.PublicKey != nil {
-		if token == nil {
-			return fmt.Errorf("missing %s", tokenFieldName)
-		}
-		parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(*platformInfo.PublicKey))
-		if err != nil {
-			logging.Warnf("cannot parse platform's public key for item with id = %d: %s",
-				itemID, err.Error())
-			return fmt.Errorf("invalid %s: wrong platform's key", tokenFieldName)
-		}
-		targetRefl.Elem().Set(reflect.New(targetRefl.Elem().Type().Elem()))
-		targetRefl.Elem().Elem().FieldByName("PublicKey").Set(reflect.ValueOf(parsedPublicKey))
-
-		if err = targetRefl.Elem().Interface().(json.Unmarshaler).UnmarshalJSON(token); err != nil {
-			return fmt.Errorf("invalid %s: %s", tokenFieldName, err.Error())
-		}
-		return nil
+	// Token shouldn't be null when there is a public key.
+	if token == nil {
+		return true, fmt.Errorf("missing %s", tokenFieldName)
 	}
-	targetRefl.Elem().Set(reflect.Zero(targetRefl.Elem().Type()))
-	return nil
-}
 
-func mustNotBeError(err error) {
+	parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(publicKey))
 	if err != nil {
-		panic(err)
-	}
-}
+		logging.Warnf("cannot parse platform's public key for item with id = %d: %s", itemID, err.Error())
 
-func recoverPanics(err *error) { // nolint:gocritic
-	if r := recover(); r != nil {
-		*err = &UnexpectedError{err: r.(error)}
+		return true, fmt.Errorf("invalid %s: wrong platform's key", tokenFieldName)
 	}
+
+	targetRefl.Elem().Set(reflect.New(targetRefl.Elem().Type().Elem()))
+	targetRefl.Elem().Elem().FieldByName("PublicKey").Set(reflect.ValueOf(parsedPublicKey))
+
+	if err = targetRefl.Elem().Interface().(json.Unmarshaler).UnmarshalJSON(token); err != nil {
+		return true, fmt.Errorf("invalid %s: %s", tokenFieldName, err.Error())
+	}
+
+	return true, nil
 }

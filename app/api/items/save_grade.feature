@@ -267,7 +267,7 @@ Feature: Save grading result
       | 101            | 0          | 50      | 0              | 0           | 0         | 2019-05-30 11:00:00 | null                 | 2017-04-29 06:38:38 | null         |
       | 101            | 1          | 60      | 99             | 1           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
     And the table "results_propagate" should be empty
-  
+
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
     And the database has the following table 'answers':
@@ -581,6 +581,80 @@ Feature: Save grading result
       """
       {
         "task_token": "{{priorUserTaskToken}}",
+        "score": 100.0,
+        "answer_token": "{{answerToken}}"
+      }
+      """
+    Then the response code should be 201
+    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+      """
+      {
+        "data": {
+          "task_token": {
+            "date": "{{currentTimeInFormat("02-01-2006")}}",
+            "idUser": "101",
+            "idItemLocal": "70",
+            "idAttempt": "101/1",
+            "itemUrl": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
+            "randomSeed": "",
+            "platformName": "{{app().Config.GetString("token.platformName")}}",
+            "bAccessSolutions": true
+          },
+          "validated": true
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    
+  Scenario: Should ignore score_token when provided if the platform doesn't have a key. Make sure the right score is used.
+    Given I am the user with id "101"
+    And the database has the following table 'attempts':
+      | id | participant_id |
+      | 1  | 101            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 1          | 101            | 70      | 2018-05-29 06:38:38 |
+    And the database has the following table 'answers':
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "70",
+        "idAttempt": "101/1",
+        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    And "answerToken" is a token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "70",
+        "idAttempt": "101/1",
+        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
+        "idUserAnswer": "125",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    And "scoreToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "70",
+        "idAttempt": "101/1",
+        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
+        "score": "99",
+        "idUserAnswer": "125"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "score_token": "{{scoreToken}}",
         "score": 100.0,
         "answer_token": "{{answerToken}}"
       }
