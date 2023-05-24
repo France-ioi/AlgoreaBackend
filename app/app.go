@@ -17,6 +17,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/app/version"
 )
 
 // Application is the core state of the app.
@@ -77,6 +78,8 @@ func (app *Application) Reset(config *viper.Viper) error {
 
 	// Set up middlewares
 	router := chi.NewRouter()
+
+	router.Use(version.AddVersionHeader)
 
 	router.Use(middleware.RealIP) // must be before logger or any middleware using remote IP
 	if serverConfig.GetBool("compress") {

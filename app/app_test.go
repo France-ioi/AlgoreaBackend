@@ -22,6 +22,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/version"
 )
 
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
@@ -38,7 +39,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(app.Database)
 	assert.NotNil(app.HTTPHandler)
 	assert.NotNil(app.apiCtx)
-	assert.Len(app.HTTPHandler.Middlewares(), 7)
+	assert.Len(app.HTTPHandler.Middlewares(), 8)
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
 	assert.Equal("/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
@@ -49,7 +50,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
 	app, _ := New()
-	assert.Len(app.HTTPHandler.Middlewares(), 6)
+	assert.Len(app.HTTPHandler.Middlewares(), 7)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
@@ -206,6 +207,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	// check that the compression has been applied but the length in the logs is not altered by compression i
 	assert.Equal(23, hook.LastEntry().Data["resp_bytes_length"])
 	assert.Equal("gzip", response.Header.Get("Content-Encoding"))
+	assert.Equal(version.Version, response.Header.Get("Backend-Version"))
 }
 
 func TestNew_MountsPprofInDev(t *testing.T) {
