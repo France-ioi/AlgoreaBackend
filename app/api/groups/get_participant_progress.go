@@ -59,6 +59,11 @@ type groupParticipantProgressResponseChild struct {
 
 	// required: true
 	CurrentUserPermissions *structures.ItemPermissions `json:"current_user_permissions"`
+
+	// The minimum `started_at` on a result among all attempts.
+	// Nullable
+	// required:true
+	StartedAt *database.Time `json:"started_at"`
 }
 
 // swagger:model groupParticipantProgressResponse
@@ -87,6 +92,7 @@ type rawParticipantProgressRaw struct {
 	HintsRequested   int32
 	Submissions      int32
 	TimeSpent        int32
+	StartedAt        *database.Time
 
 	IsParent bool
 }
@@ -229,6 +235,7 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 					fields+", is_parent, "+`
 					IFNULL(result_with_best_score.score_computed, 0) AS score,
 					IFNULL(result_with_best_score.validated, 0) AS validated,
+					(SELECT MIN(started_at) FROM results WHERE participant_id = ? AND item_id = items.id) AS started_at,
 					(SELECT MAX(latest_activity_at) FROM results WHERE participant_id = ? AND item_id = items.id) AS latest_activity_at,
 					IFNULL(result_with_best_score.hints_cached, 0) AS hints_requested,
 					IFNULL(result_with_best_score.submissions, 0) AS submissions,
@@ -242,7 +249,7 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 							FROM results
 							WHERE participant_id = ? AND item_id = items.id
 						)
-					) AS time_spent`, params.ParticipantID, params.ParticipantID).
+					) AS time_spent`, params.ParticipantID, params.ParticipantID, params.ParticipantID).
 				Joins(`
 					LEFT JOIN LATERAL (
 						SELECT score_computed, validated, hints_cached, submissions, participant_id
@@ -291,6 +298,7 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 					LanguageTag: rows[i].StringLanguageTag,
 				},
 				CurrentUserPermissions: rows[i].AsItemPermissions(store.PermissionsGranted()),
+				StartedAt:              rows[i].StartedAt,
 			})
 		}
 	}

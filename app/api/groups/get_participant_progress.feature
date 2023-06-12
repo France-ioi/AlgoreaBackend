@@ -244,48 +244,48 @@ Feature: Display the current progress of a participant on children of an item (g
       | 51       | 1030    | content                  | result              |
     And the database has the following table 'attempts':
       | id | participant_id | created_at          |
-      | 0  | 14             | 2017-05-29 06:38:38 |
-      | 1  | 14             | 2017-05-29 06:38:38 |
-      | 2  | 14             | 2017-05-29 06:38:38 |
-      | 3  | 14             | 2017-05-29 06:38:38 |
-      | 0  | 15             | 2017-03-29 06:38:38 |
-      | 0  | 16             | 2018-12-01 00:00:00 |
-      | 1  | 67             | 2019-01-01 00:00:00 |
-      | 0  | 67             | 2017-05-29 06:38:38 |
-      | 4  | 14             | 2017-05-29 06:38:38 |
-      | 1  | 15             | 2017-03-29 06:38:38 |
-      | 5  | 14             | 2017-05-29 06:38:38 |
-      | 0  | 21             | 2017-05-29 06:38:38 |
-      | 0  | 51             | 2017-05-29 06:38:38 |
+      | 0  | 14             | 2020-01-01 00:03:00 |
+      | 1  | 14             | 2020-01-01 00:03:00 |
+      | 2  | 14             | 2020-01-01 00:03:00 |
+      | 3  | 14             | 2020-01-01 00:03:00 |
+      | 0  | 15             | 2020-01-01 00:01:00 |
+      | 0  | 16             | 2020-01-01 00:16:00 |
+      | 1  | 67             | 2020-01-01 00:17:00 |
+      | 0  | 67             | 2020-01-01 00:03:00 |
+      | 4  | 14             | 2020-01-01 00:03:00 |
+      | 1  | 15             | 2020-01-01 00:01:00 |
+      | 5  | 14             | 2020-01-01 00:03:00 |
+      | 0  | 21             | 2020-01-01 00:03:00 |
+      | 0  | 51             | 2020-01-01 00:03:00 |
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
-      | 0          | 14             | 211     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38 | 2018-05-30 06:38:48 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
-      | 1          | 14             | 211     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | 2017-05-29 06:38:58 | 2018-05-29 06:38:38 | # min(validated_at) for 51, 211 comes from this line (from a team)
-      | 2          | 14             | 211     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-31 06:58:38 | 2018-05-28 06:38:38 | # hints_cached & submissions for 51, 211 come from this line (the best attempt is made by a team)
-      | 3          | 14             | 211     | 2017-05-29 06:38:38 | 50             | 2017-05-30 06:38:38 | 10           | 20          | null                | 2018-05-27 06:38:38 |
-      | 0          | 15             | 211     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-26 06:38:38 |
-      | 0          | 15             | 212     | 2017-03-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-25 06:38:38 |
-      | 0          | 16             | 212     | 2018-12-01 00:00:00 | 10             | 2017-05-30 06:38:38 | 0            | 0           | null                | 2019-06-01 00:00:00 | # started_at for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
-      | 0          | 67             | 212     | 2019-01-01 00:00:00 | 20             | 2017-06-30 06:38:38 | 1            | 2           | null                | 2019-06-01 00:00:00 | # hints_cached & submissions for 67, 212 come from this line (the best attempt is made by a user)
-      | 1          | 67             | 212     | 2019-01-01 00:00:00 | 10             | 2017-05-30 06:38:38 | 6            | 7           | null                | 2019-07-01 00:00:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
-      | 0          | 67             | 213     | 2018-11-01 00:00:00 | 0              | null                | 0            | 0           | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
-      | 0          | 67             | 214     | 2017-05-29 06:38:38 | 15             | 2017-05-29 06:38:48 | 10           | 11          | 2017-05-29 06:38:48 | 2017-05-30 06:38:48 | # min(validated_at) for 67, 214 comes from this line (from a user)
-      | 0          | 67             | 215     | 3018-11-01 00:00:00 | 0              | null                | 0            | 0           | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
-      | 4          | 14             | 211     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-24 06:38:38 |
-      | 1          | 15             | 211     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-23 06:38:38 |
-      | 1          | 15             | 212     | 2017-03-29 06:38:38 | 100            | null                | 0            | 0           | null                | 2018-05-22 06:38:38 |
-      | 5          | 14             | 211     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2018-05-21 06:38:38 |
-      | 0          | 14             | 212     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 1            | 2           | null                | 2018-05-30 06:38:58 |
-      | 0          | 14             | 213     | 2030-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | 2030-05-29 06:38:38 |
-      | 0          | 14             | 215     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38 | 2018-05-30 06:38:58 |
-      | 0          | 21             | 210     | 2020-01-21 00:00:00 | 0              | 2020-01-21 00:00:00 | 0            | 0           | null                | 2020-01-21 00:00:00 |
-      | 0          | 51             | 210     | 2020-01-21 00:00:00 | 0              | 2020-01-21 00:00:00 | 0            | 0           | null                | 2020-01-21 00:00:00 |
-      | 0          | 51             | 1010    | 2020-01-21 00:00:00 | 0              | 2020-01-21 00:00:00 | 0            | 0           | null                | 2020-01-21 00:00:00 |
+      | 0          | 14             | 211     | 2020-01-01 00:03:00 | 0              | 2020-01-01 00:03:00 | 100          | 100         | 2020-01-01 00:04:00 | 2020-01-01 00:14:01 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
+      | 1          | 14             | 211     | 2020-01-01 00:02:00 | 40             | 2020-01-01 00:03:00 | 2            | 3           | 2020-01-01 00:03:02 | 2020-01-01 00:14:00 | # min(validated_at) for 51, 211 comes from this line (from a team)
+      | 2          | 14             | 211     | 2020-01-01 00:03:00 | 50             | 2020-01-01 00:03:00 | 3            | 4           | 2020-01-01 00:04:02 | 2020-01-01 00:13:00 | # hints_cached & submissions for 51, 211 come from this line (the best attempt is made by a team)
+      | 3          | 14             | 211     | 2020-01-01 00:03:00 | 50             | 2020-01-01 00:04:00 | 10           | 20          | null                | 2020-01-01 00:12:00 |
+      | 0          | 15             | 211     | 2020-01-01 00:02:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:11:00 |
+      | 0          | 15             | 212     | 2020-01-01 00:01:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:10:00 |
+      | 0          | 16             | 212     | 2020-01-01 00:16:00 | 10             | 2020-01-01 00:04:00 | 0            | 0           | null                | 2020-01-01 00:18:00 | # started_at for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
+      | 0          | 67             | 212     | 2020-01-01 00:17:00 | 20             | 2020-01-01 00:05:00 | 1            | 2           | null                | 2020-01-01 00:18:00 | # hints_cached & submissions for 67, 212 come from this line (the best attempt is made by a user)
+      | 1          | 67             | 212     | 2020-01-01 00:17:00 | 10             | 2020-01-01 00:04:00 | 6            | 7           | null                | 2021-01-01 00:01:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
+      | 0          | 67             | 213     | 2020-01-01 00:15:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:15:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
+      | 0          | 67             | 214     | 2020-01-01 00:03:00 | 15             | 2020-01-01 00:03:01 | 10           | 11          | 2020-01-01 00:03:01 | 2020-01-01 00:04:01 | # min(validated_at) for 67, 214 comes from this line (from a user)
+      | 0          | 67             | 215     | 2021-01-01 00:04:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:15:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
+      | 4          | 14             | 211     | 2020-01-01 00:03:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:09:00 |
+      | 1          | 15             | 211     | 2020-01-01 00:02:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:08:00 |
+      | 1          | 15             | 212     | 2020-01-01 00:01:00 | 100            | null                | 0            | 0           | null                | 2020-01-01 00:07:00 |
+      | 5          | 14             | 211     | 2020-01-01 00:03:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:06:00 |
+      | 0          | 14             | 212     | 2020-01-01 00:03:00 | 0              | 2020-01-01 00:03:00 | 1            | 2           | null                | 2020-01-01 00:14:02 |
+      | 0          | 14             | 213     | 2021-01-01 00:03:00 | 0              | null                | 0            | 0           | null                | 2021-01-01 00:03:00 |
+      | 0          | 14             | 215     | 2020-01-01 00:03:00 | 0              | 2020-01-01 00:03:00 | 100          | 100         | 2020-01-01 00:04:00 | 2020-01-01 00:14:02 |
+      | 0          | 21             | 210     | 2021-01-01 00:02:00 | 0              | 2021-01-01 00:02:00 | 0            | 0           | null                | 2021-01-01 00:02:00 |
+      | 0          | 51             | 210     | 2021-01-01 00:02:00 | 0              | 2021-01-01 00:02:00 | 0            | 0           | null                | 2021-01-01 00:02:00 |
+      | 0          | 51             | 1010    | 2021-01-01 00:02:00 | 0              | 2021-01-01 00:02:00 | 0            | 0           | null                | 2021-01-01 00:02:00 |
 
   Scenario: Get progress of a user
     Given I am the user with id "21"
     # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30 20:19:05"
+    And the DB time now is "2021-01-01 00:00:00"
     When I send a GET request to "/items/210/participant-progress?watched_group_id=67"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -308,7 +308,8 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "en", "title": "Task 15"},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-          "latest_activity_at": "2018-11-01T00:00:00Z",
+          "started_at": "2021-01-01T00:04:00Z",
+          "latest_activity_at": "2020-01-01T00:15:00Z",
           "score": 0,
           "submissions": 0,
           "time_spent": 0,
@@ -321,10 +322,11 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "fr", "title": "Tâche 14"},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
-          "latest_activity_at": "2017-05-30T06:38:48Z",
+          "started_at": "2020-01-01T00:03:00Z",
+          "latest_activity_at": "2020-01-01T00:04:01Z",
           "score": 15,
           "submissions": 11,
-          "time_spent": 10,
+          "time_spent": 1,
           "validated": true
         },
         {
@@ -334,10 +336,11 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "", "title": null},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
-          "latest_activity_at": "2018-11-01T00:00:00Z",
+          "started_at": "2020-01-01T00:15:00Z",
+          "latest_activity_at": "2020-01-01T00:15:00Z",
           "score": 0,
           "submissions": 0,
-          "time_spent": 20895545,
+          "time_spent": 31621500,
           "validated": false
         },
         {
@@ -347,10 +350,11 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "", "title": null},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
-          "latest_activity_at": "2019-07-01T00:00:00Z",
+          "started_at": "2020-01-01T00:16:00Z",
+          "latest_activity_at": "2021-01-01T00:01:00Z",
           "score": 20,
           "submissions": 2,
-          "time_spent": 18303545,
+          "time_spent": 31621440,
           "validated": false
         },
         {
@@ -359,6 +363,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
           "string": {"language_tag": "", "title": null},
+          "started_at": null,
           "latest_activity_at": null,
           "score": 0,
           "hints_requested": 0,
@@ -373,7 +378,7 @@ Feature: Display the current progress of a participant on children of an item (g
   Scenario: Get progress of a current user
     Given I am the user with id "51"
     # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30 20:19:05"
+    And the DB time now is "2021-01-01 00:00:00"
     When I send a GET request to "/items/210/participant-progress"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -382,7 +387,7 @@ Feature: Display the current progress of a participant on children of an item (g
       "item": {
         "hints_requested": 0,
         "item_id": "210",
-        "latest_activity_at": "2020-01-21T00:00:00Z",
+        "latest_activity_at": "2021-01-01T00:02:00Z",
         "score": 0,
         "submissions": 0,
         "time_spent": 0,
@@ -396,10 +401,11 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 100,
           "item_id": "215",
-          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "started_at": "2020-01-01T00:03:00Z",
+          "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 100,
-          "time_spent": 86400,
+          "time_spent": 60,
           "validated": true
         },
         {
@@ -409,6 +415,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 0,
           "item_id": "214",
+          "started_at": null,
           "latest_activity_at": null,
           "score": 0,
           "submissions": 0,
@@ -422,7 +429,8 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 0,
           "item_id": "213",
-          "latest_activity_at": "2030-05-29T06:38:38Z",
+          "started_at": "2021-01-01T00:03:00Z",
+          "latest_activity_at": "2021-01-01T00:03:00Z",
           "score": 0,
           "submissions": 0,
           "time_spent": 0,
@@ -435,10 +443,11 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 1,
           "item_id": "212",
-          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "started_at": "2020-01-01T00:03:00Z",
+          "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 2,
-          "time_spent": 65886027,
+          "time_spent": 31622220,
           "validated": false
         },
         {
@@ -447,11 +456,12 @@ Feature: Display the current progress of a participant on children of an item (g
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
           "string": {"language_tag": "", "title": null},
           "type": "Task",
-          "latest_activity_at": "2018-05-30T06:38:48Z",
+          "started_at": "2020-01-01T00:02:00Z",
+          "latest_activity_at": "2020-01-01T00:14:01Z",
           "score": 50,
           "hints_requested": 3,
           "submissions": 4,
-          "time_spent": 20,
+          "time_spent": 62,
           "validated": true
         }
       ]
@@ -461,7 +471,7 @@ Feature: Display the current progress of a participant on children of an item (g
   Scenario: Get progress of a current user's team
     Given I am the user with id "51"
     # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30 20:19:05"
+    And the DB time now is "2021-01-01 00:00:00"
     When I send a GET request to "/items/210/participant-progress?as_team_id=14"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -484,10 +494,11 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 100,
           "item_id": "215",
-          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "started_at": "2020-01-01T00:03:00Z",
+          "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 100,
-          "time_spent": 86400,
+          "time_spent": 60,
           "validated": true
         },
         {
@@ -497,7 +508,8 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 0,
           "item_id": "213",
-          "latest_activity_at": "2030-05-29T06:38:38Z",
+          "started_at": "2021-01-01T00:03:00Z",
+          "latest_activity_at": "2021-01-01T00:03:00Z",
           "score": 0,
           "submissions": 0,
           "time_spent": 0,
@@ -510,10 +522,12 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 1,
           "item_id": "212",
-          "latest_activity_at": "2018-05-30T06:38:58Z",
+          "started_at": null,
+          "started_at": "2020-01-01T00:03:00Z",
+          "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 2,
-          "time_spent": 65886027,
+          "time_spent": 31622220,
           "validated": false
         },
         {
@@ -522,11 +536,13 @@ Feature: Display the current progress of a participant on children of an item (g
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
           "string": {"language_tag": "", "title": null},
           "type": "Task",
-          "latest_activity_at": "2018-05-30T06:38:48Z",
+          "started_at": null,
+          "started_at": "2020-01-01T00:02:00Z",
+          "latest_activity_at": "2020-01-01T00:14:01Z",
           "score": 50,
           "hints_requested": 3,
           "submissions": 4,
-          "time_spent": 20,
+          "time_spent": 62,
           "validated": true
         }
       ]
