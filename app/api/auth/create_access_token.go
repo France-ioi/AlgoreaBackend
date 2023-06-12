@@ -30,33 +30,63 @@ const parsedRequestData ctxKey = iota
 // swagger:operation POST /auth/token auth accessTokenCreate
 //
 //	---
-//	summary: Create or refresh an access token
+//	summary: Create or refresh an access token, may create a temporary user
 //	description:
-//		If the `{code}` is given and the "Authorization" header is not given,
-//		the service converts the given OAuth2 authorization code into tokens,
-//		creates or updates the authenticated user in the DB with the data returned by the login module,
-//		and saves new access & refresh tokens into the DB as well.
-//		If OAuth2 authentication has used the PKCE extension, the `{code_verifier}` should be provided
-//		so it can be sent together with the `{code}` to the authentication server.
+//
+//		This service is called by the frontend in the following contexts
+//			- After the user successfully logs-in on the login-module
+//			- When the frontend loads, to verify if the user is already logged-in,
+//				because if token are only stored in cookies, the frontend never has the hand on it and so does not know
+//				on launch whether the user is logged or not.
+//				If the user is not already logged, a temporary user is created.
+//
+//		The `{code}` parameter is an output of the login-module after a successful login.
+//
+//		* If the `{code}` is given and the "Authorization" header is not given.
+//			This happens after the client successfully logged on the login-module.
+//			Then,
+//			the service converts the given OAuth2 authorization code into tokens,
+//			creates or updates the authenticated user in the DB with the data returned by the login module,
+//			and saves new access & refresh tokens into the DB as well.
+//			If OAuth2 authentication has used the PKCE extension, the `{code_verifier}` should be provided
+//			so it can be sent together with the `{code}` to the authentication server.
 //
 //
-//		If the `{code}` is not given while the "Authorization" header or/and the "access_token" is given
-//		(when both are given, the "Authorization" header is used and the cookie gets deleted),
-//		the service refreshes the access token
-//		(locally for temporary users or via the login module for normal users) and
-//		saves it into the DB keeping only the input token and the new token.
-//		Since the login module responds with both access and refresh tokens, the service updates the user's
-//		refresh token in this case as well. If there is no refresh token for the user in the DB,
-//		the 'not found' error is returned.
+//		* If the `{code}` is not given while the "Authorization" header or/and the "access_token" cookie is given
+//			(when both are given, the "Authorization" header is used, and the cookie gets deleted),
+//			and if the authentication is valid.
+//			This happens when the frontend app loads and the user is already logged-in.
+//			Then,
+//			the service refreshes the access token
+//			(locally for temporary users or via the login module for normal users) and
+//			saves it into the DB keeping only the input token and the new token.
+//			Since the login module responds with both access and refresh tokens, the service updates the user's
+//			refresh token in this case as well.
+//			If there is no refresh token for the user in the DB,
+//			the 'not found' error is returned.
+//
+//
+//		* If the `{code}` is not given,
+//			and if the authentication is not given (no "Authorization" header and no "access_token" cookie) or is invalid.
+//			This happens when the frontend app loads, and the user is not logged-in, or if the authentication
+//			is not valid anymore.
+//			Then,
+//			we create a temporary user and log-in the user as it.
 //
 //
 //		If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
 //		the old cookie gets deleted (otherwise, just overwritten).
 //
+//		If a cookie is given together with a `{code}`, the cookie is deleted.
 //
-//		* The "Authorization" header is not allowed when the `{code}` is given.
+//		`{default_language}` is used only if a temporary user is created.
+//		If it is not provided, the `DEFAULT` definition of `default_language` in the `users` table is used.
 //
-//		* When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
+//
+//		Validations
+//			* The "Authorization" header is not allowed when the `{code}` is given.
+//
+//			* When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
 //	security: []
 //	consumes:
 //		- application/json
@@ -92,6 +122,10 @@ const parsedRequestData ctxKey = iota
 //			type: integer
 //			enum: [0,1]
 //			default: 0
+//		- name: default_language
+//			in: query
+//			type: string
+//			maxLength: 3
 //		- in: body
 //			name: parameters
 //			description: The optional parameters can be given in the body as well
@@ -118,7 +152,8 @@ const parsedRequestData ctxKey = iota
 //						description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //	responses:
 //		"201":
-//			description: "Created. Success response with the new access token"
+//			description: "Created.
+//			Success response with the new access token"
 //			in: body
 //			schema:
 //				"$ref": "#/definitions/userCreateTmpResponse"
@@ -146,9 +181,23 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
 		}
 	} else {
-		// The code is not given, requesting a new token from the given token
-		auth.UserMiddleware(srv.Base)(service.AppHandler(srv.refreshAccessToken)).
-			ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), parsedRequestData, requestData)))
+		// The code is not given, requesting a new token from the given token.
+
+		requestContext, isSuccess, _ := auth.ValidatesUserAuthentication(srv.Base, w, r)
+		if isSuccess {
+			service.AppHandler(srv.refreshAccessToken).
+				ServeHTTP(w, r.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
+		} else {
+			// createTempUser checks that the Authorization header is not present.
+			// But from here, we want to be able to create a temporary user if the authorization is invalid,
+			// for example, because it expired.
+			// Since we don't need its value anymore, we just delete it.
+			r.Header.Del("Authorization")
+
+			service.AppHandler(srv.createTempUser).
+				ServeHTTP(w, r)
+		}
+
 		return service.NoError
 	}
 

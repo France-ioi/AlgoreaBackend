@@ -11,17 +11,6 @@ Feature: Login callback - robustness
     And the table "sessions" should stay unchanged
     And the table "refresh_tokens" should stay unchanged
 
-  Scenario: The code is missing for an unauthenticated user
-    When I send a POST request to "/auth/token"
-    Then the response code should be 401
-    And the response error message should contain "No access token provided"
-    And the table "users" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-    And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
-
   Scenario: Invalid JSON data
     Given the "Content-Type" request header is "application/json"
     When I send a POST request to "/auth/token" with the following body:
