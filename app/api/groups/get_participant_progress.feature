@@ -260,7 +260,7 @@ Feature: Display the current progress of a participant on children of an item (g
     And the database has the following table 'results':
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
       | 0          | 14             | 211     | 2020-01-01 00:03:00 | 0              | 2020-01-01 00:03:00 | 100          | 100         | 2020-01-01 00:04:00 | 2020-01-01 00:14:01 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
-      | 1          | 14             | 211     | 2020-01-01 00:03:00 | 40             | 2020-01-01 00:03:00 | 2            | 3           | 2020-01-01 00:03:02 | 2020-01-01 00:14:00 | # min(validated_at) for 51, 211 comes from this line (from a team)
+      | 1          | 14             | 211     | 2020-01-01 00:02:00 | 40             | 2020-01-01 00:03:00 | 2            | 3           | 2020-01-01 00:03:02 | 2020-01-01 00:14:00 | # min(validated_at) for 51, 211 comes from this line (from a team)
       | 2          | 14             | 211     | 2020-01-01 00:03:00 | 50             | 2020-01-01 00:03:00 | 3            | 4           | 2020-01-01 00:04:02 | 2020-01-01 00:13:00 | # hints_cached & submissions for 51, 211 come from this line (the best attempt is made by a team)
       | 3          | 14             | 211     | 2020-01-01 00:03:00 | 50             | 2020-01-01 00:04:00 | 10           | 20          | null                | 2020-01-01 00:12:00 |
       | 0          | 15             | 211     | 2020-01-01 00:02:00 | 0              | null                | 0            | 0           | null                | 2020-01-01 00:11:00 |
@@ -308,6 +308,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "en", "title": "Task 15"},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "started_at": "2021-01-01T00:04:00Z",
           "latest_activity_at": "2020-01-01T00:15:00Z",
           "score": 0,
           "submissions": 0,
@@ -321,6 +322,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "fr", "title": "Tâche 14"},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
+          "started_at": "2020-01-01T00:03:00Z",
           "latest_activity_at": "2020-01-01T00:04:01Z",
           "score": 15,
           "submissions": 11,
@@ -334,6 +336,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "", "title": null},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false},
+          "started_at": "2020-01-01T00:15:00Z",
           "latest_activity_at": "2020-01-01T00:15:00Z",
           "score": 0,
           "submissions": 0,
@@ -347,6 +350,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "string": {"language_tag": "", "title": null},
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false},
+          "started_at": "2020-01-01T00:16:00Z",
           "latest_activity_at": "2021-01-01T00:01:00Z",
           "score": 20,
           "submissions": 2,
@@ -359,6 +363,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
           "string": {"language_tag": "", "title": null},
+          "started_at": null,
           "latest_activity_at": null,
           "score": 0,
           "hints_requested": 0,
@@ -396,6 +401,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 100,
           "item_id": "215",
+          "started_at": "2020-01-01T00:03:00Z",
           "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 100,
@@ -409,6 +415,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 0,
           "item_id": "214",
+          "started_at": null,
           "latest_activity_at": null,
           "score": 0,
           "submissions": 0,
@@ -422,6 +429,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 0,
           "item_id": "213",
+          "started_at": "2021-01-01T00:03:00Z",
           "latest_activity_at": "2021-01-01T00:03:00Z",
           "score": 0,
           "submissions": 0,
@@ -435,6 +443,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 1,
           "item_id": "212",
+          "started_at": "2020-01-01T00:03:00Z",
           "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 2,
@@ -447,11 +456,12 @@ Feature: Display the current progress of a participant on children of an item (g
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
           "string": {"language_tag": "", "title": null},
           "type": "Task",
+          "started_at": "2020-01-01T00:02:00Z",
           "latest_activity_at": "2020-01-01T00:14:01Z",
           "score": 50,
           "hints_requested": 3,
           "submissions": 4,
-          "time_spent": 2,
+          "time_spent": 62,
           "validated": true
         }
       ]
@@ -484,6 +494,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 100,
           "item_id": "215",
+          "started_at": "2020-01-01T00:03:00Z",
           "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 100,
@@ -497,6 +508,7 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 0,
           "item_id": "213",
+          "started_at": "2021-01-01T00:03:00Z",
           "latest_activity_at": "2021-01-01T00:03:00Z",
           "score": 0,
           "submissions": 0,
@@ -510,6 +522,8 @@ Feature: Display the current progress of a participant on children of an item (g
           "type": "Task",
           "hints_requested": 1,
           "item_id": "212",
+          "started_at": null,
+          "started_at": "2020-01-01T00:03:00Z",
           "latest_activity_at": "2020-01-01T00:14:02Z",
           "score": 0,
           "submissions": 2,
@@ -522,11 +536,13 @@ Feature: Display the current progress of a participant on children of an item (g
           "current_user_permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false},
           "string": {"language_tag": "", "title": null},
           "type": "Task",
+          "started_at": null,
+          "started_at": "2020-01-01T00:02:00Z",
           "latest_activity_at": "2020-01-01T00:14:01Z",
           "score": 50,
           "hints_requested": 3,
           "submissions": 4,
-          "time_spent": 2,
+          "time_spent": 62,
           "validated": true
         }
       ]

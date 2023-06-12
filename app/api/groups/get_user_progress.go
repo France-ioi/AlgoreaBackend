@@ -191,6 +191,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 const userProgressFields = `
 	IFNULL(MAX(result_with_best_score.score_computed), 0) AS score,
 	IFNULL(MAX(result_with_best_score.validated), 0) AS validated,
+	MIN(first_result.started_at) AS started_at,
 	MAX(last_result.latest_activity_at) AS latest_activity_at,
 	IFNULL(MAX(result_with_best_score.hints_cached), 0) AS hints_requested,
 	IFNULL(MAX(result_with_best_score.submissions), 0) AS submissions,
