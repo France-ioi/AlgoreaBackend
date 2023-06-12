@@ -1,9 +1,6 @@
 Feature: Create an access token
   Background:
-    Given the database has the following table 'groups':
-      | id | type | name      | created_at          |
-      | 2  | Base | AllUsers  | 2015-08-10 12:34:55 |
-    And the application config is:
+    Given the application config is:
       """
       auth:
         loginModuleURL: "https://login.algorea.org"
@@ -13,7 +10,15 @@ Feature: Create an access token
         -
           domains: [127.0.0.1]
           allUsersGroup: 2
+          TempUsersGroup: 4
       """
+    And the database has the following table 'groups':
+      | id | name      | type | created_at          |
+      | 2  | AllUsers  | Base | 2020-01-01 00:00:00 |
+      | 4  | TempUsers | Base | 2020-01-01 00:00:00 |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id |
+      | 2               | 4              |
 
   Scenario Outline: Create a new user
     Given the time now is "2019-07-16T22:02:28Z"
@@ -86,32 +91,36 @@ Feature: Create an access token
     And the table "groups" should be:
       | id                  | name                                 | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
       | 2                   | AllUsers                             | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers                            | Base  | null        | false                                             | false   | false       | null                                    |
       | 4037200794235010051 | Example badges                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
       | 5577006791947779410 | mohammed                             | User  | mohammed    | true                                              | false   | false       | null                                    |
       | 6129484611666145821 | Example badges with multiple parents | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
       | 8674665223082153551 | Example #1                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
+      | 2                   | 4                   |
       | 2                   | 5577006791947779410 |
       | 4037200794235010051 | 6129484611666145821 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id   | child_group_id      | is_self |
-      | 2                   | 2                   | true    |
-      | 2                   | 5577006791947779410 | false   |
-      | 4037200794235010051 | 4037200794235010051 | true    |
-      | 4037200794235010051 | 5577006791947779410 | false   |
-      | 4037200794235010051 | 6129484611666145821 | false   |
-      | 4037200794235010051 | 8674665223082153551 | false   |
-      | 5577006791947779410 | 5577006791947779410 | true    |
-      | 6129484611666145821 | 5577006791947779410 | false   |
-      | 6129484611666145821 | 6129484611666145821 | true    |
-      | 6129484611666145821 | 8674665223082153551 | false   |
-      | 8674665223082153551 | 5577006791947779410 | false   |
-      | 8674665223082153551 | 8674665223082153551 | true    |
-    And the table "attempts" should be:
-      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+      And the table "groups_ancestors" should be:
+        | ancestor_group_id   | child_group_id      | is_self |
+        | 2                   | 2                   | true    |
+        | 2                   | 4                   | false   |
+        | 2                   | 5577006791947779410 | false   |
+        | 4                   | 4                   | true    |
+        | 4037200794235010051 | 4037200794235010051 | true    |
+        | 4037200794235010051 | 5577006791947779410 | false   |
+        | 4037200794235010051 | 6129484611666145821 | false   |
+        | 4037200794235010051 | 8674665223082153551 | false   |
+        | 5577006791947779410 | 5577006791947779410 | true    |
+        | 6129484611666145821 | 5577006791947779410 | false   |
+        | 6129484611666145821 | 6129484611666145821 | true    |
+        | 6129484611666145821 | 8674665223082153551 | false   |
+        | 8674665223082153551 | 5577006791947779410 | false   |
+        | 8674665223082153551 | 8674665223082153551 | true    |
+      And the table "attempts" should be:
+        | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
       | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id        |
@@ -301,13 +310,16 @@ Feature: Create an access token
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
+      | 2               | 4              |
       | 2               | 11             |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 2                 | 2              | true    |
-      | 2                 | 11             | false   |
-      | 11                | 11             | true    |
-    And the table "group_membership_changes" should be empty
+      And the table "groups_ancestors" should be:
+        | ancestor_group_id | child_group_id | is_self |
+        | 2                 | 2              | true    |
+        | 2                 | 4              | false   |
+        | 2                 | 11             | false   |
+        | 4                 | 4              | true    |
+        | 11                | 11             | true    |
+      And the table "group_membership_changes" should be empty
     And the table "attempts" should stay unchanged
 
   Scenario Outline: Accepts parameters from POST data
@@ -638,25 +650,29 @@ Feature: Create an access token
     And the table "groups" should be:
       | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
       | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers  | Base  | null        | false                                             | false   | false       | null                                    |
       | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
       | 6129484611666145821 | Example #2 | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
       | 8674665223082153551 | Example #1 | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
+      | 2                   | 4                   |
       | 2                   | 5577006791947779410 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
-    And the table "groups_ancestors" should be:
-      | ancestor_group_id   | child_group_id      | is_self |
-      | 2                   | 2                   | true    |
-      | 2                   | 5577006791947779410 | false   |
-      | 5577006791947779410 | 5577006791947779410 | true    |
-      | 6129484611666145821 | 5577006791947779410 | false   |
-      | 6129484611666145821 | 6129484611666145821 | true    |
-      | 6129484611666145821 | 8674665223082153551 | false   |
-      | 8674665223082153551 | 5577006791947779410 | false   |
-      | 8674665223082153551 | 8674665223082153551 | true    |
-    And the table "attempts" should be:
+      And the table "groups_ancestors" should be:
+        | ancestor_group_id   | child_group_id      | is_self |
+        | 2                   | 2                   | true    |
+        | 2                   | 4                   | false   |
+        | 2                   | 5577006791947779410 | false   |
+        | 4                   | 4                   | true    |
+        | 5577006791947779410 | 5577006791947779410 | true    |
+        | 6129484611666145821 | 5577006791947779410 | false   |
+        | 6129484611666145821 | 6129484611666145821 | true    |
+        | 6129484611666145821 | 8674665223082153551 | false   |
+        | 8674665223082153551 | 5577006791947779410 | false   |
+        | 8674665223082153551 | 8674665223082153551 | true    |
+      And the table "attempts" should be:
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
@@ -733,15 +749,19 @@ Feature: Create an access token
     And the table "groups" should be:
       | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
       | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers  | Base  | null        | false                                             | false   | false       | null                                    |
       | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
       | 8674665223082153551 | Example #1 | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
-      | parent_group_id     | child_group_id      |
-      | 2                   | 5577006791947779410 |
+      | parent_group_id | child_group_id      |
+      | 2               | 4                   |
+      | 2               | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 4                   | 4                   | true    |
       | 5577006791947779410 | 5577006791947779410 | true    |
       | 8674665223082153551 | 8674665223082153551 | true    |
     And the table "attempts" should be:
@@ -826,15 +846,19 @@ Feature: Create an access token
     And the table "groups" should be:
       | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
       | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers  | Base  | null        | false                                             | false   | false       | null                                    |
       | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
       | 8674665223082153551 | Example #1 | Other | null        | false                                             | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
-      | parent_group_id     | child_group_id      |
-      | 2                   | 5577006791947779410 |
+      | parent_group_id | child_group_id      |
+      | 2               | 4                   |
+      | 2               | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 4                   | 4                   | true    |
       | 5577006791947779410 | 5577006791947779410 | true    |
       | 8674665223082153551 | 8674665223082153551 | true    |
     And the table "attempts" should be:
@@ -842,3 +866,29 @@ Feature: Create an access token
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be empty
     And the table "group_managers" should be empty
+
+  Scenario Outline: Should create a temp user when nor code, nor the Authorization header is given
+    Given the generated auth key is "generated_auth_key"
+    And I send a POST request to "/auth/token<query>"
+    Then the response code should be 201
+    And the response at $.data.access_token should be "generated_auth_key"
+    And the response at $.data.expires_in should be "7200"
+    And the table "users" at group_id "5577006791947779410" should be:
+      | group_id            | login_id | login        | temp_user | default_language            | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
+      | 5577006791947779410 | 0        | tmp-49727887 | true      | <expected_default_language> | true                                                 | 127.0.0.1 |
+    Examples:
+      | query                | expected_default_language |
+      |                      | fr                        |
+      | ?default_language=en | en                        |
+      | ?default_language=fr | fr                        |
+
+  Scenario: Should create a temp user when code is not given, and the Authorization is invalid
+    Given the generated auth key is "generated_auth_key"
+    And the "Authorization" request header is "invalid"
+    And I send a POST request to "/auth/token"
+    Then the response code should be 201
+    And the response at $.data.access_token should be "generated_auth_key"
+    And the response at $.data.expires_in should be "7200"
+    And the table "users" at group_id "5577006791947779410" should be:
+      | group_id            | login_id | login        | temp_user | default_language | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
+      | 5577006791947779410 | 0        | tmp-49727887 | true      | fr                | true                                                 | 127.0.0.1 |
