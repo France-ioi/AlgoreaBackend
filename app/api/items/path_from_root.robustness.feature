@@ -15,16 +15,21 @@ Feature: Find an item path - robustness
       | 104             | 101            |
     And the groups ancestors are computed
     And the database has the following table 'items':
-      | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag | requires_explicit_entry |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   | false                   |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 1                        | fr                   | false                   |
-      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 1                        | fr                   | true                    |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   | false                   |
+      | id | url                                                                     | type  | allows_multiple_attempts | default_language_tag | requires_explicit_entry |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task  | 0                        | fr                   | false                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task  | 1                        | fr                   | false                   |
+      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task  | 1                        | fr                   | true                    |
+      | 71 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task  | 1                        | fr                   | false                   |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill | 1                        | fr                   | false                   |
+    And the database has the following table 'items_items':
+      | parent_item_id | child_item_id | child_order |
+      | 70             | 71            | 1           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | none               |
       | 101      | 60      | content            |
       | 101      | 70      | content            |
+      | 101      | 71      | content            |
       | 101      | 90      | content            |
     And the database has the following table 'attempts':
       | participant_id | id |
@@ -80,6 +85,6 @@ Feature: Find an item path - robustness
 
   Scenario: No path
     Given I am the user with id "101"
-    When I send a GET request to "/items/70/path-from-root"
+    When I send a GET request to "/items/71/path-from-root"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

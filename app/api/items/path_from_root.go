@@ -17,24 +17,31 @@ import (
 //	description: >
 //		Finds a path from any of root items to a given item.
 //
-//
 //		The path consists only of the items visible to the participant
 //		(`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
-//		Of all possible paths the service chooses the one having missing/not-started results located closer
-//		to the end of the path, preferring paths having less missing/not-started results and having higher values of `attempt_id`.
-//		The chain of attempts of the path cannot have missing results for items requiring explicit entry or not started results
-//		within or below ended/not-allowing-submissions attempts.
 //
+//		Of all possible paths, the service chooses the one having:
+//			* missing/not-started results located closer to the end of the path,
+//			* preferring paths having less missing/not-started results,
+//			* and having higher values of `attempt_id`.
 //
-//		If `as_team_id` is given, the attempts/results of the path are linked to the `as_team_id` group instead of the user's self group.
+//		For a path to be returned, each of its items must:
+//			* Either have `require_explicit_entry`=0 ,
+//			* Or if it has `require_explicit_entry=1`,
+//				then the following condition must be fulfilled, except if it is the last item of the path:
+//				the item must have at least one result with `started`=1 AND its attempt must have
+//					(`attempt.ended_at` IS NULL) AND (`NOW()` < `attempt.allows_submissions_until`)).
+//				In other words, we only return a path to a contest's item if the contest has been started and is still open.
 //
+//		If `as_team_id` is given, the attempts/results of the path are linked to the `as_team_id` group instead of
+//		the current user group.
 //
-//			Restrictions:
+//		Restrictions:
 //
-//		* if `as_team_id` is given, it should be a user's parent team group,
-//		* at least one path should exist,
+//			* if `as_team_id` is given, it should be a user's parent team group,
+//			* at least one path should exist,
 //
-//		otherwise the 'forbidden' error is returned.
+//			Otherwise the 'forbidden' error is returned.
 //	parameters:
 //		- name: item_id
 //			in: path
@@ -134,17 +141,22 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 								  CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)),
 								  attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 						 FROM root_ancestors
-								  JOIN attempts
+								  LEFT JOIN attempts
 									ON attempts.participant_id = ?
 									   AND (NOT root_ancestors.requires_explicit_entry OR attempts.root_item_id = root_ancestors.id)
 								  LEFT JOIN results
 									ON results.participant_id = attempts.participant_id
 									   AND attempts.id = results.attempt_id
 										 AND results.item_id = root_ancestors.id
-					  WHERE (root_ancestors.id = ? OR root_ancestors.can_view_generated_value >= ?)
-						  AND (NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
-						  AND (results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until)
-						  AND (results.attempt_id IS NOT NULL OR attempts.id = 0))
+						WHERE root_ancestors.id = ?
+					     OR (
+										attempts.id IS NOT NULL
+								AND	root_ancestors.can_view_generated_value >= ?
+						  	AND (NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
+						  	AND (results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until)
+						  	AND (results.attempt_id IS NOT NULL OR attempts.id = 0)
+							 )
+					)
 				 	UNION
 				 	(SELECT CONCAT(paths.path, '/', item_ancestors.id),
 								  item_ancestors.id,
@@ -155,7 +167,7 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 						 FROM paths
 								  JOIN items_items ON items_items.parent_item_id = paths.last_item_id
 								  JOIN item_ancestors ON item_ancestors.id = items_items.child_item_id
-								  JOIN attempts
+								  LEFT JOIN attempts
 									ON attempts.participant_id = ?
 									   AND (NOT item_ancestors.requires_explicit_entry OR attempts.root_item_id = item_ancestors.id)
 									   AND IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.last_attempt_id
@@ -163,10 +175,17 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 									ON results.participant_id = attempts.participant_id
 									   AND attempts.id = results.attempt_id
 										 AND results.item_id = item_ancestors.id
-					 WHERE paths.last_item_id <> ?
-						 AND (item_ancestors.id = ? OR item_ancestors.can_view_generated_value >= ?)
-						 AND (NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
-						 AND (results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until AND paths.is_active)
+					 	WHERE paths.last_item_id <> ?
+						 AND (
+									item_ancestors.id = ?
+									OR (
+											 item_ancestors.can_view_generated_value >= ?
+									 AND (NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
+									 AND (   results.started_at IS NOT NULL
+												OR (attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until AND paths.is_active)
+									 )
+									)
+						 )
 				  )
 				)
 			SELECT path FROM paths
