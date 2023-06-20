@@ -218,6 +218,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			can_watch AS permissions__can_watch, can_edit AS permissions__can_edit,
 			can_make_session_official AS permissions__can_make_session_official,
 			is_owner AS permissions__is_owner, can_enter_from AS permissions__can_enter_from,
+			can_request_help_to AS permissions__can_request_help_to,
 			can_enter_until AS permissions__can_enter_until`)
 
 	query = service.NewQueryLimiter().Apply(r, query)
