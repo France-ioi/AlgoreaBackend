@@ -70,20 +70,13 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 		return service.InsufficientAccessRightsError
 	}
 
-	var result []map[string]interface{}
-	err = withGradings(
-		srv.GetStore(httpReq).Answers().GetCurrentAnswerQuery(participantID, itemID, attemptID),
-	).
-		ScanIntoSliceOfMaps(&result).
-		Error()
-	service.MustNotBeError(err)
-	if len(result) == 0 {
-		result = make([]map[string]interface{}, 1)
-		result[0] = map[string]interface{}{
+	answer, hasAnswer := store.Answers().GetCurrentAnswer(participantID, itemID, attemptID)
+	if !hasAnswer {
+		answer = map[string]interface{}{
 			"type": nil,
 		}
 	}
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
+	convertedResult := service.ConvertMapFromDBToJSON(answer)
 
 	render.Respond(rw, httpReq, convertedResult)
 	return service.NoError
