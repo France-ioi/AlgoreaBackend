@@ -21,8 +21,8 @@ type ItemPermissions struct {
 	CanEdit string `json:"can_edit"`
 	// required: true
 	IsOwner bool `json:"is_owner"`
-	// appears only in services that support this permission, and only if it is set
-	// required: true
+	// appears only in services that support this permission (see service description), and only if it is set
+	// required: false
 	CanRequestHelpTo *int64 `json:"can_request_help_to,omitempty"`
 }
 
