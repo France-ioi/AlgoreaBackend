@@ -69,6 +69,8 @@ type grantedPermissionsViewResultRow struct {
 //		or descendants of the `group_id` group managed by the current user with `can_grant_group_access` permission.
 //
 //		* The current user must be a manager (with `can_grant_group_access` permission) of `{group_id}`.
+//
+//		Returns permission `can_request_help_to` if it is set.
 //	parameters:
 //		- name: group_id
 //			in: path
@@ -218,6 +220,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			can_watch AS permissions__can_watch, can_edit AS permissions__can_edit,
 			can_make_session_official AS permissions__can_make_session_official,
 			is_owner AS permissions__is_owner, can_enter_from AS permissions__can_enter_from,
+			can_request_help_to AS permissions__can_request_help_to,
 			can_enter_until AS permissions__can_enter_until`)
 
 	query = service.NewQueryLimiter().Apply(r, query)
