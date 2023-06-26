@@ -137,3 +137,28 @@ func (u *User) HasValidatedItem(s *DataStore, itemID int64) bool {
 
 	return hasValidatedItem
 }
+
+// IsMemberOfGroupOrSelf checks whether the user is a member of a group, or is the group.
+func (u *User) IsMemberOfGroupOrSelf(s *DataStore, groupID int64) bool {
+	if groupID == u.GroupID {
+		return true
+	}
+
+	isMemberOf, err := s.GroupGroups().
+		Where("parent_group_id = ?", groupID).
+		Where("child_group_id = ?", u.GroupID).
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return isMemberOf
+}
+
+// CanSeeAnswer checks whether the user can see an answer for a participantID-itemID couple.
+//  1. the user should have at least 'content' access rights on the item,
+//  2. the user is able to see answers related to his group's attempts, so
+//     the user should be a member of the participantID team or
+//     participantID should be equal to the user's self group
+func (u *User) CanSeeAnswer(s *DataStore, participantID, itemID int64) bool {
+	return u.CanViewItemContent(s, itemID) && u.IsMemberOfGroupOrSelf(s, participantID)
+}

@@ -24,6 +24,8 @@ import (
 //
 //
 //		If any of the preconditions fails, the 'forbidden' error is returned.
+//
+//		If there is no current answer, the response is equal to `{"type":null}`.
 //	parameters:
 //		- name: item_id
 //			in: path
@@ -61,19 +63,25 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 	}
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
+	store := srv.GetStore(httpReq)
 	user := srv.GetUser(httpReq)
+
+	if !user.CanSeeAnswer(store, participantID, itemID) {
+		return service.InsufficientAccessRightsError
+	}
+
 	var result []map[string]interface{}
-	err = withGradings(srv.GetStore(httpReq).Answers().Visible(user)).
-		Where("participant_id = ?", participantID).
-		Where("attempt_id = ?", attemptID).
-		Where("item_id = ?", itemID).
-		Where("type = 'Current'").
-		Order("created_at DESC").
-		Limit(1).
-		ScanIntoSliceOfMaps(&result).Error()
+	err = withGradings(
+		srv.GetStore(httpReq).Answers().GetCurrentAnswerQuery(participantID, itemID, attemptID),
+	).
+		ScanIntoSliceOfMaps(&result).
+		Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {
-		return service.InsufficientAccessRightsError
+		result = make([]map[string]interface{}, 1)
+		result[0] = map[string]interface{}{
+			"type": nil,
+		}
 	}
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
 

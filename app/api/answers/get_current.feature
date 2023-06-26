@@ -21,13 +21,16 @@ Background:
     | id  | default_language_tag |
     | 200 | fr                   |
     | 210 | fr                   |
+    | 220 | fr                   |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 14       | 200     | content                  |
     | 23       | 210     | content_with_descendants |
+    | 11       | 220     | content                  |
   And the database has the following table 'results':
     | attempt_id | participant_id | item_id |
     | 1          | 11             | 200     |
+    | 1          | 11             | 220     |
     | 1          | 13             | 210     |
   And the database has the following table 'answers':
     | id  | author_id | participant_id | attempt_id | item_id | type       | state   | answer   | created_at          |
@@ -58,6 +61,17 @@ Background:
     | 104       | 94    | 2019-05-29 06:38:34 |
     | 105       | 95    | 2018-05-29 06:38:35 |
     | 106       | 96    | 2019-05-29 06:38:36 |
+
+  Scenario: No current answer for the item and the attempt
+    Given I am the user with id "11"
+    When I send a GET request to "/items/220/current-answer?attempt_id=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "type": null
+      }
+      """
 
   Scenario: User has access to the item and the answers.participant_id = authenticated user's self group
     Given I am the user with id "11"

@@ -58,12 +58,6 @@ Feature: Get a current answer - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: No current answer for the item and the attempt
-    Given I am the user with id "11"
-    When I send a GET request to "/items/210/current-answer?attempt_id=1"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
   Scenario: User is not a member of the team
     Given I am the user with id "11"
     When I send a GET request to "/items/210/current-answer?as_team_id=13&attempt_id=1"

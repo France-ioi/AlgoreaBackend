@@ -182,7 +182,9 @@ type createdLoginRelationsResponse struct {
 	}
 }
 
-// OK. Success response with the requested answer
+// OK.
+// Success response with the requested answer.
+// Note: when we retrieve the current answer but there is no answer, only `{"type": null}` is returned.
 // swagger:response itemAnswerGetResponse
 type itemAnswerGetResponse struct {
 	// description: The returned answer
@@ -198,6 +200,9 @@ type itemAnswerGetResponse struct {
 		// format:integer
 		// required:true
 		AttemptID *string `json:"attempt_id,string"`
+		// Can be `null` when there is no applicable existing answer for the user.
+		// e.g., No answer when we try to retrieve the current answer.
+		// Nullable
 		// required:true
 		// enum:Submission,Saved,Current
 		Type string `json:"type"`

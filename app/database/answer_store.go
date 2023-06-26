@@ -34,6 +34,17 @@ func (s *AnswerStore) WithItems() *AnswerStore {
 	}
 }
 
+// GetCurrentAnswerQuery returns a query to get the current answer of a participant-item-attempt triplet.
+func (s *AnswerStore) GetCurrentAnswerQuery(participantID, itemID, attemptID int64) *DB {
+	return s.
+		Where("participant_id = ?", participantID).
+		Where("attempt_id = ?", attemptID).
+		Where("item_id = ?", itemID).
+		Where("type = 'Current'").
+		Order("created_at DESC").
+		Limit(1)
+}
+
 // SubmitNewAnswer inserts a new row with type='Submission', created_at=NOW()
 // into the `answers` table.
 func (s *AnswerStore) SubmitNewAnswer(authorID, participantID, attemptID, itemID int64, answer string) (int64, error) {
@@ -47,25 +58,4 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, participantID, attemptID, itemID
 			answerID, authorID, participantID, attemptID, itemID, answer).Error
 	})
 	return answerID, err
-}
-
-// Visible returns a composable query for getting answers with the following access rights
-// restrictions:
-//  1. the user should have at least 'content' access rights to the answers.item_id item,
-//  2. the user is able to see answers related to his group's attempts, so
-//     the user should be a member of the answers.participant_id team or
-//     answers.participant_id should be equal to the user's self group
-func (s *AnswerStore) Visible(user *User) *DB {
-	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
-
-	// the user should have at least 'content' access to the answers.item_id
-	perms := s.Permissions().MatchingUserAncestors(user).WherePermissionIsAtLeast("view", "content").
-		Select("DISTINCT item_id")
-
-	return s.
-		// the user should have at least 'content' access to the answers.item_id
-		Joins("JOIN ? AS permissions USING(item_id)", perms.SubQuery()).
-		// attempts.group_id should be one of the authorized user's groups or the user's self group
-		Where("answers.participant_id = ? OR answers.participant_id IN ?",
-			user.GroupID, usersGroupsQuery.SubQuery())
 }
