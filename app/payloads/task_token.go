@@ -63,6 +63,4 @@ func (tt *TaskToken) Bind() error {
 	return nil
 }
 
-func ptrBool(b bool) *bool { return &b }
-
 var _ Binder = (*TaskToken)(nil)

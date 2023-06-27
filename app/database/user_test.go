@@ -6,13 +6,15 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 func TestUser_Clone(t *testing.T) {
 	ts := time.Now()
 	user := &User{
-		Login: "login", LoginID: ptrInt64(5), DefaultLanguage: "fr",
-		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: ptrInt64(4), NotificationsReadAt: (*Time)(&ts),
+		Login: "login", LoginID: utils.Ptr(int64(5)), DefaultLanguage: "fr",
+		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: utils.Ptr(int64(4)), NotificationsReadAt: (*Time)(&ts),
 	}
 	userClone := user.Clone()
 	assert.False(t, userClone == user)

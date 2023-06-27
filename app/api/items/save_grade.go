@@ -18,6 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 // swagger:operation POST /items/save-grade items saveGrade
@@ -120,7 +121,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	if validated || requestData.TaskToken.AccessSolutions != nil && !(*requestData.TaskToken.AccessSolutions) {
-		requestData.TaskToken.AccessSolutions = ptrBool(true)
+		requestData.TaskToken.AccessSolutions = utils.Ptr(true)
 	}
 	requestData.TaskToken.PlatformName = srv.TokenConfig.PlatformName
 	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)

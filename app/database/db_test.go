@@ -17,6 +17,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 const someName = "some name"
@@ -869,7 +871,7 @@ func TestDB_ScanIntoSlices(t *testing.T) {
 	assert.NoError(t, dbScan.Error())
 
 	assert.Equal(t, []int64{1, 2, 3}, ids)
-	assert.Equal(t, []*string{ptrString("value"), ptrString("another value"), nil}, fields)
+	assert.Equal(t, []*string{utils.Ptr("value"), utils.Ptr("another value"), nil}, fields)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -900,11 +902,11 @@ func TestDB_ScanIntoSlices_WipesOldData(t *testing.T) {
 	db = db.Table("myTable")
 
 	ids := []int64{10, 20, 30}
-	fields := []*string{ptrString("old value1"), ptrString("old value2"), ptrString("old value3")}
+	fields := []*string{utils.Ptr("old value1"), utils.Ptr("old value2"), utils.Ptr("old value3")}
 
 	db.ScanIntoSlices(&ids, &fields)
 	assert.Equal(t, []int64{1, 2, 3}, ids)
-	assert.Equal(t, []*string{ptrString("value"), ptrString("another value"), nil}, fields)
+	assert.Equal(t, []*string{utils.Ptr("value"), utils.Ptr("another value"), nil}, fields)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -1531,5 +1533,3 @@ func TestDB_InsertIgnoreMaps(t *testing.T) {
 	assert.Equal(t, expectedError, db.InsertIgnoreMaps("myTable", dataRows))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
-
-func ptrString(s string) *string { return &s }

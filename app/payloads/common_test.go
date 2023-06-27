@@ -9,6 +9,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 func TestPayloads_ParseMap(t *testing.T) {
@@ -29,15 +30,15 @@ func TestPayloads_ParseMap(t *testing.T) {
 				LocalItemID:        "901756573345831409",
 				PlatformName:       "test_dmitry",
 				RandomSeed:         "556371821693219925",
-				HintsGivenCount:    ptrString("0"),
-				HintsAllowed:       ptrBool(false),
-				HintPossible:       ptrBool(true),
-				AccessSolutions:    ptrBool(true),
-				ReadAnswers:        ptrBool(true),
-				Login:              ptrString("test"),
-				SubmissionPossible: ptrBool(true),
-				SupportedLangProg:  ptrString("*"),
-				IsAdmin:            ptrBool(false),
+				HintsGivenCount:    utils.Ptr("0"),
+				HintsAllowed:       utils.Ptr(false),
+				HintPossible:       utils.Ptr(true),
+				AccessSolutions:    utils.Ptr(true),
+				ReadAnswers:        utils.Ptr(true),
+				Login:              utils.Ptr("test"),
+				SubmissionPossible: utils.Ptr(true),
+				SupportedLangProg:  utils.Ptr("*"),
+				IsAdmin:            utils.Ptr(false),
 				Converted: TaskTokenConverted{
 					UserID:        556371821693219925,
 					LocalItemID:   901756573345831409,
@@ -144,5 +145,3 @@ func TestConvertIntoMap(t *testing.T) {
 		},
 	}, got)
 }
-
-func ptrString(s string) *string { return &s }
