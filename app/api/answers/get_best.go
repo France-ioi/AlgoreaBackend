@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -66,7 +65,10 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 	store := srv.GetStore(httpReq)
 	var result []map[string]interface{}
 
-	var bestAnswerQuery *database.DB
+	bestAnswerQuery := store.Answers().
+		WithGradings().
+		DB
+
 	if watchedGroupOK {
 		// the following checks were made by ResolveWatchedGroupID:
 		// - watched_group_id must be a participant
@@ -77,7 +79,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 			return service.InsufficientAccessRightsError
 		}
 
-		bestAnswerQuery = store.Answers().
+		bestAnswerQuery = bestAnswerQuery.
 			Where("participant_id = ?", watchedGroupID)
 	} else {
 		// check 'can_view'>='content' permission on the answers.item_id
@@ -85,11 +87,11 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 			return service.InsufficientAccessRightsError
 		}
 
-		bestAnswerQuery = store.Answers().
+		bestAnswerQuery = bestAnswerQuery.
 			Where("participant_id = ?", user.GroupID)
 	}
 
-	err = withGradings(bestAnswerQuery).
+	err = bestAnswerQuery.
 		Where("item_id = ?", itemID).
 		Where("`type` = 'Submission'").
 		Where("graded_at IS NOT NULL").

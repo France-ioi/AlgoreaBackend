@@ -6,7 +6,6 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -37,12 +36,4 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithParticipant.Get("/items/{item_id}/current-answer", service.AppHandler(srv.getCurrentAnswer).ServeHTTP)
 	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/answers", service.AppHandler(srv.answerCreate).ServeHTTP)
 	routerWithParticipant.Put("/items/{item_id}/attempts/{attempt_id}/answers/current", service.AppHandler(srv.updateCurrentAnswer).ServeHTTP)
-}
-
-func withGradings(answersQuery *database.DB) *database.DB {
-	return answersQuery.
-		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
-		Select(`answers.id, answers.author_id, answers.item_id, answers.attempt_id, answers.participant_id,
-			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
-			gradings.graded_at`)
 }

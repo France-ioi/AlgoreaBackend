@@ -70,14 +70,16 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 		Where("can_watch_members").
 		Select("1").Limit(1)
 
-	err = withGradings(store.Answers().ByID(answerID).
+	err = store.Answers().
+		WithGradings().
+		ByID(answerID).
 		// 1) the user is the participant or a member of the participant group able to view the item,
 		// 2) or an observer with required permissions
 		Where(`
 			(? AND (answers.participant_id = ? OR answers.participant_id IN ?)) OR
 			(? AND ?)`,
 			participantItemPerms.SubQuery(), user.GroupID, usersGroupsQuery.SubQuery(),
-			observerItemPerms.SubQuery(), observerParticipantPerms.SubQuery())).
+			observerItemPerms.SubQuery(), observerParticipantPerms.SubQuery()).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {
