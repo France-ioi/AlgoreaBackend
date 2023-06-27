@@ -50,5 +50,3 @@ func TestGroupAncestorStore_ManagedByUser(t *testing.T) {
 		})
 	}
 }
-
-func ptrInt64(i int64) *int64 { return &i }

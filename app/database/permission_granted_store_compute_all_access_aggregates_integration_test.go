@@ -5,7 +5,6 @@ package database_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -778,8 +777,6 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 		assert.Equal(t, expectedValue, result)
 	})
 }
-
-func ptrTime(t time.Time) *time.Time { return &t }
 
 func assertPermissionsGeneratedResultRowsEqual(t *testing.T, expected, got []permissionsGeneratedResultRow) {
 	if len(got) != len(expected) {

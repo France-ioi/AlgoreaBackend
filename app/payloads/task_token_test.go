@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 func TestTaskToken_Bind(t *testing.T) {
@@ -59,7 +61,7 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 	tt := &TaskToken{
 		UserID:          "10",
 		AttemptID:       "200",
-		AccessSolutions: ptrBool(true),
+		AccessSolutions: utils.Ptr(true),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
 	assert.NoError(t, err)

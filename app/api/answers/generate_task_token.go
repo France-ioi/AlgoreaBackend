@@ -11,6 +11,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 // swagger:operation POST /answers/{answer_id}/generate-task-token answers answerTaskTokenGenerate
@@ -171,12 +172,12 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 
 	taskToken := token.Task{
 		AccessSolutions:    &accessSolutions,
-		SubmissionPossible: ptrBool(false),
-		HintsAllowed:       ptrBool(false),
+		SubmissionPossible: utils.Ptr(false),
+		HintsAllowed:       utils.Ptr(false),
 		HintsRequested:     answerInfos.HintsRequested,
-		HintsGivenCount:    ptrString(strconv.Itoa(int(answerInfos.HintsCachedCount))),
-		IsAdmin:            ptrBool(false),
-		ReadAnswers:        ptrBool(true),
+		HintsGivenCount:    utils.Ptr(strconv.Itoa(int(answerInfos.HintsCachedCount))),
+		IsAdmin:            utils.Ptr(false),
+		ReadAnswers:        utils.Ptr(true),
 		UserID:             strconv.FormatInt(answerInfos.AuthorID, 10),
 		LocalItemID:        strconv.FormatInt(answerInfos.ItemID, 10),
 		ItemID:             answerInfos.TextID,
@@ -195,6 +196,3 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 	}))
 	return service.NoError
 }
-
-func ptrString(s string) *string { return &s }
-func ptrBool(b bool) *bool       { return &b }
