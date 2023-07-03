@@ -286,7 +286,7 @@ func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formda
 func constructParentItemIDValidator(
 	store *database.DataStore, user *database.User, parentInfo *parentItemInfo,
 ) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		err := store.Items().
 			JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
 			WherePermissionIsAtLeast("edit", "children").
@@ -297,7 +297,7 @@ func constructParentItemIDValidator(
 		}
 		service.MustNotBeError(err)
 		return true
-	})
+	}
 }
 
 // constructAsRootOfGroupIDValidator constructs a validator for the AsRootOfGroupID field.
@@ -305,7 +305,7 @@ func constructParentItemIDValidator(
 func constructAsRootOfGroupIDValidator(
 	store *database.DataStore, user *database.User, formData *formdata.FormData,
 ) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		if !formData.IsSet("as_root_of_group_id") {
 			return true
 		}
@@ -313,52 +313,52 @@ func constructAsRootOfGroupIDValidator(
 			Where("can_manage = 'memberships_and_group'").WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
-	})
+	}
 }
 
 // constructParentItemTypeValidator constructs a validator checking that the parent item is not a Task.
 func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		return parentInfo.Type != task
-	})
+	}
 }
 
 // constructLanguageTagValidator constructs a validator for the LanguageTag field.
 // The validator checks that the language exists.
 func constructLanguageTagValidator(store *database.DataStore) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
-	})
+	}
 }
 
 // constructTypeSkillValidator constructs a validator for the Type field.
 // The validator checks that the parent item's type is 'Skill' when the item's type is 'Skill'.
 func constructTypeSkillValidator(parentInfo *parentItemInfo) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		if parentInfo.Type == "" || fl.Field().String() != skill {
 			return true
 		}
 		return parentInfo.Type == skill
-	})
+	}
 }
 
 // constructDurationRequiresExplicitEntryValidator constructs a validator for the RequiresExplicitEntry field.
 // The validator checks that when the duration is given and is not null, the field is true.
 func constructDurationRequiresExplicitEntryValidator() validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		data := fl.Parent().Addr().Interface().(*Item)
 		return data.RequiresExplicitEntry || !fl.Field().IsValid()
-	})
+	}
 }
 
 // constructCannotBeSetForSkillsValidator constructs a validator checking that the field is not set for skill items.
 func constructCannotBeSetForSkillsValidator() validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		return fl.Field().IsZero() ||
 			fl.Top().Elem().FieldByName("Type").String() != skill
-	})
+	}
 }
 
 func constructItemOptionsValidator() validator.Func {
@@ -374,7 +374,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 	childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
 	itemID *int64,
 ) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
 
 		if len(children) == 0 {
@@ -421,7 +421,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 			}
 		}
 		return true
-	})
+	}
 }
 
 func generateOldPropagationLevelsMap(store *database.DataStore, itemID *int64) map[int64]*itemsRelationData {
@@ -458,7 +458,7 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 func constructChildrenAllowedValidator(
 	defaultItemType string, childrenInfoMap *map[int64]permissionAndType,
 ) validator.Func { // nolint:gocritic
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		if len(*childrenInfoMap) == 0 {
 			return true
 		}
@@ -470,13 +470,13 @@ func constructChildrenAllowedValidator(
 			itemType = defaultItemType
 		}
 		return itemType != task
-	})
+	}
 }
 
 // constructChildTypeNonSkillValidator constructs a validator for the Children field that check
 // if a child's type is not 'Skill' when the item's type is not 'Skill'.
 func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 
 		itemType := fl.Top().Elem().FieldByName("Type").String()
@@ -484,7 +484,7 @@ func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAn
 			return true
 		}
 		return (*childrenInfoMap)[child.ItemID].Type != skill
-	})
+	}
 }
 
 type parentItemInfo struct {

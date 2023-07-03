@@ -264,20 +264,20 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 func constructUpdateItemChildTypeNonSkillValidator(itemType string,
 	childrenInfoMap *map[int64]permissionAndType,
 ) validator.Func { // nolint:gocritic
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 		if itemType == skill {
 			return true
 		}
 		return (*childrenInfoMap)[child.ItemID].Type != skill
-	})
+	}
 }
 
 // constructUpdateItemCannotBeSetForSkillsValidator constructs a validator checking that the fields is not set for skill items.
 func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator.Func { // nolint:gocritic
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		return fl.Field().IsZero() || itemType != skill
-	})
+	}
 }
 
 // constructUpdateItemDurationRequiresExplicitEntryValidator constructs a validator for the RequiresExplicitEntry field.
@@ -286,7 +286,7 @@ func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator
 func constructUpdateItemDurationRequiresExplicitEntryValidator(
 	formData *formdata.FormData, duration *string, requiresExplicitEntry bool,
 ) validator.Func { // nolint:gocritic
-	return validator.Func(func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		data := fl.Parent().Addr().Interface().(*Item)
 		var changed bool
 		if formData.IsSet("duration") {
@@ -302,5 +302,5 @@ func constructUpdateItemDurationRequiresExplicitEntryValidator(
 			requiresExplicitEntry = data.RequiresExplicitEntry
 		}
 		return !changed || requiresExplicitEntry || duration == nil
-	})
+	}
 }
