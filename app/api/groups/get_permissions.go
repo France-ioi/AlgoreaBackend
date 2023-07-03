@@ -73,6 +73,15 @@ type permissionsViewResponse struct {
 //	summary: View permissions
 //	description: Lets a manager of a group view permissions on an item for the group.
 //
+//		Used to see the aggregated permissions a group has on an item,
+//		by `origin`,
+//		besides the permissions given directly by the group `source_group_id`
+//		(which are shown in "granted").
+//
+//		See documentation about
+//		[aggregation](https://france-ioi.github.io/algorea-devdoc/design/access-rights/items/#aggregation-of-permissions-from-multiple-sources)
+//		as well as a UI image on how this service is used to see the permissions.
+//
 //		* The current user must be a manager (with `can_grant_group_access` permission)
 //			of `{source_group_id}` which should be an ancestor of the `{group_id}`.
 //
@@ -93,7 +102,7 @@ type permissionsViewResponse struct {
 //			type: integer
 //	responses:
 //		"200":
-//			description: OK. Permissions for the group
+//			description: OK. Permissions for the group.
 //			schema:
 //				"$ref": "#/definitions/permissionsViewResponse"
 //		"400":
