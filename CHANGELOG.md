@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.9.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.8.1...v1.9.0) - 2023-07-07
+
+- forum: new thread listing service
+- get-item service returns `description` for users with `can_view=info` perm level
+- get best answer: distinguish "no answer" error from the access right errors
+- get participant progress: do not return children if parents do not have results
+- fix bug (crash) when setting a `root_skill_id` to `null` for a group
+- add token to the get thread service
+- hint request service: do not allow unsigned requests
+- item navigation service: only return skills as children of skills
+- inject backend version in responses
+- get participant progress: add a `started_at` attribute
+- access token create: create a temp user when no code provided and user is not authenticated (prevent 401 and so warning in browsers)
+- path from root item: fix some bugs
+- get best answer: return a success response when there is no answer (to prevent warning in browsers)
+- get granted permissions: add `can_request_help_to` permission
+- many code and test improvements
+
 ## [v1.8.1](https://github.com/France-ioi/AlgoreaBackend/compare/v1.8.0...v1.8.1) - 2023-03-23
 
 - fix swagger doc
