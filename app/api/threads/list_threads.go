@@ -13,27 +13,43 @@ import (
 
 // swagger:model thread
 type thread struct {
-	Item        item        `json:"item" gorm:"embedded;embedded_prefix:item__"`
+	// required:true
+	Item item `json:"item" gorm:"embedded;embedded_prefix:item__"`
+	// required:true
 	Participant participant `json:"participant" gorm:"embedded;embedded_prefix:participant__"`
 
+	// required:true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
-	Status         string         `json:"status"`
-	LatestUpdateAt *database.Time `json:"latest_update_at"`
-	MessageCount   int            `json:"message_count"`
+	Status string `json:"status"`
+	// required:true
+	LatestUpdateAt database.Time `json:"latest_update_at"`
+	// required:true
+	MessageCount int `json:"message_count"`
 }
 
 type item struct {
-	ID          int64  `json:"id,string"`
-	Type        string `json:"type"`
-	Title       string `json:"title"`
+	// required:true
+	ID int64 `json:"id,string"`
+	// required:true
+	// Nullable
+	// enum: Chapter,Task,Skill
+	Type *string `json:"type"`
+	// required:true
+	// Nullable
+	Title *string `json:"title"`
+	// required:true
 	LanguageTag string `json:"language_tag"`
 }
 
 type participant struct {
-	ID        int64  `json:"id,string"`
-	Login     string `json:"login"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	// required:true
+	ID int64 `json:"id,string"`
+	// required:true
+	Login string `json:"login"`
+	// Nullable
+	FirstName *string `json:"first_name,omitempty"`
+	// Nullable
+	LastName *string `json:"last_name,omitempty"`
 }
 
 type listThreadParameters struct {
@@ -120,7 +136,6 @@ type listThreadParameters struct {
 //			maximum: 1000
 //			default: 500
 //	responses:
-//
 //		"200":
 //			description: OK. Threads data
 //			schema:

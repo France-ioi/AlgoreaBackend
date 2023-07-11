@@ -135,9 +135,7 @@ Feature: List threads
           "message_count": 1,
           "participant": {
             "id": "@LaboratoryMember_WithoutApprovedAccessPersonalInfo",
-            "login": "LaboratoryMember_WithoutApprovedAccessPersonalInfo",
-            "first_name": "",
-            "last_name": ""
+            "login": "LaboratoryMember_WithoutApprovedAccessPersonalInfo"
           },
           "status": "waiting_for_participant"
         },
