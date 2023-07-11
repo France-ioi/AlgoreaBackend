@@ -867,7 +867,7 @@ Feature: Create an access token
     And the table "group_membership_changes" should be empty
     And the table "group_managers" should be empty
 
-  Scenario Outline: Should create a temp user when nor code, nor the Authorization header is given
+  Scenario Outline: Should create a temp user when nor code, nor the Authorization header is given, and we want a temporary user
     Given the generated auth key is "generated_auth_key"
     And I send a POST request to "/auth/token<query>"
     Then the response code should be 201
@@ -877,15 +877,16 @@ Feature: Create an access token
       | group_id            | login_id | login        | temp_user | default_language            | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | <expected_default_language> | true                                                 | 127.0.0.1 |
     Examples:
-      | query                | expected_default_language |
-      |                      | fr                        |
-      | ?default_language=en | en                        |
-      | ?default_language=fr | fr                        |
+      | query                                                     | expected_default_language |
+      | ?create_temp_user_if_not_authorized=1                     | fr                        |
+      | ?default_language=en&create_temp_user_if_not_authorized=1 | en                        |
+      | ?default_language=fr&create_temp_user_if_not_authorized=1 | fr                        |
+
 
   Scenario: Should create a temp user when code is not given, and the Authorization is invalid
     Given the generated auth key is "generated_auth_key"
     And the "Authorization" request header is "invalid"
-    And I send a POST request to "/auth/token"
+    And I send a POST request to "/auth/token?create_temp_user_if_not_authorized=1"
     Then the response code should be 201
     And the response at $.data.access_token should be "generated_auth_key"
     And the response at $.data.expires_in should be "7200"
