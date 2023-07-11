@@ -9,6 +9,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -43,6 +44,23 @@ type updatePermissionsInput struct {
 	// The current user should have permissions_generated.can_grant_view_generated >= 'enter' in order to
 	// increase this field's value.
 	CanEnterUntil time.Time `json:"can_enter_until" validate:"can_enter_until"`
+	// Optional
+	// The current user should have `permissions_generated.can_grant_view` >= 'content',
+	// in order to set this field's value.
+	CanRequestHelpTo setCanRequestHelpTo `json:"can_request_help_to" validate:"can_request_help_to_set,can_request_help_to_consistent,can_request_help_to_can_grant_view_content,can_request_help_to_visible"` //nolint:lll
+}
+
+// setCanRequestHelpTo
+// Cannot set `id` and `is_all_users_group` at the same time,
+// but one of them have to be set if `can_request_help_to` is provided.
+type setCanRequestHelpTo struct {
+	// The given group must be visible by both the current user and `group_id`.
+	// Can be set to `null` to set the helper group to no group.
+	// Optional
+	// Nullable
+	ID *int64 `json:"id" sql:"column:can_request_help_to"`
+	// Optional
+	IsAllUsersGroup bool `json:"is_all_users_group"`
 }
 
 type userPermissions struct {
@@ -54,6 +72,7 @@ type userPermissions struct {
 	CanEnterUntil          database.Time
 	CanMakeSessionOfficial bool
 	IsOwner                bool
+	CanRequestHelpTo       *int64
 }
 
 type managerGeneratedPermissions struct {
@@ -131,10 +150,15 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 			return apiErr.Error
 		}
 
+		// Even if we select a single row from permissions_granted,
+		// MAX() is used so that a row with the default values is returned even if no row exists.
 		var currentPermissions userPermissions
-		err = s.PermissionsGranted().Where("group_id = ?", groupID).Where("item_id = ?", itemID).
-			Where("source_group_id = ?", sourceGroupID).Where("origin = 'group_membership'").
+		err = s.PermissionsGranted().
 			WithWriteLock().
+			Where("group_id = ?", groupID).
+			Where("item_id = ?", itemID).
+			Where("source_group_id = ?", sourceGroupID).
+			Where("origin = 'group_membership'").
 			Select(`
 				IFNULL(MAX(can_view_value), 1) AS can_view_value,
 				IFNULL(MAX(can_grant_view_value), 1) AS can_grant_view_value,
@@ -143,6 +167,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 				IFNULL(MAX(can_make_session_official), 0) AS can_make_session_official,
 				IFNULL(MAX(can_enter_from), '9999-12-31 23:59:59') AS can_enter_from,
 				IFNULL(MAX(can_enter_until), '9999-12-31 23:59:59') AS can_enter_until,
+				MAX(can_request_help_to) AS can_request_help_to,
 				IFNULL(MAX(is_owner), 0) AS is_owner`).
 			Scan(&currentPermissions).Error()
 
@@ -164,13 +189,20 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 
 		var dataMap map[string]interface{}
 		var modified bool
-		dataMap, modified, apiErr = parsePermissionsInputData(s, &managerPermissions, &currentPermissions, r)
+		dataMap, modified, apiErr = parsePermissionsInputData(s, &managerPermissions, &currentPermissions, user, groupID, r)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
 
 		if modified {
+			allUsersGroupID := domain.ConfigFromContext(r.Context()).AllUsersGroupID
+
 			correctPermissionsDataMap(s, dataMap, &currentPermissions)
+			if _, ok := dataMap["is_all_users_group"]; ok {
+				delete(dataMap, "is_all_users_group")
+				dataMap["can_request_help_to"] = &allUsersGroupID
+			}
+
 			savePermissionsIntoDB(groupID, itemID, sourceGroupID, dataMap, s)
 		}
 		return nil
@@ -188,17 +220,17 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func registerOptionalValidator(data *formdata.FormData, tag string, validatorFunc func(fl validator.FieldLevel) bool) {
+func registerOptionalValidator(data *formdata.FormData, tag, message string, validatorFunc func(fl validator.FieldLevel) bool) {
 	data.RegisterValidation(tag, data.ValidatorSkippingUnsetFields(validatorFunc))
-	data.RegisterTranslation(tag, "the value is not permitted")
+	data.RegisterTranslation(tag, message)
 }
 
 func parsePermissionsInputData(s *database.DataStore, managerPermissions *managerGeneratedPermissions,
-	currentPermissions *userPermissions, r *http.Request) (
+	currentPermissions *userPermissions, user *database.User, groupID int64, r *http.Request) (
 	dataMap map[string]interface{}, modified bool, apiError service.APIError,
 ) {
 	data := formdata.NewFormData(&updatePermissionsInput{})
-	modifiedPtr := registerPermissionsValidators(s, managerPermissions, currentPermissions, data)
+	modifiedPtr := registerPermissionsValidators(s, managerPermissions, currentPermissions, user, groupID, data)
 
 	err := data.ParseJSONRequestData(r)
 	if err != nil {
@@ -208,7 +240,11 @@ func parsePermissionsInputData(s *database.DataStore, managerPermissions *manage
 }
 
 func registerPermissionsValidators(
-	s *database.DataStore, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
+	s *database.DataStore,
+	managerPermissions *managerGeneratedPermissions,
+	currentPermissions *userPermissions,
+	user *database.User,
+	groupID int64,
 	data *formdata.FormData,
 ) *bool {
 	var modified bool
@@ -220,13 +256,17 @@ func registerPermissionsValidators(
 	registerCanMakeSessionOfficialValidator(data, managerPermissions, currentPermissions, &modified, s)
 	registerCanEnterFromValidator(data, managerPermissions, currentPermissions, &modified, s)
 	registerCanEnterUntilValidator(data, managerPermissions, currentPermissions, &modified, s)
+	registerCanRequestHelpToSetValidator(data, currentPermissions, &modified)
+	registerCanRequestHelpToConsistentValidator(data)
+	registerCanRequestHelpToVisibleValidator(data, user, groupID, s)
+	registerCanRequestHelpToCanGrantViewContent(data, managerPermissions, s)
 	return &modified
 }
 
 func registerIsOwnerValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions,
 	currentPermissions *userPermissions, modified *bool,
 ) {
-	registerOptionalValidator(data, "is_owner", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "is_owner", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Bool()
 		if newValue && newValue != currentPermissions.IsOwner && !managerPermissions.IsOwnerGenerated {
 			return false
@@ -241,7 +281,7 @@ func registerIsOwnerValidator(data *formdata.FormData, managerPermissions *manag
 func registerCanViewValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
 	modified *bool, s *database.DataStore,
 ) {
-	registerOptionalValidator(data, "can_view", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "can_view", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanView(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -259,7 +299,7 @@ func registerCanGrantViewValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
 	modified *bool, s *database.DataStore,
 ) {
-	registerOptionalValidator(data, "can_grant_view", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "can_grant_view", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanGrantView(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -277,7 +317,7 @@ func registerCanWatchValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
 	modified *bool, s *database.DataStore,
 ) {
-	registerOptionalValidator(data, "can_watch", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "can_watch", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanWatch(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -295,7 +335,7 @@ func registerCanEditValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
 	modified *bool, s *database.DataStore,
 ) {
-	registerOptionalValidator(data, "can_edit", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "can_edit", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
 		if !checkIfPossibleToModifyCanEdit(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -312,7 +352,7 @@ func registerCanEditValidator(
 func registerCanMakeSessionOfficialValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions,
 	currentPermissions *userPermissions, modified *bool, s *database.DataStore,
 ) {
-	registerOptionalValidator(data, "can_make_session_official", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "can_make_session_official", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Bool()
 		if !checkIfPossibleToModifyCanMakeSessionOfficial(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -328,7 +368,7 @@ func registerCanMakeSessionOfficialValidator(data *formdata.FormData, managerPer
 func registerCanEnterFromValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions,
 	currentPermissions *userPermissions, modified *bool, s *database.DataStore,
 ) {
-	registerOptionalValidator(data, "can_enter_from", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "can_enter_from", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Interface().(time.Time)
 		if !checkIfPossibleToModifyCanEnterFrom(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -344,7 +384,7 @@ func registerCanEnterUntilValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
 	modified *bool, s *database.DataStore,
 ) {
-	registerOptionalValidator(data, "can_enter_until", func(fl validator.FieldLevel) bool {
+	registerOptionalValidator(data, "can_enter_until", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().Interface().(time.Time)
 		if !checkIfPossibleToModifyCanEnterUntil(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -354,6 +394,97 @@ func registerCanEnterUntilValidator(
 		}
 		return true
 	})
+}
+
+func registerCanRequestHelpToSetValidator(data *formdata.FormData, currentPermissions *userPermissions, modified *bool) {
+	registerOptionalValidator(
+		data,
+		"can_request_help_to_set",
+		"can_request_help_to_set",
+		func(fl validator.FieldLevel) bool {
+			value := fl.Field().Interface().(setCanRequestHelpTo)
+
+			if value.IsAllUsersGroup || canRequestHelpToIsModified(value.ID, currentPermissions.CanRequestHelpTo) {
+				*modified = true
+			}
+
+			return true
+		})
+}
+
+func registerCanRequestHelpToConsistentValidator(data *formdata.FormData) {
+	registerOptionalValidator(
+		data,
+		"can_request_help_to_consistent",
+		"cannot set can_request_help_to id and is_all_users_group at the same time",
+		func(fl validator.FieldLevel) bool {
+			value := fl.Field().Interface().(setCanRequestHelpTo)
+
+			// Cannot set can_request_help_to and can_request_help_to_all_users at the same time.
+			if value.ID != nil && value.IsAllUsersGroup {
+				return false
+			}
+
+			return true
+		})
+}
+
+func registerCanRequestHelpToVisibleValidator(data *formdata.FormData, user *database.User, groupID int64, s *database.DataStore) {
+	registerOptionalValidator(
+		data,
+		"can_request_help_to_visible",
+		"can_request_help_to is not visible either by the current-user or the groupID",
+		func(fl validator.FieldLevel) bool {
+			value := fl.Field().Interface().(setCanRequestHelpTo)
+
+			if value.ID != nil {
+				// There is only one case for which the can_request_help_to group is visible by the receiving group but not the current-user.
+				//
+				// When the can_request_help_to group is visible to the receiving group, this can be because:
+				// - The group is public.
+				//   It is then also visible to the current-user.
+				// - It is an ancestor of a group joined by the receiving group (or the joined group itself).
+				//   In this case, the group is an ancestor of a group the current-user can manage,
+				//   and is therefore visible too.
+				// - It is managed by the receiving group, or an ancestor of a managed group.
+				//   In this case only, can_request_help_to might not be visible by the current-user.
+				if !s.Groups().IsVisibleFor(*value.ID, user) || !s.Groups().IsVisibleForGroup(*value.ID, groupID) {
+					return false
+				}
+			}
+
+			return true
+		})
+}
+
+func registerCanRequestHelpToCanGrantViewContent(
+	data *formdata.FormData,
+	managerPermissions *managerGeneratedPermissions,
+	s *database.DataStore,
+) {
+	registerOptionalValidator(
+		data,
+		"can_request_help_to_can_grant_view_content",
+		"the current user doesn't have the right to update can_request_help_to",
+		func(fl validator.FieldLevel) bool {
+			// The current user must have can_grant_view >= content.
+
+			return managerPermissions.CanGrantViewGeneratedValue >= s.PermissionsGranted().GrantViewIndexByName(content)
+		})
+}
+
+func canRequestHelpToIsModified(newValue, oldValue *int64) bool {
+	// Modified from one group to another group.
+	if newValue != nil && oldValue != nil && *newValue != *oldValue {
+		return true
+	}
+
+	// Modified from NULL to a group, or from a group to NULL.
+	if (newValue != nil && oldValue == nil) || (newValue == nil && oldValue != nil) {
+		return true
+	}
+
+	return false
 }
 
 const (
