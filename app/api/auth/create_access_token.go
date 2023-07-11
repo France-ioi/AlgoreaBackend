@@ -204,13 +204,9 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 			service.AppHandler(srv.refreshAccessToken).
 				ServeHTTP(w, r.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
 		} else {
-			createTempUser := false
-			if len(r.URL.Query()["create_temp_user_if_not_authorized"]) > 0 {
-				var err error
-				createTempUser, err = service.ResolveURLQueryGetBoolField(r, "create_temp_user_if_not_authorized")
-				if err != nil {
-					return service.ErrInvalidRequest(err)
-				}
+			createTempUser, err := service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
+			if err != nil {
+				return service.ErrInvalidRequest(err)
 			}
 
 			if createTempUser {
