@@ -338,11 +338,17 @@ func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldB
 }
 
 func (ctx *TestContext) TableAtColumnValueShouldBe(table, column, values string, data *messages.PickleStepArgument_PickleTable) error { // nolint
-	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), unchanged, data)
+	return ctx.tableAtColumnValueShouldBe(
+		table,
+		[]string{column},
+		parseMultipleValuesString(ctx.replaceReferencesByIDs(values)),
+		unchanged,
+		data,
+	)
 }
 
 func (ctx *TestContext) TableShouldNotContainColumnValue(table, column, values string) error { //nolint
-	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), unchanged,
+	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(ctx.replaceReferencesByIDs(values)), unchanged,
 		&messages.PickleStepArgument_PickleTable{
 			Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
 				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: column}}},
