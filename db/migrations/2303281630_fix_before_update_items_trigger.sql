@@ -1,6 +1,6 @@
 -- +migrate Up
 
-DROP TRIGGER `before_update_items`;
+DROP TRIGGER IF EXISTS `before_update_items`;
 -- +migrate StatementBegin
 CREATE TRIGGER `before_update_items` BEFORE UPDATE ON `items` FOR EACH ROW
 BEGIN
@@ -19,7 +19,7 @@ END;
 
 -- +migrate Down
 
-DROP TRIGGER `before_update_items`;
+DROP TRIGGER IF EXISTS `before_update_items`;
 -- +migrate StatementBegin
 CREATE TRIGGER `before_update_items` BEFORE UPDATE ON `items` FOR EACH ROW
 BEGIN
