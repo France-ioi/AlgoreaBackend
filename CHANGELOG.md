@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.9.2](https://github.com/France-ioi/AlgoreaBackend/compare/v1.9.1...v1.9.2) - 2023-07-12
+- disable dynamic linking librairies in order to fix a deployment issue
+
 ## [v1.9.1](https://github.com/France-ioi/AlgoreaBackend/compare/v1.9.0...v1.9.1) - 2023-07-12
 - minor fixes
 
@@ -21,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - get best answer: return a success response when there is no answer (to prevent warning in browsers)
 - get granted permissions: add `can_request_help_to` permission
 - many code and test improvements
+- upgrade to Go 1.20
 
 ## [v1.8.1](https://github.com/France-ioi/AlgoreaBackend/compare/v1.8.0...v1.8.1) - 2023-03-23
 
