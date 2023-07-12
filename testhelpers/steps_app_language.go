@@ -235,7 +235,7 @@ func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
 }
 
 // addGroupManager adds a group manager in the database.
-func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers string) {
+func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess string) {
 	managerID := ctx.getReference(manager)
 	groupID := ctx.getReference(group)
 
@@ -243,9 +243,10 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers string) 
 		"group_managers",
 		strconv.FormatInt(managerID, 10)+","+strconv.FormatInt(groupID, 10),
 		map[string]interface{}{
-			"manager_id":        managerID,
-			"group_id":          groupID,
-			"can_watch_members": canWatchMembers,
+			"manager_id":             managerID,
+			"group_id":               groupID,
+			"can_watch_members":      canWatchMembers,
+			"can_grant_group_access": canGrantGroupAccess,
 		},
 	)
 }
@@ -522,11 +523,16 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 	group := ctx.getParameterMap(parameters)
 
 	canWatchMembers := "0"
+	canGrantGroupAccess := "0"
 	watchedGroupName := group["user_id"] + " manages " + group["name"]
 
-	if group["can_watch_members"] == "true" {
+	if group["can_watch_members"] == strTrue {
 		canWatchMembers = "1"
 		watchedGroupName += " with can_watch_members"
+	}
+	if group["can_grant_group_access"] == strTrue {
+		canGrantGroupAccess = "1"
+		watchedGroupName += " with can_grant_group_access"
 	}
 
 	err = ctx.ThereIsAGroupWith(getParameterString(map[string]string{
@@ -539,7 +545,7 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 
 	ctx.IsAMemberOfTheGroup(group["id"], watchedGroupName)
 
-	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers)
+	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers, canGrantGroupAccess)
 
 	return nil
 }
@@ -569,7 +575,7 @@ func (ctx *TestContext) IAmAManagerOfTheGroupAndCanWatchItsMembers(group string)
 		"id":                group,
 		"user_id":           ctx.user,
 		"name":              group,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
 	}))
 }
 
@@ -579,7 +585,16 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanWatchItsMembers(user, grou
 		"id":                group,
 		"user_id":           user,
 		"name":              group,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
+	}))
+}
+
+func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanGrantGroupAccess(user, group string) error {
+	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
+		"id":                     group,
+		"user_id":                user,
+		"name":                   group,
+		"can_grant_group_access": strTrue,
 	}))
 }
 
@@ -609,7 +624,7 @@ func (ctx *TestContext) ICanWatchGroupWithID(group string) error {
 	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
 		"id":                group,
 		"user_id":           ctx.user,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
 	}))
 }
 
@@ -674,7 +689,7 @@ func (ctx *TestContext) ICanWatchGroup(groupName string) error {
 		"id":                groupName,
 		"user_id":           ctx.user,
 		"name":              groupName,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
 	}))
 }
 
