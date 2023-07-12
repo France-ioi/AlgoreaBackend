@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.9.1](https://github.com/France-ioi/AlgoreaBackend/compare/v1.9.0...v1.9.1) - 2023-07-12
+- minor fixes
+
 ## [v1.9.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.8.1...v1.9.0) - 2023-07-07
 
 - forum: new thread listing service
