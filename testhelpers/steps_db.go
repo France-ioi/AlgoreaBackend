@@ -126,7 +126,7 @@ func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable
 		}
 
 		for i := 1; i < len(data.Rows); i++ {
-			login := "null"
+			login := tableValueNull
 			if loginColumnNumber != -1 {
 				login = data.Rows[i].Cells[loginColumnNumber].Value
 			}
