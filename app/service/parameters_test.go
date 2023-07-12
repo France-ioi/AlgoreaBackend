@@ -332,6 +332,79 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 	}
 }
 
+func TestResolveURLQueryGetBoolFieldWithDefault(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		queryString    string
+		defaultValue   bool
+		expectedValue  bool
+		expectedErrMsg string
+	}{
+		{
+			desc:           "no param with default false",
+			queryString:    "",
+			defaultValue:   false,
+			expectedValue:  false,
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "no param with default true",
+			queryString:    "",
+			defaultValue:   true,
+			expectedValue:  true,
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "wrong param name",
+			queryString:    "flag1=1",
+			defaultValue:   false,
+			expectedValue:  false,
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "true value given",
+			queryString:    "flag=1",
+			defaultValue:   false,
+			expectedValue:  true,
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "false value given with default false",
+			queryString:    "flag=0",
+			defaultValue:   false,
+			expectedValue:  false,
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "false value given with default true",
+			queryString:    "flag=0",
+			defaultValue:   true,
+			expectedValue:  false,
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "wrong value given",
+			queryString:    "flag=2",
+			defaultValue:   false,
+			expectedValue:  false,
+			expectedErrMsg: "wrong value for flag (should have a boolean value (0 or 1))",
+		},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.desc, func(t *testing.T) {
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, http.NoBody)
+			list, err := ResolveURLQueryGetBoolFieldWithDefault(req, "flag", testCase.defaultValue)
+			if testCase.expectedErrMsg != "" {
+				assert.EqualError(t, err, testCase.expectedErrMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, testCase.expectedValue, list)
+		})
+	}
+}
+
 func TestResolveURLQueryGetTimeField(t *testing.T) {
 	testCases := []struct {
 		desc           string

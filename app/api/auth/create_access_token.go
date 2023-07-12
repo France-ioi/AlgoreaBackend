@@ -71,7 +71,16 @@ const parsedRequestData ctxKey = iota
 //			This happens when the frontend app loads, and the user is not logged-in, or if the authentication
 //			is not valid anymore.
 //			Then,
+//			if `create_temp_user_if_not_authorized`=`true`,
 //			we create a temporary user and log-in the user as it.
+//			This happens from the frontend when a user that was once logged-in comes back to the website after the token expired.
+//			Otherwise,
+//			if `create_temp_user_if_not_authorized`=`false`,
+//			an error is returned.
+//			This happens from the frontend when a user that is logged-in becomes inactive for a while, while the tab is	still open.
+//			When the tab is then restored, for example, after the computer comes back from sleep,
+//			it tries to reconnect but the token has expired.
+//			Note, when the tab is open and active, the frontend automatically refreshes the token before it expires.
 //
 //
 //		If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
@@ -122,7 +131,14 @@ const parsedRequestData ctxKey = iota
 //			type: integer
 //			enum: [0,1]
 //			default: 0
+//		- name: create_temp_user_if_not_authorized
+//			description: Whether to create a temporary user if the token is not provided or expired.
+//			in: query
+//			type: integer
+//			enum: [0,1]
+//			default: 0
 //		- name: default_language
+//			description: The temporary user's default language.	Only if `create_temp_user_if_not_authorized`=`true`.
 //			in: query
 //			type: string
 //			maxLength: 3
@@ -152,8 +168,9 @@ const parsedRequestData ctxKey = iota
 //						description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //	responses:
 //		"201":
-//			description: "Created.
-//			Success response with the new access token"
+//			description: >
+//				Created.
+//				Success response with the new access token"
 //			in: body
 //			schema:
 //				"$ref": "#/definitions/userCreateTmpResponse"
@@ -182,20 +199,31 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		}
 	} else {
 		// The code is not given, requesting a new token from the given token.
-
-		requestContext, isSuccess, _ := auth.ValidatesUserAuthentication(srv.Base, w, r)
+		requestContext, isSuccess, authErr := auth.ValidatesUserAuthentication(srv.Base, w, r)
 		if isSuccess {
 			service.AppHandler(srv.refreshAccessToken).
 				ServeHTTP(w, r.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
 		} else {
-			// createTempUser checks that the Authorization header is not present.
-			// But from here, we want to be able to create a temporary user if the authorization is invalid,
-			// for example, because it expired.
-			// Since we don't need its value anymore, we just delete it.
-			r.Header.Del("Authorization")
+			createTempUser, err := service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
+			if err != nil {
+				return service.ErrInvalidRequest(err)
+			}
 
-			service.AppHandler(srv.createTempUser).
-				ServeHTTP(w, r)
+			if createTempUser {
+				// createTempUser checks that the Authorization header is not present.
+				// But from here, we want to be able to create a temporary user if the authorization is invalid,
+				// for example, because it expired.
+				// Since we don't need its value anymore, we just delete it.
+				r.Header.Del("Authorization")
+
+				service.AppHandler(srv.createTempUser).
+					ServeHTTP(w, r)
+			} else {
+				return service.APIError{
+					HTTPStatusCode: auth.GetAuthErrorCodeFromError(authErr),
+					Error:          authErr,
+				}
+			}
 		}
 
 		return service.NoError

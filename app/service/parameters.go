@@ -136,6 +136,24 @@ func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, erro
 	return false, fmt.Errorf("wrong value for %s (should have a boolean value (0 or 1))", name)
 }
 
+// ResolveURLQueryGetBoolFieldWithDefault extracts a get-parameter of type bool (0 or 1) from the query.
+// If it is not provided, `defaultValue` is returned.
+func ResolveURLQueryGetBoolFieldWithDefault(httpReq *http.Request, name string, defaultValue bool) (bool, error) {
+	if !URLQueryPathHasField(httpReq, name) {
+		return defaultValue, nil
+	}
+
+	strValue := httpReq.URL.Query().Get(name)
+	if strValue == "0" {
+		return false, nil
+	}
+	if strValue == "1" {
+		return true, nil
+	}
+
+	return false, fmt.Errorf("wrong value for %s (should have a boolean value (0 or 1))", name)
+}
+
 // ResolveURLQueryPathInt64Field extracts a path element of type int64 from the query.
 func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, error) {
 	strValue := chi.URLParam(httpReq, name)

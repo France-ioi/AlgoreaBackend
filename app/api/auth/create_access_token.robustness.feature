@@ -1,9 +1,37 @@
 Feature: Login callback - robustness
+  Scenario: Should be an error when create_temp_user_if_not_authorized is not a boolean
+    When I send a POST request to "/auth/token?create_temp_user_if_not_authorized=invalid"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for create_temp_user_if_not_authorized (should have a boolean value (0 or 1))"
+
   Scenario: Both code and Authorization header are present
     Given the "Authorization" request header is "Bearer 1234567890"
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 400
     And the response error message should contain "Only one of the 'code' parameter and the 'Authorization' header can be given"
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "sessions" should stay unchanged
+    And the table "refresh_tokens" should stay unchanged
+
+  Scenario: Should be an error when nor code given, nor auth token given, and we don't want to create a temporary user
+    When I send a POST request to "/auth/token"
+    Then the response code should be 401
+    And the response error message should contain "No access token provided"
+    And the table "users" should stay unchanged
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "sessions" should stay unchanged
+    And the table "refresh_tokens" should stay unchanged
+
+  Scenario: Should be an error when no code given, and auth token is invalid (could have expired), and we don't want to create a temporary user
+    When I send a POST request to "/auth/token"
+    And the "Authorization" request header is "invalid"
+    Then the response code should be 401
+    And the response error message should contain "No access token provided"
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged

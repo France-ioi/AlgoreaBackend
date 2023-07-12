@@ -38,15 +38,14 @@ func UserMiddleware(service GetStorer) func(next http.Handler) http.Handler {
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-				message := "Unauthorized"
-				status := http.StatusUnauthorized
+				errorCode := GetAuthErrorCodeFromError(err)
 
-				if errors.Is(err, errCannotValidateAccessToken) {
+				message := "Unauthorized"
+				if errorCode == http.StatusInternalServerError {
 					message = "Internal server error"
-					status = http.StatusInternalServerError
 				}
 
-				w.WriteHeader(status)
+				w.WriteHeader(errorCode)
 				_, _ = fmt.Fprintf(w, `{"success":false,"message":"%s","error_text":"%s"}`+"\n", message, utils.Capitalize(err.Error()))
 			}
 
@@ -57,6 +56,15 @@ func UserMiddleware(service GetStorer) func(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(requestContext))
 		})
 	}
+}
+
+// GetAuthErrorCodeFromError gets the HTTP error code.
+func GetAuthErrorCodeFromError(err error) int {
+	if errors.Is(err, errCannotValidateAccessToken) {
+		return http.StatusInternalServerError
+	}
+
+	return http.StatusUnauthorized
 }
 
 // ValidatesUserAuthentication checks the authentication in the Authorization header and in the "access_token" cookie.
