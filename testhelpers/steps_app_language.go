@@ -15,7 +15,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
-const ReferencePrefix = '@'
+const (
+	ReferencePrefix = '@'
+	strTrue         = "true"
+)
 
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
@@ -91,6 +94,11 @@ func (ctx *TestContext) populateDatabase() error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
+		err = ctx.addUsersIntoAllUsersGroup()
+		if err != nil {
+			return err
+		}
+
 		for tableName, tableRows := range ctx.dbTables {
 			for _, tableRow := range tableRows {
 				err = database.NewDataStoreWithTable(store.DB, tableName).InsertOrUpdateMap(tableRow, nil)
@@ -140,6 +148,22 @@ func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]inte
 	}
 
 	ctx.dbTables[tableName][key] = row
+}
+
+// addUsersIntoAllUsersGroup adds all users in the AllUsers group if it is defined.
+func (ctx *TestContext) addUsersIntoAllUsersGroup() error {
+	if ctx.allUsersGroup == "" {
+		return nil
+	}
+
+	for userID := range ctx.dbTables["users"] {
+		err := ctx.UserIsAMemberOfTheGroup(userID, ctx.allUsersGroup)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // addUser adds a user in database.
@@ -718,6 +742,34 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 	}
 
 	ctx.addPersonalInfoViewApprovedFor(user, group)
+
+	return nil
+}
+
+// AllUsersGroupIsDefinedAsTheGroup creates and sets the allUsersGroup.
+func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) error {
+	err := ctx.ThereIsAGroupWith(getParameterString(map[string]string{
+		"id":   group,
+		"name": "AllUsers",
+		"type": "Base",
+	}))
+	if err != nil {
+		return err
+	}
+
+	err = ctx.TheApplicationConfigIs(&messages.PickleStepArgument_PickleDocString{
+		Content: `
+domains:
+  -
+    domains: [127.0.0.1]
+    allUsersGroup: ` + group + `
+`,
+	})
+	if err != nil {
+		return err
+	}
+
+	ctx.allUsersGroup = group
 
 	return nil
 }

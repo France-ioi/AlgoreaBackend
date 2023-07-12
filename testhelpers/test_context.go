@@ -46,6 +46,7 @@ type TestContext struct {
 	identifierReferences map[string]int64
 	dbTables             map[string]map[string]map[string]interface{}
 	currentThreadKey     string
+	allUsersGroup        string
 	needPopulateDatabase bool
 }
 
