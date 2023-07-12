@@ -78,13 +78,14 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 }
 
 func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
+	var expected interface{} = value
+
 	switch jsonPathResultTyped := jsonPathRes.(type) {
+	case bool:
+		expected, _ = strconv.ParseBool(value)
 	case string:
 	case float64:
-		valueFloat, _ := strconv.ParseFloat(value, 64)
-		if valueFloat == jsonPathResultTyped {
-			return true
-		}
+		expected, _ = strconv.ParseFloat(value, 64)
 	case []interface{}:
 		// When the result is an empty array, matches if we're looking for an empty value.
 		if len(jsonPathResultTyped) == 0 && value == "" {
