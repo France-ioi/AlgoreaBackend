@@ -93,7 +93,11 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 	case interface{}:
 	}
 
-	return jsonPathRes == value
+	if jsonPathRes == nil && value == "null" {
+		return true
+	}
+
+	return jsonPathRes == expected
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
