@@ -48,6 +48,9 @@ func getParameterString(parameters map[string]string) string {
 
 // referenceToName returns the name of a reference.
 func referenceToName(reference string) string {
+	if reference == "" {
+		return ""
+	}
 	if reference[0] == ReferencePrefix {
 		return reference[1:]
 	}
@@ -483,7 +486,7 @@ func (ctx *TestContext) ThereIsAGroupWith(parameters string) error {
 	group := ctx.getParameterMap(parameters)
 
 	if _, ok := group["name"]; !ok {
-		group["name"] = "Group " + group["id"]
+		group["name"] = "Group " + referenceToName(group["id"])
 	}
 	if _, ok := group["type"]; !ok {
 		group["type"] = "Class"
@@ -533,7 +536,7 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 
 	canWatchMembers := "0"
 	canGrantGroupAccess := "0"
-	watchedGroupName := group["user_id"] + " manages " + group["name"]
+	watchedGroupName := group["user_id"] + " manages " + referenceToName(group["name"])
 
 	if group["can_watch_members"] == strTrue {
 		canWatchMembers = "1"
@@ -610,7 +613,7 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanGrantGroupAccess(user, gro
 // theGroupIsADescendantOfTheGroup sets a group as a descendant of another.
 func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent string) error {
 	// we add another group in between to increase the robustness of the tests.
-	middle := parent + " -> X -> " + descendant
+	middle := parent + " -> X -> " + referenceToName(descendant)
 
 	groups := []string{descendant, middle, parent}
 	for _, group := range groups {
