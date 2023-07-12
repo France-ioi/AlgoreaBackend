@@ -271,7 +271,16 @@ func (ctx *TestContext) addPermissionGranted(group, item, permission, permission
 		permissionValue = strconv.FormatInt(ctx.getReference(permissionValue), 10)
 	}
 
-	ctx.dbTables[permissionsGrantedTable][key][permission] = permissionValue
+	if permission == "is_owner" {
+		boolValue, err := strconv.ParseBool(permissionValue)
+		if err != nil {
+			panic(fmt.Sprintf("%v cannot be parsed as a boolean", boolValue))
+		}
+
+		ctx.dbTables[permissionsGrantedTable][key][permission] = boolValue
+	} else {
+		ctx.dbTables[permissionsGrantedTable][key][permission] = permissionValue
+	}
 }
 
 // addAttempt adds an attempt in database.
@@ -678,6 +687,20 @@ func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *mes
 				return err
 			}
 		}
+
+		if itemPermission["is_owner"] != "" {
+			err := ctx.UserIsOwnerOfItemWithID(itemPermission["is_owner"], itemPermission["group"], itemPermission["item"])
+			if err != nil {
+				return err
+			}
+		}
+
+		if itemPermission["can_request_help_to"] != "" {
+			err := ctx.UserCanRequestHelpToOnItemWithID(itemPermission["can_request_help_to"], itemPermission["group"], itemPermission["item"])
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -794,35 +817,45 @@ func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 	return ctx.IAmAMemberOfTheGroupWithID(name)
 }
 
-// UserCanOnItemWithID gives a user a permission on an item.
-func (ctx *TestContext) UserCanOnItemWithID(watchType, watchValue, user, item string) error {
-	ctx.addPermissionGranted(user, item, "can_"+watchType, watchValue)
+// UserSetPermissionOnItemWithID gives a user a permission on an item.
+func (ctx *TestContext) UserSetPermissionOnItemWithID(permission, value, user, item string) error {
+	ctx.addPermissionGranted(user, item, permission, value)
 
 	return nil
 }
 
 // ICanOnItemWithID gives the user a permission on an item.
 func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue, item string) error {
-	return ctx.UserCanOnItemWithID(watchType, watchValue, ctx.user, item)
+	return ctx.UserSetPermissionOnItemWithID(watchType, watchValue, ctx.user, item)
 }
 
 func (ctx *TestContext) UserCanViewOnItemWithID(viewValue, user, item string) error {
-	return ctx.UserCanOnItemWithID("view", viewValue, user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, user, item)
 }
 
 // ICanViewOnItemWithID gives the user a "view" permission on an item.
 func (ctx *TestContext) ICanViewOnItemWithID(viewValue, item string) error {
-	return ctx.UserCanOnItemWithID("view", viewValue, ctx.user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, ctx.user, item)
 }
 
 // UserCanWatchOnItemWithID gives a user a "watch" permission on an item.
 func (ctx *TestContext) UserCanWatchOnItemWithID(watchValue, user, item string) error {
-	return ctx.UserCanOnItemWithID("watch", watchValue, user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, user, item)
 }
 
 // ICanWatchOnItemWithID gives the user a "watch" permission on an item.
 func (ctx *TestContext) ICanWatchOnItemWithID(watchValue, item string) error {
-	return ctx.UserCanOnItemWithID("watch", watchValue, ctx.user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, ctx.user, item)
+}
+
+// UserIsOwnerOfItemWithID sets the is_owner permission.
+func (ctx *TestContext) UserIsOwnerOfItemWithID(isOwner, user, item string) error {
+	return ctx.UserSetPermissionOnItemWithID("is_owner", isOwner, user, item)
+}
+
+// UserCanRequestHelpToOnItemWithID sets the can_request_help_to permission.
+func (ctx *TestContext) UserCanRequestHelpToOnItemWithID(canRequestHelpTo, user, item string) error {
+	return ctx.UserSetPermissionOnItemWithID("can_request_help_to", canRequestHelpTo, user, item)
 }
 
 func (ctx *TestContext) UserHaveValidatedItemWithID(user, item string) error {
@@ -991,12 +1024,5 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 // ICanRequestHelpToTheGroupWithIDOnTheItemWithID gives the user the permission to request help from a given group
 // to a given item.
 func (ctx *TestContext) ICanRequestHelpToTheGroupWithIDOnTheItemWithID(group, item string) error {
-	ctx.addPermissionGranted(
-		ctx.user,
-		item,
-		"can_request_help_to",
-		group,
-	)
-
-	return nil
+	return ctx.UserCanRequestHelpToOnItemWithID(group, ctx.user, item)
 }
