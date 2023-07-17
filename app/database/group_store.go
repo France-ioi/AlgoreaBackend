@@ -178,20 +178,25 @@ func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
 	return nil
 }
 
-// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of a user.
-func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
+// AncestorsOfJoinedGroupsForGroup returns a query selecting all group ancestors ids of a group.
+func (s *GroupStore) AncestorsOfJoinedGroupsForGroup(store *DataStore, groupID int64) *DB {
 	return store.ActiveGroupGroups().
-		Where("groups_groups_active.child_group_id = ?", user.GroupID).
+		Where("groups_groups_active.child_group_id = ?", groupID).
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id").
 		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = groups_ancestors_active.ancestor_group_id").
 		Where("ancestor_group.type != 'ContestParticipants'").
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
-// ManagedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
-// and all users who are descendants from managed groups.
-func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, user *User) *DB {
-	return store.ActiveGroupAncestors().ManagedByUser(user).
+// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of a user.
+func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
+	return s.AncestorsOfJoinedGroupsForGroup(store, user.GroupID)
+}
+
+// ManagedUsersAndAncestorsOfManagedGroupsForGroup returns all groups which are ancestors of managed groups,
+// and all users who are descendants from managed groups, for a group.
+func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroupsForGroup(store *DataStore, groupID int64) *DB {
+	return store.ActiveGroupAncestors().ManagedByGroup(groupID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Joins(`
 			JOIN groups_ancestors_active AS ancestors_of_managed
@@ -202,18 +207,32 @@ func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, u
 		Select("ancestors_of_managed.ancestor_group_id")
 }
 
-// PickVisibleGroups returns a query filtering only group which are visible.
-func (s *GroupStore) PickVisibleGroups(db *DB, user *User) *DB {
-	AncestorsOfJoinedGroupsQuery := s.AncestorsOfJoinedGroups(NewDataStore(db.New()), user).QueryExpr()
-	ManagedUsersAndAncestorsOfManagedGroupsQuery := s.ManagedUsersAndAncestorsOfManagedGroups(NewDataStore(db.New()), user).QueryExpr()
+// ManagedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
+// and all users who are descendants from managed groups, for a user.
+func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, user *User) *DB {
+	return s.ManagedUsersAndAncestorsOfManagedGroupsForGroup(store, user.GroupID)
+}
+
+// PickVisibleGroupsForGroup returns a query filtering only group which are visible for a group.
+func (s *GroupStore) PickVisibleGroupsForGroup(db *DB, visibleForGroupID int64) *DB {
+	AncestorsOfJoinedGroupsQuery := s.AncestorsOfJoinedGroupsForGroup(NewDataStore(db.New()), visibleForGroupID).QueryExpr()
+	ManagedUsersAndAncestorsOfManagedGroupsQuery := s.ManagedUsersAndAncestorsOfManagedGroupsForGroup(
+		NewDataStore(db.New()),
+		visibleForGroupID,
+	).QueryExpr()
 
 	return db.Where("groups.is_public OR groups.id IN(?) OR groups.id IN(?)",
 		AncestorsOfJoinedGroupsQuery, ManagedUsersAndAncestorsOfManagedGroupsQuery)
 }
 
-// IsVisibleFor checks whether a group is visible to a user.
-func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
-	isVisible, err := s.PickVisibleGroups(s.Groups().DB, user).
+// PickVisibleGroups returns a query filtering only group which are visible for a user.
+func (s *GroupStore) PickVisibleGroups(db *DB, user *User) *DB {
+	return s.PickVisibleGroupsForGroup(db, user.GroupID)
+}
+
+// IsVisibleForGroup checks whether a group is visible to a group.
+func (s *GroupStore) IsVisibleForGroup(groupID, visibleForGroupID int64) bool {
+	isVisible, err := s.PickVisibleGroupsForGroup(s.Groups().DB, visibleForGroupID).
 		Where("groups.id = ?", groupID).
 		Select("1").
 		Limit(1).
@@ -221,4 +240,9 @@ func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
 	mustNotBeError(err)
 
 	return isVisible
+}
+
+// IsVisibleFor checks whether a group is visible to a user.
+func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
+	return s.IsVisibleForGroup(groupID, user.GroupID)
 }

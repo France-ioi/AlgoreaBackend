@@ -20,6 +20,8 @@ const (
 	strTrue         = "true"
 )
 
+var itemPermissionKeys = []string{"can_view", "can_grant_view", "can_watch", "can_edit", "is_owner", "can_request_help_to"}
+
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
 	parameterMap := make(map[string]string)
@@ -677,29 +679,19 @@ func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *mes
 	for i := 1; i < len(itemPermissions.Rows); i++ {
 		itemPermission := ctx.getRowMap(i, itemPermissions)
 
-		if itemPermission["can_view"] != "" {
-			err := ctx.UserCanViewOnItemWithID(itemPermission["can_view"], itemPermission["group"], itemPermission["item"])
-			if err != nil {
-				return err
-			}
+		err := ctx.applyUserPermissionsOnItem(itemPermission)
+		if err != nil {
+			return err
 		}
+	}
 
-		if itemPermission["can_watch"] != "" {
-			err := ctx.UserCanWatchOnItemWithID(itemPermission["can_watch"], itemPermission["group"], itemPermission["item"])
-			if err != nil {
-				return err
-			}
-		}
+	return nil
+}
 
-		if itemPermission["is_owner"] != "" {
-			err := ctx.UserIsOwnerOfItemWithID(itemPermission["is_owner"], itemPermission["group"], itemPermission["item"])
-			if err != nil {
-				return err
-			}
-		}
-
-		if itemPermission["can_request_help_to"] != "" {
-			err := ctx.UserCanRequestHelpToOnItemWithID(itemPermission["can_request_help_to"], itemPermission["group"], itemPermission["item"])
+func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]string) error {
+	for _, permissionKey := range itemPermissionKeys {
+		if permissionValue, ok := itemPermission[permissionKey]; ok {
+			err := ctx.UserSetPermissionOnItemWithID(permissionKey, permissionValue, itemPermission["group"], itemPermission["item"])
 			if err != nil {
 				return err
 			}
@@ -832,6 +824,7 @@ func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue, item string) err
 	return ctx.UserSetPermissionOnItemWithID(watchType, watchValue, ctx.user, item)
 }
 
+// UserCanViewOnItemWithID gives a user a can_view permission on an item.
 func (ctx *TestContext) UserCanViewOnItemWithID(viewValue, user, item string) error {
 	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, user, item)
 }
@@ -839,6 +832,11 @@ func (ctx *TestContext) UserCanViewOnItemWithID(viewValue, user, item string) er
 // ICanViewOnItemWithID gives the user a "view" permission on an item.
 func (ctx *TestContext) ICanViewOnItemWithID(viewValue, item string) error {
 	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, ctx.user, item)
+}
+
+// UserCanGrantViewOnItemWithID gives a user a can_grant_view permission on an item.
+func (ctx *TestContext) UserCanGrantViewOnItemWithID(viewValue, user, item string) error {
+	return ctx.UserSetPermissionOnItemWithID("can_grant_view", viewValue, user, item)
 }
 
 // UserCanWatchOnItemWithID gives a user a "watch" permission on an item.
