@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.10.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.9.3...v1.10.0) - 2023-07-17
+- get permission service: add `can_request_help_to` in granted permissions
+- updatePermissions: allow updating `can_request_help_to`
+- improve doc
+
 ## [v1.9.3](https://github.com/France-ioi/AlgoreaBackend/compare/v1.9.2...v1.9.3) - 2023-07-13
 - add parameter to the token refresh service to allow to create or not a temp user on refresh failure
 
