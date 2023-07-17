@@ -78,13 +78,14 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 }
 
 func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
+	var expected interface{} = value
+
 	switch jsonPathResultTyped := jsonPathRes.(type) {
+	case bool:
+		expected, _ = strconv.ParseBool(value)
 	case string:
 	case float64:
-		valueFloat, _ := strconv.ParseFloat(value, 64)
-		if valueFloat == jsonPathResultTyped {
-			return true
-		}
+		expected, _ = strconv.ParseFloat(value, 64)
 	case []interface{}:
 		// When the result is an empty array, matches if we're looking for an empty value.
 		if len(jsonPathResultTyped) == 0 && value == "" {
@@ -93,7 +94,11 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 	case interface{}:
 	}
 
-	return jsonPathRes == value
+	if jsonPathRes == nil && value == "null" {
+		return true
+	}
+
+	return jsonPathRes == expected
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
@@ -103,31 +108,39 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 		return err
 	}
 
-	wantsHasHeader := len(wants.Rows[0].Cells) > 1
+	switch typedJSONRes := jsonPathRes.(type) {
+	case []interface{}:
+		wantsHasHeader := len(wants.Rows[0].Cells) > 1
 
-	wantLength := len(wants.Rows)
-	if wantsHasHeader {
-		wantLength--
+		wantLength := len(wants.Rows)
+		if wantsHasHeader {
+			wantLength--
+		}
+
+		// The result is an array (eg. "element": [...])
+		if len(typedJSONRes) != wantLength {
+			return fmt.Errorf(
+				"TheResponseAtShouldBe: The JsonPath result length should be %v but is %v for %v",
+				wantLength,
+				len(typedJSONRes),
+				typedJSONRes,
+			)
+		}
+
+		if wantsHasHeader {
+			return ctx.wantRowsMatchesJSONPathResultArr(wants, typedJSONRes)
+		}
+
+		return ctx.wantValuesMatchesJSONPathResultArr(wants, typedJSONRes)
+	case map[string]interface{}:
+		// The result is an object (eg. "element": {"a": 0, "b": 0})
+		return ctx.wantValuesMatchesJSONPathResultObject(wants, typedJSONRes)
 	}
 
-	jsonPathResArr := jsonPathRes.([]interface{})
-	if len(jsonPathResArr) != wantLength {
-		return fmt.Errorf(
-			"TheResponseAtShouldBe: The JsonPath result length should be %v but is %v for %v",
-			wantLength,
-			len(jsonPathResArr),
-			jsonPathResArr,
-		)
-	}
-
-	if wantsHasHeader {
-		return ctx.wantRowsMatchesJSONPathResult(wants, jsonPathResArr)
-	}
-
-	return ctx.wantValuesMatchesJSONPathResult(wants, jsonPathResArr)
+	panic(fmt.Sprintf("TheResponseAtShouldBe: Unhandled case for %v", jsonPathRes))
 }
 
-func (ctx *TestContext) wantRowsMatchesJSONPathResult(
+func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 	wants *messages.PickleStepArgument_PickleTable,
 	jsonPathResArr []interface{},
 ) error {
@@ -193,7 +206,7 @@ func sortSliceForEasyComparison(
 	return slice
 }
 
-func (ctx *TestContext) wantValuesMatchesJSONPathResult(
+func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 	wants *messages.PickleStepArgument_PickleTable,
 	jsonPathResArr []interface{},
 ) error {
@@ -212,6 +225,26 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResult(
 
 	if !cmp.Equal(sortedResults, sortedWants) {
 		return fmt.Errorf("wantValuesMatchesJSONPathResult: The values (sorted) are %v but should have been: %v", sortedResults, sortedWants)
+	}
+
+	return nil
+}
+
+func (ctx *TestContext) wantValuesMatchesJSONPathResultObject(
+	wants *messages.PickleStepArgument_PickleTable,
+	jsonPathResObject map[string]interface{},
+) error {
+	headerCells := wants.Rows[0].Cells
+	objectCells := wants.Rows[1].Cells
+
+	for i := 0; i < len(headerCells); i++ {
+		key := headerCells[i].Value
+		wantedValue := ctx.replaceReferencesByIDs(objectCells[i].Value)
+		actualValue := jsonPathResObject[key]
+
+		if !jsonPathResultMatchesValue(actualValue, wantedValue) {
+			return fmt.Errorf("wantValuesMatchesJSONPathResultObject: [%v] should be %v but is %v", key, wantedValue, actualValue)
+		}
 	}
 
 	return nil

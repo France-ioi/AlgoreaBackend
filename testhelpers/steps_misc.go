@@ -155,7 +155,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *messages.PickleStepArgument_PickleDocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
-	preprocessedConfig, err := ctx.preprocessString(yamlConfig.Content)
+	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesByIDs(yamlConfig.Content))
 	if err != nil {
 		return err
 	}

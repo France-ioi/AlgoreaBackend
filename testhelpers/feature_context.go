@@ -41,11 +41,13 @@ func FeatureContext(s *godog.Suite) {
 		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
 		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
 	)
+	s.Step(`allUsersGroup is defined as the group (@\w+)$`, ctx.AllUsersGroupIsDefinedAsTheGroup)
 
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (@\w+)$`, ctx.IAmAManagerOfTheGroup)
 	s.Step(`^(@\w+) is a manager of the group (@\w+) and can watch its members$`, ctx.UserIsAManagerOfTheGroupAndCanWatchItsMembers)
 	s.Step(`^I am a manager of the group (@\w+) and can watch its members$`, ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
+	s.Step(`(@\w+) is a manager of the group (@\w+) and can grant group access`, ctx.UserIsAManagerOfTheGroupAndCanGrantGroupAccess)
 	s.Step(`^the group (@\w+) is a descendant of the group (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
 	s.Step(`^there are the following items:$`, ctx.ThereAreTheFollowingItems)
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)

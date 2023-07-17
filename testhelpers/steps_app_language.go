@@ -15,7 +15,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
-const ReferencePrefix = '@'
+const (
+	ReferencePrefix = '@'
+	strTrue         = "true"
+)
 
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
@@ -45,6 +48,9 @@ func getParameterString(parameters map[string]string) string {
 
 // referenceToName returns the name of a reference.
 func referenceToName(reference string) string {
+	if reference == "" {
+		return ""
+	}
 	if reference[0] == ReferencePrefix {
 		return reference[1:]
 	}
@@ -90,6 +96,11 @@ func (ctx *TestContext) populateDatabase() error {
 	err = database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
+
+		err = ctx.addUsersIntoAllUsersGroup()
+		if err != nil {
+			return err
+		}
 
 		for tableName, tableRows := range ctx.dbTables {
 			for _, tableRow := range tableRows {
@@ -140,6 +151,22 @@ func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]inte
 	}
 
 	ctx.dbTables[tableName][key] = row
+}
+
+// addUsersIntoAllUsersGroup adds all users in the AllUsers group if it is defined.
+func (ctx *TestContext) addUsersIntoAllUsersGroup() error {
+	if ctx.allUsersGroup == "" {
+		return nil
+	}
+
+	for userID := range ctx.dbTables["users"] {
+		err := ctx.UserIsAMemberOfTheGroup(userID, ctx.allUsersGroup)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // addUser adds a user in database.
@@ -211,7 +238,7 @@ func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
 }
 
 // addGroupManager adds a group manager in the database.
-func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers string) {
+func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess string) {
 	managerID := ctx.getReference(manager)
 	groupID := ctx.getReference(group)
 
@@ -219,9 +246,10 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers string) 
 		"group_managers",
 		strconv.FormatInt(managerID, 10)+","+strconv.FormatInt(groupID, 10),
 		map[string]interface{}{
-			"manager_id":        managerID,
-			"group_id":          groupID,
-			"can_watch_members": canWatchMembers,
+			"manager_id":             managerID,
+			"group_id":               groupID,
+			"can_watch_members":      canWatchMembers,
+			"can_grant_group_access": canGrantGroupAccess,
 		},
 	)
 }
@@ -246,7 +274,16 @@ func (ctx *TestContext) addPermissionGranted(group, item, permission, permission
 		permissionValue = strconv.FormatInt(ctx.getReference(permissionValue), 10)
 	}
 
-	ctx.dbTables[permissionsGrantedTable][key][permission] = permissionValue
+	if permission == "is_owner" {
+		boolValue, err := strconv.ParseBool(permissionValue)
+		if err != nil {
+			panic(fmt.Sprintf("%v cannot be parsed as a boolean", boolValue))
+		}
+
+		ctx.dbTables[permissionsGrantedTable][key][permission] = boolValue
+	} else {
+		ctx.dbTables[permissionsGrantedTable][key][permission] = permissionValue
+	}
 }
 
 // addAttempt adds an attempt in database.
@@ -449,7 +486,7 @@ func (ctx *TestContext) ThereIsAGroupWith(parameters string) error {
 	group := ctx.getParameterMap(parameters)
 
 	if _, ok := group["name"]; !ok {
-		group["name"] = "Group " + group["id"]
+		group["name"] = "Group " + referenceToName(group["id"])
 	}
 	if _, ok := group["type"]; !ok {
 		group["type"] = "Class"
@@ -498,11 +535,16 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 	group := ctx.getParameterMap(parameters)
 
 	canWatchMembers := "0"
-	watchedGroupName := group["user_id"] + " manages " + group["name"]
+	canGrantGroupAccess := "0"
+	watchedGroupName := group["user_id"] + " manages " + referenceToName(group["name"])
 
-	if group["can_watch_members"] == "true" {
+	if group["can_watch_members"] == strTrue {
 		canWatchMembers = "1"
 		watchedGroupName += " with can_watch_members"
+	}
+	if group["can_grant_group_access"] == strTrue {
+		canGrantGroupAccess = "1"
+		watchedGroupName += " with can_grant_group_access"
 	}
 
 	err = ctx.ThereIsAGroupWith(getParameterString(map[string]string{
@@ -515,7 +557,7 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 
 	ctx.IsAMemberOfTheGroup(group["id"], watchedGroupName)
 
-	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers)
+	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers, canGrantGroupAccess)
 
 	return nil
 }
@@ -545,7 +587,7 @@ func (ctx *TestContext) IAmAManagerOfTheGroupAndCanWatchItsMembers(group string)
 		"id":                group,
 		"user_id":           ctx.user,
 		"name":              group,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
 	}))
 }
 
@@ -555,14 +597,23 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanWatchItsMembers(user, grou
 		"id":                group,
 		"user_id":           user,
 		"name":              group,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
+	}))
+}
+
+func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanGrantGroupAccess(user, group string) error {
+	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
+		"id":                     group,
+		"user_id":                user,
+		"name":                   group,
+		"can_grant_group_access": strTrue,
 	}))
 }
 
 // theGroupIsADescendantOfTheGroup sets a group as a descendant of another.
 func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent string) error {
 	// we add another group in between to increase the robustness of the tests.
-	middle := parent + " -> X -> " + descendant
+	middle := parent + " -> X -> " + referenceToName(descendant)
 
 	groups := []string{descendant, middle, parent}
 	for _, group := range groups {
@@ -585,7 +636,7 @@ func (ctx *TestContext) ICanWatchGroupWithID(group string) error {
 	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
 		"id":                group,
 		"user_id":           ctx.user,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
 	}))
 }
 
@@ -639,6 +690,20 @@ func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *mes
 				return err
 			}
 		}
+
+		if itemPermission["is_owner"] != "" {
+			err := ctx.UserIsOwnerOfItemWithID(itemPermission["is_owner"], itemPermission["group"], itemPermission["item"])
+			if err != nil {
+				return err
+			}
+		}
+
+		if itemPermission["can_request_help_to"] != "" {
+			err := ctx.UserCanRequestHelpToOnItemWithID(itemPermission["can_request_help_to"], itemPermission["group"], itemPermission["item"])
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -650,7 +715,7 @@ func (ctx *TestContext) ICanWatchGroup(groupName string) error {
 		"id":                groupName,
 		"user_id":           ctx.user,
 		"name":              groupName,
-		"can_watch_members": "true",
+		"can_watch_members": strTrue,
 	}))
 }
 
@@ -722,40 +787,78 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 	return nil
 }
 
+// AllUsersGroupIsDefinedAsTheGroup creates and sets the allUsersGroup.
+func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) error {
+	err := ctx.ThereIsAGroupWith(getParameterString(map[string]string{
+		"id":   group,
+		"name": "AllUsers",
+		"type": "Base",
+	}))
+	if err != nil {
+		return err
+	}
+
+	err = ctx.TheApplicationConfigIs(&messages.PickleStepArgument_PickleDocString{
+		Content: `
+domains:
+  -
+    domains: [127.0.0.1]
+    allUsersGroup: ` + group + `
+`,
+	})
+	if err != nil {
+		return err
+	}
+
+	ctx.allUsersGroup = group
+
+	return nil
+}
+
 // IAmAMemberOfTheGroup puts a user in a group.
 func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 	return ctx.IAmAMemberOfTheGroupWithID(name)
 }
 
-// UserCanOnItemWithID gives a user a permission on an item.
-func (ctx *TestContext) UserCanOnItemWithID(watchType, watchValue, user, item string) error {
-	ctx.addPermissionGranted(user, item, "can_"+watchType, watchValue)
+// UserSetPermissionOnItemWithID gives a user a permission on an item.
+func (ctx *TestContext) UserSetPermissionOnItemWithID(permission, value, user, item string) error {
+	ctx.addPermissionGranted(user, item, permission, value)
 
 	return nil
 }
 
 // ICanOnItemWithID gives the user a permission on an item.
 func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue, item string) error {
-	return ctx.UserCanOnItemWithID(watchType, watchValue, ctx.user, item)
+	return ctx.UserSetPermissionOnItemWithID(watchType, watchValue, ctx.user, item)
 }
 
 func (ctx *TestContext) UserCanViewOnItemWithID(viewValue, user, item string) error {
-	return ctx.UserCanOnItemWithID("view", viewValue, user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, user, item)
 }
 
 // ICanViewOnItemWithID gives the user a "view" permission on an item.
 func (ctx *TestContext) ICanViewOnItemWithID(viewValue, item string) error {
-	return ctx.UserCanOnItemWithID("view", viewValue, ctx.user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, ctx.user, item)
 }
 
 // UserCanWatchOnItemWithID gives a user a "watch" permission on an item.
 func (ctx *TestContext) UserCanWatchOnItemWithID(watchValue, user, item string) error {
-	return ctx.UserCanOnItemWithID("watch", watchValue, user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, user, item)
 }
 
 // ICanWatchOnItemWithID gives the user a "watch" permission on an item.
 func (ctx *TestContext) ICanWatchOnItemWithID(watchValue, item string) error {
-	return ctx.UserCanOnItemWithID("watch", watchValue, ctx.user, item)
+	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, ctx.user, item)
+}
+
+// UserIsOwnerOfItemWithID sets the is_owner permission.
+func (ctx *TestContext) UserIsOwnerOfItemWithID(isOwner, user, item string) error {
+	return ctx.UserSetPermissionOnItemWithID("is_owner", isOwner, user, item)
+}
+
+// UserCanRequestHelpToOnItemWithID sets the can_request_help_to permission.
+func (ctx *TestContext) UserCanRequestHelpToOnItemWithID(canRequestHelpTo, user, item string) error {
+	return ctx.UserSetPermissionOnItemWithID("can_request_help_to", canRequestHelpTo, user, item)
 }
 
 func (ctx *TestContext) UserHaveValidatedItemWithID(user, item string) error {
@@ -924,12 +1027,5 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 // ICanRequestHelpToTheGroupWithIDOnTheItemWithID gives the user the permission to request help from a given group
 // to a given item.
 func (ctx *TestContext) ICanRequestHelpToTheGroupWithIDOnTheItemWithID(group, item string) error {
-	ctx.addPermissionGranted(
-		ctx.user,
-		item,
-		"can_request_help_to",
-		group,
-	)
-
-	return nil
+	return ctx.UserCanRequestHelpToOnItemWithID(group, ctx.user, item)
 }
