@@ -57,8 +57,8 @@ Feature: Create item
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category  | score_weight |
-      | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | Undefined | 1            |
+      | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation | category  | score_weight |
+      | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | 1                        | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
@@ -167,8 +167,8 @@ Feature: Create item
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | category    | score_weight |
-      | 5577006791947779410 | 12                  | 0           | as_info                  | as_is                         | 0                      | 0                 | 0                | Undefined   | 1            |
+      | parent_item_id      | child_item_id | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation | category  | score_weight |
+      | 5577006791947779410 | 12            | 0           | as_info                  | as_is                         | 0                      | 0                 | 0                | 1                        | Undefined | 1            |
     And the table "items_ancestors" should be:
       | ancestor_item_id    | child_item_id       |
       | 5577006791947779410 | 12                  |
@@ -189,6 +189,63 @@ Feature: Create item
       | 11 | jdoe    | User    | null             | null                |
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
+
+  Scenario: Set can_request_help for children
+    Given I am the user with id "11"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage            |
+      | 10       | 11         | memberships_and_group |
+    And the database table 'items' has also the following rows:
+      | id   | default_language_tag |
+      | 1001 | fr                   |
+      | 1002 | fr                   |
+      | 1003 | fr                   |
+      | 1004 | fr                   |
+    And the database table 'permissions_generated' has also the following rows:
+      | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11       | 1001    | content_with_descendants | content                  | answer              | none               | 0                  |
+      | 11       | 1002    | content_with_descendants | enter                    | answer              | none               | 0                  |
+      | 11       | 1003    | content_with_descendants | content                  | answer              | none               | 0                  |
+      | 11       | 1004    | content_with_descendants | enter                    | answer              | none               | 0                  |
+    And the database table 'permissions_granted' has also the following rows:
+      | group_id | item_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
+      | 11       | 1001    | content_with_descendants | content        | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
+      | 11       | 1002    | content_with_descendants | enter          | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
+      | 11       | 1003    | content_with_descendants | content        | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
+      | 11       | 1004    | content_with_descendants | enter          | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
+      When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Skill",
+        "language_tag": "sl",
+        "title": "my title",
+        "image_url":"http://bit.ly/1234",
+        "subtitle": "hard task",
+        "description": "the goal of this task is ...",
+        "as_root_of_group_id": "10",
+        "children": [
+          {"item_id": "1001", "order": 0, "request_help_propagation": true},
+          {"item_id": "1002", "order": 1, "request_help_propagation": false},
+          {"item_id": "1003", "order": 2},
+          {"item_id": "1004", "order": 3}
+        ]
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": { "id": "5577006791947779410" }
+      }
+      """
+    And the table "items_items" should be:
+      | parent_item_id      | child_item_id | request_help_propagation | # comment
+      | 5577006791947779410 | 1001          | 1                        | # set to 1
+      | 5577006791947779410 | 1002          | 0                        | # set to 0
+      | 5577006791947779410 | 1003          | 1                        | # defaults to 1
+      | 5577006791947779410 | 1004          | 0                        | # defaults to 0 because current-user has can_grant_view<content on child
 
   Scenario Outline: Valid (all the fields are set)
     Given I am the user with id "11"
@@ -249,7 +306,8 @@ Feature: Create item
           "upper_view_levels_propagation": "use_content_view_propagation",
           "grant_view_propagation": <grant_view_propagation>,
           "watch_propagation": <watch_propagation>,
-          "edit_propagation": <edit_propagation>
+          "edit_propagation": <edit_propagation>,
+          "request_help_propagation": <request_help_propagation>
         },
         "children": [
           {"item_id": "12", "order": 0},
@@ -273,10 +331,10 @@ Feature: Create item
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation   | watch_propagation   | edit_propagation   | category    | score_weight |
-      | 21                  | 5577006791947779410 | 1           | as_content               | use_content_view_propagation  | <grant_view_propagation> | <watch_propagation> | <edit_propagation> | Challenge   | 3            |
-      | 5577006791947779410 | 12                  | 0           | as_info                  | as_is                         | 0                        | 0                   | 0                  | Undefined   | 1            |
-      | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                        | 1                   | 1                  | Application | 2            |
+      | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation   | watch_propagation   | edit_propagation   | request_help_propagation   | category    | score_weight |
+      | 21                  | 5577006791947779410 | 1           | as_content               | use_content_view_propagation  | <grant_view_propagation> | <watch_propagation> | <edit_propagation> | <request_help_propagation> | Challenge   | 3            |
+      | 5577006791947779410 | 12                  | 0           | as_info                  | as_is                         | 0                        | 0                   | 0                  | 1                          | Undefined   | 1            |
+      | 5577006791947779410 | 34                  | 1           | as_info                  | as_is                         | 1                        | 1                   | 1                  | 1                          | Application | 2            |
     And the table "items_ancestors" should be:
       | ancestor_item_id    | child_item_id       |
       | 21                  | 12                  |
@@ -316,10 +374,10 @@ Feature: Create item
       | 0          | 11             | 21      |
     And the table "results_propagate" should be empty
   Examples:
-    | grant_view_propagation | watch_propagation | edit_propagation |
-    | true                   | false             | true             |
-    | false                  | true              | true             |
-    | false                  | false             | false            |
+    | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+    | true                   | false             | true             | true                     |
+    | false                  | true              | true             | false                    |
+    | false                  | false             | false            | false                    |
 
   Scenario: Valid when type=Skill
     Given I am the user with id "11"

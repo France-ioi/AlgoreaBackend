@@ -107,6 +107,8 @@ type itemParent struct {
 	WatchPropagation bool `json:"watch_propagation"`
 	// default: true
 	EditPropagation bool `json:"edit_propagation"`
+	// default: true
+	RequestHelpPropagation bool `json:"request_help_propagation"`
 }
 
 // NewItemRequest is the expected input for new created item
@@ -429,7 +431,7 @@ func generateOldPropagationLevelsMap(store *database.DataStore, itemID *int64) m
 	service.MustNotBeError(store.ItemItems().ChildrenOf(*itemID).WithWriteLock().
 		Select(`child_item_id AS item_id, category, score_weight,
 				        content_view_propagation_value, upper_view_levels_propagation_value,
-						    grant_view_propagation, watch_propagation, edit_propagation`).
+						    grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation`).
 		Scan(&oldRelations).Error())
 	oldPropagationLevelsMap := make(map[int64]*itemsRelationData, len(oldRelations))
 	for index := range oldRelations {
@@ -605,6 +607,8 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 						formData, "parent.watch_propagation", newItemRequest.Parent.WatchPropagation, true).(bool),
 					EditPropagation: valueOrDefault(
 						formData, "parent.edit_propagation", newItemRequest.Parent.EditPropagation, true).(bool),
+					RequestHelpPropagation: valueOrDefault(
+						formData, "parent.request_help_propagation", newItemRequest.Parent.RequestHelpPropagation, true).(bool),
 				})
 		}
 		parentChildSpec = append(parentChildSpec,
