@@ -60,7 +60,7 @@ type listThreadParameters struct {
 	LatestUpdateGt *time.Time
 }
 
-// swagger:operation GET /thread threads listThreads
+// swagger:operation GET /threads threads listThreads
 //
 //	---
 //	summary: Service to list the visible threads for a user.
