@@ -105,6 +105,9 @@ type childItem struct {
 	// `items_items.edit_propagation`
 	// required: true
 	EditPropagation bool `json:"edit_propagation"`
+	// `items_items.request_help_propagation`
+	// required: true
+	RequestHelpPropagation bool `json:"request_help_propagation"`
 
 	// required: true
 	Permissions structures.ItemPermissions `json:"permissions"`
@@ -145,6 +148,7 @@ type rawListChildItem struct {
 	GrantViewPropagation       bool
 	WatchPropagation           bool
 	EditPropagation            bool
+	RequestHelpPropagation     bool
 
 	// item_dependencies
 	GrantsAccessToItems bool
@@ -247,7 +251,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 	service.MustNotBeError(
 		constructItemChildrenQuery(store, itemID, participantID, requiredViewPermissionOnItems, attemptID, watchedGroupIDSet, watchedGroupID,
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
-				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation,
+				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
 				items.validation_type, items.display_details_in_parent, items.duration, items.entry_participant_type, items.no_score,
 				IFNULL(can_view_generated_value, 1) AS can_view_generated_value,
@@ -317,6 +321,7 @@ func childItemsFromRawData(
 				GrantViewPropagation:       rawData[index].GrantViewPropagation,
 				WatchPropagation:           rawData[index].WatchPropagation,
 				EditPropagation:            rawData[index].EditPropagation,
+				RequestHelpPropagation:     rawData[index].RequestHelpPropagation,
 				Permissions:                *rawData[index].AsItemPermissions(permissionGrantedStore),
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("info") {
