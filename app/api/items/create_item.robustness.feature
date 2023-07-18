@@ -640,7 +640,7 @@ Feature: Create item - robustness
       | category     | "wrong" | category must be one of [Undefined Discovery Application Validation Challenge] |
       | score_weight | "wrong" | expected type 'int8', got unconvertible type 'string'                          |
 
-  Scenario Outline: Not enough permissions for setting propagation in items_items
+  Scenario Outline: Not enough permissions for setting propagation in children items_items
     Given I am the user with id "11"
     And the database table 'items' has also the following row:
       | id | default_language_tag |
@@ -685,7 +685,8 @@ Feature: Create item - robustness
       | upper_view_levels_propagation | as_content_with_descendants | can_grant_view_generated | content                  | Not enough permissions for setting upper_view_levels_propagation |
       | grant_view_propagation        | true                        | can_grant_view_generated | solution                 | Not enough permissions for setting grant_view_propagation        |
       | watch_propagation             | true                        | can_watch_generated      | answer                   | Not enough permissions for setting watch_propagation             |
-      | edit_propagation              | true                        | can_edit_generated       | all                      | Not enough permissions for setting edit_propagation             |
+      | edit_propagation              | true                        | can_edit_generated       | all                      | Not enough permissions for setting edit_propagation              |
+      | request_help_propagation      | true                        | can_grant_view_generated | enter                    | Not enough permissions for setting request_help_propagation      |
 
   Scenario: Non-unique children item IDs
     Given I am the user with id "11"
