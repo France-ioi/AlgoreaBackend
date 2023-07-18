@@ -43,10 +43,10 @@ Feature: Get item children
       | manager_id | group_id | can_watch_members |
       | 22         | 15       | true              |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
-      | 200            | 210           | 2           | Discovery | 1            | none                     | use_content_view_propagation  | true                   | false             | true             |
-      | 200            | 220           | 1           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            |
-      | 200            | 230           | 3           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            |
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 200            | 210           | 2           | Discovery | 1            | none                     | use_content_view_propagation  | true                   | false             | true             | true                     |
+      | 200            | 220           | 1           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+      | 200            | 230           | 3           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
     And the database has the following table 'item_dependencies':
       | item_id | dependent_item_id | grant_content_view |
       | 210     | 200               | false              |
@@ -119,6 +119,7 @@ Feature: Get item children
         "grant_view_propagation": false,
         "watch_propagation": true,
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -165,6 +166,7 @@ Feature: Get item children
         "grant_view_propagation": true,
         "watch_propagation": false,
         "edit_propagation": true,
+        "request_help_propagation": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -221,6 +223,7 @@ Feature: Get item children
         "grant_view_propagation": false,
         "watch_propagation": true,
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -257,6 +260,7 @@ Feature: Get item children
         "grant_view_propagation": true,
         "watch_propagation": false,
         "edit_propagation": true,
+        "request_help_propagation": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -313,6 +317,7 @@ Feature: Get item children
         "grant_view_propagation": false,
         "watch_propagation": true,
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -348,6 +353,7 @@ Feature: Get item children
         "grant_view_propagation": true,
         "watch_propagation": false,
         "edit_propagation": true,
+        "request_help_propagation": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -393,6 +399,7 @@ Feature: Get item children
         "grant_view_propagation": false,
         "watch_propagation": true,
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -439,6 +446,7 @@ Feature: Get item children
         "grant_view_propagation": true,
         "watch_propagation": false,
         "edit_propagation": true,
+        "request_help_propagation": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -495,6 +503,7 @@ Feature: Get item children
         "grant_view_propagation": false,
         "watch_propagation": true,
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -530,6 +539,7 @@ Feature: Get item children
         "grant_view_propagation": true,
         "watch_propagation": false,
         "edit_propagation": true,
+        "request_help_propagation": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -575,6 +585,7 @@ Feature: Get item children
         "grant_view_propagation": false,
         "watch_propagation": true,
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -613,6 +624,7 @@ Feature: Get item children
         "grant_view_propagation": true,
         "watch_propagation": false,
         "edit_propagation": true,
+        "request_help_propagation": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -663,6 +675,7 @@ Feature: Get item children
         "grant_view_propagation": false,
         "watch_propagation": true,
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -701,6 +714,7 @@ Feature: Get item children
         "grant_view_propagation": true,
         "watch_propagation": false,
         "edit_propagation": true,
+        "request_help_propagation": true,
         "type": "Chapter",
         "display_details_in_parent": true,
         "validation_type": "All",
@@ -735,6 +749,7 @@ Feature: Get item children
         "category": "Discovery",
         "content_view_propagation": "as_info",
         "edit_propagation": false,
+        "request_help_propagation": false,
         "type": "Chapter",
         "grant_view_propagation": false,
         "id": "230",
