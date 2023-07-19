@@ -10,6 +10,20 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// ItemPath represents a path to an item.
+// swagger:model ItemPath
+type ItemPath struct {
+	// required:true
+	Path []string `json:"path"`
+	// required:true
+	IsActive bool `json:"is_active"`
+}
+
+type rawItemPath struct {
+	Path     string `json:"path"`
+	IsActive bool   `json:"is_active"`
+}
+
 // swagger:operation GET /items/{item_id}/path-from-root items itemPathFromRootFind
 //
 //	---
@@ -26,8 +40,8 @@ import (
 //			* and having higher values of `attempt_id`.
 //
 //		For a path to be returned, each of its items must:
-//			* Either have `require_explicit_entry`=0 ,
-//			* Or if it has `require_explicit_entry=1`,
+//			* Either have `requires_explicit_entry`=0 ,
+//			* Or if it has `requires_explicit_entry=1`,
 //				then the following condition must be fulfilled, except if it is the last item of the path:
 //				the item must have at least one result with `started`=1 AND its attempt must have
 //					(`attempt.ended_at` IS NULL) AND (`NOW()` < `attempt.allows_submissions_until`)).
@@ -81,15 +95,22 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	ids := findItemPath(srv.GetStore(r), participantID, itemID)
-	if ids == nil {
+	itemPaths := FindItemPaths(srv.GetStore(r), participantID, itemID, true)
+	if itemPaths == nil {
 		return service.InsufficientAccessRightsError
 	}
-	render.Respond(w, r, map[string]interface{}{"path": ids})
+	render.Respond(w, r, map[string]interface{}{"path": itemPaths[0].Path})
 	return service.NoError
 }
 
-func findItemPath(store *database.DataStore, participantID, itemID int64) []string {
+// FindItemPaths gets the paths to an item for a participant.
+// If {firstOnly}=true, returns only one path.
+func FindItemPaths(store *database.DataStore, participantID, itemID int64, firstOnly bool) []ItemPath {
+	limit := ""
+	if firstOnly {
+		limit = " LIMIT 1"
+	}
+
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("groups.id, root_activity_id, root_skill_id")
@@ -106,7 +127,7 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 
 	canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 
-	var pathStrings []string
+	var rawItemPaths []rawItemPath
 	service.MustNotBeError(store.Raw(
 		`
 			WITH RECURSIVE
@@ -188,10 +209,10 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 						 )
 				  )
 				)
-			SELECT path FROM paths
+			SELECT path, is_active FROM paths
 			 WHERE paths.last_item_id = ?
 			 ORDER BY score, attempts DESC
-			 LIMIT 1`,
+			 `+limit,
 		groupsWithRootItems.SubQuery(),
 		visibleItems.SubQuery(),
 		itemID,
@@ -205,12 +226,19 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 		canViewContentIndex,
 		itemID,
 	).
-		ScanIntoSlices(&pathStrings).Error())
+		Scan(&rawItemPaths).Error())
 
-	if len(pathStrings) == 0 {
+	if len(rawItemPaths) == 0 {
 		return nil
 	}
-	pathString := pathStrings[0]
-	idStrings := strings.Split(pathString, "/")
-	return idStrings
+
+	itemPaths := make([]ItemPath, len(rawItemPaths))
+	for i, itemPathRow := range rawItemPaths {
+		itemPaths[i] = ItemPath{
+			Path:     strings.Split(itemPathRow.Path, "/"),
+			IsActive: itemPathRow.IsActive,
+		}
+	}
+
+	return itemPaths
 }

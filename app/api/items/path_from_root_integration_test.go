@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func Test_findItemPath(t *testing.T) {
+func Test_FindItemPathFirstPathOnly(t *testing.T) {
 	type args struct {
 		participantID int64
 		itemID        int64
@@ -21,7 +21,7 @@ func Test_findItemPath(t *testing.T) {
 		name    string
 		fixture string
 		args    args
-		want    []string
+		want    []items.ItemPath
 	}{
 		{
 			name: "fails if not enough permissions for the first item",
@@ -49,7 +49,7 @@ func Test_findItemPath(t *testing.T) {
 					- {group_id: 200, item_id: 2, can_view_generated: info}
 			`,
 			args: args{participantID: 101, itemID: 2},
-			want: []string{"1", "2"},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
 			name: "supports a root skill as a first item",
@@ -59,7 +59,7 @@ func Test_findItemPath(t *testing.T) {
 					- {group_id: 200, item_id: 4, can_view_generated: info}
 			`,
 			args: args{participantID: 101, itemID: 4},
-			want: []string{"3", "4"},
+			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
 		},
 		{
 			name: "supports a root activity of a managed group as a first item",
@@ -74,7 +74,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 102, id: 0}
 			`,
 			args: args{participantID: 102, itemID: 2},
-			want: []string{"1", "2"},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
 			name: "supports a root skill of a managed group as a first item",
@@ -89,7 +89,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 102, id: 0}
 			`,
 			args: args{participantID: 102, itemID: 4},
-			want: []string{"3", "4"},
+			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
 		},
 		{
 			name: "supports a root activity of a group managed by an ancestor as a first item",
@@ -105,7 +105,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 103, id: 0}
 			`,
 			args: args{participantID: 103, itemID: 2},
-			want: []string{"1", "2"},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
 			name: "supports a root skill of a group managed by an ancestor as a first item",
@@ -121,7 +121,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 103, id: 0}
 			`,
 			args: args{participantID: 103, itemID: 4},
-			want: []string{"3", "4"},
+			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
 		},
 		{
 			name: "supports permissions given directly",
@@ -131,7 +131,7 @@ func Test_findItemPath(t *testing.T) {
 					- {group_id: 100, item_id: 2, can_view_generated: content}
 			`,
 			args: args{participantID: 100, itemID: 2},
-			want: []string{"1", "2"},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
 			name: "should return the element if it's the only one with explicit entry and without started result",
@@ -146,7 +146,7 @@ func Test_findItemPath(t *testing.T) {
 					- {group_id: 100, item_id: 10, can_view_generated: content}
 			`,
 			args: args{participantID: 100, itemID: 10},
-			want: []string{"10"},
+			want: []items.ItemPath{{Path: []string{"10"}, IsActive: false}},
 		},
 		{
 			name: "should return the path if the last element has explicit entry and no started result",
@@ -160,7 +160,7 @@ func Test_findItemPath(t *testing.T) {
 					- {group_id: 100, item_id: 10, can_view_generated: content}
 			`,
 			args: args{participantID: 100, itemID: 10},
-			want: []string{"1", "10"},
+			want: []items.ItemPath{{Path: []string{"1", "10"}, IsActive: false}},
 		},
 		{
 			name: "steps into child attempts for items requiring explicit entry",
@@ -184,7 +184,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 4, item_id: 22}
 			`,
 			args: args{participantID: 100, itemID: 23},
-			want: []string{"1", "2", "22", "23"},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: true}},
 		},
 		{
 			name: "supports paths starting with an item requiring explicit entry",
@@ -200,7 +200,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 103, attempt_id: 1, item_id: 22}
 			`,
 			args: args{participantID: 103, itemID: 23},
-			want: []string{"22", "23"},
+			want: []items.ItemPath{{Path: []string{"22", "23"}, IsActive: true}},
 		},
 		{
 			name: "can find a path without a result for the first item",
@@ -214,7 +214,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2}
 			`,
 			args: args{participantID: 101, itemID: 2},
-			want: []string{"1", "2"},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
 			name: "prefers the path for the last (by id) existing attempt chain with started results",
@@ -250,7 +250,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, itemID: 23},
-			want: []string{"1", "21", "22", "23"},
+			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsActive: true}},
 		},
 		{
 			name: "prefers the path for the attempt chain with the highest score",
@@ -285,7 +285,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, itemID: 23},
-			want: []string{"1", "2", "22", "23"},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: true}},
 		},
 		{
 			name: "prefers the path for the last (by id) attempt chain among all chains with started results for the same items",
@@ -324,7 +324,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 7, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, itemID: 23},
-			want: []string{"1", "21", "22", "23"},
+			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsActive: true}},
 		},
 		{
 			name: "get paths whose attempt chains have missing results for last item requiring explicit entry",
@@ -340,7 +340,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, itemID: 22},
-			want: []string{"1", "2", "22"},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: true}},
 		},
 		{
 			name: "ignores paths whose attempt chains have missing results for items requiring explicit entry for a non-last item",
@@ -375,7 +375,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 2, item_id: 22}
 			`,
 			args: args{participantID: 101, itemID: 22},
-			want: []string{"1", "2", "22"},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results below an attempt not allowing submissions for non-last item",
@@ -410,7 +410,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 2, item_id: 22}
 			`,
 			args: args{participantID: 101, itemID: 22},
-			want: []string{"1", "2", "22"},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results below an ended attempt for non-last item",
@@ -446,7 +446,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 101, attempt_id: 2, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, itemID: 23},
-			want: []string{"1", "2", "22", "23"},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: false}},
 		},
 		{
 			name: "get paths whose attempt chains have not started results for an attempt not allowing submissions for the last item",
@@ -460,7 +460,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 103, attempt_id: 1, item_id: 1}
 			`,
 			args: args{participantID: 103, itemID: 1},
-			want: []string{"1"},
+			want: []items.ItemPath{{Path: []string{"1"}, IsActive: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results for an attempt not allowing submissions for non-last item",
@@ -488,7 +488,7 @@ func Test_findItemPath(t *testing.T) {
 					- {participant_id: 103, attempt_id: 1, item_id: 1}
 			`,
 			args: args{participantID: 103, itemID: 1},
-			want: []string{"1"},
+			want: []items.ItemPath{{Path: []string{"1"}, IsActive: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results for an ended attempt for non-last item",
@@ -531,13 +531,13 @@ func Test_findItemPath(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(globalFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
-			var got []string
+			var got []items.ItemPath
 			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
 				assert.NoError(t, s.GroupGroups().After())
 				assert.NoError(t, s.ItemItems().After())
 				return nil
 			}))
-			got = items.FindItemPath(store, tt.args.participantID, tt.args.itemID)
+			got = items.FindItemPaths(store, tt.args.participantID, tt.args.itemID, true)
 			assert.Equal(t, tt.want, got)
 		})
 	}
