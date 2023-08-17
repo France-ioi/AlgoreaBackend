@@ -152,6 +152,13 @@ type itemResponse struct {
 //						 and the current user's (or the team's given in `{as_team_id}`) permissions on it
 //						 (from tables `items`, `items_string`, `permissions_generated`).
 //
+//						 `has_can_request_help_to` is returned both in `permissions` and `watched_group.permissions`.
+//						 If true, it means that for the current-user or the `watch_group` group,
+//						 respectively,
+//						 there is at least one permission in the aggregation by group
+//						 (on current-user's ancestors or `watched_group`'s ancestors respectively)
+//						 and item (on ancestors of `item_id`),
+//						 that has a `can_request_help_to` group set.
 //
 //						 * If the specified item is not visible by the current user (or the team given in `as_team_id`),
 //							 the 'not found' response is returned.
@@ -224,8 +231,20 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
+	hasCanRequestHelpTo := store.Items().HasCanRequestHelpTo(itemID, user.GroupID)
+	watchedGroupHasCanRequestHelpTo := false
+	if watchedGroupIDSet {
+		watchedGroupHasCanRequestHelpTo = store.Items().HasCanRequestHelpTo(itemID, watchedGroupID)
+	}
+
 	permissionGrantedStore := store.PermissionsGranted()
-	response := constructItemResponseFromDBData(rawData, permissionGrantedStore, watchedGroupIDSet)
+	response := constructItemResponseFromDBData(
+		rawData,
+		permissionGrantedStore,
+		watchedGroupIDSet,
+		hasCanRequestHelpTo,
+		watchedGroupHasCanRequestHelpTo,
+	)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -417,7 +436,11 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 }
 
 func constructItemResponseFromDBData(
-	rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore, watchedGroupIDSet bool,
+	rawData *rawItem,
+	permissionGrantedStore *database.PermissionGrantedStore,
+	watchedGroupIDSet bool,
+	hasCanRequestHelpTo bool,
+	watchedGroupHasCanRequestHelpTo bool,
 ) *itemResponse {
 	result := &itemResponse{
 		commonItemFields: rawData.asItemCommonFields(permissionGrantedStore),
@@ -440,6 +463,8 @@ func constructItemResponseFromDBData(
 		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
 	}
 
+	result.Permissions.HasCanRequestHelpTo = &hasCanRequestHelpTo
+
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
 		result.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
 			EduComment: rawData.StringEduComment,
@@ -460,6 +485,7 @@ func constructItemResponseFromDBData(
 		}
 		if rawData.CanViewWatchedGroupPermissions {
 			result.WatchedGroup.Permissions = rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore)
+			result.WatchedGroup.Permissions.HasCanRequestHelpTo = &watchedGroupHasCanRequestHelpTo
 		}
 	}
 

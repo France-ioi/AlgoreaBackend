@@ -1,5 +1,4 @@
 Feature: Get item view information
-
   Background:
     Given the database has the following table 'groups':
       | id | name       | grade | type  |
@@ -137,7 +136,8 @@ Feature: Get item view information
         "can_grant_view": "enter",
         "can_view": "solution",
         "can_watch": "result",
-        "is_owner": true
+        "is_owner": true,
+        "has_can_request_help_to": false
       }
     }
     """
@@ -190,7 +190,8 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
+        "is_owner": false,
+        "has_can_request_help_to": false
       }
     }
     """
@@ -242,7 +243,8 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "content_with_descendants",
         "can_watch": "none",
-        "is_owner": false
+        "is_owner": false,
+        "has_can_request_help_to": false
       }
     }
     """
@@ -299,7 +301,8 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
+        "is_owner": false,
+        "has_can_request_help_to": false
       }
     }
     """
@@ -356,7 +359,8 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
+        "is_owner": false,
+        "has_can_request_help_to": false
       }
     }
     """
@@ -408,7 +412,8 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "info",
         "can_watch": "none",
-        "is_owner": false
+        "is_owner": false,
+        "has_can_request_help_to": false
       }
     }
     """
@@ -465,7 +470,8 @@ Feature: Get item view information
         "can_grant_view": "enter",
         "can_view": "solution",
         "can_watch": "result",
-        "is_owner": true
+        "is_owner": true,
+        "has_can_request_help_to": false
       }
     }
     """
@@ -482,7 +488,7 @@ Feature: Get item view information
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
     And the template constant "permissions" is:
     """
-      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true}
+      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true, "has_can_request_help_to": false}
     """
     And the template constant "average_score" is:
     """
@@ -542,7 +548,8 @@ Feature: Get item view information
         "can_grant_view": "<expected_can_grant_view>",
         "can_view": "solution",
         "can_watch": "<can_watch_generated>",
-        "is_owner": false
+        "is_owner": false,
+        "has_can_request_help_to": false
       }
       <expected_watched_group_part>
     }
@@ -568,7 +575,7 @@ Feature: Get item view information
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
     And the template constant "permissions" is:
     """
-      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true}
+      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true, "has_can_request_help_to": false}
     """
     And the template constant "average_score" is:
     """
@@ -628,7 +635,8 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
+        "is_owner": false,
+        "has_can_request_help_to": false
       }
       <expected_watched_group_part>
     }
