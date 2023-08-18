@@ -42,13 +42,14 @@ type threadGetResponse struct {
 //
 //
 //		Restrictions:
-//			* one of these conditions matches:
+//			* one of these conditions must match:
 //				- the current-user is the thread participant and allowed to "can_view >= content" the item
 //				- the current-user has the "can_watch >= answer" permission on the item
 //				- the following rules all matches:
 //					* the current-user is descendant of the thread helper_group
 //					* the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
 //					* the current-user has validated the item
+//			Otherwise, a forbidden error is returned.
 //
 //	parameters:
 //		- name: item_id

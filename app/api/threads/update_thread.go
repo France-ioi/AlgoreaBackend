@@ -67,6 +67,15 @@ type updateThreadRequest struct {
 //				to write (see doc) (if `status` is given, checks related to status supersede this one).
 //			* at most one of `message_count_increment`, `message_count` must be given
 //
+//
+//		A forbidden error is returned when:
+//			* Trying to write to a thread, including changing its status, without having the rights to do so.
+//			* The provided `helper_group_id` doesn't match the restrictions.
+//
+//
+//		If the parameters given are inconsistent, a bad request error is returned with the reason of the error.
+//
+//
 //	parameters:
 //		- name: item_id
 //			in: path

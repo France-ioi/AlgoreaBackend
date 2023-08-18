@@ -90,6 +90,7 @@ type listThreadParameters struct {
 //		Validations:
 //			* if `watched_group_id` is given: the current-user must be (implicitly or explicitly) a manager
 //				with `can_watch_members` on `watched_group_id`.
+//				Otherwise, a forbidden error is returned.
 //
 //
 //		Extra:
