@@ -153,7 +153,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 
 type teamDescendantMember struct {
 	// required:true
-	GroupID int64 `json:"group_id"`
+	GroupID int64 `json:"group_id,string"`
 
 	*structures.UserPersonalInfo
 	ShowPersonalInfo bool `json:"-"`
