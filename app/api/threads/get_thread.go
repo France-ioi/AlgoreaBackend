@@ -8,21 +8,26 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // swagger:model threadGetResponse
 type threadGetResponse struct {
-	// required: true
+	// required:true
 	ParticipantID int64 `json:"participant_id,string"`
-	// required: true
+	// required:true
 	ItemID int64 `json:"item_id,string"`
-	// required: true
+	// required:true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
 	Status string `json:"status"`
-	// required: true
+	// The ThreadToken
+	// required:true
 	ThreadToken string `json:"token"`
+	// This field is not really present, it is here only to document the content of token.
+	// required:false
+	TokenForDoc *payloads.ThreadToken `json:"token_not_present_only_for_doc,omitempty"`
 }
 
 // swagger:operation GET /items/{item_id}/participant/{participant_id}/thread threads threadGet
