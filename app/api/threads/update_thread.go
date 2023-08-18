@@ -43,9 +43,12 @@ type updateThreadRequest struct {
 //
 //		Service to update thread information.
 //
+//
 //		If the thread doesn't exist, it is created.
 //
+//
 //		Once a thread has been created, it cannot be deleted or set back to `not_started`.
+//
 //
 //		Validations and restrictions:
 //			* if `status` is given:

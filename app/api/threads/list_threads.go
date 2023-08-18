@@ -68,9 +68,12 @@ type listThreadParameters struct {
 //
 //		Service to list the visible threads for a user.
 //
+//
 //		Exactly one of [`watched_group_id`, `is_mine`] is given.
 //
+//
 //		Only thread for which the item has can_view>=content for the current user are returned.
+//
 //
 //		* If `is_mine` = 1, only threads for which the participant is the current-user and for which the current-user has
 //			`can_view >= content` on the item are returned.
@@ -83,9 +86,11 @@ type listThreadParameters struct {
 //		* `first_name` and `last_name` are only returned for the current user, or if the user approved access to their personal
 //			info for some group managed by the current user.
 //
+//
 //		Validations:
 //			* if `watched_group_id` is given: the current-user must be (implicitly or explicitly) a manager
 //				with `can_watch_members` on `watched_group_id`.
+//
 //
 //		Extra:
 //			* By default, ordering is by `latest_update_at` DESC.

@@ -37,7 +37,9 @@ type threadGetResponse struct {
 //	description: >
 //		Retrieve a thread information.
 //
+//
 //		The `status` is `not_started` if the thread hasn't been started
+//
 //
 //		Restrictions:
 //			* one of these conditions matches:
