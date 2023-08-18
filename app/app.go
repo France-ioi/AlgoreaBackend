@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/render"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api"
@@ -17,6 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/version"
 )
 
@@ -75,6 +77,9 @@ func (app *Application) Reset(config *viper.Viper) error {
 		logging.WithField("module", "database").Error(err)
 		return err
 	}
+
+	// Set up responder.
+	render.Respond = service.AppResponder
 
 	// Set up middlewares
 	router := chi.NewRouter()

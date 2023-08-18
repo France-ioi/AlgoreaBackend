@@ -2,8 +2,12 @@ package service
 
 import (
 	"net/http"
+	"reflect"
+	"strings"
 
 	"github.com/go-chi/render"
+
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
 // Response is used for generating non-data responses, i.e. on error or on POST/PUT/PATCH/DELETE request.
@@ -63,4 +67,76 @@ func UnchangedSuccess(httpStatus int) render.Renderer {
 			"changed": false,
 		},
 	}
+}
+
+// AppResponder serializes the output of services.
+// Whenever in test env, it also checks that all int64/uint64 are serialized as strings,
+// otherwise, it breaks javascript that tries to convert them as floats.
+func AppResponder(w http.ResponseWriter, r *http.Request, v interface{}) {
+	if appenv.IsEnvTest() {
+		CheckInt64JsonHasStringTag(v)
+	}
+
+	render.DefaultResponder(w, r, v)
+}
+
+// CheckInt64JsonHasStringTag checks that all fields of obj, recursively,
+// which are int64/uint64, and are exported as JSON, also have the "string" tag.
+// Otherwise, it breaks javascript that tries to convert them as floats.
+// This function is only intended to be used in test env, and panics if the checks fail.
+func CheckInt64JsonHasStringTag(obj interface{}) {
+	checkInt64JsonHasStringTag(reflect.ValueOf(obj))
+}
+
+func checkInt64JsonHasStringTag(val reflect.Value) {
+	val = getElem(val)
+
+	switch {
+	case val.Kind() == reflect.Slice:
+		for j := 0; j < val.Len(); j++ {
+			checkInt64JsonHasStringTag(val.Index(j))
+		}
+	case val.Kind() == reflect.Map:
+		for _, k := range val.MapKeys() {
+			checkInt64JsonHasStringTag(val.MapIndex(k))
+		}
+	default:
+		checkInt64JsonHasStringTagInFields(val)
+	}
+}
+
+func checkInt64JsonHasStringTagInFields(val reflect.Value) {
+	if val.Kind() != reflect.Struct {
+		return
+	}
+
+	rt := val.Type()
+	for i := 0; i < val.NumField(); i++ {
+		fieldType := rt.Field(i)
+
+		panicIfInt64JsonHasStringTag(&fieldType)
+
+		valField := getElem(val.Field(i))
+		if valField.Kind() == reflect.Struct || valField.Kind() == reflect.Map || valField.Kind() == reflect.Slice {
+			checkInt64JsonHasStringTag(valField)
+		}
+	}
+}
+
+func panicIfInt64JsonHasStringTag(fieldType *reflect.StructField) {
+	name := fieldType.Name
+	typ := fieldType.Type.Name()
+	jsonTag := fieldType.Tag.Get("json")
+
+	if (typ == "int64" || typ == "uint64") && jsonTag != "" && jsonTag != "-" && !strings.Contains(jsonTag, ",string") {
+		panic(name + " is of type int64 but json metadata doesn't contain \",string\". This might break javascript.")
+	}
+}
+
+func getElem(val reflect.Value) reflect.Value {
+	if val.Kind() == reflect.Ptr || val.Kind() == reflect.Interface {
+		return val.Elem()
+	}
+
+	return val
 }
