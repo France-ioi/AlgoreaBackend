@@ -85,19 +85,19 @@ Feature: List team descendants of the group (groupTeamDescendantView)
             "grade": null,
             "last_name": "Baker",
             "login": "janeb",
-            "group_id": 63
+            "group_id": "63"
           },
           {
             "first_name": "Jane",
             "grade": 4,
             "last_name": null,
             "login": "janec",
-            "group_id": 65
+            "group_id": "65"
           },
           {
             "grade": -2,
             "login": "janed",
-            "group_id": 67
+            "group_id": "67"
           }
         ],
         "name": "First Team",
@@ -115,17 +115,17 @@ Feature: List team descendants of the group (groupTeamDescendantView)
           {
             "grade": 1,
             "login": "johna",
-            "group_id": 51
+            "group_id": "51"
           },
           {
             "grade": 2,
             "login": "johnb",
-            "group_id": 53
+            "group_id": "53"
           },
           {
             "grade": 3,
             "login": "johnc",
-            "group_id": 55
+            "group_id": "55"
           }
         ],
         "name": "Super Team",
@@ -155,19 +155,19 @@ Feature: List team descendants of the group (groupTeamDescendantView)
             "grade": null,
             "last_name": "Baker",
             "login": "janeb",
-            "group_id": 63
+            "group_id": "63"
           },
           {
             "first_name": "Jane",
             "grade": 4,
             "last_name": null,
             "login": "janec",
-            "group_id": 65
+            "group_id": "65"
           },
           {
             "grade": -2,
             "login": "janed",
-            "group_id": 67
+            "group_id": "67"
           }
         ],
         "name": "First Team",
@@ -195,17 +195,17 @@ Feature: List team descendants of the group (groupTeamDescendantView)
           {
             "grade": 1,
             "login": "johna",
-            "group_id": 51
+            "group_id": "51"
           },
           {
             "grade": 2,
             "login": "johnb",
-            "group_id": 53
+            "group_id": "53"
           },
           {
             "grade": 3,
             "login": "johnc",
-            "group_id": 55
+            "group_id": "55"
           }
         ],
         "name": "Super Team",
