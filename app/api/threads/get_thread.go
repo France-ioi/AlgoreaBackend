@@ -20,7 +20,8 @@ type threadGetResponse struct {
 	ItemID int64 `json:"item_id,string"`
 	// required: true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
-	Status      string `json:"status"`
+	Status string `json:"status"`
+	// required: true
 	ThreadToken string `json:"token"`
 }
 
