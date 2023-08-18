@@ -67,8 +67,8 @@ Feature: Get thread
     And the response body should be, in JSON:
       """
         {
-          "participant_id": 1,
-          "item_id": 21,
+          "participant_id": "1",
+          "item_id": "21",
           "status": "waiting_for_trainer",
           "token": "{{threadToken}}"
         }
