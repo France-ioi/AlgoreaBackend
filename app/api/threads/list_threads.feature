@@ -197,17 +197,19 @@ Feature: List threads
   Scenario: Should return only thread from item or descendant when item_id is given
     Given I am @John
     And there are the following items:
-      | item              | parent      | type    |
-      | @Root_Task        |             | Task    |
-      | @Chapter1         |             | Chapter |
-      | @Chapter1_Task    | @Chapter1   | Task    |
-      | @Chapter2         |             | Chapter |
-      | @Chapter2_Task    | @Chapter2   | Task    |
-      | @Chapter2_1       | @Chapter2   | Chapter |
-      | @Chapter2_1_Task1 | @Chapter2_1 | Task    |
-      | @Chapter2_1_Task2 | @Chapter2_1 | Task    |
-      | @Chapter3         |             | Chapter |
-    And there are the following threads:
+      | item              | parent                          | type    |
+      | @Root_Task        |                                 | Task    |
+      | @Chapter1         |                                 | Chapter |
+      | @Chapter1_Task    | @Chapter1                       | Task    |
+      | @ChapterRoot_2A   |                                 | Chapter |
+      | @ChapterRoot_2B   |                                 | Chapter |
+      | @Chapter2         | @Chapter_Root_2,@ChapterRoot_2B | Chapter |
+      | @Chapter2_Task    | @Chapter2                       | Task    |
+      | @Chapter2_1       | @Chapter2                       | Chapter |
+      | @Chapter2_1_Task1 | @Chapter2_1                     | Task    |
+      | @Chapter2_1_Task2 | @Chapter2_1                     | Task    |
+      | @Chapter3         |                                 | Chapter |
+      And there are the following threads:
       | participant | item              | visible_by_participant | message_count |
       | @John       | @Root_Task        | 1                      | 100           |
       | @John       | @Chapter1         | 1                      | 101           |
