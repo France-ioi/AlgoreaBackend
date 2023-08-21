@@ -663,7 +663,11 @@ func (ctx *TestContext) ThereAreTheFollowingItems(items *messages.PickleStepArgu
 		})
 
 		if _, ok := item["parent"]; ok {
-			ctx.addItemItem(item["parent"], item["item"])
+			parents := strings.Split(item["parent"], ",")
+
+			for _, parent := range parents {
+				ctx.addItemItem(parent, item["item"])
+			}
 		}
 	}
 
