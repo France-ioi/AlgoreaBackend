@@ -236,6 +236,7 @@ func (srv *Service) constructListThreadsQuery(r *http.Request, params listThread
 		JoinsUserAndDefaultItemStrings(user).
 		WithPersonalInfoViewApprovals(user).
 		Select(`
+			DISTINCT
 			items.id AS item__id,
 			items.type AS item__type,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS item__language_tag,
