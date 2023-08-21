@@ -69,8 +69,7 @@ type groupParticipantProgressResponseChild struct {
 // swagger:model groupParticipantProgressResponse
 type groupParticipantProgressResponse struct {
 	// required: true
-	Item groupParticipantProgressResponseCommon `json:"item"`
-	// required: true
+	Item     groupParticipantProgressResponseCommon   `json:"item"`
 	Children *[]groupParticipantProgressResponseChild `json:"children,omitempty"`
 }
 
