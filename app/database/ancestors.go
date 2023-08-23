@@ -10,6 +10,13 @@ const groups = "groups"
 // the objectName_ancestors table (items_ancestors or groups_ancestors)
 // for all rows marked with ancestors_computation_state="todo" in objectName_propagate
 // (items_propagate or groups_propagate) and their descendants.
+//
+// Note: rows in *_propagate tables with `ancestors_computation_state`="todo"
+// are added in the database in SQL triggers:
+// - after_insert_items/groups
+// - after_update_groups_groups
+// - before_insert_items_items/groups_groups
+// - before_delete_items_items/groups_groups.
 func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /* #nosec */
 	s.mustBeInTransaction()
 

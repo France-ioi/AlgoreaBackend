@@ -23,6 +23,13 @@ const (
 //     latest_activity_at, tasks_tried, tasks_with_help, validated_at.
 //     This step is repeated until no records are updated.
 //  3. We insert new permissions_granted for each unlocked item according to corresponding item_dependencies.
+//
+// The `results_propagation` rows are marked in code as well as in the following SQL Triggers:
+// - after_insert_groups_groups/items_items
+// - after_insert_permissions_generated
+// - after_update_groups_groups/items_items
+// - after_update_permissions_generated
+// - before_delete_items_items
 func (s *ResultStore) propagate() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
