@@ -18,6 +18,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the database table \'([\w\-_]*)\' has also the following rows?:$`, ctx.DBHasTable)
 	s.Step(`^the database has the following users:$`, ctx.DBHasUsers)
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
+	s.Step(`^the items, permissions and results are propagated$`, ctx.PropagateItemsPermissionsResults)
 
 	s.Step(`^I am (@\w+)$`, ctx.IAm)
 	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)

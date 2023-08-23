@@ -41,6 +41,7 @@ Feature: Create item
         "parent": {"item_id": "21"}
       }
       """
+    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -91,6 +92,7 @@ Feature: Create item
         "as_root_of_group_id": "10"
       }
       """
+    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -151,6 +153,7 @@ Feature: Create item
         "children": [{"item_id": "12", "order": 0}]
       }
       """
+    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -213,7 +216,7 @@ Feature: Create item
       | 11       | 1002    | content_with_descendants | enter          | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 1003    | content_with_descendants | content        | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 1004    | content_with_descendants | enter          | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
-      When I send a POST request to "/items" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Skill",
@@ -231,6 +234,7 @@ Feature: Create item
         ]
       }
       """
+    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -315,6 +319,7 @@ Feature: Create item
         ]
       }
       """
+    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -410,6 +415,7 @@ Feature: Create item
       ]
     }
     """
+    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
     """

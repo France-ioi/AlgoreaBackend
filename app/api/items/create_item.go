@@ -615,7 +615,6 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
 		insertItemItems(store, parentChildSpec)
 	}
-	service.MustNotBeError(store.ItemItems().After())
 
 	return itemID, service.NoError
 }

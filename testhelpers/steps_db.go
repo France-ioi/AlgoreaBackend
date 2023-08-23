@@ -213,6 +213,11 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 	return nil
 }
 
+// PropagateItemsPermissionsResults calls the propagation of items, permissions, and results.
+func (ctx *TestContext) PropagateItemsPermissionsResults() error {
+	return ctx.DBItemsAncestorsAndPermissionsAreComputed()
+}
+
 // DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
 func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 	gormDB, err := database.Open(ctx.db())
