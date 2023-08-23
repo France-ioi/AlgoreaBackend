@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
@@ -12,6 +13,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
+)
+
+const (
+	propagationLockName    = "listener_propagate"
+	propagationLockTimeout = 600 * time.Second
 )
 
 func init() { //nolint:gochecknoinits
@@ -55,8 +61,11 @@ func init() { //nolint:gochecknoinits
 			}
 
 			// Propagation.
-			err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-				return store.ItemItems().After()
+			// We use a lock because we don't want this process to be called concurrently.
+			err = database.NewDataStore(gormDB).WithNamedLock(propagationLockName, propagationLockTimeout, func(s *database.DataStore) error {
+				return s.InTransaction(func(store *database.DataStore) error {
+					return store.ItemItems().After()
+				})
 			})
 			if err != nil {
 				fmt.Println("Error while doing propagation: ", err)
