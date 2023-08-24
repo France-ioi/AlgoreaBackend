@@ -156,6 +156,19 @@ func (app *Application) CheckConfig() error {
 			}
 		}
 	}
+
+	// There must be an entry in propagations table with id 1 to handle propagation.
+	propagationStore := database.NewDataStore(app.Database).Propagations()
+	hasRows, err := propagationStore.
+		Where("propagation_id = 1").
+		Select("1").Limit(1).HasRows()
+	if err != nil {
+		return err
+	}
+	if !hasRows {
+		return fmt.Errorf("missing entry in propagations table with id 1")
+	}
+
 	return nil
 }
 

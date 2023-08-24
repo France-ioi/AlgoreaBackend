@@ -280,12 +280,17 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 		exists bool
 		error  bool
 	}
+	type propagationSpec struct {
+		exists bool
+		error  bool
+	}
 
 	tests := []struct {
 		name                     string
 		config                   []domain.ConfigItem
 		expectedGroupsToCheck    []groupSpec
 		expectedRelationsToCheck []relationSpec
+		propagationID1           *propagationSpec
 		expectedError            error
 	}{
 		{
@@ -310,6 +315,7 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 6, ChildID: 8}, exists: true},
 			},
+			propagationID1: &propagationSpec{exists: true},
 		},
 		{
 			name: "AllUsers is missing",
@@ -322,7 +328,8 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 			expectedGroupsToCheck: []groupSpec{
 				{id: 2},
 			},
-			expectedError: errors.New("no AllUsers group for domain \"192.168.0.1\""),
+			propagationID1: nil,
+			expectedError:  errors.New("no AllUsers group for domain \"192.168.0.1\""),
 		},
 		{
 			name: "TempUsers is missing",
@@ -336,7 +343,8 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 				{id: 2, exists: true},
 				{id: 4},
 			},
-			expectedError: errors.New("no TempUsers group for domain \"127.0.0.1\""),
+			propagationID1: nil,
+			expectedError:  errors.New("no TempUsers group for domain \"127.0.0.1\""),
 		},
 		{
 			name: "AllUsers -> TempUsers relation is missing",
@@ -353,7 +361,13 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
-			expectedError: errors.New("no AllUsers -> TempUsers link in groups_groups for domain \"127.0.0.1\""),
+			propagationID1: nil,
+			expectedError:  errors.New("no AllUsers -> TempUsers link in groups_groups for domain \"127.0.0.1\""),
+		},
+		{
+			name:           "propagation with id=1 is missing",
+			propagationID1: &propagationSpec{exists: false},
+			expectedError:  errors.New("missing entry in propagations table with id 1"),
 		},
 		{
 			name: "error on group checking",
@@ -366,7 +380,8 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 			expectedGroupsToCheck: []groupSpec{
 				{id: 2, error: true},
 			},
-			expectedError: errors.New("some error"),
+			propagationID1: nil,
+			expectedError:  errors.New("some error"),
 		},
 		{
 			name: "error on relation checking",
@@ -383,7 +398,13 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, error: true},
 			},
-			expectedError: errors.New("some error"),
+			propagationID1: nil,
+			expectedError:  errors.New("some error"),
+		},
+		{
+			name:           "error on propagation entry checking",
+			propagationID1: &propagationSpec{error: true},
+			expectedError:  errors.New("some error"),
 		},
 	}
 	for _, tt := range tests {
@@ -428,11 +449,29 @@ func TestApplication_CheckConfig(t *testing.T) { //nolint:gocognit Should be ref
 					}
 				}
 			}
-			config := viper.New()
-			config.Set(domainsConfigKey, tt.config)
+
+			// Propagation.
+			if tt.propagationID1 != nil {
+				queryMock := mock.ExpectQuery("^" + regexp.QuoteMeta(
+					"SELECT 1 FROM `propagations`  WHERE (propagation_id = 1) LIMIT 1",
+				) + "$")
+				if !tt.propagationID1.error {
+					rowsToReturn := mock.NewRows([]string{"1"})
+					if tt.propagationID1.exists {
+						rowsToReturn.AddRow(1)
+					}
+					queryMock.WillReturnRows(rowsToReturn)
+				} else {
+					expectedError = errors.New("some error")
+					queryMock.WillReturnError(expectedError)
+				}
+			}
+
+			conf := viper.New()
+			conf.Set(domainsConfigKey, tt.config)
 
 			app := &Application{
-				Config:   config,
+				Config:   conf,
 				Database: db,
 			}
 			err := app.CheckConfig()
