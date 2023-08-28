@@ -29,7 +29,7 @@ const (
 // - after_insert_permissions_generated
 // - after_update_groups_groups/items_items
 // - after_update_permissions_generated
-// - before_delete_items_items
+// - before_delete_items_items.
 func (s *ResultStore) propagate() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
