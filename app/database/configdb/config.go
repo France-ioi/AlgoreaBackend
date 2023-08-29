@@ -22,9 +22,8 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 			{name: "TempUsers", id: domainConfig.TempUsersGroup},
 		} {
 			hasRows, err := groupStore.ByID(spec.id).HasRows()
-			if err != nil {
-				return err
-			}
+			mustNotBeError(err)
+
 			if !hasRows {
 				return fmt.Errorf("no %s group for domain %q", spec.name, domainConfig.Domains[0])
 			}
@@ -42,9 +41,8 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 				Where("parent_group_id = ?", spec.parentID).
 				Where("child_group_id = ?", spec.childID).
 				Select("1").Limit(1).HasRows()
-			if err != nil {
-				return err
-			}
+			mustNotBeError(err)
+
 			if !hasRows {
 				return fmt.Errorf("no %s -> %s link in groups_groups for domain %q",
 					spec.parentName, spec.childName, domainConfig.Domains[0])
@@ -57,9 +55,8 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 	hasRows, err := propagationStore.
 		Where("propagation_id = 1").
 		Select("1").Limit(1).HasRows()
-	if err != nil {
-		return err
-	}
+	mustNotBeError(err)
+
 	if !hasRows {
 		return fmt.Errorf("missing entry in propagations table with id 1")
 	}
