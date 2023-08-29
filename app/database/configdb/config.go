@@ -53,7 +53,7 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 	// There must be an entry in propagations table with id 1 to handle propagation.
 	propagationStore := datastore.Propagations()
 	hasRows, err := propagationStore.
-		Where("propagation_id = 1").
+		ByID(database.PropagationID).
 		Select("1").Limit(1).HasRows()
 	mustNotBeError(err)
 
@@ -139,7 +139,7 @@ func insertPropagations(datastore *database.DataStore) {
 	propagationStore := datastore.Propagations()
 
 	found, err := propagationStore.
-		Where("propagation_id = ?", database.PropagationID).
+		ByID(database.PropagationID).
 		Limit(1).
 		HasRows()
 	mustNotBeError(err)

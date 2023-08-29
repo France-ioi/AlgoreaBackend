@@ -80,6 +80,21 @@ func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgume
 
 // populateDatabase populate the database with all the initialized data.
 func (ctx *TestContext) populateDatabase() error {
+	db, err := database.Open(ctx.db())
+	if err != nil {
+		return err
+	}
+
+	// We create the required entry in propagations table to handle propagation.
+	// It would be better to call configdb.CreateMissingData()
+	// But doing this will require some refactoring because it induces a circular dependency: configdb->testhelpers->configdb.
+	err = database.NewDataStore(db).InsertIgnoreMaps("propagations", []map[string]interface{}{{
+		"propagation_id": 1,
+	}})
+	if err != nil {
+		return err
+	}
+
 	// We cannot run this for older tests because we're computing the tables permissions_generated and item_ancestors.
 	// Older tests define those tables manually with inconsistencies, and then check that the content of those tables is
 	// still in the same inconsistent state.
@@ -87,11 +102,6 @@ func (ctx *TestContext) populateDatabase() error {
 	// We would then just have to remove the ctx.needPopulateDatabase boolean completely.
 	if !ctx.needPopulateDatabase {
 		return nil
-	}
-
-	db, err := database.Open(ctx.db())
-	if err != nil {
-		return err
 	}
 
 	// add all the defined table rows in the database.
