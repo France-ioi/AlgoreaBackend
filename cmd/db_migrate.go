@@ -4,10 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
+	"gopkg.in/gorp.v1"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
@@ -49,7 +52,7 @@ func init() { //nolint:gochecknoinits
 			var applied int
 			for {
 				var n int
-				n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Up, 1)
+				n, err = ExecMax(db, "mysql", migrations, migrate.Up, 1)
 				if err != nil {
 					fmt.Println("\nUnable to apply migration:", err)
 					os.Exit(1)
@@ -100,4 +103,101 @@ func recomputeDBCaches(gormDB *database.DB) error {
 		assertNoError(store.ItemItems().After(), "Cannot compute items_items") // calls createNewAncestors() & computeAllAccess()
 		return nil
 	})
+}
+
+// ExecMax has been copied from the package sql-migrate.
+// We need to change a variable inside the *.sql by a value in the config: the call to AWS Lambda for propagation.
+//
+// It would be better not to copy it like this, but do we have other options?
+//
+//nolint:gocognit,gocyclo
+func ExecMax(db *sql.DB, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection, max int) (int, error) {
+	awsAuroraPropagationTrigger := app.LoadConfig().GetString("database.aws_aurora_propagation_trigger")
+
+	migrations, dbMap, err := migrate.PlanMigration(db, dialect, m, dir, max)
+	if err != nil {
+		return 0, err
+	}
+
+	// Apply migrations
+	applied := 0
+	for _, migration := range migrations {
+		var executor migrate.SqlExecutor
+
+		if migration.DisableTransaction {
+			executor = dbMap
+		} else {
+			executor, err = dbMap.Begin()
+			if err != nil {
+				return applied, &migrate.TxError{
+					Migration: migration.Migration,
+					Err:       err,
+				}
+			}
+		}
+
+		for _, stmt := range migration.Queries {
+			// Here we replace our custom variable.
+			stmt = strings.Replace(stmt, "-- %%aws_aurora_propagation_trigger%%", awsAuroraPropagationTrigger, -1)
+
+			//nolint:govet
+			if _, err := executor.Exec(stmt); err != nil {
+				if trans, ok := executor.(*gorp.Transaction); ok {
+					_ = trans.Rollback()
+				}
+
+				return applied, &migrate.TxError{
+					Migration: migration.Migration,
+					Err:       err,
+				}
+			}
+		}
+
+		switch dir {
+		case migrate.Up:
+			err = executor.Insert(&migrate.MigrationRecord{
+				Id:        migration.Id,
+				AppliedAt: time.Now(),
+			})
+			if err != nil {
+				if trans, ok := executor.(*gorp.Transaction); ok {
+					_ = trans.Rollback()
+				}
+
+				return applied, &migrate.TxError{
+					Migration: migration.Migration,
+					Err:       err,
+				}
+			}
+		case migrate.Down:
+			_, err := executor.Delete(&migrate.MigrationRecord{
+				Id: migration.Id,
+			})
+			if err != nil {
+				if trans, ok := executor.(*gorp.Transaction); ok {
+					_ = trans.Rollback()
+				}
+
+				return applied, &migrate.TxError{
+					Migration: migration.Migration,
+					Err:       err,
+				}
+			}
+		default:
+			panic("Not possible")
+		}
+
+		if trans, ok := executor.(*gorp.Transaction); ok {
+			if err := trans.Commit(); err != nil {
+				return applied, &migrate.TxError{
+					Migration: migration.Migration,
+					Err:       err,
+				}
+			}
+		}
+
+		applied++
+	}
+
+	return applied, nil
 }

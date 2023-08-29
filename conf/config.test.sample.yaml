@@ -1,2 +1,3 @@
 database:
   dbname: algorea_db
+  aws_aurora_propagation_trigger: "-- disabled"

@@ -22,6 +22,7 @@ database:
   net: tcp
   #dbname: algorea_db
   allownativepasswords: true
+  aws_aurora_propagation_trigger: "lambda_async('arn:aws:lambda:REGION:ACCOUNT_ID:function:Propagate', '{}');"
 logging:
   format: text # text, json
   output: stdout # stdout, stderr, file

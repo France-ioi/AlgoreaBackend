@@ -11,8 +11,8 @@ CREATE TABLE `propagations` (
 CREATE TRIGGER `before_update_propagation` BEFORE UPDATE ON `propagations` FOR EACH ROW
 BEGIN
   IF OLD.propagate = 0 THEN
-    # This must be set on AWS Aurora.
-    -- lambda_async('arn:aws:lambda:REGION:ACCOUNT_ID:function:Propagate', '{}');
+    # The following line is replaced by the config value of database.aws_aurora_propagation_trigger.
+    -- %%aws_aurora_propagation_trigger%%
 
     -- Is incremented only when a propagation is scheduled and no propagation is scheduled yet.
     -- Used to test that we don't call the Lambda Trigger when not needed.
