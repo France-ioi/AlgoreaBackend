@@ -9,6 +9,8 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/database/configdb"
 )
 
 // nolint:gosec
@@ -27,14 +29,17 @@ do not exist or have missing relations, creates them all
 
 			appenv.SetDefaultEnv("dev")
 
-			var application *app.Application
-			var err error
-			application, err = app.New()
+			application, err := app.New()
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			err = application.CreateMissingData()
+			domainsConfig, err := app.DomainsConfig(application.Config)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = configdb.CreateMissingData(database.NewDataStore(application.Database), domainsConfig)
 			if err != nil {
 				log.Fatal(err)
 			}

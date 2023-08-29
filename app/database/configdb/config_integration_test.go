@@ -119,3 +119,71 @@ propagations:
 		})
 	}
 }
+
+func TestCreateMissingData_Integration(t *testing.T) {
+	tests := []struct {
+		name                  string
+		config                []domain.ConfigItem
+		fixtures              string
+		checkConfigPassBefore bool
+	}{
+		{
+			name: "nothing to insert, everything already exists",
+			config: []domain.ConfigItem{
+				{
+					Domains:       []string{"127.0.0.1"},
+					AllUsersGroup: 2, TempUsersGroup: 4,
+				},
+			},
+			fixtures: `
+groups:
+	- {id: 2, type: "Base", name: "AllUsers", text_id: "AllUsers"}
+	- {id: 4, type: "Base", name: "TempUsers", text_id: "TempUsers"}
+groups_groups:
+	- {parent_group_id: 2, child_group_id: 4}
+propagations:
+	- {propagation_id: 1}
+			`,
+			checkConfigPassBefore: true,
+		},
+		{
+			name: "create all rows, nothing exists yet",
+			config: []domain.ConfigItem{
+				{
+					Domains:       []string{"127.0.0.1"},
+					AllUsersGroup: 2, TempUsersGroup: 4,
+				},
+			},
+			checkConfigPassBefore: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixtureString(tt.fixtures)
+			defer func() { _ = db.Close() }()
+
+			conf := viper.New()
+			conf.Set("domains", tt.config)
+
+			domainConfig, err := app.DomainsConfig(conf)
+			assertlib.NoError(t, err)
+
+			// Verify that CheckConfig() passes or fails as expected before we call CreateMissingData().
+			errCheckConfigBefore := CheckConfig(database.NewDataStore(db), domainConfig)
+			if tt.checkConfigPassBefore {
+				assertlib.NoError(t, errCheckConfigBefore)
+			} else {
+				assertlib.Error(t, errCheckConfigBefore)
+			}
+
+			err = CreateMissingData(database.NewDataStore(db), domainConfig)
+			assertlib.NoError(t, err)
+
+			// Once CreateMissingData() have been called, CheckConfig() should pass.
+			err = CheckConfig(database.NewDataStore(db), domainConfig)
+			assertlib.NoError(t, err)
+		})
+	}
+}

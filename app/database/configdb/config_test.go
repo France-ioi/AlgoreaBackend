@@ -13,6 +13,15 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 )
 
+func Test_mustNotBeError(t *testing.T) {
+	mustNotBeError(nil)
+
+	expectedError := errors.New("some error")
+	assertlib.PanicsWithValue(t, expectedError, func() {
+		mustNotBeError(expectedError)
+	})
+}
+
 //nolint:gocyclo
 func TestCheckConfig(t *testing.T) { //nolint:gocognit Should be refactored.
 	type relationSpec struct {

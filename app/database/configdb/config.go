@@ -66,3 +66,97 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 
 	return nil
 }
+
+// CreateMissingData fills the database with required data (if missing).
+func CreateMissingData(datastore *database.DataStore, domainsConfig []domain.ConfigItem) error {
+	return datastore.InTransaction(func(store *database.DataStore) error {
+		return insertRootGroupsAndRelations(store, domainsConfig)
+	})
+}
+
+func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []domain.ConfigItem) error {
+	groupStore := store.Groups()
+	groupGroupStore := store.GroupGroups()
+	var relationsToCreate []map[string]interface{}
+	var inserted bool
+	for _, domainConfig := range domainsConfig {
+		domainConfig := domainConfig
+		insertedForDomain := insertRootGroups(groupStore, &domainConfig)
+		inserted = inserted || insertedForDomain
+		for _, spec := range []map[string]interface{}{
+			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.TempUsersGroup},
+		} {
+			found, err := groupGroupStore.
+				Where("parent_group_id = ?", spec["parent_group_id"]).
+				Where("child_group_id = ?", spec["child_group_id"]).
+				Limit(1).
+				HasRows()
+			mustNotBeError(err)
+
+			if !found {
+				relationsToCreate = append(relationsToCreate, spec)
+			}
+		}
+	}
+
+	insertPropagations(store)
+
+	if len(relationsToCreate) > 0 || inserted {
+		return groupStore.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+	}
+
+	return nil
+}
+
+func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.ConfigItem) bool {
+	var inserted bool
+	for _, spec := range []struct {
+		name string
+		id   int64
+	}{
+		{name: "AllUsers", id: domainConfig.AllUsersGroup},
+		{name: "TempUsers", id: domainConfig.TempUsersGroup},
+	} {
+		found, err := groupStore.
+			ByID(spec.id).
+			Where("type = 'Base'").
+			Where("name = ?", spec.name).
+			Where("text_id = ?", spec.name).
+			Limit(1).
+			HasRows()
+		mustNotBeError(err)
+
+		if !found {
+			err = groupStore.InsertMap(map[string]interface{}{
+				"id": spec.id, "type": "Base", "name": spec.name, "text_id": spec.name,
+			})
+			mustNotBeError(err)
+
+			inserted = true
+		}
+	}
+	return inserted
+}
+
+func insertPropagations(datastore *database.DataStore) {
+	propagationStore := datastore.Propagations()
+
+	found, err := propagationStore.
+		Where("propagation_id = ?", database.PropagationID).
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	if !found {
+		err = propagationStore.InsertMap(map[string]interface{}{
+			"propagation_id": database.PropagationID,
+		})
+		mustNotBeError(err)
+	}
+}
+
+func mustNotBeError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
