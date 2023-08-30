@@ -189,7 +189,7 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 			breadcrumb = append(breadcrumb, breadcrumbElement{ID: idInt64})
 		}
 		breadcrumbs = append(breadcrumbs, breadcrumbPath{
-			StartedByParticipant: itemPath.IsActive,
+			StartedByParticipant: itemPath.IsStarted,
 			Path:                 breadcrumb,
 		})
 	}

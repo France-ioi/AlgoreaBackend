@@ -17,12 +17,12 @@ type ItemPath struct {
 	// required:true
 	Path []string `json:"path"`
 	// required:true
-	IsActive bool `json:"is_active"`
+	IsStarted bool `json:"is_started"`
 }
 
 type rawItemPath struct {
-	Path     string `json:"path"`
-	IsActive bool   `json:"is_active"`
+	Path      string `json:"path"`
+	IsStarted bool   `json:"is_started"`
 }
 
 // swagger:operation GET /items/{item_id}/path-from-root items itemPathFromRootFind
@@ -196,12 +196,13 @@ func FindItemPaths(
 						 FROM item_ancestors
 									JOIN root_items ON root_items.id = item_ancestors.id)
 				),
-				paths (path, last_item_id, last_attempt_id, score, attempts, is_active) AS (
+				paths (path, last_item_id, last_attempt_id, score, attempts, is_started, is_active) AS (
 					(SELECT CAST(root_ancestors.id AS CHAR(1024)),
 								  root_ancestors.id,
 							 	  attempts.id,
 								  results.started_at IS NULL,
 								  CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)),
+								  results.started_at IS NOT NULL,
 								  attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 						 FROM root_ancestors
 								  LEFT JOIN attempts
@@ -226,6 +227,7 @@ func FindItemPaths(
 								  attempts.id,
 								  (paths.score << 1) + (results.started_at IS NULL),
 								  CONCAT(paths.attempts, '/', LPAD(attempts.id, 20, 0)),
+								  paths.is_started AND results.started_at IS NOT NULL,
 								  paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 						 FROM paths
 								  JOIN items_items ON items_items.parent_item_id = paths.last_item_id
@@ -251,7 +253,7 @@ func FindItemPaths(
 						 )
 				  )
 				)
-			SELECT path, is_active FROM paths
+			SELECT path, is_started FROM paths
 			 WHERE paths.last_item_id = ?
 			 ORDER BY score, attempts DESC
 			 `+limitStatement,
@@ -284,8 +286,8 @@ func FindItemPaths(
 		}
 
 		itemPaths = append(itemPaths, ItemPath{
-			Path:     strings.Split(itemPathRow.Path, "/"),
-			IsActive: itemPathRow.IsActive,
+			Path:      strings.Split(itemPathRow.Path, "/"),
+			IsStarted: itemPathRow.IsStarted,
 		})
 
 		pathAdded[itemPathRow.Path] = true
