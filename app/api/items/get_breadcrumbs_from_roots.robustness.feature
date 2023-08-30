@@ -3,6 +3,7 @@ Feature: Find all breadcrumbs to an item - robustness
     Given the database has the following table 'groups':
       | id  | type  | root_activity_id | root_skill_id |
       | 90  | Class | 10               | null          |
+      | 91  | Other | 50               | null          |
       | 101 | User  | null             | null          |
       | 102 | Team  | 60               | null          |
       | 111 | User  | null             | null          |

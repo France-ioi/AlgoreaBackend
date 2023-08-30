@@ -70,7 +70,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsStarted: false}},
 		},
 		{
 			name: "supports a root skill as a first item",
@@ -86,7 +86,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"3", "4"}, IsStarted: false}},
 		},
 		{
 			name: "supports a root activity of a managed group as a first item",
@@ -107,7 +107,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsStarted: false}},
 		},
 		{
 			name: "supports a root skill of a managed group as a first item",
@@ -128,7 +128,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"3", "4"}, IsStarted: false}},
 		},
 		{
 			name: "supports a root activity of a group managed by an ancestor as a first item",
@@ -150,7 +150,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsStarted: false}},
 		},
 		{
 			name: "supports a root skill of a group managed by an ancestor as a first item",
@@ -172,7 +172,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"3", "4"}, IsStarted: false}},
 		},
 		{
 			name: "supports permissions given directly",
@@ -188,7 +188,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsStarted: false}},
 		},
 		{
 			name: "should return the element if it's the only one with explicit entry and without started result",
@@ -209,7 +209,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"10"}, IsActive: false}},
+			want: []items.ItemPath{{Path: []string{"10"}, IsStarted: false}},
 		},
 		{
 			name: "should return the path if the last element has explicit entry and no started result",
@@ -229,7 +229,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "10"}, IsActive: false}},
+			want: []items.ItemPath{{Path: []string{"1", "10"}, IsStarted: false}},
 		},
 		{
 			name: "steps into child attempts for items requiring explicit entry",
@@ -259,7 +259,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsStarted: false}},
 		},
 		{
 			name: "supports paths starting with an item requiring explicit entry",
@@ -281,7 +281,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"22", "23"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"22", "23"}, IsStarted: false}},
 		},
 		{
 			name: "can find a path without a result for the first item",
@@ -301,7 +301,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2"}, IsStarted: false}},
 		},
 		{
 			name: "prefers the path for the last (by id) existing attempt chain with started results",
@@ -343,7 +343,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsStarted: false}},
 		},
 		{
 			name: "prefers the path for the attempt chain with the highest score",
@@ -384,7 +384,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsStarted: false}},
 		},
 		{
 			name: "prefers the path for the last (by id) attempt chain among all chains with started results for the same items",
@@ -429,7 +429,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsStarted: false}},
 		},
 		{
 			name: "get paths whose attempt chains have missing results for last item requiring explicit entry",
@@ -451,7 +451,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: true}},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have missing results for items requiring explicit entry for a non-last item",
@@ -498,7 +498,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: false}},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results below an attempt not allowing submissions for non-last item",
@@ -545,7 +545,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: false}},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results below an ended attempt for non-last item",
@@ -593,7 +593,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: false}},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsStarted: false}},
 		},
 		{
 			name: "get paths whose attempt chains have not started results for an attempt not allowing submissions for the last item",
@@ -613,7 +613,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1"}, IsActive: false}},
+			want: []items.ItemPath{{Path: []string{"1"}, IsStarted: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results for an attempt not allowing submissions for non-last item",
@@ -653,7 +653,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				pathRootBy:    items.PathRootParticipant,
 				limit:         1,
 			},
-			want: []items.ItemPath{{Path: []string{"1"}, IsActive: false}},
+			want: []items.ItemPath{{Path: []string{"1"}, IsStarted: false}},
 		},
 		{
 			name: "ignores paths whose attempt chains have not started results for an ended attempt for non-last item",
@@ -694,8 +694,8 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					attempts:
 						- {participant_id: 103, id: 0}
 					results:
-						- {participant_id: 103, attempt_id: 0, item_id: 100}
-						- {participant_id: 103, attempt_id: 0, item_id: 101}
+						- {participant_id: 103, attempt_id: 0, item_id: 100, started_at: 2020-01-01 01:01:01}
+						- {participant_id: 103, attempt_id: 0, item_id: 101, started_at: 2020-01-01 01:01:01}
 				`,
 			args: args{
 				participantID: 103,
@@ -705,8 +705,8 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				limit:         0,
 			},
 			want: []items.ItemPath{
-				{Path: []string{"101"}, IsActive: true},
-				{Path: []string{"100", "101"}, IsActive: true},
+				{Path: []string{"100", "101"}, IsStarted: true},
+				{Path: []string{"101"}, IsStarted: true},
 			},
 		},
 		{
@@ -728,8 +728,8 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					attempts:
 						- {participant_id: 103, id: 0}
 					results:
-						- {participant_id: 103, attempt_id: 0, item_id: 100}
-						- {participant_id: 103, attempt_id: 0, item_id: 101}
+						- {participant_id: 103, attempt_id: 0, item_id: 100, started_at: 2020-01-01 01:01:01}
+						- {participant_id: 103, attempt_id: 0, item_id: 101, started_at: 2020-01-01 01:01:01}
 				`,
 			args: args{
 				participantID: 103,
@@ -739,7 +739,7 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				limit:         1,
 			},
 			want: []items.ItemPath{
-				{Path: []string{"101"}, IsActive: true},
+				{Path: []string{"100", "101"}, IsStarted: true},
 			},
 		},
 	}

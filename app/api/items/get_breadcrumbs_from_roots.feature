@@ -166,7 +166,7 @@ Feature: Find all breadcrumbs to an item
       """
       [
         {
-          "started_by_participant": true,
+          "started_by_participant": false,
           "path": [
             {"id": "1010", "title": "Chapter 1", "language_tag": "en", "type": "Chapter"},
             {"id": "1011", "title": "Chapter 2", "language_tag": "en", "type": "Chapter"},
