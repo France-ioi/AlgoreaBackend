@@ -16,6 +16,9 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 	type args struct {
 		participantID int64
 		itemID        int64
+		user          *database.User
+		pathRootBy    items.PathRootType // items.PathRootUser is tested in get_breadcrumb_from_roots.feature.
+		limit         int
 	}
 	tests := []struct {
 		name    string
@@ -30,7 +33,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {group_id: 200, item_id: 1, can_view_generated: info}
 					- {group_id: 200, item_id: 2, can_view_generated: info}
 			`,
-			args: args{participantID: 101, itemID: 2},
+			args: args{
+				participantID: 101,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 		},
 		{
 			name: "fails if not enough permissions for the second item",
@@ -39,7 +48,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {group_id: 200, item_id: 1, can_view_generated: content}
 					- {group_id: 200, item_id: 2, can_view_generated: none}
 			`,
-			args: args{participantID: 101, itemID: 2},
+			args: args{
+				participantID: 101,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 		},
 		{
 			name: "supports a root activity as a first item",
@@ -48,7 +63,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {group_id: 200, item_id: 1, can_view_generated: content}
 					- {group_id: 200, item_id: 2, can_view_generated: info}
 			`,
-			args: args{participantID: 101, itemID: 2},
+			args: args{
+				participantID: 101,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
@@ -58,7 +79,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {group_id: 200, item_id: 3, can_view_generated: content}
 					- {group_id: 200, item_id: 4, can_view_generated: info}
 			`,
-			args: args{participantID: 101, itemID: 4},
+			args: args{
+				participantID: 101,
+				itemID:        4,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
 		},
 		{
@@ -73,7 +100,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				attempts:
 					- {participant_id: 102, id: 0}
 			`,
-			args: args{participantID: 102, itemID: 2},
+			args: args{
+				participantID: 102,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
@@ -88,7 +121,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				attempts:
 					- {participant_id: 102, id: 0}
 			`,
-			args: args{participantID: 102, itemID: 4},
+			args: args{
+				participantID: 102,
+				itemID:        4,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
 		},
 		{
@@ -104,7 +143,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				attempts:
 					- {participant_id: 103, id: 0}
 			`,
-			args: args{participantID: 103, itemID: 2},
+			args: args{
+				participantID: 103,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
@@ -120,7 +165,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				attempts:
 					- {participant_id: 103, id: 0}
 			`,
-			args: args{participantID: 103, itemID: 4},
+			args: args{
+				participantID: 103,
+				itemID:        4,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"3", "4"}, IsActive: true}},
 		},
 		{
@@ -130,7 +181,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {group_id: 100, item_id: 1, can_view_generated: content}
 					- {group_id: 100, item_id: 2, can_view_generated: content}
 			`,
-			args: args{participantID: 100, itemID: 2},
+			args: args{
+				participantID: 100,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
@@ -145,7 +202,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				permissions_generated:
 					- {group_id: 100, item_id: 10, can_view_generated: content}
 			`,
-			args: args{participantID: 100, itemID: 10},
+			args: args{
+				participantID: 100,
+				itemID:        10,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"10"}, IsActive: false}},
 		},
 		{
@@ -159,7 +222,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {group_id: 100, item_id: 1, can_view_generated: content}
 					- {group_id: 100, item_id: 10, can_view_generated: content}
 			`,
-			args: args{participantID: 100, itemID: 10},
+			args: args{
+				participantID: 100,
+				itemID:        10,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "10"}, IsActive: false}},
 		},
 		{
@@ -183,7 +252,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 100, attempt_id: 3, item_id: 22}
 					- {participant_id: 101, attempt_id: 4, item_id: 22}
 			`,
-			args: args{participantID: 100, itemID: 23},
+			args: args{
+				participantID: 100,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: true}},
 		},
 		{
@@ -199,7 +274,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				results:
 					- {participant_id: 103, attempt_id: 1, item_id: 22}
 			`,
-			args: args{participantID: 103, itemID: 23},
+			args: args{
+				participantID: 103,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"22", "23"}, IsActive: true}},
 		},
 		{
@@ -213,7 +294,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				results:
 					- {participant_id: 101, attempt_id: 1, item_id: 2}
 			`,
-			args: args{participantID: 101, itemID: 2},
+			args: args{
+				participantID: 101,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2"}, IsActive: true}},
 		},
 		{
@@ -249,7 +336,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 4, item_id: 22, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23},
+			args: args{
+				participantID: 101,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsActive: true}},
 		},
 		{
@@ -284,7 +377,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 4, item_id: 22}
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23},
+			args: args{
+				participantID: 101,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: true}},
 		},
 		{
@@ -323,7 +422,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 7, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23},
+			args: args{
+				participantID: 101,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsActive: true}},
 		},
 		{
@@ -339,7 +444,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 22},
+			args: args{
+				participantID: 101,
+				itemID:        22,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: true}},
 		},
 		{
@@ -357,7 +468,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 0, item_id: 23, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23},
+			args: args{
+				participantID: 101,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 		},
 		{
 			name: "get paths whose attempt chains have not started results below an attempt not allowing submissions for the last item",
@@ -374,7 +491,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 22}
 			`,
-			args: args{participantID: 101, itemID: 22},
+			args: args{
+				participantID: 101,
+				itemID:        22,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: false}},
 		},
 		{
@@ -392,7 +515,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 22}
 			`,
-			args: args{participantID: 101, itemID: 23},
+			args: args{
+				participantID: 101,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 		},
 		{
 			name: "get paths whose attempt chains have not started results below an ended attempt for the last item",
@@ -409,7 +538,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 22}
 			`,
-			args: args{participantID: 101, itemID: 22},
+			args: args{
+				participantID: 101,
+				itemID:        22,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsActive: false}},
 		},
 		{
@@ -427,7 +562,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 22}
 			`,
-			args: args{participantID: 101, itemID: 23},
+			args: args{
+				participantID: 101,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 		},
 		{
 			name: "supports path with attempt chains having ended or not allowing submissions attempts",
@@ -445,7 +586,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23},
+			args: args{
+				participantID: 101,
+				itemID:        23,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsActive: false}},
 		},
 		{
@@ -459,7 +606,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				results:
 					- {participant_id: 103, attempt_id: 1, item_id: 1}
 			`,
-			args: args{participantID: 103, itemID: 1},
+			args: args{
+				participantID: 103,
+				itemID:        1,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1"}, IsActive: false}},
 		},
 		{
@@ -474,7 +627,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 103, attempt_id: 1, item_id: 1}
 					- {participant_id: 103, attempt_id: 1, item_id: 2}
 			`,
-			args: args{participantID: 103, itemID: 2},
+			args: args{
+				participantID: 103,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 		},
 		{
 			name: "get paths whose attempt chains have not started results for an ended attempt for the last item",
@@ -487,7 +646,13 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				results:
 					- {participant_id: 103, attempt_id: 1, item_id: 1}
 			`,
-			args: args{participantID: 103, itemID: 1},
+			args: args{
+				participantID: 103,
+				itemID:        1,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
 			want: []items.ItemPath{{Path: []string{"1"}, IsActive: false}},
 		},
 		{
@@ -502,7 +667,80 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 					- {participant_id: 103, attempt_id: 1, item_id: 1}
 					- {participant_id: 103, attempt_id: 1, item_id: 2}
 			`,
-			args: args{participantID: 103, itemID: 2},
+			args: args{
+				participantID: 103,
+				itemID:        2,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
+		},
+		{
+			name: "returns all the paths when there is more than one",
+			fixture: `
+					groups:
+						- {id: 103, root_activity_id: 100}
+						- {id: 1030, root_activity_id: 101}
+					groups_groups:
+						- {parent_group_id: 1030, child_group_id: 103}
+					items:
+						- {id: 100, default_language_tag: fr}
+						- {id: 101, default_language_tag: fr}
+					items_items:
+						- {parent_item_id: 100, child_item_id: 101, child_order: 1}
+					permissions_generated:
+						- {group_id: 103, item_id: 100, can_view_generated: content}
+						- {group_id: 103, item_id: 101, can_view_generated: content}
+					attempts:
+						- {participant_id: 103, id: 0}
+					results:
+						- {participant_id: 103, attempt_id: 0, item_id: 100}
+						- {participant_id: 103, attempt_id: 0, item_id: 101}
+				`,
+			args: args{
+				participantID: 103,
+				itemID:        101,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         0,
+			},
+			want: []items.ItemPath{
+				{Path: []string{"101"}, IsActive: true},
+				{Path: []string{"100", "101"}, IsActive: true},
+			},
+		},
+		{
+			name: "returns only one path when there is more than one but we ask for one only",
+			fixture: `
+					groups:
+						- {id: 103, root_activity_id: 100}
+						- {id: 1030, root_activity_id: 101}
+					groups_groups:
+						- {parent_group_id: 1030, child_group_id: 103}
+					items:
+						- {id: 100, default_language_tag: fr}
+						- {id: 101, default_language_tag: fr}
+					items_items:
+						- {parent_item_id: 100, child_item_id: 101, child_order: 1}
+					permissions_generated:
+						- {group_id: 103, item_id: 100, can_view_generated: content}
+						- {group_id: 103, item_id: 101, can_view_generated: content}
+					attempts:
+						- {participant_id: 103, id: 0}
+					results:
+						- {participant_id: 103, attempt_id: 0, item_id: 100}
+						- {participant_id: 103, attempt_id: 0, item_id: 101}
+				`,
+			args: args{
+				participantID: 103,
+				itemID:        101,
+				user:          &database.User{},
+				pathRootBy:    items.PathRootParticipant,
+				limit:         1,
+			},
+			want: []items.ItemPath{
+				{Path: []string{"101"}, IsActive: true},
+			},
 		},
 	}
 	const globalFixture = `
@@ -537,7 +775,14 @@ func Test_FindItemPathFirstPathOnly(t *testing.T) {
 				assert.NoError(t, s.ItemItems().After())
 				return nil
 			}))
-			got = items.FindItemPaths(store, tt.args.participantID, tt.args.itemID, true)
+			got = items.FindItemPaths(
+				store,
+				&database.User{},
+				tt.args.participantID,
+				tt.args.itemID,
+				tt.args.pathRootBy,
+				tt.args.limit,
+			)
 			assert.Equal(t, tt.want, got)
 		})
 	}
