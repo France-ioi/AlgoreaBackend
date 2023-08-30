@@ -2,6 +2,7 @@ package items
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/render"
@@ -95,7 +96,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	itemPaths := FindItemPaths(srv.GetStore(r), participantID, itemID, true)
+	itemPaths := FindItemPaths(srv.GetStore(r), srv.GetUser(r), participantID, itemID, PathRootParticipant, 0)
 	if itemPaths == nil {
 		return service.InsufficientAccessRightsError
 	}
@@ -103,27 +104,68 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 	return service.NoError
 }
 
+// PathRootType is used for FindItemPaths.
+// It allows finding the roots either by participant, or by user.
+type PathRootType int
+
+const (
+	PathRootParticipant PathRootType = iota
+	PathRootUser
+)
+
 // FindItemPaths gets the paths to an item for a participant.
-// If {firstOnly}=true, returns only one path.
-func FindItemPaths(store *database.DataStore, participantID, itemID int64, firstOnly bool) []ItemPath {
-	limit := ""
-	if firstOnly {
-		limit = " LIMIT 1"
+//
+// The root items are determined either by participant: PathRootParticipant, or by user PathRootUser.
+// This comes from the initial distinction between `path_from_root`: participant, and `breadcrumbs_from_root`: user.
+//
+// When {limit}=0, return all the paths.
+func FindItemPaths(
+	store *database.DataStore,
+	user *database.User,
+	participantID, itemID int64,
+	pathRootBy PathRootType,
+	limit int,
+) []ItemPath {
+	limitStatement := ""
+	if limit > 0 {
+		limitStatement = " LIMIT " + strconv.Itoa(limit)
 	}
 
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("groups.id, root_activity_id, root_skill_id")
-	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByGroup(participantID).
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-		Select("groups.id, root_activity_id, root_skill_id")
+
+	var groupsManagedByParticipant *database.DB
+	if pathRootBy == PathRootParticipant {
+		// Used for path_from_root.
+		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByGroup(participantID).
+			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+			Select("groups.id, root_activity_id, root_skill_id")
+	} else {
+		// Used for breadcrumbs_from_roots.
+		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByUser(user).
+			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+			Select("groups.id, root_activity_id, root_skill_id")
+	}
+
 	groupsWithRootItems := participantAncestors.Union(groupsManagedByParticipant.SubQuery())
 
-	visibleItems := store.Permissions().MatchingGroupAncestors(participantID).
-		WherePermissionIsAtLeast("view", "info").
-		Joins("JOIN items ON items.id = permissions.item_id").
-		Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
-		Group("items.id")
+	var visibleItems *database.DB
+	if pathRootBy == PathRootParticipant {
+		// Used for path_from_root.
+		visibleItems = store.Permissions().MatchingGroupAncestors(participantID).
+			WherePermissionIsAtLeast("view", "info").
+			Joins("JOIN items ON items.id = permissions.item_id").
+			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
+			Group("items.id")
+	} else {
+		// Used for breadcrumbs_from_roots.
+		visibleItems = store.Permissions().MatchingUserAncestors(user).
+			WherePermissionIsAtLeast("view", "info").
+			Joins("JOIN items ON items.id = permissions.item_id").
+			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
+			Group("items.id")
+	}
 
 	canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 
@@ -212,7 +254,7 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, first
 			SELECT path, is_active FROM paths
 			 WHERE paths.last_item_id = ?
 			 ORDER BY score, attempts DESC
-			 `+limit,
+			 `+limitStatement,
 		groupsWithRootItems.SubQuery(),
 		visibleItems.SubQuery(),
 		itemID,
@@ -232,12 +274,21 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, first
 		return nil
 	}
 
-	itemPaths := make([]ItemPath, len(rawItemPaths))
-	for i, itemPathRow := range rawItemPaths {
-		itemPaths[i] = ItemPath{
+	// The SQL can return the same path multiple times, for example, with different attempts, but we need them only once.
+	pathAdded := map[string]bool{}
+
+	var itemPaths []ItemPath
+	for _, itemPathRow := range rawItemPaths {
+		if _, ok := pathAdded[itemPathRow.Path]; ok {
+			continue
+		}
+
+		itemPaths = append(itemPaths, ItemPath{
 			Path:     strings.Split(itemPathRow.Path, "/"),
 			IsActive: itemPathRow.IsActive,
-		}
+		})
+
+		pathAdded[itemPathRow.Path] = true
 	}
 
 	return itemPaths
