@@ -77,7 +77,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 		return service.InsufficientAccessRightsError
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
+	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user, "result")
 	if apiError != service.NoError {
 		return apiError
 	}

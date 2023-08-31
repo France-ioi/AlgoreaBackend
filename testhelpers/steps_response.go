@@ -3,8 +3,10 @@
 package testhelpers
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"sort"
@@ -34,6 +36,58 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	}
 
 	return nil
+}
+
+// ItShouldBeAZIPFileContainingTheFollowingFiles checks that the response is a ZIP file containing the described files.
+// the files are described by a JSON array with a `filename` and `content` keys for each file.
+// `filename` is the path inside the JSON separated by / (e.g. root/directory/file.txt).
+func (ctx *TestContext) ItShouldBeAZIPFileContainingTheFollowingFiles(body *messages.PickleStepArgument_PickleDocString) error {
+	zipReader, err := zip.NewReader(strings.NewReader(ctx.lastResponseBody), int64(len(ctx.lastResponseBody)))
+	if err != nil {
+		return err
+	}
+
+	var actualResult []interface{}
+	for _, zipFile := range zipReader.File {
+		var unzippedFileBytes []byte
+		unzippedFileBytes, err = readZipFile(zipFile)
+		if err != nil {
+			return err
+		}
+
+		actualResult = append(actualResult, map[string]interface{}{
+			"filename": zipFile.Name,
+			"content":  string(unzippedFileBytes),
+		})
+	}
+
+	var expectedResult interface{}
+	err = json.Unmarshal([]byte(body.Content), &expectedResult)
+	if err != nil {
+		return err
+	}
+
+	if !cmp.Equal(actualResult, expectedResult) {
+		return fmt.Errorf("%v doesn't match expected %v", actualResult, expectedResult)
+	}
+
+	return nil
+}
+
+func readZipFile(zipFile *zip.File) ([]byte, error) {
+	file, err := zipFile.Open()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(f io.ReadCloser) {
+		err := f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(file)
+
+	return io.ReadAll(file)
 }
 
 func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, error) {
