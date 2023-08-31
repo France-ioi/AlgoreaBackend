@@ -9,6 +9,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -97,21 +98,34 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Disposition",
 		fmt.Sprintf("attachment; filename=groups_progress_for_group_%d_and_child_items_of_%s.csv",
 			groupID, strings.Join(itemParentIDsString, "_")))
+
+	csvWriter := csv.NewWriter(w)
+	apiError = writeGroupProgressCSV(csvWriter, store, user, itemParentIDs, groupID)
+	defer csvWriter.Flush()
+
+	return apiError
+}
+
+func writeGroupProgressCSV(
+	csvWriter *csv.Writer,
+	store *database.DataStore,
+	user *database.User,
+	itemParentIDs []int64,
+	groupID int64,
+) service.APIError {
+	csvWriter.Comma = ';'
+
 	if len(itemParentIDs) == 0 {
-		_, err := w.Write([]byte("Group name\n"))
+		err := csvWriter.Write([]string{"Group name"})
 		service.MustNotBeError(err)
+
 		return service.NoError
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
 	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
-	csvWriter := csv.NewWriter(w)
-	defer csvWriter.Flush()
-	csvWriter.Comma = ';'
-
-	printTableHeader(store, user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
-		[]string{"Group name"})
+	printTableHeader(store, user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter, []string{"Group name"})
 
 	// Preselect groups for that we will calculate the stats.
 	// All the "end members" are descendants of these groups.
