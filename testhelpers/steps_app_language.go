@@ -257,18 +257,23 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 }
 
 // addPermissionsGranted adds a permission granted in the database.
-func (ctx *TestContext) addPermissionGranted(group, item, permission, permissionValue string) {
+func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, permission, permissionValue string) {
 	groupID := ctx.getReference(group)
+	sourceGroupID := ctx.getReference(sourceGroup)
 	itemID := ctx.getReference(item)
 
 	permissionsGrantedTable := "permissions_granted"
-	key := strconv.FormatInt(groupID, 10) + "," + strconv.FormatInt(itemID, 10)
+	key := strconv.FormatInt(groupID, 10) + "," +
+		strconv.FormatInt(itemID, 10) + "," +
+		strconv.FormatInt(sourceGroupID, 10) + "," +
+		origin
 
 	if !ctx.isInDatabase(permissionsGrantedTable, key) {
 		ctx.addInDatabase(permissionsGrantedTable, key, map[string]interface{}{
 			"group_id":        groupID,
-			"source_group_id": groupID,
+			"source_group_id": sourceGroupID,
 			"item_id":         itemID,
+			"origin":          origin,
 		})
 	}
 
@@ -693,9 +698,26 @@ func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *mes
 }
 
 func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]string) error {
+	sourceGroup := itemPermission["group"]
+	if definedSourceGroup, ok := itemPermission["source_group"]; ok {
+		sourceGroup = definedSourceGroup
+	}
+
+	origin := "group_membership"
+	if definedOrigin, ok := itemPermission["origin"]; ok {
+		origin = definedOrigin
+	}
+
 	for _, permissionKey := range itemPermissionKeys {
 		if permissionValue, ok := itemPermission[permissionKey]; ok {
-			err := ctx.UserSetPermissionOnItemWithID(permissionKey, permissionValue, itemPermission["group"], itemPermission["item"])
+			err := ctx.UserSetPermissionExtendedOnItemWithID(
+				permissionKey,
+				permissionValue,
+				itemPermission["group"],
+				itemPermission["item"],
+				sourceGroup,
+				origin,
+			)
 			if err != nil {
 				return err
 			}
@@ -816,9 +838,16 @@ func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 	return ctx.IAmAMemberOfTheGroupWithID(name)
 }
 
+// UserSetPermissionExtendedOnItemWithID gives a user a permission on an item with a specific source_group and origin.
+func (ctx *TestContext) UserSetPermissionExtendedOnItemWithID(permission, value, user, item, sourceGroup, origin string) error {
+	ctx.addPermissionGranted(user, item, sourceGroup, origin, permission, value)
+
+	return nil
+}
+
 // UserSetPermissionOnItemWithID gives a user a permission on an item.
 func (ctx *TestContext) UserSetPermissionOnItemWithID(permission, value, user, item string) error {
-	ctx.addPermissionGranted(user, item, permission, value)
+	ctx.addPermissionGranted(user, item, user, "group_membership", permission, value)
 
 	return nil
 }
