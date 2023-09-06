@@ -110,7 +110,7 @@ Feature: Find all breadcrumbs to an item
     | /items/90/breadcrumbs-from-roots                                                                              | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
     | /items/by-text-id/id90/breadcrumbs-from-roots                                                                 | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
 
-  Scenario: Should return a breadcrumb when there is missing results, like path-from-root
+  Scenario: Should return a breadcrumb when there are missing results, like path-from-root
     Given the database has the following table 'users':
       | login | group_id | default_language |
       | user  | 1000     | en               |
