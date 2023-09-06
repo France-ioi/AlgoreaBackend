@@ -37,32 +37,44 @@ type grantedPermissionsStruct struct {
 	CanRequestHelpTo *canRequestHelpTo `json:"can_request_help_to"`
 }
 
-type permissionsWithCanEnterFrom struct {
+type aggregatedPermissionsWithCanEnterFromStruct struct {
 	permissionsStruct
 	// The next time the group can enter the item (>= NOW())
 	// required: true
 	CanEnterFrom string `json:"can_enter_from"`
+	// required: true
+	CanRequestHelpTo []canRequestHelpTo `json:"can_request_help_to"`
 }
 
 // Computed permissions for the group
 // (respecting permissions of its ancestors).
-type computedPermissions struct{ permissionsWithCanEnterFrom }
+type computedPermissions struct {
+	aggregatedPermissionsWithCanEnterFromStruct
+}
 
 // Permissions granted to the group or its ancestors
 // via `origin` = 'group_membership' excluding the row from `granted`.
-type permissionsGrantedViaGroupMembership struct{ permissionsWithCanEnterFrom }
+type permissionsGrantedViaGroupMembership struct {
+	aggregatedPermissionsWithCanEnterFromStruct
+}
 
 // Permissions granted to the group or its ancestors
 // via `origin` = 'item_unlocking'.
-type permissionsGrantedViaItemUnlocking struct{ permissionsWithCanEnterFrom }
+type permissionsGrantedViaItemUnlocking struct {
+	aggregatedPermissionsWithCanEnterFromStruct
+}
 
 // Permissions granted to the group or its ancestors
 // via `origin` = 'self'.
-type permissionsGrantedViaSelf struct{ permissionsWithCanEnterFrom }
+type permissionsGrantedViaSelf struct {
+	aggregatedPermissionsWithCanEnterFromStruct
+}
 
 // Permissions granted to the group or its ancestors
 // via `origin` = 'other'.
-type permissionsGrantedViaOther struct{ permissionsWithCanEnterFrom }
+type permissionsGrantedViaOther struct {
+	aggregatedPermissionsWithCanEnterFromStruct
+}
 
 // swagger:model permissionsViewResponse
 type permissionsViewResponse struct {
@@ -343,7 +355,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 			CanEnterUntil:    service.ConvertDBTimeToJSONTime(permissionsRow["granted_directly_can_enter_until"]),
 			CanRequestHelpTo: canRequestHelpToPermission,
 		},
-		Computed: computedPermissions{permissionsWithCanEnterFrom{
+		Computed: computedPermissions{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
 				ItemPermissions: structures.ItemPermissions{
 					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["generated_can_view_value"].(int64))),
@@ -354,9 +366,10 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["generated_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["generated_can_enter_from"]),
+			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["generated_can_enter_from"]),
+			CanRequestHelpTo: make([]canRequestHelpTo, 0),
 		}},
-		GrantedViaGroupMembership: permissionsGrantedViaGroupMembership{permissionsWithCanEnterFrom{
+		GrantedViaGroupMembership: permissionsGrantedViaGroupMembership{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
 				ItemPermissions: structures.ItemPermissions{
 					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_membership_can_view_value"].(int64))),
@@ -367,9 +380,10 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_membership_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_membership_can_enter_from"]),
+			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_membership_can_enter_from"]),
+			CanRequestHelpTo: make([]canRequestHelpTo, 0),
 		}},
-		GrantedViaItemUnlocking: permissionsGrantedViaItemUnlocking{permissionsWithCanEnterFrom{
+		GrantedViaItemUnlocking: permissionsGrantedViaItemUnlocking{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
 				ItemPermissions: structures.ItemPermissions{
 					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_unlocking_can_view_value"].(int64))),
@@ -380,9 +394,10 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_unlocking_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_unlocking_can_enter_from"]),
+			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_unlocking_can_enter_from"]),
+			CanRequestHelpTo: make([]canRequestHelpTo, 0),
 		}},
-		GrantedViaSelf: permissionsGrantedViaSelf{permissionsWithCanEnterFrom{
+		GrantedViaSelf: permissionsGrantedViaSelf{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
 				ItemPermissions: structures.ItemPermissions{
 					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_self_can_view_value"].(int64))),
@@ -393,9 +408,10 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_self_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_self_can_enter_from"]),
+			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_self_can_enter_from"]),
+			CanRequestHelpTo: make([]canRequestHelpTo, 0),
 		}},
-		GrantedViaOther: permissionsGrantedViaOther{permissionsWithCanEnterFrom{
+		GrantedViaOther: permissionsGrantedViaOther{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
 				ItemPermissions: structures.ItemPermissions{
 					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_other_can_view_value"].(int64))),
@@ -406,7 +422,8 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_other_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_other_can_enter_from"]),
+			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_other_can_enter_from"]),
+			CanRequestHelpTo: make([]canRequestHelpTo, 0),
 		}},
 	})
 	return service.NoError
