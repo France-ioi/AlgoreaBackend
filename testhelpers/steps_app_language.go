@@ -278,7 +278,13 @@ func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, p
 	}
 
 	if permission == "can_request_help_to" {
-		permissionValue = strconv.FormatInt(ctx.getReference(permissionValue), 10)
+		canRequestHelpToGroupID := strconv.FormatInt(ctx.getReference(permissionValue), 10)
+
+		if !ctx.isInDatabase("groups", canRequestHelpToGroupID) {
+			ctx.addGroup(permissionValue, "Group "+referenceToName(permissionValue), "Class")
+		}
+
+		permissionValue = canRequestHelpToGroupID
 	}
 
 	if permission == "is_owner" {
