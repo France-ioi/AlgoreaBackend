@@ -75,6 +75,21 @@ type commonItemFields struct {
 	Permissions structures.ItemPermissions `json:"permissions"`
 }
 
+type getItemCommonFields struct {
+	commonItemFields
+
+	// required: true
+	Permissions itemPermissionsWithHasCanRequestHelpTo `json:"permissions"`
+}
+
+type itemPermissionsWithHasCanRequestHelpTo struct {
+	structures.ItemPermissions
+
+	// Whether a `can_request_help_to` permission is defined.
+	// required: true
+	HasCanRequestHelpTo bool `json:"has_can_request_help_to"`
+}
+
 type itemRootNodeNotChapterFields struct {
 	// Nullable; only if not a chapter
 	URL *string `json:"url"`
@@ -88,7 +103,8 @@ type itemRootNodeNotChapterFields struct {
 
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
-	Permissions *structures.ItemPermissions `json:"permissions,omitempty"`
+	Permissions *itemPermissionsWithHasCanRequestHelpTo `json:"permissions,omitempty"`
+
 	// Average score of all "end-members" within the watched group
 	// (or of the watched group itself if it is a user or a team).
 	// The score of an "end-member" is the max of his `results.score` or 0 if no results.
@@ -98,7 +114,7 @@ type itemResponseWatchedGroupItemInfo struct {
 
 // swagger:model itemResponse
 type itemResponse struct {
-	*commonItemFields
+	*getItemCommonFields
 
 	// required: true
 	// enum: All,Half,One,None
@@ -443,7 +459,13 @@ func constructItemResponseFromDBData(
 	watchedGroupHasCanRequestHelpTo bool,
 ) *itemResponse {
 	result := &itemResponse{
-		commonItemFields: rawData.asItemCommonFields(permissionGrantedStore),
+		getItemCommonFields: &getItemCommonFields{
+			commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
+			Permissions: itemPermissionsWithHasCanRequestHelpTo{
+				ItemPermissions:     *rawData.AsItemPermissions(permissionGrantedStore),
+				HasCanRequestHelpTo: hasCanRequestHelpTo,
+			},
+		},
 		String: itemStringRoot{
 			itemStringCommon: constructItemStringCommon(rawData),
 		},
@@ -462,8 +484,6 @@ func constructItemResponseFromDBData(
 		BestScore:                    rawData.BestScore,
 		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
 	}
-
-	result.Permissions.HasCanRequestHelpTo = &hasCanRequestHelpTo
 
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
 		result.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
@@ -484,8 +504,10 @@ func constructItemResponseFromDBData(
 			result.WatchedGroup.AverageScore = &rawData.WatchedGroupAverageScore
 		}
 		if rawData.CanViewWatchedGroupPermissions {
-			result.WatchedGroup.Permissions = rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore)
-			result.WatchedGroup.Permissions.HasCanRequestHelpTo = &watchedGroupHasCanRequestHelpTo
+			result.WatchedGroup.Permissions = &itemPermissionsWithHasCanRequestHelpTo{
+				ItemPermissions:     *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
+				HasCanRequestHelpTo: watchedGroupHasCanRequestHelpTo,
+			}
 		}
 	}
 

@@ -55,7 +55,7 @@ Feature: Get permissions has_can_request_help_to for an item
       | @Chapter2            | @Class       |          |           | @HelperGroup2       | On item's ancestor                                 |
       | @Item3               | @ClassParent |          |           | @HelperGroup3       | On item, on an ancestor of current-user            |
       | @Chapter4            | @ClassParent |          |           | @HelperGroup4       | On item's ancestor, on an ancestor of current-user |
-  When I send a GET request to "/items/<item_id>?watched_group_id=@Class"
+    When I send a GET request to "/items/<item_id>?watched_group_id=@Class"
     Then the response code should be 200
     And the response at $.watched_group.permissions.has_can_request_help_to should be "<has_can_request_help_to>"
     Examples:
