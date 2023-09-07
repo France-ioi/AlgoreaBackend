@@ -2,6 +2,7 @@ package items
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/render"
@@ -9,6 +10,20 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// ItemPath represents a path to an item.
+// swagger:model ItemPath
+type ItemPath struct {
+	// required:true
+	Path []string `json:"path"`
+	// required:true
+	IsStarted bool `json:"is_started"`
+}
+
+type rawItemPath struct {
+	Path      string `json:"path"`
+	IsStarted bool   `json:"is_started"`
+}
 
 // swagger:operation GET /items/{item_id}/path-from-root items itemPathFromRootFind
 //
@@ -26,8 +41,8 @@ import (
 //			* and having higher values of `attempt_id`.
 //
 //		For a path to be returned, each of its items must:
-//			* Either have `require_explicit_entry`=0 ,
-//			* Or if it has `require_explicit_entry=1`,
+//			* Either have `requires_explicit_entry`=0 ,
+//			* Or if it has `requires_explicit_entry=1`,
 //				then the following condition must be fulfilled, except if it is the last item of the path:
 //				the item must have at least one result with `started`=1 AND its attempt must have
 //					(`attempt.ended_at` IS NULL) AND (`NOW()` < `attempt.allows_submissions_until`)).
@@ -81,32 +96,80 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	ids := findItemPath(srv.GetStore(r), participantID, itemID)
-	if ids == nil {
+	itemPaths := FindItemPaths(srv.GetStore(r), srv.GetUser(r), participantID, itemID, PathRootParticipant, 0)
+	if itemPaths == nil {
 		return service.InsufficientAccessRightsError
 	}
-	render.Respond(w, r, map[string]interface{}{"path": ids})
+	render.Respond(w, r, map[string]interface{}{"path": itemPaths[0].Path})
 	return service.NoError
 }
 
-func findItemPath(store *database.DataStore, participantID, itemID int64) []string {
+// PathRootType is used for FindItemPaths.
+// It allows finding the roots either by participant, or by user.
+type PathRootType int
+
+const (
+	PathRootParticipant PathRootType = iota
+	PathRootUser
+)
+
+// FindItemPaths gets the paths to an item for a participant.
+//
+// The root items are determined either by participant: PathRootParticipant, or by user PathRootUser.
+// This comes from the initial distinction between `path_from_root`: participant, and `breadcrumbs_from_root`: user.
+//
+// When {limit}=0, return all the paths.
+func FindItemPaths(
+	store *database.DataStore,
+	user *database.User,
+	participantID, itemID int64,
+	pathRootBy PathRootType,
+	limit int,
+) []ItemPath {
+	limitStatement := ""
+	if limit > 0 {
+		limitStatement = " LIMIT " + strconv.Itoa(limit)
+	}
+
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("groups.id, root_activity_id, root_skill_id")
-	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByGroup(participantID).
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-		Select("groups.id, root_activity_id, root_skill_id")
+
+	var groupsManagedByParticipant *database.DB
+	if pathRootBy == PathRootParticipant {
+		// Used for path_from_root.
+		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByGroup(participantID).
+			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+			Select("groups.id, root_activity_id, root_skill_id")
+	} else {
+		// Used for breadcrumbs_from_roots.
+		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByUser(user).
+			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+			Select("groups.id, root_activity_id, root_skill_id")
+	}
+
 	groupsWithRootItems := participantAncestors.Union(groupsManagedByParticipant.SubQuery())
 
-	visibleItems := store.Permissions().MatchingGroupAncestors(participantID).
-		WherePermissionIsAtLeast("view", "info").
-		Joins("JOIN items ON items.id = permissions.item_id").
-		Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
-		Group("items.id")
+	var visibleItems *database.DB
+	if pathRootBy == PathRootParticipant {
+		// Used for path_from_root.
+		visibleItems = store.Permissions().MatchingGroupAncestors(participantID).
+			WherePermissionIsAtLeast("view", "info").
+			Joins("JOIN items ON items.id = permissions.item_id").
+			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
+			Group("items.id")
+	} else {
+		// Used for breadcrumbs_from_roots.
+		visibleItems = store.Permissions().MatchingUserAncestors(user).
+			WherePermissionIsAtLeast("view", "info").
+			Joins("JOIN items ON items.id = permissions.item_id").
+			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
+			Group("items.id")
+	}
 
 	canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 
-	var pathStrings []string
+	var rawItemPaths []rawItemPath
 	service.MustNotBeError(store.Raw(
 		`
 			WITH RECURSIVE
@@ -133,12 +196,13 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 						 FROM item_ancestors
 									JOIN root_items ON root_items.id = item_ancestors.id)
 				),
-				paths (path, last_item_id, last_attempt_id, score, attempts, is_active) AS (
+				paths (path, last_item_id, last_attempt_id, score, attempts, is_started, is_active) AS (
 					(SELECT CAST(root_ancestors.id AS CHAR(1024)),
 								  root_ancestors.id,
 							 	  attempts.id,
 								  results.started_at IS NULL,
 								  CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)),
+								  results.started_at IS NOT NULL,
 								  attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 						 FROM root_ancestors
 								  LEFT JOIN attempts
@@ -163,6 +227,7 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 								  attempts.id,
 								  (paths.score << 1) + (results.started_at IS NULL),
 								  CONCAT(paths.attempts, '/', LPAD(attempts.id, 20, 0)),
+								  paths.is_started AND results.started_at IS NOT NULL,
 								  paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 						 FROM paths
 								  JOIN items_items ON items_items.parent_item_id = paths.last_item_id
@@ -188,10 +253,10 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 						 )
 				  )
 				)
-			SELECT path FROM paths
+			SELECT path, is_started FROM paths
 			 WHERE paths.last_item_id = ?
 			 ORDER BY score, attempts DESC
-			 LIMIT 1`,
+			 `+limitStatement,
 		groupsWithRootItems.SubQuery(),
 		visibleItems.SubQuery(),
 		itemID,
@@ -205,12 +270,28 @@ func findItemPath(store *database.DataStore, participantID, itemID int64) []stri
 		canViewContentIndex,
 		itemID,
 	).
-		ScanIntoSlices(&pathStrings).Error())
+		Scan(&rawItemPaths).Error())
 
-	if len(pathStrings) == 0 {
+	if len(rawItemPaths) == 0 {
 		return nil
 	}
-	pathString := pathStrings[0]
-	idStrings := strings.Split(pathString, "/")
-	return idStrings
+
+	// The SQL can return the same path multiple times, for example, with different attempts, but we need them only once.
+	pathAdded := map[string]bool{}
+
+	var itemPaths []ItemPath
+	for _, itemPathRow := range rawItemPaths {
+		if _, ok := pathAdded[itemPathRow.Path]; ok {
+			continue
+		}
+
+		itemPaths = append(itemPaths, ItemPath{
+			Path:      strings.Split(itemPathRow.Path, "/"),
+			IsStarted: itemPathRow.IsStarted,
+		})
+
+		pathAdded[itemPathRow.Path] = true
+	}
+
+	return itemPaths
 }
