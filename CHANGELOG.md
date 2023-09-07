@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [v1.11.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.10.0...v1.11.0) - 2023-07-17
+## [v1.11.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.10.0...v1.11.0) - 2023-09-07
 - implement request-help permission propagation
 - improve / fix the services to look for the path to some content, add info whether the path has been already been visited
 - fix doc
