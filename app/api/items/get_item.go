@@ -89,11 +89,6 @@ type itemRootNodeNotChapterFields struct {
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
 	Permissions *structures.ItemPermissions `json:"permissions,omitempty"`
-
-	// Whether a `can_request_help_to` permission is defined on the item for the watched_group.
-	// The field is only shown when the current user can view the permissions of the watched group.
-	HasCanRequestHelpTo *bool `json:"has_can_request_help_to,omitempty"`
-
 	// Average score of all "end-members" within the watched group
 	// (or of the watched group itself if it is a user or a team).
 	// The score of an "end-member" is the max of his `results.score` or 0 if no results.
@@ -147,10 +142,6 @@ type itemResponse struct {
 	*itemRootNodeNotChapterFields
 
 	WatchedGroup *itemResponseWatchedGroupItemInfo `json:"watched_group,omitempty"`
-
-	// Whether a `can_request_help_to` permission is defined on the item for the current-user.
-	// required: true
-	HasCanRequestHelpTo bool `json:"has_can_request_help_to"`
 }
 
 // swagger:operation GET /items/{item_id} items itemView
@@ -472,7 +463,7 @@ func constructItemResponseFromDBData(
 		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
 	}
 
-	result.HasCanRequestHelpTo = hasCanRequestHelpTo
+	result.Permissions.HasCanRequestHelpTo = &hasCanRequestHelpTo
 
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
 		result.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
@@ -494,7 +485,7 @@ func constructItemResponseFromDBData(
 		}
 		if rawData.CanViewWatchedGroupPermissions {
 			result.WatchedGroup.Permissions = rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore)
-			result.WatchedGroup.HasCanRequestHelpTo = &watchedGroupHasCanRequestHelpTo
+			result.WatchedGroup.Permissions.HasCanRequestHelpTo = &watchedGroupHasCanRequestHelpTo
 		}
 	}
 

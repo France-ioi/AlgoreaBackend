@@ -20,7 +20,7 @@ Feature: Get permissions has_can_request_help_to for an item
       | @Item3               | @Chapter3 | Task    |                          |
       | @Item4               | @Chapter4 | Task    | true                     |
 
-  Scenario Outline: has_can_request_help_to should be true if there is a can_request_help_to permission
+  Scenario Outline: permissions.has_can_request_help_to should be true if there is a can_request_help_to permission
     Given I am @Student
     And there are the following item permissions:
       | item                 | group    | can_view | can_request_help_to | can_request_help is defined                        |
@@ -33,7 +33,7 @@ Feature: Get permissions has_can_request_help_to for an item
       | @Item4               | @School  | solution |                     |                                                    |
     When I send a GET request to "/items/<item_id>"
     Then the response code should be 200
-    And the response at $.has_can_request_help_to should be "<has_can_request_help_to>"
+    And the response at $.permissions.has_can_request_help_to should be "<has_can_request_help_to>"
     Examples:
       | item_id              | has_can_request_help_to |
       | @Item1               | true                    |
@@ -42,7 +42,7 @@ Feature: Get permissions has_can_request_help_to for an item
       | @Item3               | true                    |
       | @Item4               | true                    |
 
-  Scenario Outline: watched_group.has_can_request_help_to should be true if there is a can_request_help_to permission for the watched_group
+  Scenario Outline: watched_group.permissions.has_can_request_help_to should be true if there is a can_request_help_to permission for the watched_group
     Given I am @Teacher
     And there are the following item permissions:
       | item                 | group        | can_view | can_watch | can_request_help_to | can_request_help is defined                        |
@@ -57,7 +57,7 @@ Feature: Get permissions has_can_request_help_to for an item
       | @Chapter4            | @ClassParent |          |           | @HelperGroup4       | On item's ancestor, on an ancestor of current-user |
   When I send a GET request to "/items/<item_id>?watched_group_id=@Class"
     Then the response code should be 200
-    And the response at $.watched_group.has_can_request_help_to should be "<has_can_request_help_to>"
+    And the response at $.watched_group.permissions.has_can_request_help_to should be "<has_can_request_help_to>"
     Examples:
       | item_id              | has_can_request_help_to |
       | @Item1               | true                    |

@@ -136,9 +136,9 @@ Feature: Get item view information
         "can_grant_view": "enter",
         "can_view": "solution",
         "can_watch": "result",
-        "is_owner": true
-      },
-      "has_can_request_help_to": false
+        "is_owner": true,
+        "has_can_request_help_to": false
+      }
     }
     """
 
@@ -190,9 +190,9 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
-      },
-      "has_can_request_help_to": false
+        "is_owner": false,
+        "has_can_request_help_to": false
+      }
     }
     """
 
@@ -243,9 +243,9 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "content_with_descendants",
         "can_watch": "none",
-        "is_owner": false
-      },
-      "has_can_request_help_to": false
+        "is_owner": false,
+        "has_can_request_help_to": false
+      }
     }
     """
 
@@ -301,9 +301,9 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
-      },
-      "has_can_request_help_to": false
+        "is_owner": false,
+        "has_can_request_help_to": false
+      }
     }
     """
 
@@ -359,9 +359,9 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
-      },
-      "has_can_request_help_to": false
+        "is_owner": false,
+        "has_can_request_help_to": false
+      }
     }
     """
 
@@ -412,9 +412,9 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "info",
         "can_watch": "none",
-        "is_owner": false
-      },
-      "has_can_request_help_to": false
+        "is_owner": false,
+        "has_can_request_help_to": false
+      }
     }
     """
 
@@ -470,9 +470,9 @@ Feature: Get item view information
         "can_grant_view": "enter",
         "can_view": "solution",
         "can_watch": "result",
-        "is_owner": true
-      },
-      "has_can_request_help_to": false
+        "is_owner": true,
+        "has_can_request_help_to": false
+      }
     }
     """
 
@@ -488,7 +488,7 @@ Feature: Get item view information
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
     And the template constant "permissions" is:
     """
-      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true}
+      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true, "has_can_request_help_to": false}
     """
     And the template constant "average_score" is:
     """
@@ -496,11 +496,11 @@ Feature: Get item view information
     """
     And the template constant "watched_group_permissions" is:
     """
-    , "watched_group": { {{permissions}}, "has_can_request_help_to": false }
+    , "watched_group": { {{permissions}} }
     """
     And the template constant "watched_group_average_score_and_permissions" is:
     """
-    , "watched_group": { {{average_score}}, {{permissions}}, "has_can_request_help_to": false }
+    , "watched_group": { {{average_score}}, {{permissions}} }
     """
     When I send a GET request to "/items/220?watched_group_id=15"
     Then the response code should be 200
@@ -548,9 +548,9 @@ Feature: Get item view information
         "can_grant_view": "<expected_can_grant_view>",
         "can_view": "solution",
         "can_watch": "<can_watch_generated>",
-        "is_owner": false
-      },
-      "has_can_request_help_to": false
+        "is_owner": false,
+        "has_can_request_help_to": false
+      }
       <expected_watched_group_part>
     }
     """
@@ -575,7 +575,7 @@ Feature: Get item view information
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
     And the template constant "permissions" is:
     """
-      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true}
+      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true, "has_can_request_help_to": false}
     """
     And the template constant "average_score" is:
     """
@@ -583,11 +583,11 @@ Feature: Get item view information
     """
     And the template constant "watched_group_permissions" is:
     """
-    , "watched_group": { "has_can_request_help_to": false, {{permissions}} }
+    , "watched_group": { {{permissions}} }
     """
     And the template constant "watched_group_average_score_and_permissions" is:
     """
-    , "watched_group": { {{average_score}}, "has_can_request_help_to": false, {{permissions}} }
+    , "watched_group": { {{average_score}}, {{permissions}} }
     """
     When I send a GET request to "/items/220?watched_group_id=15&as_team_id=13"
     Then the response code should be 200
@@ -635,9 +635,9 @@ Feature: Get item view information
         "can_grant_view": "none",
         "can_view": "solution",
         "can_watch": "none",
-        "is_owner": false
-      },
-      "has_can_request_help_to": false
+        "is_owner": false,
+        "has_can_request_help_to": false
+      }
       <expected_watched_group_part>
     }
     """
