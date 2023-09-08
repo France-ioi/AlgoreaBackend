@@ -5,9 +5,17 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
+)
+
+const (
+	OriginGroupMembership = "group_membership"
+	OriginItemUnlocking   = "item_unlocking"
+	OriginSelf            = "self"
+	OriginOther           = "other"
 )
 
 type permissionsStruct struct {
@@ -17,12 +25,16 @@ type permissionsStruct struct {
 }
 
 // The group which can be asked for help.
-// either (ID, Name) is set, or IsAllUsersGroup is set and equal to true.
 type canRequestHelpTo struct {
-	ID   int64  `json:"id,string,omitempty"`
-	Name string `json:"name,omitempty"`
-	// Whether the group is the "all-users" group
-	IsAllUsersGroup bool `json:"is_all_users_group,omitempty"`
+	// required: true
+	ID int64 `json:"id,string"`
+	// The name is only set if the group is visible to the current user.
+	// Nullable
+	// required: true
+	Name *string `json:"name"`
+	// Whether the group is the "all-users" group.
+	// required: true
+	IsAllUsersGroup bool `json:"is_all_users_group"`
 }
 
 // Permissions granted directly to the group via `origin` = 'group_membership' and `source_group_id` = `{source_group_id}`.
@@ -90,6 +102,14 @@ type permissionsViewResponse struct {
 	GrantedViaSelf permissionsGrantedViaSelf `json:"granted_via_self"`
 	// required: true
 	GrantedViaOther permissionsGrantedViaOther `json:"granted_via_other"`
+}
+
+type canRequestHelpToPermissionsRaw struct {
+	Origin            string
+	SourceGroupID     int64
+	PermissionGroupID int64
+	GroupID           int64
+	GroupName         string
 }
 
 // swagger:operation GET /groups/{source_group_id}/permissions/{group_id}/{item_id} groups permissionsView
@@ -202,7 +222,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 		Where("group_id = ?", groupID).
 		Where("item_id = ?", itemID).
 		Where("source_group_id = ?", sourceGroupID).
-		Where("origin = 'group_membership'").
+		Where("origin = ?", OriginGroupMembership).
 		Select(`
 			can_view_value,
 			can_grant_view_value,
@@ -263,11 +283,11 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 	aggregatedPermissions := ancestorPermissions.Select(canEnterFromColumn + ", " + canMakeSessionOfficialColumn)
 
 	grantedPermissionsGroupMembership := grantedPermissionsWithAncestors.
-		Where("origin = 'group_membership'").
+		Where("origin = ?", OriginGroupMembership).
 		Where("NOT (group_id = ? AND source_group_id = ?)", groupID, sourceGroupID)
-	grantedPermissionsItemUnlocking := grantedPermissionsWithAncestors.Where("origin = 'item_unlocking'")
-	grantedPermissionsSelf := grantedPermissionsWithAncestors.Where("origin = 'self'")
-	grantedPermissionsOther := grantedPermissionsWithAncestors.Where("origin = 'other'")
+	grantedPermissionsItemUnlocking := grantedPermissionsWithAncestors.Where("origin = ?", OriginItemUnlocking)
+	grantedPermissionsSelf := grantedPermissionsWithAncestors.Where("origin = ?", OriginSelf)
+	grantedPermissionsOther := grantedPermissionsWithAncestors.Where("origin = ?", OriginOther)
 
 	err = store.
 		Raw(`
@@ -320,26 +340,45 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 		ScanIntoSliceOfMaps(&permissions).Error()
 	service.MustNotBeError(err)
 
+	var canRequestHelpToPermissions []canRequestHelpToPermissionsRaw
+	err = ancestorPermissions.
+		Joins("JOIN `groups` AS can_request_help_to_group ON can_request_help_to_group.id = permissions_granted.can_request_help_to").
+		Where("source_group_id = ?", sourceGroupID).
+		Select(`
+			permissions_granted.origin AS origin,
+			permissions_granted.source_group_id AS source_group_id,
+			permissions_granted.group_id AS permission_group_id,
+			can_request_help_to_group.id AS group_id,
+			can_request_help_to_group.name AS group_name
+		`).
+		Scan(&canRequestHelpToPermissions).
+		Error()
+	service.MustNotBeError(err)
+
 	permissionsRow := permissions[0]
 	permissionsGrantedStore := store.PermissionsGranted()
+
+	allUsersGroupID := domain.ConfigFromContext(r.Context()).AllUsersGroupID
 
 	var canRequestHelpToPermission *canRequestHelpTo
 
 	if permissionsRow["granted_directly_can_request_help_to__id"] != nil {
 		canRequestHelpToGroupID := permissionsRow["granted_directly_can_request_help_to__id"].(int64)
-		if domain.ConfigFromContext(r.Context()).AllUsersGroupID == canRequestHelpToGroupID {
-			canRequestHelpToPermission = &canRequestHelpTo{
-				IsAllUsersGroup: true,
-			}
+		groupName := permissionsRow["granted_directly_can_request_help_to__name"].(string)
+
+		canRequestHelpToPermission = &canRequestHelpTo{
+			ID: canRequestHelpToGroupID,
+		}
+
+		if allUsersGroupID == canRequestHelpToGroupID {
+			canRequestHelpToPermission.IsAllUsersGroup = true
+			canRequestHelpToPermission.Name = &groupName
 		} else if store.Groups().IsVisibleFor(canRequestHelpToGroupID, user) {
-			canRequestHelpToPermission = &canRequestHelpTo{
-				ID:   canRequestHelpToGroupID,
-				Name: permissionsRow["granted_directly_can_request_help_to__name"].(string),
-			}
+			canRequestHelpToPermission.Name = &groupName
 		}
 	}
 
-	render.Respond(w, r, &permissionsViewResponse{
+	response := permissionsViewResponse{
 		Granted: grantedPermissionsStruct{
 			permissionsStruct: permissionsStruct{
 				ItemPermissions: structures.ItemPermissions{
@@ -366,8 +405,16 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["generated_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["generated_can_enter_from"]),
-			CanRequestHelpTo: make([]canRequestHelpTo, 0),
+			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["generated_can_enter_from"]),
+			CanRequestHelpTo: filterCanRequestHelpTo(
+				canRequestHelpToPermissions,
+				"computed",
+				groupID,
+				sourceGroupID,
+				store,
+				user.GroupID,
+				allUsersGroupID,
+			),
 		}},
 		GrantedViaGroupMembership: permissionsGrantedViaGroupMembership{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
@@ -380,8 +427,16 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_membership_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_membership_can_enter_from"]),
-			CanRequestHelpTo: make([]canRequestHelpTo, 0),
+			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_membership_can_enter_from"]),
+			CanRequestHelpTo: filterCanRequestHelpTo(
+				canRequestHelpToPermissions,
+				OriginGroupMembership,
+				groupID,
+				sourceGroupID,
+				store,
+				user.GroupID,
+				allUsersGroupID,
+			),
 		}},
 		GrantedViaItemUnlocking: permissionsGrantedViaItemUnlocking{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
@@ -394,8 +449,16 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_unlocking_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_unlocking_can_enter_from"]),
-			CanRequestHelpTo: make([]canRequestHelpTo, 0),
+			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_unlocking_can_enter_from"]),
+			CanRequestHelpTo: filterCanRequestHelpTo(
+				canRequestHelpToPermissions,
+				OriginItemUnlocking,
+				groupID,
+				sourceGroupID,
+				store,
+				user.GroupID,
+				allUsersGroupID,
+			),
 		}},
 		GrantedViaSelf: permissionsGrantedViaSelf{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
@@ -408,8 +471,16 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_self_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_self_can_enter_from"]),
-			CanRequestHelpTo: make([]canRequestHelpTo, 0),
+			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_self_can_enter_from"]),
+			CanRequestHelpTo: filterCanRequestHelpTo(
+				canRequestHelpToPermissions,
+				OriginSelf,
+				groupID,
+				sourceGroupID,
+				store,
+				user.GroupID,
+				allUsersGroupID,
+			),
 		}},
 		GrantedViaOther: permissionsGrantedViaOther{aggregatedPermissionsWithCanEnterFromStruct{
 			permissionsStruct: permissionsStruct{
@@ -422,9 +493,58 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 				},
 				CanMakeSessionOfficial: permissionsRow["granted_anc_other_can_make_session_official"].(int64) == 1,
 			},
-			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_other_can_enter_from"]),
-			CanRequestHelpTo: make([]canRequestHelpTo, 0),
+			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_other_can_enter_from"]),
+			CanRequestHelpTo: filterCanRequestHelpTo(
+				canRequestHelpToPermissions,
+				OriginOther,
+				groupID,
+				sourceGroupID,
+				store,
+				user.GroupID,
+				allUsersGroupID,
+			),
 		}},
-	})
+	}
+
+	render.Respond(w, r, &response)
 	return service.NoError
+}
+
+func filterCanRequestHelpTo(
+	permissions []canRequestHelpToPermissionsRaw,
+	origin string,
+	groupID int64,
+	sourceGroupID int64,
+	store *database.DataStore,
+	visibleGroupID int64,
+	allUsersGroupID int64,
+) []canRequestHelpTo {
+	results := make([]canRequestHelpTo, 0)
+
+	for i, canRequestHelpToPermission := range permissions {
+		// The canRequestHelpToPermission matching "group_membership" origin as well as GroupID and SourceGroupID
+		// is a special case that goes into "granted".
+		if canRequestHelpToPermission.Origin == OriginGroupMembership &&
+			canRequestHelpToPermission.PermissionGroupID == groupID &&
+			canRequestHelpToPermission.SourceGroupID == sourceGroupID {
+			continue
+		}
+
+		if canRequestHelpToPermission.Origin == origin {
+			curCanRequestHelpTo := canRequestHelpTo{
+				ID: canRequestHelpToPermission.GroupID,
+			}
+
+			if allUsersGroupID == canRequestHelpToPermission.GroupID {
+				curCanRequestHelpTo.IsAllUsersGroup = true
+				curCanRequestHelpTo.Name = &permissions[i].GroupName
+			} else if store.Groups().IsVisibleForGroup(canRequestHelpToPermission.GroupID, visibleGroupID) {
+				curCanRequestHelpTo.Name = &permissions[i].GroupName
+			}
+
+			results = append(results, curCanRequestHelpTo)
+		}
+	}
+
+	return results
 }

@@ -94,7 +94,7 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 	case interface{}:
 	}
 
-q	if jsonPathRes == nil && (value == "null" || value == "") {
+	if jsonPathRes == nil && (value == "null" || value == "") {
 		return true
 	}
 
