@@ -94,7 +94,7 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 	case interface{}:
 	}
 
-	if jsonPathRes == nil && value == "null" {
+q	if jsonPathRes == nil && (value == "null" || value == "") {
 		return true
 	}
 
@@ -135,9 +135,13 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 	case map[string]interface{}:
 		// The result is an object (eg. "element": {"a": 0, "b": 0})
 		return ctx.wantValuesMatchesJSONPathResultObject(wants, typedJSONRes)
+	default:
+		if typedJSONRes == nil {
+			return fmt.Errorf("TheResponseAtShouldBe: The JsonPath result at the path %v is %v", jsonPath, typedJSONRes)
+		}
 	}
 
-	panic(fmt.Sprintf("TheResponseAtShouldBe: Unhandled case for %v", jsonPathRes))
+	panic(fmt.Sprintf("TheResponseAtShouldBe: Unhandled case for result found at JSON Path %v: %v", jsonPath, jsonPathRes))
 }
 
 func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
@@ -256,6 +260,10 @@ func stringifyJSONPathResultValue(value interface{}) string {
 		// Convert boolean results to strings because the values we check are coming from Gherkin as strings.
 		return strconv.FormatBool(typedValue)
 	default:
+		if value == nil {
+			return ""
+		}
+
 		return typedValue.(string)
 	}
 }
