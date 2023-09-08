@@ -15,9 +15,9 @@ import (
 // swagger:model threadGetResponse
 type threadGetResponse struct {
 	// required: true
-	ParticipantID int64 `json:"participant_id"`
+	ParticipantID int64 `json:"participant_id,string"`
 	// required: true
-	ItemID int64 `json:"item_id"`
+	ItemID int64 `json:"item_id,string"`
 	// required: true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
 	Status      string `json:"status"`
