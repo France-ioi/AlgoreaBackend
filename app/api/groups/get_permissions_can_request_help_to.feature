@@ -11,12 +11,13 @@ Feature: Get permissions can_request_help_to for a group
   Background:
     Given allUsersGroup is defined as the group @AllUsers
     And there are the following groups:
-      | group              | parent             | members  |
-      | @AllUsers          |                    |          |
-      | @School            |                    | @Teacher |
-      | @ClassParentParent |                    |          |
-      | @ClassParent       | @ClassParentParent |          |
-      | @Class             | @ClassParent       |          |
+      | group                    | parent                   | members  |
+      | @AllUsers                |                          |          |
+      | @School                  |                          | @Teacher |
+      | @ClassParentParentParent |                          |          |
+      | @ClassParentParent       | @ClassParentParentParent |          |
+      | @ClassParent             | @ClassParentParent       |          |
+      | @Class                   | @ClassParent             |          |
     And @Teacher is a manager of the group @Class and can grant group access
     And there are the following tasks:
       | item  |
@@ -65,19 +66,20 @@ Feature: Get permissions can_request_help_to for a group
   Scenario: Should return can_request_help_to arrays when permissions with specific origins are defined
     Given I am @Teacher
     And there are the following item permissions:
-      | item  | group              | source_group | origin           | is_owner | can_request_help_to          | comment                          |
-      | @Item | @Class             | @Class       | self             | false    | @HelperGroupSelf1            |                                  |
-      | @Item | @ClassParent       | @Class       | self             | false    | @AllUsers                    |                                  |
-      | @Item | @ClassParentParent | @Class       | self             | false    |                              | check we don't get empty groups  |
-      | @Item | @Class             | @Class       | group_membership | false    | @HelperGroupGroupMembership1 | granted                          |
-      | @Item | @ClassParent       | @Class       | group_membership | false    | @HelperGroupGroupMembership2 | group_membership but not granted |
-      | @Item | @ClassParentParent | @Class       | group_membership | false    | @AllUsers                    | group_membership but not granted |
-      | @Item | @ClassParent       | @Class       | item_unlocking   | false    | @HelperGroupItemUnlocking    |                                  |
-      | @Item | @Class             | @Class       | item_unlocking   | false    | @AllUsers                    |                                  |
-      | @Item | @ClassParentParent | @Class       | item_unlocking   | false    | @HelperGroupNotVisible       | not visible                      |
-      | @Item | @Class             | @Class       | other            | false    | @AllUsers                    |                                  |
-      | @Item | @ClassParentParent | @Class       | other            | false    | @HelperGroupOther1           |                                  |
-      | @Item | @ClassParent       | @Class       | other            | false    | @HelperGroupOther2           |                                  |
+      | item  | group                    | source_group | origin           | is_owner | can_request_help_to          | comment                                     |
+      | @Item | @Class                   | @Class       | self             | false    | @HelperGroupSelf1            |                                             |
+      | @Item | @ClassParentParentParent | @Class       | self             | false    | @HelperGroupSelf1            | shouldn't contain duplicate of previous one |
+      | @Item | @ClassParent             | @Class       | self             | false    | @AllUsers                    |                                             |
+      | @Item | @ClassParentParent       | @Class       | self             | false    |                              | check we don't get empty groups             |
+      | @Item | @Class                   | @Class       | group_membership | false    | @HelperGroupGroupMembership1 | granted                                     |
+      | @Item | @ClassParent             | @Class       | group_membership | false    | @HelperGroupGroupMembership2 | group_membership but not granted            |
+      | @Item | @ClassParentParent       | @Class       | group_membership | false    | @AllUsers                    | group_membership but not granted            |
+      | @Item | @ClassParent             | @Class       | item_unlocking   | false    | @HelperGroupItemUnlocking    |                                             |
+      | @Item | @Class                   | @Class       | item_unlocking   | false    | @AllUsers                    |                                             |
+      | @Item | @ClassParentParent       | @Class       | item_unlocking   | false    | @HelperGroupNotVisible       | not visible                                 |
+      | @Item | @Class                   | @Class       | other            | false    | @AllUsers                    |                                             |
+      | @Item | @ClassParentParent       | @Class       | other            | false    | @HelperGroupOther1           |                                             |
+      | @Item | @ClassParent             | @Class       | other            | false    | @HelperGroupOther2           |                                             |
   # The following lines are to make the groups visible by @Teacher
   And the group @Teacher is a descendant of the group @HelperGroupSelf1
   And the group @Teacher is a descendant of the group @HelperGroupGroupMembership1
@@ -108,3 +110,13 @@ Feature: Get permissions can_request_help_to for a group
     | @AllUsers          | AllUsers                | true               |
     | @HelperGroupOther1 | Group HelperGroupOther1 | false              |
     | @HelperGroupOther2 | Group HelperGroupOther2 | false              |
+  And the response at $.computed.can_request_help_to[*] should be:
+    | id                           | name                              | is_all_users_group |
+    | @AllUsers                    | AllUsers                          | true               |
+    | @HelperGroupSelf1            | Group HelperGroupSelf1            | false              |
+    | @HelperGroupGroupMembership1 | Group HelperGroupGroupMembership1 | false              |
+    | @HelperGroupGroupMembership2 | Group HelperGroupGroupMembership2 | false              |
+    | @HelperGroupItemUnlocking    | Group HelperGroupItemUnlocking    | false              |
+    | @HelperGroupNotVisible       |                                   | false              |
+    | @HelperGroupOther1           | Group HelperGroupOther1           | false              |
+    | @HelperGroupOther2           | Group HelperGroupOther2           | false              |

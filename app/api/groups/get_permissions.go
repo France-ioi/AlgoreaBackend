@@ -510,6 +510,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 	return service.NoError
 }
 
+// filterCanRequestHelpTo filters the canRequestHelpTo permissions to only keep the ones matching the wanted origin.
 func filterCanRequestHelpTo(
 	permissions []canRequestHelpToPermissionsRaw,
 	origin string,
@@ -524,13 +525,14 @@ func filterCanRequestHelpTo(
 	for i, canRequestHelpToPermission := range permissions {
 		// The canRequestHelpToPermission matching "group_membership" origin as well as GroupID and SourceGroupID
 		// is a special case that goes into "granted".
-		if canRequestHelpToPermission.Origin == OriginGroupMembership &&
+		if origin != "computed" &&
+			canRequestHelpToPermission.Origin == OriginGroupMembership &&
 			canRequestHelpToPermission.PermissionGroupID == groupID &&
 			canRequestHelpToPermission.SourceGroupID == sourceGroupID {
 			continue
 		}
 
-		if canRequestHelpToPermission.Origin == origin {
+		if origin == "computed" || canRequestHelpToPermission.Origin == origin {
 			curCanRequestHelpTo := canRequestHelpTo{
 				ID: canRequestHelpToPermission.GroupID,
 			}
@@ -546,5 +548,20 @@ func filterCanRequestHelpTo(
 		}
 	}
 
-	return results
+	return uniqueCanRequestHelpTo(results)
+}
+
+// uniqueCanRequestHelpTo removes duplicates from the canRequestHelpTo slice.
+func uniqueCanRequestHelpTo(canRequestHelpTos []canRequestHelpTo) []canRequestHelpTo {
+	hasID := make(map[int64]bool)
+	result := make([]canRequestHelpTo, 0)
+
+	for _, entry := range canRequestHelpTos {
+		if _, value := hasID[entry.ID]; !value {
+			hasID[entry.ID] = true
+			result = append(result, entry)
+		}
+	}
+
+	return result
 }
