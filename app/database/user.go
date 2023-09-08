@@ -69,7 +69,7 @@ func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool 
 	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
 	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
 
-	itemAncestorsRequestHelpPropagationQuery := s.Items().getAncestorsRequestHelpPropagationQuery(itemID)
+	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
 
 	canRequestHelpTo, err := s.Users().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", u.GroupID).

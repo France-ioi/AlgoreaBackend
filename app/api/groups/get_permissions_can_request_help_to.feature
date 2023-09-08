@@ -20,9 +20,17 @@ Feature: Get permissions can_request_help_to for a group
       | @Class                   | @ClassParent             |          |
       | @OtherSourceGroup        |                          |          |
     And @Teacher is a manager of the group @Class and can grant group access
-    And there are the following tasks:
-      | item  |
-      | @Item |
+    And there are the following items:
+      | item                        | type    |
+      | @ChapterParent              | Chapter |
+      | @ChapterParentNoPropagation | Chapter |
+      | @Chapter                    | Chapter |
+      | @Item                       | Task    |
+    And there are the following item relations:
+      | item     | parent                      | request_help_propagation |
+      | @Item    | @Chapter                    | true                     |
+      | @Chapter | @ChapterParent              | true                     |
+      | @Chapter | @ChapterParentNoPropagation | false                    |
     And there are the following item permissions:
       | item  | group    | is_owner | can_request_help_to |
       | @Item | @Teacher | true     |                     |
@@ -140,3 +148,45 @@ Feature: Get permissions can_request_help_to for a group
     | @HelperOtherSourceGroup3          | Group HelperOtherSourceGroup3     | false              |
     | @HelperOtherSourceGroup4          | Group HelperOtherSourceGroup4     | false              |
     | @HelperOtherSourceGroupNotVisible |                                   | false              |
+
+  Scenario: Should return can_request_help_to from parent items only into computed and only when it propagates
+    Given I am @Teacher
+    And there are the following item permissions:
+      | item                        | group                    | source_group      | origin           | is_owner | can_request_help_to                      | comment            |
+      | @Chapter                    | @Class                   | @Class            | self             | false    | @HelperGroupSelf1                        |                    |
+      | @ChapterParent              | @ClassParentParentParent | @Class            | self             | false    | @HelperGroupSelfNotVisible               | without name       |
+      | @ChapterParentNoPropagation | @ClassParent             | @Class            | self             | false    | @HelperGroupSelfNoPropagation            | shouldn't appear   |
+      | @Chapter                    | @Class                   | @Class            | group_membership | false    | @HelperGroupGroupMembership1             |                    |
+      | @ChapterParent              | @ClassParent             | @Class            | group_membership | false    | @AllUsers                                |                    |
+      | @ChapterParentNoPropagation | @ClassParentParent       | @Class            | group_membership | false    | @HelperGroupGroupMembershipNoPropagation | shouldn't appear   |
+      | @Chapter                    | @ClassParent             | @Class            | item_unlocking   | false    | @HelperGroupItemUnlocking1               |                    |
+      | @ChapterParent              | @Class                   | @Class            | item_unlocking   | false    | @HelperGroupItemUnlocking2               |                    |
+      | @ChapterParentNoPropagation | @ClassParentParent       | @Class            | item_unlocking   | false    | @HelperGroupItemUnlockingNoPropagation   | shouldn't appear   |
+      | @Chapter                    | @Class                   | @Class            | other            | false    | @HelperGroupOther1                       |                    |
+      | @ChapterParent              | @ClassParentParent       | @Class            | other            | false    | @HelperGroupOther2                       |                    |
+      | @ChapterParentNoPropagation | @ClassParent             | @OtherSourceGroup | other            | false    | @HelperGroupOtherNoPropagation           | other source group |
+  # The following lines are to make the groups visible by @Teacher
+    And the group @Teacher is a descendant of the group @HelperGroupSelf1
+    And the group @Teacher is a descendant of the group @HelperGroupGroupMembership1
+    And the group @Teacher is a descendant of the group @HelperGroupGroupMembership2
+    And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking1
+    And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking2
+    And the group @Teacher is a descendant of the group @HelperGroupOther1
+    And the group @Teacher is a descendant of the group @HelperGroupOther2
+    When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
+    Then the response code should be 200
+    And the response at $.granted_via_self.can_request_help_to[*] should be ""
+    And the response at $.granted.can_request_help_to should be "null"
+    And the response at $.granted_via_group_membership.can_request_help_to[*] should be ""
+    And the response at $.granted_via_item_unlocking.can_request_help_to[*] should be ""
+    And the response at $.granted_via_other.can_request_help_to[*] should be ""
+    And the response at $.computed.can_request_help_to[*] should be:
+      | id                           | name                              | is_all_users_group |
+      | @HelperGroupSelf1            | Group HelperGroupSelf1            | false              |
+      | @HelperGroupSelfNotVisible   |                                   | false              |
+      | @HelperGroupGroupMembership1 | Group HelperGroupGroupMembership1 | false              |
+      | @AllUsers                    | AllUsers                          | true               |
+      | @HelperGroupItemUnlocking1   | Group HelperGroupItemUnlocking1   | false              |
+      | @HelperGroupItemUnlocking2   | Group HelperGroupItemUnlocking2   | false              |
+      | @HelperGroupOther1           | Group HelperGroupOther1           | false              |
+      | @HelperGroupOther2           | Group HelperGroupOther2           | false              |
