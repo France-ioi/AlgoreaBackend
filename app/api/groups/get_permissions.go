@@ -16,6 +16,7 @@ const (
 	OriginItemUnlocking   = "item_unlocking"
 	OriginSelf            = "self"
 	OriginOther           = "other"
+	OriginComputed        = "computed"
 )
 
 type permissionsStruct struct {
@@ -343,7 +344,6 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 	var canRequestHelpToPermissions []canRequestHelpToPermissionsRaw
 	err = ancestorPermissions.
 		Joins("JOIN `groups` AS can_request_help_to_group ON can_request_help_to_group.id = permissions_granted.can_request_help_to").
-		Where("source_group_id = ?", sourceGroupID).
 		Select(`
 			permissions_granted.origin AS origin,
 			permissions_granted.source_group_id AS source_group_id,
@@ -408,7 +408,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) servi
 			CanEnterFrom: service.ConvertDBTimeToJSONTime(permissionsRow["generated_can_enter_from"]),
 			CanRequestHelpTo: filterCanRequestHelpTo(
 				canRequestHelpToPermissions,
-				"computed",
+				OriginComputed,
 				groupID,
 				sourceGroupID,
 				store,
@@ -524,15 +524,15 @@ func filterCanRequestHelpTo(
 
 	for i, canRequestHelpToPermission := range permissions {
 		// The canRequestHelpToPermission matching "group_membership" origin as well as GroupID and SourceGroupID
-		// is a special case that goes into "granted".
-		if origin != "computed" &&
+		// is a special case that goes into "granted", and into "computed".
+		if origin != OriginComputed &&
 			canRequestHelpToPermission.Origin == OriginGroupMembership &&
 			canRequestHelpToPermission.PermissionGroupID == groupID &&
 			canRequestHelpToPermission.SourceGroupID == sourceGroupID {
 			continue
 		}
 
-		if origin == "computed" || canRequestHelpToPermission.Origin == origin {
+		if origin == OriginComputed || canRequestHelpToPermission.Origin == origin {
 			curCanRequestHelpTo := canRequestHelpTo{
 				ID: canRequestHelpToPermission.GroupID,
 			}
