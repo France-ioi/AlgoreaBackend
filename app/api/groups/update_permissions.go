@@ -225,8 +225,14 @@ func registerOptionalValidator(data *formdata.FormData, tag, message string, val
 	data.RegisterTranslation(tag, message)
 }
 
-func parsePermissionsInputData(s *database.DataStore, managerPermissions *managerGeneratedPermissions,
-	currentPermissions *userPermissions, user *database.User, groupID int64, r *http.Request) (
+func parsePermissionsInputData(
+	s *database.DataStore,
+	managerPermissions *managerGeneratedPermissions,
+	currentPermissions *userPermissions,
+	user *database.User,
+	groupID int64,
+	r *http.Request,
+) (
 	dataMap map[string]interface{}, modified bool, apiError service.APIError,
 ) {
 	data := formdata.NewFormData(&updatePermissionsInput{})
@@ -258,7 +264,7 @@ func registerPermissionsValidators(
 	registerCanEnterUntilValidator(data, managerPermissions, currentPermissions, &modified, s)
 	registerCanRequestHelpToSetValidator(data, currentPermissions, &modified)
 	registerCanRequestHelpToConsistentValidator(data)
-	registerCanRequestHelpToVisibleValidator(data, user, groupID, s)
+	registerCanRequestHelpToVisibleValidator(data, currentPermissions, user, groupID, s)
 	registerCanRequestHelpToCanGrantViewContent(data, managerPermissions, s)
 	return &modified
 }
@@ -429,7 +435,13 @@ func registerCanRequestHelpToConsistentValidator(data *formdata.FormData) {
 		})
 }
 
-func registerCanRequestHelpToVisibleValidator(data *formdata.FormData, user *database.User, groupID int64, s *database.DataStore) {
+func registerCanRequestHelpToVisibleValidator(
+	data *formdata.FormData,
+	currentPermissions *userPermissions,
+	user *database.User,
+	groupID int64,
+	s *database.DataStore,
+) {
 	registerOptionalValidator(
 		data,
 		"can_request_help_to_visible",
@@ -438,6 +450,11 @@ func registerCanRequestHelpToVisibleValidator(data *formdata.FormData, user *dat
 			value := fl.Field().Interface().(setCanRequestHelpTo)
 
 			if value.ID != nil {
+				// If the same value as before is provided, we don't check for visibility.
+				if currentPermissions.CanRequestHelpTo != nil && *value.ID == *currentPermissions.CanRequestHelpTo {
+					return true
+				}
+
 				// There is only one case for which the can_request_help_to group is visible by the receiving group but not the current-user.
 				//
 				// When the can_request_help_to group is visible to the receiving group, this can be because:

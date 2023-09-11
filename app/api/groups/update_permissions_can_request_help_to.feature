@@ -77,3 +77,41 @@ Feature: Change item access rights for a group - can_request_help_to
     And the table "permissions_granted" at group_id "@Class" should be:
       | group_id | item_id | source_group_id | can_request_help_to |
       | @Class   | @Item   | @Class          | @AllUsers           |
+
+  Scenario: Should work when trying to set can_request_help_to to a group not visible by the giver (current-user) if it was already set at the same value previously
+    Given I am @Teacher
+    # This is the only case for @HelperGroup to be visible by @Class and not @Teacher. Details in comment in update_permissions.go.
+    And @Class is a manager of the group @HelperGroup and can watch its members
+    And there are the following item permissions:
+      | item  | group    | can_view | can_grant_view | can_request_help_to |
+      | @Item | @Teacher |          | content        |                     |
+      | @Item | @Class   | info     |                | @HelperGroup        |
+    When I send a PUT request to "/groups/@Class/permissions/@Class/@Item" with the following body:
+    """
+      {
+        "can_request_help_to": {
+          "id": "@HelperGroup"
+        }
+      }
+    """
+    Then the response code should be 200
+    Then the response should be "updated"
+
+  Scenario: Should work when trying to set can_request_help_to to a group no visible by the receiver if it was already set at the same value previously
+    Given I am @Teacher
+    # @HelperGroup is visible by @Teacher
+    And the group @Teacher is a descendant of the group @HelperGroup
+    And there are the following item permissions:
+      | item  | group    | can_view | can_grant_view | can_request_help_to |
+      | @Item | @Teacher |          | content        |                     |
+      | @Item | @Class   | info     |                | @HelperGroup        |
+    When I send a PUT request to "/groups/@Class/permissions/@Class/@Item" with the following body:
+      """
+        {
+          "can_request_help_to": {
+            "id": "@HelperGroup"
+          }
+        }
+      """
+    Then the response code should be 200
+    Then the response should be "updated"
