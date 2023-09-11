@@ -85,7 +85,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "2999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -95,7 +96,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": true
+          "is_owner": true,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       },
@@ -105,7 +107,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       },
@@ -115,7 +118,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "result",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -125,7 +129,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": true, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -135,7 +140,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "enter", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false, "can_request_help_to": 25
+          "is_owner": false,
+          "can_request_help_to": 25
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -145,7 +151,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       },
@@ -155,7 +162,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "children", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       }
@@ -178,7 +186,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "2999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -188,7 +197,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": true
+          "is_owner": true,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       },
@@ -198,7 +208,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       },
@@ -208,7 +219,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "result",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -218,7 +230,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "10", "name": "Other"}
       },
@@ -228,7 +241,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": true, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -238,7 +252,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "enter", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false, "can_request_help_to": 25
+          "is_owner": false,
+          "can_request_help_to": 25
         },
         "source_group": {"id": "26", "name": "other class"}
       },
@@ -248,7 +263,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       },
@@ -258,7 +274,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "children", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       }
@@ -278,7 +295,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "none", "can_watch": "none",
-          "is_owner": true
+          "is_owner": true,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       }
@@ -298,7 +316,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       }
@@ -321,7 +340,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "10", "name": "Other"}
       },
@@ -331,7 +351,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       },
@@ -341,7 +362,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "27", "name": "third class"}
       }
@@ -364,7 +386,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "info", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "10", "name": "Other"}
       },
@@ -374,7 +397,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "9999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "27", "name": "third class"}
       },
@@ -384,7 +408,8 @@ Feature: Get permissions granted to group
         "permissions": {
           "can_edit": "none", "can_enter_from": "9999-12-31T23:59:59Z", "can_enter_until": "3999-12-31T23:59:59Z",
           "can_grant_view": "none", "can_make_session_official": false, "can_view": "content", "can_watch": "none",
-          "is_owner": false
+          "is_owner": false,
+          "can_request_help_to": null
         },
         "source_group": {"id": "25", "name": "some class"}
       }
