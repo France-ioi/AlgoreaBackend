@@ -50,7 +50,6 @@ type updatePermissionsInput struct {
 	CanRequestHelpTo setCanRequestHelpTo `json:"can_request_help_to" validate:"can_request_help_to_set,can_request_help_to_consistent,can_request_help_to_can_grant_view_content,can_request_help_to_visible"` //nolint:lll
 }
 
-// setCanRequestHelpTo
 // Cannot set `id` and `is_all_users_group` at the same time,
 // but one of them have to be set if `can_request_help_to` is provided.
 type setCanRequestHelpTo struct {
