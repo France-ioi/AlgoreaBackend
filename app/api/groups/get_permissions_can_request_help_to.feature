@@ -58,8 +58,9 @@ Feature: Get permissions can_request_help_to for a group
     When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
     Then the response code should be 200
     And the response at $.granted.can_request_help_to should be:
-      | id           | name   | is_all_users_group |
-      | @HelperGroup | <null> | false              |
+      | id           | is_all_users_group |
+      | @HelperGroup | false              |
+    And the response should not be defined at $.granted.can_request_help_to.name
 
   Scenario: Should return helper group as "AllUsers" group when set to its value
     Given I am @Teacher
@@ -124,7 +125,7 @@ Feature: Get permissions can_request_help_to for a group
     | id                        | name                           | is_all_users_group |
     | @HelperGroupItemUnlocking | Group HelperGroupItemUnlocking | false              |
     | @AllUsers                 | AllUsers                       | true               |
-    | @HelperGroupNotVisible    | <null>                         | false              |
+    | @HelperGroupNotVisible    | <undefined>                    | false              |
     | @HelperOtherSourceGroup3  | Group HelperOtherSourceGroup3  | false              |
   And the response at $.granted_via_other.can_request_help_to[*] should be:
     | id                                | name                          | is_all_users_group |
@@ -132,7 +133,7 @@ Feature: Get permissions can_request_help_to for a group
     | @HelperGroupOther1                | Group HelperGroupOther1       | false              |
     | @HelperGroupOther2                | Group HelperGroupOther2       | false              |
     | @HelperOtherSourceGroup4          | Group HelperOtherSourceGroup4 | false              |
-    | @HelperOtherSourceGroupNotVisible | <null>                        | false              |
+    | @HelperOtherSourceGroupNotVisible | <undefined>                   | false              |
   And the response at $.computed.can_request_help_to[*] should be:
     | id                                | name                              | is_all_users_group |
     | @AllUsers                         | AllUsers                          | true               |
@@ -140,14 +141,14 @@ Feature: Get permissions can_request_help_to for a group
     | @HelperGroupGroupMembership1      | Group HelperGroupGroupMembership1 | false              |
     | @HelperGroupGroupMembership2      | Group HelperGroupGroupMembership2 | false              |
     | @HelperGroupItemUnlocking         | Group HelperGroupItemUnlocking    | false              |
-    | @HelperGroupNotVisible            | <null>                            | false              |
+    | @HelperGroupNotVisible            | <undefined>                       | false              |
     | @HelperGroupOther1                | Group HelperGroupOther1           | false              |
     | @HelperGroupOther2                | Group HelperGroupOther2           | false              |
     | @HelperOtherSourceGroup1          | Group HelperOtherSourceGroup1     | false              |
     | @HelperOtherSourceGroup2          | Group HelperOtherSourceGroup2     | false              |
     | @HelperOtherSourceGroup3          | Group HelperOtherSourceGroup3     | false              |
     | @HelperOtherSourceGroup4          | Group HelperOtherSourceGroup4     | false              |
-    | @HelperOtherSourceGroupNotVisible | <null>                            | false              |
+    | @HelperOtherSourceGroupNotVisible | <undefined>                       | false              |
 
   Scenario: Should return can_request_help_to from parent items only into computed and only when it propagates
     Given I am @Teacher
@@ -183,7 +184,7 @@ Feature: Get permissions can_request_help_to for a group
     And the response at $.computed.can_request_help_to[*] should be:
       | id                           | name                              | is_all_users_group |
       | @HelperGroupSelf1            | Group HelperGroupSelf1            | false              |
-      | @HelperGroupSelfNotVisible   | <null>                            | false              |
+      | @HelperGroupSelfNotVisible   | <undefined>                       | false              |
       | @HelperGroupGroupMembership1 | Group HelperGroupGroupMembership1 | false              |
       | @AllUsers                    | AllUsers                          | true               |
       | @HelperGroupItemUnlocking1   | Group HelperGroupItemUnlocking1   | false              |

@@ -259,8 +259,9 @@ func stringifyJSONPathResultValue(value interface{}) string {
 		// Convert boolean results to strings because the values we check are coming from Gherkin as strings.
 		return strconv.FormatBool(typedValue)
 	default:
+		// The value is nil when the JSONPath is not defined.
 		if value == nil {
-			return nullValue
+			return undefinedValue
 		}
 
 		return typedValue.(string)
@@ -377,6 +378,7 @@ func compareStrings(expected, actual string) error {
 const (
 	nullHeaderValue = "[NULL]"
 	nullValue       = "<null>"
+	undefinedValue  = "<undefined>"
 )
 
 // TheResponseHeaderShouldBe checks that the response header matches the provided value.

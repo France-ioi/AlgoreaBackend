@@ -30,10 +30,9 @@ type permissionsStruct struct {
 type canRequestHelpTo struct {
 	// required: true
 	ID int64 `json:"id,string"`
-	// The name is only set if the group is visible to the current user.
-	// Nullable
-	// required: true
-	Name *string `json:"name"`
+	// The name is present only if the group is visible to the current user.
+	// required: false
+	Name *string `json:"name,omitempty"`
 	// Whether the group is the "all-users" group.
 	// required: true
 	IsAllUsersGroup bool `json:"is_all_users_group"`
