@@ -79,15 +79,15 @@ type getItemCommonFields struct {
 	commonItemFields
 
 	// required: true
-	Permissions itemPermissionsWithHasCanRequestHelpTo `json:"permissions"`
+	Permissions itemPermissionsWithCanRequestHelpTo `json:"permissions"`
 }
 
-type itemPermissionsWithHasCanRequestHelpTo struct {
+type itemPermissionsWithCanRequestHelpTo struct {
 	structures.ItemPermissions
 
 	// Whether a `can_request_help_to` permission is defined.
 	// required: true
-	HasCanRequestHelpTo bool `json:"has_can_request_help_to"`
+	CanRequestHelpTo bool `json:"can_request_help_to"`
 }
 
 type itemRootNodeNotChapterFields struct {
@@ -103,7 +103,7 @@ type itemRootNodeNotChapterFields struct {
 
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
-	Permissions *itemPermissionsWithHasCanRequestHelpTo `json:"permissions,omitempty"`
+	Permissions *itemPermissionsWithCanRequestHelpTo `json:"permissions,omitempty"`
 
 	// Average score of all "end-members" within the watched group
 	// (or of the watched group itself if it is a user or a team).
@@ -461,9 +461,9 @@ func constructItemResponseFromDBData(
 	result := &itemResponse{
 		getItemCommonFields: &getItemCommonFields{
 			commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
-			Permissions: itemPermissionsWithHasCanRequestHelpTo{
-				ItemPermissions:     *rawData.AsItemPermissions(permissionGrantedStore),
-				HasCanRequestHelpTo: hasCanRequestHelpTo,
+			Permissions: itemPermissionsWithCanRequestHelpTo{
+				ItemPermissions:  *rawData.AsItemPermissions(permissionGrantedStore),
+				CanRequestHelpTo: hasCanRequestHelpTo,
 			},
 		},
 		String: itemStringRoot{
@@ -504,9 +504,9 @@ func constructItemResponseFromDBData(
 			result.WatchedGroup.AverageScore = &rawData.WatchedGroupAverageScore
 		}
 		if rawData.CanViewWatchedGroupPermissions {
-			result.WatchedGroup.Permissions = &itemPermissionsWithHasCanRequestHelpTo{
-				ItemPermissions:     *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
-				HasCanRequestHelpTo: watchedGroupHasCanRequestHelpTo,
+			result.WatchedGroup.Permissions = &itemPermissionsWithCanRequestHelpTo{
+				ItemPermissions:  *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
+				CanRequestHelpTo: watchedGroupHasCanRequestHelpTo,
 			}
 		}
 	}
