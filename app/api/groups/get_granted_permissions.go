@@ -25,6 +25,9 @@ type grantedPermissionsViewResultPermissions struct {
 	CanEnterFrom database.Time `json:"can_enter_from"`
 	// required: true
 	CanEnterUntil database.Time `json:"can_enter_until"`
+	// Nullable
+	// required: true
+	CanRequestHelpTo *int64 `json:"can_request_help_to"`
 }
 
 // swagger:model grantedPermissionsViewResultRow
@@ -69,8 +72,6 @@ type grantedPermissionsViewResultRow struct {
 //		or descendants of the `group_id` group managed by the current user with `can_grant_group_access` permission.
 //
 //		* The current user must be a manager (with `can_grant_group_access` permission) of `{group_id}`.
-//
-//		Returns permission `can_request_help_to` if it is set.
 //	parameters:
 //		- name: group_id
 //			in: path
