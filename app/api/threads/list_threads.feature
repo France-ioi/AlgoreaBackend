@@ -257,7 +257,7 @@ Feature: List threads
       | -latest_update_at | 2     | 2          | 0                 | @TaskMaxUpdateAt       |
       | -latest_update_at | 2     | 2          | 1                 | @TaskSecondMaxUpdateAt |
 
-  Scenario Outline: Should support pagination parameters
+  Scenario: Should support pagination parameters with results
     Given I am @John
     And there are the following items:
       | item             | type |
@@ -268,14 +268,25 @@ Feature: List threads
       | @John       | @TaskMinUpdateAt | 1                      | 2023-01-01 00:00:01 |
       | @John       | @TaskMaxUpdateAt | 1                      | 2023-01-01 00:00:02 |
     And I am @John
-    When I send a GET request to "/threads?is_mine=1&limit=1&sort=latest_update_at&from.item_id=<from.item_id>&from.participant_id=<from.participant_id>"
+    When I send a GET request to "/threads?is_mine=1&limit=1&sort=latest_update_at&from.item_id=@TaskMinUpdateAt&from.participant_id=@John"
     Then the response code should be 200
-    And the response should be a JSON array with <nb_results> entries
-    And the response at $[0].item.id should be "<result_item>"
-    Examples:
-      | from.item_id     | from.participant_id | nb_results | result_item      |
-      | @TaskMinUpdateAt | @John               | 1          | @TaskMaxUpdateAt |
-      | @TaskMaxUpdateAt | @John               | 0          |                  |
+    And the response should be a JSON array with 1 entries
+    And the response at $[0].item.id should be "@TaskMaxUpdateAt"
+
+  Scenario: Should support pagination parameters with no results
+    Given I am @John
+    And there are the following items:
+      | item             | type |
+      | @TaskMinUpdateAt | Task |
+      | @TaskMaxUpdateAt | Task |
+    And there are the following threads:
+      | participant | item             | visible_by_participant | latest_update_at    |
+      | @John       | @TaskMinUpdateAt | 1                      | 2023-01-01 00:00:01 |
+      | @John       | @TaskMaxUpdateAt | 1                      | 2023-01-01 00:00:02 |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&limit=1&sort=latest_update_at&from.item_id=@TaskMaxUpdateAt&from.participant_id=@John"
+    Then the response code should be 200
+    And the response should be a JSON array with 0 entries
 
   Scenario Outline: Should filter by status if parameter status is given
     Given I am @John
@@ -320,4 +331,20 @@ Feature: List threads
       | latest_update_gt     | first_result_item | nb_results |
       | 2023-01-01T00:00:00Z | @Task1            | 3          |
       | 2023-01-01T00:00:02Z | @Task3            | 1          |
-      | 2023-01-01T00:00:03Z |                   | 0          |
+
+  Scenario: Should return no results when latest_update_gt is given but no entries are greater than latest_update_gt
+    Given I am @John
+    And there are the following items:
+      | item   | type |
+      | @Task1 | Task |
+      | @Task2 | Task |
+      | @Task3 | Task |
+    And there are the following threads:
+      | participant | item   | visible_by_participant | latest_update_at    |
+      | @John       | @Task1 | 1                      | 2023-01-01 00:00:01 |
+      | @John       | @Task2 | 1                      | 2023-01-01 00:00:02 |
+      | @John       | @Task3 | 1                      | 2023-01-01 00:00:03 |
+    And I am @John
+    When I send a GET request to "/threads?is_mine=1&latest_update_gt=2023-01-01T00:00:03Z&sort=latest_update_at"
+    Then the response code should be 200
+    And the response should be a JSON array with 0 entries

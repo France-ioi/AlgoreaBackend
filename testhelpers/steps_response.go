@@ -55,11 +55,6 @@ func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, err
 func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
 	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
 	if err != nil {
-		// When an empty value is provided, not finding the jsonPath because it doesn't exist is a success.
-		if value == "" {
-			return nil
-		}
-
 		return err
 	}
 
@@ -87,8 +82,8 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 	case float64:
 		expected, _ = strconv.ParseFloat(value, 64)
 	case []interface{}:
-		// When the result is an empty array, matches if we're looking for an empty value.
-		if len(jsonPathResultTyped) == 0 && value == "" {
+		// When the result is an empty array, matches if we're looking for "[]".
+		if len(jsonPathResultTyped) == 0 && value == "[]" {
 			return true
 		}
 	case interface{}:
@@ -102,7 +97,7 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 }
 
 func jsonPathValueConsideredNil(value string) bool {
-	return value == "null" || value == ""
+	return value == nullValue
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
@@ -265,7 +260,7 @@ func stringifyJSONPathResultValue(value interface{}) string {
 		return strconv.FormatBool(typedValue)
 	default:
 		if value == nil {
-			return ""
+			return nullValue
 		}
 
 		return typedValue.(string)
@@ -379,7 +374,10 @@ func compareStrings(expected, actual string) error {
 	return nil
 }
 
-const nullHeaderValue = "[NULL]"
+const (
+	nullHeaderValue = "[NULL]"
+	nullValue       = "<null>"
+)
 
 // TheResponseHeaderShouldBe checks that the response header matches the provided value.
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName, headerValue string) (err error) {
