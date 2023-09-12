@@ -43,19 +43,19 @@ func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, err
 		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %v", err)
 	}
 
-	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
-	if err != nil {
-		return nil, fmt.Errorf("getJSONPathOnResponse: Cannot get JsonPath: %v", err)
-	}
-
-	return jsonPathRes, nil
+	return jsonpath.Get(jsonPath, JSONResponse)
 }
 
 // TheResponseAtShouldBeTheValue checks that the response at a JSONPath is a certain value.
 func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
 	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
 	if err != nil {
-		return err
+		// The JSONPath is not defined.
+		if value == undefinedValue {
+			return nil
+		}
+
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %v", jsonPath, value, err)
 	}
 
 	value = ctx.replaceReferencesByIDs(value)
@@ -266,23 +266,6 @@ func stringifyJSONPathResultValue(value interface{}) string {
 
 		return typedValue.(string)
 	}
-}
-
-// TheResponseShouldNotBeDefinedAt checks that the provided jsonPath doesn't exist.
-func (ctx *TestContext) TheResponseShouldNotBeDefinedAt(jsonPath string) error {
-	var JSONResponse interface{}
-	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
-	if err != nil {
-		return fmt.Errorf("TheResponseShouldNotBeDefinedAt: Unmarshal response: %v", err)
-	}
-
-	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
-	if err != nil {
-		//nolint:nilerr // We want jsonpath.Get to return an error.
-		return nil
-	}
-
-	return fmt.Errorf("TheResponseShouldNotBeDefinedAt: JsonPath: %v is defined with value %v", jsonPath, jsonPathRes)
 }
 
 func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint

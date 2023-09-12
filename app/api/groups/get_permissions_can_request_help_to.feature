@@ -60,7 +60,7 @@ Feature: Get permissions can_request_help_to for a group
     And the response at $.granted.can_request_help_to should be:
       | id           | is_all_users_group |
       | @HelperGroup | false              |
-    And the response should not be defined at $.granted.can_request_help_to.name
+    And the response at $.granted.can_request_help_to.name should be "<undefined>"
 
   Scenario: Should return helper group as "AllUsers" group when set to its value
     Given I am @Teacher

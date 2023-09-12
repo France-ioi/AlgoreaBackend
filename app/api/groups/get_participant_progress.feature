@@ -574,11 +574,11 @@ Feature: Display the current progress of a participant on children of an item (g
     When I send a GET request to "/items/1020/participant-progress?as_team_id=14"
     Then the response code should be 200
     And the response at $.item.item_id should be "1020"
-    And the response should not be defined at $.children
+    And the response at $.children should be "<undefined>"
 
   Scenario: Should not return the children when the current user doesn't have a started result on the requested item with watched_group_id
     Given I am the user with id "22"
     When I send a GET request to "/items/210/participant-progress?watched_group_id=67"
     Then the response code should be 200
     And the response at $.item.item_id should be "210"
-    And the response should not be defined at $.children
+    And the response at $.children should be "<undefined>"
