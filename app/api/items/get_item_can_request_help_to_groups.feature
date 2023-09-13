@@ -9,16 +9,23 @@ Feature: Get permissions can_request_help_to for an item
       | @Class              | @School | @Student,@HelperGroup |
     And @Teacher is a manager of the group @Class and can watch its members
     And there are the following items:
-      | item                 | parent    | type    | request_help_propagation |
-      | @Chapter1            |           | Chapter |                          |
-      | @Chapter2            |           | Chapter |                          |
-      | @Chapter3            |           | Chapter |                          |
-      | @Chapter4            |           | Chapter |                          |
-      | @Item1               | @Chapter1 | Task    |                          |
-      | @Item2               | @Chapter2 | Task    | true                     |
-      | @Item2_NoPropagation | @Chapter2 | Task    | false                    |
-      | @Item3               | @Chapter3 | Task    |                          |
-      | @Item4               | @Chapter4 | Task    | true                     |
+      | item                 | type    |
+      | @Chapter1            | Chapter |
+      | @Chapter2            | Chapter |
+      | @Chapter3            | Chapter |
+      | @Chapter4            | Chapter |
+      | @Item1               | Task    |
+      | @Item2               | Task    |
+      | @Item2_NoPropagation | Task    |
+      | @Item3               | Task    |
+      | @Item4               | Task    |
+    And there are the following item relations:
+      | item                 | parent    | request_help_propagation |
+      | @Item1               | @Chapter1 |                          |
+      | @Item2               | @Chapter2 | true                     |
+      | @Item2_NoPropagation | @Chapter2 | false                    |
+      | @Item3               | @Chapter3 |                          |
+      | @Item4               | @Chapter4 | true                     |
 
   Scenario Outline: permissions.can_request_help_to should be true if there is a can_request_help_to permission
     Given I am @Student
