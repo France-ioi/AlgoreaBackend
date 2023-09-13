@@ -45,9 +45,14 @@ Feature: Get permissions can_request_help_to for a group
       | @Item | @Class | false    | @HelperGroup        |
     When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
     Then the response code should be 200
-    And the response at $.granted.can_request_help_to should be:
-      | id           | name              | is_all_users_group |
-      | @HelperGroup | Group HelperGroup | false              |
+    And the response at $.granted.can_request_help_to in JSON should be:
+      """
+        {
+          "id": "@HelperGroup",
+          "name": "Group HelperGroup",
+          "is_all_users_group": false
+        }
+      """
 
   Scenario: Should return helper group without the name when set and not visible by the current user
     Given I am @Teacher
@@ -57,10 +62,13 @@ Feature: Get permissions can_request_help_to for a group
       | @Item | @Class | false    | @HelperGroup        |
     When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
     Then the response code should be 200
-    And the response at $.granted.can_request_help_to should be:
-      | id           | is_all_users_group |
-      | @HelperGroup | false              |
-    And the response at $.granted.can_request_help_to.name should be "<undefined>"
+    And the response at $.granted.can_request_help_to in JSON should be:
+      """
+        {
+          "id": "@HelperGroup",
+          "is_all_users_group": false
+        }
+      """
 
   Scenario: Should return helper group as "AllUsers" group when set to its value
     Given I am @Teacher
@@ -69,9 +77,14 @@ Feature: Get permissions can_request_help_to for a group
       | @Item | @Class | false    | @AllUsers           |
     When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
     Then the response code should be 200
-    And the response at $.granted.can_request_help_to should be:
-      | id        | name     | is_all_users_group |
-      | @AllUsers | AllUsers | true               |
+    And the response at $.granted.can_request_help_to in JSON should be:
+      """
+        {
+          "id": "@AllUsers",
+          "name": "AllUsers",
+          "is_all_users_group": true
+        }
+      """
 
   Scenario: Should return can_request_help_to arrays when permissions with specific origins are defined
     Given I am @Teacher
@@ -113,9 +126,14 @@ Feature: Get permissions can_request_help_to for a group
     | @AllUsers                | AllUsers                      | true               |
     | @HelperGroupSelf1        | Group HelperGroupSelf1        | false              |
     | @HelperOtherSourceGroup1 | Group HelperOtherSourceGroup1 | false              |
-  And the response at $.granted.can_request_help_to should be:
-    | id                           | name                              |
-    | @HelperGroupGroupMembership1 | Group HelperGroupGroupMembership1 |
+  And the response at $.granted.can_request_help_to in JSON should be:
+    """
+      {
+        "id": "@HelperGroupGroupMembership1",
+        "name": "Group HelperGroupGroupMembership1",
+        "is_all_users_group": false
+      }
+    """
   And the response at $.granted_via_group_membership.can_request_help_to[*] should be:
     | id                           | name                              | is_all_users_group |
     | @HelperGroupGroupMembership2 | Group HelperGroupGroupMembership2 | false              |
@@ -176,11 +194,11 @@ Feature: Get permissions can_request_help_to for a group
     And the group @Teacher is a descendant of the group @HelperGroupOther2
     When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
     Then the response code should be 200
-    And the response at $.granted_via_self.can_request_help_to[*] should be "[]"
+    And the response at $.granted_via_self.can_request_help_to should be "[]"
     And the response at $.granted.can_request_help_to should be "<null>"
-    And the response at $.granted_via_group_membership.can_request_help_to[*] should be "[]"
-    And the response at $.granted_via_item_unlocking.can_request_help_to[*] should be "[]"
-    And the response at $.granted_via_other.can_request_help_to[*] should be "[]"
+    And the response at $.granted_via_group_membership.can_request_help_to should be "[]"
+    And the response at $.granted_via_item_unlocking.can_request_help_to should be "[]"
+    And the response at $.granted_via_other.can_request_help_to should be "[]"
     And the response at $.computed.can_request_help_to[*] should be:
       | id                           | name                              | is_all_users_group |
       | @HelperGroupSelf1            | Group HelperGroupSelf1            | false              |
