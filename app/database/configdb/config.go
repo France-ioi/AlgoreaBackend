@@ -3,6 +3,7 @@ package configdb
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
@@ -118,14 +119,17 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 			ByID(spec.id).
 			Where("type = 'Base'").
 			Where("name = ?", spec.name).
-			Where("text_id = ?", spec.name).
 			Limit(1).
 			HasRows()
 		mustNotBeError(err)
 
 		if !found {
 			err = groupStore.InsertMap(map[string]interface{}{
-				"id": spec.id, "type": "Base", "name": spec.name, "text_id": spec.name,
+				"id":   spec.id,
+				"type": "Base",
+				"name": spec.name,
+				// Append the id to the name because the text_id must be unique.
+				"text_id": spec.name + "-" + strconv.FormatInt(spec.id, 10),
 			})
 			mustNotBeError(err)
 

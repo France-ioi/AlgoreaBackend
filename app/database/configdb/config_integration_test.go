@@ -156,6 +156,20 @@ propagations:
 			},
 			checkConfigPassBefore: false,
 		},
+		{
+			name: "create everything with two domains",
+			config: []domain.ConfigItem{
+				{
+					Domains:       []string{"127.0.0.1", "192.168.0.1"},
+					AllUsersGroup: 2, TempUsersGroup: 4,
+				},
+				{
+					Domains:       []string{"www.france-ioi.org"},
+					AllUsersGroup: 6, TempUsersGroup: 8,
+				},
+			},
+			checkConfigPassBefore: false,
+		},
 	}
 
 	for _, tt := range tests {
