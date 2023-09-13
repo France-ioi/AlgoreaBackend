@@ -339,7 +339,7 @@ func (ctx *TestContext) getItemItemKey(parentItemID, childItemID int64) string {
 }
 
 // addItemItem adds an item-item in the database.
-func (ctx *TestContext) addItemItem(parentItem, childItem string, requestHelpPropagation bool) {
+func (ctx *TestContext) addItemItem(parentItem, childItem string) {
 	parentItemID := ctx.getReference(parentItem)
 	childItemID := ctx.getReference(childItem)
 
@@ -347,10 +347,9 @@ func (ctx *TestContext) addItemItem(parentItem, childItem string, requestHelpPro
 		"items_items",
 		ctx.getItemItemKey(parentItemID, childItemID),
 		map[string]interface{}{
-			"parent_item_id":           parentItemID,
-			"child_item_id":            childItemID,
-			"child_order":              rand.Int31n(1000),
-			"request_help_propagation": requestHelpPropagation,
+			"parent_item_id": parentItemID,
+			"child_item_id":  childItemID,
+			"child_order":    rand.Int31n(1000),
 		},
 	)
 }
@@ -678,19 +677,10 @@ func (ctx *TestContext) ThereAreTheFollowingItems(items *messages.PickleStepArgu
 		})
 
 		if _, ok := item["parent"]; ok {
-			requestHelpPropagation := false
-			if _, ok := item["request_help_propagation"]; ok {
-				var err error
-				requestHelpPropagation, err = strconv.ParseBool(item["request_help_propagation"])
-				if err != nil {
-					return err
-				}
-			}
-
 			parents := strings.Split(item["parent"], ",")
 
 			for _, parent := range parents {
-				ctx.addItemItem(parent, item["item"], requestHelpPropagation)
+				ctx.addItemItem(parent, item["item"])
 			}
 		}
 	}
