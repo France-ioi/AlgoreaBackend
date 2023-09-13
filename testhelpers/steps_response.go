@@ -143,6 +143,48 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 	panic(fmt.Sprintf("TheResponseAtShouldBe: Unhandled case for result found at JSON Path %v: %v", jsonPath, jsonPathRes))
 }
 
+// TheResponseAtInJSONShouldBe checks that the response in JSON at a JSONPath matches.
+func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *messages.PickleStepArgument_PickleDocString) error {
+	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
+	if err != nil {
+		return err
+	}
+
+	actual, err := json.MarshalIndent(&jsonPathRes, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	preprocessedWants, err := ctx.preprocessString(wants.Content)
+	if err != nil {
+		return err
+	}
+
+	expected, err := indentJSON(preprocessedWants)
+	if err != nil {
+		return err
+	}
+
+	return compareStrings(string(expected), string(actual))
+}
+
+// indentJSON indents the JSON string.
+// Works by re-encoding the JSON string with indentation.
+func indentJSON(preprocessedWants string) ([]byte, error) {
+	var exp interface{}
+	err := json.Unmarshal([]byte(preprocessedWants), &exp)
+	if err != nil {
+		return nil, err
+	}
+
+	var expected []byte
+	if expected, err = json.MarshalIndent(&exp, "", "\t"); err != nil {
+		return nil, err
+	}
+
+	return expected, nil
+}
+
 func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 	wants *messages.PickleStepArgument_PickleTable,
 	jsonPathResArr []interface{},
@@ -290,14 +332,8 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		return err
 	}
 
-	// re-encode expected response
-	var exp interface{}
-	err = json.Unmarshal([]byte(expectedBody), &exp)
+	expected, err := indentJSON(expectedBody)
 	if err != nil {
-		return err
-	}
-	var expected, actual []byte
-	if expected, err = json.MarshalIndent(&exp, "", "\t"); err != nil {
 		return err
 	}
 
@@ -322,7 +358,8 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	if responseType != "" {
 		act = payloads.ConvertIntoMap(act)
 	}
-	if actual, err = json.MarshalIndent(act, "", "\t"); err != nil {
+	actual, err := json.MarshalIndent(act, "", "\t")
+	if err != nil {
 		return
 	}
 
