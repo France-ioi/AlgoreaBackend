@@ -131,16 +131,13 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 		}
 
 		return ctx.wantValuesMatchesJSONPathResultArr(wants, typedJSONRes)
-	case map[string]interface{}:
-		// The result is an object (eg. "element": {"a": 0, "b": 0})
-		return ctx.wantValuesMatchesJSONPathResultObject(wants, typedJSONRes)
 	default:
 		if typedJSONRes == nil {
 			return fmt.Errorf("TheResponseAtShouldBe: The JsonPath result at the path %v is %v", jsonPath, typedJSONRes)
 		}
 	}
 
-	panic(fmt.Sprintf("TheResponseAtShouldBe: Unhandled case for result found at JSON Path %v: %v", jsonPath, jsonPathRes))
+	panic(fmt.Sprintf("TheResponseAtShouldBe: Result found at JSON Path %v should be an array but is: %v", jsonPath, jsonPathRes))
 }
 
 // TheResponseAtInJSONShouldBe checks that the response in JSON at a JSONPath matches.
@@ -270,26 +267,6 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 
 	if !cmp.Equal(sortedResults, sortedWants) {
 		return fmt.Errorf("wantValuesMatchesJSONPathResult: The values (sorted) are %v but should have been: %v", sortedResults, sortedWants)
-	}
-
-	return nil
-}
-
-func (ctx *TestContext) wantValuesMatchesJSONPathResultObject(
-	wants *messages.PickleStepArgument_PickleTable,
-	jsonPathResObject map[string]interface{},
-) error {
-	headerCells := wants.Rows[0].Cells
-	objectCells := wants.Rows[1].Cells
-
-	for i := 0; i < len(headerCells); i++ {
-		key := headerCells[i].Value
-		wantedValue := ctx.replaceReferencesByIDs(objectCells[i].Value)
-		actualValue := jsonPathResObject[key]
-
-		if !jsonPathResultMatchesValue(actualValue, wantedValue) {
-			return fmt.Errorf("wantValuesMatchesJSONPathResultObject: [%v] should be %v but is %v", key, wantedValue, actualValue)
-		}
 	}
 
 	return nil
