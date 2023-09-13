@@ -82,27 +82,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "none", "can_grant_view": "none", "can_edit": "none", "can_watch": "none",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "none", "can_grant_view": "none", "can_edit": "none", "can_watch": "none",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "none", "can_grant_view": "none", "can_edit": "none", "can_watch": "none",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "none", "can_grant_view": "none", "can_edit": "none", "can_watch": "none",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "none", "can_grant_view": "none", "can_edit": "none", "can_watch": "none",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -141,27 +146,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content_with_descendants", "can_grant_view": "solution", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -200,27 +210,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -259,27 +274,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -318,27 +338,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -377,27 +402,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -436,27 +466,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -495,27 +530,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         }
       }
     """
@@ -554,27 +594,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         }
       }
     """
@@ -613,27 +658,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "9999-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         }
       }
     """
@@ -672,27 +722,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2021-12-31T23:59:59Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2022-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "2024-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2026-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2028-12-31T23:59:59Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         }
       }
     """
@@ -731,27 +786,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2021-12-31T23:59:59Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2027-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "2025-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2023-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2021-12-31T23:59:59Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         }
       }
     """
@@ -790,27 +850,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2022-12-31T23:59:59Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2028-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "2026-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2024-12-31T23:59:59Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2022-12-31T23:59:59Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         }
       }
     """
@@ -849,27 +914,32 @@ Feature: Get permissions for a group
         "computed": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         },
         "granted_via_group_membership": {
           "can_view": "content", "can_grant_view": "content", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_item_unlocking": {
           "can_view": "info", "can_grant_view": "enter", "can_edit": "all", "can_watch": "answer",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_self": {
           "can_view": "content", "can_grant_view": "content_with_descendants", "can_edit": "children", "can_watch": "result",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": false, "is_owner": false
+          "can_make_session_official": false, "is_owner": false,
+          "can_request_help_to": []
         },
         "granted_via_other": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_edit": "all_with_grant", "can_watch": "answer_with_grant",
           "can_enter_from": "2019-07-16T22:02:28Z",
-          "can_make_session_official": true, "is_owner": true
+          "can_make_session_official": true, "is_owner": true,
+          "can_request_help_to": []
         }
       }
     """

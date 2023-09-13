@@ -52,6 +52,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^there are the following items:$`, ctx.ThereAreTheFollowingItems)
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
+	s.Step(`^there are the following item relations:$`, ctx.ThereAreTheFollowingItemRelations)
 	s.Step(`^I can watch the group (@\w+)$`, ctx.ICanWatchGroup)
 	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
@@ -83,7 +84,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
 	s.Step(`^the response at ([^ ]+) should be "([^"]*)"$`, ctx.TheResponseAtShouldBeTheValue)
 	s.Step("^the response at ([^ ]+) should be:$", ctx.TheResponseAtShouldBe)
-	s.Step("^the response should not be defined at ([^ ]+)$", ctx.TheResponseShouldNotBeDefinedAt)
+	s.Step("^the response at ([^ ]+) in JSON should be:$", ctx.TheResponseAtInJSONShouldBe)
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)

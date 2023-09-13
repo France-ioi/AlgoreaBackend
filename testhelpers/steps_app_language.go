@@ -20,7 +20,10 @@ const (
 	strTrue         = "true"
 )
 
-var itemPermissionKeys = []string{"can_view", "can_grant_view", "can_watch", "can_edit", "is_owner", "can_request_help_to"}
+var (
+	itemPermissionKeys  = []string{"can_view", "can_grant_view", "can_watch", "can_edit", "is_owner", "can_request_help_to"}
+	itemPropagationKeys = []string{"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation"}
+)
 
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
@@ -257,23 +260,34 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 }
 
 // addPermissionsGranted adds a permission granted in the database.
-func (ctx *TestContext) addPermissionGranted(group, item, permission, permissionValue string) {
+func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, permission, permissionValue string) {
 	groupID := ctx.getReference(group)
+	sourceGroupID := ctx.getReference(sourceGroup)
 	itemID := ctx.getReference(item)
 
 	permissionsGrantedTable := "permissions_granted"
-	key := strconv.FormatInt(groupID, 10) + "," + strconv.FormatInt(itemID, 10)
+	key := strconv.FormatInt(groupID, 10) + "," +
+		strconv.FormatInt(itemID, 10) + "," +
+		strconv.FormatInt(sourceGroupID, 10) + "," +
+		origin
 
 	if !ctx.isInDatabase(permissionsGrantedTable, key) {
 		ctx.addInDatabase(permissionsGrantedTable, key, map[string]interface{}{
 			"group_id":        groupID,
-			"source_group_id": groupID,
+			"source_group_id": sourceGroupID,
 			"item_id":         itemID,
+			"origin":          origin,
 		})
 	}
 
 	if permission == "can_request_help_to" {
-		permissionValue = strconv.FormatInt(ctx.getReference(permissionValue), 10)
+		canRequestHelpToGroupID := strconv.FormatInt(ctx.getReference(permissionValue), 10)
+
+		if !ctx.isInDatabase("groups", canRequestHelpToGroupID) {
+			ctx.addGroup(permissionValue, "Group "+referenceToName(permissionValue), "Class")
+		}
+
+		permissionValue = canRequestHelpToGroupID
 	}
 
 	if permission == "is_owner" {
@@ -320,6 +334,10 @@ func (ctx *TestContext) addResult(attemptID, participant, item string, validated
 	)
 }
 
+func (ctx *TestContext) getItemItemKey(parentItemID, childItemID int64) string {
+	return strconv.FormatInt(parentItemID, 10) + "," + strconv.FormatInt(childItemID, 10)
+}
+
 // addItemItem adds an item-item in the database.
 func (ctx *TestContext) addItemItem(parentItem, childItem string) {
 	parentItemID := ctx.getReference(parentItem)
@@ -327,13 +345,19 @@ func (ctx *TestContext) addItemItem(parentItem, childItem string) {
 
 	ctx.addInDatabase(
 		"items_items",
-		strconv.FormatInt(parentItemID, 10)+","+strconv.FormatInt(childItemID, 10),
+		ctx.getItemItemKey(parentItemID, childItemID),
 		map[string]interface{}{
 			"parent_item_id": parentItemID,
 			"child_item_id":  childItemID,
 			"child_order":    rand.Int31n(1000),
 		},
 	)
+}
+
+func (ctx *TestContext) addItemItemPropagation(parent, child, propagation, propagationValue string) {
+	key := ctx.getItemItemKey(ctx.getReference(parent), ctx.getReference(child))
+
+	ctx.dbTables["items_items"][key][propagation] = propagationValue
 }
 
 // addItem adds an item in the database.
@@ -693,12 +717,71 @@ func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *mes
 }
 
 func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]string) error {
+	sourceGroup := itemPermission["group"]
+	if definedSourceGroup, ok := itemPermission["source_group"]; ok {
+		sourceGroup = definedSourceGroup
+	}
+
+	origin := "group_membership"
+	if definedOrigin, ok := itemPermission["origin"]; ok {
+		origin = definedOrigin
+	}
+
 	for _, permissionKey := range itemPermissionKeys {
 		if permissionValue, ok := itemPermission[permissionKey]; ok {
-			err := ctx.UserSetPermissionOnItemWithID(permissionKey, permissionValue, itemPermission["group"], itemPermission["item"])
+			err := ctx.UserSetPermissionExtendedOnItemWithID(
+				permissionKey,
+				permissionValue,
+				itemPermission["group"],
+				itemPermission["item"],
+				sourceGroup,
+				origin,
+			)
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+// ThereAreTheFollowingItemRelations defines item relations, in items_items table.
+func (ctx *TestContext) ThereAreTheFollowingItemRelations(itemPermissions *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(itemPermissions.Rows); i++ {
+		itemRelation := ctx.getRowMap(i, itemPermissions)
+
+		err := ctx.applyItemRelation(itemRelation)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ctx *TestContext) applyItemRelation(itemRelation map[string]string) error {
+	ctx.addItemItem(itemRelation["parent"], itemRelation["item"])
+
+	for _, propagationKey := range itemPropagationKeys {
+		if propagationValue, ok := itemRelation[propagationKey]; ok {
+			boolValue, err := strconv.ParseBool(propagationValue)
+			if err != nil {
+				panic(fmt.Sprintf("applyItemRelation: %v cannot be parsed as a boolean", boolValue))
+			}
+
+			if boolValue {
+				propagationValue = "1"
+			} else {
+				propagationValue = "0"
+			}
+
+			ctx.addItemItemPropagation(
+				itemRelation["parent"],
+				itemRelation["item"],
+				propagationKey,
+				propagationValue,
+			)
 		}
 	}
 
@@ -816,9 +899,23 @@ func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 	return ctx.IAmAMemberOfTheGroupWithID(name)
 }
 
+// ItemRelationSetPropagation adds a propagation on an item relation.
+func (ctx *TestContext) ItemRelationSetPropagation(propagation, value, parent, item string) error {
+	ctx.addItemItemPropagation(parent, item, propagation, value)
+
+	return nil
+}
+
+// UserSetPermissionExtendedOnItemWithID gives a user a permission on an item with a specific source_group and origin.
+func (ctx *TestContext) UserSetPermissionExtendedOnItemWithID(permission, value, user, item, sourceGroup, origin string) error {
+	ctx.addPermissionGranted(user, item, sourceGroup, origin, permission, value)
+
+	return nil
+}
+
 // UserSetPermissionOnItemWithID gives a user a permission on an item.
 func (ctx *TestContext) UserSetPermissionOnItemWithID(permission, value, user, item string) error {
-	ctx.addPermissionGranted(user, item, permission, value)
+	ctx.addPermissionGranted(user, item, user, "group_membership", permission, value)
 
 	return nil
 }

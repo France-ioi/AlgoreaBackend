@@ -43,24 +43,19 @@ func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, err
 		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %v", err)
 	}
 
-	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
-	if err != nil {
-		return nil, fmt.Errorf("getJSONPathOnResponse: Cannot get JsonPath: %v", err)
-	}
-
-	return jsonPathRes, nil
+	return jsonpath.Get(jsonPath, JSONResponse)
 }
 
 // TheResponseAtShouldBeTheValue checks that the response at a JSONPath is a certain value.
 func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) error {
 	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
 	if err != nil {
-		// When an empty value is provided, not finding the jsonPath because it doesn't exist is a success.
-		if value == "" {
+		// The JSONPath is not defined.
+		if value == undefinedValue {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %v", jsonPath, value, err)
 	}
 
 	value = ctx.replaceReferencesByIDs(value)
@@ -87,18 +82,22 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 	case float64:
 		expected, _ = strconv.ParseFloat(value, 64)
 	case []interface{}:
-		// When the result is an empty array, matches if we're looking for an empty value.
-		if len(jsonPathResultTyped) == 0 && value == "" {
+		// When the result is an empty array, matches if we're looking for "[]".
+		if len(jsonPathResultTyped) == 0 && value == "[]" {
 			return true
 		}
 	case interface{}:
 	}
 
-	if jsonPathRes == nil && value == "null" {
+	if jsonPathRes == nil && jsonPathValueConsideredNil(value) {
 		return true
 	}
 
 	return jsonPathRes == expected
+}
+
+func jsonPathValueConsideredNil(value string) bool {
+	return value == nullValue
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
@@ -132,12 +131,55 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 		}
 
 		return ctx.wantValuesMatchesJSONPathResultArr(wants, typedJSONRes)
-	case map[string]interface{}:
-		// The result is an object (eg. "element": {"a": 0, "b": 0})
-		return ctx.wantValuesMatchesJSONPathResultObject(wants, typedJSONRes)
+	default:
+		if typedJSONRes == nil {
+			return fmt.Errorf("TheResponseAtShouldBe: The JsonPath result at the path %v is %v", jsonPath, typedJSONRes)
+		}
 	}
 
-	panic(fmt.Sprintf("TheResponseAtShouldBe: Unhandled case for %v", jsonPathRes))
+	panic(fmt.Sprintf("TheResponseAtShouldBe: Result found at JSON Path %v should be an array but is: %v", jsonPath, jsonPathRes))
+}
+
+// TheResponseAtInJSONShouldBe checks that the response in JSON at a JSONPath matches.
+func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *messages.PickleStepArgument_PickleDocString) error {
+	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
+	if err != nil {
+		return err
+	}
+
+	actual, err := json.MarshalIndent(&jsonPathRes, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	preprocessedWants, err := ctx.preprocessString(wants.Content)
+	if err != nil {
+		return err
+	}
+
+	expected, err := indentJSON(preprocessedWants)
+	if err != nil {
+		return err
+	}
+
+	return compareStrings(string(expected), string(actual))
+}
+
+// indentJSON indents the JSON string.
+// Works by re-encoding the JSON string with indentation.
+func indentJSON(preprocessedWants string) ([]byte, error) {
+	var exp interface{}
+	err := json.Unmarshal([]byte(preprocessedWants), &exp)
+	if err != nil {
+		return nil, err
+	}
+
+	var expected []byte
+	if expected, err = json.MarshalIndent(&exp, "", "\t"); err != nil {
+		return nil, err
+	}
+
+	return expected, nil
 }
 
 func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
@@ -230,51 +272,19 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 	return nil
 }
 
-func (ctx *TestContext) wantValuesMatchesJSONPathResultObject(
-	wants *messages.PickleStepArgument_PickleTable,
-	jsonPathResObject map[string]interface{},
-) error {
-	headerCells := wants.Rows[0].Cells
-	objectCells := wants.Rows[1].Cells
-
-	for i := 0; i < len(headerCells); i++ {
-		key := headerCells[i].Value
-		wantedValue := ctx.replaceReferencesByIDs(objectCells[i].Value)
-		actualValue := jsonPathResObject[key]
-
-		if !jsonPathResultMatchesValue(actualValue, wantedValue) {
-			return fmt.Errorf("wantValuesMatchesJSONPathResultObject: [%v] should be %v but is %v", key, wantedValue, actualValue)
-		}
-	}
-
-	return nil
-}
-
 func stringifyJSONPathResultValue(value interface{}) string {
 	switch typedValue := value.(type) {
 	case bool:
 		// Convert boolean results to strings because the values we check are coming from Gherkin as strings.
 		return strconv.FormatBool(typedValue)
 	default:
+		// The value is nil when the JSONPath is not defined.
+		if value == nil {
+			return undefinedValue
+		}
+
 		return typedValue.(string)
 	}
-}
-
-// TheResponseShouldNotBeDefinedAt checks that the provided jsonPath doesn't exist.
-func (ctx *TestContext) TheResponseShouldNotBeDefinedAt(jsonPath string) error {
-	var JSONResponse interface{}
-	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
-	if err != nil {
-		return fmt.Errorf("TheResponseShouldNotBeDefinedAt: Unmarshal response: %v", err)
-	}
-
-	jsonPathRes, err := jsonpath.Get(jsonPath, JSONResponse)
-	if err != nil {
-		//nolint:nilerr // We want jsonpath.Get to return an error.
-		return nil
-	}
-
-	return fmt.Errorf("TheResponseShouldNotBeDefinedAt: JsonPath: %v is defined with value %v", jsonPath, jsonPathRes)
 }
 
 func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint
@@ -299,14 +309,8 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		return err
 	}
 
-	// re-encode expected response
-	var exp interface{}
-	err = json.Unmarshal([]byte(expectedBody), &exp)
+	expected, err := indentJSON(expectedBody)
 	if err != nil {
-		return err
-	}
-	var expected, actual []byte
-	if expected, err = json.MarshalIndent(&exp, "", "\t"); err != nil {
 		return err
 	}
 
@@ -331,7 +335,8 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	if responseType != "" {
 		act = payloads.ConvertIntoMap(act)
 	}
-	if actual, err = json.MarshalIndent(act, "", "\t"); err != nil {
+	actual, err := json.MarshalIndent(act, "", "\t")
+	if err != nil {
 		return
 	}
 
@@ -367,7 +372,11 @@ func compareStrings(expected, actual string) error {
 	return nil
 }
 
-const nullHeaderValue = "[NULL]"
+const (
+	nullHeaderValue = "[NULL]"
+	nullValue       = "<null>"
+	undefinedValue  = "<undefined>"
+)
 
 // TheResponseHeaderShouldBe checks that the response header matches the provided value.
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName, headerValue string) (err error) {
