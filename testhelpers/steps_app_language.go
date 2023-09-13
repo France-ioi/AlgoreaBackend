@@ -334,6 +334,21 @@ func (ctx *TestContext) addResult(attemptID, participant, item string, validated
 	)
 }
 
+// addItemString adds an item-string in the database.
+func (ctx *TestContext) addItemString(item, languageTag, title string) {
+	itemID := ctx.getReference(item)
+
+	ctx.addInDatabase(
+		"items_strings",
+		strconv.FormatInt(itemID, 10)+","+languageTag,
+		map[string]interface{}{
+			"item_id":      itemID,
+			"language_tag": languageTag,
+			"title":        title,
+		},
+	)
+}
+
 func (ctx *TestContext) getItemItemKey(parentItemID, childItemID int64) string {
 	return strconv.FormatInt(parentItemID, 10) + "," + strconv.FormatInt(childItemID, 10)
 }
@@ -741,6 +756,17 @@ func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]str
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+// ThereAreTheFollowingItemStrings defines item strings, in items_strings table.
+func (ctx *TestContext) ThereAreTheFollowingItemStrings(itemStrings *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(itemStrings.Rows); i++ {
+		itemString := ctx.getRowMap(i, itemStrings)
+
+		ctx.addItemString(itemString["item"], itemString["language_tag"], itemString["title"])
 	}
 
 	return nil

@@ -52,6 +52,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^there are the following items:$`, ctx.ThereAreTheFollowingItems)
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
+	s.Step(`^there are the following item strings:$`, ctx.ThereAreTheFollowingItemStrings)
 	s.Step(`^there are the following item relations:$`, ctx.ThereAreTheFollowingItemRelations)
 	s.Step(`^I can watch the group (@\w+)$`, ctx.ICanWatchGroup)
 	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
