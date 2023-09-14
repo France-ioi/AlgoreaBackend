@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.12.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.11.0...v1.12.0) - 2023-09-14
+- fix services where ids were returned as numbers (instead of string)
+- fix duplication in the thread listing service
+- viewGrantedPermission: improve can_request_help_to support
+- updatePermissions: allow non-visible can_request_help_to value if unchanged
+- fix doc in general and for a few services
+
 ## [v1.11.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.10.0...v1.11.0) - 2023-09-07
 - implement request-help permission propagation
 - improve / fix the services to look for the path to some content, add info whether the path has been already been visited
