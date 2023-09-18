@@ -337,6 +337,25 @@ func (s *ItemStore) GetAncestorsRequestHelpPropagatedQuery(itemID int64) *DB {
 	`, itemID)
 }
 
+// HasCanRequestHelpTo checks whether there is a can_request_help_to permission on an item-group.
+// The checks are made on item's ancestor while can_request_help_propagation=1, and on group's ancestors.
+func (s *ItemStore) HasCanRequestHelpTo(itemID, groupID int64) bool {
+	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
+
+	hasCanRequestHelpTo, err := s.Users().
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", groupID).
+		Joins(`JOIN permissions_granted ON
+			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+			(permissions_granted.item_id = ? OR permissions_granted.item_id IN (?))`, itemID, itemAncestorsRequestHelpPropagationQuery.SubQuery()).
+		Where("permissions_granted.can_request_help_to IS NOT NULL").
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return hasCanRequestHelpTo
+}
+
 // GetItemIDFromTextID gets the item_id from the text_id of an item.
 func (s *ItemStore) GetItemIDFromTextID(textID string) (itemID int64, err error) {
 	err = s.Select("items.id AS id").

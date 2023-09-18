@@ -75,6 +75,21 @@ type commonItemFields struct {
 	Permissions structures.ItemPermissions `json:"permissions"`
 }
 
+type getItemCommonFields struct {
+	commonItemFields
+
+	// required: true
+	Permissions itemPermissionsWithCanRequestHelpTo `json:"permissions"`
+}
+
+type itemPermissionsWithCanRequestHelpTo struct {
+	structures.ItemPermissions
+
+	// Whether a `can_request_help_to` permission is defined.
+	// required: true
+	CanRequestHelpTo bool `json:"can_request_help_to"`
+}
+
 type itemRootNodeNotChapterFields struct {
 	// Nullable; only if not a chapter
 	URL *string `json:"url"`
@@ -88,7 +103,8 @@ type itemRootNodeNotChapterFields struct {
 
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
-	Permissions *structures.ItemPermissions `json:"permissions,omitempty"`
+	Permissions *itemPermissionsWithCanRequestHelpTo `json:"permissions,omitempty"`
+
 	// Average score of all "end-members" within the watched group
 	// (or of the watched group itself if it is a user or a team).
 	// The score of an "end-member" is the max of his `results.score` or 0 if no results.
@@ -98,7 +114,7 @@ type itemResponseWatchedGroupItemInfo struct {
 
 // swagger:model itemResponse
 type itemResponse struct {
-	*commonItemFields
+	*getItemCommonFields
 
 	// required: true
 	// enum: All,Half,One,None
@@ -152,6 +168,13 @@ type itemResponse struct {
 //						 and the current user's (or the team's given in `{as_team_id}`) permissions on it
 //						 (from tables `items`, `items_string`, `permissions_generated`).
 //
+//						 `has_can_request_help_to` is returned both in `permissions` and `watched_group.permissions`.
+//						 If true, it means that for the current-user or the `watch_group` group,
+//						 respectively,
+//						 there is at least one permission in the aggregation by group
+//						 (on current-user's ancestors or `watched_group`'s ancestors respectively)
+//						 and item (on ancestors of `item_id`),
+//						 that has a `can_request_help_to` group set.
 //
 //						 * If the specified item is not visible by the current user (or the team given in `as_team_id`),
 //							 the 'not found' response is returned.
@@ -224,8 +247,20 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
+	hasCanRequestHelpTo := store.Items().HasCanRequestHelpTo(itemID, user.GroupID)
+	watchedGroupHasCanRequestHelpTo := false
+	if watchedGroupIDSet {
+		watchedGroupHasCanRequestHelpTo = store.Items().HasCanRequestHelpTo(itemID, watchedGroupID)
+	}
+
 	permissionGrantedStore := store.PermissionsGranted()
-	response := constructItemResponseFromDBData(rawData, permissionGrantedStore, watchedGroupIDSet)
+	response := constructItemResponseFromDBData(
+		rawData,
+		permissionGrantedStore,
+		watchedGroupIDSet,
+		hasCanRequestHelpTo,
+		watchedGroupHasCanRequestHelpTo,
+	)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -417,10 +452,20 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 }
 
 func constructItemResponseFromDBData(
-	rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore, watchedGroupIDSet bool,
+	rawData *rawItem,
+	permissionGrantedStore *database.PermissionGrantedStore,
+	watchedGroupIDSet bool,
+	hasCanRequestHelpTo bool,
+	watchedGroupHasCanRequestHelpTo bool,
 ) *itemResponse {
 	result := &itemResponse{
-		commonItemFields: rawData.asItemCommonFields(permissionGrantedStore),
+		getItemCommonFields: &getItemCommonFields{
+			commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
+			Permissions: itemPermissionsWithCanRequestHelpTo{
+				ItemPermissions:  *rawData.AsItemPermissions(permissionGrantedStore),
+				CanRequestHelpTo: hasCanRequestHelpTo,
+			},
+		},
 		String: itemStringRoot{
 			itemStringCommon: constructItemStringCommon(rawData),
 		},
@@ -459,7 +504,10 @@ func constructItemResponseFromDBData(
 			result.WatchedGroup.AverageScore = &rawData.WatchedGroupAverageScore
 		}
 		if rawData.CanViewWatchedGroupPermissions {
-			result.WatchedGroup.Permissions = rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore)
+			result.WatchedGroup.Permissions = &itemPermissionsWithCanRequestHelpTo{
+				ItemPermissions:  *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
+				CanRequestHelpTo: watchedGroupHasCanRequestHelpTo,
+			}
 		}
 	}
 
