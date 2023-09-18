@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.13.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.12.0...v1.13.0) - 2023-09-18
+- add `can_request_help` information into the `getItem` service
+
 ## [v1.12.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.11.0...v1.12.0) - 2023-09-14
 - fix services where ids were returned as numbers (instead of string)
 - fix duplication in the thread listing service
