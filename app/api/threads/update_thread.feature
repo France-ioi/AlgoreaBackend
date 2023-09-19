@@ -6,6 +6,7 @@ Feature: Update thread
       | 2  | manager | User  |
       | 3  | jack    | User  |
       | 4  | jess    | User  |
+      | 5  | owner   | User  |
       | 10 | Class   | Class |
       | 11 | School  | Class |
       | 12 | Region  | Class |
@@ -13,12 +14,14 @@ Feature: Update thread
       | 30 | Group   | Class |
       | 50 | Group   | Class |
       | 51 | Group   | Class |
+      | 60 | Group   | Class |
     And the database has the following table 'users':
       | login   | group_id |
       | john    | 1        |
       | manager | 2        |
       | jack    | 3        |
       | jess    | 4        |
+      | owner   | 5        |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 2              |
@@ -33,12 +36,14 @@ Feature: Update thread
       | 51              | 2              |
       | 51              | 3              |
       | 51              | 4              |
+      | 60              | 5              |
     And the groups ancestors are computed
     And the database has the following table 'items':
       | id   | default_language_tag | type    |
       | 3004 | en                   | Chapter |
       | 3005 | en                   | Chapter |
       | 3006 | en                   | Chapter |
+      | 3010 | en                   | Task    |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | request_help_propagation | child_order |
       | 3004           | 3005          | 1                        | 1           |
@@ -48,12 +53,13 @@ Feature: Update thread
       | 3006           | 2009          | 1                        | 1           |
       | 3006           | 2010          | 1                        | 2           |
     And the database has the following table 'permissions_granted':
-      | group_id | source_group_id | item_id | can_request_help_to |
-      | 3        | 11              | 2000    | 12                  |
-      | 3        | 11              | 2001    | 12                  |
-      | 11       | 11              | 2002    | 12                  |
-      | 11       | 11              | 2003    | 12                  |
-      | 12       | 11              | 3004    | 12                  |
+      | group_id | source_group_id | item_id | can_request_help_to | is_owner |
+      | 3        | 11              | 2000    | 12                  | 0        |
+      | 3        | 11              | 2001    | 12                  | 0        |
+      | 5        | 5               | 3010    | null                | 1        |
+      | 11       | 11              | 2002    | 12                  | 0        |
+      | 11       | 11              | 2003    | 12                  | 0        |
+      | 12       | 11              | 3004    | 12                  | 0        |
     And the database has the following table 'threads':
       | item_id | participant_id | status | helper_group_id | latest_update_at |
     And the time now is "2022-01-01T00:00:00Z"
@@ -370,7 +376,6 @@ Feature: Update thread
       | 2010    | waiting_for_participant | 11              | In chapter |
 
   Scenario: Participant who can request help on region can request help on class
-  Scenario: Participant who can request help on region can request help on class
     Given I am the user with id "3"
     And there is no thread with "item_id=270,participant_id=3"
     And I can request help to the group with id "12" on the item with id "270"
@@ -385,3 +390,33 @@ Feature: Update thread
     And the table "threads" at item_id "270" should be:
       | latest_update_at    | helper_group_id |
       | 2022-01-01 00:00:00 | 10              |
+
+  Scenario: The owner of a thread can request help to himself
+    Given I am the user with id "5"
+    And there is no thread with "item_id=3010,participant_id=5"
+    When I send a PUT request to "/items/3010/participant/5/thread" with the following body:
+      """
+      {
+        "status": "waiting_for_trainer",
+        "helper_group_id": 5
+      }
+      """
+    Then the response should be "updated"
+    And the table "threads" at item_id "3010" should be:
+      | latest_update_at    | helper_group_id |
+      | 2022-01-01 00:00:00 | 5               |
+
+  Scenario: The owner of a thread can request help to a visible group
+    Given I am the user with id "5"
+    And there is no thread with "item_id=3010,participant_id=5"
+    When I send a PUT request to "/items/3010/participant/5/thread" with the following body:
+      """
+      {
+        "status": "waiting_for_trainer",
+        "helper_group_id": 60
+      }
+      """
+    Then the response should be "updated"
+    And the table "threads" at item_id "3010" should be:
+      | latest_update_at    | helper_group_id |
+      | 2022-01-01 00:00:00 | 60              |
