@@ -30,9 +30,6 @@ type threadUpdateFields struct {
 type updateThreadRequest struct {
 	threadUpdateFields `json:"thread,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 
-	ItemID        int64
-	ParticipantID int64
-
 	// Used to increment the message count when we are not sure of the exact total message count. Can be negative.
 	// Optional
 	MessageCountIncrement *int `json:"message_count_increment"`
@@ -46,9 +43,12 @@ type updateThreadRequest struct {
 //
 //		Service to update thread information.
 //
+//
 //		If the thread doesn't exist, it is created.
 //
+//
 //		Once a thread has been created, it cannot be deleted or set back to `not_started`.
+//
 //
 //		Validations and restrictions:
 //			* if `status` is given:
@@ -66,6 +66,15 @@ type updateThreadRequest struct {
 //			* if `helper_group_id` or `message_count` or `message_count_increment` is given: the current-user must be allowed
 //				to write (see doc) (if `status` is given, checks related to status supersede this one).
 //			* at most one of `message_count_increment`, `message_count` must be given
+//
+//
+//		A forbidden error is returned when:
+//			* Trying to write to a thread, including changing its status, without having the rights to do so.
+//			* The provided `helper_group_id` doesn't match the restrictions.
+//
+//
+//		If the parameters given are inconsistent, a bad request error is returned with the reason of the error.
+//
 //
 //	parameters:
 //		- name: item_id
@@ -123,10 +132,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 
 		user := srv.GetUser(r)
 
-		input := updateThreadRequest{
-			ItemID:        itemID,
-			ParticipantID: participantID,
-		}
+		input := updateThreadRequest{}
 		formData := formdata.NewFormData(&input)
 
 		formData.RegisterValidation("exclude_increment_if_message_count_set", excludeIncrementIfMessageCountSetValidator)
@@ -153,12 +159,12 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			return apiError.Error
 		}
 
-		apiError = checkUpdateThreadPermissions(user, store, oldThread.Status, input)
+		apiError = checkUpdateThreadPermissions(user, store, oldThread.Status, input, itemID, participantID)
 		if apiError != service.NoError {
 			return apiError.Error
 		}
 
-		threadData := computeNewThreadData(formData, oldThread.MessageCount, oldThread.HelperGroupID, input)
+		threadData := computeNewThreadData(formData, oldThread.MessageCount, oldThread.HelperGroupID, input, itemID, participantID)
 		service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil))
 
 		return nil
@@ -172,8 +178,13 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
-func computeNewThreadData(formData *formdata.FormData, oldMessageCount int, oldHelperGroupID int64,
+func computeNewThreadData(
+	formData *formdata.FormData,
+	oldMessageCount int,
+	oldHelperGroupID int64,
 	input updateThreadRequest,
+	itemID int64,
+	participantID int64,
 ) map[string]interface{} {
 	threadData := formData.ConstructPartialMapForDB("threadUpdateFields")
 	if formData.IsSet("message_count_increment") && input.MessageCountIncrement != nil {
@@ -184,8 +195,8 @@ func computeNewThreadData(formData *formdata.FormData, oldMessageCount int, oldH
 	}
 
 	if len(threadData) > 0 {
-		threadData["item_id"] = input.ItemID
-		threadData["participant_id"] = input.ParticipantID
+		threadData["item_id"] = itemID
+		threadData["participant_id"] = participantID
 		threadData["latest_update_at"] = time.Now()
 
 		if _, ok := threadData["helper_group_id"]; !ok {
@@ -196,8 +207,13 @@ func computeNewThreadData(formData *formdata.FormData, oldMessageCount int, oldH
 	return threadData
 }
 
-func checkUpdateThreadPermissions(user *database.User, store *database.DataStore, oldThreadStatus string,
+func checkUpdateThreadPermissions(
+	user *database.User,
+	store *database.DataStore,
+	oldThreadStatus string,
 	input updateThreadRequest,
+	itemID int64,
+	participantID int64,
 ) service.APIError {
 	if input.Status == "" {
 		if input.HelperGroupID == nil && input.MessageCount == nil && input.MessageCountIncrement == nil {
@@ -206,10 +222,10 @@ func checkUpdateThreadPermissions(user *database.User, store *database.DataStore
 		}
 
 		// the current-user must be allowed to write
-		if !store.Threads().UserCanWrite(user, input.ParticipantID, input.ItemID) {
+		if !store.Threads().UserCanWrite(user, participantID, itemID) {
 			return service.InsufficientAccessRightsError
 		}
-	} else if !store.Threads().UserCanChangeStatus(user, oldThreadStatus, input.Status, input.ParticipantID, input.ItemID) {
+	} else if !store.Threads().UserCanChangeStatus(user, oldThreadStatus, input.Status, participantID, itemID) {
 		return service.InsufficientAccessRightsError
 	}
 

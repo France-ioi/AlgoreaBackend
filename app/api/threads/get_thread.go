@@ -8,20 +8,26 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // swagger:model threadGetResponse
 type threadGetResponse struct {
-	// required: true
+	// required:true
 	ParticipantID int64 `json:"participant_id,string"`
-	// required: true
+	// required:true
 	ItemID int64 `json:"item_id,string"`
-	// required: true
+	// required:true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
-	Status      string `json:"status"`
+	Status string `json:"status"`
+	// The ThreadToken
+	// required:true
 	ThreadToken string `json:"token"`
+	// This field is not really present, it is here only to document the content of token.
+	// required:false
+	TokenForDoc *payloads.ThreadToken `json:"token_not_present_only_for_doc,omitempty"`
 }
 
 // swagger:operation GET /items/{item_id}/participant/{participant_id}/thread threads threadGet
@@ -31,16 +37,19 @@ type threadGetResponse struct {
 //	description: >
 //		Retrieve a thread information.
 //
+//
 //		The `status` is `not_started` if the thread hasn't been started
 //
+//
 //		Restrictions:
-//			* one of these conditions matches:
+//			* one of these conditions must match:
 //				- the current-user is the thread participant and allowed to "can_view >= content" the item
 //				- the current-user has the "can_watch >= answer" permission on the item
 //				- the following rules all matches:
 //					* the current-user is descendant of the thread helper_group
 //					* the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
 //					* the current-user has validated the item
+//			Otherwise, a forbidden error is returned.
 //
 //	parameters:
 //		- name: item_id
