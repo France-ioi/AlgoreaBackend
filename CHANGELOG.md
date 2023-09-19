@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.13.1](https://github.com/France-ioi/AlgoreaBackend/compare/v1.13.0...v1.13.1) - 2023-09-19
+- small fixes, mainly to the doc, related with the thread services
+
 ## [v1.13.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.12.0...v1.13.0) - 2023-09-18
 - add `can_request_help` information into the `getItem` service
 
