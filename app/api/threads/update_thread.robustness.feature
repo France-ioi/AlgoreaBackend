@@ -7,6 +7,7 @@ Feature: Update thread - robustness
       | 3   | jack           | User  |
       | 4   | managernowatch | User  |
       | 5   | jess           | User  |
+      | 6   | owner          | User  |
       | 10  | Class          | Class |
       | 11  | School         | Class |
       | 12  | Region         | Class |
@@ -24,6 +25,7 @@ Feature: Update thread - robustness
       | jack           | 3        |
       | managernowatch | 4        |
       | jess           | 5        |
+      | owner          | 6        |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 12              | 11             |
@@ -51,6 +53,7 @@ Feature: Update thread - robustness
       | 3001 | en                   | Chapter |
       | 3002 | en                   | Chapter |
       | 3003 | en                   | Chapter |
+      | 3010 | en                   | Task    |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | request_help_propagation | child_order |
       | 3000           | 3001          | 1                        | 1           |
@@ -63,13 +66,14 @@ Feature: Update thread - robustness
       | 2004           | 1007          | 1                        | 1           |
       | 2004           | 1008          | 0                        | 2           |
     And the database has the following table 'permissions_granted':
-      | group_id | source_group_id | item_id | can_request_help_to |
-      | 100      | 100             | 240     | 100                 |
-      | 100      | 100             | 250     | 100                 |
-      | 100      | 100             | 260     | 100                 |
-      | 100      | 100             | 270     | 100                 |
-      | 12       | 3               | 3000    | 10                  |
-      | 12       | 3               | 3001    | 12                  |
+      | group_id | source_group_id | item_id | can_request_help_to | is_owner |
+      | 100      | 100             | 240     | 100                 | 0        |
+      | 100      | 100             | 250     | 100                 | 0        |
+      | 100      | 100             | 260     | 100                 | 0        |
+      | 100      | 100             | 270     | 100                 | 0        |
+      | 12       | 3               | 3000    | 10                  | 0        |
+      | 12       | 3               | 3001    | 12                  | 0        |
+      | 6        | 6               | 3010    | null                | 1        |
     And the database has the following table 'threads':
       | item_id | participant_id | status | helper_group_id | latest_update_at |
 
@@ -676,6 +680,29 @@ Feature: Update thread - robustness
       "error_text": "Invalid input data",
       "errors":{
         "helper_group_id": ["the group must be descendant of a group the participant can request help to"]
+      }
+    }
+    """
+
+  Scenario: The owner of a thread cannot request help to a non-visible group
+    Given I am the user with id "6"
+    And there is no thread with "item_id=3010,participant_id=6"
+    When I send a PUT request to "/items/3010/participant/6/thread" with the following body:
+      """
+      {
+        "status": "waiting_for_trainer",
+        "helper_group_id": 5
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Bad Request",
+      "error_text": "Invalid input data",
+      "errors":{
+        "helper_group_id": ["the group must be visible to the current-user and the participant"]
       }
     }
     """
