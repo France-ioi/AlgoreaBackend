@@ -38,29 +38,3 @@ func (s *PropagationStore) ScheduleAsyncPropagation() {
 		Error()
 	mustNotBeError(err)
 }
-
-// AsyncPropagationDone marks the propagation as done.
-func (s *PropagationStore) AsyncPropagationDone() {
-	err := s.
-		ByID(PropagationID).
-		UpdateColumn(map[string]interface{}{
-			"propagate": 0,
-		}).
-		Error()
-	mustNotBeError(err)
-}
-
-// GetScheduledCounter retrieves the propagation counter: how many times a propagation was scheduled.
-// It is incremented in TRIGGER, only when a propagation is scheduled while no propagation is scheduled yet.
-// We use this to make sure we don't trigger the propagation again before it is done.
-func (s *PropagationStore) GetScheduledCounter() int64 {
-	var scheduleCounter int64
-	err := s.
-		ByID(PropagationID).
-		Select("scheduled_counter").
-		PluckFirst("scheduled_counter", &scheduleCounter).
-		Error()
-	mustNotBeError(err)
-
-	return scheduleCounter
-}
