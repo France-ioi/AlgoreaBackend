@@ -108,11 +108,6 @@ func (s *DataStore) PermissionsGranted() *PermissionGrantedStore {
 	return &PermissionGrantedStore{NewDataStoreWithTable(s.DB, "permissions_granted")}
 }
 
-// Propagations returns a PropagationStore.
-func (s *DataStore) Propagations() *PropagationStore {
-	return &PropagationStore{NewDataStoreWithTable(s.DB, "propagations")}
-}
-
 // ItemAncestors returns an ItemAncestorStore.
 func (s *DataStore) ItemAncestors() *ItemAncestorStore {
 	return &ItemAncestorStore{NewDataStoreWithTable(s.DB, "items_ancestors")}
