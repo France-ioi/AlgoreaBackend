@@ -27,23 +27,6 @@ Feature: Create item
       | tag |
       | sl  |
 
-  Scenario: Should have async propagation scheduled after success
-    Given I am the user with id "11"
-    When I send a POST request to "/items" with the following body:
-      """
-      {
-        "type": "Task",
-        "language_tag": "sl",
-        "title": "my title",
-        "image_url":"http://bit.ly/1234",
-        "subtitle": "hard task",
-        "description": "the goal of this task is ...",
-        "parent": {"item_id": "21"}
-      }
-      """
-    Then the response code should be 201
-    And the async propagation is scheduled
-
   Scenario: Valid
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
@@ -91,7 +74,6 @@ Feature: Create item
     And the table "groups" should stay unchanged
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
-    And the async propagation is scheduled
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (not a skill)
     Given I am the user with id "11"

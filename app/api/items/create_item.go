@@ -266,9 +266,6 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		service.MustNotBeError(err)
 
 		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
-
-		store.Propagations().ScheduleAsyncPropagation()
-
 		return nil
 	})
 

@@ -4,7 +4,6 @@ package testhelpers
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -217,20 +216,6 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 // PropagateItemsPermissionsResults calls the propagation of items, permissions, and results.
 func (ctx *TestContext) PropagateItemsPermissionsResults() error {
 	return ctx.DBItemsAncestorsAndPermissionsAreComputed()
-}
-
-// AsyncPropagationIsScheduled checks that the async propagation is scheduled.
-func (ctx *TestContext) AsyncPropagationIsScheduled() error {
-	gormDB, err := database.Open(ctx.db())
-	if err != nil {
-		return err
-	}
-
-	if !database.NewDataStore(gormDB).Propagations().AsyncPropagationScheduled() {
-		return errors.New("async propagation should be scheduled")
-	}
-
-	return nil
 }
 
 // DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
