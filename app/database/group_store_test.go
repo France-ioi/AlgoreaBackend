@@ -131,3 +131,12 @@ func TestGroupStore_DeleteGroup_HandlesErrorOfInnerMethod(t *testing.T) {
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGroupStore_GroupIsVisibleToHimself(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	store := NewDataStore(db)
+
+	assert.True(t, store.Groups().IsVisibleForGroup(1, 1))
+}

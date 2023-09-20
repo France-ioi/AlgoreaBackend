@@ -232,6 +232,10 @@ func (s *GroupStore) PickVisibleGroups(db *DB, user *User) *DB {
 
 // IsVisibleForGroup checks whether a group is visible to a group.
 func (s *GroupStore) IsVisibleForGroup(groupID, visibleForGroupID int64) bool {
+	if groupID == visibleForGroupID {
+		return true
+	}
+
 	isVisible, err := s.PickVisibleGroupsForGroup(s.Groups().DB, visibleForGroupID).
 		Where("groups.id = ?", groupID).
 		Select("1").

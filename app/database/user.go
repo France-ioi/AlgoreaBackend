@@ -30,6 +30,20 @@ func (u *User) Clone() *User {
 	return &result
 }
 
+// IsItemOwner checks whether the user is the owner of an item.
+func (u *User) IsItemOwner(s *DataStore, itemID int64) bool {
+	userIsOwner, err := s.Permissions().
+		Where("permissions.group_id = ?", u.GroupID).
+		Where("permissions.item_id = ?", itemID).
+		Where("permissions.is_owner_generated = 1").
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return userIsOwner
+}
+
 // HasItemPermission checks whether the user have a certain permission on an item.
 func (u *User) HasItemPermission(s *DataStore, itemID int64, permissionType, permissionValue string) bool {
 	userHasPermission, err := s.Permissions().MatchingUserAncestors(u).
@@ -68,6 +82,11 @@ func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool 
 	// in order to verify that the user “can request help to” a group on an item, we need to verify whether
 	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
 	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
+	// additionally, if the user owns the item, he can request help to any group.
+
+	if u.IsItemOwner(s, itemID) {
+		return true
+	}
 
 	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
 
