@@ -236,7 +236,8 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		}
 
 		if !formData.IsSet("parent") && !formData.IsSet("as_root_of_group_id") {
-			apiError = service.ErrInvalidRequest(errors.New("at least one of parent and as_root_of_group_id should be given"))
+			err = errors.New("at least one of parent and as_root_of_group_id should be given")
+			apiError = service.ErrInvalidRequest(err)
 			return err // rollback
 		}
 
@@ -271,8 +272,9 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 
 		return nil
 	})
-
-	service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
+	if err == nil {
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
+	}
 
 	return itemID, apiError, err
 }
