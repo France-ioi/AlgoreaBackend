@@ -73,7 +73,6 @@ Background:
     And the table "groups" should stay unchanged
     And the table "attempts" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "permissions_generated" should stay unchanged
 
   Scenario: Valid (set nullable fields to null)
     Given I am the user with id "11"
@@ -94,7 +93,6 @@ Background:
     And the table "groups" should stay unchanged
     And the table "attempts" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "permissions_generated" should stay unchanged
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
@@ -745,16 +743,15 @@ Background:
       | parent_item_id | child_item_id | child_order | <field_name> |
       | 21             | 112           | 1           | <value>      |
     Examples:
-      | field_name                    | old_value                    | value                        |
-      | content_view_propagation      | as_content                   | as_content                   |
-      | content_view_propagation      | as_content                   | as_info                      |
-      | content_view_propagation      | as_info                      | as_info                      |
-      | upper_view_levels_propagation | as_is                        | as_is                        |
-      | upper_view_levels_propagation | as_is                        | as_content_with_descendants  |
-      | upper_view_levels_propagation | as_content_with_descendants  | as_content_with_descendants  |
-      | grant_view_propagation        | true                         | true                         |
-      | watch_propagation             | true                         | true                         |
-      | edit_propagation              | true                         | true                         |
+      | field_name                    | old_value                   | value                       |
+      | content_view_propagation      | as_content                  | as_content                  |
+      | content_view_propagation      | as_content                  | as_info                     |
+      | content_view_propagation      | as_info                     | as_info                     |
+      | upper_view_levels_propagation | as_is                       | as_is                       |
+      | upper_view_levels_propagation | as_is                       | as_content_with_descendants |
+      | upper_view_levels_propagation | as_content_with_descendants | as_content_with_descendants |
+      | grant_view_propagation        | true                        | true                        |
+      | watch_propagation             | true                        | true                        |
 
   Scenario: Allows keeping old values in items_items
     Given I am the user with id "11"
