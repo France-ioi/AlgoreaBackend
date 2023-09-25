@@ -266,8 +266,13 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		service.MustNotBeError(err)
 
 		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
+
+		store.ItemItems().CreateNewAncestors()
+
 		return nil
 	})
+
+	service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
 
 	return itemID, apiError, err
 }

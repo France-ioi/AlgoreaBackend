@@ -184,7 +184,15 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return apiError.Error // rollback
 		}
 
-		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenInfoMap, oldPropagationLevelsMap)
+		apiError, err = updateChildrenAndRunListeners(
+			formData,
+			store,
+			itemID,
+			&input,
+			childrenInfoMap,
+			oldPropagationLevelsMap,
+			srv.GetPropagationEndpoint(),
+		)
 		return err
 	})
 
@@ -221,9 +229,14 @@ func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64,
 	return service.NoError
 }
 
-func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.DataStore, itemID int64,
-	input *updateItemRequest, childrenPermissionMap map[int64]permissionAndType,
+func updateChildrenAndRunListeners(
+	formData *formdata.FormData,
+	store *database.DataStore,
+	itemID int64,
+	input *updateItemRequest,
+	childrenPermissionMap map[int64]permissionAndType,
 	oldPropagationLevelsMap map[int64]*itemsRelationData,
+	propagationEndpoint string,
 ) (apiError service.APIError, err error) {
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
@@ -246,15 +259,21 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 
 			parentChildSpec := constructItemsItemsForChildren(input.Children, itemID)
 			insertItemItems(lockedStore, parentChildSpec)
-			return lockedStore.ItemItems().After()
+
+			store.ItemItems().CreateNewAncestors()
+
+			return nil
 		})
+
+		service.SchedulePropagation(store, propagationEndpoint, []string{"permissions", "results"})
 	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
 		// results data of the task will be zeroed
 		service.MustNotBeError(
 			store.Exec("INSERT INTO results_propagate ? ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'",
 				store.Results().Where("item_id = ?", itemID).
 					Select("participant_id, attempt_id, item_id, 'to_be_recomputed' AS state").QueryExpr()).Error())
-		store.ScheduleResultsPropagation()
+
+		service.SchedulePropagation(store, propagationEndpoint, []string{"results"})
 	}
 	return apiError, err
 }
