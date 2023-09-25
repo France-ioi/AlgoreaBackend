@@ -16,17 +16,18 @@ func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 	}
 }
 
-func (s *ItemItemStore) createNewAncestors() {
+// CreateNewAncestors populates items_ancestors table.
+func (s *ItemItemStore) CreateNewAncestors() {
 	s.DataStore.createNewAncestors("items", "item")
 }
 
-// After is a "listener" that calls ItemItemStore::createNewAncestors(),
+// After is a "listener" that calls ItemItemStore::CreateNewAncestors(),
 // PermissionGrantedStore::computeAllAccess() and schedules a run of ResultStore.propagate().
 func (s *ItemItemStore) After() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	s.createNewAncestors()
+	s.CreateNewAncestors()
 	s.PermissionsGranted().computeAllAccess()
 	s.ScheduleResultsPropagation()
 	return nil
