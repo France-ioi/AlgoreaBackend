@@ -87,7 +87,7 @@ type itemPermissionsWithCanRequestHelpTo struct {
 
 	// Whether a `can_request_help_to` permission is defined.
 	// required: true
-	CanRequestHelpTo bool `json:"can_request_help_to"`
+	CanRequestHelp bool `json:"can_request_help"`
 }
 
 type itemRootNodeNotChapterFields struct {
@@ -462,8 +462,8 @@ func constructItemResponseFromDBData(
 		getItemCommonFields: &getItemCommonFields{
 			commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
 			Permissions: itemPermissionsWithCanRequestHelpTo{
-				ItemPermissions:  *rawData.AsItemPermissions(permissionGrantedStore),
-				CanRequestHelpTo: hasCanRequestHelpTo,
+				ItemPermissions: *rawData.AsItemPermissions(permissionGrantedStore),
+				CanRequestHelp:  hasCanRequestHelpTo,
 			},
 		},
 		String: itemStringRoot{
@@ -505,8 +505,8 @@ func constructItemResponseFromDBData(
 		}
 		if rawData.CanViewWatchedGroupPermissions {
 			result.WatchedGroup.Permissions = &itemPermissionsWithCanRequestHelpTo{
-				ItemPermissions:  *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
-				CanRequestHelpTo: watchedGroupHasCanRequestHelpTo,
+				ItemPermissions: *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
+				CanRequestHelp:  watchedGroupHasCanRequestHelpTo,
 			}
 		}
 	}

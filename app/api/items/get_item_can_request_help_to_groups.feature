@@ -1,4 +1,4 @@
-Feature: Get permissions can_request_help_to for an item
+Feature: Get permissions can_request_help for an item
   Background:
     Given there are the following groups:
       | group               | parent  | members               |
@@ -29,7 +29,7 @@ Feature: Get permissions can_request_help_to for an item
       | @Item4               | @Chapter4 | true                     |
       | @Item4_NoPropagation | @Chapter4 | false                    |
 
-  Scenario Outline: permissions.can_request_help_to should be true if there is a can_request_help_to permission
+  Scenario Outline: permissions.can_request_help should be true if there is a can_request_help_to permission
     Given I am @Student
     And there are the following item permissions:
       | item                 | group    | can_view | can_request_help_to | can_request_help is defined                                                           |
@@ -43,17 +43,17 @@ Feature: Get permissions can_request_help_to for an item
       | @Item4_NoPropagation | @School  | solution |                     |                                                                                       |
     When I send a GET request to "/items/<item_id>"
     Then the response code should be 200
-    And the response at $.permissions.can_request_help_to should be "<can_request_help_to>"
+    And the response at $.permissions.can_request_help should be "<can_request_help>"
     Examples:
-      | item_id              | can_request_help_to |
-      | @Item1               | true                |
-      | @Item2               | true                |
-      | @Item2_NoPropagation | false               |
-      | @Item3               | true                |
-      | @Item4               | true                |
-      | @Item4_NoPropagation | false               |
+      | item_id              | can_request_help |
+      | @Item1               | true             |
+      | @Item2               | true             |
+      | @Item2_NoPropagation | false            |
+      | @Item3               | true             |
+      | @Item4               | true             |
+      | @Item4_NoPropagation | false            |
 
-  Scenario Outline: watched_group.permissions.can_request_help_to should be true if there is a can_request_help_to permission for the watched_group
+  Scenario Outline: watched_group.permissions.can_request_help should be true if there is a can_request_help_to permission for the watched_group
     Given I am @Teacher
     And there are the following item permissions:
       | item                 | group        | can_view | can_watch | can_request_help_to | can_request_help is defined                                                                |
@@ -69,12 +69,12 @@ Feature: Get permissions can_request_help_to for an item
       | @Chapter4            | @ClassParent |          |           | @HelperGroup4       | On @Item4 and @Item4_NoPropagation ancestor, on an ancestor (@ClassParent) of current-user |
     When I send a GET request to "/items/<item_id>?watched_group_id=@Class"
     Then the response code should be 200
-    And the response at $.watched_group.permissions.can_request_help_to should be "<can_request_help_to>"
+    And the response at $.watched_group.permissions.can_request_help should be "<can_request_help>"
     Examples:
-      | item_id              | can_request_help_to |
-      | @Item1               | true                |
-      | @Item2               | true                |
-      | @Item2_NoPropagation | false               |
-      | @Item3               | true                |
-      | @Item4               | true                |
-      | @Item4_NoPropagation | false               |
+      | item_id              | can_request_help |
+      | @Item1               | true             |
+      | @Item2               | true             |
+      | @Item2_NoPropagation | false            |
+      | @Item3               | true             |
+      | @Item4               | true             |
+      | @Item4_NoPropagation | false            |
