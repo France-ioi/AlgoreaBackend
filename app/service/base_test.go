@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -45,4 +46,44 @@ func TestBase_GetStore(t *testing.T) {
 func TestBase_GetStore_WithNilStore(t *testing.T) {
 	req := &http.Request{}
 	assert.Nil(t, (&Base{}).GetStore(req))
+}
+
+func TestBase_GetPropagationEndpoint(t *testing.T) {
+	tests := []struct {
+		name         string
+		ServerConfig func() *viper.Viper
+		want         string
+	}{
+		{
+			name:         "should be empty if no config",
+			ServerConfig: viper.New,
+			want:         "",
+		},
+		{
+			name: "should be empty if the propagation endpoint is not set",
+			ServerConfig: func() *viper.Viper {
+				config := viper.New()
+				config.Set("propagation_endpoint", "")
+				return config
+			},
+			want: "",
+		},
+		{
+			name: "should return the endpoint if it is set",
+			ServerConfig: func() *viper.Viper {
+				config := viper.New()
+				config.Set("propagation_endpoint", "https://example.com")
+				return config
+			},
+			want: "https://example.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := &Base{
+				ServerConfig: tt.ServerConfig(),
+			}
+			assert.Equalf(t, tt.want, srv.GetPropagationEndpoint(), "GetPropagationEndpoint()")
+		})
+	}
 }

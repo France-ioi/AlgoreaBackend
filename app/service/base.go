@@ -38,3 +38,8 @@ func (srv *Base) GetStore(r *http.Request) *database.DataStore {
 	}
 	return database.NewDataStoreWithContext(r.Context(), srv.store.DB)
 }
+
+// GetPropagationEndpoint returns the propagation endpoint from the config.
+func (srv *Base) GetPropagationEndpoint() string {
+	return srv.ServerConfig.GetString("propagation_endpoint")
+}
