@@ -3,9 +3,12 @@ package service
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
+
+const PropagationEndpointTimeout = 3 * time.Second
 
 // SchedulePropagation schedules asynchronous propagation of the given types.
 // If endpoint is an empty string, it will be done synchronously.
@@ -13,7 +16,10 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 	endpointFailed := false
 	if endpoint != "" {
 		// Async.
-		response, err := http.Get(endpoint + "?types=" + strings.Join(types, ",")) //nolint:bodyclose Closed in defer.
+		client := http.Client{
+			Timeout: PropagationEndpointTimeout,
+		}
+		response, err := client.Get(endpoint + "?types=" + strings.Join(types, ",")) //nolint:bodyclose Closed in defer.
 		defer func(response *http.Response) {
 			_ = response.Body.Close()
 		}(response)
