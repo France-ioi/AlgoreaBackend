@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const PropagationEndpointTimeout = 3 * time.Second
@@ -25,6 +26,8 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 		}(response)
 
 		if err != nil || response.StatusCode != http.StatusOK {
+			logging.Errorf("Propagation endpoint error: status=%v, error=%v", response.StatusCode, err)
+
 			endpointFailed = true
 		}
 	}

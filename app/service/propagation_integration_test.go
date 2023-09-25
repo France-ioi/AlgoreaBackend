@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -8,6 +9,8 @@ import (
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
@@ -20,6 +23,7 @@ func TestSchedulePropagation(t *testing.T) {
 		name                 string
 		args                 args
 		endpointResponseCode int
+		loggedError          string
 		propagated           bool
 	}{
 		{
@@ -42,6 +46,7 @@ func TestSchedulePropagation(t *testing.T) {
 			args: args{
 				endpoint: "https://example.com",
 			},
+			loggedError:          "Propagation endpoint error: status=500, error=<nil>",
 			endpointResponseCode: http.StatusInternalServerError,
 			propagated:           true,
 		},
@@ -63,6 +68,9 @@ func TestSchedulePropagation(t *testing.T) {
 			httpmock.Activate()
 			defer httpmock.DeactivateAndReset()
 
+			logHook, restoreFunc := logging.MockSharedLoggerHook()
+			defer restoreFunc()
+
 			if tt.args.endpoint != "" {
 				httpmock.RegisterStubRequest(
 					httpmock.NewStubRequest(
@@ -79,9 +87,15 @@ func TestSchedulePropagation(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.propagated, exists)
 
-			// verify that all stubs were called
+			// Verify that all stubs were called.
 			if err := httpmock.AllStubsCalled(); err != nil {
 				t.Errorf("Not all stubs were called: %s", err)
+			}
+
+			// Verify logs.
+			if tt.loggedError != "" {
+				logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+				assert.Contains(t, logs, fmt.Sprintf("level=error msg=%q", tt.loggedError))
 			}
 		})
 	}
