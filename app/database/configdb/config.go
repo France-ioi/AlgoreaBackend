@@ -50,17 +50,6 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 		}
 	}
 
-	// There must be an entry in propagations table with id 1 to handle propagation.
-	propagationStore := datastore.Propagations()
-	hasRows, err := propagationStore.
-		Where("propagation_id = 1").
-		Select("1").Limit(1).HasRows()
-	mustNotBeError(err)
-
-	if !hasRows {
-		return fmt.Errorf("missing entry in propagations table with id 1")
-	}
-
 	return nil
 }
 
@@ -95,8 +84,6 @@ func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []dom
 			}
 		}
 	}
-
-	insertPropagations(store)
 
 	if len(relationsToCreate) > 0 || inserted {
 		return groupStore.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
@@ -133,23 +120,6 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 		}
 	}
 	return inserted
-}
-
-func insertPropagations(datastore *database.DataStore) {
-	propagationStore := datastore.Propagations()
-
-	found, err := propagationStore.
-		Where("propagation_id = ?", database.PropagationID).
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-
-	if !found {
-		err = propagationStore.InsertMap(map[string]interface{}{
-			"propagation_id": database.PropagationID,
-		})
-		mustNotBeError(err)
-	}
 }
 
 func mustNotBeError(err error) {

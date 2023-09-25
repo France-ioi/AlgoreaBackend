@@ -41,8 +41,6 @@ groups:
 groups_groups:
 	- {parent_group_id: 2, child_group_id: 4}
 	- {parent_group_id: 6, child_group_id: 8}
-propagations:
-	- {propagation_id: 1}
 			`,
 		},
 		{
@@ -56,8 +54,6 @@ propagations:
 			fixtures: `
 groups:
 	- {id: 4}
-propagations:
-	- {propagation_id: 1}
 			`,
 			expectedError: errors.New("no AllUsers group for domain \"192.168.0.1\""),
 		},
@@ -89,15 +85,8 @@ propagations:
 groups:
 	- {id: 2}
 	- {id: 4}
-propagations:
-	- {propagation_id: 1}
 			`,
 			expectedError: errors.New("no AllUsers -> TempUsers link in groups_groups for domain \"127.0.0.1\""),
-		},
-		{
-			name:          "propagations entry with id=1 missing",
-			fixtures:      "",
-			expectedError: errors.New("missing entry in propagations table with id 1"),
 		},
 	}
 
@@ -141,8 +130,6 @@ groups:
 	- {id: 4, type: "Base", name: "TempUsers", text_id: "TempUsers"}
 groups_groups:
 	- {parent_group_id: 2, child_group_id: 4}
-propagations:
-	- {propagation_id: 1}
 			`,
 			checkConfigPassBefore: true,
 		},
