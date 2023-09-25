@@ -68,8 +68,6 @@ groups:
 			fixtures: `
 groups:
 	- {id: 2}
-propagations:
-	- {propagation_id: 1}
 			`,
 			expectedError: errors.New("no TempUsers group for domain \"127.0.0.1\""),
 		},
