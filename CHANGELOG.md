@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v1.13.2](https://github.com/France-ioi/AlgoreaBackend/compare/v1.13.1...v1.13.2) - 2023-09-25
+- allow item owners to request help to any visible group
+- rename attribute name related with the request help permission in the `getItem` service
+
 ## [v1.13.1](https://github.com/France-ioi/AlgoreaBackend/compare/v1.13.0...v1.13.1) - 2023-09-19
 - small fixes, mainly to the doc, related with the thread services
 
