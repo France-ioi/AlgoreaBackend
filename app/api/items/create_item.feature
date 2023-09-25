@@ -41,7 +41,6 @@ Feature: Create item
         "parent": {"item_id": "21"}
       }
       """
-    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -92,7 +91,6 @@ Feature: Create item
         "as_root_of_group_id": "10"
       }
       """
-    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -153,7 +151,6 @@ Feature: Create item
         "children": [{"item_id": "12", "order": 0}]
       }
       """
-    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -234,7 +231,6 @@ Feature: Create item
         ]
       }
       """
-    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -319,7 +315,6 @@ Feature: Create item
         ]
       }
       """
-    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -415,7 +410,6 @@ Feature: Create item
       ]
     }
     """
-    And the items, permissions and results are propagated
     Then the response code should be 201
     And the response body should be, in JSON:
     """
