@@ -8,6 +8,9 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/database/configdb"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 )
 
 func init() { //nolint:gochecknoinits
@@ -34,7 +37,12 @@ func init() { //nolint:gochecknoinits
 			}
 
 			if !skipChecks {
-				err = application.CheckConfig()
+				var domainConfig []domain.ConfigItem
+				domainConfig, err = app.DomainsConfig(application.Config)
+				if err != nil {
+					log.Fatalf("Cannot load domain config: %s\n", err)
+				}
+				err = configdb.CheckConfig(database.NewDataStore(application.Database), domainConfig)
 				if err != nil {
 					log.Fatalf("Integrity check failed: %s\nUse --skip-checks to bypass the integrity check\n", err)
 				}

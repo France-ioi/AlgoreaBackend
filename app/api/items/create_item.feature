@@ -213,7 +213,7 @@ Feature: Create item
       | 11       | 1002    | content_with_descendants | enter          | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 1003    | content_with_descendants | content        | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 1004    | content_with_descendants | enter          | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
-      When I send a POST request to "/items" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Skill",

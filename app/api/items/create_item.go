@@ -236,7 +236,8 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		}
 
 		if !formData.IsSet("parent") && !formData.IsSet("as_root_of_group_id") {
-			apiError = service.ErrInvalidRequest(errors.New("at least one of parent and as_root_of_group_id should be given"))
+			err = errors.New("at least one of parent and as_root_of_group_id should be given")
+			apiError = service.ErrInvalidRequest(err)
 			return err // rollback
 		}
 
@@ -266,8 +267,14 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		service.MustNotBeError(err)
 
 		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
+
+		store.ItemItems().CreateNewAncestors()
+
 		return nil
 	})
+	if err == nil {
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
+	}
 
 	return itemID, apiError, err
 }
@@ -615,7 +622,6 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
 		insertItemItems(store, parentChildSpec)
 	}
-	service.MustNotBeError(store.ItemItems().After())
 
 	return itemID, service.NoError
 }

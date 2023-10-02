@@ -5,6 +5,11 @@ import "database/sql"
 // computeAllAccess recomputes fields of permissions_generated.
 //
 // It starts from group-item pairs marked with propagate_to = 'self' in `permissions_propagate`.
+// Those are created by SQL triggers:
+// - after_insert_permissions_granted
+// - after_update_permissions_granted
+// - after_delete_permissions_granted
+// - after_insert_items_items
 //
 // 1. can_view_generated, can_grant_view_generated, can_watch_generated, can_edit_generated, is_owner_generated are updated.
 //
