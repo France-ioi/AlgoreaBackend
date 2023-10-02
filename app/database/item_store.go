@@ -347,7 +347,7 @@ func (s *ItemStore) HasCanRequestHelpTo(itemID, groupID int64) bool {
 		Joins(`JOIN permissions_granted ON
 			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
 			(permissions_granted.item_id = ? OR permissions_granted.item_id IN (?))`, itemID, itemAncestorsRequestHelpPropagationQuery.SubQuery()).
-		Where("permissions_granted.can_request_help_to IS NOT NULL").
+		Where("permissions_granted.can_request_help_to IS NOT NULL OR permissions_granted.is_owner = 1").
 		Select("1").
 		Limit(1).
 		HasRows()
