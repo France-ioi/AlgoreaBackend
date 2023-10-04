@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.14.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.13.2...v2.14.0) - 2023-10-04
+- jump from v1.x.y to v2.x.y to match how we usually name this backend
+- allow asynchronous permisssion and result propagation by calling an external endpoint
+- fix: `getItem` service should return `can_request_help = true` in its permissions when the user is an owner
+
 ## [v1.13.2](https://github.com/France-ioi/AlgoreaBackend/compare/v1.13.1...v1.13.2) - 2023-09-25
 - allow item owners to request help to any visible group
 - rename attribute name related with the request help permission in the `getItem` service
