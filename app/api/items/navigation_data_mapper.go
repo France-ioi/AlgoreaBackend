@@ -76,11 +76,24 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		Limit(1).
 		SubQuery()
 
-	childrenQuery := constructItemChildrenQuery(dataStore, rootID, groupID, "info", attemptID, watchedGroupIDSet, watchedGroupID,
+	childrenQuery := constructItemChildrenQuery(
+		dataStore,
+		rootID,
+		groupID,
+		"info",
+		attemptID,
+		watchedGroupIDSet,
+		watchedGroupID,
 		commonAttributes+
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
 			 IFNULL(?, 0) AS has_visible_children, child_order`,
-		[]interface{}{hasVisibleChildrenQuery}, "",
+		[]interface{}{hasVisibleChildrenQuery},
+		"",
+		func(db *database.DB) *database.DB {
+			return db.Joins("JOIN items AS parent_item ON parent_item.id = ?", rootID).
+				Joins("JOIN items_items ON items_items.parent_item_id = parent_item.id AND items_items.child_item_id = items.id").
+				Where("(parent_item.type = 'Skill' AND items.type = 'Skill') OR parent_item.type <> 'Skill'")
+		},
 	)
 
 	allItemsQuery := itemsQuery.UnionAll(childrenQuery.SubQuery())
