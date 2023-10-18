@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.14.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.14.0...v2.14.1) - 2023-10-18
+- fix a bug in the item children service related with skills
+
 ## [v2.14.0](https://github.com/France-ioi/AlgoreaBackend/compare/v1.13.2...v2.14.0) - 2023-10-04
 - jump from v1.x.y to v2.x.y to match how we usually name this backend
 - allow asynchronous permisssion and result propagation by calling an external endpoint
