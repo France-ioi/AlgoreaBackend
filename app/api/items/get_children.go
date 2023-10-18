@@ -249,7 +249,14 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 
 	var rawData []rawListChildItem
 	service.MustNotBeError(
-		constructItemChildrenQuery(store, itemID, participantID, requiredViewPermissionOnItems, attemptID, watchedGroupIDSet, watchedGroupID,
+		constructItemChildrenQuery(
+			store,
+			itemID,
+			participantID,
+			requiredViewPermissionOnItems,
+			attemptID,
+			watchedGroupIDSet,
+			watchedGroupID,
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
@@ -269,7 +276,11 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
-			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`).
+			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
+			func(db *database.DB) *database.DB {
+				return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", itemID)
+			},
+		).
 			JoinsUserAndDefaultItemStrings(user).
 			Scan(&rawData).Error())
 
@@ -279,18 +290,29 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 	return service.NoError
 }
 
-func constructItemChildrenQuery(dataStore *database.DataStore, parentItemID, groupID int64, requiredViewPermissionOnItems string,
-	attemptID int64, watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+func constructItemChildrenQuery(
+	dataStore *database.DataStore,
+	parentItemID int64,
+	groupID int64,
+	requiredViewPermissionOnItems string,
+	attemptID int64,
+	watchedGroupIDSet bool,
+	watchedGroupID int64,
+	columnList string,
+	columnListValues []interface{},
 	externalColumnList string,
+	joinItemRelationsToItemsFunc func(*database.DB) *database.DB,
 ) *database.DB {
 	return constructItemListQuery(
-		dataStore, groupID, requiredViewPermissionOnItems, watchedGroupIDSet, watchedGroupID, columnList, columnListValues,
+		dataStore,
+		groupID,
+		requiredViewPermissionOnItems,
+		watchedGroupIDSet,
+		watchedGroupID,
+		columnList,
+		columnListValues,
 		externalColumnList,
-		func(db *database.DB) *database.DB {
-			return db.Joins("JOIN items AS parent_item ON parent_item.id = ?", parentItemID).
-				Joins("JOIN items_items ON items_items.parent_item_id = parent_item.id AND items_items.child_item_id = items.id").
-				Where("(parent_item.type = 'Skill' AND items.type = 'Skill') OR parent_item.type <> 'Skill'")
-		},
+		joinItemRelationsToItemsFunc,
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items_items ON items_items.child_item_id = item_id").
 				Where("items_items.parent_item_id = ?", parentItemID)

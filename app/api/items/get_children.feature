@@ -16,20 +16,26 @@ Feature: Get item children
       | fr         | 0         | 17       | fr               |
       | info       | 0         | 22       |                  |
     And the database has the following table 'items':
-      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
-      | 200 | Task    | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://someurl | true     | true          |
-      | 210 | Chapter | en                   | true     | true                      | All             | false                   | true                     | User                   | 10:20:31 | true              | true      | forceYes    | true            | null           | true     | true          |
-      | 220 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null           | true     | true          |
-      | 230 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null           | true     | true          |
+      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | title_bar_visible | read_only | full_screen | show_user_infos | url                    | uses_api | hints_allowed |
+      | 200 | Task    | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://someurl         | true     | true          |
+      | 210 | Chapter | en                   | true     | true                      | All             | false                   | true                     | User                   | 10:20:31 | true              | true      | forceYes    | true            | null                   | true     | true          |
+      | 220 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null                   | true     | true          |
+      | 230 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null                   | true     | true          |
+      | 300 | Skill   | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://example.com/300 | true     | true          |
+      | 301 | Skill   | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://example.com/301 | true     | true          |
+      | 302 | Task    | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://example.com/302 | true     | true          |
     And the database has the following table 'items_strings':
-      | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
-      | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
-      | 210     | en           | Chapter A   | http://example.com/my1.jpg | Subtitle 1   | Description 1 | Some comment   |
-      | 220     | en           | Chapter B   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   |
-      | 230     | en           | Chapter C   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   |
-      | 200     | fr           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
-      | 210     | fr           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire |
-      | 220     | fr           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire |
+      | item_id | language_tag | title        | image_url                  | subtitle     | description     | edu_comment    |
+      | 200     | en           | Category 1   | http://example.com/my0.jpg | Subtitle 0   | Description 0   | Some comment   |
+      | 210     | en           | Chapter A    | http://example.com/my1.jpg | Subtitle 1   | Description 1   | Some comment   |
+      | 220     | en           | Chapter B    | http://example.com/my2.jpg | Subtitle 2   | Description 2   | Some comment   |
+      | 230     | en           | Chapter C    | http://example.com/my2.jpg | Subtitle 2   | Description 2   | Some comment   |
+      | 200     | fr           | Catégorie 1  | http://example.com/mf0.jpg | Sous-titre 0 | texte 0         | Un commentaire |
+      | 210     | fr           | Chapitre A   | http://example.com/mf1.jpg | Sous-titre 1 | texte 1         | Un commentaire |
+      | 220     | fr           | Chapitre B   | http://example.com/mf2.jpg | Sous-titre 2 | texte 2         | Un commentaire |
+      | 300     | en           | Skill Parent | http://example.com/300.jpg | Subtitle 300 | Description 300 | Comment 300    |
+      | 301     | en           | Skill Child  | http://example.com/301.jpg | Subtitle 301 | Description 301 | Comment 301    |
+      | 302     | en           | Task Child   | http://example.com/302.jpg | Subtitle 302 | Description 302 | Comment 302    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 11             |
@@ -47,6 +53,8 @@ Feature: Get item children
       | 200            | 210           | 2           | Discovery | 1            | none                     | use_content_view_propagation  | true                   | false             | true             | true                     |
       | 200            | 220           | 1           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
       | 200            | 230           | 3           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+      | 300            | 301           | 1           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+      | 300            | 302           | 2           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
     And the database has the following table 'item_dependencies':
       | item_id | dependent_item_id | grant_content_view |
       | 210     | 200               | false              |
@@ -57,6 +65,9 @@ Feature: Get item children
       | 11       | 200     | solution                 | enter                    | children           | result              | true               |
       | 11       | 210     | solution                 | none                     | none               | none                | true               |
       | 11       | 220     | solution                 | none                     | none               | none                | false              |
+      | 11       | 300     | solution                 | none                     | none               | none                | false              |
+      | 11       | 301     | solution                 | none                     | none               | none                | false              |
+      | 11       | 302     | solution                 | none                     | none               | none                | false              |
       | 13       | 200     | solution                 | none                     | none               | none                | false              |
       | 13       | 210     | solution                 | none                     | none               | none                | false              |
       | 13       | 220     | solution                 | none                     | none               | none                | false              |
@@ -87,6 +98,9 @@ Feature: Get item children
       | 0          | 11             | 200     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 11.1           | null                |
       | 0          | 11             | 210     | null                | 2018-05-30 11:00:01 | 12.2           | null                |
       | 0          | 11             | 220     | 2019-05-30 11:00:00 | 2019-05-30 11:00:02 | 13.3           | null                |
+      | 0          | 11             | 300     | 2019-05-30 11:00:00 | 2019-05-30 11:00:02 | 0.0            | null                |
+      | 0          | 11             | 301     | 2019-05-30 11:00:00 | 2019-05-30 11:00:02 | 0.0            | null                |
+      | 0          | 11             | 302     | 2019-05-30 11:00:00 | 2019-05-30 11:00:02 | 0.0            | null                |
       | 0          | 13             | 200     | 2019-05-30 11:00:00 | 2019-05-30 11:00:03 | 0.0            | null                |
       | 0          | 13             | 210     | 2019-05-30 11:00:00 | 2019-05-30 11:00:03 | 14.4           | null                |
       | 0          | 13             | 220     | null                | 2018-05-30 11:00:02 | 15.5           | null                |
@@ -770,3 +784,12 @@ Feature: Get item children
       }
     ]
     """
+
+  Scenario: Should return children of type Skill and Task when retrieving the children of a Skill
+    Given I am the user with id "11"
+    When I send a GET request to "/items/300/children?attempt_id=0"
+    Then the response code should be 200
+    And the response at $[*] should be:
+      | id  | type  |
+      | 301 | Skill |
+      | 302 | Task  |
