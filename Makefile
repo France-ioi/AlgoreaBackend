@@ -110,6 +110,9 @@ clean:
 linux-build:
 	GOOS=linux $(GOBUILD) -o $(BIN_PATH)-linux $(GOBUILD_VERSION_INJECTION)
 
+awslambda-build:
+	GOARCH=amd64 GOOS=linux go build -o $(BIN_PATH)-awslambda -tags lambda.norpc $(GOBUILD_VERSION_INJECTION)
+
 version:
 	@echo $(shell $(VERSION_FETCHING_CMD))
 
