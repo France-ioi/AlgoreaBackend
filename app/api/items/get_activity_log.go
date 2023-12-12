@@ -337,10 +337,6 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			Where("item_id = ? OR item_id IN ?", *itemID, itemDescendants.SubQuery())
 	}
 
-	if ok {
-		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
-	}
-
 	participantsQuerySubQuery := participantsQuery.SubQuery()
 	visibleItemDescendantsSubQuery := visibleItemDescendants.SubQuery()
 
