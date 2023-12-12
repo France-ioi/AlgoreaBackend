@@ -326,7 +326,6 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		if len(r.URL.Query()["as_team_id"]) != 0 {
 			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
-		store.Permissions().MatchingUserAncestors(user).Where("item_id = ?")
 		participantsQuery = store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
 			Select("child_group_id AS id")
 		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
