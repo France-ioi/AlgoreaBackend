@@ -9,6 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 const itemActivityLogStraightJoinBoundary = 10000
@@ -250,15 +251,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	if len(urlParams["from.activity_type"]) > 0 {
 		validActivityTypes := []string{"result_started", "submission", "result_validated", "saved_answer", "current_answer"}
 
-		// Use slices.Contains after update to Go 1.21.
-		found := false
-		for _, validActivityType := range validActivityTypes {
-			if validActivityType == urlParams["from.activity_type"][0] {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !utils.Contains(validActivityTypes, urlParams["from.activity_type"][0]) {
 			return service.ErrInvalidRequest(
 				errors.New(
 					"wrong value for from.activity_type (should be one of (result_started, submission, result_validated, saved_answer, current_answer))"))
