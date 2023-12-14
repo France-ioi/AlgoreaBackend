@@ -30,12 +30,12 @@ Feature: Get activity log
     And the database has the following table 'results':
       | attempt_id | item_id | participant_id | started_at          | validated_at        | latest_submission_at |
       | 0          | 200     | 11             | 2020-01-01 00:41:00 | 2020-01-01 00:44:00 | 2020-05-29 06:38:38  |
-      | 0          | 200     | 30             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 0          | 200     | 30             | 2020-01-01 00:09:00 | 2020-01-01 00:10:00 | 2020-05-29 06:38:38  |
       | 0          | 201     | 11             | 2020-01-01 00:32:00 | null                | 2020-05-29 06:38:38  |
       | 0          | 202     | 11             | 2020-01-01 00:30:00 | 2020-01-01 00:57:00 | 2020-05-29 06:38:38  |
       | 0          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 1          | 200     | 11             | 2020-01-01 00:33:00 | 2020-01-01 00:59:00 | 2020-05-29 06:38:38  |
-      | 1          | 200     | 31             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 1          | 200     | 31             | 2020-01-01 00:19:00 | 2020-01-01 00:20:00 | 2020-05-29 06:38:38  |
       | 1          | 200     | 41             | 2020-01-01 00:28:00 | 2020-01-01 00:29:00 | 2020-05-29 06:38:38  |
       | 1          | 201     | 11             | null                | 2020-01-01 00:40:00 | 2020-05-29 06:38:38  |
       | 1          | 202     | 11             | 2020-01-01 00:31:00 | 2020-01-01 00:58:00 | 2020-05-29 06:38:38  |
@@ -345,7 +345,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2017-05-30T12:00:00Z",
+        "at": "2020-01-01T00:59:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -370,7 +370,7 @@ Feature: Get activity log
       {
         "activity_type": "current_answer",
         "answer_id": "15",
-        "at": "2017-05-30T06:38:38Z",
+        "at": "2020-01-01T00:56:00Z",
         "attempt_id": "1",
         "from_answer_id": "15",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -380,7 +380,7 @@ Feature: Get activity log
       {
         "activity_type": "saved_answer",
         "answer_id": "14",
-        "at": "2017-05-30T06:38:38Z",
+        "at": "2020-01-01T00:55:00Z",
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -405,7 +405,7 @@ Feature: Get activity log
       {
         "activity_type": "saved_answer",
         "answer_id": "14",
-        "at": "2017-05-30T06:38:38Z",
+        "at": "2020-01-01T00:55:00Z",
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -414,7 +414,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2017-05-30T06:38:38Z",
+        "at": "2020-01-01T00:54:00Z",
         "answer_id": "18",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
@@ -439,7 +439,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "submission",
-        "at": "2017-05-30T06:38:38Z",
+        "at": "2020-01-01T00:54:00Z",
         "answer_id": "18",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
@@ -449,7 +449,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2017-05-30T06:38:38Z",
+        "at": "2020-01-01T00:53:00Z",
         "answer_id": "13",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
@@ -474,7 +474,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2017-05-29T06:38:38Z",
+        "at": "2020-01-01T00:44:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -483,7 +483,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2017-05-29T06:38:38Z",
+        "at": "2020-01-01T00:43:00Z",
         "answer_id": "11",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
@@ -508,7 +508,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2017-05-29T06:38:38Z",
+        "at": "2020-01-01T00:40:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -532,7 +532,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2016-05-30T12:00:00Z",
+        "at": "2020-01-01T00:29:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -541,7 +541,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2016-05-29T06:38:00Z",
+        "at": "2020-01-01T00:28:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -564,7 +564,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2017-05-30T12:00:00Z",
+        "at": "2020-01-01T00:20:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
@@ -583,7 +583,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2017-05-30T12:00:00Z",
+        "at": "2020-01-01T00:10:00Z",
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -591,7 +591,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2017-05-29T06:38:00Z",
+        "at": "2020-01-01T00:09:00Z",
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -941,7 +941,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2017-05-30T12:00:00Z",
+        "at": "2020-01-01T00:20:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
@@ -950,7 +950,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2017-05-29T06:38:00Z",
+        "at": "2020-01-01T00:19:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
@@ -974,7 +974,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2017-05-30T12:00:00Z",
+        "at": "2020-01-01T00:20:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
@@ -998,7 +998,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_started",
-        "at": "2017-05-29T06:38:00Z",
+        "at": "2020-01-01T00:19:00Z",
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
