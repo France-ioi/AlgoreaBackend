@@ -1,8 +1,9 @@
 -- +migrate Up
 ALTER TABLE `answers`
-ADD INDEX `type_participant_id_item_id_created_at_desc_attempt_id_desc`
-(`type`, `participant_id`, `item_id`, `created_at` DESC, `attempt_id` DESC);
+  ADD INDEX `c_at_desc_item_id_part_id_attempt_id_desc_type_desc_answers`
+  (`created_at` DESC,`item_id`,`participant_id`,`attempt_id` DESC, `type` DESC, id)
+;
 
 -- +migrate Down
 ALTER TABLE `answers`
-DROP INDEX `type_participant_id_item_id_created_at_desc_attempt_id_desc`;
+  DROP INDEX `c_at_desc_item_id_part_id_attempt_id_desc_type_desc_answers`;
