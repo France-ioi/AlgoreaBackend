@@ -3,13 +3,13 @@ package items
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 const itemActivityLogStraightJoinBoundary = 10000
@@ -249,23 +249,18 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	// check and patch from.activity_type to make it integer
 	urlParams := r.URL.Query()
 	if len(urlParams["from.activity_type"]) > 0 {
-		stringValue := r.URL.Query().Get("from.activity_type")
-		var intValue int
-		var ok bool
-		if intValue, ok = map[string]int{
-			"result_started": 1, "submission": 2, "result_validated": 3, "saved_answer": 4, "current_answer": 5,
-		}[stringValue]; !ok {
+		validActivityTypes := []string{"result_started", "submission", "result_validated", "saved_answer", "current_answer"}
+
+		if !utils.Contains(validActivityTypes, urlParams["from.activity_type"][0]) {
 			return service.ErrInvalidRequest(
 				errors.New(
 					"wrong value for from.activity_type (should be one of (result_started, submission, result_validated, saved_answer, current_answer))"))
 		}
-		urlParams["from.activity_type"] = []string{strconv.Itoa(intValue)}
-		r.URL.RawQuery = urlParams.Encode()
 	}
 
 	fromValues, err := service.ParsePagingParameters(
 		r, service.SortingAndPagingTieBreakers{
-			"activity_type":  service.FieldTypeInt64,
+			"activity_type":  service.FieldTypeString,
 			"participant_id": service.FieldTypeInt64,
 			"attempt_id":     service.FieldTypeInt64,
 			"item_id":        service.FieldTypeInt64,
@@ -326,7 +321,6 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		if len(r.URL.Query()["as_team_id"]) != 0 {
 			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
-		store.Permissions().MatchingUserAncestors(user).Where("item_id = ?")
 		participantsQuery = store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
 			Select("child_group_id AS id")
 		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
@@ -336,10 +330,6 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		itemDescendants := store.ItemAncestors().DescendantsOf(*itemID).Select("child_item_id")
 		visibleItemDescendants = visibleItemDescendants.
 			Where("item_id = ? OR item_id IN ?", *itemID, itemDescendants.SubQuery())
-	}
-
-	if ok {
-		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
 	}
 
 	participantsQuerySubQuery := participantsQuery.SubQuery()
@@ -356,11 +346,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		visibleItemDescendantsSubQuery, participantsQuerySubQuery).Scan(&cnt).Error())
 
 	answersQuerySelect := `
-			CASE answers.type
-				WHEN 'Submission' THEN 2
-				WHEN 'Saved' THEN 4
-				WHEN 'Current' THEN 5
-			END AS activity_type_int,
+			LOWER(answers.type) AS activity_type,
 			answers.created_at AS at,
 			answers.id AS answer_id,
 			answers.attempt_id, answers.participant_id,
@@ -384,7 +370,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	startedResultsQuery := store.Table("results AS started_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
-			1 AS activity_type_int,
+			'result_started' AS activity_type,
 			started_at AS at,
 			-1 AS answer_id,
 			started_results.attempt_id, started_results.participant_id, started_results.item_id, started_results.participant_id AS user_id,
@@ -400,7 +386,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	validatedResultsQuery := store.Table("results AS validated_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
-			3 AS activity_type_int,
+			'result_validated' AS activity_type,
 			validated_results.validated_at AS at,
 			-1 AS answer_id,
 			validated_results.attempt_id, validated_results.participant_id,
@@ -418,22 +404,16 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	answersQuery, _ = service.ApplySortingAndPaging(
 		nil, answersQuery,
 		&service.SortingAndPagingParameters{
+			// An index is defined for this query: answers.c_at_desc_item_id_part_id_attempt_id_desc_type_desc_answers.
 			Fields: service.SortingAndPagingFields{
 				"at":             {ColumnName: "answers.created_at"},
 				"item_id":        {ColumnName: "answers.item_id"},
 				"participant_id": {ColumnName: "answers.participant_id"},
 				"attempt_id":     {ColumnName: "answers.attempt_id"},
-				"activity_type_int": {
-					ColumnName: `
-						CASE answers.type
-							WHEN 'Submission' THEN 2
-							WHEN 'Saved' THEN 4
-							WHEN 'Current' THEN 5
-						END`,
-				},
-				"answer_id": {ColumnName: "answers.id"},
+				"activity_type":  {ColumnName: "answers.type"},
+				"answer_id":      {ColumnName: "answers.id"},
 			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type_int,answer_id",
+			DefaultRules:         "-at,item_id,participant_id,-attempt_id,activity_type,answer_id",
 			IgnoreSortParameter:  true,
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
@@ -481,14 +461,14 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		nil, unionQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"at":                {ColumnName: "un.at"},
-				"participant_id":    {ColumnName: "un.participant_id"},
-				"attempt_id":        {ColumnName: "un.attempt_id"},
-				"item_id":           {ColumnName: "un.item_id"},
-				"activity_type_int": {ColumnName: "un.activity_type_int"},
-				"answer_id":         {ColumnName: "un.answer_id"},
+				"at":             {ColumnName: "un.at"},
+				"participant_id": {ColumnName: "un.participant_id"},
+				"attempt_id":     {ColumnName: "un.attempt_id"},
+				"item_id":        {ColumnName: "un.item_id"},
+				"activity_type":  {ColumnName: "un.activity_type"},
+				"answer_id":      {ColumnName: "un.answer_id"},
 			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type_int,answer_id",
+			DefaultRules:         "-at,item_id,participant_id,-attempt_id,activity_type,answer_id",
 			IgnoreSortParameter:  true,
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
@@ -496,12 +476,10 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	query := store.Raw(`
 		WITH items_to_show AS ?, participants AS ?, start_from_row AS ?, un AS ?
 		SELECT STRAIGHT_JOIN
-			CASE activity_type_int
-				WHEN 1 THEN 'result_started'
-				WHEN 2 THEN 'submission'
-				WHEN 3 THEN 'result_validated'
-				WHEN 4 THEN 'saved_answer'
-				WHEN 5 THEN 'current_answer'
+			CASE activity_type
+				WHEN 'current' THEN 'current_answer'
+				WHEN 'saved' THEN 'saved_answer'
+				ELSE activity_type
 			END AS activity_type,
 			at, answer_id, attempt_id, participant_id, score,
 			items.id AS item__id, items.type AS item__type,
@@ -526,21 +504,21 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 }
 
 func (srv *Service) generateSubQueriesForPagination(
-	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
+	store *database.DataStore, activityType string, startedResultsQuery, validatedResultsQuery,
 	answersQuery *database.DB, fromValues map[string]interface{}) (
 	startFromRowSubQuery, startFromRowCTESubQuery interface{},
 ) {
 	startFromRowSubQuery = store.Table("start_from_row").SubQuery()
 	var startFromRowQuery *database.DB
-	switch activityTypeIndex {
-	case "1": // result_started
+	switch activityType {
+	case "result_started":
 		startFromRowQuery = startedResultsQuery.
 			Where("started_results.participant_id = ?", fromValues["participant_id"]).
 			Where("started_results.attempt_id = ?", fromValues["attempt_id"]).
 			Where("started_results.item_id = ?", fromValues["item_id"])
-	case "2", "4", "5": // submission/saved_answer/current_answer
+	case "submission", "saved_answer", "current_answer":
 		startFromRowQuery = answersQuery.Where("answers.id = ?", fromValues["answer_id"])
-	case "3": // result_validated
+	case "result_validated":
 		startFromRowQuery = validatedResultsQuery.
 			Where("validated_results.participant_id = ?", fromValues["participant_id"]).
 			Where("validated_results.attempt_id = ?", fromValues["attempt_id"]).
