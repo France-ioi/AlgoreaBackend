@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.14.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.14.1...v2.14.2) - 2023-12-18
+- make the request returning progresses of a group or user faster
+
 ## [v2.14.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.14.0...v2.14.1) - 2023-10-18
 - fix a bug in the item children service related with skills
 
