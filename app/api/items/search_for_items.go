@@ -106,17 +106,7 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := store.Items().JoinsUserAndDefaultItemStrings(user).
-		Select(`
-			items.id,
-			COALESCE(user_strings.title, default_strings.title) AS title,
-			items.type,
-			permissions.*`).
-		Where("items.type IN (?)", typesList).
-		Where("COALESCE(user_strings.title, default_strings.title) LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString).
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
-		Order("items.id")
+	query := store.Items().GetSearchQuery(user, searchString, typesList)
 
 	query = service.NewQueryLimiter().
 		SetDefaultLimit(20).SetMaxAllowedLimit(20).Apply(r, query)
