@@ -74,6 +74,28 @@ Feature: Search for possible subgroups
     ]
     """
 
+  Scenario: Should treat the words in the search string as "AND"
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/possible-subgroups?search=the%20team"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "2",
+        "name": "(the) Our Team ___",
+        "description": null,
+        "type": "Team"
+      },
+      {
+        "id": "7",
+        "name": "Another %%%Team",
+        "description": "Another team group",
+        "type": "Team"
+      }
+    ]
+    """
+
   Scenario: Search for groups with "the" (limit=2)
     Given I am the user with id "21"
     When I send a GET request to "/groups/possible-subgroups?search=the&limit=2"
