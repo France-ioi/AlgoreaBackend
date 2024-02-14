@@ -45,6 +45,9 @@ type itemSearchResponseRowRaw struct {
 //	description: >
 //		Searches for visible (`can_view` >= 'info') items, basing on a substring of their titles
 //		in the current user's (if exists, otherwise default) language.
+//
+//
+//		All the words of the search query must appear in the title for the item to be returned.
 //	parameters:
 //		- name: search
 //			in: query

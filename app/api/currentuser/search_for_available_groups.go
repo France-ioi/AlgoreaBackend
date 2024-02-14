@@ -23,6 +23,9 @@ const minSearchStringLength = 3
 //		and for that the current user is not already a member and don’t have pending requests/invitations.
 //
 //
+//		All the words of the search query must appear in the name for the group to be returned.
+//
+//
 //		Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
 //		at the beginning. This causes MySQL to explore every row having `is_public`=1. Moreover, actually
 //		it has to examine every row of the `groups` table since there is no index for the `is_public` column.

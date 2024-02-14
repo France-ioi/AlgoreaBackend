@@ -21,6 +21,9 @@ const minSearchStringLength = 3
 //		Searches for groups that can be added as subgroups, based on a substring of their name.
 //		Returns groups for which the user is a manager with `can_manage` = 'memberships_and_group',
 //		whose `name` has `{search}` as a substring.
+//
+//
+//		All the words of the search query must appear in the name for the group to be returned.
 //	parameters:
 //		- name: search
 //			in: query
