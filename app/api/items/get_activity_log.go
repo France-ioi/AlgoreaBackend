@@ -62,6 +62,8 @@ type itemActivityLogResponseRow struct {
 			Title *string `json:"title"`
 		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
+	// required: true
+	CanWatchItemAnswer bool `json:"can_watch_item_answer"`
 }
 
 // swagger:operation GET /items/{ancestor_item_id}/log items itemActivityLogForItem
@@ -483,6 +485,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			END AS activity_type,
 			at, answer_id, attempt_id, participant_id, score,
 			items.id AS item__id, items.type AS item__type,
+			permissions_generated.can_watch_generated_value >= ? AS can_watch_item_answer,
 			groups.id AS participant__id,
 			groups.name AS participant__name,
 			groups.type AS participant__type,
@@ -493,9 +496,16 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
 		FROM ? AS activities`, visibleItemDescendantsSubQuery, participantsQuerySubQuery,
-		startFromRowCTESubQuery, unionCTEQuery.SubQuery(), user.GroupID, user.GroupID, user.GroupID,
+		startFromRowCTESubQuery, unionCTEQuery.SubQuery(),
+		store.PermissionsGranted().WatchIndexByName("answer"),
+		user.GroupID, user.GroupID, user.GroupID,
 		unionQuery.SubQuery()).
 		Joins("JOIN items ON items.id = item_id").
+		Joins(`
+			JOIN permissions_generated
+			  ON permissions_generated.item_id = items.id
+       AND permissions_generated.group_id = ?
+		`, user.GroupID).
 		Joins("JOIN `groups` ON groups.id = participant_id").
 		Joins("LEFT JOIN users ON users.group_id = user_id").
 		WithPersonalInfoViewApprovals(user).
