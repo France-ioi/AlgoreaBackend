@@ -140,10 +140,14 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			groups.id as id, groups.name, groups.type, groups.grade,
 			groups.is_open, groups.is_public,
 			IF(manager_permissions.found,
-				(SELECT COUNT(DISTINCT users.group_id) FROM users
-				JOIN groups_groups_active ON groups_groups_active.child_group_id = users.group_id
-				JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id
-				WHERE groups_ancestors_active.ancestor_group_id = groups.id),
+				(SELECT COUNT(DISTINCT users.group_id)
+					 FROM users
+					 JOIN groups_groups_active
+					   ON groups_groups_active.child_group_id = users.group_id
+					 JOIN groups_ancestors_active
+					   ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id
+					WHERE groups_ancestors_active.ancestor_group_id = groups.id
+				),
 				0
 			) AS user_count,
 			IF(manager_permissions.found,
