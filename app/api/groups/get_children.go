@@ -33,7 +33,6 @@ type groupChildrenViewResponseRow struct {
 	// required:true
 	IsPublic bool `json:"is_public"`
 	// Only returned if the current user is a manager of the group.
-	// For now, it is always `false` if the user is a manager.
 	IsEmpty *bool `json:"is_empty,omitempty"`
 	// required:true
 	CurrentUserIsManager bool `json:"current_user_is_manager"`
@@ -148,7 +147,11 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				0
 			) AS user_count,
 			IF(manager_permissions.found,
-				FALSE,
+				(SELECT COUNT(*) = 0
+				   FROM groups_groups_active
+				  WHERE groups_groups_active.parent_group_id = groups.id
+					  AND groups_groups_active.child_group_id != groups.id
+				),
 				NULL
 			) AS is_empty,
 			manager_permissions.found AS current_user_is_manager,

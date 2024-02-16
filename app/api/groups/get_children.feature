@@ -1,4 +1,3 @@
-@wip
 Feature: Get group children (groupChildrenView)
   Background:
     Given the database has the following table 'groups':
@@ -36,6 +35,10 @@ Feature: Get group children (groupChildrenView)
       | 23       | 21         | none                  | true                   | true              |
       | 28       | 21         | memberships_and_group | false                  | true              |
       | 30       | 21         | memberships           | true                   | false             |
+    # The group AllUsers should contain all users.
+    # But in this test file, this behavior is not implemented.
+    # Because this test file doesn't use the new Gherkin test system (steps_app_language).
+    # That's why we return "is_empty": false for this group.
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 11              | 29             |
@@ -64,16 +67,16 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": true},
       {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": true, "current_user_can_watch_members": true, "is_empty": false},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
@@ -82,7 +85,7 @@ Feature: Get group children (groupChildrenView)
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -95,16 +98,16 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": true},
       {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": true, "current_user_can_watch_members": true, "is_empty": false},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
@@ -113,13 +116,13 @@ Feature: Get group children (groupChildrenView)
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -132,16 +135,16 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": true},
       {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": true, "current_user_can_watch_members": true, "is_empty": false},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
@@ -150,13 +153,13 @@ Feature: Get group children (groupChildrenView)
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -169,19 +172,19 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": true},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -197,22 +200,22 @@ Feature: Get group children (groupChildrenView)
        "current_user_can_grant_group_access": true, "current_user_can_watch_members": true, "is_empty": false},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "25", "name": "Our Team", "type": "Team", "is_public": false, "grade": -1, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": true},
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -231,19 +234,19 @@ Feature: Get group children (groupChildrenView)
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "none",
        "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships_and_group",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": true, "is_empty": true},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -256,7 +259,7 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -269,7 +272,7 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "none",
-       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": false, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
@@ -282,16 +285,16 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "30", "name": "AllUsers", "type": "Base", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "28", "name": "Other", "type": "Other", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "23", "name": "Our Class", "type": "Class", "is_public": false, "grade": -3, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "memberships",
        "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "26", "name": "Our Club", "type": "Club", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "27", "name": "Our Friends", "type": "Friends", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 1, "current_user_is_manager": true, "current_user_can_manage": "memberships",
        "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
@@ -300,13 +303,13 @@ Feature: Get group children (groupChildrenView)
        "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
       {"id": "24", "name": "Root", "type": "Base", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "21", "name": "user", "type": "User", "is_public": false, "grade": -2, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false},
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true},
       {"id": "29", "name": "User", "type": "User", "is_public": false, "grade": 0, "is_open": true,
        "user_count": 0, "current_user_is_manager": true, "current_user_can_manage": "memberships",
-       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": false}
+       "current_user_can_grant_group_access": true, "current_user_can_watch_members": false, "is_empty": true}
     ]
     """
 
