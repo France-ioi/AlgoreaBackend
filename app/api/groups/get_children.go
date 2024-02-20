@@ -32,6 +32,7 @@ type groupChildrenViewResponseRow struct {
 	IsOpen bool `json:"is_open"`
 	// required:true
 	IsPublic bool `json:"is_public"`
+	// Whether the group has no child group (incl. users).
 	// Only returned if the current user is a manager of the group.
 	IsEmpty *bool `json:"is_empty,omitempty"`
 	// required:true
