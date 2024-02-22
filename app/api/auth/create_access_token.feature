@@ -86,54 +86,54 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "users" should be:
-      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+      | group_id      | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
+      | @UserMohammed | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
     And the table "groups" should be:
-      | id                  | name                                 | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
-      | 2                   | AllUsers                             | Base  | null        | false                                             | false   | false       | null                                    |
-      | 4                   | TempUsers                            | Base  | null        | false                                             | false   | false       | null                                    |
-      | 4037200794235010051 | Example badges                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
-      | 5577006791947779410 | mohammed                             | User  | mohammed    | true                                              | false   | false       | null                                    |
-      | 6129484611666145821 | Example badges with multiple parents | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
-      | 8674665223082153551 | Example #1                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
+      | id                                 | name                                 | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                                  | AllUsers                             | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                                  | TempUsers                            | Base  | null        | false                                             | false   | false       | null                                    |
+      | @GroupExampleBadges                | Example badges                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
+      | @UserMohammed                      | mohammed                             | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | @GroupExampleBadgesMultipleParents | Example badges with multiple parents | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
+      | @GroupExample1                     | Example #1                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
-      | parent_group_id     | child_group_id      |
-      | 2                   | 4                   |
-      | 2                   | 5577006791947779410 |
-      | 4037200794235010051 | 6129484611666145821 |
-      | 6129484611666145821 | 8674665223082153551 |
-      | 8674665223082153551 | 5577006791947779410 |
+      | parent_group_id                    | child_group_id                     |
+      | 2                                  | 4                                  |
+      | 2                                  | @UserMohammed                      |
+      | @GroupExampleBadges                | @GroupExampleBadgesMultipleParents |
+      | @GroupExampleBadgesMultipleParents | @GroupExample1                     |
+      | @GroupExample1                     | @UserMohammed                      |
       And the table "groups_ancestors" should be:
-        | ancestor_group_id   | child_group_id      | is_self |
-        | 2                   | 2                   | true    |
-        | 2                   | 4                   | false   |
-        | 2                   | 5577006791947779410 | false   |
-        | 4                   | 4                   | true    |
-        | 4037200794235010051 | 4037200794235010051 | true    |
-        | 4037200794235010051 | 5577006791947779410 | false   |
-        | 4037200794235010051 | 6129484611666145821 | false   |
-        | 4037200794235010051 | 8674665223082153551 | false   |
-        | 5577006791947779410 | 5577006791947779410 | true    |
-        | 6129484611666145821 | 5577006791947779410 | false   |
-        | 6129484611666145821 | 6129484611666145821 | true    |
-        | 6129484611666145821 | 8674665223082153551 | false   |
-        | 8674665223082153551 | 5577006791947779410 | false   |
-        | 8674665223082153551 | 8674665223082153551 | true    |
+        | ancestor_group_id                  | child_group_id                     | is_self |
+        | 2                                  | 2                                  | true    |
+        | 2                                  | 4                                  | false   |
+        | 2                                  | @UserMohammed                      | false   |
+        | 4                                  | 4                                  | true    |
+        | @GroupExampleBadges                | @GroupExampleBadges                | true    |
+        | @GroupExampleBadges                | @UserMohammed                      | false   |
+        | @GroupExampleBadges                | @GroupExampleBadgesMultipleParents | false   |
+        | @GroupExampleBadges                | @GroupExample1                     | false   |
+        | @UserMohammed                      | @UserMohammed                      | true    |
+        | @GroupExampleBadgesMultipleParents | @UserMohammed                      | false   |
+        | @GroupExampleBadgesMultipleParents | @GroupExampleBadgesMultipleParents | true    |
+        | @GroupExampleBadgesMultipleParents | @GroupExample1                     | false   |
+        | @GroupExample1                     | @UserMohammed                      | false   |
+        | @GroupExample1                     | @GroupExample1                     | true    |
       And the table "attempts" should be:
-        | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
-      | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
+        | participant_id | id | creator_id    | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+        | @UserMohammed  | 0  | @UserMohammed | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
-      | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id        |
-      | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_badge | 5577006791947779410 |
+      | group_id       | member_id     | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id  |
+      | @GroupExample1 | @UserMohammed | true                                      | joined_by_badge | @UserMohammed |
     And the table "sessions" should be:
-      | expires_at          | user_id             | issuer       | issued_at           | access_token                |
-      | 2020-07-16 22:02:28 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
+      | expires_at          | user_id       | issuer       | issued_at           | access_token                |
+      | 2020-07-16 22:02:28 | @UserMohammed | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
-      | user_id             | refresh_token                |
-      | 5577006791947779410 | {{refresh_token_from_oauth}} |
+      | user_id       | refresh_token                |
+      | @UserMohammed | {{refresh_token_from_oauth}} |
     And the table "group_managers" should be:
-      | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
-      | 4037200794235010051 | 5577006791947779410 | memberships | true                   | true              | false                  |
+      | group_id            | manager_id    | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
+      | @GroupExampleBadges | @UserMohammed | memberships | true                   | true              | false                  |
   Examples:
     | query                            | token_in_data                                  | expected_cookie                                                                                                                                                            |
     |                                  | "access_token": "{{access_token_from_oauth}}", | [NULL]                                                                                                                                                                     |

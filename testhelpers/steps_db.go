@@ -503,14 +503,21 @@ func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgumen
 			continue
 		}
 
-		dataValue, err := ctx.preprocessString(dataCell.Value)
+		value := values[colIndex]
+		if value == nil {
+			value = pTableValueNull
+		}
+
+		// If the cell is a new reference (not defined yet), we set the reference to the value.
+		// This way, we can check that the reference is the same next time we encounter it.
+		err := ctx.setUndefinedReferenceTo(dataCell.Value, *value)
 		if err != nil {
 			return err
 		}
 
-		value := values[colIndex]
-		if value == nil {
-			value = pTableValueNull
+		dataValue, err := ctx.preprocessString(dataCell.Value)
+		if err != nil {
+			return err
 		}
 
 		if (dataValue == tableValueTrue && *value == "1") || (dataValue == tableValueFalse && *value == "0") {

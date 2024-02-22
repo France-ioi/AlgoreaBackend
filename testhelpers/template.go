@@ -41,6 +41,23 @@ func (ctx *TestContext) getReference(reference string) int64 {
 	return id
 }
 
+// setUndefinedReferenceTo sets the reference to the value if it is not defined yet.
+// if dataValue is a reference (ie. @ReferenceName).
+func (ctx *TestContext) setUndefinedReferenceTo(dataValue, value string) error {
+	if dataValue[0] == ReferencePrefix {
+		if _, ok := ctx.identifierReferences[dataValue]; !ok {
+			intValue, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return err
+			}
+
+			ctx.identifierReferences[dataValue] = intValue
+		}
+	}
+
+	return nil
+}
+
 // replaceReferencesByIDs changes the references (@ref) in a string by the referenced identifiers (ID).
 func (ctx *TestContext) replaceReferencesByIDs(str string) string {
 	// a reference should either be at the beginning of the string (^), or after a non alpha-num character (\W).
