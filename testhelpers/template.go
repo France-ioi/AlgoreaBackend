@@ -42,9 +42,9 @@ func (ctx *TestContext) getReference(reference string) int64 {
 }
 
 // setUndefinedReferenceTo sets the reference to the value if it is not defined yet.
-// if dataValue is a reference (ie. @ReferenceName).
+// if dataValue is a reference (i.e. @ReferenceName).
 func (ctx *TestContext) setUndefinedReferenceTo(dataValue, value string) error {
-	if dataValue[0] == ReferencePrefix {
+	if len(dataValue) > 0 && dataValue[0] == ReferencePrefix {
 		if _, ok := ctx.identifierReferences[dataValue]; !ok {
 			intValue, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
