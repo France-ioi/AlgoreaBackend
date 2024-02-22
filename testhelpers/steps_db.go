@@ -520,7 +520,7 @@ func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgumen
 			return err
 		}
 
-		if (dataValue == tableValueTrue && *value == "1") || (dataValue == tableValueFalse && *value == "0") {
+		if matchingBooleanValue(dataValue, *value) {
 			continue
 		}
 
@@ -531,6 +531,10 @@ func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgumen
 	}
 
 	return nil
+}
+
+func matchingBooleanValue(dataValue, value string) bool {
+	return (dataValue == tableValueTrue && value == "1") || (dataValue == tableValueFalse && value == "0")
 }
 
 // getColumnNamesFromData gets the column names from the data table.
