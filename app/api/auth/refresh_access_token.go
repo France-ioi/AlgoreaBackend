@@ -65,7 +65,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 		// usage of the old refresh token for that reason.
 		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), srv.GetStore(r), user, oldAccessToken)
+			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), srv.GetStore(r), user, sessionID, oldAccessToken)
 			return nil
 		}))
 	}
@@ -78,15 +78,19 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	return service.NoError
 }
 
-func (srv *Service) refreshTokens(ctx context.Context, store *database.DataStore, user *database.User, oldAccessToken string) (
+func (srv *Service) refreshTokens(ctx context.Context, store *database.DataStore, user *database.User, sessionID int64, oldAccessToken string) (
 	newToken string, expiresIn int32, apiError service.APIError,
 ) {
 	var refreshToken string
-	err := store.RefreshTokens().Where("user_id = ?", user.GroupID).
+	err := store.Sessions().Where("session_id = ?", sessionID).
 		PluckFirst("refresh_token", &refreshToken).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		logging.Warnf("No refresh token found in the DB for user %d", user.GroupID)
 		return "", 0, service.ErrNotFound(errors.New("no refresh token found in the DB for the authenticated user"))
+	}
+	if refreshToken == "" {
+		logging.Warnf("The refresh token is empty for user %d", user.GroupID)
+		return "", 0, service.ErrNotFound(errors.New("the refresh token is empty for the authenticated user"))
 	}
 	service.MustNotBeError(err)
 	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
@@ -95,16 +99,22 @@ func (srv *Service) refreshTokens(ctx context.Context, store *database.DataStore
 	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
 	service.MustNotBeError(err)
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-		sessionStore := store.Sessions()
+		accessTokenStore := store.AccessTokens()
 		// delete all the user's access tokens keeping the input token only
-		service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
-			user.GroupID, oldAccessToken).Error())
+		service.MustNotBeError(accessTokenStore.Delete("session_id = ? AND token != ?",
+			sessionID, oldAccessToken).Error())
 		// insert the new access token
-		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token.AccessToken,
-			int32(time.Until(token.Expiry)/time.Second), "login-module"))
+		service.MustNotBeError(accessTokenStore.InsertNewToken(
+			sessionID,
+			token.AccessToken,
+			int32(time.Until(token.Expiry)/time.Second),
+		))
 		if refreshToken != token.RefreshToken {
-			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
-				UpdateColumn("refresh_token", token.RefreshToken).Error())
+			service.MustNotBeError(store.Sessions().
+				Where("session_id = ?", sessionID).
+				UpdateColumn("refresh_token", token.RefreshToken).
+				Error(),
+			)
 		}
 		newToken = token.AccessToken
 		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)

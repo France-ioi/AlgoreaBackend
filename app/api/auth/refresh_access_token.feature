@@ -92,15 +92,17 @@ Feature: Create a new access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "sessions" should be:
-      | user_id | expires_at          | access_token          |
-      | 12      | 2019-07-16 22:02:29 | someaccesstoken       |
-      | 12      | 2019-07-16 22:02:40 | anotheraccesstoken    |
-      | 13      | 2019-07-16 22:02:29 | accesstokenforjane    |
-      | 13      | 2020-07-16 22:02:28 | newaccesstokenforjane |
-    And the table "refresh_tokens" should be:
-      | user_id | refresh_token          |
-      | 13      | newrefreshtokenforjane |
-      | 14      | refreshtokenforjohn    |
+      | session_id | user_id | refresh_token          |
+      | 1          | 12      |                        |
+      | 2          | 13      | newrefreshtokenforjane |
+      | 3          | 14      | refreshtokenforjohn    |
+    And the table "access_tokens" should be:
+      | session_id | token                 | expires_at          |
+      | 1          | anotheraccesstoken    | 2019-07-16 22:02:40 |
+      | 1          | someaccesstoken       | 2019-07-16 22:02:29 |
+      | 2          | accesstokenforjane    | 2019-07-16 22:02:29 |
+      | 2          | newaccesstokenforjane | 2020-07-16 22:02:28 |
+      | 3          | accesstokenjohn       | 2019-07-16 22:02:31 |
   Examples:
     | query                            | token_in_data                            | expected_cookie                                                                                                                                                      |
     |                                  | "access_token": "newaccesstokenforjane", | [NULL]                                                                                                                                                               |
@@ -108,12 +110,12 @@ Feature: Create a new access token
     | ?use_cookie=1&cookie_same_site=1 |                                          | access_token=1!newaccesstokenforjane!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
 
   Scenario Outline: Accepts access_token cookie and removes it if cookie attributes differ for a normal user
-    Given the database table 'sessions' has also the following rows:
-      | user_id | expires_at          | access_token              |
-      | 13      | 2019-07-16 22:02:31 | onemoreaccesstokenforjane |
-      | 13      | 2019-07-16 22:02:31 | andmoreaccesstokenforjane |
-      | 13      | 2019-07-16 22:02:31 | moremoraccesstokenforjane |
-    And the login module "token" endpoint for refresh token "refreshtokenforjane" returns 200 with body:
+    Given the database table 'access_tokens' has also the following rows:
+      | session_id | expires_at          | token                     |
+      | 2          | 2019-07-16 22:02:31 | onemoreaccesstokenforjane |
+      | 2          | 2019-07-16 22:02:31 | andmoreaccesstokenforjane |
+      | 2          | 2019-07-16 22:02:31 | moremoraccesstokenforjane |
+  And the login module "token" endpoint for refresh token "refreshtokenforjane" returns 200 with body:
       """
       {
         "token_type":"Bearer",
@@ -147,11 +149,11 @@ Feature: Create a new access token
 
   Scenario Outline: Accepts access_token cookie and removes it if cookie attributes differ for a temporary user
     Given the generated auth key is "newaccesstoken"
-    And the database table 'sessions' has also the following rows:
-      | user_id | expires_at          | access_token       |
-      | 12      | 2019-07-16 22:02:31 | onemoreaccesstoken |
-      | 12      | 2019-07-16 22:02:31 | andmoreaccesstoken |
-      | 12      | 2019-07-16 22:02:31 | moremoraccesstoken |
+    And the database table 'access_tokens' has also the following rows:
+      | session_id | expires_at          | token              |
+      | 1          | 2019-07-16 22:02:31 | onemoreaccesstoken |
+      | 1          | 2019-07-16 22:02:31 | andmoreaccesstoken |
+      | 1          | 2019-07-16 22:02:31 | moremoraccesstoken |
     And the "Cookie" request header is "access_token=<token_cookie>"
     When I send a POST request to "/auth/token?use_cookie=1&cookie_secure=1"
     Then the response code should be 201
