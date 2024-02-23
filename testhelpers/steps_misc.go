@@ -40,11 +40,20 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 	return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-		return store.Sessions().InsertMap(map[string]interface{}{
-			"access_token": testAccessToken,
-			"user_id":      ctx.userID,
-			"issued_at":    database.Now(),
-			"expires_at":   gorm.Expr("? + INTERVAL 7200 SECOND", database.Now()),
+
+		err = store.Sessions().InsertMap(map[string]interface{}{
+			"session_id": testSessionID,
+			"user_id":    ctx.userID,
+		})
+		if err != nil {
+			return err
+		}
+
+		return store.AccessTokens().InsertMap(map[string]interface{}{
+			"session_id": testSessionID,
+			"token":      testAccessToken,
+			"issued_at":  database.Now(),
+			"expires_at": gorm.Expr("? + INTERVAL 7200 SECOND", database.Now()),
 		})
 	})
 }
