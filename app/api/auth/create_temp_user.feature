@@ -56,8 +56,11 @@ Feature: Create a temporary user
       | 4                   | 5577006791947779410 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |
     And the table "sessions" should be:
-      | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 | user_id             | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at)) < 3 | issuer  |
-      | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                     | 5577006791947779410 | true                                             | backend |
+      | session_id          | user_id             |
+      | 6129484611666145821 | 5577006791947779410 |
+    And the table "access_tokens" should be:
+      | session_id          | token                            | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 |
+      | 6129484611666145821 | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                     |
     And the table "attempts" should be:
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
