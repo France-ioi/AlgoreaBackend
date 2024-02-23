@@ -23,11 +23,11 @@ import (
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+	sessionID := srv.GetSessionID(r)
 
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		service.MustNotBeError(store.Sessions().Delete("user_id = ?", user.GroupID).Error())
-		service.MustNotBeError(store.RefreshTokens().Delete("user_id = ?", user.GroupID).Error())
+		service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
+		service.MustNotBeError(store.AccessTokens().Delete("session_id = ?", sessionID).Error())
 		return nil
 	}))
 

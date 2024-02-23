@@ -6,15 +6,15 @@ Feature: Sign the current user out
       | 3        | jane  |
     And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
-      | user_id | expires_at          | access_token              |
-      | 2       | 2019-07-16 22:02:29 | someaccesstoken           |
-      | 2       | 2019-07-16 22:02:40 | anotheraccesstoken        |
-      | 3       | 2019-07-16 22:02:29 | accesstokenforjane        |
-      | 3       | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
-    And the database has the following table 'refresh_tokens':
-      | user_id | refresh_token       |
-      | 2       | somerefreshtoken    |
-      | 3       | refreshtokenforjane |
+      | session_id | user_id | refresh_token       |
+      | 1          | 2       | somerefreshtoken    |
+      | 2          | 3       | refreshtokenforjane |
+    And the database has the following table 'access_tokens':
+      | session_id | token                     | expires_at          |
+      | 1          | someaccesstoken           | 2019-07-16 22:02:29 |
+      | 1          | anotheraccesstoken        | 2019-07-16 22:02:40 |
+      | 2          | accesstokenforjane        | 2019-07-16 22:02:29 |
+      | 2          | anotheraccesstokenforjane | 2019-07-16 22:02:31 |
     And the "Authorization" request header is "Bearer someaccesstoken"
     When I send a POST request to "/auth/logout"
     Then the response code should be 200
@@ -27,12 +27,12 @@ Feature: Sign the current user out
     """
     And the response header "Set-Cookie" should be "[NULL]"
     And the table "sessions" should be:
-      | user_id | expires_at          | access_token              |
-      | 3       | 2019-07-16 22:02:29 | accesstokenforjane        |
-      | 3       | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
-    And the table "refresh_tokens" should be:
-      | user_id | refresh_token       |
-      | 3       | refreshtokenforjane |
+      | session_id | user_id | refresh_token       |
+      | 2          | 3       | refreshtokenforjane |
+    And the table "access_tokens" should be:
+      | session_id | token                     | expires_at          |
+      | 2          | accesstokenforjane        | 2019-07-16 22:02:29 |
+      | 2          | anotheraccesstokenforjane | 2019-07-16 22:02:31 |
     And the table "users" should stay unchanged
 
   Scenario Outline: The user logs out successfully with the session cookie provided
@@ -43,17 +43,17 @@ Feature: Sign the current user out
     And the time now is "2019-07-16T22:02:28Z"
     And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
-      | user_id | expires_at          | access_token              |
-      | 2       | 2019-07-16 22:02:29 | someaccesstoken           |
-      | 2       | 2019-07-16 22:02:40 | anotheraccesstoken        |
-      | 2       | 2019-07-16 22:02:40 | onemoreaccesstoken        |
-      | 2       | 2019-07-16 22:02:40 | thirdaccesstoken          |
-      | 3       | 2019-07-16 22:02:29 | accesstokenforjane        |
-      | 3       | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
-    And the database has the following table 'refresh_tokens':
-      | user_id | refresh_token       |
-      | 2       | somerefreshtoken    |
-      | 3       | refreshtokenforjane |
+      | session_id | user_id | refresh_token       |
+      | 1          | 2       | somerefreshtoken    |
+      | 2          | 3       | refreshtokenforjane |
+    And the database has the following table 'access_tokens':
+      | session_id | token                     | expires_at          |
+      | 1          | someaccesstoken           | 2019-07-16 22:02:29 |
+      | 1          | anotheraccesstoken        | 2019-07-16 22:02:40 |
+      | 1          | onemoreaccesstoken        | 2019-07-16 22:02:40 |
+      | 1          | thirdaccesstoken          | 2019-07-16 22:02:40 |
+      | 2          | accesstokenforjane        | 2019-07-16 22:02:29 |
+      | 2          | anotheraccesstokenforjane | 2019-07-16 22:02:31 |
     And the "Cookie" request header is "access_token=<access_token_cookie>"
     When I send a POST request to "/auth/logout"
     Then the response code should be 200
@@ -66,12 +66,12 @@ Feature: Sign the current user out
     """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "sessions" should be:
-      | user_id | expires_at          | access_token              |
-      | 3       | 2019-07-16 22:02:29 | accesstokenforjane        |
-      | 3       | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
-    And the table "refresh_tokens" should be:
-      | user_id | refresh_token       |
-      | 3       | refreshtokenforjane |
+      | session_id | user_id | refresh_token       |
+      | 2          | 3       | refreshtokenforjane |
+    And the table "access_tokens" should be:
+      | session_id | token                     | expires_at          |
+      | 2          | accesstokenforjane        | 2019-07-16 22:02:29 |
+      | 2          | anotheraccesstokenforjane | 2019-07-16 22:02:31 |
     And the table "users" should stay unchanged
     Examples:
       | access_token_cookie                    | expected_cookie                                                                                                                  |
