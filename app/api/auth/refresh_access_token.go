@@ -43,6 +43,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
 
 	user := srv.GetUser(r)
+	sessionID := srv.GetSessionID(r)
 	oldAccessToken := auth.BearerTokenFromContext(r.Context())
 
 	var newToken string
@@ -51,12 +52,12 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 
 	if user.IsTempUser {
 		service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-			sessionStore := store.Sessions()
 			// delete all the user's access tokens keeping the input token only
-			service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
-				user.GroupID, oldAccessToken).Error())
+			// TODO: the behavior should be the same as for the non-temporary users.
+			// We should not delete the old access token before it is expired.
+			service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
 			var err error
-			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.GroupID)
+			newToken, expiresIn, err = auth.CreateNewTempSession(store, user.GroupID)
 			return err
 		}))
 	} else {
