@@ -20,6 +20,7 @@ const (
 	ctxUser ctxKey = iota
 	ctxBearer
 	ctxSessionCookieAttributes
+	ctxSessionID
 )
 
 var errCannotValidateAccessToken = errors.New("can't validate the access token")
@@ -74,7 +75,9 @@ func GetAuthErrorCodeFromError(err error) int {
 //   - The reason why the user couldn't be authenticated
 func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *http.Request) (context.Context, bool, error) {
 	var user database.User
+	var sessionID int64
 	var authorized bool
+	var err error
 
 	accessToken, cookieAttributes := ParseSessionCookie(r)
 
@@ -94,14 +97,7 @@ func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *ht
 	}
 
 	if len(accessToken) <= 2000 {
-		err := service.GetStore(r).Sessions().
-			Select(`
-						users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id,
-						users.temp_user, users.notifications_read_at, users.default_language`).
-			Joins("JOIN users ON users.group_id = sessions.user_id").
-			Where("access_token = ?", accessToken).
-			Where("expires_at > NOW()").Take(&user).
-			Error()
+		user, sessionID, err = service.GetStore(r).Sessions().GetUserAndSessionIDByValidAccessToken(accessToken)
 		authorized = err == nil
 		if err != nil && !gorm.IsRecordNotFoundError(err) {
 			logging.Errorf("Can't validate an access token: %s", err)
@@ -117,6 +113,7 @@ func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *ht
 	ctx := context.WithValue(r.Context(), ctxBearer, accessToken)
 	ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &cookieAttributes)
 	ctx = context.WithValue(ctx, ctxUser, &user)
+	ctx = context.WithValue(ctx, ctxSessionID, sessionID)
 
 	return ctx, true, nil
 }

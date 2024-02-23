@@ -138,11 +138,6 @@ func (s *DataStore) Platforms() *PlatformStore {
 	return &PlatformStore{NewDataStoreWithTable(s.DB, "platforms")}
 }
 
-// RefreshTokens returns a RefreshTokenStore.
-func (s *DataStore) RefreshTokens() *RefreshTokenStore {
-	return &RefreshTokenStore{NewDataStoreWithTable(s.DB, "refresh_tokens")}
-}
-
 // Results returns a ResultStore.
 func (s *DataStore) Results() *ResultStore {
 	return &ResultStore{NewDataStoreWithTable(s.DB, "results")}
@@ -151,6 +146,11 @@ func (s *DataStore) Results() *ResultStore {
 // Sessions returns a SessionStore.
 func (s *DataStore) Sessions() *SessionStore {
 	return &SessionStore{NewDataStoreWithTable(s.DB, "sessions")}
+}
+
+// AccessTokens returns a AccessTokenStore.
+func (s *DataStore) AccessTokens() *AccessTokenStore {
+	return &AccessTokenStore{NewDataStoreWithTable(s.DB, "access_tokens")}
 }
 
 // Threads returns a ThreadStore.

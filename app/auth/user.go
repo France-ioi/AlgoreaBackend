@@ -13,6 +13,11 @@ func UserFromContext(ctx context.Context) *database.User {
 	return userFromContext.Clone()
 }
 
+// SessionIDFromContext retrieves the session id from a context set by the middleware.
+func SessionIDFromContext(ctx context.Context) int64 {
+	return ctx.Value(ctxSessionID).(int64)
+}
+
 // BearerTokenFromContext retrieves a bearer token from a context set by the middleware.
 func BearerTokenFromContext(ctx context.Context) string {
 	return ctx.Value(ctxBearer).(string)
