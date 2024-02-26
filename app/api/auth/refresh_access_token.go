@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"golang.org/x/oauth2"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -86,13 +85,9 @@ func (srv *Service) refreshTokens(
 	var refreshToken string
 	err := store.Sessions().Where("session_id = ?", sessionID).
 		PluckFirst("refresh_token", &refreshToken).Error()
-	if gorm.IsRecordNotFoundError(err) {
+	if refreshToken == "" {
 		logging.Warnf("No refresh token found in the DB for user %d", user.GroupID)
 		return "", 0, service.ErrNotFound(errors.New("no refresh token found in the DB for the authenticated user"))
-	}
-	if refreshToken == "" {
-		logging.Warnf("The refresh token is empty for user %d", user.GroupID)
-		return "", 0, service.ErrNotFound(errors.New("the refresh token is empty for the authenticated user"))
 	}
 	service.MustNotBeError(err)
 	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it

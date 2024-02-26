@@ -14,7 +14,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: Should be an error when nor code given, nor auth token given, and we don't want to create a temporary user
     When I send a POST request to "/auth/token"
@@ -25,7 +25,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: Should be an error when no code given, and auth token is invalid (could have expired), and we don't want to create a temporary user
     When I send a POST request to "/auth/token"
@@ -37,7 +37,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: Invalid JSON data
     Given the "Content-Type" request header is "application/json"
@@ -52,7 +52,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: Invalid form data
     Given the "Content-Type" request header is "application/x-www-form-urlencoded"
@@ -67,7 +67,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: Invalid request content type
     Given the "Content-Type" request header is "application/xml"
@@ -81,7 +81,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: OAuth error
     Given the DB time now is "2019-07-16 22:02:28"
@@ -98,7 +98,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: User API error
     Given the DB time now is "2019-07-16 22:02:28"
@@ -127,7 +127,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario: User profile can't be parsed
     Given the DB time now is "2019-07-16 22:02:28"
@@ -156,7 +156,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
 
   Scenario Outline: User profile is invalid
     Given the DB time now is "2019-07-16 22:02:28"
@@ -185,7 +185,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
   Examples:
     | profile_body      | error_text                 |
     | {"login":"login"} | no id in user's profile    |
@@ -200,7 +200,7 @@ Feature: Login callback - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
   Examples:
     | query                                            | expected_error                                                                 |
     | ?use_cookie=1                                    | One of cookie_secure and cookie_same_site must be true when use_cookie is true |

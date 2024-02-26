@@ -7,9 +7,12 @@ Feature: Refresh an access token - robustness
       | group_id | login       | temp_user |
       | 13       | jane        | false     |
     And the database has the following table 'sessions':
-      | user_id | expires_at          | access_token              |
-      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
-      | 13      | 3019-07-16 22:02:29 | accesstokenforjane        |
+      | session_id | user_id | refresh_token |
+      | 1          | 13      |               |
+    And the database has the following table 'access_tokens':
+      | session_id | token                     | expires_at          |
+      | 1          | accesstokenforjane        | 3019-07-16 22:02:29 |
+      | 1          | anotheraccesstokenforjane | 2019-07-16 22:02:31 |
 
   Scenario: No refresh token in the DB
     Given the "Authorization" request header is "Bearer accesstokenforjane"
@@ -21,4 +24,4 @@ Feature: Refresh an access token - robustness
       No refresh token found in the DB for user 13
       """
     And the table "sessions" should stay unchanged
-    And the table "refresh_tokens" should stay unchanged
+    And the table "access_tokens" should stay unchanged
