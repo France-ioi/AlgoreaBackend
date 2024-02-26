@@ -76,9 +76,13 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	return service.NoError
 }
 
-func (srv *Service) refreshTokens(ctx context.Context, store *database.DataStore, user *database.User, sessionID int64, oldAccessToken string) (
-	newToken string, expiresIn int32, apiError service.APIError,
-) {
+func (srv *Service) refreshTokens(
+	ctx context.Context,
+	store *database.DataStore,
+	user *database.User,
+	sessionID int64,
+	oldAccessToken string,
+) (newToken string, expiresIn int32, apiError service.APIError) {
 	var refreshToken string
 	err := store.Sessions().Where("session_id = ?", sessionID).
 		PluckFirst("refresh_token", &refreshToken).Error()

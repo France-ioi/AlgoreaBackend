@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"

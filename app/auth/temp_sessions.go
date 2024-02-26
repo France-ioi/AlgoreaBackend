@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"

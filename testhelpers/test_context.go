@@ -52,8 +52,10 @@ type TestContext struct {
 
 var db *sql.DB
 
-const testAccessToken = "testsessiontestsessiontestsessio"
-const testSessionID = 123451234512345
+const (
+	testAccessToken = "testsessiontestsessiontestsessio"
+	testSessionID   = 123451234512345
+)
 
 // SetupTestContext initializes the test context. Called before each scenario.
 func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
