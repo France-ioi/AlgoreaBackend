@@ -385,7 +385,7 @@ Feature: Create an access token
     | content-type                      | data                                                                        |
     | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url         |
     | application/jsoN; charset=utf8    | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url"} |
-  
+
   Scenario Outline: Sets the cookie correctly when parameters are passed in the query for an existing user who log-in
     Given the time now is "2019-07-16T22:02:29Z"
     And the DB time now is "2019-07-16 22:02:28"
@@ -516,11 +516,11 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "sessions" should be:
-      | session_id | user_id             |
-      | 1          | 5577006791947779410 |
+      | session_id          | user_id             |
+      | 8674665223082153551 | 5577006791947779410 |
     And the table "access_tokens" should be:
-      | session_id | token                       |
-      | 1          | {{access_token_from_oauth}} |
+      | session_id          | token                       |
+      | 8674665223082153551 | {{access_token_from_oauth}} |
     Examples:
       | content-type                      | data                                                                                                                                        | expected_cookie                                                                                                                                                              |
       | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1                                            | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   |
