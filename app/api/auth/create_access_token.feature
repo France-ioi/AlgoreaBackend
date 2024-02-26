@@ -313,14 +313,14 @@ Feature: Create an access token
       | parent_group_id | child_group_id |
       | 2               | 4              |
       | 2               | 11             |
-      And the table "groups_ancestors" should be:
-        | ancestor_group_id | child_group_id | is_self |
-        | 2                 | 2              | true    |
-        | 2                 | 4              | false   |
-        | 2                 | 11             | false   |
-        | 4                 | 4              | true    |
-        | 11                | 11             | true    |
-      And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id | child_group_id | is_self |
+      | 2                 | 2              | true    |
+      | 2                 | 4              | false   |
+      | 2                 | 11             | false   |
+      | 4                 | 4              | true    |
+      | 11                | 11             | true    |
+    And the table "group_membership_changes" should be empty
     And the table "attempts" should stay unchanged
 
   Scenario Outline: Accepts parameters from POST data
@@ -376,17 +376,17 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "[NULL]"
     And the table "sessions" should be:
-      | session_id | user_id             |
-      | 1          | 5577006791947779410 |
+      | session_id          | user_id             |
+      | 8674665223082153551 | 5577006791947779410 |
     And the table "access_tokens" should be:
-      | session_id | token                       |
-      | 1          | {{access_token_from_oauth}} |
+      | session_id          | token                       |
+      | 8674665223082153551 | {{access_token_from_oauth}} |
   Examples:
     | content-type                      | data                                                                        |
     | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url         |
     | application/jsoN; charset=utf8    | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url"} |
-
-  Scenario Outline: Sets the cookie correctly when parameters are passed in the query for an existing user
+  
+  Scenario Outline: Sets the cookie correctly when parameters are passed in the query for an existing user who log-in
     Given the time now is "2019-07-16T22:02:29Z"
     And the DB time now is "2019-07-16 22:02:28"
     And the template constant "code_from_oauth" is "someanothercode"
@@ -455,10 +455,10 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "access_tokens" should be:
-      | session_id | access_token                |
-      | 1          | {{access_token_from_oauth}} |
-      | 1          | previousaccesstoken1        |
-      | 2          | previousaccesstoken2        |
+      | session_id          | token                       |
+      | 1                   | previousaccesstoken1        |
+      | 2                   | previousaccesstoken2        |
+      | 5577006791947779410 | {{access_token_from_oauth}} |
     Examples:
       | query                                                     | expected_cookie                                                                                                                                                            |
       | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=1    | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=None |
