@@ -42,18 +42,21 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 			func(mock sqlmock.Sqlmock) {
 				if !timeout {
 					mock.ExpectQuery("^" +
-						regexp.QuoteMeta("SELECT refresh_token FROM `refresh_tokens`  WHERE (user_id = ?) LIMIT 1") + "$").
-						WithArgs(int64(2)).WillReturnRows(mock.NewRows([]string{"refresh_token"}).AddRow("firstrefreshtoken"))
+						regexp.QuoteMeta("SELECT refresh_token FROM `sessions` WHERE (session_id = ?) LIMIT 1") + "$").
+						WithArgs(sqlmock.AnyArg()).
+						WillReturnRows(mock.NewRows([]string{"refresh_token"}).AddRow("firstrefreshtoken"))
 					mock.ExpectBegin()
-					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `sessions`  WHERE (user_id = ? AND access_token != ?)")+"$").
-						WithArgs(int64(2), "accesstoken").WillReturnResult(sqlmock.NewResult(-1, 1))
+					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `access_tokens`  WHERE (session_id = ? AND token != ?)")+"$").
+						WithArgs(sqlmock.AnyArg(), "accesstoken").
+						WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta(
-						"INSERT INTO `sessions` (`access_token`, `expires_at`, `issued_at`, `issuer`, `user_id`) "+
-							"VALUES (?, NOW() + INTERVAL ? SECOND, NOW(), ?, ?)")+
-						"$").WithArgs("newaccesstoken", sqlmock.AnyArg(), "login-module", int64(2)).
+						"INSERT INTO `access_tokens` (`expires_at`, `issued_at`, `session_id`, `token`) "+
+							"VALUES (NOW() + INTERVAL ? SECOND, NOW(), ?, ?)")+"$").
+						WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), "newaccesstoken").
 						WillReturnResult(sqlmock.NewResult(123, 1))
-					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `refresh_tokens` SET `refresh_token` = ? WHERE (user_id = ?)")+
-						"$").WithArgs("newfirstrefreshtoken", int64(2)).WillReturnResult(sqlmock.NewResult(-1, 1))
+					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `sessions` SET `refresh_token` = ? WHERE (session_id = ?)")+"$").
+						WithArgs("newfirstrefreshtoken", sqlmock.AnyArg()).
+						WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectCommit()
 				}
 			},
