@@ -23,7 +23,8 @@ func CreateNewTempSession(s *database.DataStore, userID int64) (
 
 	sessionID := rand.Int63()
 	mustNotBeError(s.
-		Exec("INSERT INTO sessions (session_id, user_id, refresh_token) VALUES (?, ?, ?)", sessionID, userID, nil).
+		// No refresh tokens specified for temporary users.
+		Exec("INSERT INTO sessions (session_id, user_id) VALUES (?, ?)", sessionID, userID).
 		Error(),
 	)
 
