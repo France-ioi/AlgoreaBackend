@@ -21,7 +21,7 @@ import (
 //
 //							 The data to be deleted:
 //
-//							 1. [`filters`, `sessions`, `refresh_tokens`]
+//							 1. [`filters`, `sessions`, `access_tokens`]
 //									having `user_id` = `users.group_id`;
 //							 2. `answers` having `author_id` = `users.group_id`;
 //
