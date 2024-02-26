@@ -140,7 +140,7 @@ Feature: Create an access token
     | &use_cookie=1&cookie_secure=1    |                                                | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None |
     | &use_cookie=1&cookie_same_site=1 |                                                | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
 
-  Scenario Outline: Update an existing user
+  Scenario Outline: Log-in with an existing user
     Given the time now is "2019-07-16T22:02:28Z"
     And the DB time now is "2019-07-16 22:02:28"
     And the template constant "code_from_oauth" is "someanothercode"
