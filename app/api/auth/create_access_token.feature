@@ -103,34 +103,34 @@ Feature: Create an access token
       | 4037200794235010051 | 6129484611666145821 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
-      And the table "groups_ancestors" should be:
-        | ancestor_group_id   | child_group_id      | is_self |
-        | 2                   | 2                   | true    |
-        | 2                   | 4                   | false   |
-        | 2                   | 5577006791947779410 | false   |
-        | 4                   | 4                   | true    |
-        | 4037200794235010051 | 4037200794235010051 | true    |
-        | 4037200794235010051 | 5577006791947779410 | false   |
-        | 4037200794235010051 | 6129484611666145821 | false   |
-        | 4037200794235010051 | 8674665223082153551 | false   |
-        | 5577006791947779410 | 5577006791947779410 | true    |
-        | 6129484611666145821 | 5577006791947779410 | false   |
-        | 6129484611666145821 | 6129484611666145821 | true    |
-        | 6129484611666145821 | 8674665223082153551 | false   |
-        | 8674665223082153551 | 5577006791947779410 | false   |
-        | 8674665223082153551 | 8674665223082153551 | true    |
-      And the table "attempts" should be:
-        | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 4                   | false   |
+      | 2                   | 5577006791947779410 | false   |
+      | 4                   | 4                   | true    |
+      | 4037200794235010051 | 4037200794235010051 | true    |
+      | 4037200794235010051 | 5577006791947779410 | false   |
+      | 4037200794235010051 | 6129484611666145821 | false   |
+      | 4037200794235010051 | 8674665223082153551 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
+      | 6129484611666145821 | 5577006791947779410 | false   |
+      | 6129484611666145821 | 6129484611666145821 | true    |
+      | 6129484611666145821 | 8674665223082153551 | false   |
+      | 8674665223082153551 | 5577006791947779410 | false   |
+      | 8674665223082153551 | 8674665223082153551 | true    |
+    And the table "attempts" should be:
+      | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:
       | group_id            | member_id           | ABS(TIMESTAMPDIFF(SECOND, NOW(), at)) < 3 | action          | initiator_id        |
       | 8674665223082153551 | 5577006791947779410 | true                                      | joined_by_badge | 5577006791947779410 |
     And the table "sessions" should be:
-      | expires_at          | user_id             | issuer       | issued_at           | access_token                |
-      | 2020-07-16 22:02:28 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
-    And the table "refresh_tokens" should be:
-      | user_id             | refresh_token                |
-      | 5577006791947779410 | {{refresh_token_from_oauth}} |
+      | session_id          | user_id             | refresh_token                |
+      | 3916589616287113937 | 5577006791947779410 | {{refresh_token_from_oauth}} |
+    And the table "access_tokens" should be:
+      | session_id          | token                       | expires_at          | issued_at           |
+      | 3916589616287113937 | {{access_token_from_oauth}} | 2020-07-16 22:02:28 | 2019-07-16 22:02:28 |
     And the table "group_managers" should be:
       | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
       | 4037200794235010051 | 5577006791947779410 | memberships | true                   | true              | false                  |
@@ -198,13 +198,13 @@ Feature: Create an access token
       | 2               | 13             |
     And the groups ancestors are computed
     And the database has the following table 'sessions':
-      | expires_at          | user_id | issuer       | issued_at           | access_token         |
-      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
-      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
-    And the database has the following table 'refresh_tokens':
-      | user_id | refresh_token         |
-      | 11      | previousrefreshtoken1 |
-      | 13      | previousrefreshtoken2 |
+      | session_id | user_id | refresh_token         |
+      | 1          | 11      | previousrefreshtoken1 |
+      | 2          | 13      | previousrefreshtoken2 |
+    And the database has the following table 'access_tokens':
+      | session_id | token                | expires_at          | issued_at           |
+      | 1          | previousaccesstoken1 | 2020-06-16 22:02:49 | 2019-07-16 22:02:28 |
+      | 2          | previousaccesstoken2 | 2020-06-16 22:02:49 | 2019-07-16 22:02:28 |
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
       """
       {
@@ -242,15 +242,16 @@ Feature: Create an access token
     And the table "group_membership_changes" should be empty
     And the table "attempts" should stay unchanged
     And the table "sessions" should be:
-      | expires_at          | user_id | issuer       | issued_at           | access_token                |
-      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        |
-      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        |
-      | 2020-07-16 22:02:48 | 11      | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
-    And the table "refresh_tokens" should be:
-      | user_id | refresh_token                |
-      | 11      | {{refresh_token_from_oauth}} |
-      | 13      | previousrefreshtoken2        |
-  Examples:
+      | session_id          | user_id | refresh_token                |
+      | 1                   | 11      | previousrefreshtoken1        |
+      | 2                   | 13      | previousrefreshtoken2        |
+      | 5577006791947779410 | 11      | {{refresh_token_from_oauth}} |
+    And the table "access_tokens" should be:
+      | session_id          | token                       | expires_at          | issued_at           |
+      | 1                   | previousaccesstoken1        | 2020-06-16 22:02:49 | 2019-07-16 22:02:28 |
+      | 2                   | previousaccesstoken2        | 2020-06-16 22:02:49 | 2019-07-16 22:02:28 |
+      | 5577006791947779410 | {{access_token_from_oauth}} | 2020-07-16 22:02:48 | 2019-07-16 22:02:28 |
+    Examples:
     | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | free_text    | web_site                  | sex    | email_verified | time_zone     | notify_news | photo_autoload | real_name_visible |
     | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | I'm Jane Doe | http://jane.freepages.com | Female | true           | Europe/London | true        | true           | true              |
     | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | null         | null                      | null   | false          | null          | false       | false          | false             |
@@ -375,8 +376,11 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "[NULL]"
     And the table "sessions" should be:
-      | user_id             | access_token                |
-      | 5577006791947779410 | {{access_token_from_oauth}} |
+      | session_id | user_id             |
+      | 1          | 5577006791947779410 |
+    And the table "access_tokens" should be:
+      | session_id | token                       |
+      | 1          | {{access_token_from_oauth}} |
   Examples:
     | content-type                      | data                                                                        |
     | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url         |
@@ -402,13 +406,13 @@ Feature: Create an access token
       | 2               | 13             |
     And the groups ancestors are computed
     And the database has the following table 'sessions':
-      | expires_at          | user_id | issuer       | issued_at           | access_token         |
-      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
-      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
-    And the database has the following table 'refresh_tokens':
-      | user_id | refresh_token         |
-      | 11      | previousrefreshtoken1 |
-      | 13      | previousrefreshtoken2 |
+      | session_id | user_id | refresh_token         |
+      | 1          | 11      | previousrefreshtoken1 |
+      | 2          | 13      | previousrefreshtoken2 |
+    And the database has the following table 'access_tokens':
+      | session_id | token                | expires_at          | issued_at           |
+      | 1          | previousaccesstoken1 | 2020-06-16 22:02:49 | 2019-06-16 22:02:28 |
+      | 2          | previousaccesstoken2 | 2020-06-16 22:02:49 | 2019-06-16 22:02:28 |
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
       """
       {
@@ -450,11 +454,11 @@ Feature: Create an access token
       }
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
-    And the table "sessions" should be:
-      | user_id | access_token                |
-      | 11      | {{access_token_from_oauth}} |
-      | 11      | previousaccesstoken1        |
-      | 13      | previousaccesstoken2        |
+    And the table "access_tokens" should be:
+      | session_id | access_token                |
+      | 1          | {{access_token_from_oauth}} |
+      | 1          | previousaccesstoken1        |
+      | 2          | previousaccesstoken2        |
     Examples:
       | query                                                     | expected_cookie                                                                                                                                                            |
       | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=1    | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=None |
@@ -512,8 +516,11 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "sessions" should be:
-      | user_id             | access_token                |
-      | 5577006791947779410 | {{access_token_from_oauth}} |
+      | session_id | user_id             |
+      | 1          | 5577006791947779410 |
+    And the table "access_tokens" should be:
+      | session_id | token                       |
+      | 1          | {{access_token_from_oauth}} |
     Examples:
       | content-type                      | data                                                                                                                                        | expected_cookie                                                                                                                                                              |
       | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1                                            | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   |
@@ -660,19 +667,19 @@ Feature: Create an access token
       | 2                   | 5577006791947779410 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
-      And the table "groups_ancestors" should be:
-        | ancestor_group_id   | child_group_id      | is_self |
-        | 2                   | 2                   | true    |
-        | 2                   | 4                   | false   |
-        | 2                   | 5577006791947779410 | false   |
-        | 4                   | 4                   | true    |
-        | 5577006791947779410 | 5577006791947779410 | true    |
-        | 6129484611666145821 | 5577006791947779410 | false   |
-        | 6129484611666145821 | 6129484611666145821 | true    |
-        | 6129484611666145821 | 8674665223082153551 | false   |
-        | 8674665223082153551 | 5577006791947779410 | false   |
-        | 8674665223082153551 | 8674665223082153551 | true    |
-      And the table "attempts" should be:
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 4                   | false   |
+      | 2                   | 5577006791947779410 | false   |
+      | 4                   | 4                   | true    |
+      | 5577006791947779410 | 5577006791947779410 | true    |
+      | 6129484611666145821 | 5577006791947779410 | false   |
+      | 6129484611666145821 | 6129484611666145821 | true    |
+      | 6129484611666145821 | 8674665223082153551 | false   |
+      | 8674665223082153551 | 5577006791947779410 | false   |
+      | 8674665223082153551 | 8674665223082153551 | true    |
+    And the table "attempts" should be:
       | participant_id      | id | creator_id          | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | parent_attempt_id | root_item_id |
       | 5577006791947779410 | 0  | 5577006791947779410 | true                                              | null              | null         |
     And the table "group_membership_changes" should be:

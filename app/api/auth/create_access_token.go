@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -250,12 +251,16 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), userID, true))
-		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token.AccessToken,
-			int32(time.Until(token.Expiry)/time.Second), "login-module"))
 
+		sessionID := rand.Int63()
 		service.MustNotBeError(store.Exec(
-			"INSERT INTO refresh_tokens (user_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
-			userID, token.RefreshToken, token.RefreshToken).Error())
+			"INSERT INTO sessions (session_id, user_id, refresh_token) VALUES (?, ?, ?)",
+			sessionID, userID, token.RefreshToken).Error())
+		service.MustNotBeError(store.AccessTokens().InsertNewToken(
+			sessionID,
+			token.AccessToken,
+			int32(time.Until(token.Expiry)/time.Second),
+		))
 
 		return nil
 	}))
