@@ -423,6 +423,40 @@ func (ctx *TestContext) addThread(item, participant, helperGroup, status, messag
 	})
 }
 
+// addSession adds a session in database.
+func (ctx *TestContext) addSession(session, user, refreshToken string) {
+	sessionID := ctx.getReference(session)
+	userID := ctx.getReference(user)
+
+	ctx.addInDatabase("sessions", strconv.FormatInt(sessionID, 10), map[string]interface{}{
+		"session_id":    sessionID,
+		"user_id":       userID,
+		"refresh_token": refreshToken,
+	})
+}
+
+// addAccessToken adds a access token in database.
+func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt string) {
+	sessionID := ctx.getReference(session)
+
+	issuedAtDate, err := time.Parse(utils.DateTimeFormat, issuedAt)
+	if err != nil {
+		panic(err)
+	}
+
+	expiresAtDate, err := time.Parse(utils.DateTimeFormat, expiresAt)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.addInDatabase("access_tokens", token, map[string]interface{}{
+		"session_id": sessionID,
+		"token":      token,
+		"issued_at":  issuedAtDate,
+		"expires_at": expiresAtDate,
+	})
+}
+
 // IAm Sets the current user.
 func (ctx *TestContext) IAm(name string) error {
 	err := ctx.ThereIsAUser(name)
@@ -1127,4 +1161,35 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 // to a given item.
 func (ctx *TestContext) ICanRequestHelpToTheGroupWithIDOnTheItemWithID(group, item string) error {
 	return ctx.UserCanRequestHelpToOnItemWithID(group, ctx.user, item)
+}
+
+// ThereAreTheFollowingSessions create sessions.
+func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(sessions.Rows); i++ {
+		session := ctx.getRowMap(i, sessions)
+
+		ctx.addSession(
+			session["session"],
+			session["user"],
+			session["refresh_token"],
+		)
+	}
+
+	return nil
+}
+
+// ThereAreTheFollowingAccessTokens create access tokens.
+func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(accessTokens.Rows); i++ {
+		accessToken := ctx.getRowMap(i, accessTokens)
+
+		ctx.addAccessToken(
+			accessToken["session"],
+			accessToken["token"],
+			accessToken["issued_at"],
+			accessToken["expires_at"],
+		)
+	}
+
+	return nil
 }
