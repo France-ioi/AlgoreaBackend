@@ -21,10 +21,14 @@ Feature: Export the current user's data
       | user  | 11       | John       | Doe       | 1     |
       | jack  | 21       | Jack       | Smith     | 2     |
       | jane  | 31       | Jane       | Doe       | 2     |
-    And the database has the following table 'refresh_tokens':
-      | user_id | refresh_token    |
-      | 21      | refreshTokenFor1 |
-      | 11      | refreshTokenFor2 |
+    And the database has the following table 'sessions':
+      | session_id | user_id | refresh_token    |
+      | 1          | 21      | refreshTokenFor1 |
+      | 2          | 11      | refreshTokenFor2 |
+    And the database has the following table 'access_tokens':
+      | session_id | token     | issued_at           | expires_at          |
+      | 1          | tokenFor1 | 2020-01-01 00:00:00 | 2020-01-01 02:00:00 |
+      | 2          | tokenFor2 | 2020-01-01 00:00:00 | 2020-01-01 02:00:00 |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 2               | 11             |
@@ -222,12 +226,13 @@ Feature: Export the current user's data
         {"id": "6", "name": "Another Class"},
         {"id": "11", "name": "user self"}
       ],
-      "refresh_token": {"user_id": "11", "refresh_token": "***"},
       "sessions": [
-        {
-          "user_id": "11", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
-          "issued_at": "2019-07-16T22:02:28Z", "issuer": null
-        }
+        {"session_id": "2", "user_id": "11", "refresh_token": "***"},
+        {"session_id": "123451234512345", "user_id": "11", "refresh_token": "***"}
+      ],
+      "access_tokens": [
+        {"session_id": "2", "token": "***", "expires_at": "2020-01-01T02:00:00Z", "issued_at": "2020-01-01T00:00:00Z"},
+        {"session_id": "123451234512345", "token": "***", "expires_at": "2019-07-17T00:02:28Z", "issued_at": "2019-07-16T22:02:28Z"}
       ],
       "answers": [
         {
@@ -267,12 +272,11 @@ Feature: Export the current user's data
       "group_pending_requests": [],
       "joined_groups": [],
       "managed_groups": [],
-      "refresh_token": null,
       "sessions": [
-        {
-          "user_id": "31", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
-          "issued_at": "2019-07-16T22:02:28Z", "issuer": null
-        }
+        {"session_id": "123451234512345", "user_id": "31", "refresh_token": "***"}
+      ],
+      "access_tokens": [
+        {"session_id": "123451234512345", "token": "***", "expires_at": "2019-07-17T00:02:28Z", "issued_at": "2019-07-16T22:02:28Z"}
       ],
       "answers": []
     }

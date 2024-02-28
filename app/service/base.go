@@ -31,6 +31,11 @@ func (srv *Base) GetUser(r *http.Request) *database.User {
 	return auth.UserFromContext(r.Context())
 }
 
+// GetSessionID returns the session ID from the request's context.
+func (srv *Base) GetSessionID(r *http.Request) int64 {
+	return auth.SessionIDFromContext(r.Context())
+}
+
 // GetStore returns a data store with the given request's context.
 func (srv *Base) GetStore(r *http.Request) *database.DataStore {
 	if srv.store == nil {

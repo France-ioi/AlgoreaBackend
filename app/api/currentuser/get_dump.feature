@@ -18,10 +18,14 @@ Feature: Export the short version of the current user's data
       | login | group_id | first_name | last_name | grade |
       | user  | 11       | John       | Doe       | 1     |
       | jane  | 31       | Jane       | Doe       | 2     |
-    And the database has the following table 'refresh_tokens':
-      | user_id | refresh_token    |
-      | 11      | refreshTokenFor1 |
-      | 31      | refreshTokenFor2 |
+    And the database has the following table 'sessions':
+      | session_id | user_id | refresh_token    |
+      | 1          | 11      | refreshTokenFor1 |
+      | 2          | 31      | refreshTokenFor2 |
+    And the database has the following table 'access_tokens':
+      | session_id | token        | expires_at          |
+      | 1          | accessToken1 | 3000-01-01 00:00:00 |
+      | 2          | accessToken2 | 3000-01-01 00:00:00 |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 2               | 11             |

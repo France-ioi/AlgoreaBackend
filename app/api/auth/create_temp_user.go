@@ -124,7 +124,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 			[]map[string]interface{}{{"parent_group_id": domainConfig.TempUsersGroupID, "child_group_id": userID}}))
 
 		var err error
-		token, expiresIn, err = auth.CreateNewTempSession(store.Sessions(), userID)
+		token, expiresIn, err = auth.CreateNewTempSession(store, userID)
 		return err
 	}))
 

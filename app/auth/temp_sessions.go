@@ -3,6 +3,8 @@ package auth
 import (
 	"time"
 
+	"github.com/France-ioi/AlgoreaBackend/app/rand"
+
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -11,25 +13,32 @@ import (
 const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 
 // CreateNewTempSession creates a new session for a temporary user.
-func CreateNewTempSession(s *database.SessionStore, userID int64) (
+func CreateNewTempSession(s *database.DataStore, userID int64) (
 	accessToken string, expiresIn int32, err error,
 ) {
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
-	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-		accessToken, err = GenerateKey()
-		if err != nil {
-			return err
-		}
-		return retryStore.Sessions().InsertNewOAuth(userID, accessToken, expiresIn, "backend")
-	})
-	if err != nil {
-		accessToken = ""
-		return
-	}
+	accessToken, err = GenerateKey()
+	mustNotBeError(err)
+
+	sessionID := rand.Int63()
+	mustNotBeError(s.
+		// No refresh tokens specified for temporary users.
+		Exec("INSERT INTO sessions (session_id, user_id) VALUES (?, ?)", sessionID, userID).
+		Error(),
+	)
+
+	mustNotBeError(s.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn))
 
 	logging.Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
 		expiresIn, userID)
 
 	return
+}
+
+// mustNotBeError panics if the error is not nil.
+func mustNotBeError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

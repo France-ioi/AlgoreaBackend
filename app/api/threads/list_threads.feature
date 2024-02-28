@@ -209,7 +209,7 @@ Feature: List threads
       | @Chapter2_1_Task1 | @Chapter2_1                     | Task    |
       | @Chapter2_1_Task2 | @Chapter2_1                     | Task    |
       | @Chapter3         |                                 | Chapter |
-      And there are the following threads:
+    And there are the following threads:
       | participant | item              | visible_by_participant | message_count |
       | @John       | @Root_Task        | 1                      | 100           |
       | @John       | @Chapter1         | 1                      | 101           |
@@ -220,7 +220,6 @@ Feature: List threads
       | @John       | @Chapter2_1       | 1                      | 106           |
       | @John       | @Chapter2_1_Task1 | 1                      | 107           |
       | @John       | @Chapter2_1_Task2 | 1                      | 108           |
-    And I am @John
     When I send a GET request to "/threads?is_mine=1&item_id=@Chapter2"
     Then the response code should be 200
     And the response at $[*].item.id should be:
@@ -244,7 +243,6 @@ Feature: List threads
       | @John       | @TaskMinUpdateAt       | 1                      | 101           | 2023-01-01 00:00:01 |
       | @John       | @TaskMaxUpdateAt       | 1                      | 102           | 2023-01-01 00:00:11 |
       | @John       | @TaskSecondMinUpdateAt | 1                      | 103           | 2023-01-01 00:00:02 |
-      And I am @John
     When I send a GET request to "/threads?is_mine=1&limit=<limit>&sort=<sort>"
     Then the response code should be 200
     And the response should be a JSON array with <nb_results> entries
@@ -267,7 +265,6 @@ Feature: List threads
       | participant | item             | visible_by_participant | latest_update_at    |
       | @John       | @TaskMinUpdateAt | 1                      | 2023-01-01 00:00:01 |
       | @John       | @TaskMaxUpdateAt | 1                      | 2023-01-01 00:00:02 |
-    And I am @John
     When I send a GET request to "/threads?is_mine=1&limit=1&sort=latest_update_at&from.item_id=@TaskMinUpdateAt&from.participant_id=@John"
     Then the response code should be 200
     And the response should be a JSON array with 1 entries
@@ -283,7 +280,6 @@ Feature: List threads
       | participant | item             | visible_by_participant | latest_update_at    |
       | @John       | @TaskMinUpdateAt | 1                      | 2023-01-01 00:00:01 |
       | @John       | @TaskMaxUpdateAt | 1                      | 2023-01-01 00:00:02 |
-    And I am @John
     When I send a GET request to "/threads?is_mine=1&limit=1&sort=latest_update_at&from.item_id=@TaskMaxUpdateAt&from.participant_id=@John"
     Then the response code should be 200
     And the response should be a JSON array with 0 entries
@@ -300,7 +296,6 @@ Feature: List threads
       | @John       | @TaskWaitingForParticipantThread | waiting_for_participant | 1                      |
       | @John       | @TaskWaitingForTrainerThread     | waiting_for_trainer     | 1                      |
       | @John       | @TaskClosedThread                | closed                  | 1                      |
-    And I am @John
     When I send a GET request to "/threads?is_mine=1&status=<status>"
     Then the response code should be 200
     And the response should be a JSON array with 1 entries
@@ -322,7 +317,6 @@ Feature: List threads
       | @John       | @Task1 | 1                      | 2023-01-01 00:00:01 |
       | @John       | @Task2 | 1                      | 2023-01-01 00:00:02 |
       | @John       | @Task3 | 1                      | 2023-01-01 00:00:03 |
-    And I am @John
     When I send a GET request to "/threads?is_mine=1&latest_update_gt=<latest_update_gt>&sort=latest_update_at"
     Then the response code should be 200
     And the response should be a JSON array with <nb_results> entries
@@ -344,7 +338,6 @@ Feature: List threads
       | @John       | @Task1 | 1                      | 2023-01-01 00:00:01 |
       | @John       | @Task2 | 1                      | 2023-01-01 00:00:02 |
       | @John       | @Task3 | 1                      | 2023-01-01 00:00:03 |
-    And I am @John
     When I send a GET request to "/threads?is_mine=1&latest_update_gt=2023-01-01T00:00:03Z&sort=latest_update_at"
     Then the response code should be 200
     And the response should be a JSON array with 0 entries

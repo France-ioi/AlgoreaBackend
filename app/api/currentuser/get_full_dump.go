@@ -21,16 +21,27 @@ import (
 //		The content returned is just the dump of raw entries of each table related to the user
 //
 //		* `current_user` (from `users`): all attributes;
-//		* `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”;
+//
+//		* `sessions`, `access_tokens`: all attributes, but secrets replaced with “***”;
+//
 //		* `managed_groups`: `id` and `name` for every descendant of groups managed by the user;
+//
 //		* `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
+//
 //		* `answers`: all attributes;
+//
 //		* `attempts`: the user's or his teams' attempts, all attributes;
+//
 //		* `results`: the user's or his teams' attempt results, all attributes;
+//
 //		* `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
+//
 //		* `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;
+//
 //		* `group_pending_requests`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`;
+//
 //		* `group_membership_changes`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`.
+//
 //
 //		In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //		```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
@@ -70,22 +81,21 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("sessions", w, func(writer io.Writer) {
-			columns := getColumnsList(store, "sessions", []string{"access_token"})
-			service.MustNotBeError(store.Sessions().Where("user_id = ?", user.GroupID).
-				Select(columns + ", '***' AS access_token").ScanAndHandleMaps(streamerFunc(w)).Error())
+			columns := getColumnsList(store, "sessions", []string{"refresh_token"})
+			service.MustNotBeError(store.Sessions().
+				Where("user_id = ?", user.GroupID).
+				Select(columns + ", '***' AS refresh_token").
+				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
-		writeJSONObjectElement("refresh_token", w, func(writer io.Writer) {
-			columns := getColumnsList(store, "refresh_tokens", []string{"refresh_token"})
-			var refreshTokens []map[string]interface{}
-			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
-				Select(columns + ", '***' AS refresh_token").ScanIntoSliceOfMaps(&refreshTokens).Error())
-			if len(refreshTokens) > 0 {
-				writeValue(w, refreshTokens[0])
-			} else {
-				writeValue(w, nil)
-			}
+		writeJSONObjectArrayElement("access_tokens", w, func(writer io.Writer) {
+			columns := getColumnsList(store, "access_tokens", []string{"token"})
+			service.MustNotBeError(store.AccessTokens().
+				Joins("JOIN sessions ON sessions.session_id = access_tokens.session_id").
+				Where("sessions.user_id = ?", user.GroupID).
+				Select(columns + ", '***' AS token").
+				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 	}
 

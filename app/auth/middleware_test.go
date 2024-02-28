@@ -235,30 +235,31 @@ func (sp *storeProvider) GetStore(*http.Request) *database.DataStore { return sp
 
 var _ GetStorer = &storeProvider{}
 
-func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders, cookieHeaders []string,
+func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders, cookieHeaders []string,
 	userID int64, dbError error,
 ) (bool, *http.Response, sqlmock.Sqlmock) {
 	dbmock, mock := database.NewDBMock()
 	defer func() { _ = dbmock.Close() }()
-	if expectedSessionID != "" {
+	if expectedAccessToken != "" {
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
 				"SELECT users.login, users.login_id, users.is_admin, users.group_id, users.access_group_id, "+
-					"users.temp_user, users.notifications_read_at, users.default_language "+
+					"users.temp_user, users.notifications_read_at, users.default_language, sessions.session_id "+
 					"FROM `sessions` "+
 					"JOIN users ON users.group_id = sessions.user_id "+
-					"WHERE (access_token = ?) AND (expires_at > NOW()) LIMIT 1") +
-			"$").WithArgs(expectedSessionID)
+					"JOIN access_tokens ON access_tokens.session_id = sessions.session_id "+
+					"WHERE (access_tokens.token = ?) AND (access_tokens.expires_at > NOW()) LIMIT 1") +
+			"$").WithArgs(expectedAccessToken)
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
 			neededRows := mock.NewRows([]string{
 				"group_id", "login", "login_id", "is_admin", "access_group_id", "temp_user",
-				"notifications_read_at", "default_language",
+				"notifications_read_at", "default_language", "session_id",
 			})
 			if userID != 0 {
 				neededRows = neededRows.AddRow(userID, "login", "12345", int64(1), int64(23456), int64(1),
-					[]byte("2019-05-30 11:00:00"), "fr")
+					[]byte("2019-05-30 11:00:00"), "fr", "1")
 			}
 			expectation.WillReturnRows(neededRows)
 		}
