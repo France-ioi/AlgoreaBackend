@@ -58,6 +58,8 @@ CREATE TABLE `new_sessions` (
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sessions represent a logged in user, on a specific device.';
 
+ALTER TABLE `new_sessions` ADD INDEX `refresh_token` (`refresh_token`(767));
+
 CREATE TABLE `access_tokens` (
   `token` VARBINARY(2000) NOT NULL COMMENT 'The access token.',
   `session_id` BIGINT NOT NULL,
@@ -65,6 +67,9 @@ CREATE TABLE `access_tokens` (
   `expires_at` DATETIME NOT NULL COMMENT 'The time the token expires and becomes invalid. It should be deleted after this time.',
   `issued_at` DATETIME NOT NULL DEFAULT NOW() COMMENT 'The time the token was issued.'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Access tokens (short lifetime) distributed to users, to access a specific session.';
+
+ALTER TABLE `access_tokens` ADD INDEX `expires_at` (`expires_at`);
+ALTER TABLE `access_tokens` ADD INDEX `token` (`token`(767));
 
 # 1a.
 # For each row in the current refresh_tokens table [create rows for real users in sessions]:
