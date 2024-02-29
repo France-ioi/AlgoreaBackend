@@ -1,7 +1,7 @@
 Feature: Refresh an access token - robustness
   Background:
-    Given the DB time is "2020-01-01 00:00:00"
-    Given the database has the following table 'groups':
+    Given the DB time now is "2020-01-01 00:00:00"
+    And the database has the following table 'groups':
       | id | name        | type |
       | 13 | jane        | User |
     And the database has the following table 'users':
@@ -14,10 +14,9 @@ Feature: Refresh an access token - robustness
       | session_id | expires_at          | token              |
       | 1          | 2019-01-01 00:00:00 | jane_expired_token |
       | 1          | 2021-01-01 00:00:00 | jane_current_token |
-
-
+    @wop
   Scenario: No refresh token in the DB
-    Given the "Authorization" request header is "Bearer accesstokenforjane"
+    Given the "Authorization" request header is "Bearer jane_current_token"
     When I send a POST request to "/auth/token"
     Then the response code should be 404
     And the response error message should contain "No refresh token found in the DB for the authenticated user"
