@@ -1,5 +1,6 @@
 Feature: Refresh an access token - robustness
   Background:
+    Given the DB time is "2020-01-01 00:00:00"
     Given the database has the following table 'groups':
       | id | name        | type |
       | 13 | jane        | User |
@@ -10,9 +11,10 @@ Feature: Refresh an access token - robustness
       | session_id | user_id | refresh_token |
       | 1          | 13      |               |
     And the database has the following table 'access_tokens':
-      | session_id | token                     | expires_at          |
-      | 1          | accesstokenforjane        | 3019-07-16 22:02:29 |
-      | 1          | anotheraccesstokenforjane | 2019-07-16 22:02:31 |
+      | session_id | expires_at          | token              |
+      | 1          | 2019-01-01 00:00:00 | jane_expired_token |
+      | 1          | 2021-01-01 00:00:00 | jane_current_token |
+
 
   Scenario: No refresh token in the DB
     Given the "Authorization" request header is "Bearer accesstokenforjane"
