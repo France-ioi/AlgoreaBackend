@@ -42,6 +42,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 	sessionID := srv.GetSessionID(r)
 	oldAccessToken := auth.BearerTokenFromContext(r.Context())
 
@@ -49,27 +50,37 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	var expiresIn int32
 	apiError := service.NoError
 
-	if user.IsTempUser {
-		service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-			// delete all the user's access tokens keeping the input token only
-			service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
-			var err error
-			newToken, expiresIn, err = auth.CreateNewTempSession(store, user.GroupID)
-			return err
-		}))
+	sessionMostRecentValidToken, sessionMostRecentValidTokenExpiresIn := store.AccessTokens().
+		GetMostRecentValidTokenForSession(sessionID)
+	if sessionMostRecentValidToken != oldAccessToken {
+		// If we try to refresh a token that is not the most recent one, we return the most recent one.
+		// Note: we know that the token is valid because we checked it in the middleware.
+		newToken = sessionMostRecentValidToken
+		expiresIn = sessionMostRecentValidTokenExpiresIn
 	} else {
-		// We should not allow concurrency in this part because the login module generates not only
-		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
-		// usage of the old refresh token for that reason.
-		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), srv.GetStore(r), user, sessionID, oldAccessToken)
-			return nil
-		}))
+		if user.IsTempUser {
+			service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
+				// delete all the user's access tokens keeping the input token only
+				service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
+				var err error
+				newToken, expiresIn, err = auth.CreateNewTempSession(store, user.GroupID)
+				return err
+			}))
+		} else {
+			// We should not allow concurrency in this part because the login module generates not only
+			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
+			// usage of the old refresh token for that reason.
+			service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
+				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID, oldAccessToken)
+				return nil
+			}))
+		}
+
+		if apiError != service.NoError {
+			return apiError
+		}
 	}
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
 		cookieAttributes)
 	return service.NoError

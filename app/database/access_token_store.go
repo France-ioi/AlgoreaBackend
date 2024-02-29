@@ -16,3 +16,21 @@ func (s *AccessTokenStore) InsertNewToken(sessionID int64, token string, seconds
 		"issued_at":  Now(),
 	})
 }
+
+// GetMostRecentValidTokenForSession returns the most recent valid token for the given sessionID.
+func (s *AccessTokenStore) GetMostRecentValidTokenForSession(sessionID int64) (token string, secondsUntilExpiry int32) {
+	var resultRow struct {
+		Token              string
+		SecondsUntilExpiry int32
+	}
+
+	err := s.Select(`token, TIMESTAMPDIFF(SECOND, NOW(), expires_at) AS seconds_until_expiry`).
+		Where("session_id = ?", sessionID).
+		Order("expires_at DESC").
+		Limit(1).
+		Scan(&resultRow).
+		Error()
+	mustNotBeError(err)
+
+	return resultRow.Token, resultRow.SecondsUntilExpiry
+}
