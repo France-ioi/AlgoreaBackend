@@ -59,7 +59,9 @@ const parsedRequestData ctxKey = iota
 //			and if the authentication is valid.
 //			This happens when the frontend app loads and the user is already logged-in.
 //			Then,
-//			the service refreshes the access token
+//			if the access token used isn't the most recent access token of the user, we return the most recent access token.
+//			If the access token used is the most recent access token of the user,
+//			we refresh the access token and return the new access token
 //			(locally for temporary users or via the login module for normal users) and
 //			saves it into the DB keeping only the input token and the new token.
 //			Since the login module responds with both access and refresh tokens, the service updates the user's
