@@ -50,13 +50,14 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	var expiresIn int32
 	apiError := service.NoError
 
-	sessionMostRecentValidToken, sessionMostRecentValidTokenExpiresIn := store.AccessTokens().
+	sessionMostRecentToken := store.
+		AccessTokens().
 		GetMostRecentValidTokenForSession(sessionID)
-	if sessionMostRecentValidToken != oldAccessToken {
-		// If we try to refresh a token that is not the most recent one, we return the most recent one.
+	if sessionMostRecentToken.Token != oldAccessToken || sessionMostRecentToken.TooNewToRefresh {
+		// We return the most recent token if the input token is not the most recent one or if it is too new to refresh.
 		// Note: we know that the token is valid because we checked it in the middleware.
-		newToken = sessionMostRecentValidToken
-		expiresIn = sessionMostRecentValidTokenExpiresIn
+		newToken = sessionMostRecentToken.Token
+		expiresIn = sessionMostRecentToken.SecondsUntilExpiry
 	} else {
 		if user.IsTempUser {
 			service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {

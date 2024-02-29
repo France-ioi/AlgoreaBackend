@@ -14,7 +14,7 @@ Feature: Refresh an access token - robustness
       | session_id | expires_at          | token              |
       | 1          | 2019-01-01 00:00:00 | jane_expired_token |
       | 1          | 2021-01-01 00:00:00 | jane_current_token |
-    @wop
+
   Scenario: No refresh token in the DB
     Given the "Authorization" request header is "Bearer jane_current_token"
     When I send a POST request to "/auth/token"
