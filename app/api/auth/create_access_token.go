@@ -60,7 +60,9 @@ const parsedRequestData ctxKey = iota
 //			This happens when the frontend app loads and the user is already logged-in.
 //			Then,
 //			if the access token used isn't the most recent access token of the user, we return the most recent access token.
-//			If the access token used is the most recent access token of the user,
+//			If the access token used is the most recent access token of the user, and it has been refreshed LESS than 5 minutes ago,
+//			we just return it.
+//			If the access token used is the most recent access token of the user, and it has been refreshed MORE than 5 minutes ago,
 //			we refresh the access token and return the new access token
 //			(locally for temporary users or via the login module for normal users) and
 //			saves it into the DB keeping only the input token and the new token.
