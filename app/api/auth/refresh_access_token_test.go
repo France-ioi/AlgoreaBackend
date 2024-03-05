@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -107,17 +108,17 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 
 	// check that the service waits while the user is locked
 	mutexChannel := make(chan bool, 1)
-	(*sync.Map)(&userIDsInProgress).Store(int64(2), mutexChannel) // lock the user
+	(*sync.Map)(&sessionIDsInProgress).Store(auth.MockCtxSessionID, mutexChannel) // lock the session
 	mutexChannel <- true
 	go doRequest(false)
 	mutexChannel <- true // wait until refreshAccessToken() reads from the channel (meaning the service is inside the for loop)
 	close(mutexChannel)
-	(*sync.Map)(&userIDsInProgress).Delete(int64(2)) // here the service gets unlocked
-	<-done                                           // wait until the service finishes
+	(*sync.Map)(&sessionIDsInProgress).Delete(auth.MockCtxSessionID) // here the service gets unlocked
+	<-done                                                           // wait until the service finishes
 
 	// check that the service timeouts if the user is locked for too long
 	mutexChannel = make(chan bool, 1)
-	(*sync.Map)(&userIDsInProgress).Store(int64(2), mutexChannel) // lock the user
+	(*sync.Map)(&sessionIDsInProgress).Store(auth.MockCtxSessionID, mutexChannel) // lock the session
 	mutexChannel <- true
 	go doRequest(true)
 	<-done // wait until the service finishes

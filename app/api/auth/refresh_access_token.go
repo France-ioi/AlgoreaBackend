@@ -15,27 +15,27 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type userIDsInProgressMap sync.Map
+type sessionIDsInProgressMap sync.Map
 
-func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() error) error {
-	userMutex := make(chan bool)
-	defer close(userMutex)
-	userMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(userID, userMutex)
+func (m *sessionIDsInProgressMap) withLock(sessionID int64, r *http.Request, f func() error) error {
+	sessionMutex := make(chan bool)
+	defer close(sessionMutex)
+	sessionMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex)
 	// retry storing our mutex into the map
-	for ; loaded; userMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(userID, userMutex) {
+	for ; loaded; sessionMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex) {
 		select { // like mutex.Lock(), but with cancel/deadline
-		case <-userMutexInterface.(chan bool): // it is much better than <-time.After(...)
+		case <-sessionMutexInterface.(chan bool): // it is much better than <-time.After(...)
 		case <-r.Context().Done():
 			logging.GetLogEntry(r).Warnf("The request is canceled: %s", r.Context().Err())
 			return r.Context().Err()
 		}
 	}
-	defer (*sync.Map)(m).Delete(userID)
+	defer (*sync.Map)(m).Delete(sessionID)
 
 	return f()
 }
 
-var userIDsInProgress userIDsInProgressMap
+var sessionIDsInProgress sessionIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
@@ -71,7 +71,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			// We should not allow concurrency in this part because the login module generates not only
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
-			service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
+			service.MustNotBeError(sessionIDsInProgress.withLock(sessionID, r, func() error {
 				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID, oldAccessToken)
 				return nil
 			}))
