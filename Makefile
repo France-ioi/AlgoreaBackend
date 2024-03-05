@@ -96,6 +96,9 @@ lint: $(GOLANGCILINT)
 validate-swagger:
 	swagger generate spec --scan-models -o ./swagger.yaml && swagger validate ./swagger.yaml
 
+serve-swagger:
+	swagger generate spec --scan-models -o ./swagger.yaml && swagger validate ./swagger.yaml && swagger serve ./swagger.yaml --no-open
+
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)
 	$(call check_defined, DBHOST)
