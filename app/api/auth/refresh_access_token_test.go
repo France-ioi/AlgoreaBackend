@@ -1,13 +1,14 @@
 package auth
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
 	"sync"
 	"testing"
+
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
