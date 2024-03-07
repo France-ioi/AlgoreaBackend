@@ -35,3 +35,47 @@ func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user
 
 	return result.User, result.SessionID, err
 }
+
+type sessionWithMostRecentIssuedAt struct {
+	SessionID int64
+	IssuedAt  Time
+}
+
+// GetUserSessionsSortedByMostRecentIssuedAt returns the user's sessions sorted by most recent issued_at.
+func (s *SessionStore) GetUserSessionsSortedByMostRecentIssuedAt(userID int64) []sessionWithMostRecentIssuedAt {
+	var sessions []sessionWithMostRecentIssuedAt
+
+	err := s.
+		Select(`
+			access_tokens.session_id AS session_id,
+			MAX(access_tokens.issued_at) AS issued_at
+		`).
+		Joins("JOIN access_tokens ON access_tokens.session_id = sessions.session_id").
+		Where("sessions.user_id = ?", userID).
+		Group("access_tokens.session_id").
+		Order("issued_at DESC").
+		Scan(&sessions).
+		Error()
+	mustNotBeError(err)
+
+	return sessions
+}
+
+// DeleteOldSessionsToKeepMaximum deletes old sessions to keep the maximum number of sessions.
+func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
+	sessions := s.GetUserSessionsSortedByMostRecentIssuedAt(userID)
+
+	if len(sessions) > max {
+		// Delete the oldest sessions.
+		oldestSessions := sessions[max:]
+
+		oldestSessionIDs := make([]int64, len(oldestSessions))
+		for i, session := range oldestSessions {
+			oldestSessionIDs[i] = session.SessionID
+		}
+
+		err := s.Delete("session_id IN (?)", oldestSessionIDs).
+			Error()
+		mustNotBeError(err)
+	}
+}

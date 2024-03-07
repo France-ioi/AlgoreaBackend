@@ -68,6 +68,8 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^there are the following sessions:$`, ctx.ThereAreTheFollowingSessions)
 	s.Step(`^there are the following access tokens:$`, ctx.ThereAreTheFollowingAccessTokens)
+	s.Step(`^there are (\d+) sessions for user (@\w+)$`, ctx.ThereAreCountSessionsForUser)
+	s.Step(`^there is no session (@\w+)$`, ctx.ThereIsNoSessionID)
 
 	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
