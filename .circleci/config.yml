@@ -81,6 +81,7 @@ jobs:
       - run:
           when: on_fail
           name: On failure, run BDD tests with details
+          no_output_timeout: 30m
           command: make test-bdd
   migration-tests:
     docker:
