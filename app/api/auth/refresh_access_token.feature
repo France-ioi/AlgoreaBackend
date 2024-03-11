@@ -75,11 +75,11 @@ Feature: Create a new access token
       {
         "token_type":"Bearer",
         "expires_in":31622400,
-        "access_token":"newaccesstokenforjane",
+        "access_token":"jane_new_token",
         "refresh_token":"jane_new_refreshtoken"
       }
       """
-    And the "Authorization" request header is "Bearer jane_old_token"
+    And the "Authorization" request header is "Bearer jane_current_token"
     When I send a POST request to "/auth/token<query>"
     Then the response code should be 201
     And the response body should be, in JSON:
