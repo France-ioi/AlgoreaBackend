@@ -120,6 +120,8 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	// check that the service timeouts if the user is locked for too long
 	mutexChannel = make(chan bool, 1)
 	(*sync.Map)(&sessionIDsInProgress).Store(auth.MockCtxSessionID, mutexChannel) // lock the session
+	// Remove the mutex once we're finished, otherwise it makes further tests block if they use the same session ID.
+	defer (*sync.Map)(&sessionIDsInProgress).Delete(auth.MockCtxSessionID)
 	mutexChannel <- true
 	go doRequest(true)
 	<-done // wait until the service finishes
