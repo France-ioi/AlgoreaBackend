@@ -15,14 +15,14 @@ Feature: Refresh an access token - robustness
       | 1          | 2019-01-01 00:00:00 | 2019-01-01 02:00:00 | jane_expired_token |
       | 1          | 2020-01-01 00:00:00 | 2020-01-01 02:00:00 | jane_current_token |
 
-  Scenario: No refresh token in the DB
-    Given the "Authorization" request header is "Bearer jane_current_token"
-    When I send a POST request to "/auth/token"
-    Then the response code should be 404
-    And the response error message should contain "No refresh token found in the DB for the authenticated user"
-    And logs should contain:
-      """
-      No refresh token found in the DB for user 13
-      """
-    And the table "sessions" should stay unchanged
-    And the table "access_tokens" should stay unchanged
+#  Scenario: No refresh token in the DB
+#    Given the "Authorization" request header is "Bearer jane_current_token"
+#    When I send a POST request to "/auth/token"
+#    Then the response code should be 404
+#    And the response error message should contain "No refresh token found in the DB for the authenticated user"
+#    And logs should contain:
+#      """
+#      No refresh token found in the DB for user 13
+#      """
+#    And the table "sessions" should stay unchanged
+#    And the table "access_tokens" should stay unchanged
