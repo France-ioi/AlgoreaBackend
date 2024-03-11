@@ -64,9 +64,9 @@ Feature: Create a new access token
       | 5577006791947779410 | newaccesstoken            | 2019-07-17 00:02:28 |
   Examples:
     | query                            | current_cookie        | token_in_data                    | expected_cookie                                                                                                                                           |
-    |                                  | [NULL]                | "access_token":"newaccesstoken", | [NULL]                                                                                                                                                    |
-    | ?use_cookie=1&cookie_secure=1    | [NULL]                |                                  | access_token=2!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None |
-    | ?use_cookie=1&cookie_same_site=1 | [NULL]                |                                  | access_token=1!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       |
+    |                                  | [Header not defined]  | "access_token":"newaccesstoken", | [Header not defined]                                                                                                                                      |
+    | ?use_cookie=1&cookie_secure=1    | [Header not defined]  |                                  | access_token=2!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None |
+    | ?use_cookie=1&cookie_same_site=1 | [Header not defined]  |                                  | access_token=1!newaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       |
     | ?use_cookie=0                    | access_token=0!1234!! | "access_token":"newaccesstoken", | access_token=; Expires=Tue, 16 Jul 2019 21:45:48 GMT; Max-Age=0; HttpOnly; SameSite=None                                                                  |
 
   Scenario Outline: Request a new access token for a normal user
@@ -105,7 +105,7 @@ Feature: Create a new access token
       | 3          | accesstokenjohn       | 2019-07-16 22:02:31 |
   Examples:
     | query                            | token_in_data                            | expected_cookie                                                                                                                                                      |
-    |                                  | "access_token": "newaccesstokenforjane", | [NULL]                                                                                                                                                               |
+    |                                  | "access_token": "newaccesstokenforjane", | [Header not defined]                                                                                                                                                 |
     | ?use_cookie=1&cookie_secure=1    |                                          | access_token=2!newaccesstokenforjane!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None |
     | ?use_cookie=1&cookie_same_site=1 |                                          | access_token=1!newaccesstokenforjane!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
 

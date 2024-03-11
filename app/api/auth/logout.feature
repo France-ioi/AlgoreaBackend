@@ -27,7 +27,7 @@ Feature: Sign the current user out
       "message": "success"
     }
     """
-    And the response header "Set-Cookie" should be "[NULL]"
+    And the response header "Set-Cookie" should not be set
     And the table "sessions" should be:
       | session_id | user_id | refresh_token       |
       | 2          | 3       | refreshtokenforjane |
@@ -54,7 +54,7 @@ Feature: Sign the current user out
       "message": "success"
     }
     """
-    And the response header "Set-Cookie" should be "[NULL]"
+    And the response header "Set-Cookie" should not be set
     And the table "sessions" should be:
       | session_id | user_id | refresh_token        |
       | 2          | 3       | refreshtokenforjane  |

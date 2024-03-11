@@ -15,7 +15,7 @@ func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
 		return err
 	}
 
-	if value == nullHeaderValue {
+	if value == undefinedHeaderValue {
 		return nil
 	}
 

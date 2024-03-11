@@ -373,30 +373,43 @@ func compareStrings(expected, actual string) error {
 }
 
 const (
-	nullHeaderValue = "[NULL]"
-	nullValue       = "<null>"
-	undefinedValue  = "<undefined>"
+	undefinedHeaderValue = "[Header not defined]"
+	nullValue            = "<null>"
+	undefinedValue       = "<undefined>"
 )
 
 // TheResponseHeaderShouldBe checks that the response header matches the provided value.
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName, headerValue string) (err error) {
+	if headerValue == undefinedHeaderValue {
+		return ctx.TheResponseHeaderShouldNotBeSet(headerName)
+	}
+
 	headerValue, err = ctx.preprocessString(headerValue)
 	if err != nil {
 		return err
 	}
 	headerName = http.CanonicalHeaderKey(headerName)
-	if headerValue != nullHeaderValue {
-		if len(ctx.lastResponse.Header[headerName]) == 0 {
-			return fmt.Errorf("no such header '%s' in the response", headerName)
-		}
-		realValue := strings.Join(ctx.lastResponse.Header[headerName], "\n")
-		if realValue != headerValue {
-			return fmt.Errorf("headers %s different from expected.\nExpected:\n%s\ngot:\n%s",
-				headerName, headerValue, realValue)
-		}
-	} else if len(ctx.lastResponse.Header[headerName]) != 0 {
+
+	if len(ctx.lastResponse.Header[headerName]) == 0 {
+		return fmt.Errorf("no such header '%s' in the response", headerName)
+	}
+	realValue := strings.Join(ctx.lastResponse.Header[headerName], "\n")
+	if realValue != headerValue {
+		return fmt.Errorf("headers %s different from expected.\nExpected:\n%s\ngot:\n%s",
+			headerName, headerValue, realValue)
+	}
+
+	return nil
+}
+
+// TheResponseHeaderShouldNotBeSet checks that the response header is not set.
+func (ctx *TestContext) TheResponseHeaderShouldNotBeSet(headerName string) (err error) {
+	headerName = http.CanonicalHeaderKey(headerName)
+
+	if len(ctx.lastResponse.Header[headerName]) != 0 {
 		return fmt.Errorf("there should not be a '%s' header, but at least one is found", headerName)
 	}
+
 	return nil
 }
 

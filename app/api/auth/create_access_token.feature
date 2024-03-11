@@ -136,7 +136,7 @@ Feature: Create an access token
       | 4037200794235010051 | 5577006791947779410 | memberships | true                   | true              | false                  |
   Examples:
     | query                            | token_in_data                                  | expected_cookie                                                                                                                                                            |
-    |                                  | "access_token": "{{access_token_from_oauth}}", | [NULL]                                                                                                                                                                     |
+    |                                  | "access_token": "{{access_token_from_oauth}}", | [Header not defined]                                                                                                                                                       |
     | &use_cookie=1&cookie_secure=1    |                                                | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None |
     | &use_cookie=1&cookie_same_site=1 |                                                | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
 
@@ -231,7 +231,7 @@ Feature: Create an access token
         }
       }
       """
-    And the response header "Set-Cookie" should be "[NULL]"
+    And the response header "Set-Cookie" should not be set
     And the table "users" should stay unchanged but the row with group_id "11"
     And the table "users" at group_id "11" should be:
       | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text   | web_site   | sex   | email_verified   | last_ip   | time_zone   | notify_news   | photo_autoload   | public_first_name   | public_last_name    |
@@ -374,7 +374,7 @@ Feature: Create an access token
         }
       }
       """
-    And the response header "Set-Cookie" should be "[NULL]"
+    And the response header "Set-Cookie" should not be set
     And the table "sessions" should be:
       | session_id          | user_id             |
       | 8674665223082153551 | 5577006791947779410 |
