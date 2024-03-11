@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -22,6 +21,9 @@ const minSearchStringLength = 3
 //		Searches for groups that can be joined freely, based on a substring of their name.
 //		Returns groups with `is_public` = 1 and `type` != 'User'/'ContestParticipants', whose `name` has `{search}` as a substring,
 //		and for that the current user is not already a member and don’t have pending requests/invitations.
+//
+//
+//		All the words of the search query must appear in the name for the group to be returned.
 //
 //
 //		Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
@@ -97,29 +99,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	skipGroups := store.ActiveGroupGroups().
-		Select("groups_groups_active.parent_group_id").
-		Where("groups_groups_active.child_group_id = ?", user.GroupID).
-		SubQuery()
-
-	skipPending := store.GroupPendingRequests().
-		Select("group_pending_requests.group_id").
-		Where("group_pending_requests.member_id = ?", user.GroupID).
-		Where("group_pending_requests.type IN ('join_request', 'invitation')").
-		SubQuery()
-
-	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := store.Groups().
-		Select(`
-			groups.id,
-			groups.name,
-			groups.type,
-			groups.description`).
-		Where("groups.is_public").
-		Where("type != 'User' AND type != 'ContestParticipants'").
-		Where("groups.id NOT IN ?", skipGroups).
-		Where("groups.id NOT IN ?", skipPending).
-		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
+	query := store.Groups().GetSearchForAvailableGroupsQuery(user, searchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(
