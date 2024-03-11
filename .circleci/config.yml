@@ -68,6 +68,7 @@ jobs:
             go install github.com/jstemmer/go-junit-report
       - run:
           name: Run tests (make verbosity disabled)
+          no_output_timeout: 30m
           command: NOECHO=1 make test 2>&1 | go-junit-report > test-results/junit.xml
       - run:
           name: Upload test coverage results to Codecov
@@ -80,6 +81,7 @@ jobs:
       - run:
           when: on_fail
           name: On failure, run BDD tests with details
+          no_output_timeout: 30m
           command: make test-bdd
   migration-tests:
     docker:
