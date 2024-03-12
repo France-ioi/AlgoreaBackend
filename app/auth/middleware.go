@@ -96,7 +96,9 @@ func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *ht
 		return r.Context(), false, errors.New("no access token provided")
 	}
 
-	if len(accessToken) <= 2000 {
+	if len(accessToken) > database.AccessTokenMaxLength {
+		authorized = false
+	} else {
 		user, sessionID, err = service.GetStore(r).Sessions().GetUserAndSessionIDByValidAccessToken(accessToken)
 		authorized = err == nil
 		if err != nil && !gorm.IsRecordNotFoundError(err) {
