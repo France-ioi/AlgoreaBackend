@@ -2,6 +2,8 @@ package database
 
 import "github.com/jinzhu/gorm"
 
+const AccessTokenMaxLength = 2000
+
 // AccessTokenStore implements database operations on `access_tokens`.
 type AccessTokenStore struct {
 	*DataStore
