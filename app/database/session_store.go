@@ -53,7 +53,7 @@ func (s *SessionStore) GetUserSessionsSortedByMostRecentIssuedAt(userID int64) [
 		Joins("JOIN access_tokens ON access_tokens.session_id = sessions.session_id").
 		Where("sessions.user_id = ?", userID).
 		Group("access_tokens.session_id").
-		Order("issued_at DESC").
+		Order("issued_at DESC, sessions.session_id").
 		Scan(&sessions).
 		Error()
 	mustNotBeError(err)
