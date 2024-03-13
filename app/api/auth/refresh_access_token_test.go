@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -40,6 +42,17 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 		response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 			"POST", "/auth/token", "", &database.User{GroupID: 2},
 			func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("^" +
+					regexp.QuoteMeta(
+						"SELECT "+
+							"token, "+
+							"TIMESTAMPDIFF(SECOND, NOW(), expires_at) AS seconds_until_expiry, "+
+							"issued_at > (NOW() - INTERVAL 5 MINUTE) AS too_new_to_refresh "+
+							"FROM `access_tokens`  WHERE (session_id = ?) ORDER BY expires_at DESC LIMIT 1") + "$").
+					WithArgs(sqlmock.AnyArg()).
+					WillReturnRows(mock.NewRows([]string{"token", "seconds_until_expiry", "too_new_to_refresh"}).
+						AddRow("accesstoken", 600, false))
+
 				if !timeout {
 					mock.ExpectQuery("^" +
 						regexp.QuoteMeta("SELECT refresh_token FROM `sessions` WHERE (session_id = ?) LIMIT 1") + "$").
@@ -96,17 +109,19 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 
 	// check that the service waits while the user is locked
 	mutexChannel := make(chan bool, 1)
-	(*sync.Map)(&userIDsInProgress).Store(int64(2), mutexChannel) // lock the user
+	(*sync.Map)(&sessionIDsInProgress).Store(auth.MockCtxSessionID, mutexChannel) // lock the session
 	mutexChannel <- true
 	go doRequest(false)
 	mutexChannel <- true // wait until refreshAccessToken() reads from the channel (meaning the service is inside the for loop)
 	close(mutexChannel)
-	(*sync.Map)(&userIDsInProgress).Delete(int64(2)) // here the service gets unlocked
-	<-done                                           // wait until the service finishes
+	(*sync.Map)(&sessionIDsInProgress).Delete(auth.MockCtxSessionID) // here the service gets unlocked
+	<-done                                                           // wait until the service finishes
 
 	// check that the service timeouts if the user is locked for too long
 	mutexChannel = make(chan bool, 1)
-	(*sync.Map)(&userIDsInProgress).Store(int64(2), mutexChannel) // lock the user
+	(*sync.Map)(&sessionIDsInProgress).Store(auth.MockCtxSessionID, mutexChannel) // lock the session
+	// Remove the mutex once we're finished, otherwise it makes further tests block if they use the same session ID.
+	defer (*sync.Map)(&sessionIDsInProgress).Delete(auth.MockCtxSessionID)
 	mutexChannel <- true
 	go doRequest(true)
 	<-done // wait until the service finishes

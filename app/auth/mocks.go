@@ -7,6 +7,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
+const MockCtxSessionID = int64(1)
+
 // MockUserMiddleware is a middleware to be used to mock a fixed user in the context.
 func MockUserMiddleware(user *database.User) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -14,7 +16,7 @@ func MockUserMiddleware(user *database.User) func(next http.Handler) http.Handle
 			ctx := context.WithValue(r.Context(), ctxBearer, "accesstoken")
 			ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &SessionCookieAttributes{})
 			ctx = context.WithValue(ctx, ctxUser, user)
-			ctx = context.WithValue(ctx, ctxSessionID, int64(1))
+			ctx = context.WithValue(ctx, ctxSessionID, MockCtxSessionID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

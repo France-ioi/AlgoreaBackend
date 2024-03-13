@@ -16,3 +16,30 @@ func (s *AccessTokenStore) InsertNewToken(sessionID int64, token string, seconds
 		"issued_at":  Now(),
 	})
 }
+
+// MostRecentToken represents the most recent token for a session.
+type MostRecentToken struct {
+	Token              string
+	SecondsUntilExpiry int32
+	TooNewToRefresh    bool
+}
+
+// GetMostRecentValidTokenForSession returns the most recent valid token for the given sessionID.
+func (s *AccessTokenStore) GetMostRecentValidTokenForSession(sessionID int64) MostRecentToken {
+	var mostRecentToken MostRecentToken
+
+	// A token is considered too new to refresh if it was issued less than 5 minutes ago.
+	err := s.Select(`
+			token,
+			TIMESTAMPDIFF(SECOND, NOW(), expires_at) AS seconds_until_expiry,
+			issued_at > (NOW() - INTERVAL 5 MINUTE) AS too_new_to_refresh
+		`).
+		Where("session_id = ?", sessionID).
+		Order("expires_at DESC").
+		Limit(1).
+		Scan(&mostRecentToken).
+		Error()
+	mustNotBeError(err)
+
+	return mostRecentToken
+}

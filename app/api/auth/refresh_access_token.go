@@ -15,33 +15,34 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type userIDsInProgressMap sync.Map
+type sessionIDsInProgressMap sync.Map
 
-func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() error) error {
-	userMutex := make(chan bool)
-	defer close(userMutex)
-	userMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(userID, userMutex)
+func (m *sessionIDsInProgressMap) withLock(sessionID int64, r *http.Request, f func() error) error {
+	sessionMutex := make(chan bool)
+	defer close(sessionMutex)
+	sessionMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex)
 	// retry storing our mutex into the map
-	for ; loaded; userMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(userID, userMutex) {
+	for ; loaded; sessionMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex) {
 		select { // like mutex.Lock(), but with cancel/deadline
-		case <-userMutexInterface.(chan bool): // it is much better than <-time.After(...)
+		case <-sessionMutexInterface.(chan bool): // it is much better than <-time.After(...)
 		case <-r.Context().Done():
 			logging.GetLogEntry(r).Warnf("The request is canceled: %s", r.Context().Err())
 			return r.Context().Err()
 		}
 	}
-	defer (*sync.Map)(m).Delete(userID)
+	defer (*sync.Map)(m).Delete(sessionID)
 
 	return f()
 }
 
-var userIDsInProgress userIDsInProgressMap
+var sessionIDsInProgress sessionIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
 	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 	sessionID := srv.GetSessionID(r)
 	oldAccessToken := auth.BearerTokenFromContext(r.Context())
 
@@ -49,27 +50,38 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	var expiresIn int32
 	apiError := service.NoError
 
-	if user.IsTempUser {
-		service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-			// delete all the user's access tokens keeping the input token only
-			service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
-			var err error
-			newToken, expiresIn, err = auth.CreateNewTempSession(store, user.GroupID)
-			return err
-		}))
+	sessionMostRecentToken := store.
+		AccessTokens().
+		GetMostRecentValidTokenForSession(sessionID)
+	if sessionMostRecentToken.Token != oldAccessToken || sessionMostRecentToken.TooNewToRefresh {
+		// We return the most recent token if the input token is not the most recent one or if it is too new to refresh.
+		// Note: we know that the token is valid because we checked it in the middleware.
+		newToken = sessionMostRecentToken.Token
+		expiresIn = sessionMostRecentToken.SecondsUntilExpiry
 	} else {
-		// We should not allow concurrency in this part because the login module generates not only
-		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
-		// usage of the old refresh token for that reason.
-		service.MustNotBeError(userIDsInProgress.withLock(user.GroupID, r, func() error {
-			newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), srv.GetStore(r), user, sessionID, oldAccessToken)
-			return nil
-		}))
+		if user.IsTempUser {
+			service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
+				// delete all the user's access tokens keeping the input token only
+				service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
+				var err error
+				newToken, expiresIn, err = auth.CreateNewTempSession(store, user.GroupID)
+				return err
+			}))
+		} else {
+			// We should not allow concurrency in this part because the login module generates not only
+			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
+			// usage of the old refresh token for that reason.
+			service.MustNotBeError(sessionIDsInProgress.withLock(sessionID, r, func() error {
+				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID, oldAccessToken)
+				return nil
+			}))
+		}
+
+		if apiError != service.NoError {
+			return apiError
+		}
 	}
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
 		cookieAttributes)
 	return service.NoError

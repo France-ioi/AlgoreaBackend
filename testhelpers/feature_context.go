@@ -69,6 +69,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^there is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
 	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
 
+	s.Step(`^there are the following sessions:$`, ctx.ThereAreTheFollowingSessions)
+	s.Step(`^there are the following access tokens:$`, ctx.ThereAreTheFollowingAccessTokens)
+
 	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.ISendrequestToWithBody)
