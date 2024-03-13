@@ -45,7 +45,18 @@ type sessionWithMostRecentIssuedAt struct {
 func (s *SessionStore) GetUserSessionsSortedByMostRecentIssuedAt(userID int64) []sessionWithMostRecentIssuedAt {
 	var sessions []sessionWithMostRecentIssuedAt
 
-	err := s.
+	// Sessions without access tokens are treated as the oldest ones.
+	// So they will be deleted first when the maximum number of sessions is reached.
+	sessionsWithoutAccessTokensQuery := s.
+		Select(`
+			sessions.session_id AS session_id,
+			 FROM_UNIXTIME(0) AS issued_at
+		`).
+		Joins("LEFT JOIN access_tokens ON access_tokens.session_id = sessions.session_id").
+		Where("sessions.user_id = ?", userID).
+		Where("access_tokens.issued_at IS NULL")
+
+	sessionsWithAccessTokensQuery := s.
 		Select(`
 			access_tokens.session_id AS session_id,
 			MAX(access_tokens.issued_at) AS issued_at
@@ -53,7 +64,11 @@ func (s *SessionStore) GetUserSessionsSortedByMostRecentIssuedAt(userID int64) [
 		Joins("JOIN access_tokens ON access_tokens.session_id = sessions.session_id").
 		Where("sessions.user_id = ?", userID).
 		Group("access_tokens.session_id").
-		Order("issued_at DESC, sessions.session_id").
+		SubQuery()
+
+	err := sessionsWithoutAccessTokensQuery.
+		UnionAll(sessionsWithAccessTokensQuery).
+		Order("issued_at DESC, session_id").
 		Scan(&sessions).
 		Error()
 	mustNotBeError(err)
