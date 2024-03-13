@@ -91,6 +91,14 @@ type groupGetResponse struct {
 	// Only for joined teams
 	// enum: frozen_membership,would_break_entry_conditions,free_to_leave
 	CanLeaveTeam string `json:"can_leave_team,omitempty"`
+	// required: true
+	// enum: none,view,edit
+	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
+	// Nullable
+	// required: true
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
+	// required: true
+	RequireWatchApproval bool `json:"require_watch_approval"`
 }
 
 // swagger:operation GET /groups/{group_id} groups groupGet
@@ -161,6 +169,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	err = selectGroupsDataForMenu(store, query, user,
 		`groups.grade, groups.description, groups.created_at,
 		groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
+		groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until, groups.require_watch_approval,
 		IF(manager_access.found, groups.code, NULL) AS code,
 		IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
 		IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
