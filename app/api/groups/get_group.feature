@@ -1,24 +1,24 @@
 Feature: Get group by groupID (groupView)
   Background:
     Given the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type  | root_activity_id    | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_lock_membership_approval_until | frozen_membership |
-      | 8  | Other   | -4    | Parent of 9     | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | efghijklmn | null          | null                | false                      | null                                   | false             |
-      | 9  | Club    | -4    | Club            | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 10 | Parent  | -3    | Parent of 16    | 2019-02-06 09:26:40 | Class | 7297887146214536132 | 123456        | true    | false     | defghijklm | 7200          | 2019-10-13 05:39:48 | true                       | null                                   | false             |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | 567890        | true    | false     | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       | null                                   | false             |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | 789012        | true    | false     | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       | null                                   | false             |
-      | 15 | Group D | -4    | Other Group     | 2019-04-06 09:26:40 | Other | null                | null          | false   | true      | abcdefghij | null          | null                | false                      | null                                   | false             |
-      | 16 | Group E | -4    | Other Group     | 2019-04-06 09:26:40 | Other | null                | null          | false   | true      | null       | null          | null                | false                      | null                                   | false             |
-      | 17 | Team 1  | -4    | Team 1          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | 3019-05-30 11:00:00                    | false             |
-      | 18 | Team 2  | -4    | Team 2          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | 2019-05-30 11:00:00                    | true              |
-      | 19 | Team 3  | -4    | Team 3          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 21 | owner   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 31 | john    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 41 | jane    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 51 | rick    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 61 | ian     | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 71 | dirk    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
-      | 81 | chuck   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | null                                   | false             |
+      | id | name    | grade | description     | created_at          | type  | root_activity_id    | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_personal_info_access_approval | require_watch_approval | require_lock_membership_approval_until | frozen_membership |
+      | 8  | Other   | -4    | Parent of 9     | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | efghijklmn | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 9  | Club    | -4    | Club            | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 10 | Parent  | -3    | Parent of 16    | 2019-02-06 09:26:40 | Class | 7297887146214536132 | 123456        | true    | false     | defghijklm | 7200          | 2019-10-13 05:39:48 | true                       | none                                  | false                  | null                                   | false             |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | 567890        | true    | false     | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       | none                                  | false                  | null                                   | false             |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | 789012        | true    | false     | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       | none                                  | false                  | null                                   | false             |
+      | 15 | Group D | -4    | Other Group     | 2019-04-06 09:26:40 | Other | null                | null          | false   | true      | abcdefghij | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 16 | Group E | -4    | Other Group     | 2019-04-06 09:26:40 | Other | null                | null          | false   | true      | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 17 | Team 1  | -4    | Team 1          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | true                   | 3019-05-30 11:00:00                    | false             |
+      | 18 | Team 2  | -4    | Team 2          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | view                                  | false                  | 2019-05-30 11:00:00                    | true              |
+      | 19 | Team 3  | -4    | Team 3          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | edit                                  | false                  | null                                   | false             |
+      | 21 | owner   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 31 | john    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 41 | jane    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 51 | rick    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 61 | ian     | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 71 | dirk    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
+      | 81 | chuck   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
     And the database has the following table 'users':
       | login | group_id |
       | owner | 21       |
@@ -90,7 +90,10 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [],
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [{"id": "11", "name": "Group A"}],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false
     }
     """
 
@@ -123,7 +126,10 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [],
       "ancestors_current_user_is_manager_of": [{"id": "13", "name": "Group B"}, {"id": "15", "name": "Group D"}],
       "descendants_current_user_is_manager_of": [],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false
     }
     """
 
@@ -150,7 +156,10 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [],
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [{"id": "16", "name": "Group E"}],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false
     }
     """
 
@@ -177,7 +186,10 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [{"id": "9", "name": "Club"}],
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false
     }
     """
 
@@ -204,7 +216,10 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [{"id": "11", "name": "Group A"}],
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false
     }
     """
 
@@ -231,7 +246,10 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [],
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false
     }
     """
   Examples:
@@ -264,7 +282,10 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [],
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false
     }
     """
 
@@ -292,15 +313,18 @@ Feature: Get group by groupID (groupView)
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [],
       "is_membership_locked": <is_membership_locked>,
-      "can_leave_team": "<can_leave_team>"
+      "can_leave_team": "<can_leave_team>",
+      "require_lock_membership_approval_until": <require_lock_membership_approval_until>,
+      "require_personal_info_access_approval": "<require_personal_info_access_approval>",
+      "require_watch_approval": <require_watch_approval>
     }
     """
     Examples:
-      | group_id | user_id | team_name | is_membership_locked | can_leave_team               |
-      | 17       | 51      | Team 1    | true                 | would_break_entry_conditions |
-      | 17       | 61      | Team 1    | false                | would_break_entry_conditions |
-      | 18       | 71      | Team 2    | false                | frozen_membership            |
-      | 19       | 81      | Team 3    | false                | free_to_leave                |
+      | group_id | user_id | team_name | is_membership_locked | can_leave_team               | require_lock_membership_approval_until | require_personal_info_access_approval | require_watch_approval |
+      | 17       | 51      | Team 1    | true                 | would_break_entry_conditions | "3019-05-30T11:00:00Z"                 | none                                  | true                   |
+      | 17       | 61      | Team 1    | false                | would_break_entry_conditions | "3019-05-30T11:00:00Z"                 | none                                  | true                   |
+      | 18       | 71      | Team 2    | false                | frozen_membership            | "2019-05-30T11:00:00Z"                 | view                                  | false                  |
+      | 19       | 81      | Team 3    | false                | free_to_leave                | null                                   | edit                                  | false                  |
 
   Scenario: The user is a manager of the team
     Given I am the user with id "21"
@@ -331,6 +355,9 @@ Feature: Get group by groupID (groupView)
       "descendants_current_user_is_member_of": [],
       "ancestors_current_user_is_manager_of": [],
       "descendants_current_user_is_manager_of": [],
-      "is_membership_locked": false
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "edit",
+      "require_watch_approval": false
     }
     """
