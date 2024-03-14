@@ -330,29 +330,6 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: require_personal_info_access_approval cannot be changed to 'edit'
-    Given I am the user with id "21"
-    When I send a PUT request to "/groups/13" with the following body:
-    """
-    {
-      "require_personal_info_access_approval": "edit"
-    }
-    """
-    Then the response code should be 400
-    And the response body should be, in JSON:
-    """
-    {
-      "error_text": "Invalid input data",
-      "errors": {
-        "require_personal_info_access_approval": ["cannot be changed to 'edit'"]
-      },
-      "message": "Bad Request",
-      "success": false
-    }
-    """
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-
   Scenario: Doesn't allow setting max_participants to null when enforce_max_participant is true
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:

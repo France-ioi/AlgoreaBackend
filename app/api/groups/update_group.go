@@ -47,11 +47,10 @@ type groupUpdateInput struct {
 	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll
 
 	// enum: none,view,edit
-	// Cannot be changed to 'edit'
-	RequirePersonalInfoAccessApproval  string         `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,require_personal_info_access_approval,oneof=none view edit"` //nolint:lll
-	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                           //nolint:lll
-	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                           //nolint:lll
-	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                   //nolint:lll
+	RequirePersonalInfoAccessApproval  string         `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit"` //nolint:lll
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                     //nolint:lll
+	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                     //nolint:lll
+	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                             //nolint:lll
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
@@ -103,9 +102,6 @@ type groupUpdateInput struct {
 //
 //		Setting `enforce_max_participants` to true while keeping `max_participants` null or setting `max_participants` to null
 //		while keeping `enforce_max_participants` = true will cause the "bad request" error.
-//
-//
-//		Changing `require_personal_info_access_approval` to 'edit' will cause the "bad request" error.
 //	parameters:
 //		- name: group_id
 //			in: path
@@ -327,9 +323,6 @@ func validateUpdateGroupInput(
 		constructChangingRequiresCanManageAtLeastValidator(formData, store, currentGroupData))
 	formData.RegisterTranslation("changing_requires_can_manage_at_least", "only managers with 'can_manage' >= '%[3]s' can modify this field")
 
-	formData.RegisterValidation("require_personal_info_access_approval", constructRequirePersonalInfoAccessApprovalValidator(formData))
-	formData.RegisterTranslation("require_personal_info_access_approval", "cannot be changed to 'edit'")
-
 	formData.RegisterValidation("max_participants", constructMaxParticipantsValidator(formData, currentGroupData))
 	formData.RegisterTranslation("max_participants", "cannot be set to null when 'enforce_max_participants' is true")
 
@@ -365,12 +358,6 @@ func constructChangingRequiresCanManageAtLeastValidator(formData *formdata.FormD
 ) validator.Func {
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
 		return currentGroupData.CanManageValue >= store.GroupManagers().CanManageIndexByName(fl.Param())
-	})
-}
-
-func constructRequirePersonalInfoAccessApprovalValidator(formData *formdata.FormData) validator.Func {
-	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
-		return fl.Field().Interface() != "edit"
 	})
 }
 
