@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.16.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.15.0...v2.16.0) - 2024-03-14
+- authMiddleware: explicitely disallow access if the token > max token size
+- Get group service: add required approval info
+
 ## [v2.15.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.14.2...v2.15.0) - 2024-03-12
 - itemActivityLogForItem & itemActivityLogForAllItems: add can_watch_item_answer in response: whether the current user can watch the answer
 - add "isEmpty" info to group member services
