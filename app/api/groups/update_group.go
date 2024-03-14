@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
@@ -12,6 +13,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+)
+
+const (
+	enumNone = "none"
+	enumView = "view"
+	enumEdit = "edit"
 )
 
 // Information of the group to be modified
@@ -47,10 +54,11 @@ type groupUpdateInput struct {
 	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll
 
 	// enum: none,view,edit
-	RequirePersonalInfoAccessApproval  string         `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit"` //nolint:lll
-	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                     //nolint:lll
-	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                     //nolint:lll
-	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                             //nolint:lll
+	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action,oneof=none view edit"` //nolint:lll
+	// Nullable
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"`                 //nolint:lll
+	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                       //nolint:lll
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
@@ -329,6 +337,12 @@ func validateUpdateGroupInput(
 	formData.RegisterValidation("enforce_max_participants", constructEnforceMaxParticipantsValidator(formData, currentGroupData))
 	formData.RegisterTranslation("enforce_max_participants", "cannot be set to true when 'max_participants' is null")
 
+	formData.RegisterValidation(
+		"strengthening_requires_approval_change_action",
+		constructStrengtheningRequiresFieldValidator(formData, currentGroupData),
+	)
+	formData.RegisterTranslation("strengthening_requires_approval_change_action", "Strengthening requires parameter approval_change_action")
+
 	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
 
 	err := formData.ParseJSONRequestData(r)
@@ -387,6 +401,35 @@ func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, curre
 				return false
 			}
 		}
+		return true
+	})
+}
+
+func constructStrengtheningRequiresFieldValidator(formData *formdata.FormData, currentGroupData *groupUpdateInput) validator.Func {
+	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
+		switch fl.FieldName() {
+		case "require_personal_info_access_approval":
+			newValue := fl.Field().String()
+			switch currentGroupData.RequirePersonalInfoAccessApproval {
+			case enumNone:
+				return newValue == enumNone
+			case enumView:
+				return newValue != enumEdit
+			case enumEdit:
+				return true
+			}
+		case "require_lock_membership_approval_until":
+			newDate := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+			if currentGroupData.RequireLockMembershipApprovalUntil == nil {
+				return newDate == nil
+			} else {
+				oldValue := (*time.Time)(currentGroupData.RequireLockMembershipApprovalUntil)
+				return newDate != nil && (*time.Time)(newDate).Compare(*oldValue) == -1
+			}
+		case "require_watch_approval":
+			return currentGroupData.RequireWatchApproval && !fl.Field().Bool()
+		}
+
 		return true
 	})
 }
