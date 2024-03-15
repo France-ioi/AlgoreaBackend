@@ -40,6 +40,7 @@ type TestContext struct {
 	logsHook             *loggingtest.Hook
 	logsRestoreFunc      func()
 	inScenario           bool
+	db                   *sql.DB
 	dbTableData          map[string]*messages.PickleStepArgument_PickleTable
 	templateSet          *jet.Set
 	requestHeaders       map[string][]string
@@ -49,8 +50,6 @@ type TestContext struct {
 	allUsersGroup        string
 	needPopulateDatabase bool
 }
-
-var db *sql.DB
 
 const (
 	testAccessToken = "testsessiontestsessiontestsessio"
@@ -71,6 +70,7 @@ func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
 	ctx.requestHeaders = map[string][]string{}
+	ctx.db = ctx.openDB()
 	ctx.dbTableData = make(map[string]*messages.PickleStepArgument_PickleTable)
 	ctx.templateSet = ctx.constructTemplateSet()
 	ctx.identifierReferences = make(map[string]int64)
@@ -151,23 +151,25 @@ func testRequest(ts *httptest.Server, method, path string, headers map[string][]
 	return resp, string(respBody), nil
 }
 
-func (ctx *TestContext) db() *sql.DB {
-	if db == nil {
+// openDB opens a connection to the database.
+// We use instrumented-mysql driver to log all queries.
+func (ctx *TestContext) openDB() *sql.DB {
+	if ctx.db == nil {
 		var err error
 		config, _ := app.DBConfig(ctx.application.Config)
-		db, err = sql.Open("instrumented-mysql", config.FormatDSN())
+		ctx.db, err = sql.Open("instrumented-mysql", config.FormatDSN())
 		if err != nil {
 			fmt.Println("Unable to connect to the database: ", err)
 			os.Exit(1)
 		}
 	}
-	return db
+
+	return ctx.db
 }
 
 func (ctx *TestContext) emptyDB() error {
-	db := ctx.db()
 	config, _ := app.DBConfig(ctx.application.Config)
-	return emptyDB(db, config.DBName)
+	return emptyDB(ctx.db, config.DBName)
 }
 
 func (ctx *TestContext) initDB() error {
@@ -175,10 +177,9 @@ func (ctx *TestContext) initDB() error {
 	if err != nil {
 		return err
 	}
-	db := ctx.db()
 
 	if len(ctx.featureQueries) > 0 {
-		tx, err := db.Begin()
+		tx, err := ctx.db.Begin()
 		if err != nil {
 			return err
 		}

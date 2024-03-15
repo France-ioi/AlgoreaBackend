@@ -140,9 +140,7 @@ Feature: Create a new access token
     | 2!jane_old2_token!!             | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                               |
     | 3!jane_old3_token!a.127.0.0.1!/ | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict |
 
-  Scenario Outline: >
-      Accepts access_token cookie and removes it if cookie attributes differ for a temporary user.
-      Since old tokens are used, the most recent one is returned.
+  Scenario Outline: Accepts access_token cookie and removes it if cookie attributes differ for a temporary user
     Given the generated auth key is "tmp_new_token"
     And the database table 'access_tokens' has also the following rows:
       | session_id | issued_at           | expires_at          | token          |
