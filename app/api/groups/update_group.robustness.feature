@@ -374,6 +374,30 @@ Feature: Update a group (groupEdit) - robustness
       | require_lock_membership_approval_until | false                      | false                      | none                                      | none                                      | null                                       | "2020-01-01T00:00:00Z"                     |
       | require_lock_membership_approval_until | false                      | false                      | none                                      | none                                      | 2020-01-01 00:00:00                        | "2020-01-01T00:00:01Z"                     |
 
+  Scenario: Should return an error if approval_change_action has an invalid value
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "require_personal_info_access_approval": "edit",
+      "approval_change_action": "invalid"
+    }
+    """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+    """
+    {
+      "error_text": "Invalid input data",
+      "errors": {
+        "approval_change_action": ["approval_change_action must be one of [empty reinvite]"]
+      },
+      "message": "Bad Request",
+      "success": false
+    }
+    """
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+
   Scenario: Doesn't allow setting max_participants to null when enforce_max_participant is true
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:

@@ -77,7 +77,7 @@ type groupUpdateInput struct {
 	// Must be present only if a `require_*` field is strengthened.
 	//
 	// enum: empty,reinvite
-	ApprovalChangeAction *string `json:"approval_change_action"`
+	ApprovalChangeAction *string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite"`
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
@@ -424,31 +424,40 @@ func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, curre
 	})
 }
 
+func fieldIsStrengthened(fl validator.FieldLevel, currentGroupData *groupUpdateInput) bool {
+	switch fl.FieldName() {
+	case "require_personal_info_access_approval":
+		newValue := fl.Field().String()
+		switch currentGroupData.RequirePersonalInfoAccessApproval {
+		case enumNone:
+			return newValue != enumNone
+		case enumView:
+			return newValue == enumEdit
+		case enumEdit:
+			return false
+		}
+	case "require_lock_membership_approval_until":
+		newDate := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+		if currentGroupData.RequireLockMembershipApprovalUntil == nil {
+			return newDate != nil
+		} else {
+			oldValue := (*time.Time)(currentGroupData.RequireLockMembershipApprovalUntil)
+			return newDate != nil && (*time.Time)(newDate).Compare(*oldValue) == 1
+		}
+	case "require_watch_approval":
+		return !currentGroupData.RequireWatchApproval && fl.Field().Bool()
+	}
+
+	return false
+}
+
 func constructStrengtheningRequiresFieldValidator(formData *formdata.FormData, currentGroupData *groupUpdateInput) validator.Func {
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
-		switch fl.FieldName() {
-		case "require_personal_info_access_approval":
-			newValue := fl.Field().String()
-			switch currentGroupData.RequirePersonalInfoAccessApproval {
-			case enumNone:
-				return newValue == enumNone
-			case enumView:
-				return newValue != enumEdit
-			case enumEdit:
-				return true
-			}
-		case "require_lock_membership_approval_until":
-			newDate := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
-			if currentGroupData.RequireLockMembershipApprovalUntil == nil {
-				return newDate == nil
-			} else {
-				oldValue := (*time.Time)(currentGroupData.RequireLockMembershipApprovalUntil)
-				return newDate != nil && (*time.Time)(newDate).Compare(*oldValue) == -1
-			}
-		case "require_watch_approval":
-			return currentGroupData.RequireWatchApproval && !fl.Field().Bool()
+		if !fieldIsStrengthened(fl, currentGroupData) {
+			return true
+		} else {
+			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string)
+			return approvalChangeAction != nil
 		}
-
-		return true
 	})
 }
