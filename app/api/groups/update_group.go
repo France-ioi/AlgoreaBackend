@@ -362,6 +362,9 @@ func validateUpdateGroupInput(
 	)
 	formData.RegisterTranslation("strengthening_requires_approval_change_action", "Strengthening requires parameter approval_change_action")
 
+	formData.RegisterValidation("not_set_when_no_field_strengthened", constructNotSetWhenNoFieldStrengthenedValidator(currentGroupData))
+	formData.RegisterTranslation("not_set_when_no_field_strengthened", "must be present only if a 'require_*' field is strengthened")
+
 	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
 
 	err := formData.ParseJSONRequestData(r)
@@ -424,28 +427,51 @@ func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, curre
 	})
 }
 
+// requirePersonalInfoAccessApprovalIsStrengthened checks whether the field `require_personal_info_access_approval`
+// is strengthened.
+func requirePersonalInfoAccessApprovalIsStrengthened(oldValue, newValue string) bool {
+	switch oldValue {
+	case enumNone:
+		return newValue != enumNone
+	case enumView:
+		return newValue == enumEdit
+	}
+
+	return false
+}
+
+// requireLockMembershipApprovalUntilIsStrengthened checks whether the field `require_lock_membership_approval_until`
+// is strengthened.
+func requireLockMembershipApprovalUntilIsStrengthened(oldValue, newValue *database.Time) bool {
+	if oldValue == nil {
+		return newValue != nil
+	} else {
+		oldValueDate := (*time.Time)(oldValue)
+		newValueDate := (*time.Time)(newValue)
+
+		return newValue != nil && newValueDate.Compare(*oldValueDate) == 1
+	}
+}
+
+// requireWatchApprovalIsStrengthened checks whether the field `require_watch_approval` is strengthened.
+func requireWatchApprovalIsStrengthened(oldValue, newValue bool) bool {
+	return !oldValue && newValue
+}
+
 func fieldIsStrengthened(fl validator.FieldLevel, currentGroupData *groupUpdateInput) bool {
 	switch fl.FieldName() {
 	case "require_personal_info_access_approval":
 		newValue := fl.Field().String()
-		switch currentGroupData.RequirePersonalInfoAccessApproval {
-		case enumNone:
-			return newValue != enumNone
-		case enumView:
-			return newValue == enumEdit
-		case enumEdit:
-			return false
-		}
+
+		return requirePersonalInfoAccessApprovalIsStrengthened(currentGroupData.RequirePersonalInfoAccessApproval, newValue)
 	case "require_lock_membership_approval_until":
-		newDate := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
-		if currentGroupData.RequireLockMembershipApprovalUntil == nil {
-			return newDate != nil
-		} else {
-			oldValue := (*time.Time)(currentGroupData.RequireLockMembershipApprovalUntil)
-			return newDate != nil && (*time.Time)(newDate).Compare(*oldValue) == 1
-		}
+		newValue := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+
+		return requireLockMembershipApprovalUntilIsStrengthened(currentGroupData.RequireLockMembershipApprovalUntil, newValue)
 	case "require_watch_approval":
-		return !currentGroupData.RequireWatchApproval && fl.Field().Bool()
+		newValue := fl.Field().Bool()
+
+		return requireWatchApprovalIsStrengthened(currentGroupData.RequireWatchApproval, newValue)
 	}
 
 	return false
@@ -457,6 +483,7 @@ func constructStrengtheningRequiresFieldValidator(formData *formdata.FormData, c
 			return true
 		} else {
 			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string)
+
 			return approvalChangeAction != nil
 		}
 	})
