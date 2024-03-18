@@ -53,12 +53,31 @@ type groupUpdateInput struct {
 	// Cannot be set to true when max_participants is null
 	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll
 
+	// Strengthened if the new value is `view` and the old value is `none`, or if the new value is `edit` and
+	// the old value is either `view` or `none`.
+	//
+	// If it is strengthened, `approval_change_action should be set`.
+	//
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action,oneof=none view edit"` //nolint:lll
 	// Nullable
+	//
+	// Strengthened if the new value is after the old value, or if the new value is set and the old value is not.
+	//
+	// If it is strengthened, `approval_change_action` must be set.
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
-	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"`                 //nolint:lll
-	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                       //nolint:lll
+	// Strengthened if the new value is `true` and the old value is `false`.
+	//
+	// If it is strengthened, `approval_change_action` must be set.
+	RequireWatchApproval       bool `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                       //nolint:lll
+
+	// Nullable
+	//
+	// Must be present only if a `require_*` field is strengthened.
+	//
+	// enum: empty,reinvite
+	ApprovalChangeAction *string `json:"approval_change_action"`
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
