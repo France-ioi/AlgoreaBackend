@@ -398,6 +398,33 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
+  Scenario Outline: Should return an error if no field is strengthened, and approval_change_action is given
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {
+      "approval_change_action": "<approval_change_action>"
+    }
+    """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+    """
+    {
+      "error_text": "Invalid input data",
+      "errors": {
+        "approval_change_action": ["must be present only if a 'require_*' field is strengthened"]
+      },
+      "message": "Bad Request",
+      "success": false
+    }
+    """
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    Examples:
+      | approval_change_action |
+      | empty                  |
+      | reinvite               |
+
   Scenario: Doesn't allow setting max_participants to null when enforce_max_participant is true
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:

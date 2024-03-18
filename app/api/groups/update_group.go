@@ -77,7 +77,7 @@ type groupUpdateInput struct {
 	// Must be present only if a `require_*` field is strengthened.
 	//
 	// enum: empty,reinvite
-	ApprovalChangeAction *string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite"`
+	ApprovalChangeAction *string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
@@ -487,4 +487,33 @@ func constructStrengtheningRequiresFieldValidator(formData *formdata.FormData, c
 			return approvalChangeAction != nil
 		}
 	})
+}
+
+func constructNotSetWhenNoFieldStrengthenedValidator(currentGroupData *groupUpdateInput) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		newRequirePersonalInfoAccessApproval := fl.Top().Elem().FieldByName("RequirePersonalInfoAccessApproval").Interface().(string)
+		newRequireLockMembershipApprovalUntil := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+		newRequireWatchApproval := fl.Top().Elem().FieldByName("RequireWatchApproval").Interface().(bool)
+
+		// If the field is set.
+		if fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string) != nil {
+			// There must be no require_* fields strengthened.
+			if requirePersonalInfoAccessApprovalIsStrengthened(
+				currentGroupData.RequirePersonalInfoAccessApproval,
+				newRequirePersonalInfoAccessApproval,
+			) ||
+				requireLockMembershipApprovalUntilIsStrengthened(
+					currentGroupData.RequireLockMembershipApprovalUntil,
+					newRequireLockMembershipApprovalUntil,
+				) ||
+				requireWatchApprovalIsStrengthened(
+					currentGroupData.RequireWatchApproval,
+					newRequireWatchApproval,
+				) {
+				return false
+			}
+		}
+
+		return true
+	}
 }
