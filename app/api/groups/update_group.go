@@ -510,6 +510,8 @@ func constructNotSetWhenNoFieldStrengthenedValidator(currentGroupData *groupUpda
 					currentGroupData.RequireWatchApproval,
 					newRequireWatchApproval,
 				) {
+				return true
+			} else {
 				return false
 			}
 		}
