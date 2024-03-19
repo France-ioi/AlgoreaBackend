@@ -950,7 +950,7 @@ func (ctx *TestContext) TheFieldOfTheGroupShouldBe(field, group, value string) e
 	groupID := ctx.getReference(group)
 
 	var resultCount int
-	err := db.QueryRow("SELECT COUNT(*) as count FROM `groups` WHERE id = ? AND ? = ?", groupID, field, value).
+	err := db.QueryRow("SELECT COUNT(*) as count FROM `groups` WHERE id = ? AND "+field+" = ?", groupID, value).
 		Scan(&resultCount)
 	if err != nil {
 		return err
