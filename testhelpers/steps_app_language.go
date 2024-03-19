@@ -243,7 +243,7 @@ func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
 }
 
 // addGroupManager adds a group manager in the database.
-func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess string) {
+func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess, canManage string) {
 	managerID := ctx.getReference(manager)
 	groupID := ctx.getReference(group)
 
@@ -255,6 +255,7 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 			"group_id":               groupID,
 			"can_watch_members":      canWatchMembers,
 			"can_grant_group_access": canGrantGroupAccess,
+			"can_manage":             canManage,
 		},
 	)
 }
@@ -596,6 +597,7 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 
 	canWatchMembers := "0"
 	canGrantGroupAccess := "0"
+	canManage := "none"
 	watchedGroupName := group["user_id"] + " manages " + referenceToName(group["name"])
 
 	if group["can_watch_members"] == strTrue {
@@ -605,6 +607,10 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 	if group["can_grant_group_access"] == strTrue {
 		canGrantGroupAccess = "1"
 		watchedGroupName += " with can_grant_group_access"
+	}
+	if _, ok := group["can_manage"]; ok {
+		canManage = group["can_manage"]
+		watchedGroupName += " with can_manage_memberships_and_groups"
 	}
 
 	err = ctx.ThereIsAGroupWith(getParameterString(map[string]string{
@@ -617,7 +623,7 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 
 	ctx.IsAMemberOfTheGroup(group["id"], watchedGroupName)
 
-	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers, canGrantGroupAccess)
+	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers, canGrantGroupAccess, canManage)
 
 	return nil
 }
@@ -667,6 +673,17 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanGrantGroupAccess(user, gro
 		"user_id":                user,
 		"name":                   group,
 		"can_grant_group_access": strTrue,
+	}))
+}
+
+// UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup adds a user as a manager of a group
+// with the can_manage=memberships_and_groups permission.
+func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup(user, group string) error {
+	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
+		"id":         group,
+		"user_id":    user,
+		"name":       group,
+		"can_manage": "memberships_and_group",
 	}))
 }
 
@@ -924,6 +941,75 @@ domains:
 	}
 
 	ctx.allUsersGroup = group
+
+	return nil
+}
+
+// TheFieldOfTheGroupShouldBe checks that the field of a group in the database is equal to a value.
+func (ctx *TestContext) TheFieldOfTheGroupShouldBe(field, group, value string) error {
+	groupID := ctx.getReference(group)
+
+	var resultCount int
+	err := db.QueryRow("SELECT COUNT(*) as count FROM `groups` WHERE id = ? AND ? = ?", groupID, field, value).
+		Scan(&resultCount)
+	if err != nil {
+		return err
+	}
+
+	if resultCount != 1 {
+		return fmt.Errorf("expected the group %s have %s=%s", group, field, value)
+	}
+
+	return nil
+}
+
+// UserShouldNotBeAMemberOfTheGroup check that the user is not a member of the group.
+func (ctx *TestContext) UserShouldNotBeAMemberOfTheGroup(user, group string) error {
+	userID := ctx.getReference(user)
+	groupID := ctx.getReference(group)
+
+	var resultCount int
+	err := db.QueryRow("SELECT COUNT(*) as count FROM `groups_groups` WHERE parent_group_id = ? AND child_group_id = ?", groupID, userID).
+		Scan(&resultCount)
+	if err != nil {
+		return err
+	}
+
+	if resultCount != 0 {
+		return fmt.Errorf("expected the user %s not to be a member of the group %s", user, group)
+	}
+
+	return nil
+}
+
+// ThereShouldBeTheFollowingGroupMembershipChanges checks that the entries are in the database.
+func (ctx *TestContext) ThereShouldBeTheFollowingGroupMembershipChanges(entries *messages.PickleStepArgument_PickleTable) error {
+	for i := 1; i < len(entries.Rows); i++ {
+		change := ctx.getRowMap(i, entries)
+
+		var conditions string
+		var values []interface{}
+		for key, value := range change {
+			if conditions != "" {
+				conditions += " AND "
+			}
+
+			conditions += key + " = ? "
+			values = append(values, value)
+		}
+		query := "SELECT COUNT(*) as count FROM `group_membership_changes` WHERE " + conditions
+
+		var resultCount int
+		err := db.QueryRow(query, values...).
+			Scan(&resultCount)
+		if err != nil {
+			return err
+		}
+
+		if resultCount != 0 {
+			return fmt.Errorf("could not find the group membership change %+v", change)
+		}
+	}
 
 	return nil
 }
