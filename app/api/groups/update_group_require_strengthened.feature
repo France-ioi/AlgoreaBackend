@@ -26,9 +26,9 @@ Feature:
     And @Student1 should not be a member of the group @Class
     And @Student2 should not be a member of the group @Class
     And there should be the following group membership changes:
-      | group_id | member_id | action | at                  | initiator_id |
-      | @Class   | @Student1 | TODO   | 2020-01-01 01:00:00 | @Teacher     |
-      | @Class   | @Student2 | TODO   | 2020-01-01 01:00:00 | @Teacher     |
+      | group_id | member_id | action                         | at                  | initiator_id |
+      | @Class   | @Student1 | removed_due_to_approval_change | 2020-01-01 01:00:00 | @Teacher     |
+      | @Class   | @Student2 | removed_due_to_approval_change | 2020-01-01 01:00:00 | @Teacher     |
     Examples:
       | require_field                          | new_value              | new_value_db        | old_require_personal_info_access_approval | old_require_lock_membership_approval_until | old_require_watch_approval |
       | require_personal_info_access_approval  | "view"                 | view                | none                                      |                                            |                            |
