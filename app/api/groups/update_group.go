@@ -192,6 +192,9 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		dbMap := formData.ConstructMapForDB()
 
+		approvalChangeAction := dbMap["approval_change_action"].(*string)
+		delete(dbMap, "approval_change_action")
+
 		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
@@ -203,6 +206,10 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
 			groupStore, groupID, user.GroupID, dbMap, currentGroupData.IsPublic, currentGroupData.FrozenMembership))
+
+		if approvalChangeAction != nil {
+			s.GroupGroups().RemoveAllParticipantsOfGroup(groupID)
+		}
 
 		// update the group
 		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())

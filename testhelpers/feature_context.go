@@ -45,6 +45,7 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^the field "([^"]*)" of the group (@\w+) should be "([^"]*)"$`, ctx.TheFieldOfTheGroupShouldBe)
 	s.Step(`^(@\w+) should not be a member of the group (@\w+)$`, ctx.UserShouldNotBeAMemberOfTheGroup)
+	s.Step(`^(@\w+) should be a member of the group (@\w+)$`, ctx.UserShouldBeAMemberOfTheGroup)
 	s.Step(`^there should be the following group membership changes:$`, ctx.ThereShouldBeTheFollowingGroupMembershipChanges)
 
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)

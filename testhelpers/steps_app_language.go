@@ -963,7 +963,7 @@ func (ctx *TestContext) TheFieldOfTheGroupShouldBe(field, group, value string) e
 	return nil
 }
 
-// UserShouldNotBeAMemberOfTheGroup check that the user is not a member of the group.
+// UserShouldNotBeAMemberOfTheGroup checks that the user is not a member of the group.
 func (ctx *TestContext) UserShouldNotBeAMemberOfTheGroup(user, group string) error {
 	userID := ctx.getReference(user)
 	groupID := ctx.getReference(group)
@@ -977,6 +977,25 @@ func (ctx *TestContext) UserShouldNotBeAMemberOfTheGroup(user, group string) err
 
 	if resultCount != 0 {
 		return fmt.Errorf("expected the user %s not to be a member of the group %s", user, group)
+	}
+
+	return nil
+}
+
+// UserShouldBeAMemberOfTheGroup checks that the user is a member of the group.
+func (ctx *TestContext) UserShouldBeAMemberOfTheGroup(user, group string) error {
+	userID := ctx.getReference(user)
+	groupID := ctx.getReference(group)
+
+	var resultCount int
+	err := db.QueryRow("SELECT COUNT(*) as count FROM `groups_groups` WHERE parent_group_id = ? AND child_group_id = ?", groupID, userID).
+		Scan(&resultCount)
+	if err != nil {
+		return err
+	}
+
+	if resultCount != 1 {
+		return fmt.Errorf("expected the user %s to be a member of the group %s", user, group)
 	}
 
 	return nil

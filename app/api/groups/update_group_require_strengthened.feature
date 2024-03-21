@@ -8,10 +8,15 @@ Feature:
       a require_* field is strengthened, and approval_change_action is set to "empty"
     Given I am @Teacher
     And there are the following groups:
-      | group   | parent | members             | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       |
-      | @School |        | @Teacher            |                                             |                                              |                              |
-      | @Class  |        | @Student1,@Student2 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
-      | @Other  |        | @Student3,@Student4 |                                             |                                              |                              |
+      | group     | type  | members                       | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       |
+      | @School   | Class | @Teacher                      |                                             |                                              |                              |
+      | @Class    | Class | @Student1,@Student2,@SubGroup | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
+      | @SubGroup | Class | @Student3,@Student4           |                                             |                                              |                              |
+      | @Teacher  | User  |                               |                                             |                                              |                              |
+      | @Student1 | User  |                               |                                             |                                              |                              |
+      | @Student2 | User  |                               |                                             |                                              |                              |
+      | @Student3 | User  |                               |                                             |                                              |                              |
+      | @Student4 | User  |                               |                                             |                                              |                              |
     And @Teacher is a manager of the group @Class and can manage memberships and group
     And the time now is "2020-01-01T01:00:00Z"
     When I send a PUT request to "/groups/@Class" with the following body:
@@ -25,6 +30,10 @@ Feature:
     And the field "<require_field>" of the group @Class should be "<new_value_db>"
     And @Student1 should not be a member of the group @Class
     And @Student2 should not be a member of the group @Class
+    # The subgroups should not be affected.
+    And @SubGroup should be a member of the group @Class
+    And @Student3 should be a member of the group @SubGroup
+    And @Student4 should be a member of the group @SubGroup
     And there should be the following group membership changes:
       | group_id | member_id | action                         | at                  | initiator_id |
       | @Class   | @Student1 | removed_due_to_approval_change | 2020-01-01 01:00:00 | @Teacher     |
