@@ -526,12 +526,16 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepAr
 					return err
 				}
 
-				err = ctx.ThereIsAGroup(member)
+				err = ctx.GroupIsAChildOfTheGroup(member, group["group"])
 				if err != nil {
 					return err
 				}
 
-				err = ctx.GroupIsAChildOfTheGroup(member, group["group"])
+				err = ctx.ThereIsAGroupWith(getParameterString(map[string]string{
+					"id":   member,
+					"name": member,
+					"type": "User",
+				}))
 				if err != nil {
 					return err
 				}
