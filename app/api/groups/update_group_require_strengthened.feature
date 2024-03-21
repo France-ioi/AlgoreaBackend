@@ -8,16 +8,11 @@ Feature:
       a require_* field is strengthened, and approval_change_action is set to "empty"
     Given I am @Teacher
     And there are the following groups:
-      | group     | type  | members                       | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       |
-      | @School   | Class | @Teacher                      |                                             |                                              |                              |
-      | @Class    | Class | @Student1,@Student2,@SubGroup | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
-      | @SubGroup | Class | @Student3,@Student4           |                                             |                                              |                              |
-      | @Teacher  | User  |                               |                                             |                                              |                              |
-      | @Student1 | User  |                               |                                             |                                              |                              |
-      | @Student2 | User  |                               |                                             |                                              |                              |
-      | @Student3 | User  |                               |                                             |                                              |                              |
-      | @Student4 | User  |                               |                                             |                                              |                              |
-    And @Teacher is a manager of the group @Class and can manage memberships and group
+      | group     | parent | members             | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       |
+      | @School   |        | @Teacher            |                                             |                                              |                              |
+      | @Class    |        | @Student1,@Student2 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
+      | @SubGroup | @Class | @Student3,@Student4 |                                             |                                              |                              |
+  And @Teacher is a manager of the group @Class and can manage memberships and group
     And the time now is "2020-01-01T01:00:00Z"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
@@ -48,4 +43,3 @@ Feature:
       | require_watch_approval                 | true                   | 1                   |                                           |                                            | false                      |
 
   # TODO: updating without strengthening can be done without approval_change_action
-
