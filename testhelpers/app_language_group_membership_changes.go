@@ -28,8 +28,14 @@ func (ctx *TestContext) ThereShouldBeTheFollowingGroupMembershipChanges(entries 
 			}
 
 			conditions += key + " = ? "
-			values = append(values, value)
+
+			if value[0] == ReferencePrefix {
+				values = append(values, ctx.getReference(value))
+			} else {
+				values = append(values, value)
+			}
 		}
+
 		query := "SELECT COUNT(*) as count FROM `group_membership_changes` WHERE " + conditions
 
 		var resultCount int
