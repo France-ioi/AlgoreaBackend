@@ -59,7 +59,7 @@ type groupUpdateInput struct {
 	// If it is strengthened, `approval_change_action should be set`.
 	//
 	// enum: none,view,edit
-	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action,oneof=none view edit"` //nolint:lll
+	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit,strengthening_requires_approval_change_action"` //nolint:lll
 	// Nullable
 	//
 	// Strengthened if the new value is after the old value, or if the new value is set and the old value is not.
