@@ -192,8 +192,11 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		dbMap := formData.ConstructMapForDB()
 
-		approvalChangeAction := dbMap["approval_change_action"].(*string)
-		delete(dbMap, "approval_change_action")
+		var approvalChangeAction *string
+		if _, ok := dbMap["approval_change_action"]; ok {
+			approvalChangeAction = dbMap["approval_change_action"].(*string)
+			delete(dbMap, "approval_change_action")
+		}
 
 		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
 		if apiErr != service.NoError {
@@ -439,6 +442,11 @@ func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, curre
 // requirePersonalInfoAccessApprovalIsStrengthened checks whether the field `require_personal_info_access_approval`
 // is strengthened.
 func requirePersonalInfoAccessApprovalIsStrengthened(oldValue, newValue string) bool {
+	// If the field is empty, the value is not changed, so it is not strengthened.
+	if newValue == "" {
+		return false
+	}
+
 	switch oldValue {
 	case enumNone:
 		return newValue != enumNone
@@ -505,7 +513,8 @@ func constructNotSetWhenNoFieldStrengthenedValidator(currentGroupData *groupUpda
 		newRequireWatchApproval := fl.Top().Elem().FieldByName("RequireWatchApproval").Interface().(bool)
 
 		// If the field is set.
-		if fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string) != nil {
+		approveChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string)
+		if approveChangeAction != nil {
 			// There must be no require_* fields strengthened.
 			if requirePersonalInfoAccessApprovalIsStrengthened(
 				currentGroupData.RequirePersonalInfoAccessApproval,
