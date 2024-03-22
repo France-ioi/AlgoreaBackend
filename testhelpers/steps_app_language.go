@@ -271,13 +271,14 @@ func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, p
 	}
 
 	if permission == "can_request_help_to" {
-		canRequestHelpToGroupID := strconv.FormatInt(ctx.getReference(permissionValue), 10)
+		canRequestHelpToGroupID := ctx.getReference(permissionValue)
 
-		if !ctx.isInDatabase("groups", canRequestHelpToGroupID) {
-			ctx.addGroup(permissionValue, "Group "+referenceToName(permissionValue), "Class")
+		err := ctx.ThereIsAGroup(permissionValue)
+		if err != nil {
+			return
 		}
 
-		permissionValue = canRequestHelpToGroupID
+		permissionValue = strconv.FormatInt(canRequestHelpToGroupID, 10)
 	}
 
 	if permission == "is_owner" {
@@ -425,7 +426,7 @@ func (ctx *TestContext) addSession(session, user, refreshToken string) {
 	})
 }
 
-// addAccessToken adds a access token in database.
+// addAccessToken adds an access token in database.
 func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt string) {
 	sessionID := ctx.getReference(session)
 
@@ -482,11 +483,15 @@ func (ctx *TestContext) ThereIsAUserWith(parameters string) error {
 
 	ctx.addUser(user)
 
-	return ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-		"id":   user["group_id"],
-		"name": user["user"],
-		"type": "User",
-	}))
+	err := ctx.ThereIsAGroup(user["user"])
+	if err != nil {
+		return err
+	}
+
+	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(user["group_id"]))
+	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "User")
+
+	return nil
 }
 
 // ThereAreTheFollowingUsers defines users.
@@ -510,13 +515,12 @@ func (ctx *TestContext) ThereAreTheFollowingUsers(users *messages.PickleStepArgu
 
 // UserIsAManagerOfTheGroupWith sets the current user as the manager of a group.
 func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
-	err := ctx.ThereIsAGroupWith(parameters)
+	group := ctx.getParameterMap(parameters)
+
+	err := ctx.ThereIsAGroup(group["id"])
 	if err != nil {
 		return err
 	}
-
-	// We create a parent group of which the user is the manager.
-	group := ctx.getParameterMap(parameters)
 
 	canWatchMembers := "0"
 	canGrantGroupAccess := "0"
@@ -536,10 +540,8 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 		watchedGroupName += " with can_manage_memberships_and_groups"
 	}
 
-	err = ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-		"id":   watchedGroupName,
-		"name": watchedGroupName,
-	}))
+	// We create a parent group of which the user is the manager.
+	err = ctx.ThereIsAGroup(watchedGroupName)
 	if err != nil {
 		return err
 	}
@@ -914,13 +916,15 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	if _, ok := thread["helper_group_id"]; !ok {
 		helperGroupID := rand.Int63()
 
-		err := ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-			"id":   strconv.FormatInt(helperGroupID, 10),
-			"name": "helper_group_for_" + thread["item_id"] + "-" + thread["participant_id"],
-		}))
+		err := ctx.ThereIsAGroup(strconv.FormatInt(helperGroupID, 10))
 		if err != nil {
 			return err
 		}
+		ctx.setGroupFieldInDatabase(
+			ctx.getGroupPrimaryKey(helperGroupID),
+			"name",
+			"helper_group_for_"+thread["item_id"]+"-"+thread["participant_id"],
+		)
 
 		thread["helper_group_id"] = strconv.FormatInt(helperGroupID, 10)
 	}

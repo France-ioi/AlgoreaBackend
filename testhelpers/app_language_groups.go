@@ -15,7 +15,6 @@ import (
 // registerFeaturesForGroups registers the Gherkin features related to groups.
 func (ctx *TestContext) registerFeaturesForGroups(s *godog.Suite) {
 	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
-	s.Step(`^there is a group with "([^"]*)"$`, ctx.ThereIsAGroupWith)
 	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
 	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
@@ -33,39 +32,76 @@ func (ctx *TestContext) registerFeaturesForGroups(s *godog.Suite) {
 	s.Step(`^the group (@\w+) is a descendant of the group (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
 }
 
+// getGroupPrimaryKey returns the primary key of a group.
+func (ctx *TestContext) getGroupPrimaryKey(groupID int64) string {
+	return strconv.FormatInt(groupID, 10)
+}
+
 // addGroup adds a group in database.
-func (ctx *TestContext) addGroup(group, name, groupType string) {
+func (ctx *TestContext) addGroup(group string) {
 	groupID := ctx.getReference(group)
 
-	ctx.addInDatabase("groups", strconv.FormatInt(groupID, 10), map[string]interface{}{
-		"id":   groupID,
-		"name": referenceToName(name),
-		"type": groupType,
-	})
+	primaryKey := ctx.getGroupPrimaryKey(groupID)
+
+	if !ctx.isInDatabase("groups", primaryKey) {
+		ctx.addInDatabase("groups", primaryKey, map[string]interface{}{
+			"id": groupID,
+			// All the other fields are set to default values.
+			"name":                                   "Group " + referenceToName(group),
+			"type":                                   "Class",
+			"require_personal_info_access_approval":  "none",
+			"require_lock_membership_approval_until": nil,
+			"require_watch_approval":                 false,
+		})
+	}
+}
+
+// setGroupFieldInDatabase sets a specific field of a group in the database.
+func (ctx *TestContext) setGroupFieldInDatabase(primaryKey, field string, value interface{}) {
+	if value == tableValueNull {
+		value = nil
+	}
+	if value == tableValueFalse {
+		value = false
+	}
+	if value == tableValueTrue {
+		value = true
+	}
+
+	ctx.dbTables["groups"][primaryKey][field] = value
 }
 
 // ThereAreTheFollowingGroups defines groups.
 func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepArgument_PickleTable) error {
 	for i := 1; i < len(groups.Rows); i++ {
 		group := ctx.getRowMap(i, groups)
+		groupID := ctx.getReference(group["group"])
 
-		groupParameters := map[string]string{
-			"id":   group["group"],
-			"name": group["group"],
-		}
-		if _, ok := group["require_personal_info_access_approval"]; ok {
-			groupParameters["require_personal_info_access_approval"] = group["require_personal_info_access_approval"]
-		}
-		if _, ok := group["require_lock_membership_approval_until"]; ok {
-			groupParameters["require_lock_membership_approval_until"] = group["require_lock_membership_approval_until"]
-		}
-		if _, ok := group["require_watch_approval"]; ok {
-			groupParameters["require_watch_approval"] = group["require_watch_approval"]
-		}
-
-		err := ctx.ThereIsAGroupWith(getParameterString(groupParameters))
+		err := ctx.ThereIsAGroup(group["group"])
 		if err != nil {
 			return err
+		}
+
+		if _, ok := group["require_personal_info_access_approval"]; ok {
+			ctx.setGroupFieldInDatabase(
+				ctx.getGroupPrimaryKey(groupID),
+				"require_personal_info_access_approval",
+				group["require_personal_info_access_approval"],
+			)
+		}
+		if _, ok := group["require_lock_membership_approval_until"]; ok {
+			ctx.setGroupFieldInDatabase(
+				ctx.getGroupPrimaryKey(groupID),
+				"require_lock_membership_approval_until",
+				group["require_lock_membership_approval_until"],
+			)
+		}
+		if _, ok := group["require_watch_approval"]; ok {
+			ctx.setGroupFieldInDatabase(
+				ctx.getGroupPrimaryKey(groupID),
+				"require_watch_approval",
+				group["require_watch_approval"],
+			)
 		}
 
 		if _, ok := group["parent"]; ok {
@@ -88,15 +124,6 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepAr
 				if err != nil {
 					return err
 				}
-
-				err = ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-					"id":   member,
-					"name": member,
-					"type": "User",
-				}))
-				if err != nil {
-					return err
-				}
 			}
 		}
 	}
@@ -104,28 +131,11 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepAr
 	return nil
 }
 
-// ThereIsAGroupWith creates a new group.
-func (ctx *TestContext) ThereIsAGroupWith(parameters string) error {
-	group := ctx.getParameterMap(parameters)
-
-	if _, ok := group["name"]; !ok {
-		group["name"] = "Group " + referenceToName(group["id"])
-	}
-	if _, ok := group["type"]; !ok {
-		group["type"] = "Class"
-	}
-
-	ctx.addGroup(group["id"], group["name"], group["type"])
-
-	return nil
-}
-
 // ThereIsAGroup creates a new group.
 func (ctx *TestContext) ThereIsAGroup(group string) error {
-	return ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-		"id":   group,
-		"name": group,
-	}))
+	ctx.addGroup(group)
+
+	return nil
 }
 
 // IAmAMemberOfTheGroup puts a user in a group.
@@ -135,7 +145,7 @@ func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 
 // IAmAMemberOfTheGroupWithID creates a group and add the user in it.
 func (ctx *TestContext) IAmAMemberOfTheGroupWithID(group string) error {
-	err := ctx.ThereIsAGroupWith("id=" + group)
+	err := ctx.ThereIsAGroup(group)
 	if err != nil {
 		return err
 	}
@@ -150,18 +160,12 @@ func (ctx *TestContext) IAmAMemberOfTheGroupWithID(group string) error {
 
 // GroupIsAChildOfTheGroup puts a group as a child of another group.
 func (ctx *TestContext) GroupIsAChildOfTheGroup(childGroup, parentGroup string) error {
-	err := ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-		"id":   childGroup,
-		"name": childGroup,
-	}))
+	err := ctx.ThereIsAGroup(childGroup)
 	if err != nil {
 		return err
 	}
 
-	err = ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-		"id":   parentGroup,
-		"name": parentGroup,
-	}))
+	err = ctx.ThereIsAGroup(parentGroup)
 	if err != nil {
 		return err
 	}
@@ -198,14 +202,14 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 
 // AllUsersGroupIsDefinedAsTheGroup creates and sets the allUsersGroup.
 func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) error {
-	err := ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-		"id":   group,
-		"name": "AllUsers",
-		"type": "Base",
-	}))
+	err := ctx.ThereIsAGroup(group)
 	if err != nil {
 		return err
 	}
+
+	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(group))
+	ctx.setGroupFieldInDatabase(groupPrimaryKey, "name", "AllUsers")
+	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "Base")
 
 	err = ctx.TheApplicationConfigIs(&messages.PickleStepArgument_PickleDocString{
 		Content: `
@@ -228,9 +232,13 @@ domains:
 func (ctx *TestContext) TheFieldOfTheGroupShouldBe(field, group, value string) error {
 	groupID := ctx.getReference(group)
 
+	queryRow := db.QueryRow("SELECT COUNT(*) as count FROM `groups` WHERE id = ? AND "+field+" = ?", groupID, value)
+	if value == nullValue {
+		queryRow = db.QueryRow("SELECT COUNT(*) as count FROM `groups` WHERE id = ? AND "+field+" IS NULL", groupID)
+	}
+
 	var resultCount int
-	err := db.QueryRow("SELECT COUNT(*) as count FROM `groups` WHERE id = ? AND "+field+" = ?", groupID, value).
-		Scan(&resultCount)
+	err := queryRow.Scan(&resultCount)
 	if err != nil {
 		return err
 	}
@@ -287,9 +295,7 @@ func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent strin
 
 	groups := []string{descendant, middle, parent}
 	for _, group := range groups {
-		err := ctx.ThereIsAGroupWith(getParameterString(map[string]string{
-			"id": group,
-		}))
+		err := ctx.ThereIsAGroup(group)
 		if err != nil {
 			return err
 		}
