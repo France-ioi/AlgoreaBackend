@@ -250,3 +250,16 @@ func (s *GroupStore) IsVisibleForGroup(groupID, visibleForGroupID int64) bool {
 func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
 	return s.IsVisibleForGroup(groupID, user.GroupID)
 }
+
+// GetDirectParticipantIDsOf returns the participant IDs of the direct participants of a group.
+func (s *GroupStore) GetDirectParticipantIDsOf(groupID int64) (participantIDs []int64) {
+	err := s.
+		Joins("JOIN groups_groups ON groups_groups.child_group_id = groups.id").
+		Where("groups_groups.parent_group_id = ?", groupID).
+		Where("groups.type = 'User'").
+		Pluck("groups.id", &participantIDs).
+		Error()
+	mustNotBeError(err)
+
+	return participantIDs
+}

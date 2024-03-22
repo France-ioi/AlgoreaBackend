@@ -208,7 +208,9 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			groupStore, groupID, user.GroupID, dbMap, currentGroupData.IsPublic, currentGroupData.FrozenMembership))
 
 		if approvalChangeAction != nil {
-			s.GroupGroups().RemoveAllParticipantsOfGroup(groupID)
+			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
+			s.GroupMembershipChanges().InsertEntries(user.GroupID, groupID, participantIDs, "removed_due_to_approval_change")
+			s.GroupGroups().RemoveMembersOfGroup(groupID, participantIDs)
 		}
 
 		// update the group

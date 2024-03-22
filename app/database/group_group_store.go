@@ -212,21 +212,11 @@ func (s *GroupGroupStore) WithGroupsRelationsLock(txFunc func(*DataStore) error)
 	return s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, txFunc)
 }
 
-// RemoveAllParticipantsOfGroup removes all participants of a group.
-// Only remove users who are direct descendants of the groups.
-func (s *GroupGroupStore) RemoveAllParticipantsOfGroup(groupID int64) {
-	var participantsIds []int64
-	err := s.Groups().
-		Joins("JOIN groups_groups ON groups_groups.child_group_id = groups.id").
+// RemoveMembersOfGroup removes members of a group.
+func (s *GroupGroupStore) RemoveMembersOfGroup(groupID int64, memberIDs []int64) {
+	err := s.
 		Where("groups_groups.parent_group_id = ?", groupID).
-		Where("groups.type = 'User'").
-		Pluck("groups.id", &participantsIds).
-		Error()
-	mustNotBeError(err)
-
-	err = s.
-		Where("groups_groups.parent_group_id = ?", groupID).
-		Where("groups_groups.child_group_id IN (?)", participantsIds).
+		Where("groups_groups.child_group_id IN (?)", memberIDs).
 		Delete().
 		Error()
 	mustNotBeError(err)
