@@ -1005,38 +1005,6 @@ func (ctx *TestContext) UserShouldBeAMemberOfTheGroup(user, group string) error 
 	return nil
 }
 
-// ThereShouldBeTheFollowingGroupMembershipChanges checks that the entries are in the database.
-func (ctx *TestContext) ThereShouldBeTheFollowingGroupMembershipChanges(entries *messages.PickleStepArgument_PickleTable) error {
-	for i := 1; i < len(entries.Rows); i++ {
-		change := ctx.getRowMap(i, entries)
-
-		var conditions string
-		var values []interface{}
-		for key, value := range change {
-			if conditions != "" {
-				conditions += " AND "
-			}
-
-			conditions += key + " = ? "
-			values = append(values, value)
-		}
-		query := "SELECT COUNT(*) as count FROM `group_membership_changes` WHERE " + conditions
-
-		var resultCount int
-		err := db.QueryRow(query, values...).
-			Scan(&resultCount)
-		if err != nil {
-			return err
-		}
-
-		if resultCount != 0 {
-			return fmt.Errorf("could not find the group membership change %+v", change)
-		}
-	}
-
-	return nil
-}
-
 // IAmAMemberOfTheGroup puts a user in a group.
 func (ctx *TestContext) IAmAMemberOfTheGroup(name string) error {
 	return ctx.IAmAMemberOfTheGroupWithID(name)
