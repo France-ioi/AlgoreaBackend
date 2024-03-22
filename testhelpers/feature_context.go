@@ -31,21 +31,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the application config is:$`, ctx.TheApplicationConfigIs)
 	s.Step(`^the context variable "([^"]*)" is "([^"]*)"$`, ctx.TheContextVariableIs)
 
-	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
-	s.Step(`^there is a group with "([^"]*)"$`, ctx.ThereIsAGroupWith)
-	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
-	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
-	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
-	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
-	s.Step(
-		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
-		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
-	)
-	s.Step(`allUsersGroup is defined as the group (@\w+)$`, ctx.AllUsersGroupIsDefinedAsTheGroup)
-
-	s.Step(`^the field "([^"]*)" of the group (@\w+) should be "([^"]*)"$`, ctx.TheFieldOfTheGroupShouldBe)
-	s.Step(`^(@\w+) should not be a member of the group (@\w+)$`, ctx.UserShouldNotBeAMemberOfTheGroup)
-	s.Step(`^(@\w+) should be a member of the group (@\w+)$`, ctx.UserShouldBeAMemberOfTheGroup)
+	ctx.registerFeaturesForGroups(s)
 
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (@\w+)$`, ctx.IAmAManagerOfTheGroup)
@@ -56,7 +42,7 @@ func FeatureContext(s *godog.Suite) {
 		`(@\w+) is a manager of the group (@\w+) and can manage memberships and group`,
 		ctx.UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
 	)
-	s.Step(`^the group (@\w+) is a descendant of the group (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
+
 	s.Step(`^there are the following items:$`, ctx.ThereAreTheFollowingItems)
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
