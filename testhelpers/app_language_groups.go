@@ -78,9 +78,7 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepAr
 		groupID := ctx.getReference(group["group"])
 
 		err := ctx.ThereIsAGroup(group["group"])
-		if err != nil {
-			return err
-		}
+		mustNotBeError(err)
 
 		if _, ok := group["require_personal_info_access_approval"]; ok {
 			ctx.setGroupFieldInDatabase(
@@ -106,9 +104,7 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepAr
 
 		if _, ok := group["parent"]; ok {
 			err = ctx.GroupIsAChildOfTheGroup(group["group"], group["parent"])
-			if err != nil {
-				return err
-			}
+			mustNotBeError(err)
 		}
 
 		if _, ok := group["members"]; ok {
@@ -116,14 +112,10 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepAr
 
 			for _, member := range members {
 				err = ctx.ThereIsAUser(member)
-				if err != nil {
-					return err
-				}
+				mustNotBeError(err)
 
 				err = ctx.GroupIsAChildOfTheGroup(member, group["group"])
-				if err != nil {
-					return err
-				}
+				mustNotBeError(err)
 			}
 		}
 	}
