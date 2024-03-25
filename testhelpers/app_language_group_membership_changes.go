@@ -20,30 +20,7 @@ func (ctx *TestContext) ThereShouldBeTheFollowingGroupMembershipChanges(entries 
 	for i := 1; i < len(entries.Rows); i++ {
 		change := ctx.getRowMap(i, entries)
 
-		var conditions string
-		var values []interface{}
-		for key, value := range change {
-			if conditions != "" {
-				conditions += " AND "
-			}
-
-			conditions += key + " = ? "
-
-			if value[0] == ReferencePrefix {
-				values = append(values, ctx.getReference(value))
-			} else {
-				values = append(values, value)
-			}
-		}
-
-		query := "SELECT COUNT(*) as count FROM `group_membership_changes` WHERE " + conditions
-
-		var resultCount int
-		err := db.QueryRow(query, values...).
-			Scan(&resultCount)
-		if err != nil {
-			return err
-		}
+		resultCount := ctx.databaseCountRows("group_membership_changes", change)
 
 		if resultCount == 0 {
 			return fmt.Errorf("could not find the group membership change %+v", change)
