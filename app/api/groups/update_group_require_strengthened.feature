@@ -86,8 +86,7 @@ Feature:
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
-      require_lock_membership_approval_until: null,
-      "approval_change_action": "empty"
+      "require_lock_membership_approval_until": null
     }
     """
     Then the response should be "updated"

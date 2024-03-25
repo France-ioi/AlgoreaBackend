@@ -471,7 +471,7 @@ func requireLockMembershipApprovalUntilIsStrengthened(oldValue, newValue *databa
 		newValueDate := (*time.Time)(newValue)
 
 		// The field is not considered strengthened if the new value is <= NOW().
-		if newValueDate.Before(time.Now().Add(time.Second)) {
+		if newValueDate != nil && newValueDate.Before(time.Now().Add(time.Second)) {
 			return false
 		}
 
