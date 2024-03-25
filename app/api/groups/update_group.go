@@ -207,14 +207,14 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			return apiErr.Error // rollback
 		}
 
-		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, user.GroupID, dbMap, currentGroupData.IsPublic, currentGroupData.FrozenMembership))
-
 		if approvalChangeAction != nil {
 			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
 			s.GroupMembershipChanges().InsertEntries(user.GroupID, groupID, participantIDs, "removed_due_to_approval_change")
 			s.GroupGroups().RemoveMembersOfGroup(groupID, participantIDs)
 		}
+
+		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
+			groupStore, groupID, user.GroupID, dbMap, currentGroupData.IsPublic, currentGroupData.FrozenMembership, approvalChangeAction))
 
 		// update the group
 		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())
@@ -311,7 +311,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 // with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
-	previousIsPublicValue, previousFrozenMembershipValue bool,
+	previousIsPublicValue, previousFrozenMembershipValue bool, approvalChangeAction *string,
 ) error {
 	var shouldRefusePending bool
 
@@ -325,6 +325,11 @@ func refuseSentGroupRequestsIfNeeded(
 	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !previousFrozenMembershipValue {
 		shouldRefusePending = true
 		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
+	}
+
+	// If a require_* fields is strengthened, we want to refuse all pending join requests.
+	if approvalChangeAction != nil {
+		shouldRefusePending = true
 	}
 
 	if shouldRefusePending {

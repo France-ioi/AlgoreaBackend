@@ -56,6 +56,7 @@ func FeatureContext(s *godog.Suite) {
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
 
 	ctx.registerFeaturesForGroupMembershipChanges(s)
+	ctx.registerFeaturesForGroupPendingRequests(s)
 
 	s.Step(`^there are the following results:$`, ctx.ThereAreTheFollowingResults)
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)

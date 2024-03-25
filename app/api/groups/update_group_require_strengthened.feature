@@ -75,3 +75,54 @@ Feature:
       | require_lock_membership_approval_until | "2020-01-01T01:00:00Z" | 2020-01-01 01:00:00 |                                           | 2020-01-01 00:59:59                        |                            | # The new valus is == NOW()
       | require_watch_approval                 | false                  | false               |                                           |                                            | false                      |
       | require_watch_approval                 | false                  | false               |                                           |                                            | true                       |
+
+  Scenario: Should be able to set require_lock_membership_approval_until to null when it is already set
+    Given I am @Teacher
+    And there are the following groups:
+      | group   | members   | require_lock_membership_approval_until |
+      | @School | @Teacher  |                                        |
+      | @Class  | @Student1 | 2020-01-01 12:00:00                    |
+    And @Teacher is a manager of the group @Class and can manage memberships and group
+    When I send a PUT request to "/groups/@Class" with the following body:
+    """
+    {
+      require_lock_membership_approval_until: null,
+      "approval_change_action": "empty"
+    }
+    """
+    Then the response should be "updated"
+    And the field "require_lock_membership_approval_until" of the group @Class should be "<null>"
+
+  Scenario Outline: Should reject all pending requests when approval_change_action is set
+    Given I am @Teacher
+    And there are the following groups:
+      | group   | members                       | require_watch_approval |
+      | @School | @Teacher                      |                        |
+      | @Class  | @Student1,@Student2           | false                  |
+      | @Other  | @Student3,@Student4,@Student5 |                        |
+    And there are the following group pending requests:
+      | group  | member    | type          |
+      | @Class | @Student1 | leave_request |
+      | @Class | @Student3 | join_request  |
+      | @Class | @Student4 | join_request  |
+      | @Class | @Student5 | invitation    |
+      | @Other | @Student5 | join_request  |
+    And @Teacher is a manager of the group @Class and can manage memberships and group
+    When I send a PUT request to "/groups/@Class" with the following body:
+    """
+    {
+      "require_watch_approval": true,
+      "approval_change_action": "<approval_change_action>"
+    }
+    """
+    Then the response should be "updated"
+    And there should be no group pending requests for the group @Class with the type "join_request"
+    And there should be the following group pending requests:
+      | group_id | member_id | type          |
+      | @Class   | @Student1 | leave_request |
+      | @Class   | @Student5 | invitation    |
+      | @Other   | @Student5 | join_request  |
+    Examples:
+      | approval_change_action |
+      | empty                  |
+      | reinvite                |
