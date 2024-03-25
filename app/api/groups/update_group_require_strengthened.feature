@@ -12,7 +12,7 @@ Feature:
       | @School   |        | @Teacher            |                                             |                                              |                              |
       | @Class    |        | @Student1,@Student2 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
       | @SubGroup | @Class | @Student3,@Student4 |                                             |                                              |                              |
-  And @Teacher is a manager of the group @Class and can manage memberships and group
+    And @Teacher is a manager of the group @Class and can manage memberships and group
     And the time now is "2020-01-01T01:00:00Z"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
@@ -42,4 +42,34 @@ Feature:
       | require_lock_membership_approval_until | "2020-01-01T12:00:01Z" | 2020-01-01 12:00:01 |                                           | 2020-01-01 12:00:00                        |                            |
       | require_watch_approval                 | true                   | 1                   |                                           |                                            | false                      |
 
-  # TODO: updating without strengthening can be done without approval_change_action
+  Scenario Outline: >
+      Should be able to update the require_* fields without approval_change_action when they are not strengthened
+    Given I am @Teacher
+    And there are the following groups:
+      | group   | members   | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       |
+      | @School | @Teacher  |                                             |                                              |                              |
+      | @Class  | @Student1 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
+  And @Teacher is a manager of the group @Class and can manage memberships and group
+    And the time now is "2020-01-01T01:00:00Z"
+    When I send a PUT request to "/groups/@Class" with the following body:
+    """
+    {
+      "<require_field>": <new_value>
+    }
+    """
+    Then the response should be "updated"
+    And the field "<require_field>" of the group @Class should be "<new_value_db>"
+    Examples:
+      | require_field                          | new_value              | new_value_db        | old_require_personal_info_access_approval | old_require_lock_membership_approval_until | old_require_watch_approval |
+      | require_personal_info_access_approval  | "none"                 | none                | none                                      |                                            |                            |
+      | require_personal_info_access_approval  | "none"                 | none                | view                                      |                                            |                            |
+      | require_personal_info_access_approval  | "none"                 | none                | edit                                      |                                            |                            |
+      | require_personal_info_access_approval  | "view"                 | view                | view                                      |                                            |                            |
+      | require_personal_info_access_approval  | "view"                 | view                | edit                                      |                                            |                            |
+      | require_personal_info_access_approval  | "edit"                 | edit                | edit                                      |                                            |                            |
+      | require_lock_membership_approval_until | null                   | <null>              |                                           |                                            |                            |
+      | require_lock_membership_approval_until | null                   | <null>              |                                           |                                            |                            |
+      | require_lock_membership_approval_until | "2020-01-01T12:00:00Z" | 2020-01-01 12:00:00 |                                           | 2020-01-01 12:00:00                        |                            |
+      | require_lock_membership_approval_until | "2020-01-01T11:59:59Z" | 2020-01-01 11:59:59 |                                           | 2020-01-01 12:00:00                        |                            |
+      | require_watch_approval                 | false                  | false               |                                           |                                            | false                      |
+      | require_watch_approval                 | false                  | false               |                                           |                                            | true                       |
