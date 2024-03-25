@@ -49,7 +49,7 @@ Feature:
       | group   | members   | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       |
       | @School | @Teacher  |                                             |                                              |                              |
       | @Class  | @Student1 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
-  And @Teacher is a manager of the group @Class and can manage memberships and group
+    And @Teacher is a manager of the group @Class and can manage memberships and group
     And the time now is "2020-01-01T01:00:00Z"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
@@ -71,5 +71,7 @@ Feature:
       | require_lock_membership_approval_until | null                   | <null>              |                                           |                                            |                            |
       | require_lock_membership_approval_until | "2020-01-01T12:00:00Z" | 2020-01-01 12:00:00 |                                           | 2020-01-01 12:00:00                        |                            |
       | require_lock_membership_approval_until | "2020-01-01T11:59:59Z" | 2020-01-01 11:59:59 |                                           | 2020-01-01 12:00:00                        |                            |
+      | require_lock_membership_approval_until | "2020-01-01T00:59:59Z" | 2020-01-01 00:59:59 |                                           | 2020-01-01 00:59:58                        |                            | # The new value is < NOW()
+      | require_lock_membership_approval_until | "2020-01-01T01:00:00Z" | 2020-01-01 01:00:00 |                                           | 2020-01-01 00:59:59                        |                            | # The new valus is == NOW()
       | require_watch_approval                 | false                  | false               |                                           |                                            | false                      |
       | require_watch_approval                 | false                  | false               |                                           |                                            | true                       |
