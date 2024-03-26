@@ -211,6 +211,11 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
 			s.GroupMembershipChanges().InsertEntries(user.GroupID, groupID, participantIDs, "removed_due_to_approval_change")
 			s.GroupGroups().RemoveMembersOfGroup(groupID, participantIDs)
+
+			// If the approval_change_action is 'reinvite', we need to reinvite the participants.
+			if *approvalChangeAction == "reinvite" {
+				s.GroupPendingRequests().InviteParticipants(groupID, participantIDs)
+			}
 		}
 
 		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(

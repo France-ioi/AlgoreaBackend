@@ -20,6 +20,10 @@ func (ctx *TestContext) registerFeaturesForGroupPendingRequests(s *godog.Suite) 
 		`^there should be no group pending requests for the group (@\w+) with the type "([^"]*)"$`,
 		ctx.ThereShouldBeNoGroupPendingRequestsForTheGroupWithTheType,
 	)
+	s.Step(
+		`^there should be no group pending requests for the member (@\w+) with the type "([^"]*)"$`,
+		ctx.ThereShouldBeNoGroupPendingRequestsForTheMemberWithTheType,
+	)
 	s.Step(`^there should be the following group pending requests:$`, ctx.ThereShouldBeTheFollowingGroupPendingRequests)
 }
 
@@ -65,6 +69,19 @@ func (ctx *TestContext) ThereShouldBeNoGroupPendingRequestsForTheGroupWithTheTyp
 	})
 	if resultCount != 0 {
 		return fmt.Errorf("found group pending requests for the group %s with the type %s", group, requestType)
+	}
+
+	return nil
+}
+
+// ThereShouldBeNoGroupPendingRequestsForTheMemberWithTheType checks that no rows are present in the group_pending_requests table.
+func (ctx *TestContext) ThereShouldBeNoGroupPendingRequestsForTheMemberWithTheType(member, requestType string) error {
+	resultCount := ctx.databaseCountRows("group_pending_requests", map[string]string{
+		"member_id": member,
+		"type":      requestType,
+	})
+	if resultCount != 0 {
+		return fmt.Errorf("found group pending requests for the member %s with the type %s", member, requestType)
 	}
 
 	return nil
