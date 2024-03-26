@@ -16,11 +16,15 @@ func (ctx *TestContext) buildDatabaseCountRowQuery(table string, datamap map[str
 			conditions += " AND "
 		}
 
-		if value == nullValue {
+		switch {
+		case value == nullValue:
 			conditions += "`" + key + "` IS NULL "
-		} else {
+		case value == tableValueFalse:
+			conditions += "`" + key + "` = 0 "
+		case value == tableValueTrue:
+			conditions += "`" + key + "` = 1 "
+		default:
 			conditions += "`" + key + "`" + " = ? "
-
 			if value[0] == ReferencePrefix {
 				values = append(values, ctx.getReference(value))
 			} else {
