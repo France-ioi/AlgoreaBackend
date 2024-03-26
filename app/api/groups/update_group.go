@@ -183,8 +183,10 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 		service.MustNotBeError(err)
 
+		groupHasParticipants := groupStore.HasParticipants(groupID)
+
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(r, &currentGroupData, s)
+		formData, err = validateUpdateGroupInput(r, groupHasParticipants, &currentGroupData, s)
 		if err != nil {
 			apiErr = service.ErrInvalidRequest(err)
 			return apiErr.Error // rollback
@@ -360,7 +362,7 @@ func refuseSentGroupRequestsIfNeeded(
 }
 
 func validateUpdateGroupInput(
-	r *http.Request, currentGroupData *groupUpdateInput, store *database.DataStore,
+	r *http.Request, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
 ) (*formdata.FormData, error) {
 	input := &groupUpdateInput{}
 	formData := formdata.NewFormData(input)
@@ -380,11 +382,14 @@ func validateUpdateGroupInput(
 
 	formData.RegisterValidation(
 		"strengthening_requires_approval_change_action",
-		constructStrengtheningRequiresFieldValidator(formData, currentGroupData),
+		constructStrengtheningRequiresFieldValidator(formData, groupHasParticipants, currentGroupData),
 	)
 	formData.RegisterTranslation("strengthening_requires_approval_change_action", "Strengthening requires parameter approval_change_action")
 
-	formData.RegisterValidation("not_set_when_no_field_strengthened", constructNotSetWhenNoFieldStrengthenedValidator(currentGroupData))
+	formData.RegisterValidation(
+		"not_set_when_no_field_strengthened",
+		constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants, currentGroupData),
+	)
 	formData.RegisterTranslation("not_set_when_no_field_strengthened", "must be present only if a 'require_*' field is strengthened")
 
 	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
@@ -451,7 +456,11 @@ func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, curre
 
 // requirePersonalInfoAccessApprovalIsStrengthened checks whether the field `require_personal_info_access_approval`
 // is strengthened.
-func requirePersonalInfoAccessApprovalIsStrengthened(oldValue, newValue string) bool {
+func requirePersonalInfoAccessApprovalIsStrengthened(groupHasParticipants bool, oldValue, newValue string) bool {
+	if !groupHasParticipants {
+		return false
+	}
+
 	// If the field is empty, the value is not changed, so it is not strengthened.
 	if newValue == "" {
 		return false
@@ -469,7 +478,11 @@ func requirePersonalInfoAccessApprovalIsStrengthened(oldValue, newValue string) 
 
 // requireLockMembershipApprovalUntilIsStrengthened checks whether the field `require_lock_membership_approval_until`
 // is strengthened.
-func requireLockMembershipApprovalUntilIsStrengthened(oldValue, newValue *database.Time) bool {
+func requireLockMembershipApprovalUntilIsStrengthened(groupHasParticipants bool, oldValue, newValue *database.Time) bool {
+	if !groupHasParticipants {
+		return false
+	}
+
 	if oldValue == nil {
 		return newValue != nil
 	} else {
@@ -487,32 +500,52 @@ func requireLockMembershipApprovalUntilIsStrengthened(oldValue, newValue *databa
 }
 
 // requireWatchApprovalIsStrengthened checks whether the field `require_watch_approval` is strengthened.
-func requireWatchApprovalIsStrengthened(oldValue, newValue bool) bool {
+func requireWatchApprovalIsStrengthened(groupHasParticipants, oldValue, newValue bool) bool {
+	if !groupHasParticipants {
+		return false
+	}
+
 	return !oldValue && newValue
 }
 
-func fieldIsStrengthened(fl validator.FieldLevel, currentGroupData *groupUpdateInput) bool {
+func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, currentGroupData *groupUpdateInput) bool {
 	switch fl.FieldName() {
 	case "require_personal_info_access_approval":
 		newValue := fl.Field().String()
 
-		return requirePersonalInfoAccessApprovalIsStrengthened(currentGroupData.RequirePersonalInfoAccessApproval, newValue)
+		return requirePersonalInfoAccessApprovalIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequirePersonalInfoAccessApproval,
+			newValue,
+		)
 	case "require_lock_membership_approval_until":
 		newValue := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
 
-		return requireLockMembershipApprovalUntilIsStrengthened(currentGroupData.RequireLockMembershipApprovalUntil, newValue)
+		return requireLockMembershipApprovalUntilIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequireLockMembershipApprovalUntil,
+			newValue,
+		)
 	case "require_watch_approval":
 		newValue := fl.Field().Bool()
 
-		return requireWatchApprovalIsStrengthened(currentGroupData.RequireWatchApproval, newValue)
+		return requireWatchApprovalIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequireWatchApproval,
+			newValue,
+		)
 	}
 
 	return false
 }
 
-func constructStrengtheningRequiresFieldValidator(formData *formdata.FormData, currentGroupData *groupUpdateInput) validator.Func {
+func constructStrengtheningRequiresFieldValidator(
+	formData *formdata.FormData,
+	groupHasParticipants bool,
+	currentGroupData *groupUpdateInput,
+) validator.Func {
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
-		if !fieldIsStrengthened(fl, currentGroupData) {
+		if !fieldIsStrengthened(fl, groupHasParticipants, currentGroupData) {
 			return true
 		} else {
 			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string)
@@ -522,7 +555,7 @@ func constructStrengtheningRequiresFieldValidator(formData *formdata.FormData, c
 	})
 }
 
-func constructNotSetWhenNoFieldStrengthenedValidator(currentGroupData *groupUpdateInput) validator.Func {
+func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, currentGroupData *groupUpdateInput) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		newRequirePersonalInfoAccessApproval := fl.Top().Elem().FieldByName("RequirePersonalInfoAccessApproval").Interface().(string)
 		newRequireLockMembershipApprovalUntil := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
@@ -533,14 +566,17 @@ func constructNotSetWhenNoFieldStrengthenedValidator(currentGroupData *groupUpda
 		if approveChangeAction != nil {
 			// There must be no require_* fields strengthened.
 			if requirePersonalInfoAccessApprovalIsStrengthened(
+				groupHasParticipants,
 				currentGroupData.RequirePersonalInfoAccessApproval,
 				newRequirePersonalInfoAccessApproval,
 			) ||
 				requireLockMembershipApprovalUntilIsStrengthened(
+					groupHasParticipants,
 					currentGroupData.RequireLockMembershipApprovalUntil,
 					newRequireLockMembershipApprovalUntil,
 				) ||
 				requireWatchApprovalIsStrengthened(
+					groupHasParticipants,
 					currentGroupData.RequireWatchApproval,
 					newRequireWatchApproval,
 				) {
