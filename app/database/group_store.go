@@ -256,7 +256,7 @@ func (s *GroupStore) GetDirectParticipantIDsOf(groupID int64) (participantIDs []
 	err := s.
 		Joins("JOIN groups_groups ON groups_groups.child_group_id = groups.id").
 		Where("groups_groups.parent_group_id = ?", groupID).
-		Where("groups.type = 'User'").
+		Where("groups.type = 'User' OR groups.type = 'Team'").
 		Pluck("groups.id", &participantIDs).
 		Error()
 	mustNotBeError(err)
