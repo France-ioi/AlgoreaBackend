@@ -178,3 +178,39 @@ Feature:
     And @Student1 should not be a member of the group @Class
     And @Student2 should not be a member of the group @Class
     And @Student3 should be a member of the group @SubGroup
+
+  # If approval_change_action = "reinvite", the leave requests are transformed into invitations,
+  # because the primary key of the group_pending_requests table is (group_id, member_id).
+  # This was already tested in a test above.
+  Scenario: Should reject all pending leave requests when require_lock_membership_approval_until is strengthened and approval_change_action = 'empty'
+    Given I am @Teacher
+    And the time now is "2020-01-01T01:00:00Z"
+    And there are the following groups:
+      | group   | members                       | require_lock_membership_approval_until |
+      | @School | @Teacher                      |                                        |
+      | @Class  | @Student1,@Student2,@Student3 | 2020-01-01 12:00:00                    |
+      | @Other  | @Student4,@Student5,@Student6 |                                        |
+    And there are the following group pending requests:
+      | group  | member    | type          |
+      | @Class | @Student1 | leave_request |
+      | @Class | @Student2 | leave_request |
+      | @Class | @Student4 | join_request  |
+      | @Class | @Student5 | join_request  |
+      | @Class | @Student6 | invitation    |
+      | @Other | @Student5 | leave_request |
+      | @Other | @Student6 | join_request  |
+    And @Teacher is a manager of the group @Class and can manage memberships and group
+    When I send a PUT request to "/groups/@Class" with the following body:
+    """
+    {
+      "require_lock_membership_approval_until": "2020-01-01T12:00:01Z",
+      "approval_change_action": "empty"
+    }
+    """
+    Then the response should be "updated"
+    And there should be no group pending requests for the group @Class with the type "leave_request"
+    And there should be the following group pending requests:
+      | group_id | member_id | type          |
+      | @Class   | @Student6 | invitation    |
+      | @Other   | @Student5 | leave_request |
+      | @Other   | @Student6 | join_request  |

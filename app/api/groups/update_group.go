@@ -221,7 +221,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, user.GroupID, dbMap, currentGroupData.IsPublic, currentGroupData.FrozenMembership, approvalChangeAction))
+			groupStore, groupID, user.GroupID, dbMap, currentGroupData, approvalChangeAction))
 
 		// update the group
 		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())
@@ -318,7 +318,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 // with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
-	previousIsPublicValue, previousFrozenMembershipValue bool, approvalChangeAction *string,
+	currentGroupData groupUpdateInput, approvalChangeAction *string,
 ) error {
 	var shouldRefusePending bool
 
@@ -326,10 +326,10 @@ func refuseSentGroupRequestsIfNeeded(
 	pendingTypesToHandle = append(pendingTypesToHandle, "join_request")
 
 	// if is_public is going to be changed from true to false
-	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && previousIsPublicValue {
+	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && currentGroupData.IsPublic {
 		shouldRefusePending = true
 	}
-	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !previousFrozenMembershipValue {
+	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
 		shouldRefusePending = true
 		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
 	}
@@ -337,6 +337,19 @@ func refuseSentGroupRequestsIfNeeded(
 	// If a require_* fields is strengthened, we want to refuse all pending join requests.
 	if approvalChangeAction != nil {
 		shouldRefusePending = true
+
+		if _, ok := dbMap["require_lock_membership_approval_until"]; ok {
+			newRequireLockMembershipApprovalUntil := dbMap["require_lock_membership_approval_until"].(*database.Time)
+
+			// We can pass "true" for "groupHasParticipants" because we know there are participants, since approvalChangeAction is not nil.
+			if requireLockMembershipApprovalUntilIsStrengthened(
+				true,
+				currentGroupData.RequireLockMembershipApprovalUntil,
+				newRequireLockMembershipApprovalUntil,
+			) {
+				pendingTypesToHandle = append(pendingTypesToHandle, "leave_request")
+			}
+		}
 	}
 
 	if shouldRefusePending {
