@@ -56,17 +56,23 @@ type groupUpdateInput struct {
 	// Strengthened if the new value is `view` and the old value is `none`, or if the new value is `edit` and
 	// the old value is either `view` or `none`.
 	//
+	// Not considered strengthened if the group doesn't have any participants.
+	//
 	// If it is strengthened, `approval_change_action should be set`.
 	//
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit,strengthening_requires_approval_change_action"` //nolint:lll
 	// Nullable
 	//
-	// Strengthened if the new value is after the old value, or if the new value is set and the old value is not.
+	// Strengthened if the new value is after `NOW()` and after the old value, or if the new value is set and the old value is not.
+	//
+	// Not considered strengthened if the group doesn't have any participants.
 	//
 	// If it is strengthened, `approval_change_action` must be set.
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
 	// Strengthened if the new value is `true` and the old value is `false`.
+	//
+	// Not considered strengthened if the group doesn't have any participants.
 	//
 	// If it is strengthened, `approval_change_action` must be set.
 	RequireWatchApproval       bool `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
