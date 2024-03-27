@@ -64,7 +64,7 @@ type groupUpdateInput struct {
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit,strengthening_requires_approval_change_action"` //nolint:lll
 	// Nullable
 	//
-	// Strengthened if the new value is after `NOW()` and after the old value, or if the new value is set and the old value is not.
+	// Strengthened if the new value is > `NOW()` and > the old value, or if the new value is > `NOW()` and the old value is `null`.
 	//
 	// Not considered strengthened if the group doesn't have any participants.
 	//
@@ -503,7 +503,14 @@ func requireLockMembershipApprovalUntilIsStrengthened(groupHasParticipants bool,
 	}
 
 	if oldValue == nil {
-		return newValue != nil
+		if newValue == nil {
+			return false
+		}
+
+		newValueDate := (*time.Time)(newValue)
+
+		// The field is considered strengthened only if the new value is > NOW().
+		return newValueDate.After(time.Now())
 	} else {
 		newValueDate := (*time.Time)(newValue)
 
