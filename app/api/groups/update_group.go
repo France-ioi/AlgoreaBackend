@@ -237,7 +237,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, user.GroupID, dbMap, currentGroupData, approvalChangeAction))
+			groupStore, groupID, user.GroupID, dbMap, &currentGroupData, approvalChangeAction))
 
 		// update the group
 		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())
@@ -334,7 +334,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 // with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
-	currentGroupData groupUpdateInput, approvalChangeAction *string,
+	currentGroupData *groupUpdateInput, approvalChangeAction *string,
 ) error {
 	var shouldRefusePending bool
 
