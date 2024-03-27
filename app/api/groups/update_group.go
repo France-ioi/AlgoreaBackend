@@ -336,29 +336,29 @@ func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
 	currentGroupData *groupUpdateInput, approvalChangeAction *string,
 ) error {
-	pendingTypesToHandle := []string{"join_request"}
+	if shouldRefuseGroupPendingRequests(dbMap, currentGroupData, approvalChangeAction) {
+		pendingTypesToHandle := []string{"join_request"}
 
-	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
-		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
-	}
+		if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
+			pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
+		}
 
-	// If a require_* fields is strengthened, we want to refuse all pending join requests.
-	if approvalChangeAction != nil {
-		if _, ok := dbMap["require_lock_membership_approval_until"]; ok {
-			newRequireLockMembershipApprovalUntil := dbMap["require_lock_membership_approval_until"].(*database.Time)
+		// If a require_* fields is strengthened, we want to refuse all pending join requests.
+		if approvalChangeAction != nil {
+			if _, ok := dbMap["require_lock_membership_approval_until"]; ok {
+				newRequireLockMembershipApprovalUntil := dbMap["require_lock_membership_approval_until"].(*database.Time)
 
-			// We can pass "true" for "groupHasParticipants" because we know there are participants, since approvalChangeAction is not nil.
-			if requireLockMembershipApprovalUntilIsStrengthened(
-				true,
-				currentGroupData.RequireLockMembershipApprovalUntil,
-				newRequireLockMembershipApprovalUntil,
-			) {
-				pendingTypesToHandle = append(pendingTypesToHandle, "leave_request")
+				// We can pass "true" for "groupHasParticipants" because we know there are participants, since approvalChangeAction is not nil.
+				if requireLockMembershipApprovalUntilIsStrengthened(
+					true,
+					currentGroupData.RequireLockMembershipApprovalUntil,
+					newRequireLockMembershipApprovalUntil,
+				) {
+					pendingTypesToHandle = append(pendingTypesToHandle, "leave_request")
+				}
 			}
 		}
-	}
 
-	if shouldRefuseGroupPendingRequests(dbMap, currentGroupData, approvalChangeAction) {
 		service.MustNotBeError(store.Exec(`
 			INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)
 			SELECT group_id, member_id,
