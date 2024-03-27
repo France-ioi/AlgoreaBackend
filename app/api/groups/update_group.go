@@ -336,24 +336,14 @@ func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
 	currentGroupData *groupUpdateInput, approvalChangeAction *string,
 ) error {
-	var shouldRefusePending bool
+	pendingTypesToHandle := []string{"join_request"}
 
-	pendingTypesToHandle := make([]string, 0, 3)
-	pendingTypesToHandle = append(pendingTypesToHandle, "join_request")
-
-	// if is_public is going to be changed from true to false
-	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && currentGroupData.IsPublic {
-		shouldRefusePending = true
-	}
 	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
-		shouldRefusePending = true
 		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
 	}
 
 	// If a require_* fields is strengthened, we want to refuse all pending join requests.
 	if approvalChangeAction != nil {
-		shouldRefusePending = true
-
 		if _, ok := dbMap["require_lock_membership_approval_until"]; ok {
 			newRequireLockMembershipApprovalUntil := dbMap["require_lock_membership_approval_until"].(*database.Time)
 
@@ -368,7 +358,7 @@ func refuseSentGroupRequestsIfNeeded(
 		}
 	}
 
-	if shouldRefusePending {
+	if shouldRefuseGroupPendingRequests(dbMap, currentGroupData, approvalChangeAction) {
 		service.MustNotBeError(store.Exec(`
 			INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)
 			SELECT group_id, member_id,
@@ -388,6 +378,25 @@ func refuseSentGroupRequestsIfNeeded(
 			Delete().Error()
 	}
 	return nil
+}
+
+func shouldRefuseGroupPendingRequests(
+	dbMap map[string]interface{},
+	currentGroupData *groupUpdateInput,
+	approvalChangeAction *string,
+) bool {
+	// If is_public is going to be changed from true to false
+	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && currentGroupData.IsPublic {
+		return true
+	}
+	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
+		return true
+	}
+	if approvalChangeAction != nil {
+		return true
+	}
+
+	return false
 }
 
 func validateUpdateGroupInput(
