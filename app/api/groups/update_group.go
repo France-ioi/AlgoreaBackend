@@ -82,6 +82,16 @@ type groupUpdateInput struct {
 	//
 	// Must be present only if a `require_*` field is strengthened.
 	//
+	// If `empty`, we remove all participants from the group,
+	// and we remove all the pending requests to the group.
+	//
+	// If `reinvite`, we remove all participants from the group,
+	// we remove all the pending requests to the group,
+	// and we invite all the participants again (`invitation` in `groups_pending_requests`).
+	//
+	// Additionally, if `require_lock_membership_approval_until` is strengthened,
+	// all pending leave requests are removed.
+	//
 	// enum: empty,reinvite
 	ApprovalChangeAction *string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
 
