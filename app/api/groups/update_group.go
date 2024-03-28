@@ -616,31 +616,28 @@ func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, 
 		newRequireLockMembershipApprovalUntil := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
 		newRequireWatchApproval := fl.Top().Elem().FieldByName("RequireWatchApproval").Interface().(bool)
 
-		// If the field is set.
-		approveChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string)
-		if approveChangeAction != nil {
-			// There must be no require_* fields strengthened.
-			if requirePersonalInfoAccessApprovalIsStrengthened(
-				groupHasParticipants,
-				currentGroupData.RequirePersonalInfoAccessApproval,
-				newRequirePersonalInfoAccessApproval,
-			) ||
-				requireLockMembershipApprovalUntilIsStrengthened(
-					groupHasParticipants,
-					currentGroupData.RequireLockMembershipApprovalUntil,
-					newRequireLockMembershipApprovalUntil,
-				) ||
-				requireWatchApprovalIsStrengthened(
-					groupHasParticipants,
-					currentGroupData.RequireWatchApproval,
-					newRequireWatchApproval,
-				) {
-				return true
-			} else {
-				return false
-			}
-		}
+		// We don't need to check that approval_change_action is set,
+		// because this validator is called only if it is (it has omitempty).
 
-		return true
+		// There must be no require_* fields strengthened.
+		if requirePersonalInfoAccessApprovalIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequirePersonalInfoAccessApproval,
+			newRequirePersonalInfoAccessApproval,
+		) ||
+			requireLockMembershipApprovalUntilIsStrengthened(
+				groupHasParticipants,
+				currentGroupData.RequireLockMembershipApprovalUntil,
+				newRequireLockMembershipApprovalUntil,
+			) ||
+			requireWatchApprovalIsStrengthened(
+				groupHasParticipants,
+				currentGroupData.RequireWatchApproval,
+				newRequireWatchApproval,
+			) {
+			return true
+		} else {
+			return false
+		}
 	}
 }
