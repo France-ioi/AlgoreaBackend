@@ -78,8 +78,6 @@ type groupUpdateInput struct {
 	RequireWatchApproval       bool `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
 	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                       //nolint:lll
 
-	// Nullable
-	//
 	// Must be present only if a `require_*` field is strengthened.
 	//
 	// If `empty`, we remove all participants from the group,
@@ -93,7 +91,7 @@ type groupUpdateInput struct {
 	// all pending leave requests are removed.
 	//
 	// enum: empty,reinvite
-	ApprovalChangeAction *string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
+	ApprovalChangeAction string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
@@ -210,9 +208,9 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		dbMap := formData.ConstructMapForDB()
 
-		var approvalChangeAction *string
+		var approvalChangeAction string
 		if _, ok := dbMap["approval_change_action"]; ok {
-			approvalChangeAction = dbMap["approval_change_action"].(*string)
+			approvalChangeAction = dbMap["approval_change_action"].(string)
 			delete(dbMap, "approval_change_action")
 		}
 
@@ -225,13 +223,13 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			return apiErr.Error // rollback
 		}
 
-		if approvalChangeAction != nil {
+		if approvalChangeAction != "" {
 			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
 			s.GroupMembershipChanges().InsertEntries(user.GroupID, groupID, participantIDs, "removed_due_to_approval_change")
 			s.GroupGroups().RemoveMembersOfGroup(groupID, participantIDs)
 
 			// If the approval_change_action is 'reinvite', we need to reinvite the participants.
-			if *approvalChangeAction == "reinvite" {
+			if approvalChangeAction == "reinvite" {
 				s.GroupPendingRequests().InviteParticipants(groupID, participantIDs)
 			}
 		}
@@ -334,7 +332,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 // with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
-	currentGroupData *groupUpdateInput, approvalChangeAction *string,
+	currentGroupData *groupUpdateInput, approvalChangeAction string,
 ) error {
 	if shouldRefuseGroupPendingRequests(dbMap, currentGroupData, approvalChangeAction) {
 		pendingTypesToRefuse := getGroupPendingRequestTypesToRefuse(dbMap, currentGroupData, approvalChangeAction)
@@ -364,7 +362,7 @@ func refuseSentGroupRequestsIfNeeded(
 func getGroupPendingRequestTypesToRefuse(
 	dbMap map[string]interface{},
 	currentGroupData *groupUpdateInput,
-	approvalChangeAction *string,
+	approvalChangeAction string,
 ) []string {
 	pendingTypesToHandle := []string{"join_request"}
 
@@ -373,7 +371,7 @@ func getGroupPendingRequestTypesToRefuse(
 	}
 
 	// If a require_* fields is strengthened, we want to refuse all pending join requests.
-	if approvalChangeAction != nil {
+	if approvalChangeAction != "" {
 		if _, ok := dbMap["require_lock_membership_approval_until"]; ok {
 			newRequireLockMembershipApprovalUntil := dbMap["require_lock_membership_approval_until"].(*database.Time)
 
@@ -393,7 +391,7 @@ func getGroupPendingRequestTypesToRefuse(
 func shouldRefuseGroupPendingRequests(
 	dbMap map[string]interface{},
 	currentGroupData *groupUpdateInput,
-	approvalChangeAction *string,
+	approvalChangeAction string,
 ) bool {
 	// If is_public is going to be changed from true to false
 	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && currentGroupData.IsPublic {
@@ -402,7 +400,7 @@ func shouldRefuseGroupPendingRequests(
 	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
 		return true
 	}
-	if approvalChangeAction != nil {
+	if approvalChangeAction != "" {
 		return true
 	}
 
@@ -603,9 +601,9 @@ func constructStrengtheningRequiresFieldValidator(
 		if !fieldIsStrengthened(fl, groupHasParticipants, currentGroupData) {
 			return true
 		} else {
-			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").Interface().(*string)
+			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").String()
 
-			return approvalChangeAction != nil
+			return approvalChangeAction != ""
 		}
 	})
 }
