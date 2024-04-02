@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
@@ -12,6 +13,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+)
+
+const (
+	enumNone = "none"
+	enumView = "view"
+	enumEdit = "edit"
 )
 
 // Information of the group to be modified
@@ -46,12 +53,45 @@ type groupUpdateInput struct {
 	// Cannot be set to true when max_participants is null
 	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll
 
+	// Strengthened if the new value is `view` and the old value is `none`, or if the new value is `edit` and
+	// the old value is either `view` or `none`.
+	//
+	// Not considered strengthened if the group doesn't have any participants.
+	//
+	// If it is strengthened, `approval_change_action` should be set.
+	//
 	// enum: none,view,edit
-	// Cannot be changed to 'edit'
-	RequirePersonalInfoAccessApproval  string         `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,require_personal_info_access_approval,oneof=none view edit"` //nolint:lll
-	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                           //nolint:lll
-	RequireWatchApproval               bool           `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                           //nolint:lll
-	RequireMembersToJoinParent         bool           `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                                                   //nolint:lll
+	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit,strengthening_requires_approval_change_action"` //nolint:lll
+	// Nullable
+	//
+	// Strengthened if the new value is > `NOW()` and > the old value, or if the new value is > `NOW()` and the old value is `null`.
+	//
+	// Not considered strengthened if the group doesn't have any participants.
+	//
+	// If it is strengthened, `approval_change_action` must be set.
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	// Strengthened if the new value is `true` and the old value is `false`.
+	//
+	// Not considered strengthened if the group doesn't have any participants.
+	//
+	// If it is strengthened, `approval_change_action` must be set.
+	RequireWatchApproval       bool `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                       //nolint:lll
+
+	// Must be present only if a `require_*` field is strengthened.
+	//
+	// If `empty`, we remove all participants from the group,
+	// and we remove all the pending requests to the group.
+	//
+	// If `reinvite`, we remove all participants from the group,
+	// we remove all the pending requests to the group,
+	// and we invite all the participants again (`invitation` in `groups_pending_requests`).
+	//
+	// Additionally, if `require_lock_membership_approval_until` is strengthened,
+	// all pending leave requests are removed.
+	//
+	// enum: empty,reinvite
+	ApprovalChangeAction string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
 
 	// Nullable
 	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
@@ -103,9 +143,6 @@ type groupUpdateInput struct {
 //
 //		Setting `enforce_max_participants` to true while keeping `max_participants` null or setting `max_participants` to null
 //		while keeping `enforce_max_participants` = true will cause the "bad request" error.
-//
-//
-//		Changing `require_personal_info_access_approval` to 'edit' will cause the "bad request" error.
 //	parameters:
 //		- name: group_id
 //			in: path
@@ -160,14 +197,22 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 		service.MustNotBeError(err)
 
+		groupHasParticipants := groupStore.HasParticipants(groupID)
+
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(r, &currentGroupData, s)
+		formData, err = validateUpdateGroupInput(r, groupHasParticipants, &currentGroupData, s)
 		if err != nil {
 			apiErr = service.ErrInvalidRequest(err)
 			return apiErr.Error // rollback
 		}
 
 		dbMap := formData.ConstructMapForDB()
+
+		var approvalChangeAction string
+		if _, ok := dbMap["approval_change_action"]; ok {
+			approvalChangeAction = dbMap["approval_change_action"].(string)
+			delete(dbMap, "approval_change_action")
+		}
 
 		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
 		if apiErr != service.NoError {
@@ -178,8 +223,19 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			return apiErr.Error // rollback
 		}
 
+		if approvalChangeAction != "" {
+			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
+			s.GroupMembershipChanges().InsertEntries(user.GroupID, groupID, participantIDs, "removed_due_to_approval_change")
+			s.GroupGroups().RemoveMembersOfGroup(groupID, participantIDs)
+
+			// If the approval_change_action is 'reinvite', we need to reinvite the participants.
+			if approvalChangeAction == "reinvite" {
+				s.GroupPendingRequests().InviteParticipants(groupID, participantIDs)
+			}
+		}
+
 		service.MustNotBeError(refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, user.GroupID, dbMap, currentGroupData.IsPublic, currentGroupData.FrozenMembership))
+			groupStore, groupID, user.GroupID, dbMap, &currentGroupData, approvalChangeAction))
 
 		// update the group
 		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())
@@ -276,23 +332,11 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 // with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
-	previousIsPublicValue, previousFrozenMembershipValue bool,
+	currentGroupData *groupUpdateInput, approvalChangeAction string,
 ) error {
-	var shouldRefusePending bool
+	if shouldRefuseGroupPendingRequests(dbMap, currentGroupData, approvalChangeAction) {
+		pendingTypesToRefuse := getGroupPendingRequestTypesToRefuse(dbMap, currentGroupData, approvalChangeAction)
 
-	pendingTypesToHandle := make([]string, 0, 3)
-	pendingTypesToHandle = append(pendingTypesToHandle, "join_request")
-
-	// if is_public is going to be changed from true to false
-	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && previousIsPublicValue {
-		shouldRefusePending = true
-	}
-	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !previousFrozenMembershipValue {
-		shouldRefusePending = true
-		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
-	}
-
-	if shouldRefusePending {
 		service.MustNotBeError(store.Exec(`
 			INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)
 			SELECT group_id, member_id,
@@ -304,18 +348,67 @@ func refuseSentGroupRequestsIfNeeded(
 				NOW(), ?
 			FROM group_pending_requests
 			WHERE group_id = ? AND type IN (?)
-			FOR UPDATE`, initiatorID, groupID, pendingTypesToHandle).Error())
+			FOR UPDATE`, initiatorID, groupID, pendingTypesToRefuse).Error())
+
 		// refuse sent group requests
 		return store.GroupPendingRequests().
-			Where("type IN (?)", pendingTypesToHandle).
+			Where("type IN (?)", pendingTypesToRefuse).
 			Where("group_id = ?", groupID).
 			Delete().Error()
 	}
 	return nil
 }
 
+func getGroupPendingRequestTypesToRefuse(
+	dbMap map[string]interface{},
+	currentGroupData *groupUpdateInput,
+	approvalChangeAction string,
+) []string {
+	pendingTypesToHandle := []string{"join_request"}
+
+	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
+		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
+	}
+
+	// If a require_* fields is strengthened, we want to refuse all pending join requests.
+	if approvalChangeAction != "" {
+		if _, ok := dbMap["require_lock_membership_approval_until"]; ok {
+			newRequireLockMembershipApprovalUntil := dbMap["require_lock_membership_approval_until"].(*database.Time)
+
+			// We can pass "true" for "groupHasParticipants" because we know there are participants, since approvalChangeAction is not nil.
+			if requireLockMembershipApprovalUntilIsStrengthened(
+				true,
+				currentGroupData.RequireLockMembershipApprovalUntil,
+				newRequireLockMembershipApprovalUntil,
+			) {
+				pendingTypesToHandle = append(pendingTypesToHandle, "leave_request")
+			}
+		}
+	}
+	return pendingTypesToHandle
+}
+
+func shouldRefuseGroupPendingRequests(
+	dbMap map[string]interface{},
+	currentGroupData *groupUpdateInput,
+	approvalChangeAction string,
+) bool {
+	// If is_public is going to be changed from true to false
+	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && currentGroupData.IsPublic {
+		return true
+	}
+	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
+		return true
+	}
+	if approvalChangeAction != "" {
+		return true
+	}
+
+	return false
+}
+
 func validateUpdateGroupInput(
-	r *http.Request, currentGroupData *groupUpdateInput, store *database.DataStore,
+	r *http.Request, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
 ) (*formdata.FormData, error) {
 	input := &groupUpdateInput{}
 	formData := formdata.NewFormData(input)
@@ -327,14 +420,23 @@ func validateUpdateGroupInput(
 		constructChangingRequiresCanManageAtLeastValidator(formData, store, currentGroupData))
 	formData.RegisterTranslation("changing_requires_can_manage_at_least", "only managers with 'can_manage' >= '%[3]s' can modify this field")
 
-	formData.RegisterValidation("require_personal_info_access_approval", constructRequirePersonalInfoAccessApprovalValidator(formData))
-	formData.RegisterTranslation("require_personal_info_access_approval", "cannot be changed to 'edit'")
-
 	formData.RegisterValidation("max_participants", constructMaxParticipantsValidator(formData, currentGroupData))
 	formData.RegisterTranslation("max_participants", "cannot be set to null when 'enforce_max_participants' is true")
 
 	formData.RegisterValidation("enforce_max_participants", constructEnforceMaxParticipantsValidator(formData, currentGroupData))
 	formData.RegisterTranslation("enforce_max_participants", "cannot be set to true when 'max_participants' is null")
+
+	formData.RegisterValidation(
+		"strengthening_requires_approval_change_action",
+		constructStrengtheningRequiresFieldValidator(formData, groupHasParticipants, currentGroupData),
+	)
+	formData.RegisterTranslation("strengthening_requires_approval_change_action", "Strengthening requires parameter approval_change_action")
+
+	formData.RegisterValidation(
+		"not_set_when_no_field_strengthened",
+		constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants, currentGroupData),
+	)
+	formData.RegisterTranslation("not_set_when_no_field_strengthened", "must be present only if a 'require_*' field is strengthened")
 
 	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
 
@@ -368,12 +470,6 @@ func constructChangingRequiresCanManageAtLeastValidator(formData *formdata.FormD
 	})
 }
 
-func constructRequirePersonalInfoAccessApprovalValidator(formData *formdata.FormData) validator.Func {
-	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
-		return fl.Field().Interface() != "edit"
-	})
-}
-
 func constructMaxParticipantsValidator(formData *formdata.FormData, currentGroupData *groupUpdateInput) validator.Func {
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
 		if fl.Field().Kind() == reflect.Ptr {
@@ -402,4 +498,144 @@ func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, curre
 		}
 		return true
 	})
+}
+
+// requirePersonalInfoAccessApprovalIsStrengthened checks whether the field `require_personal_info_access_approval`
+// is strengthened.
+func requirePersonalInfoAccessApprovalIsStrengthened(groupHasParticipants bool, oldValue, newValue string) bool {
+	if !groupHasParticipants {
+		return false
+	}
+
+	// If the field is empty, the value is not changed, so it is not strengthened.
+	if newValue == "" {
+		return false
+	}
+
+	switch oldValue {
+	case enumNone:
+		return newValue != enumNone
+	case enumView:
+		return newValue == enumEdit
+	}
+
+	return false
+}
+
+// requireLockMembershipApprovalUntilIsStrengthened checks whether the field `require_lock_membership_approval_until`
+// is strengthened.
+func requireLockMembershipApprovalUntilIsStrengthened(groupHasParticipants bool, oldValue, newValue *database.Time) bool {
+	if !groupHasParticipants {
+		return false
+	}
+
+	if oldValue == nil {
+		if newValue == nil {
+			return false
+		}
+
+		newValueDate := (*time.Time)(newValue)
+
+		// The field is considered strengthened only if the new value is > NOW().
+		return newValueDate.After(time.Now())
+	} else {
+		newValueDate := (*time.Time)(newValue)
+
+		// The field is not considered strengthened if the new value is <= NOW().
+		if newValueDate != nil && newValueDate.Before(time.Now().Add(time.Second)) {
+			return false
+		}
+
+		oldValueDate := (*time.Time)(oldValue)
+
+		return newValue != nil && newValueDate.Compare(*oldValueDate) == 1
+	}
+}
+
+// requireWatchApprovalIsStrengthened checks whether the field `require_watch_approval` is strengthened.
+func requireWatchApprovalIsStrengthened(groupHasParticipants, oldValue, newValue bool) bool {
+	if !groupHasParticipants {
+		return false
+	}
+
+	return !oldValue && newValue
+}
+
+func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, currentGroupData *groupUpdateInput) bool {
+	switch fl.FieldName() {
+	case "require_personal_info_access_approval":
+		newValue := fl.Field().String()
+
+		return requirePersonalInfoAccessApprovalIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequirePersonalInfoAccessApproval,
+			newValue,
+		)
+	case "require_lock_membership_approval_until":
+		newValue := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+
+		return requireLockMembershipApprovalUntilIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequireLockMembershipApprovalUntil,
+			newValue,
+		)
+	case "require_watch_approval":
+		newValue := fl.Field().Bool()
+
+		return requireWatchApprovalIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequireWatchApproval,
+			newValue,
+		)
+	}
+
+	return false
+}
+
+func constructStrengtheningRequiresFieldValidator(
+	formData *formdata.FormData,
+	groupHasParticipants bool,
+	currentGroupData *groupUpdateInput,
+) validator.Func {
+	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
+		if !fieldIsStrengthened(fl, groupHasParticipants, currentGroupData) {
+			return true
+		} else {
+			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").String()
+
+			return approvalChangeAction != ""
+		}
+	})
+}
+
+func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, currentGroupData *groupUpdateInput) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		newRequirePersonalInfoAccessApproval := fl.Top().Elem().FieldByName("RequirePersonalInfoAccessApproval").Interface().(string)
+		newRequireLockMembershipApprovalUntil := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+		newRequireWatchApproval := fl.Top().Elem().FieldByName("RequireWatchApproval").Interface().(bool)
+
+		// We don't need to check that approval_change_action is set,
+		// because this validator is called only if it is (it has omitempty).
+
+		// There must be no require_* fields strengthened.
+		if requirePersonalInfoAccessApprovalIsStrengthened(
+			groupHasParticipants,
+			currentGroupData.RequirePersonalInfoAccessApproval,
+			newRequirePersonalInfoAccessApproval,
+		) ||
+			requireLockMembershipApprovalUntilIsStrengthened(
+				groupHasParticipants,
+				currentGroupData.RequireLockMembershipApprovalUntil,
+				newRequireLockMembershipApprovalUntil,
+			) ||
+			requireWatchApprovalIsStrengthened(
+				groupHasParticipants,
+				currentGroupData.RequireWatchApproval,
+				newRequireWatchApproval,
+			) {
+			return true
+		} else {
+			return false
+		}
+	}
 }

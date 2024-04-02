@@ -31,24 +31,18 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the application config is:$`, ctx.TheApplicationConfigIs)
 	s.Step(`^the context variable "([^"]*)" is "([^"]*)"$`, ctx.TheContextVariableIs)
 
-	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
-	s.Step(`^there is a group with "([^"]*)"$`, ctx.ThereIsAGroupWith)
-	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
-	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
-	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
-	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
-	s.Step(
-		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
-		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
-	)
-	s.Step(`allUsersGroup is defined as the group (@\w+)$`, ctx.AllUsersGroupIsDefinedAsTheGroup)
+	ctx.registerFeaturesForGroups(s)
 
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (@\w+)$`, ctx.IAmAManagerOfTheGroup)
 	s.Step(`^(@\w+) is a manager of the group (@\w+) and can watch its members$`, ctx.UserIsAManagerOfTheGroupAndCanWatchItsMembers)
 	s.Step(`^I am a manager of the group (@\w+) and can watch its members$`, ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
 	s.Step(`(@\w+) is a manager of the group (@\w+) and can grant group access`, ctx.UserIsAManagerOfTheGroupAndCanGrantGroupAccess)
-	s.Step(`^the group (@\w+) is a descendant of the group (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
+	s.Step(
+		`(@\w+) is a manager of the group (@\w+) and can manage memberships and group`,
+		ctx.UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
+	)
+
 	s.Step(`^there are the following items:$`, ctx.ThereAreTheFollowingItems)
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
@@ -60,6 +54,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
+
+	ctx.registerFeaturesForGroupMembershipChanges(s)
+	ctx.registerFeaturesForGroupPendingRequests(s)
 
 	s.Step(`^there are the following results:$`, ctx.ThereAreTheFollowingResults)
 	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)

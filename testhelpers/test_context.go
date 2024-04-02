@@ -207,3 +207,9 @@ func (ctx *TestContext) initDB() error {
 
 	return nil
 }
+
+func mustNotBeError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

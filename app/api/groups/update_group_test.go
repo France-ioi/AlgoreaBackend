@@ -37,9 +37,10 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 			database.ClearAllDBEnums()
 			database.MockDBEnumQueries(mock)
 			defer database.ClearAllDBEnums()
+
 			store := database.NewDataStore(db)
 			r, _ := http.NewRequest("PUT", "/", strings.NewReader(tt.json))
-			_, err := validateUpdateGroupInput(r, &groupUpdateInput{
+			_, err := validateUpdateGroupInput(r, true, &groupUpdateInput{
 				CanManageValue: store.GroupManagers().CanManageIndexByName("memberships_and_group"),
 			}, store)
 			if (err != nil) != tt.wantErr {
@@ -65,6 +66,8 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.
 		mock.ExpectQuery("SELECT .* FOR UPDATE").
 			WithArgs(2, 1).
 			WillReturnRows(sqlmock.NewRows([]string{"is_public", "can_manage_value"}).AddRow(true, int64(3)))
+		mock.ExpectQuery("SELECT 1 FROM .*").
+			WillReturnRows(sqlmock.NewRows([]string{"1"}))
 		database.ClearAllDBEnums()
 		database.MockDBEnumQueries(mock)
 		mock.ExpectExec("INSERT INTO group_membership_changes .+").
@@ -80,6 +83,8 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.
 		mock.ExpectQuery("SELECT .* FOR UPDATE").
 			WithArgs(2, 1).
 			WillReturnRows(sqlmock.NewRows([]string{"is_public", "can_manage_value"}).AddRow(true, int64(3)))
+		mock.ExpectQuery("SELECT 1 FROM .*").
+			WillReturnRows(sqlmock.NewRows([]string{"1"}))
 		database.ClearAllDBEnums()
 		database.MockDBEnumQueries(mock)
 		mock.ExpectExec("INSERT INTO group_membership_changes .+").WithArgs(2, 1, "join_request").
@@ -97,6 +102,8 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 		mock.ExpectQuery("SELECT .* FOR UPDATE").
 			WithArgs(2, 1).
 			WillReturnRows(sqlmock.NewRows([]string{"is_public", "can_manage_value"}).AddRow(false, int64(3)))
+		mock.ExpectQuery("SELECT 1 FROM .*").
+			WillReturnRows(sqlmock.NewRows([]string{"1"}))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()

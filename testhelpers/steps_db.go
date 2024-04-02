@@ -27,7 +27,7 @@ const (
 )
 
 func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
-	db := ctx.db()
+	db = ctx.db()
 
 	if len(data.Rows) > 1 {
 		referenceColumnIndex := -1
@@ -261,7 +261,7 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 }
 
 func (ctx *TestContext) TableShouldBeEmpty(table string) error { //nolint
-	db := ctx.db()
+	db = ctx.db()
 	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", table)) //nolint:gosec
 	if err != nil {
 		return err
@@ -283,7 +283,7 @@ func (ctx *TestContext) TableShouldBeEmpty(table string) error { //nolint
 func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(table string, column, valuesStr string) error { //nolint
 	values := parseMultipleValuesString(valuesStr)
 
-	db := ctx.db()
+	db = ctx.db()
 	where, parameters := constructWhereForColumnValues([]string{column}, values, true)
 	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", table, where), parameters...) //nolint:gosec
 	if err != nil {
@@ -582,7 +582,7 @@ func getColumnIndexes(data *messages.PickleStepArgument_PickleTable, columns []s
 func (ctx *TestContext) getSQLRowsMatching(table string, columns, filterColumns, filterValues []string, whereIn bool) (
 	*sql.Rows, func(), error,
 ) {
-	db := ctx.db()
+	db = ctx.db()
 
 	selectsJoined := strings.Join(columns, ", ")
 
@@ -598,7 +598,7 @@ func (ctx *TestContext) getSQLRowsMatching(table string, columns, filterColumns,
 
 // getNbRowsMatching returns how many rows matches one of values at any column.
 func (ctx *TestContext) getNbRowsMatching(table string, columns, values []string) (int, error) {
-	db := ctx.db()
+	db = ctx.db()
 
 	// check that the rows are not present anymore
 	where, parameters := constructWhereForColumnValues(columns, values, true)
