@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.17.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.16.0...v2.17.0) - 2024-04-04
+- update group service: handle change in approval policies
+
 ## [v2.16.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.15.0...v2.16.0) - 2024-03-14
 - authMiddleware: explicitely disallow access if the token > max token size
 - Get group service: add required approval info
