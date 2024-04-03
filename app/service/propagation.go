@@ -20,15 +20,21 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 		client := http.Client{
 			Timeout: PropagationEndpointTimeout,
 		}
-		response, err := client.Get(endpoint + "?types=" + strings.Join(types, ",")) //nolint:bodyclose Closed in defer.
-		defer func(response *http.Response) {
-			_ = response.Body.Close()
-		}(response)
-
-		if err != nil || response.StatusCode != http.StatusOK {
-			logging.Errorf("Propagation endpoint error: status=%v, error=%v", response.StatusCode, err)
+		response, err := client.Get(endpoint + "?types=" + strings.Join(types, ","))
+		if err != nil {
+			logging.Errorf("Propagation endpoint error: %v", err)
 
 			endpointFailed = true
+		} else {
+			defer func(response *http.Response) {
+				_ = response.Body.Close()
+			}(response)
+
+			if response.StatusCode != http.StatusOK {
+				logging.Errorf("Propagation endpoint error: status=%v", response.StatusCode)
+
+				endpointFailed = true
+			}
 		}
 	}
 

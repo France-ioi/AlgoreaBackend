@@ -22,6 +22,7 @@ func TestSchedulePropagation(t *testing.T) {
 	tests := []struct {
 		name                 string
 		args                 args
+		endpointCallErr      error
 		endpointResponseCode int
 		loggedError          string
 		propagated           bool
@@ -32,6 +33,15 @@ func TestSchedulePropagation(t *testing.T) {
 				endpoint: "",
 			},
 			propagated: true,
+		},
+		{
+			name: "should propagate sync when the endpoint call returns an error",
+			args: args{
+				endpoint: "https://example.com",
+			},
+			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
+			endpointCallErr: fmt.Errorf("error"),
+			propagated:      true,
 		},
 		{
 			name: "should not propagate now (async) when endpoint is defined, and endpoint must be called",
@@ -46,7 +56,7 @@ func TestSchedulePropagation(t *testing.T) {
 			args: args{
 				endpoint: "https://example.com",
 			},
-			loggedError:          "Propagation endpoint error: status=500, error=<nil>",
+			loggedError:          "Propagation endpoint error: status=500",
 			endpointResponseCode: http.StatusInternalServerError,
 			propagated:           true,
 		},
@@ -72,13 +82,25 @@ func TestSchedulePropagation(t *testing.T) {
 			defer restoreFunc()
 
 			if tt.args.endpoint != "" {
-				httpmock.RegisterStubRequest(
-					httpmock.NewStubRequest(
-						"GET",
-						tt.args.endpoint+"?types=permissions",
-						httpmock.NewStringResponder(tt.endpointResponseCode, ""),
-					),
-				)
+				if tt.endpointCallErr == nil {
+					httpmock.RegisterStubRequest(
+						httpmock.NewStubRequest(
+							"GET",
+							tt.args.endpoint+"?types=permissions",
+							httpmock.NewStringResponder(tt.endpointResponseCode, ""),
+						),
+					)
+				} else {
+					httpmock.RegisterStubRequest(
+						httpmock.NewStubRequest(
+							"GET",
+							tt.args.endpoint+"?types=permissions",
+							func(*http.Request) (*http.Response, error) {
+								return nil, tt.endpointCallErr
+							},
+						),
+					)
+				}
 			}
 
 			service.SchedulePropagation(store, tt.args.endpoint, []string{"permissions"})
