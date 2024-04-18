@@ -25,7 +25,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
 	testhelpers.RunConcurrently(func() {
 		dataStore := database.NewDataStoreWithContext(context.Background(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
-			ds.PermissionsGranted().ComputeAllAccess()
+			ds.SchedulePermissionsPropagation()
 			return nil
 		}))
 	}, 30)
