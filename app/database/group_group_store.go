@@ -21,10 +21,6 @@ func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
 	return result
 }
 
-func (s *GroupGroupStore) createNewAncestors() {
-	s.DataStore.createNewAncestors("groups", "group")
-}
-
 // ErrRelationCycle is returned by CreateRelation() if the relation is impossible because it would
 // create a cycle in the groups_groups graph.
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
@@ -144,8 +140,8 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 
 	// recalculate relations
 	// It seems (to be verified), that this propagation has to be called right now
-	// because it's result is used in the following steps.
-	s.GroupGroups().createNewAncestors()
+	// because it's result is uin the following steps.
+	s.createNewAncestors("groups", "group")
 
 	var idsToDelete []int64
 	// besides the group with id = groupID, we also want to delete its descendants

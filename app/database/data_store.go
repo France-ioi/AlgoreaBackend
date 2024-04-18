@@ -204,11 +204,11 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 
 	if triggersToRun.GroupAncestors {
 		triggersToRun.GroupAncestors = false
-		s.GroupGroups().createNewAncestors()
+		s.createNewAncestors("groups", "group")
 	}
 	if triggersToRun.ItemAncestors {
 		triggersToRun.ItemAncestors = false
-		s.ItemItems().CreateNewAncestors()
+		s.createNewAncestors("items", "item")
 	}
 	if triggersToRun.Permissions {
 		triggersToRun.Permissions = false
