@@ -224,24 +224,32 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 
 // ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
 func (s *DataStore) ScheduleResultsPropagation() {
+	s.mustBeInTransaction()
+
 	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
 	triggersToRun.Results = true
 }
 
 // ScheduleGroupsAncestorsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
 func (s *DataStore) ScheduleGroupsAncestorsPropagation() {
+	s.mustBeInTransaction()
+
 	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
 	triggersToRun.GroupAncestors = true
 }
 
 // ScheduleItemsAncestorsPropagation schedules a run of the items ancestors propagation after the transaction commit.
 func (s *DataStore) ScheduleItemsAncestorsPropagation() {
+	s.mustBeInTransaction()
+
 	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
 	triggersToRun.ItemAncestors = true
 }
 
 // SchedulePermissionsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
 func (s *DataStore) SchedulePermissionsPropagation() {
+	s.mustBeInTransaction()
+
 	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
 	triggersToRun.Permissions = true
 }
