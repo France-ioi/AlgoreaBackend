@@ -326,7 +326,9 @@ func (s *ResultStore) propagate() (err error) {
 		s.SchedulePermissionsPropagation()
 		// we should compute attempts again as new permissions were set and
 		// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-		return s.propagate()
+		s.ScheduleResultsPropagation()
+
+		return nil
 	}
 	return nil
 }

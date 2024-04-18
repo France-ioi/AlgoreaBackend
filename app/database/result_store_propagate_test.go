@@ -23,7 +23,9 @@ func TestResultStore_Propagate_RecoverError(t *testing.T) {
 		WithArgs("listener_propagate", 10).WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
-		return s.Results().propagate()
+		s.ScheduleResultsPropagation()
+
+		return nil
 	})
 	assert.Equal(t, expectedError, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
@@ -51,7 +53,9 @@ func TestResultStore_Propagate_RecoverRuntimeError(t *testing.T) {
 		}()
 
 		_ = NewDataStore(db).InTransaction(func(s *DataStore) error {
-			return s.Results().propagate()
+			s.ScheduleResultsPropagation()
+
+			return nil
 		})
 
 		return false, nil
@@ -73,7 +77,9 @@ func TestResultStore_Propagate_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeo
 	dbMock.ExpectRollback()
 
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
-		return s.Results().propagate()
+		s.ScheduleResultsPropagation()
+
+		return nil
 	})
 	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
