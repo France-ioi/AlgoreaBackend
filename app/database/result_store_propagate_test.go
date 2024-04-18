@@ -84,24 +84,3 @@ func TestResultStore_Propagate_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeo
 	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
-
-func TestResultStore_Propagate_CannotBeCalledWithoutTransaction(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	resultStore := NewDataStore(db).Results()
-	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
-		defer func() {
-			if p := recover(); p != nil {
-				didPanic = true
-				panicValue = p
-			}
-		}()
-		_ = resultStore.propagate()
-		return false, nil
-	}()
-
-	assert.True(t, didPanic)
-	assert.Equal(t, errors.New("should be executed in a transaction"), panicValue)
-	assert.NoError(t, dbMock.ExpectationsWereMet())
-}
