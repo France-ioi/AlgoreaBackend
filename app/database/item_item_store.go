@@ -21,18 +21,6 @@ func (s *ItemItemStore) CreateNewAncestors() {
 	s.DataStore.createNewAncestors("items", "item")
 }
 
-// After is a "listener" that calls ItemItemStore::CreateNewAncestors(),
-// PermissionGrantedStore::computeAllAccess() and schedules a run of ResultStore.propagate().
-func (s *ItemItemStore) After() (err error) {
-	s.mustBeInTransaction()
-	defer recoverPanics(&err)
-
-	s.CreateNewAncestors()
-	s.PermissionsGranted().computeAllAccess()
-	s.ScheduleResultsPropagation()
-	return nil
-}
-
 // ContentViewPropagationNameByIndex returns the content view propagation level name with the given index from the enum.
 func (s *ItemItemStore) ContentViewPropagationNameByIndex(index int) string {
 	getterFunc := func() interface{} { return requireDBEnumNameByIndex("items_items.content_view_propagation", index) }

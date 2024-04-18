@@ -817,7 +817,10 @@ func Test_FindItemPath(t *testing.T) {
 			var got []items.ItemPath
 			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
 				s.ScheduleGroupsAncestorsPropagation()
-				assert.NoError(t, s.ItemItems().After())
+				s.ScheduleItemsAncestorsPropagation()
+				s.SchedulePermissionsPropagation()
+				s.ScheduleResultsPropagation()
+
 				return nil
 			}))
 			got = items.FindItemPaths(

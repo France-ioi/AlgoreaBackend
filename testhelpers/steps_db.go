@@ -228,7 +228,11 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
-		return store.ItemItems().After()
+		store.ScheduleItemsAncestorsPropagation()
+		store.SchedulePermissionsPropagation()
+		store.ScheduleResultsPropagation()
+
+		return nil
 	})
 	if err != nil {
 		return err
