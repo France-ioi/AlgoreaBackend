@@ -19,16 +19,15 @@ import "database/sql"
 //   - The function may loop endlessly if items_items is a cyclic graph.
 //   - Processed group-item pairs are removed from permissions_propagate.
 func (s *PermissionGrantedStore) computeAllAccess() {
-	s.mustBeInTransaction()
+	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		// ------------------------------------------------------------------------------------
+		// Here we declare and prepare DB statements that will be used by the function later on
+		// ------------------------------------------------------------------------------------
+		var stmtMarkChildrenOfChildrenAsSelf, stmtDeleteProcessedChildren, stmtUpdatePermissionsGenerated, stmtMarkSelfAsChildren *sql.Stmt
+		var err error
 
-	// ------------------------------------------------------------------------------------
-	// Here we declare and prepare DB statements that will be used by the function later on
-	// ------------------------------------------------------------------------------------
-	var stmtMarkChildrenOfChildrenAsSelf, stmtDeleteProcessedChildren, stmtUpdatePermissionsGenerated, stmtMarkSelfAsChildren *sql.Stmt
-	var err error
-
-	// marking group-item pairs whose parents are marked with propagate_to = 'children' as 'self'
-	const queryMarkChildrenOfChildrenAsSelf = `
+		// marking group-item pairs whose parents are marked with propagate_to = 'children' as 'self'
+		const queryMarkChildrenOfChildrenAsSelf = `
 		INSERT INTO permissions_propagate (group_id, item_id, propagate_to)
 		SELECT
 			parents.group_id,
@@ -41,18 +40,18 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 			ON parents_propagate.group_id = parents.group_id AND parents_propagate.item_id = parents.item_id
 		WHERE parents_propagate.propagate_to = 'children'
 		ON DUPLICATE KEY UPDATE propagate_to='self'`
-	stmtMarkChildrenOfChildrenAsSelf, err = s.db.CommonDB().Prepare(queryMarkChildrenOfChildrenAsSelf)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtMarkChildrenOfChildrenAsSelf.Close()) }()
+		stmtMarkChildrenOfChildrenAsSelf, err = s.db.CommonDB().Prepare(queryMarkChildrenOfChildrenAsSelf)
+		mustNotBeError(err)
+		defer func() { mustNotBeError(stmtMarkChildrenOfChildrenAsSelf.Close()) }()
 
-	// deleting 'children' permissions_propagate
-	const queryDeleteProcessedChildren = `DELETE FROM permissions_propagate WHERE propagate_to = 'children'`
-	stmtDeleteProcessedChildren, err = s.db.CommonDB().Prepare(queryDeleteProcessedChildren)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtDeleteProcessedChildren.Close()) }()
+		// deleting 'children' permissions_propagate
+		const queryDeleteProcessedChildren = `DELETE FROM permissions_propagate WHERE propagate_to = 'children'`
+		stmtDeleteProcessedChildren, err = s.db.CommonDB().Prepare(queryDeleteProcessedChildren)
+		mustNotBeError(err)
+		defer func() { mustNotBeError(stmtDeleteProcessedChildren.Close()) }()
 
-	// computation for group-item pairs marked as 'self' in permissions_propagate (so all of them)
-	const queryUpdatePermissionsGenerated = `
+		// computation for group-item pairs marked as 'self' in permissions_propagate (so all of them)
+		const queryUpdatePermissionsGenerated = `
 		INSERT INTO permissions_generated
 			(group_id, item_id, can_view_generated, can_grant_view_generated, can_watch_generated, can_edit_generated, is_owner_generated)
 		SELECT
@@ -98,39 +97,42 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 			can_watch_generated = VALUES(can_watch_generated),
 			can_edit_generated = VALUES(can_edit_generated),
 			is_owner_generated = VALUES(is_owner_generated)`
-	stmtUpdatePermissionsGenerated, err = s.db.CommonDB().Prepare(queryUpdatePermissionsGenerated)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtUpdatePermissionsGenerated.Close()) }()
+		stmtUpdatePermissionsGenerated, err = s.db.CommonDB().Prepare(queryUpdatePermissionsGenerated)
+		mustNotBeError(err)
+		defer func() { mustNotBeError(stmtUpdatePermissionsGenerated.Close()) }()
 
-	// marking 'self' permissions_propagate (so all of them) as 'children'
-	// (although all existing rows in permissions_propagate have propagate_to='self' at this moment,
-	//  we still need to use WHERE clause in order for MySQL to use indexes,
-	//  otherwise the query can take minutes to execute)
-	const queryMarkSelfAsChildren = `
+		// marking 'self' permissions_propagate (so all of them) as 'children'
+		// (although all existing rows in permissions_propagate have propagate_to='self' at this moment,
+		//  we still need to use WHERE clause in order for MySQL to use indexes,
+		//  otherwise the query can take minutes to execute)
+		const queryMarkSelfAsChildren = `
 		UPDATE permissions_propagate
 		SET propagate_to = 'children' WHERE propagate_to='self'`
-	stmtMarkSelfAsChildren, err = s.db.CommonDB().Prepare(queryMarkSelfAsChildren)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtMarkSelfAsChildren.Close()) }()
+		stmtMarkSelfAsChildren, err = s.db.CommonDB().Prepare(queryMarkSelfAsChildren)
+		mustNotBeError(err)
+		defer func() { mustNotBeError(stmtMarkSelfAsChildren.Close()) }()
 
-	// ------------------------------------------------------------------------------------
-	// Here we execute the statements
-	// ------------------------------------------------------------------------------------
-	hasChanges := true
-	for hasChanges {
-		_, err = stmtMarkChildrenOfChildrenAsSelf.Exec()
-		mustNotBeError(err)
-		_, err = stmtDeleteProcessedChildren.Exec()
-		mustNotBeError(err)
-		_, err = stmtUpdatePermissionsGenerated.Exec()
-		mustNotBeError(err)
+		// ------------------------------------------------------------------------------------
+		// Here we execute the statements
+		// ------------------------------------------------------------------------------------
+		hasChanges := true
+		for hasChanges {
+			_, err = stmtMarkChildrenOfChildrenAsSelf.Exec()
+			mustNotBeError(err)
+			_, err = stmtDeleteProcessedChildren.Exec()
+			mustNotBeError(err)
+			_, err = stmtUpdatePermissionsGenerated.Exec()
+			mustNotBeError(err)
 
-		var result sql.Result
-		result, err = stmtMarkSelfAsChildren.Exec()
-		mustNotBeError(err)
-		var rowsAffected int64
-		rowsAffected, err = result.RowsAffected()
-		mustNotBeError(err)
-		hasChanges = rowsAffected > 0
-	}
+			var result sql.Result
+			result, err = stmtMarkSelfAsChildren.Exec()
+			mustNotBeError(err)
+			var rowsAffected int64
+			rowsAffected, err = result.RowsAffected()
+			mustNotBeError(err)
+			hasChanges = rowsAffected > 0
+		}
+
+		return nil
+	}))
 }
