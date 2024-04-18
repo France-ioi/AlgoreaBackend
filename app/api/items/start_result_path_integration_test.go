@@ -443,7 +443,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			store := database.NewDataStore(db)
 			var got []map[string]interface{}
 			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
-				assert.NoError(t, s.GroupGroups().After())
+				s.ScheduleGroupsAncestorsPropagation()
 				got = items.GetDataForResultPathStart(s, tt.args.participantID, tt.args.ids)
 				return nil
 			}))

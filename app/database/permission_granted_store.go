@@ -7,15 +7,6 @@ type PermissionGrantedStore struct {
 	*DataStore
 }
 
-// After is a "listener" that calls PermissionGrantedStore::computeAllAccess().
-func (s *PermissionGrantedStore) After() (err error) {
-	s.mustBeInTransaction()
-	defer recoverPanics(&err)
-
-	s.computeAllAccess()
-	return nil
-}
-
 // PermissionIndexByKindAndName returns the index of the given permission in the enum.
 func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string) int {
 	getterFunc := func() interface{} { return requireDBEnumIndexByName("permissions_granted.can_"+kind, name) }

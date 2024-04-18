@@ -27,7 +27,9 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-		return trStore.GroupGroups().After()
+		trStore.ScheduleGroupsAncestorsPropagation()
+
+		return nil
 	}))
 
 	tests := []struct {

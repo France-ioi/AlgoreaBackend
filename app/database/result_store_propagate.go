@@ -323,7 +323,7 @@ func (s *ResultStore) propagate() (err error) {
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
 		// generate permissions_generated from permissions_granted
-		mustNotBeError(s.PermissionsGranted().After())
+		s.SchedulePermissionsPropagation()
 		// we should compute attempts again as new permissions were set and
 		// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
 		return s.propagate()
