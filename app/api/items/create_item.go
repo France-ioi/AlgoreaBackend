@@ -221,6 +221,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError service.APIError, err error) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
+	propagationsToRun := []string{}
 	err = store.InTransaction(func(store *database.DataStore) error {
 		input := NewItemRequest{}
 		formData := formdata.NewFormData(&input)
@@ -268,12 +269,14 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 
 		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
 
-		store.ItemItems().CreateNewAncestors()
+		propagationsToRun = append(propagationsToRun, "items_ancestors")
 
 		return nil
 	})
 	if err == nil {
-		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
+		propagationsToRun = append(propagationsToRun, "permissions", "results")
+
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)
 	}
 
 	return itemID, apiError, err

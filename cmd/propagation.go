@@ -64,7 +64,10 @@ func init() { //nolint:gochecknoinits
 			// We use a lock because we don't want this process to be called concurrently.
 			err = database.NewDataStore(gormDB).WithNamedLock(propagationLockName, propagationLockTimeout, func(s *database.DataStore) error {
 				return s.InTransaction(func(store *database.DataStore) error {
-					return store.ItemItems().After()
+					store.ScheduleItemsAncestorsPropagation()
+					store.ScheduleResultsPropagation()
+
+					return nil
 				})
 			})
 			if err != nil {

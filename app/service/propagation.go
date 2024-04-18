@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
+
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -41,7 +43,13 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 	if endpoint == "" || endpointFailed {
 		// Sync.
 		err := store.InTransaction(func(store *database.DataStore) error {
-			return store.ItemItems().After()
+			if utils.Contains(types, "items_ancestors") {
+				store.ScheduleItemsAncestorsPropagation()
+			}
+
+			store.ScheduleResultsPropagation()
+
+			return nil
 		})
 		MustNotBeError(err)
 	}
