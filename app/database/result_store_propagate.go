@@ -31,22 +31,21 @@ const (
 // - after_update_permissions_generated
 // - before_delete_items_items.
 func (s *ResultStore) propagate() (err error) {
-	s.mustBeInTransaction()
-	defer recoverPanics(&err)
-
 	var groupsUnlocked int64
+	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		defer recoverPanics(&err)
 
-	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
-		// We mark as 'to_be_recomputed' results of all ancestors of items marked as 'to_be_recomputed'/'to_be_propagated'
-		// with appropriate attempt_id.
-		// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
-		// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
-		// to solve the descendant items. Chapters requiring explicit entry or placed outside of the scope
-		// of the attempts' root item are skipped).
-		// (This query can take more than 30 seconds to run when executed for the first time after the db migration)
-		mustNotBeError(s.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
-		mustNotBeError(s.Exec(`
+		// Use a lock so that we don't execute the listener multiple times in parallel
+		mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
+			// We mark as 'to_be_recomputed' results of all ancestors of items marked as 'to_be_recomputed'/'to_be_propagated'
+			// with appropriate attempt_id.
+			// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
+			// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
+			// to solve the descendant items. Chapters requiring explicit entry or placed outside of the scope
+			// of the attempts' root item are skipped).
+			// (This query can take more than 30 seconds to run when executed for the first time after the db migration)
+			mustNotBeError(s.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
+			mustNotBeError(s.Exec(`
 			CREATE TEMPORARY TABLE results_to_mark (
 				participant_id BIGINT(20) NOT NULL,
 				attempt_id BIGINT(20) NOT NULL,
@@ -54,9 +53,9 @@ func (s *ResultStore) propagate() (err error) {
 				result_exists TINYINT(1) NOT NULL,
 				KEY result_exists (result_exists)
 			)`).Error())
-		defer func() { mustNotBeError(s.Exec("DROP TEMPORARY TABLE results_to_mark").Error()) }()
+			defer func() { mustNotBeError(s.Exec("DROP TEMPORARY TABLE results_to_mark").Error()) }()
 
-		result := s.db.Exec(`
+			result := s.db.Exec(`
 			INSERT INTO results_to_mark (participant_id, attempt_id, item_id, result_exists)
 			WITH RECURSIVE results_to_insert (participant_id, attempt_id, item_id, result_exists) AS (
 					SELECT results.participant_id,
@@ -131,43 +130,43 @@ func (s *ResultStore) propagate() (err error) {
 				root_item_descendant.ancestor_item_id IS NOT NULL))
 			GROUP BY results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id
 		`)
-		mustNotBeError(result.Error)
+			mustNotBeError(result.Error)
 
-		if result.RowsAffected > 0 {
-			mustNotBeError(s.Exec(`
+			if result.RowsAffected > 0 {
+				mustNotBeError(s.Exec(`
 				INSERT IGNORE INTO results (participant_id, attempt_id, item_id, latest_activity_at)
 				SELECT
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, '1000-01-01 00:00:00'
 				FROM results_to_mark
 				WHERE NOT result_exists`).Error())
 
-			mustNotBeError(s.Exec(`
+				mustNotBeError(s.Exec(`
 				INSERT INTO results_propagate (participant_id, attempt_id, item_id, state)
 				SELECT
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
 				FROM results_to_mark
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
-		}
-		hasChanges := true
+			}
+			hasChanges := true
 
-		var updateStatement *sql.Stmt
+			var updateStatement *sql.Stmt
 
-		for hasChanges {
-			// We process only those objects that were marked as 'to_be_recomputed' and
-			// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
-			// This way we prevent infinite looping as we never process items that are ancestors of themselves
-			//
-			// For every object, we compute all the characteristics based on the children:
-			//  - latest_activity_at as the max of children's
-			//  - tasks_with_help, tasks_tried as the sum of children's per-item maximums
-			//  - children_validated as the number of children items with validated == 1
-			//  - validated, depending on the items_items.category and items.validation_type
-			//    (an item should have at least one validated child to become validated itself by the propagation)
-			if updateStatement == nil {
-				const updateQuery = `
+			for hasChanges {
+				// We process only those objects that were marked as 'to_be_recomputed' and
+				// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
+				// This way we prevent infinite looping as we never process items that are ancestors of themselves
+				//
+				// For every object, we compute all the characteristics based on the children:
+				//  - latest_activity_at as the max of children's
+				//  - tasks_with_help, tasks_tried as the sum of children's per-item maximums
+				//  - children_validated as the number of children items with validated == 1
+				//  - validated, depending on the items_items.category and items.validation_type
+				//    (an item should have at least one validated child to become validated itself by the propagation)
+				if updateStatement == nil {
+					const updateQuery = `
 					UPDATE results_propagate AS target_propagate ` +
-					// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
-					`JOIN (
+						// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
+						`JOIN (
 						SELECT *
 						FROM (
 							WITH marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
@@ -216,10 +215,10 @@ func (s *ResultStore) propagate() (err error) {
 							SUM(IFNULL(aggregated_children_results.score_computed, 0) * items_items.score_weight) /
 								COALESCE(NULLIF(SUM(items_items.score_weight), 0), 1) AS average_score
 						FROM items_items ` +
-					// We use LEFT JOIN LATERAL to aggregate results grouped by target_results.participant_id & items_items.child_item_id.
-					// The usual LEFT JOIN conditions in the ON clause would group results before joining which would produce
-					// wrong results.
-					`	LEFT JOIN LATERAL (
+						// We use LEFT JOIN LATERAL to aggregate results grouped by target_results.participant_id & items_items.child_item_id.
+						// The usual LEFT JOIN conditions in the ON clause would group results before joining which would produce
+						// wrong results.
+						`	LEFT JOIN LATERAL (
 							SELECT
 								MAX(validated) AS validated,
 								MIN(validated_at) AS validated_at,
@@ -271,21 +270,21 @@ func (s *ResultStore) propagate() (err error) {
 								ELSE children_stats.average_score
 							END, 0), 100)), 0),
 						target_propagate.state = 'to_be_propagated'`
-				updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
+					updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
+					mustNotBeError(err)
+					defer func() { mustNotBeError(updateStatement.Close()) }() //nolint:gocritic defer in for loop, possible resource leak.
+				}
+
+				result, err := updateStatement.Exec()
 				mustNotBeError(err)
-				defer func() { mustNotBeError(updateStatement.Close()) }() //nolint:gocritic defer in for loop, possible resource leak.
+
+				rowsAffected, err := result.RowsAffected()
+				mustNotBeError(err)
+				hasChanges = rowsAffected > 0
 			}
 
-			result, err := updateStatement.Exec()
-			mustNotBeError(err)
-
-			rowsAffected, err := result.RowsAffected()
-			mustNotBeError(err)
-			hasChanges = rowsAffected > 0
-		}
-
-		canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
-		result = s.db.Exec(`
+			canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
+			result = s.db.Exec(`
 			INSERT INTO permissions_granted
 				(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
 				SELECT
@@ -312,12 +311,15 @@ func (s *ResultStore) propagate() (err error) {
 				can_enter_from = IF(
 					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_from > VALUES(can_enter_from),
 					VALUES(can_enter_from), can_enter_from)`,
-			canViewContentIndex, canViewContentIndex)
+				canViewContentIndex, canViewContentIndex)
 
-		mustNotBeError(result.Error)
-		groupsUnlocked += result.RowsAffected
+			mustNotBeError(result.Error)
+			groupsUnlocked += result.RowsAffected
 
-		return s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
+			return s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
+		}))
+
+		return nil
 	}))
 
 	// If items have been unlocked, need to recompute access
