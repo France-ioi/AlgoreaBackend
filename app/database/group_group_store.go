@@ -54,7 +54,12 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
 		groupGroupStore.createRelation(parentGroupID, childGroupID)
-		s.ScheduleGroupsAncestorsPropagation()
+
+		// We need to propagate the group ancestors now, and not at the end of the transaction.
+		// Because the group ancestors are used to detect cycles in the code above,
+		// and it might not work if we call CreateRelation again in this same transaction.
+		s.createNewAncestorsInsideTransaction("groups", "group")
+
 		s.ScheduleResultsPropagation()
 		return nil
 	}))
