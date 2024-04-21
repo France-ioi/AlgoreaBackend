@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.18.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.17.0...v2.18.0) - 2024-04-21
+- fix nil pointer dereference when the schedule propagation endpoint call returns an error
+- permission propagation is now split into smaller pieces to avoid timeouting
+- all propagations are now scheduled so that they are run after the current transaction
+
 ## [v2.17.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.16.0...v2.17.0) - 2024-04-04
 - update group service: handle change in approval policies
 
