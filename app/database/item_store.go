@@ -317,7 +317,11 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 			return s.ItemStrings().Where("item_id = ?", itemID).Delete().Error()
 		}))
 		mustNotBeError(s.Items().ByID(itemID).Delete().Error())
-		mustNotBeError(s.ItemItems().After())
+
+		s.ScheduleItemsAncestorsPropagation()
+		s.SchedulePermissionsPropagation()
+		s.ScheduleResultsPropagation()
+
 		return nil
 	})
 }

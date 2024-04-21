@@ -200,8 +200,8 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 			                   {ancestor_group_id: 1, child_group_id: 7000}]`)
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-		trStore.GroupGroups().CreateNewAncestors()
-		trStore.PermissionsGranted().ComputeAllAccess()
+		trStore.ScheduleGroupsAncestorsPropagation()
+		trStore.SchedulePermissionsPropagation()
 		return nil
 	}))
 	return db

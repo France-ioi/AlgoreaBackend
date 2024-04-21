@@ -76,7 +76,7 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 			"created_at":     Now(),
 		}))
 	}
-	s.GroupGroups().createNewAncestors()
+	s.ScheduleGroupsAncestorsPropagation()
 	return groupID, nil
 }
 
