@@ -18,6 +18,25 @@ const groups = "groups"
 // - before_insert_items_items/groups_groups
 // - before_delete_items_items/groups_groups.
 func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /* #nosec */
+	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		s.createNewAncestorsInsideTransaction(objectName, singleObjectName)
+
+		return nil
+	}))
+}
+
+// createNewAncestorsInsideTransaction does the sql work of createNewAncestors.
+// It has to be called in a transaction.
+// Normally, createNewAncestors is called AFTER transactions.
+// But there is a case where we need to call it inside: when we import the badges of the user.
+// In this case, there is a verification that there are no cycles that needs the groups ancestors to be propagated.
+// For now, since we keep the whole work of createNewAncestors in a single transaction, we can use this function
+// when we need to propagate inside a transaction, and createNewAncestors for the normal propagation.
+// In the future, we might want to split the steps here each into its own transaction.
+// At that time, we'll need a better way to either:
+// - Remove the need for badges cycles detection to not depend on group ancestors
+// - Or refactor those two functions in a different way.
+func (s *DataStore) createNewAncestorsInsideTransaction(objectName, singleObjectName string) {
 	s.mustBeInTransaction()
 
 	// We mark as 'todo' all descendants of objects marked as 'todo'

@@ -91,7 +91,9 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 			participantID, attemptID, participantID, participantID).
 			Error())
 
-		return store.GroupGroups().After()
+		store.ScheduleGroupsAncestorsPropagation()
+
+		return nil
 	})
 
 	if apiError != service.NoError {

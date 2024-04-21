@@ -40,6 +40,14 @@ Feature: Update thread
     And the groups ancestors are computed
     And the database has the following table 'items':
       | id   | default_language_tag | type    |
+      | 2000 | en                   | Task    |
+      | 2001 | en                   | Task    |
+      | 2002 | en                   | Task    |
+      | 2003 | en                   | Task    |
+      | 2007 | en                   | Task    |
+      | 2008 | en                   | Task    |
+      | 2009 | en                   | Task    |
+      | 2010 | en                   | Task    |
       | 3004 | en                   | Chapter |
       | 3005 | en                   | Chapter |
       | 3006 | en                   | Chapter |

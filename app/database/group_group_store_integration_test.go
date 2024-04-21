@@ -168,7 +168,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			assert.NoError(t, dataStore.Table("groups_propagate").UpdateColumn("ancestors_computation_state", "done").Error())
 
 			assert.NoError(t, dataStore.InTransaction(func(s *database.DataStore) error {
-				s.PermissionsGranted().ComputeAllAccess()
+				s.SchedulePermissionsPropagation()
 				return nil
 			}))
 			err := dataStore.InTransaction(func(s *database.DataStore) error {
@@ -372,7 +372,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.GroupGroups().CreateNewAncestors()
+				store.ScheduleGroupsAncestorsPropagation()
 				return nil
 			}))
 			assert.NoError(t, dataStore.GroupGroups().InsertMap(map[string]interface{}{
@@ -459,7 +459,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.GroupGroups().CreateNewAncestors()
+				store.ScheduleGroupsAncestorsPropagation()
 				return nil
 			}))
 			groupGroupStore := dataStore.GroupGroups()

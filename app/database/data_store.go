@@ -176,33 +176,82 @@ func (s *DataStore) NewID() int64 {
 }
 
 type awaitingTriggers struct {
-	Results bool
+	ItemAncestors  bool
+	GroupAncestors bool
+	Permissions    bool
+	Results        bool
 }
 type dbContextKey string
 
 var triggersContextKey = dbContextKey("triggers")
 
 // InTransaction executes the given function in a transaction and commits.
+// If a propagation is scheduled, it will be run after the transaction commit,
+// so we can run each step of the propagation in a separate transaction.
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	s.DB.ctx = context.WithValue(s.DB.ctx, triggersContextKey, &awaitingTriggers{})
-	return s.inTransaction(func(db *DB) error {
+	err := s.inTransaction(func(db *DB) error {
 		dataStore := NewDataStoreWithTable(db, s.tableName)
 		err := txFunc(dataStore)
-		if err == nil {
-			triggersToRun := db.ctx.Value(triggersContextKey).(*awaitingTriggers)
-			if triggersToRun.Results {
-				triggersToRun.Results = false
-				err = dataStore.Results().propagate()
-			}
-		}
+
 		return err
 	})
+	if err != nil {
+		return err
+	}
+
+	triggersToRun := s.ctx.Value(triggersContextKey).(*awaitingTriggers)
+
+	if triggersToRun.GroupAncestors {
+		triggersToRun.GroupAncestors = false
+		s.createNewAncestors("groups", "group")
+	}
+	if triggersToRun.ItemAncestors {
+		triggersToRun.ItemAncestors = false
+		s.createNewAncestors("items", "item")
+	}
+	if triggersToRun.Permissions {
+		triggersToRun.Permissions = false
+		s.PermissionsGranted().computeAllAccess()
+	}
+	if triggersToRun.Results {
+		triggersToRun.Results = false
+		err = s.Results().propagate()
+	}
+
+	return err
 }
 
-// ScheduleResultsPropagation schedules a run of ResultStore::propagate() on transaction commit.
+// ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
 func (s *DataStore) ScheduleResultsPropagation() {
+	s.mustBeInTransaction()
+
 	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
 	triggersToRun.Results = true
+}
+
+// ScheduleGroupsAncestorsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
+func (s *DataStore) ScheduleGroupsAncestorsPropagation() {
+	s.mustBeInTransaction()
+
+	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	triggersToRun.GroupAncestors = true
+}
+
+// ScheduleItemsAncestorsPropagation schedules a run of the items ancestors propagation after the transaction commit.
+func (s *DataStore) ScheduleItemsAncestorsPropagation() {
+	s.mustBeInTransaction()
+
+	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	triggersToRun.ItemAncestors = true
+}
+
+// SchedulePermissionsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
+func (s *DataStore) SchedulePermissionsPropagation() {
+	s.mustBeInTransaction()
+
+	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	triggersToRun.Permissions = true
 }
 
 // WithForeignKeyChecksDisabled executes the given function with foreign keys checking disabled

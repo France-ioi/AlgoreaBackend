@@ -331,7 +331,12 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 			withLock := withLock
 			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-					store.GroupGroups().CreateNewAncestors()
+					store.ScheduleGroupsAncestorsPropagation()
+
+					return nil
+				}))
+
+				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					got, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
 						tt.args.teamGroupID, tt.args.userID, tt.args.isAddition, withLock)
 					if (err != nil) != tt.wantErr {

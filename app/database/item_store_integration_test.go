@@ -374,7 +374,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 	defer func() { _ = db.Close() }()
 
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		store.GroupGroups().CreateNewAncestors()
+		store.ScheduleGroupsAncestorsPropagation()
 		return nil
 	}))
 
@@ -841,7 +841,7 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		store.GroupGroups().CreateNewAncestors()
+		store.ScheduleGroupsAncestorsPropagation()
 		return nil
 	}))
 

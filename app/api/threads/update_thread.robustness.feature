@@ -49,6 +49,20 @@ Feature: Update thread - robustness
       | 12       | 4          | false             |
     And the database has the following table 'items':
       | id   | default_language_tag | type    |
+      | 110  | en                   | Task    |
+      | 120  | en                   | Task    |
+      | 130  | en                   | Task    |
+      | 140  | en                   | Task    |
+      | 240  | en                   | Task    |
+      | 250  | en                   | Task    |
+      | 260  | en                   | Task    |
+      | 270  | en                   | Task    |
+      | 1004 | en                   | Task    |
+      | 1005 | en                   | Task    |
+      | 1006 | en                   | Task    |
+      | 1007 | en                   | Task    |
+      | 1008 | en                   | Task    |
+      | 2004 | en                   | Chapter |
       | 3000 | en                   | Chapter |
       | 3001 | en                   | Chapter |
       | 3002 | en                   | Chapter |

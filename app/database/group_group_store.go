@@ -21,10 +21,6 @@ func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
 	return result
 }
 
-func (s *GroupGroupStore) createNewAncestors() {
-	s.DataStore.createNewAncestors("groups", "group")
-}
-
 // ErrRelationCycle is returned by CreateRelation() if the relation is impossible because it would
 // create a cycle in the groups_groups graph.
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
@@ -58,7 +54,12 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
 		groupGroupStore.createRelation(parentGroupID, childGroupID)
-		groupGroupStore.createNewAncestors()
+
+		// We need to propagate the group ancestors now, and not at the end of the transaction.
+		// Because the group ancestors are used to detect cycles in the code above,
+		// and it might not work if we call CreateRelation again in this same transaction.
+		s.createNewAncestorsInsideTransaction("groups", "group")
+
 		s.ScheduleResultsPropagation()
 		return nil
 	}))
@@ -82,9 +83,8 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	defer recoverPanics(&err)
 
 	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
-		groupGroupStore := s.GroupGroups()
 		mustNotBeError(s.InsertMaps(relations))
-		groupGroupStore.createNewAncestors()
+		s.ScheduleGroupsAncestorsPropagation()
 		return nil
 	}))
 	return err
@@ -116,10 +116,10 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			shouldPropagatePermissions := permissionsResult.RowsAffected() > 0
 
 			// recalculate relations
-			s.GroupGroups().createNewAncestors()
+			s.ScheduleGroupsAncestorsPropagation()
 
 			if shouldPropagatePermissions {
-				s.PermissionsGranted().computeAllAccess()
+				s.SchedulePermissionsPropagation()
 			}
 		}
 
@@ -144,7 +144,9 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	mustNotBeError(s.deleteObjectsLinkedToGroups([]int64{groupID}).Error())
 
 	// recalculate relations
-	s.GroupGroups().createNewAncestors()
+	// This propagation has to be called right now, in the current transaction,
+	// because it's result is used the following steps.
+	s.createNewAncestorsInsideTransaction("groups", "group")
 
 	var idsToDelete []int64
 	// besides the group with id = groupID, we also want to delete its descendants
@@ -172,7 +174,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 			deleteResult := s.deleteObjectsLinkedToGroups(idsToDelete)
 			mustNotBeError(deleteResult.Error())
 			if deleteResult.RowsAffected() > 0 {
-				s.GroupGroups().createNewAncestors()
+				s.ScheduleGroupsAncestorsPropagation()
 			}
 		}
 	}
@@ -181,7 +183,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// cascading deletes from many tables including groups_ancestors, groups_propagate, permission_granted & permissions_generated
 	mustNotBeError(s.Groups().Delete("id IN (?)", idsToDelete).Error())
 
-	s.PermissionsGranted().computeAllAccess()
+	s.SchedulePermissionsPropagation()
 }
 
 func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
@@ -195,15 +197,6 @@ func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
 		LEFT JOIN filters
 			ON filters.group_id = groups.id
 		WHERE groups.id IN(?)`, groupIDs)
-}
-
-// After is a "listener" that calls GroupGroupStore::createNewAncestors().
-func (s *GroupGroupStore) After() (err error) {
-	s.mustBeInTransaction()
-	defer recoverPanics(&err)
-
-	s.createNewAncestors()
-	return nil
 }
 
 // WithGroupsRelationsLock wraps the given function in GET_LOCK/RELEASE_LOCK

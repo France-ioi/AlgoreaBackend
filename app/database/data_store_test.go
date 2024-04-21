@@ -401,3 +401,23 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 		InsertOrUpdateMaps(dataRows, []string{"sField", "sNullField"}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		NewDataStore(db).ScheduleGroupsAncestorsPropagation()
+	})
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		NewDataStore(db).ScheduleItemsAncestorsPropagation()
+	})
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		NewDataStore(db).SchedulePermissionsPropagation()
+	})
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		NewDataStore(db).ScheduleResultsPropagation()
+	})
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}

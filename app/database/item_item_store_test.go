@@ -1,14 +1,12 @@
 package database
 
 import (
-	"errors"
 	"reflect"
 	"regexp"
 	"sync"
 	"testing"
 
 	"bou.ke/monkey"
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,91 +28,6 @@ func TestItemItemStore_ChildrenOf(t *testing.T) {
 	err := newStore.Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestItemItemStore_After_MustBeInTransaction(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_ = NewDataStore(db).ItemItems().After()
-	})
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
-}
-
-func TestItemItemStore_After_HandlesErrorOfCreateNewAncestors(t *testing.T) {
-	expectedError := errors.New("some error")
-
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-	dbMock.ExpectBegin()
-	dbMock.ExpectExec("^INSERT INTO  items_propagate").WillReturnError(expectedError)
-	dbMock.ExpectRollback()
-
-	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
-		return NewDataStore(trDB).ItemItems().After()
-	}))
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
-}
-
-func TestItemItemStore_After_HandlesErrorOfComputeAllAccess(t *testing.T) {
-	expectedError := errors.New("some error")
-
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-	dbMock.ExpectBegin()
-	dbMock.ExpectExec("^INSERT INTO  items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectPrepare("UPDATE items_propagate")
-	dbMock.ExpectPrepare("DELETE items_ancestors")
-	dbMock.ExpectPrepare("INSERT IGNORE INTO items_ancestors")
-	dbMock.ExpectPrepare("INSERT IGNORE INTO items_ancestors")
-	dbMock.ExpectPrepare("UPDATE items_propagate")
-	dbMock.ExpectExec("UPDATE items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("DELETE items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("INSERT IGNORE INTO items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("INSERT IGNORE INTO items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("UPDATE items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectPrepare("^INSERT INTO permissions_propagate").WillReturnError(expectedError)
-	dbMock.ExpectRollback()
-
-	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
-		return NewDataStore(trDB).ItemItems().After()
-	}))
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
-}
-
-func TestItemItemStore_After_HandlesErrorOfPropagate(t *testing.T) {
-	expectedError := errors.New("some error")
-
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-	dbMock.ExpectBegin()
-	dbMock.ExpectExec("^INSERT INTO  items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectPrepare("UPDATE items_propagate")
-	dbMock.ExpectPrepare("DELETE items_ancestors")
-	dbMock.ExpectPrepare("INSERT IGNORE INTO items_ancestors")
-	dbMock.ExpectPrepare("INSERT IGNORE INTO items_ancestors")
-	dbMock.ExpectPrepare("UPDATE items_propagate")
-	dbMock.ExpectExec("UPDATE items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("DELETE items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("INSERT IGNORE INTO items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("INSERT IGNORE INTO items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectExec("UPDATE items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectPrepare("^INSERT INTO permissions_propagate")
-	dbMock.ExpectPrepare("^DELETE FROM permissions_propagate")
-	dbMock.ExpectPrepare("^INSERT INTO permissions_generated")
-	dbMock.ExpectPrepare("^UPDATE permissions_propagate")
-	dbMock.ExpectExec("^INSERT INTO permissions_propagate").WillReturnError(expectedError)
-	dbMock.ExpectRollback()
-
-	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
-		return NewDataStore(trDB).ItemItems().After()
-	}))
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
 func TestItemItemStore_PropagationEnums(t *testing.T) {
