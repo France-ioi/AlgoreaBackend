@@ -243,12 +243,13 @@ func updateChildrenAndRunListeners(
 ) (propagationsToRun []string, apiError service.APIError, err error) {
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
-			deleteStatement := lockedStore.ItemItems().DB
+			deleteStatement := lockedStore.ItemItems().DB.
+				Where("parent_item_id = ?", itemID)
 			newChildrenIDs := input.childrenIDs()
 			if len(newChildrenIDs) > 0 {
 				deleteStatement = deleteStatement.Where("child_item_id NOT IN(?)", newChildrenIDs)
 			}
-			service.MustNotBeError(deleteStatement.Delete("parent_item_id = ?", itemID).Error())
+			service.MustNotBeError(deleteStatement.Delete().Error())
 
 			if !input.checkItemsRelationsCycles(lockedStore, itemID) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
