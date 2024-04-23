@@ -150,8 +150,11 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
 		groupsManagedByParticipant.Select("groups.root_skill_id").SubQuery())
 
-	subQuery := store.Table("visible_items as items0").WithWriteLock().Where("items0.id = ?", ids[0]).
-		Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
+	subQuery := store.Table("visible_items as items0").WithWriteLock()
+	for i := 0; i < len(ids); i++ {
+		subQuery = subQuery.Where(fmt.Sprintf("items%d.id = ?", i), ids[i])
+	}
+	subQuery = subQuery.Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
 
 	var score string
 	var columns string
@@ -195,6 +198,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		Order(score + columnsForOrder).Limit(1)
 
 	visibleItems := store.Permissions().MatchingGroupAncestors(participantID).
+		Where("items.id IN (?)", ids). // Optimisation: we only need to check the permissions of the items in the path.
 		WherePermissionIsAtLeast("view", "content").
 		Joins("JOIN items ON items.id = permissions.item_id").
 		Select("items.id AS id, requires_explicit_entry").Group("items.id")
@@ -203,5 +207,6 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	service.MustNotBeError(
 		store.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.SubQuery()).
 			ScanIntoSliceOfMaps(&result).Error())
+
 	return result
 }

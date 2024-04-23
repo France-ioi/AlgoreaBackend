@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/go-chi/render"
 
@@ -24,7 +25,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			default:
 				apiErr = ErrUnexpected(fmt.Errorf("unknown error: %+v", err))
 			}
-			logging.GetLogEntry(r).Errorf("unexpected error: %s", apiErr.Error)
+			logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", apiErr.Error, debug.Stack())
 		}
 		if apiErr != NoError { // apiErr is an APIError, not os.Error
 			_ = render.Render(w, r, apiErr.httpResponse()) // nolint, never fails
