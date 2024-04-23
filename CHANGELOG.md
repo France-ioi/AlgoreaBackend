@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.18.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.1...v2.18.2) - 2024-04-23
+- improve performance for the start-result-path service
+
 ## [v2.18.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.0...v2.18.1) - 2024-04-22
 - improve performance of the update item children service
 
