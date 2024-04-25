@@ -150,7 +150,11 @@ func (s *ResultStore) propagate() (err error) {
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
 			}
 
-			logging.Debugf("Duration of step of results propagation: %d rows affected, took %v", result.RowsAffected, time.Since(initTransactionTime))
+			logging.Debugf(
+				"Duration of step of results propagation: %d rows affected, took %v",
+				result.RowsAffected,
+				time.Since(initTransactionTime),
+			)
 
 			return nil
 		}))
@@ -328,7 +332,11 @@ func (s *ResultStore) propagate() (err error) {
 			err = s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
 			mustNotBeError(err)
 
-			logging.Debugf("Duration of final step of results propagation: %d rows affected, took %v", result.RowsAffected, time.Since(initTransactionTime))
+			logging.Debugf(
+				"Duration of final step of results propagation: %d rows affected, took %v",
+				result.RowsAffected,
+				time.Since(initTransactionTime),
+			)
 
 			return nil
 		}))
