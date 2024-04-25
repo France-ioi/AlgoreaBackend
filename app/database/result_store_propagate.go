@@ -2,6 +2,8 @@ package database
 
 import (
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const (
@@ -35,6 +37,8 @@ func (s *ResultStore) propagate() (err error) {
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			initTransactionTime := time.Now()
+
 			// We mark as 'to_be_recomputed' results of all ancestors of items marked as 'to_be_recomputed'/'to_be_propagated'
 			// with appropriate attempt_id.
 			// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
@@ -146,7 +150,7 @@ func (s *ResultStore) propagate() (err error) {
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
 			}
 
-			// TODO: Log time: initialization step of results propagation
+			logging.Debugf("Duration of step of results propagation: %d rows affected, took %v", result.RowsAffected, time.Since(initTransactionTime))
 
 			return nil
 		}))
@@ -155,6 +159,8 @@ func (s *ResultStore) propagate() (err error) {
 
 		for hasChanges {
 			mustNotBeError(s.InTransaction(func(s *DataStore) error {
+				initTransactionTime := time.Now()
+
 				// We process only those objects that were marked as 'to_be_recomputed' and
 				// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
 				// This way we prevent infinite looping as we never process items that are ancestors of themselves
@@ -275,7 +281,7 @@ func (s *ResultStore) propagate() (err error) {
 
 				rowsAffected := s.Exec(updateQuery).RowsAffected()
 
-				// TODO: Log time: step of results propagation
+				logging.Debugf("Duration of step of results propagation: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
 
 				hasChanges = rowsAffected > 0
 
@@ -284,6 +290,8 @@ func (s *ResultStore) propagate() (err error) {
 		}
 
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			initTransactionTime := time.Now()
+
 			canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
 			result := s.db.Exec(`
 			INSERT INTO permissions_granted
@@ -320,7 +328,7 @@ func (s *ResultStore) propagate() (err error) {
 			err = s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
 			mustNotBeError(err)
 
-			// TODO: Log time: ending step of results propagation
+			logging.Debugf("Duration of final step of results propagation: %d rows affected, took %v", result.RowsAffected, time.Since(initTransactionTime))
 
 			return nil
 		}))

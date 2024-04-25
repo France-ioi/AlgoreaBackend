@@ -2,6 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const groups = "groups"
@@ -19,7 +22,11 @@ const groups = "groups"
 // - before_delete_items_items/groups_groups.
 func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /* #nosec */
 	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		initTransactionTime := time.Now()
+
 		s.createNewAncestorsInsideTransaction(objectName, singleObjectName)
+
+		logging.Debugf("Duration of %v_ancestors propagation: %v", objectName, time.Since(initTransactionTime))
 
 		return nil
 	}))
