@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.18.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.2...v2.18.3) - 2024-04-26
+- improve performance for auth
+- add more logs to track db timings
+
 ## [v2.18.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.1...v2.18.2) - 2024-04-23
 - improve performance for the start-result-path service
 
