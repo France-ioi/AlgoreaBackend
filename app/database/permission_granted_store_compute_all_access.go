@@ -1,5 +1,11 @@
 package database
 
+import (
+	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
+)
+
 // computeAllAccess recomputes fields of permissions_generated.
 //
 // It starts from group-item pairs marked with propagate_to = 'self' in `permissions_propagate`.
@@ -97,12 +103,16 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	hasChanges := true
 	for hasChanges {
 		mustNotBeError(s.InTransaction(func(store *DataStore) error {
+			initTransactionTime := time.Now()
+
 			mustNotBeError(store.Exec(queryMarkChildrenOfChildrenAsSelf).Error())
 			mustNotBeError(store.Exec(queryDeleteProcessedChildren).Error())
 			mustNotBeError(store.Exec(queryUpdatePermissionsGenerated).Error())
 
 			rowsAffected := store.Exec(queryMarkSelfAsChildren).RowsAffected()
 			mustNotBeError(store.Error())
+
+			logging.Debugf("Duration of permissions propagation step: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
 
 			hasChanges = rowsAffected > 0
 

@@ -24,9 +24,12 @@ func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user
 			sessions.session_id
 		`).
 		Joins("JOIN users ON users.group_id = sessions.user_id").
-		Joins("JOIN access_tokens ON access_tokens.session_id = sessions.session_id").
-		Where("access_tokens.token = ?", token).
-		Where("access_tokens.expires_at > NOW()").
+		Joins(`
+			JOIN access_tokens
+			  ON access_tokens.session_id = sessions.session_id
+			 AND access_tokens.token = ?
+			 AND access_tokens.expires_at > NOW()
+		`, token).
 		Take(&result).
 		Error()
 

@@ -1,8 +1,9 @@
 package database
 
 import (
-	"database/sql"
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const (
@@ -32,11 +33,12 @@ const (
 // - before_delete_items_items.
 func (s *ResultStore) propagate() (err error) {
 	var groupsUnlocked int64
-	mustNotBeError(s.InTransaction(func(s *DataStore) error {
-		defer recoverPanics(&err)
+	defer recoverPanics(&err)
+	// Use a lock so that we don't execute the listener multiple times in parallel
+	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
+		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			initTransactionTime := time.Now()
 
-		// Use a lock so that we don't execute the listener multiple times in parallel
-		mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
 			// We mark as 'to_be_recomputed' results of all ancestors of items marked as 'to_be_recomputed'/'to_be_propagated'
 			// with appropriate attempt_id.
 			// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
@@ -147,11 +149,22 @@ func (s *ResultStore) propagate() (err error) {
 				FROM results_to_mark
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
 			}
-			hasChanges := true
 
-			var updateStatement *sql.Stmt
+			logging.Debugf(
+				"Duration of step of results propagation: %d rows affected, took %v",
+				result.RowsAffected,
+				time.Since(initTransactionTime),
+			)
 
-			for hasChanges {
+			return nil
+		}))
+
+		hasChanges := true
+
+		for hasChanges {
+			mustNotBeError(s.InTransaction(func(s *DataStore) error {
+				initTransactionTime := time.Now()
+
 				// We process only those objects that were marked as 'to_be_recomputed' and
 				// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
 				// This way we prevent infinite looping as we never process items that are ancestors of themselves
@@ -162,11 +175,10 @@ func (s *ResultStore) propagate() (err error) {
 				//  - children_validated as the number of children items with validated == 1
 				//  - validated, depending on the items_items.category and items.validation_type
 				//    (an item should have at least one validated child to become validated itself by the propagation)
-				if updateStatement == nil {
-					const updateQuery = `
+				const updateQuery = `
 					UPDATE results_propagate AS target_propagate ` +
-						// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
-						`JOIN (
+					// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
+					`JOIN (
 						SELECT *
 						FROM (
 							WITH marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
@@ -215,10 +227,10 @@ func (s *ResultStore) propagate() (err error) {
 							SUM(IFNULL(aggregated_children_results.score_computed, 0) * items_items.score_weight) /
 								COALESCE(NULLIF(SUM(items_items.score_weight), 0), 1) AS average_score
 						FROM items_items ` +
-						// We use LEFT JOIN LATERAL to aggregate results grouped by target_results.participant_id & items_items.child_item_id.
-						// The usual LEFT JOIN conditions in the ON clause would group results before joining which would produce
-						// wrong results.
-						`	LEFT JOIN LATERAL (
+					// We use LEFT JOIN LATERAL to aggregate results grouped by target_results.participant_id & items_items.child_item_id.
+					// The usual LEFT JOIN conditions in the ON clause would group results before joining which would produce
+					// wrong results.
+					`	LEFT JOIN LATERAL (
 							SELECT
 								MAX(validated) AS validated,
 								MIN(validated_at) AS validated_at,
@@ -270,21 +282,22 @@ func (s *ResultStore) propagate() (err error) {
 								ELSE children_stats.average_score
 							END, 0), 100)), 0),
 						target_propagate.state = 'to_be_propagated'`
-					updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
-					mustNotBeError(err)
-					defer func() { mustNotBeError(updateStatement.Close()) }() //nolint:gocritic defer in for loop, possible resource leak.
-				}
 
-				result, err := updateStatement.Exec()
-				mustNotBeError(err)
+				rowsAffected := s.Exec(updateQuery).RowsAffected()
 
-				rowsAffected, err := result.RowsAffected()
-				mustNotBeError(err)
+				logging.Debugf("Duration of step of results propagation: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
+
 				hasChanges = rowsAffected > 0
-			}
+
+				return nil
+			}))
+		}
+
+		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			initTransactionTime := time.Now()
 
 			canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
-			result = s.db.Exec(`
+			result := s.db.Exec(`
 			INSERT INTO permissions_granted
 				(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
 				SELECT
@@ -316,18 +329,29 @@ func (s *ResultStore) propagate() (err error) {
 			mustNotBeError(result.Error)
 			groupsUnlocked += result.RowsAffected
 
-			return s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
+			err = s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
+			mustNotBeError(err)
+
+			logging.Debugf(
+				"Duration of final step of results propagation: %d rows affected, took %v",
+				result.RowsAffected,
+				time.Since(initTransactionTime),
+			)
+
+			return nil
 		}))
 
 		// If items have been unlocked, need to recompute access
 		if groupsUnlocked > 0 {
-			// generate permissions_generated from permissions_granted
-			s.SchedulePermissionsPropagation()
-			// we should compute attempts again as new permissions were set and
-			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-			s.ScheduleResultsPropagation()
+			mustNotBeError(s.InTransaction(func(s *DataStore) error {
+				// generate permissions_generated from permissions_granted
+				s.SchedulePermissionsPropagation()
+				// we should compute attempts again as new permissions were set and
+				// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
+				s.ScheduleResultsPropagation()
 
-			return nil
+				return nil
+			}))
 		}
 
 		return nil

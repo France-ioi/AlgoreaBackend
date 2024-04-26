@@ -247,9 +247,11 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 					"users.temp_user, users.notifications_read_at, users.default_language, sessions.session_id "+
 					"FROM `sessions` "+
 					"JOIN users ON users.group_id = sessions.user_id "+
-					"JOIN access_tokens ON access_tokens.session_id = sessions.session_id "+
-					"WHERE (access_tokens.token = ?) AND (access_tokens.expires_at > NOW()) LIMIT 1") +
+					"JOIN access_tokens "+
+					"  ON access_tokens.session_id = sessions.session_id AND access_tokens.token = ? AND access_tokens.expires_at > NOW() "+
+					"LIMIT 1") +
 			"$").WithArgs(expectedAccessToken)
+
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
