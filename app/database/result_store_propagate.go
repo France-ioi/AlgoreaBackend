@@ -36,6 +36,8 @@ func (s *ResultStore) propagate() (err error) {
 	defer recoverPanics(&err)
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
+		s.setResultsPropagationFromResultsPropagateItems()
+
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
 			initTransactionTime := time.Now()
 
@@ -358,4 +360,46 @@ func (s *ResultStore) propagate() (err error) {
 	}))
 
 	return nil
+}
+
+// setResultsPropagationFromResultsPropagateItems inserts results_propagate rows from results_propagate_items.
+func (s *DataStore) setResultsPropagationFromResultsPropagateItems() {
+	hasResultsPropagateItems := true
+	for hasResultsPropagateItems {
+		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			initTransactionTime := time.Now()
+
+			var itemID int64
+			s.Raw("SELECT `item_id` FROM `results_propagate_items`").
+				PluckFirst("item_id", &itemID)
+
+			if itemID == 0 {
+				hasResultsPropagateItems = false
+			} else {
+				mustNotBeError(
+					s.Exec(`
+							INSERT INTO results_propagate
+							SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state
+							FROM results
+							WHERE item_id = ?
+							ON DUPLICATE KEY UPDATE state = 'to_be_recomputed';
+						`, itemID).
+						Error(),
+				)
+
+				mustNotBeError(
+					s.Exec("DELETE FROM `results_propagate_items` WHERE `item_id` = ?", itemID).
+						Error(),
+				)
+			}
+
+			logging.Debugf(
+				"Duration of step of results propagation insertion from results_propagate_items: took %v with item_id %d",
+				time.Since(initTransactionTime),
+				itemID,
+			)
+
+			return nil
+		}))
+	}
 }
