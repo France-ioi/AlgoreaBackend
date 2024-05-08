@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.18.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.3...v2.18.4) - 2024-05-08
+- speed up permission propagation
+- step-by-step propagation for propagations related to item ancestors and group ancestors
+
 ## [v2.18.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.2...v2.18.3) - 2024-04-26
 - improve performance for auth
 - add more logs to track db timings
