@@ -364,42 +364,42 @@ func (s *ResultStore) propagate() (err error) {
 
 // setResultsPropagationFromResultsPropagateItems inserts results_propagate rows from results_propagate_items.
 func (s *DataStore) setResultsPropagationFromResultsPropagateItems() {
-	hasResultsPropagateItems := true
-	for hasResultsPropagateItems {
-		mustNotBeError(s.InTransaction(func(s *DataStore) error {
-			initTransactionTime := time.Now()
+	const maxInserts = 5000
 
-			var itemID int64
-			s.Raw("SELECT `item_id` FROM `results_propagate_items`").
-				PluckFirst("item_id", &itemID)
+	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		initTransactionTime := time.Now()
 
-			if itemID == 0 {
-				hasResultsPropagateItems = false
-			} else {
-				mustNotBeError(
-					s.Exec(`
+		offset := int64(0)
+		hasRowsToInsert := true
+		for hasRowsToInsert {
+			rowsAffected := s.Exec(`
 							INSERT INTO results_propagate
-							SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state
-							FROM results
-							WHERE item_id = ?
+								(
+									SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state
+									FROM results
+									WHERE item_id IN (SELECT DISTINCT item_id FROM results_propagate_items ORDER BY item_id)
+									ORDER BY participant_id, attempt_id, item_id
+									LIMIT ? OFFSET ?
+								)
 							ON DUPLICATE KEY UPDATE state = 'to_be_recomputed';
-						`, itemID).
-						Error(),
-				)
+					`, maxInserts, offset).
+				RowsAffected()
 
-				mustNotBeError(
-					s.Exec("DELETE FROM `results_propagate_items` WHERE `item_id` = ?", itemID).
-						Error(),
-				)
-			}
+			offset += maxInserts
+			hasRowsToInsert = rowsAffected > 0
+		}
 
-			logging.Debugf(
-				"Duration of step of results propagation insertion from results_propagate_items: took %v with item_id %d",
-				time.Since(initTransactionTime),
-				itemID,
-			)
+		mustNotBeError(
+			s.Exec("DELETE FROM `results_propagate_items`").
+				Error(),
+		)
 
-			return nil
-		}))
-	}
+		logging.Debugf(
+			"Duration of step of results propagation insertion from results_propagate_items: took %v with final offset %d",
+			time.Since(initTransactionTime),
+			offset,
+		)
+
+		return nil
+	}))
 }
