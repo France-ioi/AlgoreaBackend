@@ -61,9 +61,9 @@ type invitationsViewResponseRow struct {
 	// required: true
 	At time.Time `json:"at"`
 
-	// the user that invited (Nullable: only for invitations)
+	// the user that invited
 	// required: true
-	InvitingUser *struct {
+	InvitingUser struct {
 		// `users.group_id`
 		// required: true
 		ID int64 `json:"id"`
