@@ -36,6 +36,8 @@ func (s *ResultStore) propagate() (err error) {
 	defer recoverPanics(&err)
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
+		s.setResultsPropagationFromResultsPropagateItems()
+
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
 			initTransactionTime := time.Now()
 
@@ -358,4 +360,69 @@ func (s *ResultStore) propagate() (err error) {
 	}))
 
 	return nil
+}
+
+// setResultsPropagationFromResultsPropagateItems inserts results_propagate rows from results_propagate_items.
+func (s *DataStore) setResultsPropagationFromResultsPropagateItems() {
+	const maxInserts = 5000
+
+	const fromResultsWithItemIDToPropagateQueryPart = `
+		FROM results
+		WHERE item_id IN (SELECT item_id FROM results_propagate_items ORDER BY item_id)
+	`
+
+	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		initTransactionTime := time.Now()
+
+		// First we count the number of rows that need to be processed, then we use LIMIT/OFFSET.
+		// Because we want the transaction to take a reasonable time to execute,
+		// we also don't want to have too many small transactions running, that's why we don't loop on item_id.
+		//
+		// We can't use rowsAffected to know whether all rows are updated, because it counts:
+		// - 0 when a row exists and is not updated
+		// - 1 when a row is inserted
+		// - 2 when a row exists and is updated
+		// So we can have rowsAffected == 0 if nothing has to be updated in the first `maxInserts` rows,
+		// even when there is still work to be done at a later offset.
+		var res struct {
+			Count int64 `json:"count"`
+		}
+		mustNotBeError(
+			s.Raw(`SELECT COUNT(*) AS count ` + fromResultsWithItemIDToPropagateQueryPart).
+				Scan(&res).
+				Error(),
+		)
+
+		totalRowsAffected := int64(0)
+		offset := int64(0)
+		for ; offset < res.Count; offset += maxInserts {
+			rowsAffected := s.Exec(`
+							INSERT INTO results_propagate
+								(
+								 	SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state
+									`+fromResultsWithItemIDToPropagateQueryPart+`
+									ORDER BY participant_id, attempt_id, item_id
+									LIMIT ? OFFSET ?
+								)
+							ON DUPLICATE KEY UPDATE state = 'to_be_recomputed';
+					`, maxInserts, offset).
+				RowsAffected()
+
+			totalRowsAffected += rowsAffected
+		}
+
+		mustNotBeError(
+			s.Exec("DELETE FROM `results_propagate_items`").
+				Error(),
+		)
+
+		logging.Debugf(
+			"Duration of step of results propagation insertion from results_propagate_items: took %v with %d rows affected and last offset %d",
+			time.Since(initTransactionTime),
+			totalRowsAffected,
+			offset,
+		)
+
+		return nil
+	}))
 }
