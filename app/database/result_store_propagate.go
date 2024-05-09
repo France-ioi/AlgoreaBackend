@@ -368,7 +368,7 @@ func (s *DataStore) setResultsPropagationFromResultsPropagateItems() {
 
 	const fromResultsWithItemIDToPropagateQueryPart = `
 		FROM results
-		WHERE item_id IN (SELECT DISTINCT item_id FROM results_propagate_items ORDER BY item_id)
+		WHERE item_id IN (SELECT item_id FROM results_propagate_items ORDER BY item_id)
 	`
 
 	mustNotBeError(s.InTransaction(func(s *DataStore) error {
