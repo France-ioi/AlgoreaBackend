@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.18.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.4...v2.18.5) - 2024-05-09
+- speed up item children edition
+
 ## [v2.18.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.3...v2.18.4) - 2024-05-08
 - speed up permission propagation
 - step-by-step propagation for propagations related to item ancestors and group ancestors
