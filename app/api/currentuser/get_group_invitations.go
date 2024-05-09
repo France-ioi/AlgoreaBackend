@@ -15,11 +15,8 @@ import (
 //	description:
 //		Returns the list of invitations that the current user received and requests sent by him
 //		(`group_membership_changes.action` is “invitation_created” or “join_request_created” or “join_request_refused”)
-//		with `group_membership_changes.at` within `within_weeks` back from now (if `within_weeks` is present).
+//		with `group_membership_changes.at`.
 //	parameters:
-//		- name: within_weeks
-//			in: query
-//			type: integer
 //		- name: sort
 //			in: query
 //			default: [-at,group_id]
@@ -89,14 +86,6 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		Where("action IN ('invitation_created', 'join_request_created', 'join_request_refused')").
 		Where("action = 'join_request_refused' OR group_pending_requests.group_id IS NOT NULL").
 		Where("group_membership_changes.member_id = ?", user.GroupID)
-
-	if len(r.URL.Query()["within_weeks"]) > 0 {
-		withinWeeks, err := service.ResolveURLQueryGetInt64Field(r, "within_weeks")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-		query = query.Where("NOW() - INTERVAL ? WEEK < group_membership_changes.at", withinWeeks)
-	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(

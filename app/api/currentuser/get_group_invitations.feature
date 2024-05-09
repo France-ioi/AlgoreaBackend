@@ -140,37 +140,3 @@ Feature: Get group invitations for the current user
       }
     ]
     """
-
-  Scenario: Filter out old invitations
-    Given I am the user with id "21"
-    When I send a GET request to "/current-user/group-invitations?within_weeks=1"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "group_id": "4",
-        "inviting_user": null,
-        "group": {
-          "id": "4",
-          "name": "Our Friends",
-          "description": "Group for our friends",
-          "type": "Friends"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
-        "action": "join_request_refused"
-      },
-      {
-        "group_id": "3",
-        "inviting_user": null,
-        "group": {
-          "id": "3",
-          "name": "Our Club",
-          "description": "Our club group",
-          "type": "Club"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
-        "action": "join_request_created"
-      }
-    ]
-    """
