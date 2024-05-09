@@ -60,7 +60,6 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		Select(`
 			group_membership_changes.group_id,
 			group_membership_changes.at,
-			action,
 			users.group_id AS inviting_user__id,
 			users.login AS inviting_user__login,
 			users.first_name AS inviting_user__first_name,

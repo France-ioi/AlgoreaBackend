@@ -60,10 +60,6 @@ type invitationsViewResponseRow struct {
 	// `groups_groups.type_changed_at`
 	// required: true
 	At time.Time `json:"at"`
-	// `group_membership_changes.action`
-	// required: true
-	// enum: invitation_created,join_request_created,join_request_refused
-	Action string `json:"action"`
 
 	// the user that invited (Nullable: only for invitations)
 	// required: true

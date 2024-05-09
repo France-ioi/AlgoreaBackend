@@ -74,8 +74,7 @@ Feature: Get group invitations for the current user
           "description": "Other group with invitation 2",
           "type": "Class"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
-        "action": "invitation_created"
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}"
       },
       {
         "group_id": "33",
@@ -91,8 +90,7 @@ Feature: Get group invitations for the current user
           "description": "Other group with invitation",
           "type": "Class"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
-        "action": "invitation_created"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}"
       },
       {
         "group_id": "1",
@@ -108,8 +106,7 @@ Feature: Get group invitations for the current user
           "description": "Our class group",
           "type": "Class"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
-        "action": "invitation_created"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}"
       }
     ]
     """
@@ -135,8 +132,7 @@ Feature: Get group invitations for the current user
           "description": "Other group with invitation 2",
           "type": "Class"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}",
-        "action": "invitation_created"
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}"
       }
     ]
     """
@@ -163,8 +159,7 @@ Feature: Get group invitations for the current user
           "description": "Other group with invitation",
           "type": "Class"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
-        "action": "invitation_created"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}"
       }
     ]
     """
