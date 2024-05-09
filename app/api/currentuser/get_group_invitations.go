@@ -13,9 +13,7 @@ import (
 //	---
 //	summary: List current invitations and requests to groups
 //	description:
-//		Returns the list of invitations that the current user received and requests sent by him
-//		(`group_membership_changes.action` is “invitation_created” or “join_request_created” or “join_request_refused”)
-//		with `group_membership_changes.at`.
+//		Returns the list of invitations that the current user received with `group_membership_changes.at`.
 //	parameters:
 //		- name: sort
 //			in: query
@@ -71,20 +69,16 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.name AS group__name,
 			groups.description AS group__description,
 			groups.type AS group__type`).
-		Joins("LEFT JOIN users ON users.group_id = initiator_id AND action = 'invitation_created'").
+		Joins("JOIN users ON users.group_id = initiator_id AND action = 'invitation_created'").
 		Joins("JOIN `groups` ON `groups`.id = group_membership_changes.group_id").
 		Joins(`
-			LEFT JOIN group_pending_requests
+			JOIN group_pending_requests
 				ON group_pending_requests.group_id = group_membership_changes.group_id AND
 					group_pending_requests.member_id = group_membership_changes.member_id AND
-					IF(group_pending_requests.type = 'invitation', 'invitation_created', 'join_request_created') =
-						group_membership_changes.action AND
 					(SELECT MAX(latest_change.at) FROM group_membership_changes AS latest_change
 					 WHERE latest_change.group_id = group_pending_requests.group_id AND
 						latest_change.member_id = group_pending_requests.member_id AND
 						latest_change.action = group_membership_changes.action) = group_membership_changes.at`).
-		Where("action IN ('invitation_created', 'join_request_created', 'join_request_refused')").
-		Where("action = 'join_request_refused' OR group_pending_requests.group_id IS NOT NULL").
 		Where("group_membership_changes.member_id = ?", user.GroupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
