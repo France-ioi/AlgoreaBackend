@@ -251,9 +251,17 @@ func getRootItemsFromDB(
 		Select("group_managers.group_id AS id")
 
 	if !watchedGroupIDSet {
+		groupManagedByUserOrCurrentQuery := store.Raw(`
+			SELECT id FROM (
+				SELECT ? AS id
+				UNION ALL
+				?
+			) AS group_filter_sorted
+		`, groupID, groupsManagedByUserQuery.SubQuery())
+
 		itemsWithResultsQuery = itemsWithResultsQuery.
-			Where("groups_ancestors_active.child_group_id = ? OR groups_ancestors_active.child_group_id IN(?)",
-				groupID, groupsManagedByUserQuery.SubQuery())
+			Where("groups_ancestors_active.child_group_id IN(?)",
+				groupManagedByUserOrCurrentQuery.SubQuery())
 	} else {
 		groupsQuery := store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
 			groupsManagedByUserQuery.SubQuery(),
