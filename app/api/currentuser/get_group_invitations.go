@@ -53,8 +53,8 @@ type groupWithApprovals struct {
 	// required: true
 	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
-	// require: true
 	// enum: none,view,edit
+	// required: true
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
 	// Nullable
 	// required: true
@@ -66,7 +66,7 @@ type groupWithApprovals struct {
 // swagger:operation GET /current-user/group-invitations group-memberships invitationsView
 //
 //	---
-//	summary: List current invitations and requests to groups
+//	summary: List current invitations to groups
 //	description:
 //		Returns the list of invitations that the current user received with `group_membership_changes.at`.
 //	parameters:
@@ -97,7 +97,7 @@ type groupWithApprovals struct {
 //			default: 500
 //	responses:
 //		"200":
-//			description: OK. Success response with an array of invitations/requests
+//			description: OK. Success response with an array of invitations.
 //			schema:
 //				type: array
 //				items:
