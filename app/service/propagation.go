@@ -20,7 +20,11 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 		client := http.Client{
 			Timeout: PropagationEndpointTimeout,
 		}
+
+		callTime := time.Now()
 		response, err := client.Get(endpoint + "?types=" + strings.Join(types, ","))
+		logging.Infof("Propagation endpoint called: %v, types=%v, duration=%v", endpoint, types, time.Since(callTime))
+
 		if err != nil {
 			logging.Errorf("Propagation endpoint error: %v", err)
 
