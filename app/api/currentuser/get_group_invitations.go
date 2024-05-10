@@ -3,10 +3,65 @@ package currentuser
 import (
 	"net/http"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// swagger:model
+type invitationsViewResponseRow struct {
+	// `group_membership_changes.group_id`
+	// required: true
+	GroupID int64 `json:"group_id,string"`
+	// `groups_groups.type_changed_at`
+	// required: true
+	At database.Time `json:"at"`
+
+	// the user that invited
+	// required: true
+	InvitingUser invitingUser `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+
+	// required: true
+	Group groupWithApprovals `json:"group" gorm:"embedded;embedded_prefix:group__"`
+}
+
+type invitingUser struct {
+	// `users.group_id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	Login string `json:"login"`
+	// Nullable
+	// required: true
+	FirstName string `json:"first_name"`
+	// Nullable
+	// required: true
+	LastName string `json:"last_name"`
+}
+
+type groupWithApprovals struct {
+	// `groups.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	Name string `json:"name"`
+	// Nullable
+	// required: true
+	Description *string `json:"description"`
+	// required: true
+	// enum: Class,Team,Club,Friends,Other,Session,Base
+	Type string `json:"type"`
+	// require: true
+	// enum: none,view,edit
+	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
+	// Nullable
+	// required: true
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
+	// required: true
+	RequireWatchApproval bool `json:"require_watch_approval"`
+}
 
 // swagger:operation GET /current-user/group-invitations group-memberships invitationsView
 //
@@ -102,10 +157,9 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []invitationsViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }
