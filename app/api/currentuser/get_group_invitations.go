@@ -67,7 +67,11 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.id AS group__id,
 			groups.name AS group__name,
 			groups.description AS group__description,
-			groups.type AS group__type`).
+			groups.type AS group__type,
+		  groups.require_personal_info_access_approval AS group__require_personal_info_access_approval,
+			groups.require_lock_membership_approval_until AS group__require_lock_membership_approval_until,
+			groups.require_watch_approval AS group__require_watch_approval
+		`).
 		Joins("JOIN users ON users.group_id = initiator_id AND action = 'invitation_created'").
 		Joins("JOIN `groups` ON `groups`.id = group_membership_changes.group_id").
 		Joins(`
