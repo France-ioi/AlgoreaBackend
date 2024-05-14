@@ -138,7 +138,25 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 	return service.NoError
 }
 
+func hasAccessToItemPath(store *database.DataStore, participantID int64, ids []int64) bool {
+	var count int64
+	store.Permissions().
+		MatchingGroupAncestors(participantID).
+		Joins(`JOIN items ON items.id = permissions.item_id`).
+		Where("items.id IN (?)", ids).
+		WherePermissionIsAtLeast("view", "content").
+		Select("COUNT(DISTINCT items.id) AS count").
+		Count(&count)
+
+	return count == int64(len(ids))
+}
+
 func getDataForResultPathStart(store *database.DataStore, participantID int64, ids []int64) []map[string]interface{} {
+	var result []map[string]interface{}
+	if !hasAccessToItemPath(store, participantID, ids) {
+		return result
+	}
+
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("root_activity_id, root_skill_id")
@@ -150,11 +168,11 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
 		groupsManagedByParticipant.Select("groups.root_skill_id").SubQuery())
 
-	subQuery := store.Table("visible_items as items0").WithWriteLock()
+	query := store.Table("items as items0").WithWriteLock()
 	for i := 0; i < len(ids); i++ {
-		subQuery = subQuery.Where(fmt.Sprintf("items%d.id = ?", i), ids[i])
+		query = query.Where(fmt.Sprintf("items%d.id = ?", i), ids[i])
 	}
-	subQuery = subQuery.Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
+	query = query.Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
 
 	var score string
 	var columns string
@@ -174,7 +192,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		attemptIsActiveCondition = fmt.Sprintf(
 			"attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until AND %s", i, i, attemptIsActiveCondition)
 		score += fmt.Sprintf("((results%d.started_at IS NULL) << %d)", i, len(ids)-i-1)
-		subQuery = subQuery.
+		query = query.
 			Joins(fmt.Sprintf(`
 				JOIN attempts AS attempts%d ON attempts%d.participant_id = ? AND
 					(NOT items%d.requires_explicit_entry OR attempts%d.root_item_id = items%d.id)`+previousAttemptCondition, i, i, i, i, i),
@@ -187,25 +205,18 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 					i, i, i, attemptIsActiveCondition))
 
 		if i != len(ids)-1 {
-			subQuery = subQuery.Joins(fmt.Sprintf(
+			query = query.Joins(fmt.Sprintf(
 				"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
 				i+1, i+1, i, i+1), ids[i+1]).
-				Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", i+1, i+1, i+1))
+				Joins(fmt.Sprintf("JOIN items AS items%d ON items%d.id = items_items%d.child_item_id", i+1, i+1, i+1))
 		}
 		columns += fmt.Sprintf("attempts%d.id AS attempt_id%d, results%d.started_at IS NOT NULL AS has_started_result%d", i, i, i, i)
 	}
-	subQuery = subQuery.Select(columns).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
+	query = query.Select(columns).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
 		Order(score + columnsForOrder).Limit(1)
 
-	visibleItems := store.Permissions().MatchingGroupAncestors(participantID).
-		Where("items.id IN (?)", ids). // Optimisation: we only need to check the permissions of the items in the path.
-		WherePermissionIsAtLeast("view", "content").
-		Joins("JOIN items ON items.id = permissions.item_id").
-		Select("items.id AS id, requires_explicit_entry").Group("items.id")
-
-	var result []map[string]interface{}
 	service.MustNotBeError(
-		store.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.SubQuery()).
+		query.
 			ScanIntoSliceOfMaps(&result).Error())
 
 	return result
