@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.18.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.6...v2.18.7) - 2024-05-14
+- speed up the "get-result-path" service
+
 ## [v2.18.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.5...v2.18.6) - 2024-05-13
 - speed up the "list root activities" service
 
