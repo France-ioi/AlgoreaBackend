@@ -27,6 +27,6 @@ func (s *AttemptStore) CreateNew(participantID, parentAttemptID, itemID, creator
 		"participant_id": participantID, "attempt_id": attemptID, "item_id": itemID,
 		"started_at": Now(), "latest_activity_at": Now(),
 	}))
-	mustNotBeError(s.Results().MarkAsToBePropagated(participantID, attemptID, itemID))
+	mustNotBeError(s.Results().MarkAsToBePropagated(participantID, attemptID, itemID, true))
 	return attemptID, nil
 }

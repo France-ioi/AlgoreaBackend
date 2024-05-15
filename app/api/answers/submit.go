@@ -109,7 +109,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			}).Error())
 		service.MustNotBeError(resultStore.MarkAsToBePropagated(
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
-			requestData.TaskToken.Converted.LocalItemID))
+			requestData.TaskToken.Converted.LocalItemID, true))
 		return nil
 	})
 
