@@ -101,7 +101,9 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 
 		if result.RowsAffected() != 0 {
 			resultStore := store.Results()
-			service.MustNotBeError(resultStore.MarkAsToBePropagated(participantID, attemptID, itemID))
+			service.MustNotBeError(resultStore.MarkAsToBePropagated(participantID, attemptID, itemID, false))
+
+			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
 		}
 		return nil
 	})

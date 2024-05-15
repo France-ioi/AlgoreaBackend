@@ -122,7 +122,8 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert, []string{"started_at", "latest_activity_at"}))
 			service.MustNotBeError(resultStore.InsertIgnoreMaps("results_propagate", rowsToInsertPropagate))
-			resultStore.ScheduleResultsPropagation()
+
+			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
 		}
 
 		return nil

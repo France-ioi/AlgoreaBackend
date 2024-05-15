@@ -147,7 +147,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 			}).Error())
 		service.MustNotBeError(resultStore.MarkAsToBePropagated(
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
-			requestData.TaskToken.Converted.LocalItemID))
+			requestData.TaskToken.Converted.LocalItemID, true))
 
 		return nil
 	})
