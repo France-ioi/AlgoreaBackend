@@ -202,7 +202,9 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 				dataMap["can_request_help_to"] = &allUsersGroupID
 			}
 
-			savePermissionsIntoDB(groupID, itemID, sourceGroupID, dataMap, s)
+			propagationsToRun := savePermissionsIntoDB(groupID, itemID, sourceGroupID, dataMap, s)
+
+			service.SchedulePropagation(s, srv.GetPropagationEndpoint(), propagationsToRun)
 		}
 		return nil
 	})
@@ -713,7 +715,7 @@ func correctPermissionsDataMap(store *database.DataStore, dataMap map[string]int
 	}
 }
 
-func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
+func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, s *database.DataStore) []string {
 	dbMap["latest_update_at"] = database.Now()
 
 	columnsToUpdate := make([]string, 0, len(dbMap))
@@ -728,10 +730,13 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 
 	permissionGrantedStore := s.PermissionsGranted()
 	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate))
-	s.SchedulePermissionsPropagation()
+
+	propagationsToRun := []string{"permissions"}
 	if dbMap["can_view"] != nil && dbMap["can_view"] != none || dbMap["is_owner"] != nil && dbMap["is_owner"].(bool) {
 		// permissionGrantedStore.After() implicitly (via triggers) marks some attempts as to_be_propagated
 		// when an item becomes visible, so we should propagate attempts here
-		s.ScheduleResultsPropagation()
+		propagationsToRun = append(propagationsToRun, "results")
 	}
+
+	return propagationsToRun
 }

@@ -101,7 +101,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		}
 		service.MustNotBeError(err)
 
-		setAdditionalTimeForGroupInContest(store, groupID, itemID, contestInfo.ParticipantsGroupID,
+		srv.setAdditionalTimeForGroupInContest(store, groupID, itemID, contestInfo.ParticipantsGroupID,
 			contestInfo.DurationInSeconds, seconds)
 		return nil
 	})
@@ -135,7 +135,7 @@ func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, 
 	return itemID, groupID, seconds, service.NoError
 }
 
-func setAdditionalTimeForGroupInContest(
+func (srv *Service) setAdditionalTimeForGroupInContest(
 	store *database.DataStore, groupID, itemID, participantsGroupID, durationInSeconds, additionalTimeInSeconds int64,
 ) {
 	groupContestItemStore := store.GroupContestItems()
@@ -230,7 +230,6 @@ func setAdditionalTimeForGroupInContest(
 	`, itemID, itemID).Error())
 	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 	if groupsGroupsModified {
-		store.ScheduleGroupsAncestorsPropagation()
-		store.ScheduleResultsPropagation()
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"groups_ancestors", "results"})
 	}
 }
