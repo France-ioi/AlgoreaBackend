@@ -343,21 +343,21 @@ func (s *ResultStore) propagate() (err error) {
 			return nil
 		}))
 
-		// If items have been unlocked, need to recompute access
-		if groupsUnlocked > 0 {
-			mustNotBeError(s.InTransaction(func(s *DataStore) error {
-				// generate permissions_generated from permissions_granted
-				s.SchedulePermissionsPropagation()
-				// we should compute attempts again as new permissions were set and
-				// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-				s.ScheduleResultsPropagation()
-
-				return nil
-			}))
-		}
-
 		return nil
 	}))
+
+	// If items have been unlocked, need to recompute access
+	if groupsUnlocked > 0 {
+		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			// generate permissions_generated from permissions_granted
+			s.SchedulePermissionsPropagation()
+			// we should compute attempts again as new permissions were set and
+			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
+			s.ScheduleResultsPropagation()
+
+			return nil
+		}))
+	}
 
 	return nil
 }
