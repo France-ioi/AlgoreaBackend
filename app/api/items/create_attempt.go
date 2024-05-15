@@ -101,7 +101,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		attemptID, err = store.Attempts().CreateNew(participantID, parentAttemptID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
-		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+		store.SchedulePropagationAsync([]string{"results"})
 		return nil
 	})
 	if apiError != service.NoError {

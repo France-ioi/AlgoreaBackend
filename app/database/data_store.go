@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/France-ioi/AlgoreaBackend/app"
+
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
 
@@ -176,10 +178,11 @@ func (s *DataStore) NewID() int64 {
 }
 
 type awaitingTriggers struct {
-	ItemAncestors  bool
-	GroupAncestors bool
-	Permissions    bool
-	Results        bool
+	AsyncPropagation []string
+	ItemAncestors    bool
+	GroupAncestors   bool
+	Permissions      bool
+	Results          bool
 }
 type dbContextKey string
 
@@ -202,6 +205,11 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 
 	triggersToRun := s.ctx.Value(triggersContextKey).(*awaitingTriggers)
 
+	if len(triggersToRun.AsyncPropagation) > 0 {
+		endpoint := app.GetPropagationEndpoint(app.LoadConfig())
+
+		s.SchedulePropagation(endpoint, triggersToRun.AsyncPropagation)
+	}
 	if triggersToRun.GroupAncestors {
 		triggersToRun.GroupAncestors = false
 		s.createNewAncestors("groups", "group")
@@ -220,6 +228,12 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	}
 
 	return err
+}
+
+// SchedulePropagationAsync schedules an asynchronous run of the propagation of the given types after the transaction commit.
+func (s *DataStore) SchedulePropagationAsync(types []string) {
+	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	triggersToRun.AsyncPropagation = append(triggersToRun.AsyncPropagation, types...)
 }
 
 // ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.

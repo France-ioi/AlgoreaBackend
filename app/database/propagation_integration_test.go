@@ -1,17 +1,17 @@
-package service_test
+package database_test
 
 import (
 	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/thingful/httpmock"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
@@ -103,7 +103,7 @@ func TestSchedulePropagation(t *testing.T) {
 				}
 			}
 
-			service.SchedulePropagation(store, tt.args.endpoint, []string{"permissions"})
+			store.SchedulePropagation(tt.args.endpoint, []string{"permissions"})
 
 			exists, err := store.Permissions().Where("item_id = 1").HasRows()
 			assert.NoError(t, err)

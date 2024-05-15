@@ -171,3 +171,8 @@ func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem, err e
 	err = globalConfig.UnmarshalKey(domainsConfigKey, &config)
 	return
 }
+
+// GetPropagationEndpoint returns the propagation endpoint from the config.
+func GetPropagationEndpoint(globalConfig *viper.Viper) string {
+	return ServerConfig(globalConfig).GetString("propagation_endpoint")
+}

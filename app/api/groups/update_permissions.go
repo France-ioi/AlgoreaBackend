@@ -204,7 +204,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 
 			propagationsToRun := savePermissionsIntoDB(groupID, itemID, sourceGroupID, dataMap, s)
 
-			service.SchedulePropagation(s, srv.GetPropagationEndpoint(), propagationsToRun)
+			s.SchedulePropagationAsync(propagationsToRun)
 		}
 		return nil
 	})

@@ -91,7 +91,7 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 			participantID, attemptID, participantID, participantID).
 			Error())
 
-		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"groups_ancestors"})
+		store.SchedulePropagationAsync([]string{"groups_ancestors"})
 
 		return nil
 	})

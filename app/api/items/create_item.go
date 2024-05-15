@@ -276,7 +276,7 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 	if err == nil {
 		propagationsToRun = append(propagationsToRun, "permissions", "results")
 
-		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)
+		store.SchedulePropagationAsync(propagationsToRun)
 	}
 
 	return itemID, apiError, err

@@ -230,6 +230,6 @@ func (srv *Service) setAdditionalTimeForGroupInContest(
 	`, itemID, itemID).Error())
 	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 	if groupsGroupsModified {
-		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"groups_ancestors", "results"})
+		store.SchedulePropagationAsync([]string{"groups_ancestors", "results"})
 	}
 }

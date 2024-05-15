@@ -116,7 +116,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 			// generate permissions_generated from permissions_granted
 			// we should compute attempts again as new permissions were set and
 			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
+			store.SchedulePropagationAsync([]string{"permissions", "results"})
 		}
 		return err
 	})
