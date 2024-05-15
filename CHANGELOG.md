@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.18.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.7...v2.18.8) - 2024-05-15
+- make `startResultPath` and `startResult` use the async propagation
+- bug fix: possible deadlock in propagation
+
 ## [v2.18.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.6...v2.18.7) - 2024-05-14
 - speed up the "get-result-path" service
 
