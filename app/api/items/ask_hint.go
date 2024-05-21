@@ -28,10 +28,12 @@ import (
 //		Saves the hint request into `results` and generates a new task token.
 //
 //
+//		This service doesn't require authentication. The user is identified by the task token.
+//
+//
 //		Restrictions:
 //
-//			* `task_token` should belong to the current user, otherwise the "bad request" response is returned.
-//			* The current user should have submission rights to the `task_token`'s item,
+//			* The task token's user should have submission rights to the `task_token`'s item,
 //				otherwise the "forbidden" response is returned.
 //			* There should be a row in the `results` with `participant_id`, `attempt_id`, and `item_id` matching the tokens
 //				and `attempts.allows_submissions_until` should be equal to time in the future,
