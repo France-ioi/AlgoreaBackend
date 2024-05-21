@@ -29,8 +29,7 @@ Feature: Submit a new answer
       | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
 
   Scenario: User is able to submit a new answer
-    Given I am the user with id "101"
-    And time is frozen
+    Given time is frozen
     And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
@@ -81,8 +80,7 @@ Feature: Submit a new answer
     And the table "results_propagate" should be empty
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
-    Given I am the user with id "101"
-    And time is frozen
+    Given time is frozen
     And "userTaskToken" is a token signed by the app with the following payload:
       """
       {

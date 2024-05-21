@@ -90,14 +90,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
-
-	if user.GroupID != requestData.TaskToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.TaskToken.Converted.UserID, user.GroupID))
-	}
-
 	var answerID int64
 	var hintsInfo *database.HintsInfo
 	apiError := service.NoError
@@ -124,7 +116,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		service.MustNotBeError(err)
 
 		answerID, err = store.Answers().SubmitNewAnswer(
-			user.GroupID, requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+			requestData.TaskToken.Converted.UserID, requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 			requestData.TaskToken.Converted.LocalItemID, *requestData.Answer)
 		service.MustNotBeError(err)
 

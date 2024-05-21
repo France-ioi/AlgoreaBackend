@@ -23,8 +23,7 @@ Feature: Submit a new answer - robustness
       | 101            | 1          | 60      |
 
   Scenario: Wrong JSON in request
-    Given I am the user with id "101"
-    When I send a POST request to "/answers" with the following body:
+    Given I send a POST request to "/answers" with the following body:
       """
       []
       """
@@ -33,8 +32,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: No task_token
-    Given I am the user with id "101"
-    When I send a POST request to "/answers" with the following body:
+    Given I send a POST request to "/answers" with the following body:
       """
       {
         "answer": "print 1"
@@ -45,8 +43,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: Wrong task_token
-    Given I am the user with id "101"
-    When I send a POST request to "/answers" with the following body:
+    Given I send a POST request to "/answers" with the following body:
       """
       {
         "task_token": "ADSFADQER.ASFDAS.ASDFSDA",
@@ -58,8 +55,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: Missing answer
-    Given I am the user with id "101"
-    And "userTaskToken" is a token signed by the app with the following payload:
+    Given "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -79,8 +75,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: Wrong idUser
-    Given I am the user with id "101"
-    And "userTaskToken" is a token signed by the app with the following payload:
+    Given "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "",
@@ -101,8 +96,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: Wrong idItemLocal
-    Given I am the user with id "101"
-    And "userTaskToken" is a token signed by the app with the following payload:
+    Given "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -122,8 +116,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: Wrong idAttempt
-    Given I am the user with id "101"
-    And "userTaskToken" is a token signed by the app with the following payload:
+    Given "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -143,31 +136,8 @@ Feature: Submit a new answer - robustness
     And the response error message should contain "Invalid task_token: wrong idAttempt"
     And the table "answers" should stay unchanged
 
-  Scenario: idUser doesn't match the user's group id
-    Given I am the user with id "101"
-    And "userTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "20",
-        "idItemLocal": "50",
-        "idAttempt": "100/1",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    When I send a POST request to "/answers" with the following body:
-      """
-      {
-        "task_token": "{{userTaskToken}}",
-        "answer": "print(1)"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Token doesn't correspond to user session: got idUser=20, expected 101"
-    And the table "answers" should stay unchanged
-
   Scenario: User not found
-    Given I am the user with id "404"
-    And "userTaskToken" is a token signed by the app with the following payload:
+    Given "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "404",
@@ -183,13 +153,12 @@ Feature: Submit a new answer - robustness
         "answer": "print(1)"
       }
       """
-    Then the response code should be 401
-    And the response error message should contain "Invalid access token"
+    Then the response code should be 403
+    And the response error message should contain "No access to the task item"
     And the table "answers" should stay unchanged
 
   Scenario: No submission rights
-    Given I am the user with id "101"
-    And "userTaskToken" is a token signed by the app with the following payload:
+    Given "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -210,8 +179,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: The attempt is expired (doesn't allow submissions anymore)
-    Given I am the user with id "101"
-    And "userTaskToken" is a token signed by the app with the following payload:
+    Given "userTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
