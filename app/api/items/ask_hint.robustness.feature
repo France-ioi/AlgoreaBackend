@@ -40,8 +40,7 @@ Feature: Ask for a hint - robustness
     And time is frozen
 
   Scenario: Wrong JSON in request
-    Given I am the user with id "101"
-    When I send a POST request to "/items/ask-hint" with the following body:
+    Given I send a POST request to "/items/ask-hint" with the following body:
       """
       []
       """
@@ -49,75 +48,8 @@ Feature: Ask for a hint - robustness
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.askHintRequestWrapper"
     And the table "attempts" should stay unchanged
 
-  Scenario: User not found
-    Given I am the user with id "404"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "404",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "https://platformwithkey/50",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "hintRequestToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "404",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "https://platformwithkey/50",
-        "askedHint": {"rotorIndex":1}
-      }
-      """
-    When I send a POST request to "/items/ask-hint" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "hint_requested": "{{hintRequestToken}}"
-      }
-      """
-    Then the response code should be 401
-    And the response error message should contain "Invalid access token"
-    And the table "attempts" should stay unchanged
-
-  Scenario: idUser in task_token doesn't match the user's id
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "20",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "https://platformwithkey/50",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "hintRequestToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "https://platformwithkey/50",
-        "askedHint": {"rotorIndex":1}
-      }
-      """
-    When I send a POST request to "/items/ask-hint" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "hint_requested": "{{hintRequestToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Token in task_token doesn't correspond to user session: got idUser=20, expected 10"
-    And the table "attempts" should stay unchanged
-
   Scenario: itemUrls of task_token and hint_requested don't match
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -149,8 +81,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: idUser in hint_requested doesn't match the user's id
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -182,8 +113,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: idAttempt in hint_requested & task_token don't match
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -215,8 +145,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: idItemLocal in hint_requested & task_token don't match
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -248,8 +177,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: No submission rights
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -281,8 +209,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: idAttempt not found
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -314,8 +241,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: missing askedHint
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -346,8 +272,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: The attempt is expired (doesn't allow submissions anymore)
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -379,8 +304,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: Should return an error if there is a public key and the hint token's content is sent in clear JSON
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -407,8 +331,7 @@ Feature: Ask for a hint - robustness
     And the response error message should contain "Invalid hint_requested: json: cannot unmarshal object into Go value of type string"
 
   Scenario: Should return an error if there is no public key and the hint token's content is sent in clear JSON
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",

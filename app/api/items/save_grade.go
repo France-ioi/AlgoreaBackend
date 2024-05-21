@@ -103,7 +103,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 	user := srv.GetUser(r)
 
-	if apiError := checkHintOrScoreTokenRequiredFields(user, requestData.TaskToken, "score_token",
+	if apiError := checkHintOrScoreTokenRequiredFields(user.GroupID, requestData.TaskToken, "score_token",
 		requestData.ScoreToken.Converted.UserID, requestData.ScoreToken.LocalItemID,
 		requestData.ScoreToken.ItemURL, requestData.ScoreToken.AttemptID); apiError != service.NoError {
 		return apiError

@@ -26,8 +26,7 @@ Feature: Ask for a hint
     And time is frozen
 
   Scenario: User is able to ask for a hint
-    Given I am the user with id "101"
-    And the database has the following table 'attempts':
+    Given the database has the following table 'attempts':
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
@@ -90,8 +89,7 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
 
   Scenario: User is able to ask for a hint with a minimal hint token
-    Given I am the user with id "101"
-    And the database has the following table 'attempts':
+    Given the database has the following table 'attempts':
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
@@ -154,8 +152,7 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
 
   Scenario: User is able to ask for an already given hint
-    Given I am the user with id "101"
-    And the database has the following table 'attempts':
+    Given the database has the following table 'attempts':
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
@@ -218,8 +215,7 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
 
   Scenario: Can't parse hints_requested
-    Given I am the user with id "101"
-    And the database has the following table 'attempts':
+    Given the database has the following table 'attempts':
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table 'results':
