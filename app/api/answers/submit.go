@@ -8,14 +8,44 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/France-ioi/AlgoreaBackend/app/doc"
+
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/doc"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
+
+// SubmitRequest represents a JSON request body format needed by answers.submit()
+// swagger:ignore
+type SubmitRequest struct {
+	TaskToken *token.Task `json:"task_token"`
+	Answer    *string     `json:"answer"`
+
+	PublicKey *rsa.PublicKey
+}
+
+// swagger:model
+type submitRequestWrapper struct {
+	// required:true
+	TaskToken *string `json:"task_token"`
+	// required:true
+	Answer *string `json:"answer"`
+}
+
+// Created. Success response with answer_token
+// swagger:model answerSubmitResponse
+type answerSubmitResponse struct {
+	// description
+	// swagger:allOf
+	doc.CreatedResponse
+	// required:true
+	Data struct {
+		AnswerToken string `json:"answer_token"`
+	} `json:"data"`
+}
 
 // swagger:operation POST /answers answers itemGetAnswerToken
 //
@@ -139,23 +169,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	return service.NoError
 }
 
-// SubmitRequest represents a JSON request body format needed by answers.submit()
-// swagger:ignore
-type SubmitRequest struct {
-	TaskToken *token.Task `json:"task_token"`
-	Answer    *string     `json:"answer"`
-
-	PublicKey *rsa.PublicKey
-}
-
-// swagger:model
-type submitRequestWrapper struct {
-	// required:true
-	TaskToken *string `json:"task_token"`
-	// required:true
-	Answer *string `json:"answer"`
-}
-
 // UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken.
 func (requestData *SubmitRequest) UnmarshalJSON(raw []byte) error {
 	var wrapper submitRequestWrapper
@@ -187,15 +200,3 @@ func (requestData *SubmitRequest) Bind(r *http.Request) error {
 }
 
 var _ render.Binder = (*SubmitRequest)(nil)
-
-// Created. Success response with answer_token
-// swagger:model answerSubmitResponse
-type answerSubmitResponse struct {
-	// description
-	// swagger:allOf
-	doc.CreatedResponse
-	// required:true
-	Data struct {
-		AnswerToken string `json:"answer_token"`
-	} `json:"data"`
-}
