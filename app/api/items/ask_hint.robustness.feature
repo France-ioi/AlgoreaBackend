@@ -48,6 +48,40 @@ Feature: Ask for a hint - robustness
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.askHintRequestWrapper"
     And the table "attempts" should stay unchanged
 
+  Scenario: Expired task_token
+    Given the time now is "2020-01-01T00:00:00Z"
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemURL": "https://platformwithkey/50",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    Then the time now is "2020-01-03T00:00:00Z"
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemUrl": "https://platformwithkey/404",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
+    When I send a POST request to "/items/ask-hint" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid task_token: the token has expired"
+    And the table "answers" should stay unchanged
+
   Scenario: itemUrls of task_token and hint_requested don't match
     Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """

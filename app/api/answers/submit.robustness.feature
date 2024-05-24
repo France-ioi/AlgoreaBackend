@@ -54,6 +54,28 @@ Feature: Submit a new answer - robustness
     And the response error message should contain "Invalid task_token: illegal base64 data at input byte 8"
     And the table "answers" should stay unchanged
 
+  Scenario: Expired task_token
+    Given the time now is "2020-01-01T00:00:00Z"
+    And "userTaskToken" is a token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idAttempt": "100/2",
+        "idItemLocal": "50",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    Then the time now is "2020-01-03T00:00:00Z"
+    When I send a POST request to "/answers" with the following body:
+      """
+      {
+        "task_token": "{{userTaskToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid task_token: the token has expired"
+    And the table "answers" should stay unchanged
+
   Scenario: Missing answer
     Given "userTaskToken" is a token signed by the app with the following payload:
       """
