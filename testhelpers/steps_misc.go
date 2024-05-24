@@ -160,6 +160,35 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 	return nil
 }
 
+func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
+	varName, signerName string,
+	jsonPayload *messages.PickleStepArgument_PickleDocString,
+) error {
+	privateKey := ctx.getPrivateKeyOf(signerName)
+
+	data, err := ctx.preprocessString(jsonPayload.Content)
+	if err != nil {
+		return err
+	}
+
+	var payload map[string]interface{}
+	if err := json.Unmarshal([]byte(data), &payload); err != nil {
+		return err
+	}
+
+	generatedToken := token.Generate(payload, privateKey)
+
+	// A token is of the following form:
+	// HEADER.PAYLOAD.SIGNATURE (separated by dots)
+	// To falsify the token, we increment the last byte of the payload.
+	lastPayloadPosition := strings.LastIndex(string(generatedToken), ".") - 1
+	generatedToken[lastPayloadPosition]++ // falsify the token.
+
+	ctx.templateSet.AddGlobal(varName, generatedToken)
+
+	return nil
+}
+
 // TheApplicationConfigIs specifies variables of the app configuration given in YAML format.
 func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *messages.PickleStepArgument_PickleDocString) error {
 	config := viper.New()

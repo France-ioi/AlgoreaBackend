@@ -80,7 +80,37 @@ Feature: Ask for a hint - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid task_token: the token has expired"
-    And the table "answers" should stay unchanged
+
+  Scenario: Falsified task_token with non-matching signature
+    Given "priorUserTaskToken" is a falsified token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemURL": "https://platformwithkey/50",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    And "hintRequestToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemUrl": "https://platformwithkey/404",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
+    When I send a POST request to "/items/ask-hint" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid task_token: invalid token: crypto/rsa: verification error"
 
   Scenario: itemUrls of task_token and hint_requested don't match
     Given "priorUserTaskToken" is a token signed by the app with the following payload:

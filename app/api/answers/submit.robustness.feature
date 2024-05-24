@@ -76,6 +76,26 @@ Feature: Submit a new answer - robustness
     And the response error message should contain "Invalid task_token: the token has expired"
     And the table "answers" should stay unchanged
 
+  Scenario: Falsified task_token with non-matching signature
+    Given "userTaskToken" is a falsified token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idAttempt": "100/2",
+        "idItemLocal": "50",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    When I send a POST request to "/answers" with the following body:
+      """
+      {
+        "task_token": "{{userTaskToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid task_token: invalid token: crypto/rsa: verification error"
+    And the table "answers" should stay unchanged
+
   Scenario: Missing answer
     Given "userTaskToken" is a token signed by the app with the following payload:
       """

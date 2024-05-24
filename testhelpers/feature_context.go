@@ -100,6 +100,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DbTimeNow)
 
 	s.Step(`^"([^"]+)" is a token signed by (.+) with the following payload:$`, ctx.SignedTokenIsDistributed)
+	s.Step(`^"([^"]+)" is a falsified token signed by (.+) with the following payload:$`, ctx.FalsifiedSignedTokenIsDistributed)
 	s.Step(`^logs should contain:$`, ctx.LogsShouldContain)
 
 	s.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`, ctx.TheLoginModuleTokenEndpointForCodeReturns)
