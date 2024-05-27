@@ -78,8 +78,6 @@ type answerSubmitResponse struct {
 //				"$ref": "#/definitions/answerSubmitResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
-//		"401":
-//			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
 //		"500":
