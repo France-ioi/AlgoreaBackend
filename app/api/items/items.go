@@ -71,8 +71,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}start-result", service.AppHandler(srv.startResult).ServeHTTP)
 	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}start-result-path", service.AppHandler(srv.startResultPath).ServeHTTP)
 	routerWithAuthAndParticipant.Get("/items/{item_id}/path-from-root", service.AppHandler(srv.getPathFromRoot).ServeHTTP)
-	router.Get("/items/{item_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByItemID).ServeHTTP)
-	router.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByItemID).ServeHTTP)
+	routerWithAuth.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(userID int64, taskToken *token.Task, otherTokenFieldName string,
