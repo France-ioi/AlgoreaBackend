@@ -144,7 +144,7 @@ Feature: Ask for a hint - robustness
     And the response error message should contain "Wrong itemUrl in hint_requested token"
     And the table "attempts" should stay unchanged
 
-  Scenario: idUser in hint_requested doesn't match the user's id
+  Scenario: idUser in hint_requested token doesn't match the idUser in the task token
     Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
