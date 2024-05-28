@@ -28,10 +28,12 @@ import (
 //		Saves the hint request into `results` and generates a new task token.
 //
 //
+//		This service doesn't require authentication. The user is identified by the task token.
+//
+//
 //		Restrictions:
 //
-//			* `task_token` should belong to the current user, otherwise the "bad request" response is returned.
-//			* The current user should have submission rights to the `task_token`'s item,
+//			* The task token's user should have submission rights to the `task_token`'s item,
 //				otherwise the "forbidden" response is returned.
 //			* There should be a row in the `results` with `participant_id`, `attempt_id`, and `item_id` matching the tokens
 //				and `attempts.allows_submissions_until` should be equal to time in the future,
@@ -74,8 +76,6 @@ import (
 //								type: string
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
-//		"401":
-//			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
@@ -91,10 +91,9 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-
 	var apiError service.APIError
-	if apiError = checkHintOrScoreTokenRequiredFields(user, requestData.TaskToken, "hint_requested",
+	if apiError = checkHintOrScoreTokenRequiredFields(requestData.TaskToken.Converted.UserID, requestData.TaskToken,
+		"hint_requested",
 		requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
 		requestData.HintToken.ItemURL, requestData.HintToken.AttemptID); apiError != service.NoError {
 		return apiError

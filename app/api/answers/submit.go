@@ -8,14 +8,44 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/France-ioi/AlgoreaBackend/app/doc"
+
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/doc"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
+
+// SubmitRequest represents a JSON request body format needed by answers.submit()
+// swagger:ignore
+type SubmitRequest struct {
+	TaskToken *token.Task `json:"task_token"`
+	Answer    *string     `json:"answer"`
+
+	PublicKey *rsa.PublicKey
+}
+
+// swagger:model
+type submitRequestWrapper struct {
+	// required:true
+	TaskToken *string `json:"task_token"`
+	// required:true
+	Answer *string `json:"answer"`
+}
+
+// Created. Success response with answer_token
+// swagger:model answerSubmitResponse
+type answerSubmitResponse struct {
+	// description
+	// swagger:allOf
+	doc.CreatedResponse
+	// required:true
+	Data struct {
+		AnswerToken string `json:"answer_token"`
+	} `json:"data"`
+}
 
 // swagger:operation POST /answers answers itemGetAnswerToken
 //
@@ -25,9 +55,11 @@ import (
 //		Generate and return an answer token from user's answer and task token.
 //		It is used to bind an answer with task parameters so that the TaskGrader can check if they have not been altered.
 //
-//		* task_token.idUser should be the current user.
 //
-//		* The user should have submission rights on `task_token.idItemLocal`.
+//		This service doesn't require authentication. The user is identified by the task token.
+//
+//
+//		* The task token's user should have submission rights on `task_token.idItemLocal`.
 //
 //		* The attempt should allow submission (`attempts.allows_submissions_until` should be a time in the future).
 //
@@ -46,8 +78,6 @@ import (
 //				"$ref": "#/definitions/answerSubmitResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
-//		"401":
-//			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
 //		"500":
@@ -58,14 +88,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	var err error
 	if err = render.Bind(httpReq, &requestData); err != nil {
 		return service.ErrInvalidRequest(err)
-	}
-
-	user := srv.GetUser(httpReq)
-
-	if user.GroupID != requestData.TaskToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.TaskToken.Converted.UserID, user.GroupID))
 	}
 
 	var answerID int64
@@ -94,7 +116,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		service.MustNotBeError(err)
 
 		answerID, err = store.Answers().SubmitNewAnswer(
-			user.GroupID, requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
+			requestData.TaskToken.Converted.UserID, requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
 			requestData.TaskToken.Converted.LocalItemID, *requestData.Answer)
 		service.MustNotBeError(err)
 
@@ -139,23 +161,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	return service.NoError
 }
 
-// SubmitRequest represents a JSON request body format needed by answers.submit()
-// swagger:ignore
-type SubmitRequest struct {
-	TaskToken *token.Task `json:"task_token"`
-	Answer    *string     `json:"answer"`
-
-	PublicKey *rsa.PublicKey
-}
-
-// swagger:model
-type submitRequestWrapper struct {
-	// required:true
-	TaskToken *string `json:"task_token"`
-	// required:true
-	Answer *string `json:"answer"`
-}
-
 // UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken.
 func (requestData *SubmitRequest) UnmarshalJSON(raw []byte) error {
 	var wrapper submitRequestWrapper
@@ -187,15 +192,3 @@ func (requestData *SubmitRequest) Bind(r *http.Request) error {
 }
 
 var _ render.Binder = (*SubmitRequest)(nil)
-
-// Created. Success response with answer_token
-// swagger:model answerSubmitResponse
-type answerSubmitResponse struct {
-	// description
-	// swagger:allOf
-	doc.CreatedResponse
-	// required:true
-	Data struct {
-		AnswerToken string `json:"answer_token"`
-	} `json:"data"`
-}

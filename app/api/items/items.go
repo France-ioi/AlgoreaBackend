@@ -29,64 +29,65 @@ const (
 // SetRoutes defines the routes for this package in a route group.
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserMiddleware(srv.Base))
-	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Base))
-
-	router.Post("/items", service.AppHandler(srv.createItem).ServeHTTP)
-	routerWithParticipant.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)
-	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
-	router.Delete("/items/{item_id}", service.AppHandler(srv.deleteItem).ServeHTTP)
-
-	routerWithParticipant.Get("/items/{item_id}/children", service.AppHandler(srv.getItemChildren).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}/parents", service.AppHandler(srv.getItemParents).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}/prerequisites", service.AppHandler(srv.getItemPrerequisites).ServeHTTP)
-	routerWithParticipant.Post("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}",
-		service.AppHandler(srv.createDependency).ServeHTTP)
-	routerWithParticipant.Delete("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}",
-		service.AppHandler(srv.deleteDependency).ServeHTTP)
-	routerWithParticipant.Post("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}/apply",
-		service.AppHandler(srv.applyDependency).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}/dependencies", service.AppHandler(srv.getItemDependencies).ServeHTTP)
-	router.Get("/items/search", service.AppHandler(srv.searchForItems).ServeHTTP)
-
-	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/generate-task-token",
-		service.AppHandler(srv.generateTaskToken).ServeHTTP)
-	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
-	routerWithParticipant.Put("/items/{item_id}/attempts/{attempt_id}", service.AppHandler(srv.updateResult).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
-	routerWithParticipant.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
-	routerWithParticipant.Get("/items/{ancestor_item_id}/log", service.AppHandler(srv.getActivityLogForItem).ServeHTTP)
-	routerWithParticipant.Get("/items/log", service.AppHandler(srv.getActivityLogForAllItems).ServeHTTP)
-	router.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
-	router.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
 	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
-	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
-	router.Get("/items/{item_id}/entry-state",
+
+	routerWithAuth := router.With(auth.UserMiddleware(srv.Base))
+	routerWithAuthAndParticipant := routerWithAuth.With(service.ParticipantMiddleware(srv.Base))
+
+	routerWithAuth.Post("/items", service.AppHandler(srv.createItem).ServeHTTP)
+	routerWithAuthAndParticipant.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)
+	routerWithAuth.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
+	routerWithAuth.Delete("/items/{item_id}", service.AppHandler(srv.deleteItem).ServeHTTP)
+
+	routerWithAuthAndParticipant.Get("/items/{item_id}/children", service.AppHandler(srv.getItemChildren).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{item_id}/parents", service.AppHandler(srv.getItemParents).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{item_id}/navigation", service.AppHandler(srv.getItemNavigation).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{item_id}/prerequisites", service.AppHandler(srv.getItemPrerequisites).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}",
+		service.AppHandler(srv.createDependency).ServeHTTP)
+	routerWithAuthAndParticipant.Delete("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}",
+		service.AppHandler(srv.deleteDependency).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/items/{dependent_item_id}/prerequisites/{prerequisite_item_id}/apply",
+		service.AppHandler(srv.applyDependency).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{item_id}/dependencies", service.AppHandler(srv.getItemDependencies).ServeHTTP)
+	routerWithAuth.Get("/items/search", service.AppHandler(srv.searchForItems).ServeHTTP)
+
+	routerWithAuthAndParticipant.Post("/items/{item_id}/attempts/{attempt_id}/generate-task-token",
+		service.AppHandler(srv.generateTaskToken).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
+	routerWithAuthAndParticipant.Put("/items/{item_id}/attempts/{attempt_id}", service.AppHandler(srv.updateResult).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}attempts", service.AppHandler(srv.createAttempt).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{ancestor_item_id}/log", service.AppHandler(srv.getActivityLogForItem).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/log", service.AppHandler(srv.getActivityLogForAllItems).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
+	routerWithAuth.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
+	routerWithAuth.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
-	routerWithParticipant.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)
-	routerWithParticipant.Post("/attempts/{attempt_id}/end", service.AppHandler(srv.endAttempt).ServeHTTP)
-	routerWithParticipant.Post("/items/{ids:(\\d+/)+}start-result", service.AppHandler(srv.startResult).ServeHTTP)
-	routerWithParticipant.Post("/items/{ids:(\\d+/)+}start-result-path", service.AppHandler(srv.startResultPath).ServeHTTP)
-	routerWithParticipant.Get("/items/{item_id}/path-from-root", service.AppHandler(srv.getPathFromRoot).ServeHTTP)
-	router.Get("/items/{item_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByItemID).ServeHTTP)
-	router.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/attempts/{attempt_id}/end", service.AppHandler(srv.endAttempt).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}start-result", service.AppHandler(srv.startResult).ServeHTTP)
+	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}start-result-path", service.AppHandler(srv.startResultPath).ServeHTTP)
+	routerWithAuthAndParticipant.Get("/items/{item_id}/path-from-root", service.AppHandler(srv.getPathFromRoot).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByItemID).ServeHTTP)
+	routerWithAuth.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
 }
 
-func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.Task, otherTokenFieldName string,
+func checkHintOrScoreTokenRequiredFields(userID int64, taskToken *token.Task, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string,
 ) service.APIError {
-	if user.GroupID != taskToken.Converted.UserID {
+	if userID != taskToken.Converted.UserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
-			taskToken.Converted.UserID, user.GroupID))
+			taskToken.Converted.UserID, userID))
 	}
-	if user.GroupID != otherTokenConvertedUserID {
+	if userID != otherTokenConvertedUserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in %s doesn't correspond to user session: got idUser=%d, expected %d",
-			otherTokenFieldName, otherTokenConvertedUserID, user.GroupID))
+			otherTokenFieldName, otherTokenConvertedUserID, userID))
 	}
 	if taskToken.LocalItemID != otherTokenLocalItemID {
 		return service.ErrInvalidRequest(fmt.Errorf("wrong idItemLocal in %s token", otherTokenFieldName))

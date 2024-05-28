@@ -25,14 +25,15 @@ type answerData struct {
 // SetRoutes defines the routes for this package in a route answers.
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserMiddleware(srv.Base))
-	router.Get("/items/{item_id}/answers", service.AppHandler(srv.listAnswers).ServeHTTP)
-	router.Get("/items/{item_id}/best-answer", service.AppHandler(srv.getBestAnswer).ServeHTTP)
-	router.Get("/answers/{answer_id}", service.AppHandler(srv.getAnswer).ServeHTTP)
 	router.Post("/answers", service.AppHandler(srv.submit).ServeHTTP)
-	router.Post("/answers/{answer_id}/generate-task-token", service.AppHandler(srv.generateTaskToken).ServeHTTP)
 
-	routerWithParticipant := router.With(service.ParticipantMiddleware(srv.Base))
+	routerWithAuth := router.With(auth.UserMiddleware(srv.Base))
+	routerWithAuth.Get("/items/{item_id}/answers", service.AppHandler(srv.listAnswers).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/best-answer", service.AppHandler(srv.getBestAnswer).ServeHTTP)
+	routerWithAuth.Get("/answers/{answer_id}", service.AppHandler(srv.getAnswer).ServeHTTP)
+	routerWithAuth.Post("/answers/{answer_id}/generate-task-token", service.AppHandler(srv.generateTaskToken).ServeHTTP)
+
+	routerWithParticipant := routerWithAuth.With(service.ParticipantMiddleware(srv.Base))
 	routerWithParticipant.Get("/items/{item_id}/current-answer", service.AppHandler(srv.getCurrentAnswer).ServeHTTP)
 	routerWithParticipant.Post("/items/{item_id}/attempts/{attempt_id}/answers", service.AppHandler(srv.answerCreate).ServeHTTP)
 	routerWithParticipant.Put("/items/{item_id}/attempts/{attempt_id}/answers/current", service.AppHandler(srv.updateCurrentAnswer).ServeHTTP)
