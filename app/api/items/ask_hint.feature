@@ -101,7 +101,7 @@ Feature: Ask for a hint
       | attempt_id | participant_id | item_id | hints_requested        | hints_cached | started_at          |
       | 0          | 201            | 50      | [0,  1, "hint" , null] | 4            | 2020-01-01 00:00:00 |
       | 0          | 201            | 10      | null                   | 0            | 2020-01-01 00:00:00 |
-  And "priorUserTaskToken" is a token signed by the app with the following payload:
+    And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
