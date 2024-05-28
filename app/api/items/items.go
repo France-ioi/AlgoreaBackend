@@ -30,6 +30,7 @@ const (
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
+	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 
 	routerWithAuth := router.With(auth.UserMiddleware(srv.Base))
 	routerWithAuthAndParticipant := routerWithAuth.With(service.ParticipantMiddleware(srv.Base))
@@ -63,7 +64,6 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuthAndParticipant.Get("/items/log", service.AppHandler(srv.getActivityLogForAllItems).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
 	routerWithAuth.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
-	routerWithAuth.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
 	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)

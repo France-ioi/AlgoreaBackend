@@ -27,6 +27,9 @@ import (
 //	summary: Save the grade
 //	description: >
 //
+//		This service doesn't require authentication. The user is identified by the answer token or by the score token.
+//
+//
 //		Saves the grade returned by a grading app into the `gradings` table and updates the attempt results in the DB.
 //		When the `score` is big enough, the service unlocks locked dependent items (if any) and updates `bAccessSolutions`
 //		of the task token.
