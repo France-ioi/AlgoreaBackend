@@ -84,16 +84,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "50",
-            "idAttempt": "101/0",
-            "randomSeed": "456",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "platformName": "{{app().Config.GetString("token.platformName")}}",
-            "bAccessSolutions": true
-          },
           "validated": true
         },
         "message": "created",
@@ -160,15 +150,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "50",
-            "idAttempt": "101/0",
-            "randomSeed": "",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
-          },
           "validated": false
         },
         "message": "created",
@@ -242,15 +223,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "60",
-            "idAttempt": "101/1",
-            "randomSeed": "",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
-          },
           "validated": false
         },
         "message": "created",
@@ -320,15 +292,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "60",
-            "idAttempt": "101/0",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-            "randomSeed": "",
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
-          },
           "validated": false
         },
         "message": "created",
@@ -398,16 +361,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "60",
-            "idAttempt": "101/0",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-            "randomSeed": "",
-            "platformName": "{{app().Config.GetString("token.platformName")}}",
-            "bAccessSolutions": true
-          },
           "validated": true
         },
         "message": "created",
@@ -466,16 +419,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "50",
-            "idAttempt": "101/0",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "randomSeed": "",
-            "bAccessSolutions": true,
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
-          },
           "validated": true
         },
         "message": "created",
@@ -528,16 +471,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "50",
-            "idAttempt": "101/0",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "randomSeed": "",
-            "bAccessSolutions": true,
-            "platformName": "{{app().Config.GetString("token.platformName")}}"
-          },
           "validated": false
         },
         "message": "created",
@@ -590,23 +523,13 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "70",
-            "idAttempt": "101/1",
-            "itemUrl": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-            "randomSeed": "",
-            "platformName": "{{app().Config.GetString("token.platformName")}}",
-            "bAccessSolutions": true
-          },
           "validated": true
         },
         "message": "created",
         "success": true
       }
       """
-    
+
   Scenario: Should ignore score_token when provided if the platform doesn't have a key. Make sure the right score is used.
     Given I am the user with id "101"
     And the database has the following table 'attempts':
@@ -664,16 +587,6 @@ Feature: Save grading result
       """
       {
         "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "101",
-            "idItemLocal": "70",
-            "idAttempt": "101/1",
-            "itemUrl": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-            "randomSeed": "",
-            "platformName": "{{app().Config.GetString("token.platformName")}}",
-            "bAccessSolutions": true
-          },
           "validated": true
         },
         "message": "created",

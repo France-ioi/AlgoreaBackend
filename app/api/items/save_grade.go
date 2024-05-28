@@ -18,7 +18,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
 )
 
 // swagger:operation POST /items/save-grade items saveGrade
@@ -123,16 +122,8 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 		return service.ErrForbidden(errors.New("the answer has been already graded or is not found"))
 	}
 
-	if validated || requestData.TaskToken.AccessSolutions != nil && !(*requestData.TaskToken.AccessSolutions) {
-		requestData.TaskToken.AccessSolutions = utils.Ptr(true)
-	}
-	requestData.TaskToken.PlatformName = srv.TokenConfig.PlatformName
-	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)
-	service.MustNotBeError(err)
-
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"task_token": newTaskToken,
-		"validated":  validated,
+		"validated": validated,
 	})))
 	return service.NoError
 }
