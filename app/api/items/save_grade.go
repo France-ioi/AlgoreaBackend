@@ -103,9 +103,13 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	userID := requestData.ScoreToken.Converted.UserID
+	if userID == 0 {
+		userID, err = strconv.ParseInt(requestData.AnswerToken.UserID, 10, 64)
+		service.MustNotBeError(err)
+	}
 
-	if apiError := checkHintOrScoreTokenRequiredFields(user.GroupID, requestData.TaskToken, "score_token",
+	if apiError := checkHintOrScoreTokenRequiredFields(userID, requestData.TaskToken, "score_token",
 		requestData.ScoreToken.Converted.UserID, requestData.ScoreToken.LocalItemID,
 		requestData.ScoreToken.ItemURL, requestData.ScoreToken.AttemptID); apiError != service.NoError {
 		return apiError
@@ -113,7 +117,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 	var validated, ok bool
 	err = store.InTransaction(func(store *database.DataStore) error {
-		validated, ok = saveGradingResultsIntoDB(store, user, &requestData)
+		validated, ok = saveGradingResultsIntoDB(store, userID, &requestData)
 		return nil
 	})
 	service.MustNotBeError(err)
@@ -128,14 +132,12 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	return service.NoError
 }
 
-func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed,
-) (validated, ok bool) {
+func saveGradingResultsIntoDB(store *database.DataStore, userID int64, requestData *saveGradeRequestParsed) (validated, ok bool) {
 	score := requestData.ScoreToken.Converted.Score
 
 	gotFullScore := score == 100
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
-	if !saveNewScoreIntoGradings(store, user, requestData, score) {
+	if !saveNewScoreIntoGradings(store, userID, requestData, score) {
 		return validated, false
 	}
 
@@ -189,9 +191,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	return validated, true
 }
 
-func saveNewScoreIntoGradings(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed, score float64,
-) bool {
+func saveNewScoreIntoGradings(store *database.DataStore, userID int64, requestData *saveGradeRequestParsed, score float64) bool {
 	answerID := requestData.ScoreToken.Converted.UserAnswerID
 	gradingStore := store.Gradings()
 
@@ -214,7 +214,7 @@ func saveNewScoreIntoGradings(store *database.DataStore, user *database.User,
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
 					"idAttempt":    requestData.TaskToken.AttemptID,
 					"idItem":       requestData.TaskToken.LocalItemID,
-					"idUser":       strconv.FormatInt(user.GroupID, 10),
+					"idUser":       strconv.FormatInt(userID, 10),
 					"idUserAnswer": requestData.ScoreToken.UserAnswerID,
 					"newScore":     score,
 					"oldScore":     *oldScore,
