@@ -318,7 +318,10 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 // Bind of saveGradeRequestParsed does nothing.
 func (requestData *saveGradeRequestParsed) Bind(*http.Request) error {
 	requestData.bindUserID()
-	requestData.bindParticipantIDAndAttemptID()
+	err := requestData.bindParticipantIDAndAttemptID()
+	if err != nil {
+		return err
+	}
 	requestData.bindLocalItemID()
 	requestData.bindItemURL()
 
@@ -339,16 +342,22 @@ func (requestData *saveGradeRequestParsed) bindUserID() {
 }
 
 // Binds the participant ID and the attempt ID from the request, coming from either the score token or the answer token.
-func (requestData *saveGradeRequestParsed) bindParticipantIDAndAttemptID() {
+func (requestData *saveGradeRequestParsed) bindParticipantIDAndAttemptID() error {
 	var participantID, attemptID int64
-	_, err := fmt.Sscanf(requestData.ScoreToken.AttemptID, "%d/%d", &participantID, &attemptID)
-	if err != nil {
+	var err error
+	if requestData.ScoreToken.AttemptID != "" {
+		_, err = fmt.Sscanf(requestData.ScoreToken.AttemptID, "%d/%d", &participantID, &attemptID)
+	} else {
 		_, err = fmt.Sscanf(requestData.AnswerToken.AttemptID, "%d/%d", &participantID, &attemptID)
-		service.MustNotBeError(err)
+	}
+	if err != nil {
+		return fmt.Errorf("invalid attempt_id in token: %w", err)
 	}
 
 	requestData.Converted.ParticipantID = participantID
 	requestData.Converted.AttemptID = attemptID
+
+	return nil
 }
 
 // Bind the local item ID from the request, coming from either the score token or the answer token.

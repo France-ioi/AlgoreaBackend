@@ -194,7 +194,7 @@ Feature: Save grading result - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idAttempt in answer_token"
+    And the response error message should contain "Invalid attempt_id in token: EOF"
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
@@ -218,7 +218,7 @@ Feature: Save grading result - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idAttempt in answer_token"
+    And the response error message should contain "Invalid attempt_id in token: input does not match format"
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
