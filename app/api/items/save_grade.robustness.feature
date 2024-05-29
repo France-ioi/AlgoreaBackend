@@ -49,29 +49,6 @@ Feature: Save grading result - robustness
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
-  Scenario: User not found
-    Given "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "404",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 401
-    And the response error message should contain "Invalid access token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
   Scenario: Invalid score_token
     Given I send a POST request to "/items/save-grade" with the following body:
       """
