@@ -192,9 +192,9 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 		if oldScore != nil {
 			if *oldScore != score {
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-					"idAttempt":    requestData.Converted.AttemptID,
-					"idItem":       requestData.Converted.LocalItemID,
-					"idUser":       strconv.FormatInt(requestData.Converted.UserID, 10),
+					"idAttempt":    requestData.ScoreToken.AttemptID,
+					"idItem":       requestData.ScoreToken.LocalItemID,
+					"idUser":       requestData.ScoreToken.UserID,
 					"idUserAnswer": requestData.ScoreToken.UserAnswerID,
 					"newScore":     score,
 					"oldScore":     *oldScore,
