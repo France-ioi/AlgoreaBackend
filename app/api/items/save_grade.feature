@@ -50,17 +50,6 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "randomSeed": "456",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -75,7 +64,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -117,16 +105,6 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 1          | 60      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -141,7 +119,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -190,16 +167,6 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 1          | 60      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "60",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -214,7 +181,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -259,16 +225,6 @@ Feature: Save grading result
       | 101            | 0          | 10      | 20             | 2018-05-29 06:38:38 | null              | null               |
       | 101            | 0          | 50      | 20             | 2018-05-29 06:38:38 | <score_edit_rule> | <score_edit_value> |
       | 101            | 0          | 60      | 20             | 2018-05-29 06:38:38 | null              | null               |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "60",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -283,7 +239,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -328,16 +283,6 @@ Feature: Save grading result
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
       | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "60",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -352,7 +297,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -385,17 +329,6 @@ Feature: Save grading result
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "bAccessSolutions": false,
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -410,7 +343,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -437,17 +369,6 @@ Feature: Save grading result
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "bAccessSolutions": true,
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -462,7 +383,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -489,16 +409,6 @@ Feature: Save grading result
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "answerToken" is a token signed by the app with the following payload:
       """
       {
@@ -513,7 +423,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score": 100.0,
         "answer_token": "{{answerToken}}"
       }
@@ -541,16 +450,6 @@ Feature: Save grading result
     And the database has the following table 'answers':
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "answerToken" is a token signed by the app with the following payload:
       """
       {
@@ -576,7 +475,6 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}",
         "score": 100.0,
         "answer_token": "{{answerToken}}"
