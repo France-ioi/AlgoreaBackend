@@ -3,6 +3,7 @@ package payloads
 import (
 	"crypto/rsa"
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -26,9 +27,12 @@ type ScoreToken struct {
 
 // ScoreTokenConverted contains converted field values of ScoreToken payload.
 type ScoreTokenConverted struct {
-	UserID       int64
-	UserAnswerID int64
-	Score        float64
+	UserID        int64
+	UserAnswerID  int64
+	Score         float64
+	LocalItemID   int64
+	ParticipantID int64
+	AttemptID     int64
 }
 
 // Bind validates a score token and converts some needed field values (called by ParseMap).
@@ -46,7 +50,15 @@ func (tt *ScoreToken) Bind() error {
 	if err != nil {
 		return errors.New("wrong score")
 	}
+	_, err = fmt.Sscanf(tt.AttemptID, "%d/%d", &tt.Converted.ParticipantID, &tt.Converted.AttemptID)
+	if err != nil {
+		return errors.New("wrong idAttempt")
+	}
+	tt.Converted.LocalItemID, err = strconv.ParseInt(tt.LocalItemID, 10, 64)
+	if err != nil {
+		return errors.New("wrong idItemLocal")
+	}
 	return nil
 }
 
-var _ Binder = (*HintToken)(nil)
+var _ Binder = (*ScoreToken)(nil)

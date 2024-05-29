@@ -156,9 +156,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	values = append(values,
-		requestData.Converted.ParticipantID,
-		requestData.Converted.AttemptID,
-		requestData.Converted.LocalItemID,
+		requestData.ScoreToken.Converted.ParticipantID,
+		requestData.ScoreToken.Converted.AttemptID,
+		requestData.ScoreToken.Converted.LocalItemID,
 	)
 	service.MustNotBeError(
 		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+ // nolint:gosec
@@ -166,8 +166,8 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 			Error()) // nolint:gosec
 	resultStore := store.Results()
 	service.MustNotBeError(resultStore.MarkAsToBePropagated(
-		requestData.Converted.ParticipantID, requestData.Converted.AttemptID,
-		requestData.Converted.LocalItemID, true))
+		requestData.ScoreToken.Converted.ParticipantID, requestData.ScoreToken.Converted.AttemptID,
+		requestData.ScoreToken.Converted.LocalItemID, true))
 	return validated, true
 }
 
@@ -212,13 +212,6 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 type saveGradeRequestParsed struct {
 	ScoreToken  *token.Score
 	AnswerToken *token.Answer
-	Converted   struct {
-		UserID        int64
-		ParticipantID int64
-		AttemptID     int64
-		LocalItemID   int64
-		ItemURL       string
-	}
 
 	store     *database.DataStore
 	publicKey *rsa.PublicKey
@@ -294,19 +287,15 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 	if wrapper.Score == nil {
 		return errors.New("missing score")
 	}
-	userAnswerID, err := strconv.ParseInt(requestData.AnswerToken.UserAnswerID, 10, 64)
-	if err != nil {
-		return fmt.Errorf("invalid idUserAnswer in answer_token: %s", err.Error())
-	}
-
-	userID, err := strconv.ParseInt(requestData.AnswerToken.UserID, 10, 64)
-	service.MustNotBeError(err)
 
 	requestData.ScoreToken = &token.Score{
 		Converted: payloads.ScoreTokenConverted{
-			Score:        *wrapper.Score,
-			UserID:       userID,
-			UserAnswerID: userAnswerID,
+			Score:         *wrapper.Score,
+			UserID:        requestData.AnswerToken.Converted.UserID,
+			UserAnswerID:  requestData.AnswerToken.Converted.UserAnswerID,
+			LocalItemID:   requestData.AnswerToken.Converted.LocalItemID,
+			ParticipantID: requestData.AnswerToken.Converted.ParticipantID,
+			AttemptID:     requestData.AnswerToken.Converted.AttemptID,
 		},
 		ItemURL:     requestData.AnswerToken.ItemURL,
 		AttemptID:   requestData.AnswerToken.AttemptID,
@@ -317,65 +306,5 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 
 // Bind of saveGradeRequestParsed does nothing.
 func (requestData *saveGradeRequestParsed) Bind(*http.Request) error {
-	requestData.bindUserID()
-	err := requestData.bindParticipantIDAndAttemptID()
-	if err != nil {
-		return err
-	}
-	requestData.bindLocalItemID()
-	requestData.bindItemURL()
-
 	return nil
-}
-
-// Binds the user ID from the request, coming from either the score token or the answer token.
-func (requestData *saveGradeRequestParsed) bindUserID() {
-	userID := requestData.ScoreToken.Converted.UserID
-
-	if userID == 0 {
-		var err error
-		userID, err = strconv.ParseInt(requestData.AnswerToken.UserID, 10, 64)
-		service.MustNotBeError(err)
-	}
-
-	requestData.Converted.UserID = userID
-}
-
-// Binds the participant ID and the attempt ID from the request, coming from either the score token or the answer token.
-func (requestData *saveGradeRequestParsed) bindParticipantIDAndAttemptID() error {
-	var participantID, attemptID int64
-	var err error
-	if requestData.ScoreToken.AttemptID != "" {
-		_, err = fmt.Sscanf(requestData.ScoreToken.AttemptID, "%d/%d", &participantID, &attemptID)
-	} else {
-		_, err = fmt.Sscanf(requestData.AnswerToken.AttemptID, "%d/%d", &participantID, &attemptID)
-	}
-	if err != nil {
-		return fmt.Errorf("invalid attempt_id in token: %w", err)
-	}
-
-	requestData.Converted.ParticipantID = participantID
-	requestData.Converted.AttemptID = attemptID
-
-	return nil
-}
-
-// Bind the local item ID from the request, coming from either the score token or the answer token.
-func (requestData *saveGradeRequestParsed) bindLocalItemID() {
-	localItemID, err := strconv.ParseInt(requestData.ScoreToken.LocalItemID, 10, 64)
-	if localItemID == 0 || err != nil {
-		localItemID, err = strconv.ParseInt(requestData.AnswerToken.LocalItemID, 10, 64)
-		service.MustNotBeError(err)
-	}
-
-	requestData.Converted.LocalItemID = localItemID
-}
-
-// Bind the item URL from the request, coming from either the score token or the answer token.
-func (requestData *saveGradeRequestParsed) bindItemURL() {
-	if requestData.ScoreToken.ItemURL != "" {
-		requestData.Converted.ItemURL = requestData.ScoreToken.ItemURL
-	} else {
-		requestData.Converted.ItemURL = requestData.AnswerToken.ItemURL
-	}
 }

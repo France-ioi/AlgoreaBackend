@@ -7,26 +7,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestScoreToken_Bind(t *testing.T) {
+func TestAnswerToken_Bind(t *testing.T) {
 	tests := []struct {
 		name          string
-		scoreToken    ScoreToken
+		answerToken   AnswerToken
 		wantErr       error
-		wantConverted ScoreTokenConverted
+		wantConverted AnswerTokenConverted
 	}{
 		{
 			name: "okay",
-			scoreToken: ScoreToken{
+			answerToken: AnswerToken{
 				UserID:       "10",
 				UserAnswerID: "20",
-				Score:        "10.12",
 				AttemptID:    "1/2",
 				LocalItemID:  "42",
 			},
-			wantConverted: ScoreTokenConverted{
+			wantConverted: AnswerTokenConverted{
 				UserID:        10,
 				UserAnswerID:  20,
-				Score:         10.12,
 				ParticipantID: 1,
 				AttemptID:     2,
 				LocalItemID:   42,
@@ -34,10 +32,9 @@ func TestScoreToken_Bind(t *testing.T) {
 		},
 		{
 			name: "wrong idUser",
-			scoreToken: ScoreToken{
+			answerToken: AnswerToken{
 				UserID:       "abc",
 				UserAnswerID: "20",
-				Score:        "100",
 				AttemptID:    "1/2",
 				LocalItemID:  "42",
 			},
@@ -45,10 +42,9 @@ func TestScoreToken_Bind(t *testing.T) {
 		},
 		{
 			name: "wrong idUserAnswer",
-			scoreToken: ScoreToken{
+			answerToken: AnswerToken{
 				UserID:       "10",
 				UserAnswerID: "abc",
-				Score:        "10.12",
 				AttemptID:    "1/2",
 				LocalItemID:  "42",
 			},
@@ -56,32 +52,19 @@ func TestScoreToken_Bind(t *testing.T) {
 		},
 		{
 			name: "wrong idUserAnswer",
-			scoreToken: ScoreToken{
+			answerToken: AnswerToken{
 				UserID:       "10",
 				UserAnswerID: "abc",
-				Score:        "10.12",
 				AttemptID:    "1/2",
 				LocalItemID:  "42",
 			},
 			wantErr: errors.New("wrong idUserAnswer"),
 		},
 		{
-			name: "wrong score",
-			scoreToken: ScoreToken{
-				UserID:       "10",
-				UserAnswerID: "20",
-				Score:        "abc",
-				AttemptID:    "1/2",
-				LocalItemID:  "42",
-			},
-			wantErr: errors.New("wrong score"),
-		},
-		{
 			name: "wrong idAttempt",
-			scoreToken: ScoreToken{
+			answerToken: AnswerToken{
 				UserID:       "10",
 				UserAnswerID: "20",
-				Score:        "10.12",
 				AttemptID:    "abc",
 				LocalItemID:  "42",
 			},
@@ -89,10 +72,9 @@ func TestScoreToken_Bind(t *testing.T) {
 		},
 		{
 			name: "wrong idItemLocal",
-			scoreToken: ScoreToken{
+			answerToken: AnswerToken{
 				UserID:       "10",
 				UserAnswerID: "20",
-				Score:        "10.12",
 				AttemptID:    "1/2",
 				LocalItemID:  "abc",
 			},
@@ -102,10 +84,10 @@ func TestScoreToken_Bind(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.scoreToken.Bind()
+			got := tt.answerToken.Bind()
 			if tt.wantErr == nil {
 				assert.NoError(t, got)
-				assert.Equal(t, tt.wantConverted, tt.scoreToken.Converted)
+				assert.Equal(t, tt.wantConverted, tt.answerToken.Converted)
 			} else {
 				assert.Equal(t, got, tt.wantErr)
 			}
