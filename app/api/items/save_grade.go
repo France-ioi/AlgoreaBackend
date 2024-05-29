@@ -248,7 +248,7 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 		// So we need to extract it before we can unmarshal (which also verifies the signature) the token.
 		localItemIDRaw, err := token.GetUnsafeFromToken(wrapper.ScoreToken.Bytes(), "idItemLocal")
 		if err != nil {
-			return errors.Join(errors.New("invalid score_token"), err)
+			return fmt.Errorf("invalid score_token: %w", err)
 		}
 
 		localItemID, err := strconv.ParseInt(localItemIDRaw.(string), 10, 64)
