@@ -246,17 +246,17 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 	if hasScoreToken {
 		// We need the `idItemLocal` to get the platform's public key, and verify the signature of the token.
 		// So we need to extract it before we can unmarshal (which also verifies the signature) the token.
-		localItemIDRaw, err := token.GetUnsafeFromToken(wrapper.ScoreToken.Bytes(), "idItemLocal")
+		localItemIDUnsafeRaw, err := token.GetUnsafeFromToken(wrapper.ScoreToken.Bytes(), "idItemLocal")
 		if err != nil {
 			return fmt.Errorf("invalid score_token: %w", err)
 		}
 
-		localItemID, err := strconv.ParseInt(localItemIDRaw.(string), 10, 64)
+		localItemIDUnsafe, err := strconv.ParseInt(localItemIDUnsafeRaw.(string), 10, 64)
 		service.MustNotBeError(err)
 
 		hasPlatformKey, err = token.UnmarshalDependingOnItemPlatform(
 			requestData.store,
-			localItemID,
+			localItemIDUnsafe,
 			&requestData.ScoreToken,
 			wrapper.ScoreToken.Bytes(),
 			"score_token",
