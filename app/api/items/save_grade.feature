@@ -68,7 +68,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -123,7 +123,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -185,7 +185,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -243,7 +243,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -301,7 +301,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -347,7 +347,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -387,7 +387,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -428,7 +428,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {
@@ -481,7 +481,7 @@ Feature: Save grading result
       }
       """
     Then the response code should be 201
-    And the response body decoded as "SaveGradeResponse" should be, in JSON:
+    And the response body should be, in JSON:
       """
       {
         "data": {

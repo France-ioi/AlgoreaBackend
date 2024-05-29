@@ -71,11 +71,8 @@ import (
 //							enum: [created]
 //						data:
 //							type: object
-//							required: [task_token, validated]
+//							required: [validated]
 //							properties:
-//								task_token:
-//									description: The updated task token
-//									type: string
 //								validated:
 //									description: Whether the full score was obtained on this grading
 //									type: boolean
