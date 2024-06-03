@@ -78,8 +78,6 @@ import (
 //									type: boolean
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
-//		"401":
-//			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
 //		"500":
