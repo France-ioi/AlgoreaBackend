@@ -50,13 +50,17 @@ func (tt *ScoreToken) Bind() error {
 	if err != nil {
 		return errors.New("wrong score")
 	}
-	_, err = fmt.Sscanf(tt.AttemptID, "%d/%d", &tt.Converted.ParticipantID, &tt.Converted.AttemptID)
-	if err != nil {
-		return errors.New("wrong idAttempt")
+	if tt.AttemptID != "" {
+		_, err = fmt.Sscanf(tt.AttemptID, "%d/%d", &tt.Converted.ParticipantID, &tt.Converted.AttemptID)
+		if err != nil {
+			return errors.New("wrong idAttempt")
+		}
 	}
-	tt.Converted.LocalItemID, err = strconv.ParseInt(tt.LocalItemID, 10, 64)
-	if err != nil {
-		return errors.New("wrong idItemLocal")
+	if tt.LocalItemID != "" {
+		tt.Converted.LocalItemID, err = strconv.ParseInt(tt.LocalItemID, 10, 64)
+		if err != nil {
+			return errors.New("wrong idItemLocal")
+		}
 	}
 	return nil
 }
