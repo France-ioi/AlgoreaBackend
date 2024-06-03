@@ -75,19 +75,14 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuth.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
 }
 
-func checkHintOrScoreTokenRequiredFields(userID int64, taskToken *token.Task, otherTokenFieldName string,
+func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string,
 ) service.APIError {
-	if userID != taskToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
-			taskToken.Converted.UserID, userID))
-	}
-	if userID != otherTokenConvertedUserID {
+	if taskToken.Converted.UserID != otherTokenConvertedUserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in %s doesn't correspond to user session: got idUser=%d, expected %d",
-			otherTokenFieldName, otherTokenConvertedUserID, userID))
+			otherTokenFieldName, otherTokenConvertedUserID, taskToken.Converted.UserID))
 	}
 	if taskToken.LocalItemID != otherTokenLocalItemID {
 		return service.ErrInvalidRequest(fmt.Errorf("wrong idItemLocal in %s token", otherTokenFieldName))

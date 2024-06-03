@@ -92,7 +92,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	var apiError service.APIError
-	if apiError = checkHintOrScoreTokenRequiredFields(requestData.TaskToken.Converted.UserID, requestData.TaskToken,
+	if apiError = checkHintOrScoreTokenRequiredFields(requestData.TaskToken,
 		"hint_requested",
 		requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
 		requestData.HintToken.ItemURL, requestData.HintToken.AttemptID); apiError != service.NoError {
