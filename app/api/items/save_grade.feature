@@ -3,9 +3,13 @@ Feature: Save grading result
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
+    And the database has the following table 'groups':
+      | id  | name | type |
+      | 201 | team | Team |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 22              | 13             |
+      | 201             | 101            |
     And the groups ancestors are computed
     And the database has the following table 'platforms':
       | id | regexp                                             | priority | public_key                |
@@ -33,6 +37,9 @@ Feature: Save grading result
       | 101      | 50      | content            |
       | 101      | 60      | content            |
       | 101      | 70      | content            |
+      | 201      | 50      | content            |
+      | 201      | 60      | content            |
+      | 201      | 70      | content            |
     And time is frozen
 
   Scenario: User is able to save the grading result with a high score and attempt_id
@@ -88,6 +95,61 @@ Feature: Save grading result
       | 0          | 101            | 10      | 50             | 1           | 1         | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
       | 0          | 101            | 50      | 100            | 1           | 1         | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
       | 1          | 101            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
+    And the table "results_propagate" should be empty
+
+  Scenario: User is able to save the grading result for a team (participant_id is the first integer in idAttempt in the score token)
+    Given I am the user with id "101"
+    And the database has the following table 'attempts':
+      | id | participant_id |
+      | 0  | 201            |
+      | 1  | 201            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | latest_activity_at  | hints_requested        |
+      | 0          | 201            | 10      | 2019-05-30 11:00:00 | null                   |
+      | 0          | 201            | 50      | 2019-05-30 11:00:00 | [0,  1, "hint" , null] |
+      | 1          | 201            | 60      | 2019-05-29 11:00:00 | [0,  1, "hint" , null] |
+    And the database has the following table 'answers':
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 201            | 0          | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101       | 201            | 0          | 60      | 2017-05-29 06:38:38 |
+    And "scoreToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "201/0",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "score": "100",
+        "idUserAnswer": "123"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "data": {
+          "validated": true
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "answers" should stay unchanged
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123       | 100   | 1                                                |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
+      | 0          | 201            | 10      | 50             | 1           | 1         | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
+      | 0          | 201            | 50      | 100            | 1           | 1         | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
+      | 1          | 201            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
     And the table "results_propagate" should be empty
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
@@ -438,6 +500,53 @@ Feature: Save grading result
         "success": true
       }
       """
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated |
+      | 1          | 101            | 70      | 100            | 1           | 1         |
+
+  Scenario: Platform doesn't support tokens for team (participant_id is the first integer in idAttempt in the answer token)
+    Given I am the user with id "101"
+    And the database has the following table 'attempts':
+      | id | participant_id |
+      | 1  | 201            |
+    And the database has the following table 'results':
+      | attempt_id | participant_id | item_id | validated_at        |
+      | 1          | 201            | 70      | 2018-05-29 06:38:38 |
+    And the database has the following table 'answers':
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 125 | 101       | 201            | 100        | 70      | 2017-05-29 06:38:38 |
+    And "answerToken" is a token signed by the app with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "70",
+        "idAttempt": "201/1",
+        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
+        "idUserAnswer": "125",
+        "platformName": "{{app().Config.GetString("token.platformName")}}"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "score": 100.0,
+        "answer_token": "{{answerToken}}"
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "data": {
+          "validated": true
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+  And the table "results" should be:
+    | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated |
+    | 1          | 201            | 70      | 100            | 1           | 1         |
 
   Scenario: Should ignore score_token when provided if the platform doesn't have a key. Make sure the right score is used.
     Given I am the user with id "101"
