@@ -62,7 +62,7 @@ var AnswerPayloadFromAlgoreaPlatform = map[string]interface{}{
 	"sHintsRequested": interface{}(nil),
 	"nbHintsGiven":    "0",
 	"idItem":          interface{}(nil),
-	"idAttempt":       "100",
+	"idAttempt":       "100/0",
 	"idItemLocal":     "901756573345831409",
 	"idUserAnswer":    "251510027138726857",
 	"date":            "02-05-2019",
