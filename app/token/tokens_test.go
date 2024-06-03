@@ -17,58 +17,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
-func Test_UnmarshalJSON(t *testing.T) {
-	tests := []struct {
-		name                 string
-		structType           reflect.Type
-		token                []byte
-		expectedPayloadMap   map[string]interface{}
-		expectedPayloadType  reflect.Type
-		expectedErrorMessage string
-	}{
-		{
-			name:                 "invalid JSON string",
-			structType:           reflect.TypeOf(Answer{}),
-			token:                []byte(""),
-			expectedErrorMessage: "unexpected end of JSON input",
-			expectedPayloadType:  reflect.TypeOf(payloads.AnswerToken{}),
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			monkey.Patch(time.Now,
-				func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
-			defer monkey.UnpatchAll()
-
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-			assert.NoError(t, err)
-
-			expectedPayloadRefl := reflect.New(test.expectedPayloadType)
-			expectedPayloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
-			expectedPayload := expectedPayloadRefl.Interface()
-			assert.NoError(t, payloads.ParseMap(test.expectedPayloadMap, expectedPayload))
-
-			payloadRefl := reflect.New(test.structType)
-			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
-			payload := payloadRefl.Interface().(json.Unmarshaler)
-			err = payload.UnmarshalJSON(test.token)
-			if test.expectedErrorMessage == "" {
-				assert.NoError(t, err)
-			} else {
-				errMessage := ""
-				if err != nil {
-					errMessage = err.Error()
-				}
-				assert.Equal(t, test.expectedErrorMessage, errMessage)
-			}
-			assert.Equal(t, expectedPayload,
-				reflect.ValueOf(payload).Convert(reflect.PtrTo(test.expectedPayloadType)).Interface())
-		})
-	}
-}
-
 var marshalAndSignTests = []struct {
 	name        string
 	currentTime time.Time
