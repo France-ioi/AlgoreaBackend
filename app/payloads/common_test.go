@@ -53,7 +53,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 			want: &AnswerToken{
 				Date:            "02-05-2019",
 				UserID:          "556371821693219925",
-				AttemptID:       "100",
+				AttemptID:       "100/0",
 				ItemURL:         "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
 				LocalItemID:     "901756573345831409",
 				PlatformName:    "test_dmitry",
@@ -62,6 +62,13 @@ func TestPayloads_ParseMap(t *testing.T) {
 				Answer: "{\"idSubmission\":\"899146309203855074\",\"langProg\":\"python\"," +
 					"\"sourceCode\":\"print(min(int(input()), int(input()), int(input())))\"}",
 				UserAnswerID: "251510027138726857",
+				Converted: AnswerTokenConverted{
+					UserID:        556371821693219925,
+					UserAnswerID:  251510027138726857,
+					AttemptID:     0,
+					ParticipantID: 100,
+					LocalItemID:   901756573345831409,
+				},
 			},
 		},
 		{
