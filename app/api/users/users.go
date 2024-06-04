@@ -21,4 +21,5 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Get("/users/{user_id}", service.AppHandler(srv.getUser).ServeHTTP)
 	router.Get("/users/by-login/{login}", service.AppHandler(srv.getUser).ServeHTTP)
+	router.Post("/users/{target_user_id}/generate-profile-edit-token", service.AppHandler(srv.generateProfileEditToken).ServeHTTP)
 }

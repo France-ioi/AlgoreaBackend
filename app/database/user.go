@@ -181,3 +181,23 @@ func (u *User) IsMemberOfGroupOrSelf(s *DataStore, groupID int64) bool {
 func (u *User) CanSeeAnswer(s *DataStore, participantID, itemID int64) bool {
 	return u.CanViewItemContent(s, itemID) && u.IsMemberOfGroupOrSelf(s, participantID)
 }
+
+// CanEditProfile checks whether the user can edit the profile of another user.
+// The user needs to:
+//  1. be a manager of a group of which the target user is a member, and
+//  2. the group must have `require_personal_info_access_approval` set to `edit`.
+func (u *User) CanEditProfile(s *DataStore, targetUserID int64) bool {
+	userCanEditProfile, err := s.ActiveGroupAncestors().
+		ManagedByUser(u).
+		Joins(`JOIN groups_groups AS target_user_group_group
+									 ON target_user_group_group.parent_group_id = groups_ancestors_active.child_group_id AND
+											target_user_group_group.child_group_id = ?`, targetUserID).
+		Joins("JOIN `groups` AS target_user_group ON target_user_group.id = target_user_group_group.parent_group_id").
+		Where("target_user_group.require_personal_info_access_approval = 'edit'").
+		Select("1").
+		Limit(1).
+		HasRows()
+	mustNotBeError(err)
+
+	return userCanEditProfile
+}
