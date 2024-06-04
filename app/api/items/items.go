@@ -30,6 +30,7 @@ const (
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
+	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 
 	routerWithAuth := router.With(auth.UserMiddleware(srv.Base))
 	routerWithAuthAndParticipant := routerWithAuth.With(service.ParticipantMiddleware(srv.Base))
@@ -63,7 +64,6 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuthAndParticipant.Get("/items/log", service.AppHandler(srv.getActivityLogForAllItems).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
 	routerWithAuth.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
-	routerWithAuth.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
 	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)
@@ -75,19 +75,14 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuth.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
 }
 
-func checkHintOrScoreTokenRequiredFields(userID int64, taskToken *token.Task, otherTokenFieldName string,
+func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string,
 ) service.APIError {
-	if userID != taskToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
-			taskToken.Converted.UserID, userID))
-	}
-	if userID != otherTokenConvertedUserID {
+	if taskToken.Converted.UserID != otherTokenConvertedUserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in %s doesn't correspond to user session: got idUser=%d, expected %d",
-			otherTokenFieldName, otherTokenConvertedUserID, userID))
+			otherTokenFieldName, otherTokenConvertedUserID, taskToken.Converted.UserID))
 	}
 	if taskToken.LocalItemID != otherTokenLocalItemID {
 		return service.ErrInvalidRequest(fmt.Errorf("wrong idItemLocal in %s token", otherTokenFieldName))

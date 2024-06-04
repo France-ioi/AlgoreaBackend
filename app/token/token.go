@@ -82,6 +82,17 @@ func prepareFileName(fileName string) string {
 	return cwd + "/" + fileName
 }
 
+// GetUnsafeFromToken returns the value of the field without checking the token signature.
+func GetUnsafeFromToken(token []byte, field string) (interface{}, error) {
+	token = []byte(strings.Trim(string(token), "\""))
+
+	jwt, err := jws.ParseJWT(token)
+	if err != nil {
+		return nil, err
+	}
+	return jwt.Claims().Get(field), nil
+}
+
 // ParseAndValidate parses a token and validates its signature and date.
 func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interface{}, error) {
 	jwt, err := jws.ParseJWT(token)

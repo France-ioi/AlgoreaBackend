@@ -40,7 +40,6 @@ Feature: Save grading result - robustness
     And time is frozen
 
   Scenario: Wrong JSON in request
-    Given I am the user with id "101"
     When I send a POST request to "/items/save-grade" with the following body:
       """
       []
@@ -50,281 +49,10 @@ Feature: Save grading result - robustness
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
-  Scenario: User not found
-    Given I am the user with id "404"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "404",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "404",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 401
-    And the response error message should contain "Invalid access token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: idUser in task_token doesn't match the user's id
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "20",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Token in task_token doesn't correspond to user session: got idUser=20, expected 10"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: idUser in score_token doesn't match the user's id
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "20",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Token in score_token doesn't correspond to user session: got idUser=20, expected 10"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: idAttempt in score_token and task_token don't match
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "idAttempt": "101/1",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Wrong idAttempt in score_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: idItemLocal in score_token and task_token don't match
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "51",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "idAttempt": "101/0",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Wrong idItemLocal in score_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: itemUrl of score_token doesn't match itemUrl of task_token
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Wrong itemUrl in score_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: Missing task_token
-    Given I am the user with id "101"
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Missing task_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: Invalid task_token
-    Given I am the user with id "101"
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "abcdef",
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Invalid task_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
   Scenario: Invalid score_token
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+    Given I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "abcdef"
       }
       """
@@ -333,22 +61,54 @@ Feature: Save grading result - robustness
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
-  Scenario: Platform doesn't use tokens and answer_token is missing
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+  Scenario: Expired score_token
+    Given the time now is "2020-01-01T00:00:00Z"
+    And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
-        "idItemLocal": "70",
+        "idItemLocal": "50",
         "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "score": "100",
+        "idUserAnswer": "123"
+      }
+      """
+    Then the time now is "2020-01-03T00:00:00Z"
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid score_token: the token has expired"
+
+  Scenario: Falsified score_token
+    Given "scoreToken" is a falsified token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "score": "100",
+        "idUserAnswer": "123"
       }
       """
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid score_token: invalid token: crypto/rsa: verification error"
+
+  Scenario: Platform doesn't use tokens and answer_token is missing
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
         "score": 100.0
       }
       """
@@ -358,21 +118,9 @@ Feature: Save grading result - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score": 100.0,
         "answer_token": "abc"
       }
@@ -382,60 +130,36 @@ Feature: Save grading result - robustness
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
-  Scenario: Platform doesn't use tokens and idUser in answer_token is wrong
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+  Scenario: Platform doesn't use tokens and answer_token is expired
+    Given the time now is "2020-01-01T00:00:00Z"
+    And "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "answerToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "20",
-        "idItemLocal": "70",
-        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
+        "idAttempt": "101/0",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
+    Then the time now is "2020-01-03T00:00:00Z"
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score": 100.0,
         "answer_token": "{{answerToken}}"
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idUser in answer_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the response error message should contain "Invalid answer_token: the token has expired"
 
-  Scenario: Platform doesn't use tokens and idItemLocal in answer_token is wrong
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+  Scenario: Platform doesn't use tokens and answer_token is falsified
+    Given "answerToken" is a falsified token signed by the app with the following payload:
       """
       {
         "idUser": "101",
         "idItemLocal": "70",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "answerToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "60",
-        "idAttempt": "101/0",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
@@ -444,65 +168,15 @@ Feature: Save grading result - robustness
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score": 100.0,
         "answer_token": "{{answerToken}}"
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idItemLocal in answer_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
-
-  Scenario: Platform doesn't use tokens and itemUrl in answer_token is wrong
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "answerToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183",
-        "idUserAnswer": "123",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "task_token": "{{priorUserTaskToken}}",
-        "score": 100.0,
-        "answer_token": "{{answerToken}}"
-      }
-      """
-    Then the response code should be 400
-    And the response error message should contain "Wrong itemUrl in answer_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the response error message should contain "Invalid answer_token: invalid token: crypto/rsa: verification error"
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idAttempt": "101/0",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "answerToken" is a token signed by the app with the following payload:
+    Given "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -515,35 +189,23 @@ Feature: Save grading result - robustness
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score": 100.0,
         "answer_token": "{{answerToken}}"
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idAttempt in answer_token"
+    And the response error message should contain "Invalid answer_token: wrong idAttempt"
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
-  Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should be equal)
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
+  Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (format should be number/number)
+    Given "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idAttempt": "101/0",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "answerToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idAttempt": "110/0",
+        "idAttempt": "110-0",
         "idUserAnswer": "123",
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
@@ -551,29 +213,17 @@ Feature: Save grading result - robustness
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score": 100.0,
         "answer_token": "{{answerToken}}"
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idAttempt in answer_token"
+    And the response error message should contain "Invalid answer_token: wrong idAttempt"
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and score is missing
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "answerToken" is a token signed by the app with the following payload:
+    Given "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -587,7 +237,6 @@ Feature: Save grading result - robustness
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "answer_token": "{{answerToken}}"
       }
       """
@@ -597,18 +246,7 @@ Feature: Save grading result - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "answerToken" is a token signed by the app with the following payload:
+    Given "answerToken" is a token signed by the app with the following payload:
       """
       {
         "idUser": "101",
@@ -622,19 +260,17 @@ Feature: Save grading result - robustness
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "answer_token": "{{answerToken}}",
         "score": 99.0
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Invalid idUserAnswer in answer_token"
+    And the response error message should contain "Invalid answer_token: wrong idUserAnswer"
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: The answer has been already graded
-    Given I am the user with id "101"
-    And the database table 'attempts' has also the following row:
+    Given the database table 'attempts' has also the following row:
       | id | participant_id |
       | 1  | 101            |
     And the database table 'results' has also the following row:
@@ -646,17 +282,6 @@ Feature: Save grading result - robustness
     And the database has the following table 'gradings':
       | answer_id | score | graded_at           |
       | 124       | 0     | 2017-05-29 06:38:38 |
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "80",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "bAccessSolutions": false,
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -671,7 +296,6 @@ Feature: Save grading result - robustness
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
@@ -685,19 +309,7 @@ Feature: Save grading result - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: The answer is not found
-    Given I am the user with id "101"
-    And "priorUserTaskToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "80",
-        "idAttempt": "101/0",
-        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "bAccessSolutions": false,
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
+    Given "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
         "idUser": "101",
@@ -711,7 +323,6 @@ Feature: Save grading result - robustness
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "task_token": "{{priorUserTaskToken}}",
         "score_token": "{{scoreToken}}"
       }
       """
