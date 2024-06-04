@@ -143,6 +143,9 @@ func TestDBConfig_SuccessOnAWSForNonTestEnv(t *testing.T) {
 	defer monkey.UnpatchAll()
 
 	_, err := DBConfig(globalConfig)
+
+	// If this fails, make sure you run the test with "-gcflags=-l".
+	// Otherwise, the function will be inlined and the patch will not work.
 	assert.NoError(err)
 }
 
