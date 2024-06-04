@@ -84,7 +84,10 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 // OpenRawDBConnection creates a new connection to the DB specified in the config.
 func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
-	dbConfig, _ := app.DBConfig(app.LoadConfig())
+	dbConfig, err := app.DBConfig(app.LoadConfig())
+	if err != nil {
+		panic(err)
+	}
 	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN())
 	if err != nil {
 		panic(err)
