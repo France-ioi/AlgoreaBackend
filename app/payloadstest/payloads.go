@@ -113,6 +113,8 @@ var ScorePayloadFromGrader = map[string]interface{}{
 	"idUserAnswer": "251510027138726857",
 	"sAnswer": "{\"idSubmission\":\"899146309203855074\",\"langProg\":\"python\"," +
 		"\"sourceCode\":\"print(min(int(input()), int(input()), int(input())))\"}",
-	"score": "100",
-	"date":  "02-05-2019",
+	"score":       "100",
+	"date":        "02-05-2019",
+	"idAttempt":   "100/0",
+	"idItemLocal": "901756573345831409",
 }
