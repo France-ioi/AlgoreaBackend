@@ -72,12 +72,12 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 }
 
 func (srv *Service) getProfileEditToken(requesterID, targetID int64) (string, error) {
-	twoHoursLater := time.Now().Add(time.Hour * 2)
+	thirtyMinutesLater := time.Now().Add(time.Minute * 30)
 
 	profileEditToken, err := (&token.ProfileEdit{
 		RequesterID: strconv.FormatInt(requesterID, 10),
 		TargetID:    strconv.FormatInt(targetID, 10),
-		Exp:         strconv.FormatInt(twoHoursLater.Unix(), 10),
+		Exp:         strconv.FormatInt(thirtyMinutesLater.Unix(), 10),
 	}).Sign(srv.TokenConfig.PrivateKey)
 
 	return profileEditToken, err

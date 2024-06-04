@@ -15,7 +15,7 @@ Feature: Generate Profile Edit Token
           "date": "01-01-2020",
           "requester_id": "@Manager",
           "target_id": "@User",
-          "exp": "1577844000"
+          "exp": "1577838600"
         }
       """
     And the response body should be, in JSON:
