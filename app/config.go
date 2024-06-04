@@ -136,6 +136,11 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 	vConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, databaseConfigKey))
 	vConfig.AutomaticEnv()
 	err = vConfig.Unmarshal(&config)
+
+	if appenv.IsEnvTest() && strings.HasSuffix(config.Addr, "amazonaws.com") {
+		err = fmt.Errorf("cannot connect to AWS RDS in tests as it empties the database")
+	}
+
 	return
 }
 
