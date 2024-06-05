@@ -3,11 +3,10 @@
 package testhelpers
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
 	"net/http"
 	"reflect"
 	"sort"
@@ -185,20 +184,7 @@ func (ctx *TestContext) TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSON
 	}
 
 	key := []byte(app.AuthConfig(ctx.application.Config).GetString("clientSecret")[0:32])
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return err
-	}
-
-	nonce := cipherText[0:gcm.NonceSize()]
-	cipherText = cipherText[gcm.NonceSize():]
-
-	plainJSON, err := gcm.Open(nil, nonce, cipherText, nil)
+	plainJSON, err := encrypt.DecryptAES256GCM(key, cipherText)
 	if err != nil {
 		return err
 	}

@@ -1,15 +1,13 @@
 package users
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
 
 	"github.com/go-chi/render"
 
@@ -18,7 +16,7 @@ import (
 
 // swagger:model generateProfileEditTokenResponse
 type generateProfileEditTokenResponse struct {
-	// The ProfileEditToken
+	// The ProfileEditToken encoded as hex.
 	// required:true
 	ProfileEditToken string `json:"token"`
 	// The algorithm used to encrypt the token
@@ -104,17 +102,8 @@ func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token stri
 	service.MustNotBeError(err)
 
 	key := []byte(srv.AuthConfig.GetString("clientSecret")[0:32])
-	block, err := aes.NewCipher(key)
+	cipherText, err := encrypt.AES256GCM(key, jsonToken)
 	service.MustNotBeError(err)
-
-	gcm, err := cipher.NewGCM(block)
-	service.MustNotBeError(err)
-
-	nonce := make([]byte, gcm.NonceSize())
-	_, err = io.ReadFull(rand.Reader, nonce)
-	service.MustNotBeError(err)
-
-	cipherText := gcm.Seal(nonce, nonce, jsonToken, nil)
 
 	hexCipher := hex.EncodeToString(cipherText)
 
