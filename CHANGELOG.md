@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.19.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.8...v2.19.0) - 2024-06-05
+- allow not providing the access token when the task token is provided
+- save grade service: use score/answer token as auth
+
 ## [v2.18.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.7...v2.18.8) - 2024-05-15
 - make `startResultPath` and `startResult` use the async propagation
 - bug fix: possible deadlock in propagation
