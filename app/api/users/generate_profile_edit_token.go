@@ -21,6 +21,9 @@ type generateProfileEditTokenResponse struct {
 	// The ProfileEditToken
 	// required:true
 	ProfileEditToken string `json:"token"`
+	// The algorithm used to encrypt the token
+	// required:true
+	Alg string `json:"alg"`
 	// This field is not really present, it is here only to document the content of the token.
 	// required:false
 	TokenForDoc *ProfileEditToken `json:"token_not_present_only_for_doc,omitempty"`
@@ -81,14 +84,14 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 
 	response := new(generateProfileEditTokenResponse)
 
-	response.ProfileEditToken = srv.getProfileEditToken(user.GroupID, targetUserID)
+	response.ProfileEditToken, response.Alg = srv.getProfileEditToken(user.GroupID, targetUserID)
 
 	render.Respond(rw, r, response)
 
 	return service.NoError
 }
 
-func (srv *Service) getProfileEditToken(requesterID, targetID int64) string {
+func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token string, algorithm string) {
 	thirtyMinutesLater := time.Now().Add(time.Minute * 30)
 
 	profileEditToken := ProfileEditToken{
@@ -115,5 +118,5 @@ func (srv *Service) getProfileEditToken(requesterID, targetID int64) string {
 
 	hexCipher := hex.EncodeToString(cipherText)
 
-	return hexCipher
+	return hexCipher, "AES-256-GCM"
 }

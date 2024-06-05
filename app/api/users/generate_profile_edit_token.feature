@@ -17,3 +17,4 @@ Feature: Generate Profile Edit Token
           "exp": "1577838600"
         }
       """
+    And the response at $.alg should be "AES-256-GCM"
