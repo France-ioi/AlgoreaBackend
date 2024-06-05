@@ -1,15 +1,14 @@
 package users
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // swagger:model generateProfileEditTokenResponse
@@ -19,7 +18,21 @@ type generateProfileEditTokenResponse struct {
 	ProfileEditToken string `json:"token"`
 	// This field is not really present, it is here only to document the content of the token.
 	// required:false
-	TokenForDoc *payloads.ProfileEditToken `json:"token_not_present_only_for_doc,omitempty"`
+	TokenForDoc *ProfileEditToken `json:"token_not_present_only_for_doc,omitempty"`
+}
+
+// ProfileEditToken permits a requester user to edit the profile of a target user.
+// swagger:model ProfileEditToken
+type ProfileEditToken struct {
+	// User who requested the token.
+	// required:true
+	RequesterID string `json:"requester_id"`
+	// User whose profile is to be edited.
+	// required:true
+	TargetID string `json:"target_id"`
+	// Expiry date in the number of seconds since 01/01/1970 UTC.
+	// required:true
+	Exp string `json:"exp"`
 }
 
 // swagger:operation POST /users/{target_user_id}/generate-profile-edit-token users generateProfileEditToken
@@ -63,22 +76,24 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 
 	response := new(generateProfileEditTokenResponse)
 
-	response.ProfileEditToken, err = srv.getProfileEditToken(user.GroupID, targetUserID)
-	service.MustNotBeError(err)
+	response.ProfileEditToken = srv.getProfileEditToken(user.GroupID, targetUserID)
 
 	render.Respond(rw, r, response)
 
 	return service.NoError
 }
 
-func (srv *Service) getProfileEditToken(requesterID, targetID int64) (string, error) {
+func (srv *Service) getProfileEditToken(requesterID, targetID int64) string {
 	thirtyMinutesLater := time.Now().Add(time.Minute * 30)
 
-	profileEditToken, err := (&token.ProfileEdit{
+	profileEditToken := ProfileEditToken{
 		RequesterID: strconv.FormatInt(requesterID, 10),
 		TargetID:    strconv.FormatInt(targetID, 10),
 		Exp:         strconv.FormatInt(thirtyMinutesLater.Unix(), 10),
-	}).Sign(srv.TokenConfig.PrivateKey)
+	}
 
-	return profileEditToken, err
+	jsonToken, err := json.Marshal(profileEditToken)
+	service.MustNotBeError(err)
+
+	return string(jsonToken)
 }

@@ -9,18 +9,9 @@ Feature: Generate Profile Edit Token
     And I am a manager of the group @Class
     When I send a POST request to "/users/@User/generate-profile-edit-token"
     Then the response code should be 200
-    And "profileEditToken" is a token signed by the app with the following payload:
-      """
-        {
-          "date": "01-01-2020",
-          "requester_id": "@Manager",
-          "target_id": "@User",
-          "exp": "1577838600"
-        }
-      """
     And the response body should be, in JSON:
       """
         {
-          "token": "{{profileEditToken}}"
+          "token": "{\"requester_id\":\"@Manager\",\"target_id\":\"@User\",\"exp\":\"1577838600\"}"
         }
       """
