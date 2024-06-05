@@ -86,6 +86,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response at ([^ ]+) should be "([^"]*)"$`, ctx.TheResponseAtShouldBeTheValue)
 	s.Step("^the response at ([^ ]+) should be:$", ctx.TheResponseAtShouldBe)
 	s.Step("^the response at ([^ ]+) in JSON should be:$", ctx.TheResponseAtInJSONShouldBe)
+	s.Step("^the response at ([^ ]+) should be the base64 of an AES-256-GCM encrypted JSON object containing:",
+		ctx.TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSONObjectContaining)
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)

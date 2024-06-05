@@ -1,7 +1,12 @@
 package users
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -95,5 +100,20 @@ func (srv *Service) getProfileEditToken(requesterID, targetID int64) string {
 	jsonToken, err := json.Marshal(profileEditToken)
 	service.MustNotBeError(err)
 
-	return string(jsonToken)
+	key := []byte(srv.AuthConfig.GetString("clientSecret")[0:32])
+	block, err := aes.NewCipher(key)
+	service.MustNotBeError(err)
+
+	gcm, err := cipher.NewGCM(block)
+	service.MustNotBeError(err)
+
+	nonce := make([]byte, gcm.NonceSize())
+	_, err = io.ReadFull(rand.Reader, nonce)
+	service.MustNotBeError(err)
+
+	cipherText := gcm.Seal(nonce, nonce, jsonToken, nil)
+
+	hexCipher := hex.EncodeToString(cipherText)
+
+	return hexCipher
 }

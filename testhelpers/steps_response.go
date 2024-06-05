@@ -3,6 +3,9 @@
 package testhelpers
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -163,6 +166,52 @@ func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *mess
 	}
 
 	return compareStrings(string(expected), string(actual))
+}
+
+// TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSONObjectContaining checks that the response at a JSONPath is
+// an AES256GCM encrypted JSON object.
+func (ctx *TestContext) TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSONObjectContaining(
+	jsonPath string,
+	expectedJSONParam *messages.PickleStepArgument_PickleDocString,
+) error {
+	hexCipher, err := ctx.getJSONPathOnResponse(jsonPath)
+	if err != nil {
+		return err
+	}
+
+	cipherText, err := hex.DecodeString(hexCipher.(string))
+	if err != nil {
+		return err
+	}
+
+	key := []byte(app.AuthConfig(ctx.application.Config).GetString("clientSecret")[0:32])
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return err
+	}
+
+	nonce := cipherText[0:gcm.NonceSize()]
+	cipherText = cipherText[gcm.NonceSize():]
+
+	plainJSON, err := gcm.Open(nil, nonce, cipherText, nil)
+	if err != nil {
+		return err
+	}
+
+	expectedJSON := strings.ReplaceAll(expectedJSONParam.Content, " ", "")
+	expectedJSON = strings.ReplaceAll(expectedJSON, "\n", "")
+
+	expectedJSON, err = ctx.preprocessString(expectedJSON)
+	if err != nil {
+		return err
+	}
+
+	return compareStrings(expectedJSON, string(plainJSON))
 }
 
 // indentJSON indents the JSON string.
