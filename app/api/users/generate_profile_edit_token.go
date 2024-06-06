@@ -89,7 +89,7 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 	return service.NoError
 }
 
-func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token string, algorithm string) {
+func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token, algorithm string) {
 	thirtyMinutesLater := time.Now().Add(time.Minute * 30)
 
 	profileEditToken := ProfileEditToken{

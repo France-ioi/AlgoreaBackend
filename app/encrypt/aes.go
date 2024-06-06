@@ -1,3 +1,4 @@
+// Package encrypt provides utilities to encrypt and decrypt data.
 package encrypt
 
 import (
@@ -9,7 +10,7 @@ import (
 
 // AES256GCM encrypts the plaintext using AES-256-GCM with the provided key.
 // It returns the ciphertext with the nonce prepended.
-func AES256GCM(key []byte, plaintext []byte) ([]byte, error) {
+func AES256GCM(key, plaintext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,7 @@ func AES256GCM(key []byte, plaintext []byte) ([]byte, error) {
 }
 
 // DecryptAES256GCM decrypts the ciphertext using AES-256-GCM with the provided key.
-func DecryptAES256GCM(key []byte, ciphertext []byte) ([]byte, error) {
+func DecryptAES256GCM(key, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err

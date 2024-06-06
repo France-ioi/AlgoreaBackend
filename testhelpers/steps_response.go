@@ -6,12 +6,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
 	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/cucumber/messages-go/v10"

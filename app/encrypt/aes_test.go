@@ -1,6 +1,7 @@
 package encrypt
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -18,8 +19,9 @@ func Test_AES256GCMShouldProvideDifferentOutputForSameOutput(t *testing.T) {
 		t.Errorf("AES256GCM(%v, %v) returned error: %v", key, plaintext, err)
 	}
 
-	if string(ciphertext1) == string(ciphertext2) {
-		t.Errorf("AES256GCM(%v, %v) returned the same ciphertext for different calls", key, plaintext)
+	if bytes.Equal(ciphertext1, ciphertext2) {
+		t.Errorf(`AES256GCM(%v, %v) returned the same ciphertext for different calls.
+			The nonce is probably the same. That must NOT be the case!`, key, plaintext)
 	}
 }
 
@@ -37,7 +39,7 @@ func Test_DecryptAES256GCMShouldReturnOriginalPlaintext(t *testing.T) {
 		t.Errorf("DecryptAES256GCM(%v, %v) returned error: %v", key, ciphertext, err)
 	}
 
-	if string(plaintext) != string(decrypted) {
+	if !bytes.Equal(plaintext, decrypted) {
 		t.Errorf("DecryptAES256GCM(%v, %v) returned %v, want %v", key, ciphertext, decrypted, plaintext)
 	}
 }
@@ -68,7 +70,7 @@ func Test_DecryptAES256GCMShouldReturnErrorForDifferentNonce(t *testing.T) {
 	}
 
 	// The nonce is at the beginning.
-	ciphertext[0] = ciphertext[0] + 1
+	ciphertext[0]++
 
 	_, err = DecryptAES256GCM(key, ciphertext)
 	if err == nil {
@@ -86,7 +88,7 @@ func Test_DecryptAES256GCMShouldReturnErrorForDifferentCiphertext(t *testing.T) 
 	}
 
 	// The ciphertext is after the nonce, so the last byte is necessarily the ciphertext.
-	ciphertext[len(ciphertext)-1] = ciphertext[1] + 1
+	ciphertext[len(ciphertext)-1]++
 
 	_, err = DecryptAES256GCM(key, ciphertext)
 	if err == nil {
