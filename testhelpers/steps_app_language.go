@@ -92,7 +92,7 @@ func (ctx *TestContext) populateDatabase() error {
 		return nil
 	}
 
-	db, err := database.Open(ctx.db())
+	db, err := database.Open(ctx.db)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (ctx *TestContext) addUser(fields map[string]string) {
 		}
 
 		switch {
-		case "login_id" == key:
+		case key == "login_id":
 			dbFields["login_id"] = value
 		case strings.HasSuffix(key, "_id"):
 			dbFields[key] = ctx.getReference(value)
@@ -1012,7 +1012,7 @@ func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) err
 	userID := ctx.getReference(user)
 
 	var sessionCount int
-	err := db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?", userID).
+	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?", userID).
 		Scan(&sessionCount)
 	if err != nil {
 		return err
@@ -1029,7 +1029,7 @@ func (ctx *TestContext) ThereIsNoSessionID(session string) error {
 	sessionID := ctx.getReference(session)
 
 	var sessionCount int
-	err := db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE session_id = ?", sessionID).
+	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE session_id = ?", sessionID).
 		Scan(&sessionCount)
 	if err != nil {
 		return err
