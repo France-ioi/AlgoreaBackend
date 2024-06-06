@@ -38,7 +38,7 @@ type ProfileEditToken struct {
 	TargetID string `json:"target_id"`
 	// Expiry date in the number of seconds since 01/01/1970 UTC.
 	// required:true
-	Exp string `json:"exp"`
+	Exp int64 `json:"exp,string"`
 }
 
 // swagger:operation POST /users/{target_user_id}/generate-profile-edit-token users generateProfileEditToken
@@ -52,7 +52,17 @@ type ProfileEditToken struct {
 //		Restrictions:
 //			* the current user must be a manager of a group of which the target user is a member, and
 //			* the group must have `require_personal_info_access_approval` set to `edit`.
+//
 //		Otherwise, a forbidden error is returned.
+//
+//	parameters:
+//		- name: target_user_id
+//			in: path
+//			type: integer
+//			format: int64
+//			description: The ID of the user whose profile is to be edited.
+//			required: true
+//
 //	responses:
 //		"200":
 //			description: OK. Success response with the token.
@@ -95,7 +105,7 @@ func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token, alg
 	profileEditToken := ProfileEditToken{
 		RequesterID: strconv.FormatInt(requesterID, 10),
 		TargetID:    strconv.FormatInt(targetID, 10),
-		Exp:         strconv.FormatInt(thirtyMinutesLater.Unix(), 10),
+		Exp:         thirtyMinutesLater.Unix(),
 	}
 
 	jsonToken, err := json.Marshal(profileEditToken)
