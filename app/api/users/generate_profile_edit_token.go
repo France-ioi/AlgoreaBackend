@@ -52,8 +52,8 @@ type ProfileEditToken struct {
 //
 //
 //		Restrictions:
-//			* the current user must be a manager of a group of which the target user is a member, and
-//			* the group must have `require_personal_info_access_approval` set to `edit`.
+//			* the `current user` must be a manager of a group of which the `target user` is a member, and
+//			* the group the `target user` is member of, or one of its ancestor, must have `require_personal_info_access_approval` set to `edit`.
 //
 //		Otherwise, a forbidden error is returned.
 //
