@@ -1,5 +1,5 @@
 Feature: Generate Profile Edit Token
-  Scenario: Should return all fields when the thread exists
+  Scenario: Should return a token when the requester is a manager of the target group
     Given there are the following groups:
       | group     | parent | members        | require_personal_info_access_approval |
       | @AllUsers |        | @Manager,@User |                                       |
