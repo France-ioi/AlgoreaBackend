@@ -23,7 +23,7 @@ const fixtureDir = "testdata" // special directory which is not included in bina
 
 func init() { //nolint:gochecknoinits
 	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
-		appenv.SetDefaultEnvToTest()
+		appenv.ForceTestEnv()
 		// Apply the config to the global logger
 		logging.SharedLogger.Configure(app.LoggingConfig(app.LoadConfig()))
 	}
@@ -31,7 +31,7 @@ func init() { //nolint:gochecknoinits
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture.
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
-	mustNotBeInProdEnv()
+	appenv.ForceTestEnv()
 
 	rawDB, err := OpenRawDBConnection()
 	if err != nil {
@@ -57,7 +57,7 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 // SetupDBWithFixtureString creates a new DB connection, empties the DB,
 // and loads fixtures from the strings (yaml with a tableName->[]dataRow map).
 func SetupDBWithFixtureString(fixtures ...string) *database.DB {
-	mustNotBeInProdEnv()
+	appenv.ForceTestEnv()
 
 	rawDB, err := OpenRawDBConnection()
 	if err != nil {
@@ -83,6 +83,8 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 
 // OpenRawDBConnection creates a new connection to the DB specified in the config.
 func OpenRawDBConnection() (*sql.DB, error) {
+	appenv.ForceTestEnv()
+
 	// needs actual config for connection to DB
 	dbConfig, err := app.DBConfig(app.LoadConfig())
 	if err != nil {
@@ -102,7 +104,7 @@ func OpenRawDBConnection() (*sql.DB, error) {
 // Otherwise, data will be loaded into table with the same name as the filename (without extension).
 // Note that you should probably empty the DB before using this function.
 func LoadFixture(db *sql.DB, fileName string) {
-	mustNotBeInProdEnv()
+	appenv.ForceTestEnv()
 
 	var files []os.FileInfo
 	var err error
@@ -146,7 +148,7 @@ func LoadFixture(db *sql.DB, fileName string) {
 }
 
 func loadFixtureChainFromString(db *sql.DB, fixture string) {
-	mustNotBeInProdEnv()
+	appenv.ForceTestEnv()
 
 	var content yaml.MapSlice
 	fixture = dedent.Dedent(fixture)
@@ -173,7 +175,7 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 
 // InsertBatch insert the data into the table with the name given.
 func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
-	mustNotBeInProdEnv()
+	appenv.ForceTestEnv()
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -214,7 +216,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 
 // nolint: gosec
 func emptyDB(db *sql.DB, dbName string) error {
-	mustNotBeInProdEnv()
+	appenv.ForceTestEnv()
 
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
@@ -268,16 +270,9 @@ func emptyDB(db *sql.DB, dbName string) error {
 
 // EmptyDB empties all tables of the database specified in the config.
 func EmptyDB(db *sql.DB) {
-	mustNotBeInProdEnv()
+	appenv.ForceTestEnv()
 	dbConfig, _ := app.DBConfig(app.LoadConfig())
 	if err := emptyDB(db, dbConfig.DBName); err != nil {
 		panic(err)
-	}
-}
-
-func mustNotBeInProdEnv() {
-	if appenv.IsEnvProd() {
-		fmt.Println("Can't be run in 'prod' env")
-		os.Exit(1)
 	}
 }
