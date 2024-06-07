@@ -189,10 +189,10 @@ func (u *User) CanSeeAnswer(s *DataStore, participantID, itemID int64) bool {
 func (u *User) CanEditProfile(s *DataStore, targetUserID int64) bool {
 	userCanEditProfile, err := s.ActiveGroupAncestors().
 		ManagedByUser(u).
-		Joins(`JOIN groups_groups AS target_user_group_group
-									 ON target_user_group_group.parent_group_id = groups_ancestors_active.child_group_id AND
-											target_user_group_group.child_group_id = ?`, targetUserID).
-		Joins("JOIN `groups` AS target_user_group ON target_user_group.id = target_user_group_group.parent_group_id").
+		Joins(`JOIN groups_ancestors AS target_user_group_ancestor
+									 ON target_user_group_ancestor.ancestor_group_id = groups_ancestors_active.child_group_id AND
+											target_user_group_ancestor.child_group_id = ?`, targetUserID).
+		Joins("JOIN `groups` AS target_user_group ON target_user_group.id = target_user_group_ancestor.ancestor_group_id").
 		Where("target_user_group.require_personal_info_access_approval = 'edit'").
 		Select("1").
 		Limit(1).
