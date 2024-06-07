@@ -114,8 +114,7 @@ func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token, alg
 	service.MustNotBeError(err)
 
 	key := []byte(srv.AuthConfig.GetString("clientSecret")[0:32])
-	cipherText, err := encrypt.AES256GCM(key, jsonToken)
-	service.MustNotBeError(err)
+	cipherText := encrypt.AES256GCM(key, jsonToken)
 
 	hexCipher := hex.EncodeToString(cipherText)
 
