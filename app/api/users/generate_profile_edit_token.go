@@ -19,7 +19,9 @@ type generateProfileEditTokenResponse struct {
 	// The ProfileEditToken encoded as hex.
 	// required:true
 	ProfileEditToken string `json:"token"`
-	// The algorithm used to encrypt the token
+	// The algorithm used to encrypt the token (for now, it can only be `AES-256-GCM`).
+	// For `AES-256-GCM`, the `nonce` is the first 12 bytes of the token, and the `ciphertext` is the rest,
+	// once the `token` is decoded from hex to binary.
 	// required:true
 	Alg string `json:"alg"`
 	// This field is not really present, it is here only to document the content of the token.
