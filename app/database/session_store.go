@@ -43,8 +43,8 @@ type sessionWithMostRecentIssuedAt struct {
 	IssuedAt  Time
 }
 
-// GetUserOldSessionsToDelete returns the user's old sessions to delete because we keep only the `nbKeep` most recent ones.
-func (s *SessionStore) GetUserOldSessionsToDelete(userID int64, nbKeep int) []sessionWithMostRecentIssuedAt {
+// DeleteOldSessionsToKeepMaximum deletes old sessions to keep the maximum number of sessions.
+func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
 	var sessions []sessionWithMostRecentIssuedAt
 
 	// Sessions without access tokens are treated as the oldest ones.
@@ -72,17 +72,10 @@ func (s *SessionStore) GetUserOldSessionsToDelete(userID int64, nbKeep int) []se
 		UnionAll(sessionsWithAccessTokensQuery).
 		Order("issued_at DESC, session_id").
 		Limit(mysqldb.MaxRowsReturned). // Offset requires a limit in MySQL.
-		Offset(nbKeep).
+		Offset(max).
 		Scan(&sessions).
 		Error()
 	mustNotBeError(err)
-
-	return sessions
-}
-
-// DeleteOldSessionsToKeepMaximum deletes old sessions to keep the maximum number of sessions.
-func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
-	sessions := s.GetUserOldSessionsToDelete(userID, max)
 
 	if len(sessions) > 0 {
 		sessionIDs := make([]int64, len(sessions))
