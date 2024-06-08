@@ -1,5 +1,7 @@
 package database
 
+import "github.com/France-ioi/AlgoreaBackend/app/database/mysqldb"
+
 // SessionStore implements database operations on `sessions`.
 type SessionStore struct {
 	*DataStore
@@ -41,8 +43,8 @@ type sessionWithMostRecentIssuedAt struct {
 	IssuedAt  Time
 }
 
-// GetUserSessionsSortedByMostRecentIssuedAt returns the user's sessions sorted by most recent issued_at.
-func (s *SessionStore) GetUserSessionsSortedByMostRecentIssuedAt(userID int64) []sessionWithMostRecentIssuedAt {
+// GetUserOldSessionsToDelete returns the user's old sessions to delete because we keep only the `nbKeep` most recent ones.
+func (s *SessionStore) GetUserOldSessionsToDelete(userID int64, nbKeep int) []sessionWithMostRecentIssuedAt {
 	var sessions []sessionWithMostRecentIssuedAt
 
 	// Sessions without access tokens are treated as the oldest ones.
@@ -69,6 +71,8 @@ func (s *SessionStore) GetUserSessionsSortedByMostRecentIssuedAt(userID int64) [
 	err := sessionsWithoutAccessTokensQuery.
 		UnionAll(sessionsWithAccessTokensQuery).
 		Order("issued_at DESC, session_id").
+		Limit(mysqldb.MaxRowsReturned). // Offset requires a limit in MySQL.
+		Offset(nbKeep).
 		Scan(&sessions).
 		Error()
 	mustNotBeError(err)
@@ -78,18 +82,15 @@ func (s *SessionStore) GetUserSessionsSortedByMostRecentIssuedAt(userID int64) [
 
 // DeleteOldSessionsToKeepMaximum deletes old sessions to keep the maximum number of sessions.
 func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
-	sessions := s.GetUserSessionsSortedByMostRecentIssuedAt(userID)
+	sessions := s.GetUserOldSessionsToDelete(userID, max)
 
-	if len(sessions) > max {
-		// Delete the oldest sessions.
-		oldestSessions := sessions[max:]
-
-		oldestSessionIDs := make([]int64, len(oldestSessions))
-		for i, session := range oldestSessions {
-			oldestSessionIDs[i] = session.SessionID
+	if len(sessions) > 0 {
+		sessionIDs := make([]int64, len(sessions))
+		for i, session := range sessions {
+			sessionIDs[i] = session.SessionID
 		}
 
-		err := s.Delete("session_id IN (?)", oldestSessionIDs).
+		err := s.Delete("session_id IN (?)", sessionIDs).
 			Error()
 		mustNotBeError(err)
 	}
