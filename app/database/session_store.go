@@ -38,15 +38,8 @@ func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user
 	return result.User, result.SessionID, err
 }
 
-type sessionWithMostRecentIssuedAt struct {
-	SessionID int64
-	IssuedAt  Time
-}
-
 // DeleteOldSessionsToKeepMaximum deletes old sessions to keep the maximum number of sessions.
 func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
-	var sessions []sessionWithMostRecentIssuedAt
-
 	// Sessions without access tokens are treated as the oldest ones.
 	// So they will be deleted first when the maximum number of sessions is reached.
 	sessionsWithoutAccessTokensQuery := s.
@@ -68,23 +61,19 @@ func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
 		Group("access_tokens.session_id").
 		SubQuery()
 
-	err := sessionsWithoutAccessTokensQuery.
+	sessionToDeleteQuery := sessionsWithoutAccessTokensQuery.
 		UnionAll(sessionsWithAccessTokensQuery).
+		Select("session_id").
 		Order("issued_at DESC, session_id").
 		Limit(mysqldb.MaxRowsReturned). // Offset requires a limit in MySQL.
 		Offset(max).
-		Scan(&sessions).
+		SubQuery()
+
+	// The use of tmp_table is a workaround for the following MySQL error:
+	// Error 1235: This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery.
+	// @see https://stackoverflow.com/questions/17892762/mysql-this-version-of-mysql-doesnt-yet-support-limit-in-all-any-some-subqu
+	// Otherwise, we would just have used: "session_id IN ?".
+	err := s.Delete("session_id IN (SELECT session_id FROM ? tmp_table)", sessionToDeleteQuery).
 		Error()
 	mustNotBeError(err)
-
-	if len(sessions) > 0 {
-		sessionIDs := make([]int64, len(sessions))
-		for i, session := range sessions {
-			sessionIDs[i] = session.SessionID
-		}
-
-		err := s.Delete("session_id IN (?)", sessionIDs).
-			Error()
-		mustNotBeError(err)
-	}
 }
