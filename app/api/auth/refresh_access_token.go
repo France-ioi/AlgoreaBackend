@@ -72,7 +72,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
 			service.MustNotBeError(sessionIDsInProgress.withLock(sessionID, r, func() error {
-				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID, oldAccessToken)
+				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID)
 				return nil
 			}))
 		}
@@ -94,7 +94,6 @@ func (srv *Service) refreshTokens(
 	store *database.DataStore,
 	user *database.User,
 	sessionID int64,
-	oldAccessToken string,
 ) (newToken string, expiresIn int32, apiError service.APIError) {
 	var refreshToken string
 	err := store.Sessions().Where("session_id = ?", sessionID).
