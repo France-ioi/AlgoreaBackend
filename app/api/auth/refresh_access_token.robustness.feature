@@ -25,4 +25,7 @@ Feature: Refresh an access token - robustness
       No refresh token found in the DB for user 13
       """
     And the table "sessions" should stay unchanged
-    And the table "access_tokens" should stay unchanged
+    # The expired token has been removed
+    And the table "access_tokens" should be:
+      | session_id | issued_at           | expires_at          | token              |
+      | 1          | 2020-01-01 00:00:00 | 2020-01-01 02:00:00 | jane_current_token |
