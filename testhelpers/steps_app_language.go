@@ -1057,3 +1057,40 @@ func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *messages.
 
 	return nil
 }
+
+// ThereAreCountAccessTokensForUser checks if there are a given number of access tokens for a given user.
+func (ctx *TestContext) ThereAreCountAccessTokensForUser(count int, user string) error {
+	userID := ctx.getReference(user)
+
+	var accessTokensCount int
+	err := ctx.db.QueryRow(`
+		SELECT COUNT(*) as count FROM access_tokens
+			JOIN sessions ON sessions.session_id = access_tokens.session_id
+		 WHERE sessions.user_id = ?`, userID).
+		Scan(&accessTokensCount)
+	if err != nil {
+		return err
+	}
+
+	if accessTokensCount != count {
+		return fmt.Errorf("expected %d access tokens for user %s, got %d", count, user, accessTokensCount)
+	}
+
+	return nil
+}
+
+// ThereIsNoAccessToken checks that an access token doesn't exist.
+func (ctx *TestContext) ThereIsNoAccessToken(accessToken string) error {
+	var accessTokensCount int
+	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM access_tokens WHERE token = ?", accessToken).
+		Scan(&accessTokensCount)
+	if err != nil {
+		return err
+	}
+
+	if accessTokensCount > 0 {
+		return fmt.Errorf("there should be no access token %s", accessToken)
+	}
+
+	return nil
+}

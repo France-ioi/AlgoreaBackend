@@ -79,6 +79,7 @@ const parsedRequestData ctxKey = iota
 //				saves it into the DB keeping only the input token and the new token.
 //				Since the login module responds with both access and refresh tokens, the service updates the user's
 //				refresh token in this case as well.
+//				We also delete all the expired tokens of the user to keep the database leaner.
 //				If there is no refresh token for the user in the DB,
 //				the 'not found' error is returned.
 //

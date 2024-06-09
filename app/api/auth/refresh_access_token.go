@@ -77,6 +77,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			}))
 		}
 
+		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
+
 		if apiError != service.NoError {
 			return apiError
 		}
@@ -108,12 +110,8 @@ func (srv *Service) refreshTokens(
 	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
 	service.MustNotBeError(err)
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-		accessTokenStore := store.AccessTokens()
-		// delete all the user's access tokens keeping the input token only
-		service.MustNotBeError(accessTokenStore.Delete("session_id = ? AND token != ?",
-			sessionID, oldAccessToken).Error())
 		// insert the new access token
-		service.MustNotBeError(accessTokenStore.InsertNewToken(
+		service.MustNotBeError(store.AccessTokens().InsertNewToken(
 			sessionID,
 			token.AccessToken,
 			int32(time.Until(token.Expiry)/time.Second),

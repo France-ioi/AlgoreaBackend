@@ -45,3 +45,18 @@ func (s *AccessTokenStore) GetMostRecentValidTokenForSession(sessionID int64) Mo
 
 	return mostRecentToken
 }
+
+// DeleteExpiredTokensOfUser deletes all expired tokens of the given user.
+func (s *AccessTokenStore) DeleteExpiredTokensOfUser(userID int64) {
+	sessionIDofUserQuery := s.Sessions().
+		Select("session_id").
+		Where("user_id = ?", userID).
+		SubQuery()
+
+	err := s.
+		Where("session_id IN (?)", sessionIDofUserQuery).
+		Where("expires_at < NOW()").
+		Delete().
+		Error()
+	mustNotBeError(err)
+}
