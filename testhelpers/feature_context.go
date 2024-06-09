@@ -19,8 +19,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the database has the following users:$`, ctx.DBHasUsers)
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
 
-	s.Step(`^I am (@\w+)$`, ctx.IAm)
-	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
+	ctx.registerFeaturesForSessions(s)
+
 	s.Step(`^there is a user (@\w+)$`, ctx.ThereIsAUser)
 	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
@@ -65,13 +65,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^there is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
 	s.Step(`^there is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
 	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
-
-	s.Step(`^there are the following sessions:$`, ctx.ThereAreTheFollowingSessions)
-	s.Step(`^there are the following access tokens:$`, ctx.ThereAreTheFollowingAccessTokens)
-	s.Step(`^there are (\d+) sessions for user (@\w+)$`, ctx.ThereAreCountSessionsForUser)
-	s.Step(`^there is no session (@\w+)$`, ctx.ThereIsNoSessionID)
-	s.Step(`^there are (\d+) access tokens for user (@\w+)$`, ctx.ThereAreCountAccessTokensForUser)
-	s.Step(`^there is no access token "([^"]*)"$`, ctx.ThereIsNoAccessToken)
 
 	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
