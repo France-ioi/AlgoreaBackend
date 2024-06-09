@@ -77,8 +77,6 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			}))
 		}
 
-		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
-
 		if apiError != service.NoError {
 			return apiError
 		}
@@ -122,8 +120,11 @@ func (srv *Service) refreshTokens(
 				Error(),
 			)
 		}
+		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
+
 		newToken = token.AccessToken
 		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
+
 		return nil
 	}))
 	return newToken, expiresIn, service.NoError
