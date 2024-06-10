@@ -158,51 +158,6 @@ func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]inte
 	ctx.dbTables[tableName][key] = row
 }
 
-// addUsersIntoAllUsersGroup adds all users in the AllUsers group if it is defined.
-func (ctx *TestContext) addUsersIntoAllUsersGroup() error {
-	if ctx.allUsersGroup == "" {
-		return nil
-	}
-
-	for userID := range ctx.dbTables["users"] {
-		err := ctx.UserIsAMemberOfTheGroup(userID, ctx.allUsersGroup)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// addUser adds a user in database.
-func (ctx *TestContext) addUser(fields map[string]string) {
-	dbFields := make(map[string]interface{})
-	for key, value := range fields {
-		if key == "user" {
-			key = "login"
-		}
-
-		switch {
-		case key == "login_id":
-			dbFields["login_id"] = value
-		case strings.HasSuffix(key, "_id"):
-			dbFields[key] = ctx.getReference(value)
-		case value[0] == ReferencePrefix:
-			dbFields[key] = value[1:]
-		default:
-			dbFields[key] = value
-		}
-	}
-
-	userKey := strconv.FormatInt(dbFields["group_id"].(int64), 10)
-
-	if oldFields, ok := ctx.dbTables["users"][userKey]; ok {
-		dbFields = mergeFields(oldFields, dbFields)
-	}
-
-	ctx.addInDatabase("users", userKey, dbFields)
-}
-
 // addPersonalInfoViewApprovedFor adds a permission generated in the database.
 func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroup, parentGroup string) {
 	parentGroupID := ctx.getReference(parentGroup)
@@ -414,54 +369,6 @@ func (ctx *TestContext) addThread(item, participant, helperGroup, status, messag
 		"message_count":    messageCount,
 		"latest_update_at": latestUpdateAtDate,
 	})
-}
-
-// ThereIsAUser create a user.
-func (ctx *TestContext) ThereIsAUser(name string) error {
-	return ctx.ThereIsAUserWith(getParameterString(map[string]string{
-		"group_id": name,
-		"user":     name,
-	}))
-}
-
-// ThereIsAUserWith creates a new user.
-func (ctx *TestContext) ThereIsAUserWith(parameters string) error {
-	user := ctx.getParameterMap(parameters)
-
-	if _, ok := user["group_id"]; !ok {
-		user["group_id"] = user["user"]
-	}
-
-	ctx.addUser(user)
-
-	err := ctx.ThereIsAGroup(user["user"])
-	if err != nil {
-		return err
-	}
-
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(user["group_id"]))
-	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "User")
-
-	return nil
-}
-
-// ThereAreTheFollowingUsers defines users.
-func (ctx *TestContext) ThereAreTheFollowingUsers(users *messages.PickleStepArgument_PickleTable) error {
-	for i := 1; i < len(users.Rows); i++ {
-		user := ctx.getRowMap(i, users)
-
-		err := ctx.ThereIsAUserWith(getParameterString(user))
-		if err != nil {
-			return err
-		}
-
-		err = ctx.ThereIsAGroup(user["user"])
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // UserIsAManagerOfTheGroupWith sets the current user as the manager of a group.
