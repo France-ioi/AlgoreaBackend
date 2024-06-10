@@ -36,6 +36,23 @@ func CreateNewTempSession(s *database.DataStore, userID int64) (
 	return
 }
 
+// RefreshTempUserSession refreshes the session of a temporary user.
+func RefreshTempUserSession(s *database.DataStore, userID, sessionID int64) (accessToken string, expiresIn int32, err error) {
+	expiresIn = TemporaryUserSessionLifetimeInSeconds
+
+	accessToken, err = GenerateKey()
+	mustNotBeError(err)
+
+	mustNotBeError(s.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn))
+
+	logging.Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
+		expiresIn, userID)
+
+	s.AccessTokens().DeleteExpiredTokensOfUser(userID)
+
+	return
+}
+
 // mustNotBeError panics if the error is not nil.
 func mustNotBeError(err error) {
 	if err != nil {
