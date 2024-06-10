@@ -61,8 +61,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	} else {
 		if user.IsTempUser {
 			service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-				// delete all the user's access tokens keeping the input token only
-				service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
+				store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
+
 				var err error
 				newToken, expiresIn, err = auth.CreateNewTempSession(store, user.GroupID)
 				return err
