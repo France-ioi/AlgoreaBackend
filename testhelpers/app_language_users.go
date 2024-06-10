@@ -108,8 +108,8 @@ func (ctx *TestContext) ThereAreTheFollowingUsers(users *messages.PickleStepArgu
 		if _, ok := user["temp_user"]; ok {
 			ctx.setUserFieldInDatabase(
 				ctx.getUserPrimaryKey(groupID),
-				"last_name",
-				user["last_name"],
+				"temp_user",
+				user["temp_user"],
 			)
 		}
 		if _, ok := user["login_id"]; ok {
