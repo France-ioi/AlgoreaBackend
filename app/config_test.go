@@ -129,10 +129,6 @@ func TestDBConfig_FailsOnAWSForTestEnv(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	globalConfig.Set("database.addr", "test.amazonaws.com")
-
-	monkey.Patch(appenv.IsEnvTest, func() bool { return true })
-	monkey.Patch((*viper.Viper).AutomaticEnv, func(v *viper.Viper) {})
-	defer monkey.UnpatchAll()
 	_, err := DBConfig(globalConfig)
 	assert.EqualError(err, "cannot connect to AWS RDS in tests as it empties the database")
 }
