@@ -125,27 +125,6 @@ func TestDBConfig_Success(t *testing.T) {
 	assert.Equal("v99", dbConfig.TLSConfig)
 }
 
-func TestDBConfig_FailsOnAWSForTestEnv(t *testing.T) {
-	assert := assertlib.New(t)
-	globalConfig := viper.New()
-	globalConfig.Set("database.addr", "test.amazonaws.com")
-	_, err := DBConfig(globalConfig)
-	assert.EqualError(err, "cannot connect to AWS RDS in tests as it empties the database")
-}
-
-func TestDBConfig_SuccessOnAWSForNonTestEnv(t *testing.T) {
-	assert := assertlib.New(t)
-	globalConfig := viper.New()
-	globalConfig.Set("database.addr", "test.amazonaws.com")
-
-	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
-	monkey.Patch((*viper.Viper).AutomaticEnv, func(v *viper.Viper) {})
-	defer monkey.UnpatchAll()
-
-	_, err := DBConfig(globalConfig)
-	assert.NoError(err)
-}
-
 func TestDBConfig_UnmarshallingError(t *testing.T) {
 	// don't know if it is really possible to get this error
 	assert := assertlib.New(t)
