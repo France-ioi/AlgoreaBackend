@@ -84,6 +84,22 @@ func TestLoadConfigFrom_IgnoresMainConfigFileIfMissing(t *testing.T) {
 	assert.NotNil(conf)
 }
 
+func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T) {
+	assert := assertlib.New(t)
+	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+
+	// create a temp config file
+	tmpFile, deferFunc := createTmpFile("config-*.yaml", assert)
+	defer deferFunc()
+
+	fileName := filepath.Base(tmpFile.Name())
+	configName := fileName[:len(fileName)-10] // strip the ".test.yaml"
+
+	assert.Panics(func() {
+		_ = loadConfigFrom(configName, os.TempDir())
+	})
+}
+
 func TestLoadConfigFrom_IgnoresEnvConfigFileIfMissing(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
