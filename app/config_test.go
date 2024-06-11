@@ -112,15 +112,16 @@ func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
-	// create a temp config file
-	tmpFile, deferFunc := createTmpFile("config-*.yaml", assert)
+	// create a temp config dir
+	tmpDir, deferFunc := createTmpDir("conf-*", assert)
 	defer deferFunc()
 
-	fileName := filepath.Base(tmpFile.Name())
-	configName := fileName[:len(fileName)-10] // strip the ".test.yaml"
+	// create a temp config file
+	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1"), 0o600)
+	assert.NoError(err)
 
 	assert.Panics(func() {
-		_ = loadConfigFrom(configName, os.TempDir())
+		_ = loadConfigFrom("config", tmpDir)
 	})
 }
 

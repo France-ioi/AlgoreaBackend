@@ -72,7 +72,8 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 	config.SetConfigName(filename + "." + environment)
 	if err = config.MergeInConfig(); err != nil {
 		if appenv.IsEnvTest() {
-			log.Fatalf("Cannot read the %q config file: %s", environment, err)
+			log.Printf("Cannot read the %q config file: %s", environment, err)
+			panic("Cannot read the test config file")
 		} else {
 			log.Printf("Cannot merge %q config file, ignoring it: %s", environment, err)
 		}
