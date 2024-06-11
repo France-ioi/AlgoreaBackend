@@ -107,7 +107,7 @@ func TestNew_TokenConfigError(t *testing.T) {
 	defer patch.Unpatch()
 	_, err := New()
 	assert.NotNil(err)
-	assert.Contains(err.Error(), "The system cannot find the file specified")
+	assert.Contains(err.Error(), "system cannot find the file specified")
 }
 
 func TestNew_DomainsConfigError(t *testing.T) {
