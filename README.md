@@ -47,6 +47,12 @@ The app configuration stands in the `conf/config.yml` file. The file `conf/confi
 
 Environment-specific configurations can be defined using `conf/config.ENV.yml` files when ENV can be "prod", "dev" or "test.
 
+### Configuration of `test` environment
+
+The `test` environment is used for running the tests.
+For the `test` environment, we don't fall back to the default configuration file, so you need to provide a `conf/config.test.yml` file.
+This is to avoid running tests on a production database by mistake and erasing data.
+
 ## Creating the keys
 
 ```
