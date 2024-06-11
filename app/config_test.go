@@ -84,6 +84,30 @@ func TestLoadConfigFrom_IgnoresMainConfigFileIfMissing(t *testing.T) {
 	assert.NotNil(conf)
 }
 
+func TestLoadConfigFrom_MustNotUseMainConfigFileInTestEnv(t *testing.T) {
+	assert := assertlib.New(t)
+	appenv.ForceTestEnv() // to ensure it tries to find the config.test file
+
+	// create a temp dir to hold the config files
+	tmpDir, deferFunc := createTmpDir("conf-*", assert)
+	defer deferFunc()
+
+	// create a main config file inside the tmp dir, and define two distinct yaml parameters in it
+	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1\nparam2: 2"), 0o600)
+	assert.NoError(err)
+
+	// create a temp test config file inside the tmp dir, and define only one of the two parameters in it
+	err = ioutil.WriteFile(tmpDir+"/config.test.yaml", []byte("param1: 3"), 0o600)
+	assert.NoError(err)
+
+	conf := loadConfigFrom("config", tmpDir)
+	assert.NotNil(conf)
+
+	// the config of the test file should be used, and the one in the main file should not be used at all
+	assert.EqualValues(3, conf.GetInt("param1"))
+	assert.False(conf.IsSet("param2"))
+}
+
 func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
@@ -304,4 +328,10 @@ func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.Fi
 		_ = os.Remove(tmpFile.Name())
 		_ = tmpFile.Close()
 	}
+}
+
+func createTmpDir(pattern string, assert *assertlib.Assertions) (name string, deferFun func()) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), pattern)
+	assert.NoError(err)
+	return tmpDir, func() { _ = os.RemoveAll(tmpDir) }
 }
