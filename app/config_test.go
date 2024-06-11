@@ -24,35 +24,28 @@ func init() { //nolint:gochecknoinits
 
 func TestLoadConfigFrom(t *testing.T) {
 	assert := assertlib.New(t)
-	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+
+	// the test environment doesn't allow the merge of the config with a main config file for security reasons
+	// so here we mock the function that returns the current environment, because we want to test the merge
+	// of the config with the main config file
+	monkey.Patch(appenv.Env, func() string { return "dev" })
+	defer monkey.UnpatchAll()
+
+	// create a temp config dir
+	tmpDir, deferFunc := createTmpDir("conf-*", assert)
+	defer deferFunc()
 
 	// create a temp config file
-	tmpDir := os.TempDir()
-	tmpFile, err := ioutil.TempFile(tmpDir, "config-*.yaml")
-	assert.NoError(err)
-	defer func() {
-		_ = os.Remove(tmpFile.Name())
-		_ = tmpFile.Close()
-	}()
-
-	text := []byte("server:\n  port: 1234\n")
-	_, err = tmpFile.Write(text)
+	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("server:\n  port: 1234\n"), 0o600)
 	assert.NoError(err)
 
 	// change default config values
-	fileName := filepath.Base(tmpFile.Name())
-	configName := fileName[:len(fileName)-5] // strip the ".yaml"
-
-	tmpTestFileName := tmpDir + "/" + configName + ".test.yaml"
-	err = ioutil.WriteFile(tmpTestFileName, []byte("server:\n  rootpath: '/test/'"), 0o600)
+	err = ioutil.WriteFile(tmpDir+"/config.dev.yaml", []byte("server:\n  rootpath: '/test/'"), 0o600)
 	assert.NoError(err)
-	defer func() {
-		_ = os.Remove(tmpTestFileName)
-	}()
 
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "999")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
-	conf := loadConfigFrom(configName, tmpDir)
+	conf := loadConfigFrom("config", tmpDir)
 
 	// test config override
 	assert.EqualValues(1234, conf.Sub(serverConfigKey).GetInt("port"))
