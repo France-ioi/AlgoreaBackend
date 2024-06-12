@@ -22,6 +22,9 @@ type ManagerPermissionsPart struct {
 	CurrentUserCanGrantUserAccess bool `json:"current_user_can_grant_user_access"`
 	// returned only if the current user is a manager
 	CurrentUserCanWatchUser bool `json:"current_user_can_watch_user"`
+	// returned only if the current user is a manager
+	// enum: none,view,edit
+	PersonalInfoAccessApprovalToCurrentUser string `json:"personal_info_access_approval_to_current_user"`
 }
 
 // swagger:model
@@ -131,7 +134,9 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name,
 			manager_access.found AS current_user_is_manager,
 			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_user_access,
-			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_user`,
+			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_user,
+			IF(manager_access.found, manager_access.personal_info_access_approval_to_current_user, "none")
+				AS personal_info_access_approval_to_current_user`,
 			user.GroupID, user.GroupID, user.GroupID).
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
@@ -142,6 +147,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 					MAX(can_manage_value) AS can_manage_value,
 					MAX(can_grant_group_access) AS can_grant_group_access,
 					MAX(can_watch_members) AS can_watch_members,
+					"none" AS personal_info_access_approval_to_current_user,
 					groups_ancestors.child_group_id`).
 				Where("groups_ancestors.child_group_id = users.group_id").
 				Group("groups_ancestors.child_group_id").SubQuery()).

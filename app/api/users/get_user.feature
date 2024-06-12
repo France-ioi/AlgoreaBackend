@@ -95,7 +95,8 @@ Feature: Get user info
       "is_current_user": false,
       "ancestors_current_user_is_manager_of": [{"id": "10", "name": "Some group"}],
       "current_user_can_grant_user_access": false,
-      "current_user_can_watch_user": false
+      "current_user_can_watch_user": false,
+      "personal_info_access_approval_to_current_user": "none"
     }
     """
 
@@ -114,7 +115,8 @@ Feature: Get user info
       "is_current_user": false,
       "ancestors_current_user_is_manager_of": [{"id": "12", "name": "Friends"}],
       "current_user_can_grant_user_access": false,
-      "current_user_can_watch_user": true
+      "current_user_can_watch_user": true,
+      "personal_info_access_approval_to_current_user": "none"
     }
     """
 
@@ -133,6 +135,7 @@ Feature: Get user info
       "is_current_user": false,
       "ancestors_current_user_is_manager_of": [{"id": "12", "name": "Friends"}],
       "current_user_can_grant_user_access": true,
-      "current_user_can_watch_user": false
+      "current_user_can_watch_user": false,
+      "personal_info_access_approval_to_current_user": "none"
     }
     """
