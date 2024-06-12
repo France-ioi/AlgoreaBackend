@@ -186,7 +186,7 @@ type groupInfo struct {
 
 // setUserInfosForManager sets the following fields in the response:
 // - AncestorsCurrentUserIsManagerOf
-// - PersonalInfoAccessApprovalToCurrentUser
+// - PersonalInfoAccessApprovalToCurrentUser.
 func setUserInfosForManager(store *database.DataStore, user *database.User, userInfo *userViewResponse) {
 	var groupInfos []groupInfo
 
