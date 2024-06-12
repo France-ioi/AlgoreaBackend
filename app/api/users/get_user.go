@@ -160,42 +160,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	if userInfo.CurrentUserIsManager {
-		var groupInfos []struct {
-			ID                                int64
-			Name                              string
-			RequirePersonalInfoAccessApproval string
-		}
-
-		service.MustNotBeError(store.Groups().ManagedBy(user).
-			Joins(`
-				JOIN groups_ancestors_active AS groups_ancestors
-					ON groups_ancestors.ancestor_group_id = groups.id AND
-						 NOT groups_ancestors.is_self AND
-						 groups_ancestors.child_group_id = ?`, userInfo.GroupID).
-			Group("groups.id").
-			Order("groups.name").
-			Select("groups.id, groups.name, groups.require_personal_info_access_approval").
-			Scan(&groupInfos).Error())
-
-		userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, len(groupInfos))
-		for i, groupInfo := range groupInfos {
-			userInfo.AncestorsCurrentUserIsManagerOf[i] = structures.GroupShortInfo{
-				ID:   groupInfo.ID,
-				Name: groupInfo.Name,
-			}
-		}
-
-		// Compute the higher required personal info access approval ("edit" > "view" > "none").
-		highestPersonalInfoAccessApproval := "none"
-		for _, group := range groupInfos {
-			if group.RequirePersonalInfoAccessApproval == "edit" {
-				highestPersonalInfoAccessApproval = "edit"
-				break
-			} else if group.RequirePersonalInfoAccessApproval == "view" && highestPersonalInfoAccessApproval == "none" {
-				highestPersonalInfoAccessApproval = "view"
-			}
-		}
-		userInfo.PersonalInfoAccessApprovalToCurrentUser = highestPersonalInfoAccessApproval
+		setUserInfosForManager(store, user, &userInfo)
 	} else {
 		userInfo.ManagerPermissionsPart = nil
 		userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
@@ -205,4 +170,46 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 
 	render.Respond(w, r, &userInfo)
 	return service.NoError
+}
+
+// setUserInfosForManager sets the following fields in the response:
+// - AncestorsCurrentUserIsManagerOf
+// - PersonalInfoAccessApprovalToCurrentUser
+func setUserInfosForManager(store *database.DataStore, user *database.User, userInfo *userViewResponse) {
+	var groupInfos []struct {
+		ID                                int64
+		Name                              string
+		RequirePersonalInfoAccessApproval string
+	}
+
+	service.MustNotBeError(store.Groups().ManagedBy(user).
+		Joins(`
+				JOIN groups_ancestors_active AS groups_ancestors
+					ON groups_ancestors.ancestor_group_id = groups.id AND
+						 NOT groups_ancestors.is_self AND
+						 groups_ancestors.child_group_id = ?`, userInfo.GroupID).
+		Group("groups.id").
+		Order("groups.name").
+		Select("groups.id, groups.name, groups.require_personal_info_access_approval").
+		Scan(&groupInfos).Error())
+
+	userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, len(groupInfos))
+	for i, groupInfo := range groupInfos {
+		userInfo.AncestorsCurrentUserIsManagerOf[i] = structures.GroupShortInfo{
+			ID:   groupInfo.ID,
+			Name: groupInfo.Name,
+		}
+	}
+
+	// Compute the higher required personal info access approval ("edit" > "view" > "none").
+	highestPersonalInfoAccessApproval := "none"
+	for _, group := range groupInfos {
+		if group.RequirePersonalInfoAccessApproval == "edit" {
+			highestPersonalInfoAccessApproval = "edit"
+			break
+		} else if group.RequirePersonalInfoAccessApproval == "view" && highestPersonalInfoAccessApproval == "none" {
+			highestPersonalInfoAccessApproval = "view"
+		}
+	}
+	userInfo.PersonalInfoAccessApprovalToCurrentUser = highestPersonalInfoAccessApproval
 }
