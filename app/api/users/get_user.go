@@ -225,7 +225,8 @@ func computeHighestPersonalInfoAccessApproval(groupInfos []groupInfo) string {
 		if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalEdit {
 			highestPersonalInfoAccessApproval = personalInfoAccessApprovalEdit
 			break
-		} else if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalView && highestPersonalInfoAccessApproval == personalInfoAccessApprovalNone {
+		} else if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalView &&
+			highestPersonalInfoAccessApproval == personalInfoAccessApprovalNone {
 			highestPersonalInfoAccessApproval = personalInfoAccessApprovalView
 		}
 	}
