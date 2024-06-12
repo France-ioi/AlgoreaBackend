@@ -1,8 +1,10 @@
 package app
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -63,6 +65,31 @@ func TestLoadConfigFrom(t *testing.T) {
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "777")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
 	assert.EqualValues(777, conf.GetInt("server.WriteTimeout"))
+}
+
+func TestLoadConfigFrom_ShouldLogWarningWhenNonTestEnvAndNoMainConfigFile(t *testing.T) {
+	assert := assertlib.New(t)
+
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+
+	monkey.Patch(appenv.Env, func() string { return devEnv })
+	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
+	defer monkey.UnpatchAll()
+
+	// create a temp config file
+	tmpFile, deferFunc := createTmpFile("config-*.dev.yaml", assert)
+	defer deferFunc()
+
+	fileName := filepath.Base(tmpFile.Name())
+	configName := fileName[:len(fileName)-8] // strip the ".dev.yaml"
+
+	conf := loadConfigFrom(configName, os.TempDir())
+	assert.NotNil(conf)
+	assert.Contains(buf.String(), "Cannot read the main config file, ignoring it")
 }
 
 func TestLoadConfigFrom_IgnoresMainConfigFileIfMissing(t *testing.T) {
