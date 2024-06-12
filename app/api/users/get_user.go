@@ -153,7 +153,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 				Group("groups_ancestors.child_group_id").SubQuery()).
 		Scan(&userInfo).Error()
 
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return service.ErrNotFound(errors.New("no such user"))
 	}
 	service.MustNotBeError(err)
