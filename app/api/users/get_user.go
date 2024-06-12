@@ -134,9 +134,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name,
 			manager_access.found AS current_user_is_manager,
 			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_user_access,
-			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_user,
-			IF(manager_access.found, manager_access.personal_info_access_approval_to_current_user, "none")
-				AS personal_info_access_approval_to_current_user`,
+			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_user`,
 			user.GroupID, user.GroupID, user.GroupID).
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
@@ -147,7 +145,6 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 					MAX(can_manage_value) AS can_manage_value,
 					MAX(can_grant_group_access) AS can_grant_group_access,
 					MAX(can_watch_members) AS can_watch_members,
-					"none" AS personal_info_access_approval_to_current_user,
 					groups_ancestors.child_group_id`).
 				Where("groups_ancestors.child_group_id = users.group_id").
 				Group("groups_ancestors.child_group_id").SubQuery()).
@@ -163,6 +160,12 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	if userInfo.CurrentUserIsManager {
+		var groupInfos []struct {
+			ID                                int64
+			Name                              string
+			RequirePersonalInfoAccessApproval string
+		}
+
 		service.MustNotBeError(store.Groups().ManagedBy(user).
 			Joins(`
 				JOIN groups_ancestors_active AS groups_ancestors
@@ -171,8 +174,28 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 						 groups_ancestors.child_group_id = ?`, userInfo.GroupID).
 			Group("groups.id").
 			Order("groups.name").
-			Select("groups.id, groups.name").
-			Scan(&userInfo.AncestorsCurrentUserIsManagerOf).Error())
+			Select("groups.id, groups.name, groups.require_personal_info_access_approval").
+			Scan(&groupInfos).Error())
+
+		userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, len(groupInfos))
+		for i, groupInfo := range groupInfos {
+			userInfo.AncestorsCurrentUserIsManagerOf[i] = structures.GroupShortInfo{
+				ID:   groupInfo.ID,
+				Name: groupInfo.Name,
+			}
+		}
+
+		// Compute the higher required personal info access approval ("edit" > "view" > "none").
+		highestPersonalInfoAccessApproval := "none"
+		for _, group := range groupInfos {
+			if group.RequirePersonalInfoAccessApproval == "edit" {
+				highestPersonalInfoAccessApproval = "edit"
+				break
+			} else if group.RequirePersonalInfoAccessApproval == "view" && highestPersonalInfoAccessApproval == "none" {
+				highestPersonalInfoAccessApproval = "view"
+			}
+		}
+		userInfo.PersonalInfoAccessApprovalToCurrentUser = highestPersonalInfoAccessApproval
 	} else {
 		userInfo.ManagerPermissionsPart = nil
 		userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
