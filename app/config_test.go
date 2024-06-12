@@ -22,13 +22,15 @@ func init() { //nolint:gochecknoinits
 	appenv.SetDefaultEnvToTest()
 }
 
+var devEnv = "dev"
+
 func TestLoadConfigFrom(t *testing.T) {
 	assert := assertlib.New(t)
 
 	// the test environment doesn't allow the merge of the config with a main config file for security reasons
 	// so here we mock the function that returns the current environment, because we want to test the merge
 	// of the config with the main config file
-	monkey.Patch(appenv.Env, func() string { return "dev" })
+	monkey.Patch(appenv.Env, func() string { return devEnv })
 	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
 	defer monkey.UnpatchAll()
 
@@ -125,7 +127,7 @@ func TestLoadConfigFrom_IgnoresEnvConfigFileIfMissing(t *testing.T) {
 	// the test environment doesn't allow the merge of the config with a main config file for security reasons
 	// so here we mock the function that returns the current environment, because we want to test the merge
 	// of the config with the main config file
-	monkey.Patch(appenv.Env, func() string { return "dev" })
+	monkey.Patch(appenv.Env, func() string { return devEnv })
 	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
 	defer monkey.UnpatchAll()
 
