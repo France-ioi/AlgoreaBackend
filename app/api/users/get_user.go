@@ -207,8 +207,7 @@ func setUserInfosForManager(store *database.DataStore, user *database.User, user
 		}
 	}
 
-	highestPersonalInfoAccessApproval := computeHighestPersonalInfoAccessApproval(groupInfos)
-	userInfo.PersonalInfoAccessApprovalToCurrentUser = highestPersonalInfoAccessApproval
+	userInfo.PersonalInfoAccessApprovalToCurrentUser = computeHighestPersonalInfoAccessApproval(groupInfos)
 }
 
 // computeHighestPersonalInfoAccessApproval computes the highest personal info access approval ("edit" > "view" > "none").
