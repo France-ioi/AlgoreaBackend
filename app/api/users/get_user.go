@@ -230,5 +230,6 @@ func computeHighestPersonalInfoAccessApproval(groupInfos []groupInfo) string {
 			highestPersonalInfoAccessApproval = personalInfoAccessApprovalView
 		}
 	}
+
 	return highestPersonalInfoAccessApproval
 }
