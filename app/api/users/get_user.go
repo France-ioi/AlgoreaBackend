@@ -13,9 +13,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
-const personalInfoAccessApprovalNone = "none"
-const personalInfoAccessApprovalView = "view"
-const personalInfoAccessApprovalEdit = "edit"
+const (
+	personalInfoAccessApprovalNone = "none"
+	personalInfoAccessApprovalView = "view"
+	personalInfoAccessApprovalEdit = "edit"
+)
 
 // ManagerPermissionsPart contains fields related to permissions for managing the user.
 // These fields are only displayed if the current user is a manager of the user.
@@ -199,15 +201,21 @@ func setUserInfosForManager(store *database.DataStore, user *database.User, user
 		Select("groups.id, groups.name, groups.require_personal_info_access_approval").
 		Scan(&groupInfos).Error())
 
-	userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, len(groupInfos))
-	for i, groupInfo := range groupInfos {
-		userInfo.AncestorsCurrentUserIsManagerOf[i] = structures.GroupShortInfo{
-			ID:   groupInfo.ID,
-			Name: groupInfo.Name,
+	userInfo.AncestorsCurrentUserIsManagerOf = getGroupShortInfos(groupInfos)
+	userInfo.PersonalInfoAccessApprovalToCurrentUser = computeHighestPersonalInfoAccessApproval(groupInfos)
+}
+
+// getGroupShortInfos returns a list of GroupShortInfo from the given groupInfos.
+func getGroupShortInfos(groupInfos []groupInfo) []structures.GroupShortInfo {
+	ancestorsCurrentUserIsManagerOf := make([]structures.GroupShortInfo, len(groupInfos))
+	for i, groupInfoValue := range groupInfos {
+		ancestorsCurrentUserIsManagerOf[i] = structures.GroupShortInfo{
+			ID:   groupInfoValue.ID,
+			Name: groupInfoValue.Name,
 		}
 	}
 
-	userInfo.PersonalInfoAccessApprovalToCurrentUser = computeHighestPersonalInfoAccessApproval(groupInfos)
+	return ancestorsCurrentUserIsManagerOf
 }
 
 // computeHighestPersonalInfoAccessApproval computes the highest personal info access approval ("edit" > "view" > "none").
