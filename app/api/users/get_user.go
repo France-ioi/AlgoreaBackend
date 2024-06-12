@@ -176,15 +176,17 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	return service.NoError
 }
 
+type groupInfo struct {
+	ID                                int64
+	Name                              string
+	RequirePersonalInfoAccessApproval string
+}
+
 // setUserInfosForManager sets the following fields in the response:
 // - AncestorsCurrentUserIsManagerOf
 // - PersonalInfoAccessApprovalToCurrentUser
 func setUserInfosForManager(store *database.DataStore, user *database.User, userInfo *userViewResponse) {
-	var groupInfos []struct {
-		ID                                int64
-		Name                              string
-		RequirePersonalInfoAccessApproval string
-	}
+	var groupInfos []groupInfo
 
 	service.MustNotBeError(store.Groups().ManagedBy(user).
 		Joins(`
@@ -205,7 +207,12 @@ func setUserInfosForManager(store *database.DataStore, user *database.User, user
 		}
 	}
 
-	// Compute the higher required personal info access approval ("edit" > "view" > "none").
+	highestPersonalInfoAccessApproval := computeHighestPersonalInfoAccessApproval(groupInfos)
+	userInfo.PersonalInfoAccessApprovalToCurrentUser = highestPersonalInfoAccessApproval
+}
+
+// computeHighestPersonalInfoAccessApproval computes the highest personal info access approval ("edit" > "view" > "none").
+func computeHighestPersonalInfoAccessApproval(groupInfos []groupInfo) string {
 	highestPersonalInfoAccessApproval := personalInfoAccessApprovalNone
 	for _, group := range groupInfos {
 		if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalEdit {
@@ -215,5 +222,5 @@ func setUserInfosForManager(store *database.DataStore, user *database.User, user
 			highestPersonalInfoAccessApproval = personalInfoAccessApprovalView
 		}
 	}
-	userInfo.PersonalInfoAccessApprovalToCurrentUser = highestPersonalInfoAccessApproval
+	return highestPersonalInfoAccessApproval
 }
