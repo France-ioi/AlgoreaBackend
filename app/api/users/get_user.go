@@ -13,6 +13,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
+const personalInfoAccessApprovalNone = "none"
+const personalInfoAccessApprovalView = "view"
+const personalInfoAccessApprovalEdit = "edit"
+
 // ManagerPermissionsPart contains fields related to permissions for managing the user.
 // These fields are only displayed if the current user is a manager of the user.
 // swagger:ignore
@@ -202,13 +206,13 @@ func setUserInfosForManager(store *database.DataStore, user *database.User, user
 	}
 
 	// Compute the higher required personal info access approval ("edit" > "view" > "none").
-	highestPersonalInfoAccessApproval := "none"
+	highestPersonalInfoAccessApproval := personalInfoAccessApprovalNone
 	for _, group := range groupInfos {
-		if group.RequirePersonalInfoAccessApproval == "edit" {
-			highestPersonalInfoAccessApproval = "edit"
+		if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalEdit {
+			highestPersonalInfoAccessApproval = personalInfoAccessApprovalEdit
 			break
-		} else if group.RequirePersonalInfoAccessApproval == "view" && highestPersonalInfoAccessApproval == "none" {
-			highestPersonalInfoAccessApproval = "view"
+		} else if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalView && highestPersonalInfoAccessApproval == personalInfoAccessApprovalNone {
+			highestPersonalInfoAccessApproval = personalInfoAccessApprovalView
 		}
 	}
 	userInfo.PersonalInfoAccessApprovalToCurrentUser = highestPersonalInfoAccessApproval
