@@ -29,6 +29,7 @@ func TestLoadConfigFrom(t *testing.T) {
 	// so here we mock the function that returns the current environment, because we want to test the merge
 	// of the config with the main config file
 	monkey.Patch(appenv.Env, func() string { return "dev" })
+	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
 	defer monkey.UnpatchAll()
 
 	// create a temp config dir
@@ -120,7 +121,13 @@ func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T
 
 func TestLoadConfigFrom_IgnoresEnvConfigFileIfMissing(t *testing.T) {
 	assert := assertlib.New(t)
-	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+
+	// the test environment doesn't allow the merge of the config with a main config file for security reasons
+	// so here we mock the function that returns the current environment, because we want to test the merge
+	// of the config with the main config file
+	monkey.Patch(appenv.Env, func() string { return "dev" })
+	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
+	defer monkey.UnpatchAll()
 
 	// create a temp config file
 	tmpFile, deferFunc := createTmpFile("config-*.yaml", assert)
