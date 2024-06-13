@@ -48,8 +48,6 @@ func RefreshTempUserSession(s *database.DataStore, userID, sessionID int64) (acc
 	logging.Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
 		expiresIn, userID)
 
-	s.AccessTokens().DeleteExpiredTokensOfUser(userID)
-
 	return
 }
 

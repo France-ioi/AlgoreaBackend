@@ -78,6 +78,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		if apiError != service.NoError {
 			return apiError
 		}
+
+		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
 	}
 
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
@@ -118,7 +120,6 @@ func (srv *Service) refreshTokens(
 				Error(),
 			)
 		}
-		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
 
 		newToken = token.AccessToken
 		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
