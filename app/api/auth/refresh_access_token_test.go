@@ -67,6 +67,8 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `sessions` SET `refresh_token` = ? WHERE (session_id = ?)")+"$").
 						WithArgs("newfirstrefreshtoken", sqlmock.AnyArg()).
 						WillReturnResult(sqlmock.NewResult(-1, 1))
+					mock.ExpectCommit()
+					mock.ExpectBegin()
 					mock.ExpectExec("^" + regexp.QuoteMeta(
 						"DELETE FROM `access_tokens`  WHERE "+
 							"(session_id IN ((SELECT session_id FROM `sessions`  WHERE (user_id = ?)))) AND (expires_at < NOW())",
