@@ -72,7 +72,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
 			service.MustNotBeError(sessionIDsInProgress.withLock(sessionID, r, func() error {
-				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID, oldAccessToken)
+				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID)
 				return nil
 			}))
 		}
@@ -92,7 +92,6 @@ func (srv *Service) refreshTokens(
 	store *database.DataStore,
 	user *database.User,
 	sessionID int64,
-	oldAccessToken string,
 ) (newToken string, expiresIn int32, apiError service.APIError) {
 	var refreshToken string
 	err := store.Sessions().Where("session_id = ?", sessionID).
@@ -108,12 +107,8 @@ func (srv *Service) refreshTokens(
 	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
 	service.MustNotBeError(err)
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-		accessTokenStore := store.AccessTokens()
-		// delete all the user's access tokens keeping the input token only
-		service.MustNotBeError(accessTokenStore.Delete("session_id = ? AND token != ?",
-			sessionID, oldAccessToken).Error())
 		// insert the new access token
-		service.MustNotBeError(accessTokenStore.InsertNewToken(
+		service.MustNotBeError(store.AccessTokens().InsertNewToken(
 			sessionID,
 			token.AccessToken,
 			int32(time.Until(token.Expiry)/time.Second),
@@ -125,8 +120,11 @@ func (srv *Service) refreshTokens(
 				Error(),
 			)
 		}
+		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
+
 		newToken = token.AccessToken
 		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
+
 		return nil
 	}))
 	return newToken, expiresIn, service.NoError

@@ -25,4 +25,5 @@ Feature: Refresh an access token - robustness
       No refresh token found in the DB for user 13
       """
     And the table "sessions" should stay unchanged
+    # The expired token has been removed
     And the table "access_tokens" should stay unchanged

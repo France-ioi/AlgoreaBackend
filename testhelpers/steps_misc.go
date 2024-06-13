@@ -10,53 +10,20 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"bou.ke/monkey"
 	"github.com/cucumber/messages-go/v10"
 	"github.com/go-chi/chi"
-	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
-
-// IAmUserWithID sets the current logged user to the one with the provided ID.
-func (ctx *TestContext) IAmUserWithID(userID int64) error {
-	ctx.userID = userID
-	ctx.user = strconv.FormatInt(userID, 10)
-
-	db, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-	return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		store.Exec("SET FOREIGN_KEY_CHECKS=0")
-		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-
-		err = store.Sessions().InsertMap(map[string]interface{}{
-			"session_id": testSessionID,
-			"user_id":    ctx.userID,
-		})
-		if err != nil {
-			return err
-		}
-
-		return store.AccessTokens().InsertMap(map[string]interface{}{
-			"session_id": testSessionID,
-			"token":      testAccessToken,
-			"issued_at":  database.Now(),
-			"expires_at": gorm.Expr("? + INTERVAL 7200 SECOND", database.Now()),
-		})
-	})
-}
 
 // TimeNow stubs time.Now to the provided time.
 func (ctx *TestContext) TimeNow(timeStr string) error {

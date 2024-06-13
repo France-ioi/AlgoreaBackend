@@ -100,6 +100,7 @@ Feature: Create a new access token
       | session_id | issued_at           | expires_at          | token              |
       | 1          | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | tmp_old_token      |
       | 1          | 2020-01-01 01:00:12 | 2020-01-01 03:00:12 | tmp_current_token  |
+      | 2          | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | jane_old_token     |
       | 2          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
       | 2          | 2020-01-01 02:00:00 | 2021-01-01 02:00:00 | jane_new_token     | # the new token
       | 3          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |

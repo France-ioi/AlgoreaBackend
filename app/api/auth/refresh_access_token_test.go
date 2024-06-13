@@ -59,9 +59,6 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 						WithArgs(sqlmock.AnyArg()).
 						WillReturnRows(mock.NewRows([]string{"refresh_token"}).AddRow("firstrefreshtoken"))
 					mock.ExpectBegin()
-					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `access_tokens`  WHERE (session_id = ? AND token != ?)")+"$").
-						WithArgs(sqlmock.AnyArg(), "accesstoken").
-						WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta(
 						"INSERT INTO `access_tokens` (`expires_at`, `issued_at`, `session_id`, `token`) "+
 							"VALUES (NOW() + INTERVAL ? SECOND, NOW(), ?, ?)")+"$").
@@ -69,6 +66,12 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 						WillReturnResult(sqlmock.NewResult(123, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `sessions` SET `refresh_token` = ? WHERE (session_id = ?)")+"$").
 						WithArgs("newfirstrefreshtoken", sqlmock.AnyArg()).
+						WillReturnResult(sqlmock.NewResult(-1, 1))
+					mock.ExpectExec("^" + regexp.QuoteMeta(
+						"DELETE FROM `access_tokens`  WHERE "+
+							"(session_id IN ((SELECT session_id FROM `sessions`  WHERE (user_id = ?)))) AND (expires_at < NOW())",
+					) + "$").
+						WithArgs(sqlmock.AnyArg()).
 						WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectCommit()
 				}
