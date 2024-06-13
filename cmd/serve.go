@@ -26,6 +26,10 @@ func init() { //nolint:gochecknoinits
 			// if arg given, replace the env
 			if len(args) > 0 {
 				appenv.SetEnv(args[0])
+
+				if appenv.IsEnvTest() {
+					log.Fatal("serve cannot be run in test environment.")
+				}
 			}
 
 			log.Println("Starting application: environment =", appenv.Env())

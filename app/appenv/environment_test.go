@@ -115,3 +115,20 @@ func TestSetEnv_Panic(t *testing.T) {
 		SetEnv("myEnv")
 	})
 }
+
+func TestForceTestEnv(t *testing.T) {
+	_ = os.Setenv(envVarName, "prod")
+	ForceTestEnv()
+
+	assert.Equal(t, "test", Env())
+
+	assert.Panics(t, func() {
+		SetEnv("prod")
+	})
+	assert.Panics(t, func() {
+		SetEnv("dev")
+	})
+	assert.NotPanics(t, func() {
+		SetEnv("test")
+	})
+}

@@ -1,8 +1,10 @@
 package app
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -22,37 +24,33 @@ func init() { //nolint:gochecknoinits
 	appenv.SetDefaultEnvToTest()
 }
 
+var devEnv = "dev"
+
 func TestLoadConfigFrom(t *testing.T) {
 	assert := assertlib.New(t)
-	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+
+	// the test environment doesn't allow the merge of the config with a main config file for security reasons
+	// so here we mock the function that returns the current environment, because we want to test the merge
+	// of the config with the main config file
+	monkey.Patch(appenv.Env, func() string { return devEnv })
+	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
+	defer monkey.UnpatchAll()
+
+	// create a temp config dir
+	tmpDir, deferFunc := createTmpDir("conf-*", assert)
+	defer deferFunc()
 
 	// create a temp config file
-	tmpDir := os.TempDir()
-	tmpFile, err := ioutil.TempFile(tmpDir, "config-*.yaml")
-	assert.NoError(err)
-	defer func() {
-		_ = os.Remove(tmpFile.Name())
-		_ = tmpFile.Close()
-	}()
-
-	text := []byte("server:\n  port: 1234\n")
-	_, err = tmpFile.Write(text)
+	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("server:\n  port: 1234\n"), 0o600)
 	assert.NoError(err)
 
 	// change default config values
-	fileName := filepath.Base(tmpFile.Name())
-	configName := fileName[:len(fileName)-5] // strip the ".yaml"
-
-	tmpTestFileName := tmpDir + "/" + configName + ".test.yaml"
-	err = ioutil.WriteFile(tmpTestFileName, []byte("server:\n  rootpath: '/test/'"), 0o600)
+	err = ioutil.WriteFile(tmpDir+"/config.dev.yaml", []byte("server:\n  rootpath: '/test/'"), 0o600)
 	assert.NoError(err)
-	defer func() {
-		_ = os.Remove(tmpTestFileName)
-	}()
 
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "999")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
-	conf := loadConfigFrom(configName, tmpDir)
+	conf := loadConfigFrom("config", tmpDir)
 
 	// test config override
 	assert.EqualValues(1234, conf.Sub(serverConfigKey).GetInt("port"))
@@ -67,6 +65,31 @@ func TestLoadConfigFrom(t *testing.T) {
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "777")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
 	assert.EqualValues(777, conf.GetInt("server.WriteTimeout"))
+}
+
+func TestLoadConfigFrom_ShouldLogWarningWhenNonTestEnvAndNoMainConfigFile(t *testing.T) {
+	assert := assertlib.New(t)
+
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+
+	monkey.Patch(appenv.Env, func() string { return devEnv })
+	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
+	defer monkey.UnpatchAll()
+
+	// create a temp config file
+	tmpFile, deferFunc := createTmpFile("config-*.dev.yaml", assert)
+	defer deferFunc()
+
+	fileName := filepath.Base(tmpFile.Name())
+	configName := fileName[:len(fileName)-8] // strip the ".dev.yaml"
+
+	conf := loadConfigFrom(configName, os.TempDir())
+	assert.NotNil(conf)
+	assert.Contains(buf.String(), "Cannot read the main config file, ignoring it")
 }
 
 func TestLoadConfigFrom_IgnoresMainConfigFileIfMissing(t *testing.T) {
@@ -84,9 +107,56 @@ func TestLoadConfigFrom_IgnoresMainConfigFileIfMissing(t *testing.T) {
 	assert.NotNil(conf)
 }
 
-func TestLoadConfigFrom_IgnoresEnvConfigFileIfMissing(t *testing.T) {
+func TestLoadConfigFrom_MustNotUseMainConfigFileInTestEnv(t *testing.T) {
+	assert := assertlib.New(t)
+	appenv.ForceTestEnv() // to ensure it tries to find the config.test file
+
+	// create a temp dir to hold the config files
+	tmpDir, deferFunc := createTmpDir("conf-*", assert)
+	defer deferFunc()
+
+	// create a main config file inside the tmp dir, and define two distinct yaml parameters in it
+	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1\nparam2: 2"), 0o600)
+	assert.NoError(err)
+
+	// create a temp test config file inside the tmp dir, and define only one of the two parameters in it
+	err = ioutil.WriteFile(tmpDir+"/config.test.yaml", []byte("param1: 3"), 0o600)
+	assert.NoError(err)
+
+	conf := loadConfigFrom("config", tmpDir)
+	assert.NotNil(conf)
+
+	// the config of the test file should be used, and the one in the main file should not be used at all
+	assert.EqualValues(3, conf.GetInt("param1"))
+	assert.False(conf.IsSet("param2"))
+}
+
+func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+
+	// create a temp config dir
+	tmpDir, deferFunc := createTmpDir("conf-*", assert)
+	defer deferFunc()
+
+	// create a temp config file
+	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1"), 0o600)
+	assert.NoError(err)
+
+	assert.Panics(func() {
+		_ = loadConfigFrom("config", tmpDir)
+	})
+}
+
+func TestLoadConfigFrom_IgnoresEnvConfigFileIfMissing(t *testing.T) {
+	assert := assertlib.New(t)
+
+	// the test environment doesn't allow the merge of the config with a main config file for security reasons
+	// so here we mock the function that returns the current environment, because we want to test the merge
+	// of the config with the main config file
+	monkey.Patch(appenv.Env, func() string { return devEnv })
+	monkey.Patch(appenv.IsEnvTest, func() bool { return false })
+	defer monkey.UnpatchAll()
 
 	// create a temp config file
 	tmpFile, deferFunc := createTmpFile("config-*.yaml", assert)
@@ -288,4 +358,10 @@ func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.Fi
 		_ = os.Remove(tmpFile.Name())
 		_ = tmpFile.Close()
 	}
+}
+
+func createTmpDir(pattern string, assert *assertlib.Assertions) (name string, deferFun func()) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), pattern)
+	assert.NoError(err)
+	return tmpDir, func() { _ = os.RemoveAll(tmpDir) }
 }

@@ -58,8 +58,12 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 	config.SetConfigName(filename)
 	config.AddConfigPath(directory)
 
-	if err = config.ReadInConfig(); err != nil {
-		log.Print("Cannot read the main config file, ignoring it: ", err)
+	// If we are in test environment, we do not want to read the main config file,
+	// because it might contain the credentials to a live database, and running the tests will erase the database
+	if !appenv.IsEnvTest() {
+		if err = config.ReadInConfig(); err != nil {
+			log.Print("Cannot read the main config file, ignoring it: ", err)
+		}
 	}
 
 	environment := appenv.Env()
@@ -67,7 +71,12 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 
 	config.SetConfigName(filename + "." + environment)
 	if err = config.MergeInConfig(); err != nil {
-		log.Printf("Cannot merge %q config file, ignoring it: %s", environment, err)
+		if appenv.IsEnvTest() {
+			log.Printf("Cannot read the %q config file: %s", environment, err)
+			panic("Cannot read the test config file")
+		} else {
+			log.Printf("Cannot merge %q config file, ignoring it: %s", environment, err)
+		}
 	}
 
 	return config

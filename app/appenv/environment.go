@@ -10,6 +10,8 @@ const (
 	testEnv        = "test"
 )
 
+var forcedEnv = ""
+
 // Env returns the deployment environment set for this app ("prod", "dev", or "test"). Default to "dev".
 func Env() string {
 	env := os.Getenv(envVarName)
@@ -31,6 +33,9 @@ func SetDefaultEnv(newVal string) {
 
 // SetEnv sets the deployment environment to the given value.
 func SetEnv(newVal string) {
+	if forcedEnv != "" && forcedEnv != newVal {
+		panic("the environment has been forced to " + forcedEnv + " and cannot be changed to " + newVal)
+	}
 	if os.Setenv(envVarName, newVal) != nil {
 		panic("unable to set env variable")
 	}
@@ -39,6 +44,12 @@ func SetEnv(newVal string) {
 // SetDefaultEnvToTest set the deployment environment to the "test" if not set.
 func SetDefaultEnvToTest() {
 	SetDefaultEnv(testEnv)
+}
+
+// ForceTestEnv set the deployment environment to the "test" and makes the program panic if we try to change it.
+func ForceTestEnv() {
+	forcedEnv = testEnv
+	SetEnv(forcedEnv)
 }
 
 // IsEnvTest return whether the app is in "test" environment.
