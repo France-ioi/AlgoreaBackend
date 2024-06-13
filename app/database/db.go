@@ -194,6 +194,9 @@ func (conn *DB) Limit(limit interface{}) *DB {
 	return newDB(conn.ctx, conn.db.Limit(limit))
 }
 
+// Offset specifies the offset of the records to be retrieved.
+func (conn *DB) Offset(offset interface{}) *DB { return newDB(conn.ctx, conn.db.Offset(offset)) }
+
 // Where returns a new relation, filters records with given conditions, accepts `map`,
 // `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
 func (conn *DB) Where(query interface{}, args ...interface{}) *DB {

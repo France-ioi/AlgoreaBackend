@@ -92,7 +92,7 @@ func (ctx *TestContext) populateDatabase() error {
 		return nil
 	}
 
-	db, err := database.Open(ctx.db())
+	db, err := database.Open(ctx.db)
 	if err != nil {
 		return err
 	}
@@ -183,6 +183,8 @@ func (ctx *TestContext) addUser(fields map[string]string) {
 		}
 
 		switch {
+		case key == "login_id":
+			dbFields["login_id"] = value
 		case strings.HasSuffix(key, "_id"):
 			dbFields[key] = ctx.getReference(value)
 		case value[0] == ReferencePrefix:
@@ -1000,6 +1002,41 @@ func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *messages.PickleSt
 			session["user"],
 			session["refresh_token"],
 		)
+	}
+
+	return nil
+}
+
+// ThereAreCountSessionsForUser checks if there are a given number of sessions for a given user.
+func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) error {
+	userID := ctx.getReference(user)
+
+	var sessionCount int
+	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?", userID).
+		Scan(&sessionCount)
+	if err != nil {
+		return err
+	}
+
+	if sessionCount != count {
+		return fmt.Errorf("expected %d sessions for user %s, got %d", count, user, sessionCount)
+	}
+
+	return nil
+}
+
+func (ctx *TestContext) ThereIsNoSessionID(session string) error {
+	sessionID := ctx.getReference(session)
+
+	var sessionCount int
+	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE session_id = ?", sessionID).
+		Scan(&sessionCount)
+	if err != nil {
+		return err
+	}
+
+	if sessionCount > 0 {
+		return fmt.Errorf("there should be no session with ID %d", sessionID)
 	}
 
 	return nil

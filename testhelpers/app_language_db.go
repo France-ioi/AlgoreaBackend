@@ -42,7 +42,7 @@ func (ctx *TestContext) buildDatabaseCountRowQuery(table string, datamap map[str
 // queryScalar returns a single value from the database as the result of the query.
 func (ctx *TestContext) queryScalar(query string, values []interface{}) int {
 	var resultCount int
-	err := db.
+	err := ctx.db.
 		QueryRow(query, values...).
 		Scan(&resultCount)
 	mustNotBeError(err)

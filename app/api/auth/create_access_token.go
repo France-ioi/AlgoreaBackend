@@ -42,6 +42,11 @@ const parsedRequestData ctxKey = iota
 //				on launch whether the user is logged or not.
 //				If the user is not already logged, a temporary user is created.
 //
+//
+//		To avoid the spamming of the sessions table with session creation, we store a maximum of 10 sessions per user.
+//		When we reach this limit, we delete the oldest session of the user.
+//
+//
 //		The `{code}` parameter is an output of the login-module after a successful login.
 //
 //		* If the `{code}` is given and the "Authorization" header is not given.
@@ -272,6 +277,9 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 			token.AccessToken,
 			int32(time.Until(token.Expiry)/time.Second),
 		))
+
+		// Delete the oldest sessions of the user to keep a maximum of 10 sessions.
+		store.Sessions().DeleteOldSessionsToKeepMaximum(userID, 10)
 
 		return nil
 	}))
