@@ -169,10 +169,7 @@ func (ctx *TestContext) GroupIsAChildOfTheGroup(childGroup, parentGroup string) 
 
 // UserIsAMemberOfTheGroup puts a user in a group.
 func (ctx *TestContext) UserIsAMemberOfTheGroup(user, group string) error {
-	err := ctx.ThereIsAUserWith(getParameterString(map[string]string{
-		"group_id": user,
-		"user":     user,
-	}))
+	err := ctx.ThereIsAUser(user)
 	if err != nil {
 		return err
 	}

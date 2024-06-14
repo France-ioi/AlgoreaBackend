@@ -20,9 +20,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
 
 	ctx.registerFeaturesForSessions(s)
+	ctx.registerFeaturesForUsers(s)
 
-	s.Step(`^there is a user (@\w+)$`, ctx.ThereIsAUser)
-	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
 	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group code is "([^"]*)"$`, ctx.TheGeneratedGroupCodeIs)

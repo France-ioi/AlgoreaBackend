@@ -61,10 +61,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	} else {
 		if user.IsTempUser {
 			service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-				// delete all the user's access tokens keeping the input token only
-				service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
 				var err error
-				newToken, expiresIn, err = auth.CreateNewTempSession(store, user.GroupID)
+				newToken, expiresIn, err = auth.RefreshTempUserSession(store, user.GroupID, sessionID)
 				return err
 			}))
 		} else {
@@ -80,6 +78,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		if apiError != service.NoError {
 			return apiError
 		}
+
+		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
 	}
 
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
@@ -120,7 +120,6 @@ func (srv *Service) refreshTokens(
 				Error(),
 			)
 		}
-		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
 
 		newToken = token.AccessToken
 		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)

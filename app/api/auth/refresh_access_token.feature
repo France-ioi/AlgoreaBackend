@@ -49,21 +49,23 @@ Feature: Create a new access token
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And logs should contain:
       """
-      Generated a session token expiring in 7200 seconds for a temporary user with group_id = 12
+      Refreshed a session token expiring in 7200 seconds for a temporary user with group_id = 12
       """
     And the table "sessions" should be:
-      | session_id          | user_id | refresh_token             |
-      | 2                   | 13      | jane_current_refreshtoken |
-      | 3                   | 14      | john_current_refreshtoken |
-      | 5577006791947779410 | 12      | null                      |
+      | session_id | user_id | refresh_token             |
+      | 1          | 12      |                           |
+      | 2          | 13      | jane_current_refreshtoken |
+      | 3          | 14      | john_current_refreshtoken |
     And the table "access_tokens" should be:
-      | session_id          | issued_at           | expires_at          | token              |
-      | 2                   | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | jane_old_token     |
-      | 2                   | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
-      | 3                   | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |
-      | 5577006791947779410 | 2020-01-01 02:00:00 | 2020-01-01 04:00:00 | tmp_new_token      |
-  Examples:
-    | query                            | current_cookie        | token_in_data                   | expected_cookie                                                                                                                                          |
+      | session_id | issued_at           | expires_at          | token              |
+      | 1          | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | tmp_old_token      |
+      | 1          | 2020-01-01 01:00:12 | 2020-01-01 03:00:12 | tmp_current_token  |
+      | 1          | 2020-01-01 02:00:00 | 2020-01-01 04:00:00 | tmp_new_token      |
+      | 2          | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | jane_old_token     |
+      | 2          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
+      | 3          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |
+    Examples:
+      | query                            | current_cookie        | token_in_data                   | expected_cookie                                                                                                                                          |
     |                                  | [Header not defined]  | "access_token":"tmp_new_token", | [Header not defined]                                                                                                                                     |
     | ?use_cookie=1&cookie_secure=1    | [Header not defined]  |                                 | access_token=2!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None |
     | ?use_cookie=1&cookie_same_site=1 | [Header not defined]  |                                 | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       |
@@ -191,19 +193,21 @@ Feature: Create a new access token
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And logs should contain:
       """
-      Generated a session token expiring in 7200 seconds for a temporary user with group_id = 12
+      Refreshed a session token expiring in 7200 seconds for a temporary user with group_id = 12
       """
     And the table "sessions" should be:
-      | session_id          | user_id | refresh_token             |
-      | 2                   | 13      | jane_current_refreshtoken |
-      | 3                   | 14      | john_current_refreshtoken |
-      | 5577006791947779410 | 12      | null                      |
+      | session_id | user_id | refresh_token             |
+      | 1          | 12      |                           |
+      | 2          | 13      | jane_current_refreshtoken |
+      | 3          | 14      | john_current_refreshtoken |
     And the table "access_tokens" should be:
-      | session_id          | issued_at           | expires_at          | token              |
-      | 2                   | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | jane_old_token     |
-      | 2                   | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
-      | 3                   | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |
-      | 5577006791947779410 | 2020-01-01 02:00:00 | 2020-01-01 04:00:00 | tmp_new_token      |
+      | session_id | issued_at           | expires_at          | token              |
+      | 1          | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | tmp_old_token      |
+      | 1          | 2020-01-01 01:00:12 | 2020-01-01 03:00:12 | tmp_current_token  |
+      | 1          | 2020-01-01 02:00:00 | 2020-01-01 04:00:00 | tmp_new_token      |
+      | 2          | 2020-01-01 00:00:01 | 2020-01-01 02:00:01 | jane_old_token     |
+      | 2          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
+      | 3          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |
     Examples:
       | content-type                      | data                                                              | expected_cookie                                                                                                                                            |
       | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1                                      | access_token=2!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None   |
