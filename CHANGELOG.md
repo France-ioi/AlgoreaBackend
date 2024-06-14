@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.20.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.19.0...v2.20.0) - 2024-06-14
+- Service for getting a token for editing another user's profile
+- userViewById: add whether we can view/edit his personnal info
+- createAccessTokenToken: Limit number of session at 10 / users to avoid session spamming
+- Delete expired token on session refresh
+- Refactor existing and temp user session processes
+- Internal: Add a stack trace in the logs when the binary crashes.
+- Internal: Make sure the tests cannot be run on live database as it empties the database
+
 ## [v2.19.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.18.8...v2.19.0) - 2024-06-05
 - allow not providing the access token when the task token is provided
 - save grade service: use score/answer token as auth
