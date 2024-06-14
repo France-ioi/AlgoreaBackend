@@ -13,6 +13,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/structures"
 )
 
+const (
+	personalInfoAccessApprovalNone = "none"
+	personalInfoAccessApprovalView = "view"
+	personalInfoAccessApprovalEdit = "edit"
+)
+
 // ManagerPermissionsPart contains fields related to permissions for managing the user.
 // These fields are only displayed if the current user is a manager of the user.
 // swagger:ignore
@@ -22,6 +28,9 @@ type ManagerPermissionsPart struct {
 	CurrentUserCanGrantUserAccess bool `json:"current_user_can_grant_user_access"`
 	// returned only if the current user is a manager
 	CurrentUserCanWatchUser bool `json:"current_user_can_watch_user"`
+	// returned only if the current user is a manager
+	// enum: none,view,edit
+	PersonalInfoAccessApprovalToCurrentUser string `json:"personal_info_access_approval_to_current_user"`
 }
 
 // swagger:model
@@ -147,7 +156,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 				Group("groups_ancestors.child_group_id").SubQuery()).
 		Scan(&userInfo).Error()
 
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return service.ErrNotFound(errors.New("no such user"))
 	}
 	service.MustNotBeError(err)
@@ -157,16 +166,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	if userInfo.CurrentUserIsManager {
-		service.MustNotBeError(store.Groups().ManagedBy(user).
-			Joins(`
-				JOIN groups_ancestors_active AS groups_ancestors
-					ON groups_ancestors.ancestor_group_id = groups.id AND
-						 NOT groups_ancestors.is_self AND
-						 groups_ancestors.child_group_id = ?`, userInfo.GroupID).
-			Group("groups.id").
-			Order("groups.name").
-			Select("groups.id, groups.name").
-			Scan(&userInfo.AncestorsCurrentUserIsManagerOf).Error())
+		setUserInfosForManager(store, user, &userInfo)
 	} else {
 		userInfo.ManagerPermissionsPart = nil
 		userInfo.AncestorsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
@@ -176,4 +176,60 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 
 	render.Respond(w, r, &userInfo)
 	return service.NoError
+}
+
+type groupInfo struct {
+	ID                                int64
+	Name                              string
+	RequirePersonalInfoAccessApproval string
+}
+
+// setUserInfosForManager sets the following fields in the response:
+// - AncestorsCurrentUserIsManagerOf
+// - PersonalInfoAccessApprovalToCurrentUser.
+func setUserInfosForManager(store *database.DataStore, user *database.User, userInfo *userViewResponse) {
+	var groupInfos []groupInfo
+
+	service.MustNotBeError(store.Groups().ManagedBy(user).
+		Joins(`
+				JOIN groups_ancestors_active AS groups_ancestors
+					ON groups_ancestors.ancestor_group_id = groups.id AND
+						 NOT groups_ancestors.is_self AND
+						 groups_ancestors.child_group_id = ?`, userInfo.GroupID).
+		Group("groups.id").
+		Order("groups.name").
+		Select("groups.id, groups.name, groups.require_personal_info_access_approval").
+		Scan(&groupInfos).Error())
+
+	userInfo.AncestorsCurrentUserIsManagerOf = getGroupShortInfos(groupInfos)
+	userInfo.PersonalInfoAccessApprovalToCurrentUser = computeHighestPersonalInfoAccessApproval(groupInfos)
+}
+
+// getGroupShortInfos returns a list of GroupShortInfo from the given groupInfos.
+func getGroupShortInfos(groupInfos []groupInfo) []structures.GroupShortInfo {
+	ancestorsCurrentUserIsManagerOf := make([]structures.GroupShortInfo, len(groupInfos))
+	for i, groupInfoValue := range groupInfos {
+		ancestorsCurrentUserIsManagerOf[i] = structures.GroupShortInfo{
+			ID:   groupInfoValue.ID,
+			Name: groupInfoValue.Name,
+		}
+	}
+
+	return ancestorsCurrentUserIsManagerOf
+}
+
+// computeHighestPersonalInfoAccessApproval computes the highest personal info access approval ("edit" > "view" > "none").
+func computeHighestPersonalInfoAccessApproval(groupInfos []groupInfo) string {
+	highestPersonalInfoAccessApproval := personalInfoAccessApprovalNone
+	for _, group := range groupInfos {
+		if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalEdit {
+			highestPersonalInfoAccessApproval = personalInfoAccessApprovalEdit
+			break
+		} else if group.RequirePersonalInfoAccessApproval == personalInfoAccessApprovalView &&
+			highestPersonalInfoAccessApproval == personalInfoAccessApprovalNone {
+			highestPersonalInfoAccessApproval = personalInfoAccessApprovalView
+		}
+	}
+
+	return highestPersonalInfoAccessApproval
 }
