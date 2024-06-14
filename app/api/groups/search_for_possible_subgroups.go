@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -89,18 +88,9 @@ func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Re
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := srv.GetStore(r).Groups().ManagedBy(user).
-		Where("group_managers.can_manage = 'memberships_and_group'").
-		Group("groups.id").
-		Where("groups.type != 'User'").
-		Select(`
-			groups.id,
-			groups.name,
-			groups.type,
-			groups.description`).
-		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
+	query := store.Groups().GetSearchForPossibleSubgroupsQuery(user, searchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(

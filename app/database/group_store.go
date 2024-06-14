@@ -1,6 +1,10 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import (
+	"strings"
+
+	"github.com/jinzhu/gorm"
+)
 
 // GroupStore implements database operations on groups.
 type GroupStore struct {
@@ -277,4 +281,27 @@ func (s *GroupStore) HasParticipants(groupID int64) bool {
 	mustNotBeError(err)
 
 	return hasParticipants
+}
+
+// GetSearchForPossibleSubgroupsQuery returns a query for searching for possible subgroups of a user.
+func (s *GroupStore) GetSearchForPossibleSubgroupsQuery(user *User, searchString string) *DB {
+	escapedSearchString := EscapeLikeString(searchString, '|')
+
+	query := s.ManagedBy(user).
+		Where("group_managers.can_manage = 'memberships_and_group'").
+		Group("groups.id").
+		Where("groups.type != 'User'").
+		Select(`
+			groups.id,
+			groups.name,
+			groups.type,
+			groups.description`)
+
+	// For each word in searchString.
+	for _, word := range strings.Fields(escapedSearchString) {
+		// Add a condition to the query to match the word.
+		query = query.Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", word)
+	}
+
+	return query
 }
