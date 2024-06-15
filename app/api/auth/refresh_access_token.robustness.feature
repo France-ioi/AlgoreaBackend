@@ -27,3 +27,8 @@ Feature: Refresh an access token - robustness
     And the table "sessions" should stay unchanged
     # The expired token has been removed
     And the table "access_tokens" should stay unchanged
+
+  Scenario: Should return an error when trying to refresh an expired token
+    Given the "Authorization" request header is "Bearer jane_expired_token"
+    When I send a POST request to "/auth/token"
+    Then the response code should be 401
