@@ -327,3 +327,8 @@ func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColu
 func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateColumns []string) error {
 	return s.DB.insertOrUpdateMaps(s.tableName, dataMap, updateColumns)
 }
+
+// MustNotBeInTransaction panics if the store is in a transaction.
+func (s *DataStore) MustNotBeInTransaction() {
+	s.DB.mustNotBeInTransaction()
+}

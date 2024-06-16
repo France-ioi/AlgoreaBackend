@@ -639,6 +639,13 @@ func (conn *DB) withForeignKeyChecksDisabled(blockFunc func(*DB) error) (err err
 	//}
 }
 
+// mustNotBeInTransaction panics if the current connection is in a transaction.
+func (conn *DB) mustNotBeInTransaction() {
+	if conn.isInTransaction() {
+		panic("should not be executed in a transaction")
+	}
+}
+
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)

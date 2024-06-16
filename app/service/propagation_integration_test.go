@@ -122,3 +122,17 @@ func TestSchedulePropagation(t *testing.T) {
 		})
 	}
 }
+
+func TestSchedulePropagation_ShouldPanicWhenCalledInsideTransaction(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString("")
+	defer func() { _ = db.Close() }()
+	store := database.NewDataStore(db)
+
+	assert.Panics(t, func() {
+		err := store.InTransaction(func(store *database.DataStore) error {
+			service.SchedulePropagation(store, "", []string{"permissions"})
+			return nil
+		})
+		assert.NoError(t, err)
+	})
+}

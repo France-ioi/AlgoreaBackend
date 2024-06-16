@@ -14,6 +14,9 @@ const PropagationEndpointTimeout = 3 * time.Second
 // SchedulePropagation schedules asynchronous propagation of the given types.
 // If endpoint is an empty string, it will be done synchronously.
 func SchedulePropagation(store *database.DataStore, endpoint string, types []string) {
+	// Must not be called in a transaction because it calls an endpoint, which can take a long time.
+	store.MustNotBeInTransaction()
+
 	endpointFailed := false
 	if endpoint != "" {
 		// Async.
@@ -43,20 +46,13 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 	}
 
 	if endpoint == "" || endpointFailed {
-		// Sync.
-		if store.IsInTransaction() {
+		err := store.InTransaction(func(store *database.DataStore) error {
 			store.ScheduleItemsAncestorsPropagation()
 			store.SchedulePermissionsPropagation()
 			store.ScheduleResultsPropagation()
-		} else {
-			err := store.InTransaction(func(store *database.DataStore) error {
-				store.ScheduleItemsAncestorsPropagation()
-				store.SchedulePermissionsPropagation()
-				store.ScheduleResultsPropagation()
 
-				return nil
-			})
-			MustNotBeError(err)
-		}
+			return nil
+		})
+		MustNotBeError(err)
 	}
 }
