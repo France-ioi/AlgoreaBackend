@@ -12,9 +12,6 @@ func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString stri
 
 	for i := 0; i < len(words); i++ {
 		word := words[i]
-		if word == "" {
-			continue
-		}
 
 		// The "+" sign means that the word must be present in the result.
 		if word[0] != '+' {
