@@ -48,6 +48,10 @@ type itemSearchResponseRowRaw struct {
 //
 //
 //		All the words of the search query must appear in the title for the item to be returned.
+//
+//
+//		Note: MySQL Full-Text Search IN BOOLEAN MODE is used for the search, "amazing team" is transformed to "+amazing* +team*",
+//		so the words must all appear, as a prefix of a word.
 //	parameters:
 //		- name: search
 //			in: query

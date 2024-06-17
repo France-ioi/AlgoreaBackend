@@ -24,6 +24,10 @@ const minSearchStringLength = 3
 //
 //
 //		All the words of the search query must appear in the name for the group to be returned.
+//
+//
+//		Note: MySQL Full-Text Search IN BOOLEAN MODE is used for the search, "amazing team" is transformed to "+amazing* +team*",
+//		so the words must all appear, as a prefix of a word.
 //	parameters:
 //		- name: search
 //			in: query

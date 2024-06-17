@@ -26,10 +26,8 @@ const minSearchStringLength = 3
 //		All the words of the search query must appear in the name for the group to be returned.
 //
 //
-//		Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
-//		at the beginning. This causes MySQL to explore every row having `is_public`=1. Moreover, actually
-//		it has to examine every row of the `groups` table since there is no index for the `is_public` column.
-//		But since there are not too many groups and the result rows count is limited, the search works almost well.
+//		Note: MySQL Full-Text Search IN BOOLEAN MODE is used for the search, "amazing team" is transformed to "+amazing* +team*",
+//		so the words must all appear, as a prefix of a word.
 //	parameters:
 //		- name: search
 //			in: query
