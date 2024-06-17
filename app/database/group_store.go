@@ -287,7 +287,7 @@ func (s *GroupStore) GetSearchForPossibleSubgroupsQuery(user *User, searchString
 		Where("group_managers.can_manage = 'memberships_and_group'").
 		Group("groups.id").
 		Where("groups.type != 'User'").
-		WhereSearchStringMatches("groups.name", searchString).
+		WhereSearchStringMatches("groups.name", "", searchString).
 		Select(`
 			groups.id,
 			groups.name,
@@ -316,5 +316,5 @@ func (s *GroupStore) GetSearchForAvailableGroupsQuery(user *User, searchString s
 		Where("type != 'User' AND type != 'ContestParticipants'").
 		Where("groups.id NOT IN ?", skipGroups).
 		Where("groups.id NOT IN ?", skipPending).
-		WhereSearchStringMatches("groups.name", searchString)
+		WhereSearchStringMatches("groups.name", "", searchString)
 }

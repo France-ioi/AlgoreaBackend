@@ -40,7 +40,7 @@ func (s *ItemStore) GetSearchQuery(user *User, searchString string, typesList []
 			items.type,
 			permissions.*`).
 		Where("items.type IN (?)", typesList).
-		WhereSearchStringMatches("COALESCE(user_strings.title, default_strings.title)", searchString).
+		WhereSearchStringMatches("user_strings.title", "default_strings.title", searchString).
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
 		Order("items.id")
 }

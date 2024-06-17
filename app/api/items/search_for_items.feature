@@ -1,5 +1,4 @@
 Feature: Search for items
-
   Background:
     Given the database has the following table 'items':
       | id | type    | default_language_tag |
@@ -126,9 +125,25 @@ Feature: Search for items
     ]
     """
 
-  Scenario: Should treat the words in the search string as "AND"
+  Scenario: Should treat the words in the search string as "AND", and work with accents
     Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=Le%20chapitre"
+    When I send a GET request to "/items/search?search=chapitre%20troisième"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "10",
+        "title": "Le troisième chapitre",
+        "type": "Chapter",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}
+      }
+    ]
+    """
+
+  Scenario: Should treat the words in the search string as "AND", and work without accents
+    Given I am the user with id "21"
+    When I send a GET request to "/items/search?search=chapitre%20troisieme"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -173,7 +188,7 @@ Feature: Search for items
     [
       {
         "id": "2",
-        "title": "amazing Our Task",
+        "title": "amazing Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       },
