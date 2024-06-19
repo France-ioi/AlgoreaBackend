@@ -141,12 +141,12 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 		return apiError
 	}
 
-	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	rawData := getRawNavigationData(store, itemID, participantID, attemptID, user, watchedGroupID, watchedGroupIDSet)
+	rawData := getRawNavigationData(store, itemID, participantID, attemptID, user, watchedGroupID, watchedGroupIDIsSet)
 
 	if len(rawData) == 0 || rawData[0].ID != itemID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
@@ -160,7 +160,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	for index := range rawData {
 		idMap[rawData[index].ID] = &rawData[index]
 	}
-	fillNavigationWithChildren(store, rawData, watchedGroupIDSet, &response.Children)
+	fillNavigationWithChildren(store, rawData, watchedGroupIDIsSet, &response.Children)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -210,7 +210,7 @@ func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.
 }
 
 func fillNavigationWithChildren(
-	store *database.DataStore, rawData []rawNavigationItem, watchedGroupIDSet bool, target *[]navigationItemChild,
+	store *database.DataStore, rawData []rawNavigationItem, watchedGroupIDIsSet bool, target *[]navigationItemChild,
 ) {
 	*target = make([]navigationItemChild, 0, len(rawData)-1)
 	var currentChild *navigationItemChild
@@ -235,7 +235,7 @@ func fillNavigationWithChildren(
 			if rawData[index].CanViewGeneratedValue < store.PermissionsGranted().ViewIndexByName("content") {
 				child.HasVisibleChildren = false
 			}
-			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDSet, store.PermissionsGranted())
+			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDIsSet, store.PermissionsGranted())
 			*target = append(*target, child)
 			currentChild = &(*target)[len(*target)-1]
 		}

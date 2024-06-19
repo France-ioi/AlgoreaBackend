@@ -35,7 +35,7 @@ type rawNavigationItem struct {
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's.
 func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemptID int64,
-	user *database.User, watchedGroupID int64, watchedGroupIDSet bool,
+	user *database.User, watchedGroupID int64, watchedGroupIDIsSet bool,
 ) []rawNavigationItem {
 	var result []rawNavigationItem
 	items := dataStore.Items()
@@ -82,7 +82,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		groupID,
 		"info",
 		attemptID,
-		watchedGroupIDSet,
+		watchedGroupIDIsSet,
 		watchedGroupID,
 		commonAttributes+
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
@@ -129,12 +129,12 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 }
 
 func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
-	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+	watchedGroupIDIsSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc func(*database.DB) *database.DB,
 ) *database.DB {
 	watchedGroupCanViewQuery := interface{}(gorm.Expr("NULL"))
 	watchedGroupAvgScoreQuery := interface{}(gorm.Expr("(SELECT NULL AS avg_score, NULL AS all_validated)"))
-	if watchedGroupIDSet {
+	if watchedGroupIDIsSet {
 		watchedGroupCanViewQuery = dataStore.Permissions().
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions.group_id").
 			Where("groups_ancestors_active.child_group_id = ?", watchedGroupID).
@@ -182,12 +182,12 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 }
 
 func constructItemListQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
-	watchedGroupIDSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+	watchedGroupIDIsSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
 	externalColumnList string,
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB,
 ) *database.DB {
 	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, requiredViewPermissionOnItems,
-		watchedGroupIDSet, watchedGroupID, columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
+		watchedGroupIDIsSet, watchedGroupID, columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
 
 	if externalColumnList != "" {
 		externalColumnList += ", "

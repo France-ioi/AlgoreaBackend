@@ -88,7 +88,7 @@ type parentItem struct {
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(
+	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDIsSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(
 		httpReq,
 	)
 	if apiError != service.NoError {
@@ -107,18 +107,18 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 
 	var rawData []RawListItem
 	service.MustNotBeError(
-		constructItemParentsQuery(store, itemID, participantID, attemptID, watchedGroupIDSet, watchedGroupID).
+		constructItemParentsQuery(store, itemID, participantID, attemptID, watchedGroupIDIsSet, watchedGroupID).
 			JoinsUserAndDefaultItemStrings(user).
 			Scan(&rawData).Error())
 
-	response := parentItemsFromRawData(rawData, watchedGroupIDSet, store.PermissionsGranted())
+	response := parentItemsFromRawData(rawData, watchedGroupIDIsSet, store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
 }
 
 func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Request) (
-	itemID, attemptID, participantID int64, user *database.User, watchedGroupID int64, watchedGroupIDSet bool, apiError service.APIError,
+	itemID, attemptID, participantID int64, user *database.User, watchedGroupID int64, watchedGroupIDIsSet bool, apiError service.APIError,
 ) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
@@ -133,15 +133,15 @@ func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Reque
 	user = srv.GetUser(httpReq)
 	participantID = service.ParticipantIDFromContext(httpReq.Context())
 
-	watchedGroupID, watchedGroupIDSet, apiError = srv.ResolveWatchedGroupID(httpReq)
-	return itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError
+	watchedGroupID, watchedGroupIDIsSet, apiError = srv.ResolveWatchedGroupID(httpReq)
+	return itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDIsSet, apiError
 }
 
 func constructItemParentsQuery(dataStore *database.DataStore, childItemID, groupID, attemptID int64,
-	watchedGroupIDSet bool, watchedGroupID int64,
+	watchedGroupIDIsSet bool, watchedGroupID int64,
 ) *database.DB {
 	return constructItemListQuery(
-		dataStore, groupID, "info", watchedGroupIDSet, watchedGroupID,
+		dataStore, groupID, "info", watchedGroupIDIsSet, watchedGroupID,
 		`items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
 			validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
 			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
@@ -171,7 +171,7 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 		})
 }
 
-func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDSet bool,
+func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDIsSet bool,
 	permissionGrantedStore *database.PermissionGrantedStore,
 ) []parentItem {
 	result := make([]parentItem, 0, len(rawData))
@@ -191,7 +191,7 @@ func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDSet bool,
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, permissionGrantedStore)
+		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 		result = append(result, item)
 	}
 	return result

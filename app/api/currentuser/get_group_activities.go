@@ -136,15 +136,15 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 	store := srv.GetStore(r)
 
 	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
+	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
 		return apiError
 	}
-	if watchedGroupIDSet && len(r.URL.Query()["as_team_id"]) != 0 {
+	if watchedGroupIDIsSet && len(r.URL.Query()["as_team_id"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 	}
 
-	rawData := getRootItemsFromDB(store, participantID, watchedGroupID, watchedGroupIDSet, user, getActivities)
+	rawData := getRootItemsFromDB(store, participantID, watchedGroupID, watchedGroupIDIsSet, user, getActivities)
 	activitiesResult, skillsResult := generateRootItemListFromRawData(store, rawData, getActivities)
 
 	if getActivities {
@@ -229,7 +229,7 @@ func generateRootItemInfoFromRawData(store *database.DataStore, rawData *rawRoot
 }
 
 func getRootItemsFromDB(
-	store *database.DataStore, watcherID, watchedGroupID int64, watchedGroupIDSet bool,
+	store *database.DataStore, watcherID, watchedGroupID int64, watchedGroupIDIsSet bool,
 	user *database.User, selectActivities bool,
 ) []rawRootItem {
 	hasVisibleChildrenQuery := store.Permissions().
@@ -250,7 +250,7 @@ func getRootItemsFromDB(
 					groups_ancestors_active.child_group_id = ?`, user.GroupID).
 		Select("group_managers.group_id AS id")
 
-	if !watchedGroupIDSet {
+	if !watchedGroupIDIsSet {
 		groupManagedByUserOrCurrentQuery := store.Raw(`
 			SELECT id FROM (
 				SELECT ? AS id
