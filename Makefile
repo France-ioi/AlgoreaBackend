@@ -12,6 +12,7 @@ LOCAL_BIN_DIR=./bin
 
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
+GOLANGCILINT_VERSION=1.52.2
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
@@ -90,7 +91,10 @@ test-unit:
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
 	$(Q)$(GOTEST) -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
-lint: $(GOLANGCILINT)
+lint:
+	@[ -e $(GOLANGCILINT) ] && \
+		($(GOLANGCILINT) --version | grep -F "version $(GOLANGCILINT_VERSION) built" > /dev/null || rm $(GOLANGCILINT)) || true
+	$(MAKE) $(GOLANGCILINT)
 	$(GOLANGCILINT) run -v --deadline 10m0s
 
 validate-swagger:
@@ -122,7 +126,7 @@ version:
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
 $(GOLANGCILINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.52.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v$(GOLANGCILINT_VERSION)
 $(MYSQL_CONNECTOR_JAVA):
 	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)
