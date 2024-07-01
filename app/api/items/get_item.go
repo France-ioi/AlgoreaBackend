@@ -229,7 +229,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -242,14 +242,14 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	store := srv.GetStore(httpReq)
-	rawData := getRawItemData(store.Items(), itemID, participantID, languageTag, languageTagSet, user, watchedGroupID, watchedGroupIDSet)
+	rawData := getRawItemData(store.Items(), itemID, participantID, languageTag, languageTagSet, user, watchedGroupID, watchedGroupIDIsSet)
 	if rawData == nil {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
 	hasCanRequestHelpTo := store.Items().HasCanRequestHelpTo(itemID, user.GroupID)
 	watchedGroupHasCanRequestHelpTo := false
-	if watchedGroupIDSet {
+	if watchedGroupIDIsSet {
 		watchedGroupHasCanRequestHelpTo = store.Items().HasCanRequestHelpTo(itemID, watchedGroupID)
 	}
 
@@ -257,7 +257,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	response := constructItemResponseFromDBData(
 		rawData,
 		permissionGrantedStore,
-		watchedGroupIDSet,
+		watchedGroupIDIsSet,
 		hasCanRequestHelpTo,
 		watchedGroupHasCanRequestHelpTo,
 	)
@@ -306,7 +306,7 @@ type rawItem struct {
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's.
 func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User,
-	watchedGroupID int64, watchedGroupIDSet bool,
+	watchedGroupID int64, watchedGroupIDIsSet bool,
 ) *rawItem {
 	var result rawItem
 
@@ -350,7 +350,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 	query := s.ByID(rootID).
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info")
 
-	if watchedGroupIDSet {
+	if watchedGroupIDIsSet {
 		watchedGroupPermissionsQuery := database.NewDataStore(s.New()).Permissions().
 			AggregatedPermissionsForItems(watchedGroupID).
 			Where("permissions.item_id = items.id")
@@ -454,7 +454,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 func constructItemResponseFromDBData(
 	rawData *rawItem,
 	permissionGrantedStore *database.PermissionGrantedStore,
-	watchedGroupIDSet bool,
+	watchedGroupIDIsSet bool,
 	hasCanRequestHelpTo bool,
 	watchedGroupHasCanRequestHelpTo bool,
 ) *itemResponse {
@@ -498,7 +498,7 @@ func constructItemResponseFromDBData(
 			HintsAllowed: rawData.HintsAllowed,
 		}
 	}
-	if watchedGroupIDSet {
+	if watchedGroupIDIsSet {
 		result.WatchedGroup = &itemResponseWatchedGroupItemInfo{}
 		if rawData.CanWatchForGroupResults {
 			result.WatchedGroup.AverageScore = &rawData.WatchedGroupAverageScore

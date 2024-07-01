@@ -56,7 +56,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 		return service.ErrInvalidRequest(err)
 	}
 
-	watchedGroupID, watchedGroupOK, apiError := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -69,7 +69,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 		WithGradings().
 		DB
 
-	if watchedGroupOK {
+	if watchedGroupIDIsSet {
 		// the following checks were made by ResolveWatchedGroupID:
 		// - watched_group_id must be a participant
 		// - the current user is able to watch the participant

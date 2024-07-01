@@ -215,7 +215,7 @@ type rawListChildItem struct {
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(
+	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDIsSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(
 		httpReq,
 	)
 	if apiError != service.NoError {
@@ -255,7 +255,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 			participantID,
 			requiredViewPermissionOnItems,
 			attemptID,
-			watchedGroupIDSet,
+			watchedGroupIDIsSet,
 			watchedGroupID,
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
@@ -284,7 +284,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 			JoinsUserAndDefaultItemStrings(user).
 			Scan(&rawData).Error())
 
-	response := childItemsFromRawData(rawData, watchedGroupIDSet, store.PermissionsGranted())
+	response := childItemsFromRawData(rawData, watchedGroupIDIsSet, store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -296,7 +296,7 @@ func constructItemChildrenQuery(
 	groupID int64,
 	requiredViewPermissionOnItems string,
 	attemptID int64,
-	watchedGroupIDSet bool,
+	watchedGroupIDIsSet bool,
 	watchedGroupID int64,
 	columnList string,
 	columnListValues []interface{},
@@ -307,7 +307,7 @@ func constructItemChildrenQuery(
 		dataStore,
 		groupID,
 		requiredViewPermissionOnItems,
-		watchedGroupIDSet,
+		watchedGroupIDIsSet,
 		watchedGroupID,
 		columnList,
 		columnListValues,
@@ -326,7 +326,7 @@ func constructItemChildrenQuery(
 }
 
 func childItemsFromRawData(
-	rawData []rawListChildItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore,
+	rawData []rawListChildItem, watchedGroupIDIsSet bool, permissionGrantedStore *database.PermissionGrantedStore,
 ) []childItem {
 	result := make([]childItem, 0, len(rawData))
 	var currentChild *childItem
@@ -369,7 +369,7 @@ func childItemsFromRawData(
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 			}
-			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, permissionGrantedStore)
+			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 			result = append(result, child)
 			currentChild = &result[len(result)-1]
 		}

@@ -13,9 +13,9 @@ type RawWatchedGroupStatFields struct {
 }
 
 func (stat *RawWatchedGroupStatFields) asItemWatchedGroupStat(
-	watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore,
+	watchedGroupIDIsSet bool, permissionGrantedStore *database.PermissionGrantedStore,
 ) *itemWatchedGroupStat {
-	if !watchedGroupIDSet {
+	if !watchedGroupIDIsSet {
 		return nil
 	}
 	result := &itemWatchedGroupStat{
