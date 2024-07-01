@@ -30,6 +30,21 @@ func (conn *DB) WhereItemsAreSelfOrDescendantsOf(itemAncestorID int64) *DB {
 		Where("(items_ancestors.ancestor_item_id = ? OR items.id = ?)", itemAncestorID, itemAncestorID)
 }
 
+// GetSearchQuery returns a query for searching items by title.
+// It returns only items visible for the given user, which matches the given types.
+func (s *ItemStore) GetSearchQuery(user *User, searchString string, typesList []string) *DB {
+	return s.JoinsUserAndDefaultItemStrings(user).
+		Select(`
+			items.id,
+			COALESCE(user_strings.title, default_strings.title) AS title,
+			items.type,
+			permissions.*`).
+		Where("items.type IN (?)", typesList).
+		WhereSearchStringMatches("user_strings.title", "default_strings.title", searchString).
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
+		Order("items.id")
+}
+
 // IsValidParticipationHierarchyForParentAttempt checks if the given list of item ids is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
 //   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)

@@ -1,6 +1,8 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // GroupStore implements database operations on groups.
 type GroupStore struct {
@@ -277,4 +279,42 @@ func (s *GroupStore) HasParticipants(groupID int64) bool {
 	mustNotBeError(err)
 
 	return hasParticipants
+}
+
+// GetSearchForPossibleSubgroupsQuery returns a query for searching for possible subgroups of a user.
+func (s *GroupStore) GetSearchForPossibleSubgroupsQuery(user *User, searchString string) *DB {
+	return s.ManagedBy(user).
+		Where("group_managers.can_manage = 'memberships_and_group'").
+		Group("groups.id").
+		Where("groups.type != 'User'").
+		WhereSearchStringMatches("groups.name", "", searchString).
+		Select(`
+			groups.id,
+			groups.name,
+			groups.type,
+			groups.description`)
+}
+
+func (s *GroupStore) GetSearchForAvailableGroupsQuery(user *User, searchString string) *DB {
+	skipGroups := s.ActiveGroupGroups().
+		Select("groups_groups_active.parent_group_id").
+		Where("groups_groups_active.child_group_id = ?", user.GroupID).
+		SubQuery()
+
+	skipPending := s.GroupPendingRequests().
+		Select("group_pending_requests.group_id").
+		Where("group_pending_requests.member_id = ?", user.GroupID).
+		Where("group_pending_requests.type IN ('join_request', 'invitation')").
+		SubQuery()
+
+	return s.Select(`
+			groups.id,
+			groups.name,
+			groups.type,
+			groups.description`).
+		Where("groups.is_public").
+		Where("type != 'User' AND type != 'ContestParticipants'").
+		Where("groups.id NOT IN ?", skipGroups).
+		Where("groups.id NOT IN ?", skipPending).
+		WhereSearchStringMatches("groups.name", "", searchString)
 }

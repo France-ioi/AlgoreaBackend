@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -24,10 +23,11 @@ const minSearchStringLength = 3
 //		and for that the current user is not already a member and don’t have pending requests/invitations.
 //
 //
-//		Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
-//		at the beginning. This causes MySQL to explore every row having `is_public`=1. Moreover, actually
-//		it has to examine every row of the `groups` table since there is no index for the `is_public` column.
-//		But since there are not too many groups and the result rows count is limited, the search works almost well.
+//		All the words of the search query must appear in the name for the group to be returned.
+//
+//
+//		Note: MySQL Full-Text Search IN BOOLEAN MODE is used for the search, "amazing team" is transformed to "+amazing* +team*",
+//		so the words must all appear, as a prefix of a word.
 //	parameters:
 //		- name: search
 //			in: query
@@ -97,29 +97,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	skipGroups := store.ActiveGroupGroups().
-		Select("groups_groups_active.parent_group_id").
-		Where("groups_groups_active.child_group_id = ?", user.GroupID).
-		SubQuery()
-
-	skipPending := store.GroupPendingRequests().
-		Select("group_pending_requests.group_id").
-		Where("group_pending_requests.member_id = ?", user.GroupID).
-		Where("group_pending_requests.type IN ('join_request', 'invitation')").
-		SubQuery()
-
-	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := store.Groups().
-		Select(`
-			groups.id,
-			groups.name,
-			groups.type,
-			groups.description`).
-		Where("groups.is_public").
-		Where("type != 'User' AND type != 'ContestParticipants'").
-		Where("groups.id NOT IN ?", skipGroups).
-		Where("groups.id NOT IN ?", skipPending).
-		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
+	query := store.Groups().GetSearchForAvailableGroupsQuery(user, searchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(

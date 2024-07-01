@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -22,6 +21,13 @@ const minSearchStringLength = 3
 //		Searches for groups that can be added as subgroups, based on a substring of their name.
 //		Returns groups for which the user is a manager with `can_manage` = 'memberships_and_group',
 //		whose `name` has `{search}` as a substring.
+//
+//
+//		All the words of the search query must appear in the name for the group to be returned.
+//
+//
+//		Note: MySQL Full-Text Search IN BOOLEAN MODE is used for the search, "amazing team" is transformed to "+amazing* +team*",
+//		so the words must all appear, as a prefix of a word.
 //	parameters:
 //		- name: search
 //			in: query
@@ -89,18 +95,9 @@ func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Re
 	}
 
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := srv.GetStore(r).Groups().ManagedBy(user).
-		Where("group_managers.can_manage = 'memberships_and_group'").
-		Group("groups.id").
-		Where("groups.type != 'User'").
-		Select(`
-			groups.id,
-			groups.name,
-			groups.type,
-			groups.description`).
-		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
+	query := store.Groups().GetSearchForPossibleSubgroupsQuery(user, searchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(
