@@ -46,6 +46,8 @@ const (
 	LeaveRequestRefused GroupMembershipAction = "leave_request_refused"
 	// LeaveRequestWithdrawn means a user withdrew his request to leave a group.
 	LeaveRequestWithdrawn GroupMembershipAction = "leave_request_withdrawn"
+	// RemovedDueToApprovalChange means a user has been removed from a group because of approval changes.
+	RemovedDueToApprovalChange GroupMembershipAction = "removed_due_to_approval_change"
 	// NoRelation means there is no row for the group pair in the groups_groups/group_pending_requests tables.
 	NoRelation GroupMembershipAction = ""
 )
@@ -131,6 +133,11 @@ const (
 	// UserJoinsGroupByCode means a user joins a group using a group's code
 	// We don't check the code here (a calling service should check the code by itself).
 	UserJoinsGroupByCode
+	// AdminStrengthensApprovalWithEmpty means an admin strengthens the approval requirements for a group and empties it.
+	AdminStrengthensApprovalWithEmpty
+	// AdminStrengthensApprovalWithReinvite means an admin strengthens the approval requirements for a group,
+	// empties it and re-invites all the users.
+	AdminStrengthensApprovalWithReinvite
 )
 
 type groupGroupTransitionRule struct {
@@ -250,6 +257,26 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			IsMember:            NoRelation,
 			NoRelation:          NoRelation,
 			LeaveRequestCreated: NoRelation,
+		},
+	},
+	AdminStrengthensApprovalWithEmpty: {
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			IsMember:            RemovedDueToApprovalChange,
+			NoRelation:          NoRelation,
+			JoinRequestCreated:  NoRelation,
+			LeaveRequestCreated: RemovedDueToApprovalChange,
+			LeaveRequestExpired: RemovedDueToApprovalChange,
+			InvitationCreated:   NoRelation,
+		},
+	},
+	AdminStrengthensApprovalWithReinvite: {
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			IsMember:            InvitationCreated,
+			NoRelation:          NoRelation,
+			JoinRequestCreated:  NoRelation,
+			LeaveRequestCreated: RemovedDueToApprovalChange,
+			LeaveRequestExpired: RemovedDueToApprovalChange,
+			InvitationCreated:   InvitationCreated,
 		},
 	},
 }

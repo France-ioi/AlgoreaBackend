@@ -225,12 +225,14 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		if approvalChangeAction != "" {
 			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
-			s.GroupMembershipChanges().InsertEntries(user.GroupID, groupID, participantIDs, "removed_due_to_approval_change")
-			s.GroupGroups().RemoveMembersOfGroup(groupID, participantIDs)
 
 			// If the approval_change_action is 'reinvite', we need to reinvite the participants.
 			if approvalChangeAction == "reinvite" {
-				s.GroupPendingRequests().InviteParticipants(groupID, participantIDs)
+				_, _, err = s.GroupGroups().Transition(database.AdminStrengthensApprovalWithReinvite, groupID, participantIDs, nil, user.GroupID)
+				service.MustNotBeError(err)
+			} else {
+				_, _, err = s.GroupGroups().Transition(database.AdminStrengthensApprovalWithEmpty, groupID, participantIDs, nil, user.GroupID)
+				service.MustNotBeError(err)
 			}
 		}
 
