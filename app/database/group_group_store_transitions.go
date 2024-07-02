@@ -135,7 +135,8 @@ const (
 	UserJoinsGroupByCode
 	// AdminStrengthensApprovalWithEmpty means an admin strengthens the approval requirements for a group and empties it.
 	AdminStrengthensApprovalWithEmpty
-	// AdminStrengthensApprovalWithReinvite means an admin strengthens the approval requirements for a group, empties it and re-invites all the users.
+	// AdminStrengthensApprovalWithReinvite means an admin strengthens the approval requirements for a group,
+	// empties it and re-invites all the users.
 	AdminStrengthensApprovalWithReinvite
 )
 
