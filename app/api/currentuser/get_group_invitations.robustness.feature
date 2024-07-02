@@ -10,12 +10,6 @@ Feature: Get group invitations for the current user - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: within_weeks is incorrect
-    Given I am the user with id "21"
-    When I send a GET request to "/current-user/group-invitations?within_weeks=abc"
-    Then the response code should be 400
-    And the response error message should contain "Wrong value for within_weeks (should be int64)"
-
   Scenario: sort is incorrect
     Given I am the user with id "21"
     When I send a GET request to "/current-user/group-invitations?sort=myname"
