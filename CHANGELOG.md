@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.20.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.20.0...v2.20.1) - 2024-07-03
+- use full-text indexes for item/group searches
+- fix 'reinvite' after changing group approval
+
 ## [v2.20.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.19.0...v2.20.0) - 2024-06-14
 - Service for getting a token for editing another user's profile
 - userViewById: add whether we can view/edit his personnal info
