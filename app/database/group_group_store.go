@@ -204,13 +204,3 @@ func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
 func (s *GroupGroupStore) WithGroupsRelationsLock(txFunc func(*DataStore) error) error {
 	return s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, txFunc)
 }
-
-// RemoveMembersOfGroup removes members of a group.
-func (s *GroupGroupStore) RemoveMembersOfGroup(groupID int64, memberIDs []int64) {
-	err := s.
-		Where("groups_groups.parent_group_id = ?", groupID).
-		Where("groups_groups.child_group_id IN (?)", memberIDs).
-		Delete().
-		Error()
-	mustNotBeError(err)
-}

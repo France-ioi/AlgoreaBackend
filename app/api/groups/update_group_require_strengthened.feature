@@ -14,6 +14,7 @@ Feature:
       | @SubGroup | @Class | @Student3,@Student4 |                                             |                                              |                              |
     And @Teacher is a manager of the group @Class and can manage memberships and group
     And the time now is "2020-01-01T01:00:00Z"
+    And the DB time now is "2020-01-01 01:00:00"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -125,10 +126,9 @@ Feature:
     Then the response should be "updated"
     And there should be no group pending requests for the group @Class with the type "join_request"
     And there should be the following group pending requests:
-      | group_id | member_id | type          |
-      | @Class   | @Student1 | leave_request |
-      | @Class   | @Student5 | invitation    |
-      | @Other   | @Student5 | join_request  |
+      | group_id | member_id | type         |
+      | @Class   | @Student5 | invitation   |
+      | @Other   | @Student5 | join_request |
 
   Scenario: Should reject all pending requests and send invitations to the past members when approval_change_action = 'reinvite'
     Given I am @Teacher
@@ -145,6 +145,8 @@ Feature:
       | @Class | @Student5 | invitation    |
       | @Other | @Student5 | join_request  |
     And @Teacher is a manager of the group @Class and can manage memberships and group
+    And the time now is "2020-01-01T01:00:00Z"
+    And the DB time now is "2020-01-01 01:00:00"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -156,10 +158,15 @@ Feature:
     And there should be no group pending requests for the group @Class with the type "join_request"
     And there should be the following group pending requests:
       | group_id | member_id | type         |
-      | @Class   | @Student1 | invitation   |
       | @Class   | @Student2 | invitation   |
       | @Class   | @Student5 | invitation   |
       | @Other   | @Student5 | join_request |
+    And there should be the following group membership changes:
+      | group_id | member_id | action                         | at                  | initiator_id |
+      | @Class   | @Student1 | removed_due_to_approval_change | 2020-01-01 01:00:00 | @Teacher     |
+      | @Class   | @Student2 | invitation_created             | 2020-01-01 01:00:00 | @Teacher     |
+      | @Class   | @Student3 | join_request_refused           | 2020-01-01 01:00:00 | @Teacher     |
+      | @Class   | @Student4 | join_request_refused           | 2020-01-01 01:00:00 | @Teacher     |
 
   Scenario: Should empty the group when approval_change_action = "reinvite"
     Given I am @Teacher
