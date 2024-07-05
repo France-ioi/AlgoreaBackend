@@ -176,10 +176,11 @@ func (s *DataStore) NewID() int64 {
 }
 
 type awaitingTriggers struct {
-	ItemAncestors  bool
-	GroupAncestors bool
-	Permissions    bool
-	Results        bool
+	ItemAncestors            bool
+	GroupAncestors           bool
+	Permissions              bool
+	Results                  bool
+	SchedulePropagationTypes []string
 }
 type dbContextKey string
 
@@ -202,6 +203,12 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 
 	triggersToRun := s.ctx.Value(triggersContextKey).(*awaitingTriggers)
 
+	if len(triggersToRun.SchedulePropagationTypes) > 0 {
+		types := triggersToRun.SchedulePropagationTypes
+		triggersToRun.SchedulePropagationTypes = []string{}
+
+		StartAsyncPropagation(s, s.Context().Value("propagation_endpoint").(string), types)
+	}
 	if triggersToRun.GroupAncestors {
 		triggersToRun.GroupAncestors = false
 		s.createNewAncestors("groups", "group")
@@ -220,6 +227,15 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	}
 
 	return err
+}
+
+// SchedulePropagation schedules a run of the propagation for the given types after the transaction commit.
+func (s *DataStore) SchedulePropagation(types []string) {
+	s.mustBeInTransaction()
+
+	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	// TODO: filter type for available types, and make sure we don't have duplicates, maybe even sort them
+	triggersToRun.SchedulePropagationTypes = append(triggersToRun.SchedulePropagationTypes, types...)
 }
 
 // ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.

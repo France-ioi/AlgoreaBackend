@@ -195,6 +195,10 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			childrenInfoMap,
 			oldPropagationLevelsMap,
 		)
+		if err == nil {
+			store.SchedulePropagation(propagationsToRun)
+		}
+
 		return err
 	})
 
@@ -202,8 +206,6 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		return apiError
 	}
 	service.MustNotBeError(err)
-
-	service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)
 
 	// response
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
