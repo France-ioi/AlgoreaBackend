@@ -9,7 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
-const PropagationEndpointTimeout = 3 * time.Second
+const endpointTimeout = 3 * time.Second
 
 // SchedulePropagation schedules asynchronous propagation of the given types.
 // If endpoint is an empty string, it will be done synchronously.
@@ -21,7 +21,7 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 	if endpoint != "" {
 		// Async.
 		client := http.Client{
-			Timeout: PropagationEndpointTimeout,
+			Timeout: endpointTimeout,
 		}
 
 		callTime := time.Now()
