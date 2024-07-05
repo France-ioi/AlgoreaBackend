@@ -88,6 +88,11 @@ func (conn *DB) New() *DB {
 	return newDB(conn.ctx, conn.db.New())
 }
 
+// Context returns the context of the current db connection.
+func (conn *DB) Context() context.Context {
+	return conn.ctx
+}
+
 func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	return conn.inTransactionWithCount(txFunc, 0)
 }
