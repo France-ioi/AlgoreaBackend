@@ -209,7 +209,11 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 		types := triggersToRun.SchedulePropagationTypes
 		triggersToRun.SchedulePropagationTypes = []string{}
 
-		StartAsyncPropagation(s, s.Context().Value("propagation_endpoint").(string), types)
+		propagationEndpoint := ""
+		if s.Context().Value("propagation_endpoint") != nil {
+			propagationEndpoint = s.Context().Value("propagation_endpoint").(string)
+		}
+		StartAsyncPropagation(s, propagationEndpoint, types)
 	}
 	if triggersToRun.GroupAncestors {
 		triggersToRun.GroupAncestors = false
