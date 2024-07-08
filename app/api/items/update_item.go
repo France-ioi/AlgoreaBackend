@@ -123,8 +123,6 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	input := updateItemRequest{}
 	formData := formdata.NewFormData(&input)
 
-	var propagationsToRun []string
-
 	apiError := service.NoError
 	err = store.InTransaction(func(store *database.DataStore) error {
 		var itemInfo struct {
@@ -187,7 +185,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return apiError.Error // rollback
 		}
 
-		propagationsToRun, apiError, err = updateChildrenAndRunListeners(
+		apiError, err = updateChildrenAndRunListeners(
 			formData,
 			store,
 			itemID,
@@ -195,9 +193,6 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			childrenInfoMap,
 			oldPropagationLevelsMap,
 		)
-		if err == nil {
-			store.SchedulePropagation(propagationsToRun)
-		}
 
 		return err
 	})
@@ -242,7 +237,9 @@ func updateChildrenAndRunListeners(
 	input *updateItemRequest,
 	childrenPermissionMap map[int64]permissionAndType,
 	oldPropagationLevelsMap map[int64]*itemsRelationData,
-) (propagationsToRun []string, apiError service.APIError, err error) {
+) (apiError service.APIError, err error) {
+	var propagationsToRun []string
+
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			deleteStatement := lockedStore.ItemItems().DB.
@@ -282,7 +279,9 @@ func updateChildrenAndRunListeners(
 		propagationsToRun = append(propagationsToRun, "results")
 	}
 
-	return propagationsToRun, apiError, err
+	store.SchedulePropagation(propagationsToRun)
+
+	return apiError, err
 }
 
 // constructUpdateItemChildTypeNonSkillValidator constructs a validator for the Children field that checks
