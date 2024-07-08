@@ -2,8 +2,9 @@ package database
 
 import (
 	"context"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
 )
