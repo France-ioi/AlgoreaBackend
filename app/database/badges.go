@@ -53,7 +53,7 @@ func (s *GroupStore) StoreBadges(badges []Badge, userID int64, newUser bool) (er
 
 	if ancestorsCalculationNeeded {
 		s.ScheduleGroupsAncestorsPropagation()
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 	}
 
 	if len(managedBadgeGroups) > 0 {

@@ -75,7 +75,7 @@ func TestResultStore_Propagate(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
-				s.ScheduleResultsPropagation()
+				s.SchedulePropagation([]string{"results"})
 				return nil
 			})
 			if (err != nil) != tt.wantErr {
@@ -94,7 +94,7 @@ func TestResultStore_Propagate(t *testing.T) {
 //	testhelpers.RunConcurrently(func() {
 //		s := database.NewDataStoreWithContext(context.Background(), db)
 //		err := s.InTransaction(func(st *database.DataStore) error {
-//			st.ScheduleResultsPropagation()
+//			st.SchedulePropagation([]string{"results"})
 //			return nil
 //		})
 //		assert.NoError(t, err)

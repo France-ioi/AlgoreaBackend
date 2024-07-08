@@ -75,7 +75,7 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 	}
 	resultStore := database.NewDataStore(db).Results()
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)

@@ -231,6 +231,6 @@ func setAdditionalTimeForGroupInContest(
 	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 	if groupsGroupsModified {
 		store.ScheduleGroupsAncestorsPropagation()
-		store.ScheduleResultsPropagation()
+		store.SchedulePropagation([]string{"results"})
 	}
 }

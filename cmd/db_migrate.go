@@ -96,9 +96,9 @@ func recomputeDBCaches(gormDB *database.DB) error {
 	return database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
 		fmt.Print("Schedule the propagations\n")
 		store.ScheduleGroupsAncestorsPropagation()
-		store.ScheduleItemsAncestorsPropagation()
-		store.SchedulePermissionsPropagation()
-		store.ScheduleResultsPropagation()
+		store.SchedulePropagation([]string{"items_ancestors"})
+		store.SchedulePropagation([]string{"permissions"})
+		store.SchedulePropagation([]string{"results"})
 
 		return nil
 	})

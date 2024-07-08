@@ -39,7 +39,7 @@ func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int6
 		INSERT IGNORE INTO results_propagate (participant_id, attempt_id, item_id, state)
 		VALUES(?, ?, ?, 'to_be_propagated')`, participantID, attemptID, itemID).Error()
 	if err == nil && propagateNow {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 	}
 	return err
 }

@@ -69,7 +69,7 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 			err := resultStore.InTransaction(func(s *database.DataStore) error {
 				assert.NoError(t, resultStore.Exec(
 					"INSERT IGNORE INTO results_propagate SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state FROM results").Error())
-				s.ScheduleResultsPropagation()
+				s.SchedulePropagation([]string{"results"})
 				return nil
 			})
 			assert.NoError(t, err)
@@ -116,7 +116,7 @@ func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 
 	resultStore := database.NewDataStore(db).Results()
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)
@@ -145,7 +145,7 @@ func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *te
 	}).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)
@@ -189,7 +189,7 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 				}).Error())
 
 			err := resultStore.InTransaction(func(s *database.DataStore) error {
-				s.ScheduleResultsPropagation()
+				s.SchedulePropagation([]string{"results"})
 				return nil
 			})
 			assert.NoError(t, err)

@@ -201,7 +201,7 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
 		trStore.ScheduleGroupsAncestorsPropagation()
-		trStore.SchedulePermissionsPropagation()
+		trStore.SchedulePropagation([]string{"permissions"})
 		return nil
 	}))
 	return db
