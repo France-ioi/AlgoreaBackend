@@ -208,7 +208,7 @@ func testExplicitEntryUnlocks(db *database.DB, t *testing.T) {
 	prepareDependencies(db, t)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		sSchedulePropagation([]string{"results"})
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)
