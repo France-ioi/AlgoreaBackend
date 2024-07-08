@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"github.com/France-ioi/AlgoreaBackend/app/utils"
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
@@ -234,8 +235,7 @@ func (s *DataStore) SchedulePropagation(types []string) {
 	s.mustBeInTransaction()
 
 	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	// TODO: filter type for available types, and make sure we don't have duplicates, maybe even sort them
-	triggersToRun.SchedulePropagationTypes = append(triggersToRun.SchedulePropagationTypes, types...)
+	triggersToRun.SchedulePropagationTypes = utils.UniqueStrings(append(triggersToRun.SchedulePropagationTypes, types...))
 }
 
 // ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
