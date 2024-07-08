@@ -279,10 +279,6 @@ func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) erro
 	})
 }
 
-func (s *DataStore) IsInTransaction() bool {
-	return s.DB.isInTransaction()
-}
-
 // WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK.
 func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
 	return s.withNamedLock(lockName, timeout, func(db *DB) error {
