@@ -1,24 +1,28 @@
 Feature: Get group invitations for the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type    | name               | description            |
-      | 1  | Class   | Our Class          | Our class group        |
-      | 2  | Team    | Our Team           | Our team group         |
-      | 3  | Club    | Our Club           | Our club group         |
-      | 4  | Friends | Our Friends        | Group for our friends  |
-      | 5  | Other   | Other people       | Group for other people |
-      | 6  | Class   | Another Class      | Another class group    |
-      | 7  | Team    | Another Team       | Another team group     |
-      | 8  | Club    | Another Club       | Another club group     |
-      | 9  | Friends | Some other friends | Another friends group  |
-      | 10 | Other   | Secret group       | Our secret group       |
-      | 11 | Club    | Secret club        | Our secret club        |
-      | 12 | User    | user self          |                        |
-      | 21 | User    | owner self         |                        |
+      | id | type    | name                          | description                   | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
+      | 1  | Class   | Our Class                     | Our class group               | none                                  | {{relativeTime("+96h")}}               | true                   |
+      | 2  | Team    | Our Team                      | Our team group                | none                                  | null                                   | false                  |
+      | 3  | Club    | Our Club                      | Our club group                | none                                  | null                                   | false                  |
+      | 4  | Friends | Our Friends                   | Group for our friends         | none                                  | null                                   | false                  |
+      | 5  | Other   | Other people                  | Group for other people        | none                                  | null                                   | false                  |
+      | 6  | Class   | Another Class                 | Another class group           | none                                  | null                                   | false                  |
+      | 7  | Team    | Another Team                  | Another team group            | none                                  | null                                   | false                  |
+      | 8  | Club    | Another Club                  | Another club group            | none                                  | null                                   | false                  |
+      | 9  | Friends | Some other friends            | Another friends group         | none                                  | null                                   | false                  |
+      | 10 | Other   | Secret group                  | Our secret group              | none                                  | null                                   | false                  |
+      | 11 | Club    | Secret club                   | Our secret club               | none                                  | null                                   | false                  |
+      | 12 | User    | user self                     |                               | none                                  | null                                   | false                  |
+      | 13 | User    | another user                  |                               | none                                  | null                                   | false                  |
+      | 21 | User    | owner self                    |                               | none                                  | null                                   | false                  |
+      | 33 | Class   | Other group with invitation   | Other group with invitation   | view                                  | null                                   | false                  |
+      | 34 | Class   | Other group with invitation 2 | Other group with invitation 2 | edit                                  | null                                   | false                  |
     And the database has the following table 'users':
-      | login | temp_user | group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-      | user  | 0         | 12       | John        | Doe       | 1     |
+      | login       | temp_user | group_id | first_name  | last_name | grade |
+      | owner       | 0         | 21       | Jean-Michel | Blanquer  | 3     |
+      | user        | 0         | 12       | John        | Doe       | 1     |
+      | anotheruser | 0         | 13       | Another     | User      | 1     |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 5               | 21             |
@@ -30,7 +34,9 @@ Feature: Get group invitations for the current user
       | 1        | 21        | invitation_created    | {{relativeTime("-169h")}} | 12           |
       | 2        | 21        | invitation_refused    | {{relativeTime("-168h")}} | 21           |
       | 3        | 21        | join_request_created  | {{relativeTime("-167h")}} | 21           |
+      | 33       | 21        | invitation_created    | {{relativeTime("-167h")}} | 13           |
       | 4        | 21        | join_request_refused  | {{relativeTime("-166h")}} | 12           |
+      | 34       | 21        | invitation_created    | {{relativeTime("-166h")}} | 12           |
       | 5        | 21        | invitation_accepted   | {{relativeTime("-165h")}} | 12           |
       | 6        | 21        | join_request_accepted | {{relativeTime("-164h")}} | 12           |
       | 7        | 21        | removed               | {{relativeTime("-163h")}} | 21           |
@@ -42,6 +48,8 @@ Feature: Get group invitations for the current user
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 1        | 21        | invitation   |
+      | 33       | 21        | invitation   |
+      | 34       | 21        | invitation   |
       | 3        | 21        | join_request |
       | 1        | 12        | invitation   |
 
@@ -53,28 +61,42 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "group_id": "4",
-        "inviting_user": null,
-        "group": {
-          "id": "4",
-          "name": "Our Friends",
-          "description": "Group for our friends",
-          "type": "Friends"
+        "group_id": "34",
+        "inviting_user": {
+          "id": "12",
+          "first_name": "John",
+          "last_name": "Doe",
+          "login": "user"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
-        "action": "join_request_refused"
+        "group": {
+          "id": "34",
+          "name": "Other group with invitation 2",
+          "description": "Other group with invitation 2",
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_lock_membership_approval_until": null,
+          "require_watch_approval": false
+        },
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}"
       },
       {
-        "group_id": "3",
-        "inviting_user": null,
-        "group": {
-          "id": "3",
-          "name": "Our Club",
-          "description": "Our club group",
-          "type": "Club"
+        "group_id": "33",
+        "inviting_user": {
+          "id": "13",
+          "first_name": "Another",
+          "last_name": "User",
+          "login": "anotheruser"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
-        "action": "join_request_created"
+        "group": {
+          "id": "33",
+          "name": "Other group with invitation",
+          "description": "Other group with invitation",
+          "type": "Class",
+          "require_personal_info_access_approval": "view",
+          "require_lock_membership_approval_until": null,
+          "require_watch_approval": false
+        },
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}"
       },
       {
         "group_id": "1",
@@ -88,10 +110,12 @@ Feature: Get group invitations for the current user
           "id": "1",
           "name": "Our Class",
           "description": "Our class group",
-          "type": "Class"
+          "type": "Class",
+          "require_personal_info_access_approval": "none",
+          "require_lock_membership_approval_until": "{{timeToRFC(db("groups[1][require_lock_membership_approval_until]"))}}",
+          "require_watch_approval": true
         },
-        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
-        "action": "invitation_created"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}"
       }
     ]
     """
@@ -104,16 +128,23 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "group_id": "4",
-        "inviting_user": null,
-        "group": {
-          "id": "4",
-          "name": "Our Friends",
-          "description": "Group for our friends",
-          "type": "Friends"
+        "group_id": "34",
+        "inviting_user": {
+          "id": "12",
+          "first_name": "John",
+          "last_name": "Doe",
+          "login": "user"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
-        "action": "join_request_refused"
+        "group": {
+          "id": "34",
+          "name": "Other group with invitation 2",
+          "description": "Other group with invitation 2",
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_lock_membership_approval_until": null,
+          "require_watch_approval": false
+        },
+        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}"
       }
     ]
     """
@@ -127,50 +158,23 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "group_id": "3",
-        "inviting_user": null,
-        "group": {
-          "id": "3",
-          "name": "Our Club",
-          "description": "Our club group",
-          "type": "Club"
+        "group_id": "33",
+        "inviting_user": {
+          "id": "13",
+          "first_name": "Another",
+          "last_name": "User",
+          "login": "anotheruser"
         },
-        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
-        "action": "join_request_created"
-      }
-    ]
-    """
-
-  Scenario: Filter out old invitations
-    Given I am the user with id "21"
-    When I send a GET request to "/current-user/group-invitations?within_weeks=1"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "group_id": "4",
-        "inviting_user": null,
         "group": {
-          "id": "4",
-          "name": "Our Friends",
-          "description": "Group for our friends",
-          "type": "Friends"
+          "id": "33",
+          "name": "Other group with invitation",
+          "description": "Other group with invitation",
+          "type": "Class",
+          "require_personal_info_access_approval": "view",
+          "require_lock_membership_approval_until": null,
+          "require_watch_approval": false
         },
-        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
-        "action": "join_request_refused"
-      },
-      {
-        "group_id": "3",
-        "inviting_user": null,
-        "group": {
-          "id": "3",
-          "name": "Our Club",
-          "description": "Our club group",
-          "type": "Club"
-        },
-        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
-        "action": "join_request_created"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}"
       }
     ]
     """
