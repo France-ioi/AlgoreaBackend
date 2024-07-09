@@ -205,6 +205,10 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 
 	triggersToRun := s.ctx.Value(triggersContextKey).(*awaitingTriggers)
 
+	if triggersToRun.GroupAncestors {
+		triggersToRun.GroupAncestors = false
+		s.createNewAncestors("groups", "group")
+	}
 	if len(triggersToRun.SchedulePropagationTypes) > 0 {
 		types := triggersToRun.SchedulePropagationTypes
 		triggersToRun.SchedulePropagationTypes = []string{}
@@ -214,10 +218,6 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 			propagationEndpoint = s.Context().Value("propagation_endpoint").(string)
 		}
 		StartAsyncPropagation(s, propagationEndpoint, types)
-	}
-	if triggersToRun.GroupAncestors {
-		triggersToRun.GroupAncestors = false
-		s.createNewAncestors("groups", "group")
 	}
 	if triggersToRun.ItemAncestors {
 		triggersToRun.ItemAncestors = false
