@@ -268,8 +268,9 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 			{GroupID: 20, MemberID: 6, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 			{GroupID: 20, MemberID: 7, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
-		wantGrantedPermissions: grantedPermissionsUnchanged,
-		shouldRunListeners:     true,
+		wantGrantedPermissions:   grantedPermissionsUnchanged,
+		wantGeneratedPermissions: generatedPermissionsUnchanged,
+		shouldRunListeners:       true,
 	}
 }
 
@@ -328,8 +329,9 @@ func testTransitionAcceptingPendingRequest(name string, action database.GroupGro
 		wantGroupMembershipChanges: []groupMembershipChange{
 			{GroupID: 20, MemberID: acceptedID, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
-		wantGrantedPermissions: grantedPermissionsUnchanged,
-		shouldRunListeners:     true,
+		wantGrantedPermissions:   grantedPermissionsUnchanged,
+		wantGeneratedPermissions: generatedPermissionsUnchanged,
+		shouldRunListeners:       true,
 	}
 }
 
@@ -425,8 +427,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
 				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
 			},
-			wantGrantedPermissions: grantedPermissionsUnchanged,
-			shouldRunListeners:     true,
+			wantGrantedPermissions:   grantedPermissionsUnchanged,
+			wantGeneratedPermissions: generatedPermissionsUnchanged,
+			shouldRunListeners:       true,
 		},
 		{
 			name:                       "AdminCreatesInvitation (max participants limit is not exceeded)",
@@ -459,8 +462,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
 				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: userIDPtr, At: currentTimePtr},
 			},
-			wantGrantedPermissions: grantedPermissionsUnchanged,
-			shouldRunListeners:     true,
+			wantGrantedPermissions:   grantedPermissionsUnchanged,
+			wantGeneratedPermissions: generatedPermissionsUnchanged,
+			shouldRunListeners:       true,
 		},
 		{
 			name:                       "AdminCreatesInvitation (enforce max participants)",
