@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.21.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.20.1...v2.21.0) - 2024-07-09
+- change of the `invitationsView` service API
+
 ## [v2.20.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.20.0...v2.20.1) - 2024-07-03
 - use full-text indexes for item/group searches
 - fix 'reinvite' after changing group approval
