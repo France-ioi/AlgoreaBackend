@@ -3,8 +3,8 @@ package app
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -70,10 +70,13 @@ func TestLoadConfigFrom(t *testing.T) {
 func TestLoadConfigFrom_ShouldLogWarningWhenNonTestEnvAndNoMainConfigFile(t *testing.T) {
 	assert := assertlib.New(t)
 
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
+	origStdErr := os.Stderr
+	stdErrReader, stdErrWriter, _ := os.Pipe()
+	os.Stderr = stdErrWriter
 	defer func() {
-		log.SetOutput(os.Stderr)
+		os.Stderr = origStdErr
+		_ = stdErrWriter.Close()
+		_ = stdErrReader.Close()
 	}()
 
 	monkey.Patch(appenv.Env, func() string { return devEnv })
@@ -89,6 +92,11 @@ func TestLoadConfigFrom_ShouldLogWarningWhenNonTestEnvAndNoMainConfigFile(t *tes
 
 	conf := loadConfigFrom(configName, os.TempDir())
 	assert.NotNil(conf)
+
+	_ = stdErrWriter.Close()
+	buf := new(bytes.Buffer)
+	_, _ = io.Copy(buf, stdErrReader)
+
 	assert.Contains(buf.String(), "Cannot read the main config file, ignoring it")
 }
 
