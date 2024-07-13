@@ -12,11 +12,13 @@ import (
 )
 
 func TestNewRawDBLogger_TextLog(t *testing.T) {
-	nulllogger, hook := loggingtest.NewNullLogger()
+	var hook *loggingtest.Hook
+	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
+	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "text")
 	config.Set("LogRawSQLQueries", true)
-	logger := &Logger{nulllogger, config}
+	logger := &Logger{SharedLogger.Logger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
@@ -25,11 +27,13 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 }
 
 func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
-	nulllogger, hook := loggingtest.NewNullLogger()
+	var hook *loggingtest.Hook
+	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
+	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "text")
 	config.Set("LogRawSQLQueries", false)
-	logger := &Logger{nulllogger, config}
+	logger := &Logger{SharedLogger.Logger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(context.TODO(), "some message", "err", nil)
@@ -37,11 +41,13 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 }
 
 func TestNewRawDBLogger_JSONLog(t *testing.T) {
-	nulllogger, hook := loggingtest.NewNullLogger()
+	var hook *loggingtest.Hook
+	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
+	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "json")
 	config.Set("LogRawSQLQueries", true)
-	logger := &Logger{nulllogger, config}
+	logger := &Logger{SharedLogger.Logger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(context.TODO(), "some message", "err", nil)
@@ -50,11 +56,13 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 }
 
 func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
-	nulllogger, hook := loggingtest.NewNullLogger()
+	var hook *loggingtest.Hook
+	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
+	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "json")
 	config.Set("LogRawSQLQueries", true)
-	logger := &Logger{nulllogger, config}
+	logger := &Logger{SharedLogger.Logger, config}
 	dbLogger, _, rawLogMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(context.TODO(), "sql-stmt-exec", "err", driver.ErrSkip)
