@@ -17,7 +17,7 @@ import (
 // After the output is suppressed, t.Parallel() for the test will panic.
 //
 // Note: This function does nothing if the test is run in verbose mode.
-func SuppressOutputIfPasses(t *testing.T) {
+func SuppressOutputIfPasses(t *testing.T) { //nolint:gocritic
 	if testing.Verbose() {
 		return
 	}
