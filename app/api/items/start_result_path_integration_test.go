@@ -438,6 +438,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(globalFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
