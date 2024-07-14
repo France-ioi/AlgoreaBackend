@@ -6,11 +6,10 @@ import (
 	"strconv"
 
 	"github.com/cucumber/godog"
-	"github.com/cucumber/messages-go/v10"
 )
 
 // registerFeaturesForUsers registers the Gherkin features related to users.
-func (ctx *TestContext) registerFeaturesForUsers(s *godog.Suite) {
+func (ctx *TestContext) registerFeaturesForUsers(s *godog.ScenarioContext) {
 	s.Step(`^there is a user (@\w+)$`, ctx.ThereIsAUser)
 	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 }
@@ -82,7 +81,7 @@ func (ctx *TestContext) ThereIsAUser(name string) error {
 }
 
 // ThereAreTheFollowingUsers defines users.
-func (ctx *TestContext) ThereAreTheFollowingUsers(users *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingUsers(users *godog.Table) error {
 	for i := 1; i < len(users.Rows); i++ {
 		user := ctx.getRowMap(i, users)
 

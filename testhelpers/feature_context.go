@@ -3,13 +3,19 @@
 package testhelpers
 
 import (
+	"context"
+
 	"github.com/cucumber/godog"
 )
 
-// FeatureContext binds the supported steps to the verifying functions.
-func FeatureContext(s *godog.Suite) {
-	ctx := &TestContext{}
-	s.BeforeScenario(ctx.SetupTestContext)
+var ctx = &TestContext{}
+
+// InitializeScenario binds the supported steps to the verifying functions.
+func InitializeScenario(s *godog.ScenarioContext) {
+	s.Before(func(contextCtx context.Context, sc *godog.Scenario) (context.Context, error) {
+		ctx.SetupTestContext(sc)
+		return contextCtx, nil
+	})
 
 	s.Step(`^the template constant "([^"]+)" is "(.*)"$`, ctx.TheTemplateConstantIsString)
 	s.Step(`^the template constant "([^"]+)" is:$`, ctx.TheTemplateConstantIsDocString)
@@ -122,5 +128,8 @@ func FeatureContext(s *godog.Suite) {
 			`content id "([^"]*)", score "([^"]*)" returns (\d+) with encoded body:$`,
 		ctx.TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns)
 
-	s.AfterScenario(ctx.ScenarioTeardown)
+	s.After(func(contextCtx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		ctx.ScenarioTeardown(sc, err)
+		return contextCtx, nil
+	})
 }

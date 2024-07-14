@@ -3,7 +3,7 @@
 package testhelpers
 
 import (
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 )
 
 func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { //nolint
@@ -16,7 +16,7 @@ func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { 
 	return nil
 }
 
-func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *godog.DocString) error { // nolint
 	preprocessedValue, err := ctx.preprocessString(value.Content)
 	if err != nil {
 		return err
