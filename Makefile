@@ -86,6 +86,8 @@ test: $(TEST_REPORT_DIR)
 	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
 	$(Q)$(GOTEST) -gcflags=all=-l -race -coverpkg=$(COVER_PACKAGES) -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
+test-dev:
+	$(Q)$(GOTEST) -gcflags=all=-l $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd:
