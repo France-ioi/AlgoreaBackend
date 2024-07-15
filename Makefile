@@ -90,7 +90,7 @@ test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
-	$(Q)$(GOTEST) -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
+	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
 lint:
 	@[ -e $(GOLANGCILINT) ] && \
 		($(GOLANGCILINT) --version | grep -F "version $(GOLANGCILINT_VERSION) built" > /dev/null || rm $(GOLANGCILINT)) || true
