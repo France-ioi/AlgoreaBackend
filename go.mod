@@ -39,6 +39,7 @@ require (
 	github.com/spf13/viper v1.3.1
 	github.com/stretchr/testify v1.8.2
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
+	github.com/zenovich/flowmingo v1.0.4
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/yaml.v2 v2.2.8
 )

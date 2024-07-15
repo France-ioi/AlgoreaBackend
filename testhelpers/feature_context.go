@@ -4,15 +4,21 @@ package testhelpers
 
 import (
 	"context"
+	"testing"
 
 	"github.com/cucumber/godog"
+	"github.com/zenovich/flowmingo"
 )
 
 var ctx = &TestContext{}
 
 // InitializeScenario binds the supported steps to the verifying functions.
 func InitializeScenario(s *godog.ScenarioContext) {
+	var restoreFunc flowmingo.RestoreFunc
 	s.Before(func(contextCtx context.Context, sc *godog.Scenario) (context.Context, error) {
+		if !testing.Verbose() { // Do not suppress output in verbose mode
+			restoreFunc = flowmingo.CaptureStdoutAndStderr() // Suppress the output of the scenario
+		}
 		ctx.SetupTestContext(sc)
 		return contextCtx, nil
 	})
@@ -130,6 +136,15 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 	s.After(func(contextCtx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		ctx.ScenarioTeardown(sc, err)
+		if restoreFunc != nil { // If we captured the output, restore it
+			restoreFunc(err != nil) // Pass through the output if the test failed
+		}
+		if err != nil { // If the test failed, restore the output of the parent test (if it is captured)
+			if parentOutputRestorerFunc := contextCtx.Value(outputRestorerFuncKey).(*flowmingo.RestoreFunc); *parentOutputRestorerFunc != nil {
+				(*parentOutputRestorerFunc)(true)
+				*parentOutputRestorerFunc = nil
+			}
+		}
 		return contextCtx, nil
 	})
 }

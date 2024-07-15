@@ -4,6 +4,7 @@
 package testhelpers
 
 import (
+	"context"
 	"flag"
 	"io/ioutil"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
+	"github.com/zenovich/flowmingo"
 
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
@@ -32,6 +34,10 @@ func BindGodogCmdFlags() {
 	godogFlagsBound = true
 }
 
+type contextKey string
+
+var outputRestorerFuncKey = contextKey("outputRestorerFunc")
+
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package).
 func RunGodogTests(t *testing.T, tags string) {
@@ -51,9 +57,21 @@ func RunGodogTests(t *testing.T, tags string) {
 	for _, featureFile := range featureFiles {
 		featureFile := featureFile
 		t.Run(featureFile, func(t *testing.T) {
+			var restoreFunc flowmingo.RestoreFunc
+			if !testing.Verbose() { // Do not suppress output in verbose mode
+				restoreFunc = flowmingo.CaptureStdoutAndStderr() // Suppress the output of the suite
+				t.Cleanup(func() {
+					if restoreFunc != nil {
+						restoreFunc(t.Failed()) // Do not pass through the output of a passed suite
+					}
+				})
+			}
+
 			featureFileOptions := options
 			featureFileOptions.Paths = []string{featureFile}
 			featureFileOptions.TestingT = t // Testing instance that will run subtests.
+			// Set the context with the output restorer function to allow children to restore the output immediately when test fails.
+			featureFileOptions.DefaultContext = context.WithValue(context.Background(), outputRestorerFuncKey, &restoreFunc)
 			suite := godog.TestSuite{
 				ScenarioInitializer: InitializeScenario,
 				Options:             &featureFileOptions,
