@@ -98,8 +98,10 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 
 func TestStructuredDBLogger_Print_RawSQLWithDuration(t *testing.T) {
 	assert := assertlib.New(t)
-	logger, hook := test.NewNullLogger()
-	structuredLogger := logging.NewStructuredDBLogger(logger)
+	var hook *test.Hook
+	logging.SharedLogger.Logger, hook = test.NewNullLogger()
+	defer logging.ResetShared()
+	structuredLogger := logging.NewStructuredDBLogger()
 	structuredLogger.Print("rawsql", nil, "sql-stmt-exec",
 		map[string]interface{}{
 			"query":    "SELECT 1",
