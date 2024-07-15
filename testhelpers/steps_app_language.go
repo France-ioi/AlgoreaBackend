@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/rand"
@@ -64,7 +64,7 @@ func referenceToName(reference string) string {
 }
 
 // getRowMap convert a PickleTable's row into a map where the keys are the column headers.
-func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgument_PickleTable) map[string]string {
+func (ctx *TestContext) getRowMap(rowIndex int, table *godog.Table) map[string]string {
 	rowHeader := table.Rows[0]
 	sourceRow := table.Rows[rowIndex]
 
@@ -480,7 +480,7 @@ func (ctx *TestContext) ICanWatchGroupWithID(group string) error {
 }
 
 // ThereAreTheFollowingItems defines items.
-func (ctx *TestContext) ThereAreTheFollowingItems(items *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingItems(items *godog.Table) error {
 	for i := 1; i < len(items.Rows); i++ {
 		item := ctx.getRowMap(i, items)
 
@@ -502,7 +502,7 @@ func (ctx *TestContext) ThereAreTheFollowingItems(items *messages.PickleStepArgu
 }
 
 // ThereAreTheFollowingTasks defines item tasks.
-func (ctx *TestContext) ThereAreTheFollowingTasks(tasks *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingTasks(tasks *godog.Table) error {
 	for i := 1; i < len(tasks.Rows); i++ {
 		task := ctx.getRowMap(i, tasks)
 
@@ -516,7 +516,7 @@ func (ctx *TestContext) ThereAreTheFollowingTasks(tasks *messages.PickleStepArgu
 }
 
 // ThereAreTheFollowingItemPermissions defines item permissions.
-func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *godog.Table) error {
 	for i := 1; i < len(itemPermissions.Rows); i++ {
 		itemPermission := ctx.getRowMap(i, itemPermissions)
 
@@ -560,7 +560,7 @@ func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]str
 }
 
 // ThereAreTheFollowingItemRelations defines item relations, in items_items table.
-func (ctx *TestContext) ThereAreTheFollowingItemRelations(itemPermissions *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingItemRelations(itemPermissions *godog.Table) error {
 	for i := 1; i < len(itemPermissions.Rows); i++ {
 		itemRelation := ctx.getRowMap(i, itemPermissions)
 
@@ -691,7 +691,7 @@ func (ctx *TestContext) UserHaveValidatedItemWithID(user, item string) error {
 	return nil
 }
 
-func (ctx *TestContext) ThereAreTheFollowingResults(results *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingResults(results *godog.Table) error {
 	for i := 1; i < len(results.Rows); i++ {
 		result := ctx.getRowMap(i, results)
 
@@ -714,7 +714,7 @@ func (ctx *TestContext) IHaveValidatedItemWithID(item string) error {
 }
 
 // ThereAreTheFollowingThreads create threads.
-func (ctx *TestContext) ThereAreTheFollowingThreads(threads *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingThreads(threads *godog.Table) error {
 	for i := 1; i < len(threads.Rows); i++ {
 		thread := ctx.getRowMap(i, threads)
 		threadParameters := make(map[string]string)

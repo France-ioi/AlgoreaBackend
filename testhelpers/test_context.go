@@ -13,7 +13,7 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 	_ "github.com/go-sql-driver/mysql"      // use to force database/sql to use mysql
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 	"github.com/thingful/httpmock"
@@ -41,7 +41,7 @@ type TestContext struct {
 	logsRestoreFunc      func()
 	inScenario           bool
 	db                   *sql.DB
-	dbTableData          map[string]*messages.PickleStepArgument_PickleTable
+	dbTableData          map[string]*godog.Table
 	templateSet          *jet.Set
 	requestHeaders       map[string][]string
 	identifierReferences map[string]int64
@@ -57,9 +57,7 @@ const (
 )
 
 // SetupTestContext initializes the test context. Called before each scenario.
-func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
-	log.WithField("type", "test").Infof("Starting test scenario: %s", pickle.Name)
-
+func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
 	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
@@ -71,7 +69,7 @@ func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
 	ctx.inScenario = true
 	ctx.requestHeaders = map[string][]string{}
 	ctx.db = ctx.openDB()
-	ctx.dbTableData = make(map[string]*messages.PickleStepArgument_PickleTable)
+	ctx.dbTableData = make(map[string]*godog.Table)
 	ctx.templateSet = ctx.constructTemplateSet()
 	ctx.identifierReferences = make(map[string]int64)
 	ctx.dbTables = make(map[string]map[string]map[string]interface{})
@@ -105,7 +103,7 @@ func (ctx *TestContext) tearDownApp() {
 }
 
 // ScenarioTeardown is called after each scenario to remove stubs.
-func (ctx *TestContext) ScenarioTeardown(*messages.Pickle, error) {
+func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()
 	ctx.logsRestoreFunc()

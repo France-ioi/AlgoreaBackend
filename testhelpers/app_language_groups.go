@@ -8,12 +8,10 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
-
-	"github.com/cucumber/messages-go/v10"
 )
 
 // registerFeaturesForGroups registers the Gherkin features related to groups.
-func (ctx *TestContext) registerFeaturesForGroups(s *godog.Suite) {
+func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
 	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
 	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
@@ -72,7 +70,7 @@ func (ctx *TestContext) setGroupFieldInDatabase(primaryKey, field string, value 
 }
 
 // ThereAreTheFollowingGroups defines groups.
-func (ctx *TestContext) ThereAreTheFollowingGroups(groups *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 	for i := 1; i < len(groups.Rows); i++ {
 		group := ctx.getRowMap(i, groups)
 		groupID := ctx.getReference(group["group"])
@@ -200,7 +198,7 @@ func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) error {
 	ctx.setGroupFieldInDatabase(groupPrimaryKey, "name", "AllUsers")
 	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "Base")
 
-	err = ctx.TheApplicationConfigIs(&messages.PickleStepArgument_PickleDocString{
+	err = ctx.TheApplicationConfigIs(&godog.DocString{
 		Content: `
 domains:
   -

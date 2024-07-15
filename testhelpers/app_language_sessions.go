@@ -13,12 +13,10 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/cucumber/godog"
-
-	"github.com/cucumber/messages-go/v10"
 )
 
 // registerFeaturesForSessions registers the Gherkin features related to sessions and access tokens.
-func (ctx *TestContext) registerFeaturesForSessions(s *godog.Suite) {
+func (ctx *TestContext) registerFeaturesForSessions(s *godog.ScenarioContext) {
 	s.Step(`^I am (@\w+)$`, ctx.IAm)
 	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
 
@@ -112,7 +110,7 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 }
 
 // ThereAreTheFollowingSessions create sessions.
-func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *godog.Table) error {
 	for i := 1; i < len(sessions.Rows); i++ {
 		session := ctx.getRowMap(i, sessions)
 
@@ -162,7 +160,7 @@ func (ctx *TestContext) ThereIsNoSessionID(session string) error {
 }
 
 // ThereAreTheFollowingAccessTokens create access tokens.
-func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *godog.Table) error {
 	for i := 1; i < len(accessTokens.Rows); i++ {
 		accessToken := ctx.getRowMap(i, accessTokens)
 

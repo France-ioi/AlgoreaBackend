@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 	"github.com/go-chi/chi"
 	"github.com/spf13/viper"
 
@@ -74,7 +74,7 @@ func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedKey string) error {
 }
 
 // LogsShouldContain checks that the logs contain a provided string.
-func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) LogsShouldContain(docString *godog.DocString) error {
 	preprocessed, err := ctx.preprocessString(docString.Content)
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func (ctx *TestContext) getPrivateKeyOf(signerName string) *rsa.PrivateKey {
 // This allows later use inside a request, or a comparison with a response.
 func (ctx *TestContext) SignedTokenIsDistributed(
 	varName, signerName string,
-	jsonPayload *messages.PickleStepArgument_PickleDocString,
+	jsonPayload *godog.DocString,
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
@@ -129,7 +129,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 
 func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 	varName, signerName string,
-	jsonPayload *messages.PickleStepArgument_PickleDocString,
+	jsonPayload *godog.DocString,
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
@@ -157,7 +157,7 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 }
 
 // TheApplicationConfigIs specifies variables of the app configuration given in YAML format.
-func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
 	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesByIDs(yamlConfig.Content))

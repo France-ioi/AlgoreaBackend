@@ -8,12 +8,10 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-
-	"github.com/cucumber/messages-go/v10"
 )
 
 // registerFeaturesForGroupMembershipChanges registers the Gherkin features related to group membership changes.
-func (ctx *TestContext) registerFeaturesForGroupPendingRequests(s *godog.Suite) {
+func (ctx *TestContext) registerFeaturesForGroupPendingRequests(s *godog.ScenarioContext) {
 	s.Step(`^there are the following group pending requests:$`, ctx.ThereAreTheFollowingGroupPendingRequests)
 
 	s.Step(
@@ -51,7 +49,7 @@ func (ctx *TestContext) addGroupPendingRequest(group, member, requestType string
 }
 
 // ThereAreTheFollowingGroupPendingRequests adds the group pending requests in the database.
-func (ctx *TestContext) ThereAreTheFollowingGroupPendingRequests(entries *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingGroupPendingRequests(entries *godog.Table) error {
 	for i := 1; i < len(entries.Rows); i++ {
 		change := ctx.getRowMap(i, entries)
 
@@ -88,7 +86,7 @@ func (ctx *TestContext) ThereShouldBeNoGroupPendingRequestsForTheMemberWithTheTy
 }
 
 // ThereShouldBeTheFollowingGroupPendingRequests checks that rows are present in the group_pending_requests table in database.
-func (ctx *TestContext) ThereShouldBeTheFollowingGroupPendingRequests(entries *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereShouldBeTheFollowingGroupPendingRequests(entries *godog.Table) error {
 	for i := 1; i < len(entries.Rows); i++ {
 		change := ctx.getRowMap(i, entries)
 
