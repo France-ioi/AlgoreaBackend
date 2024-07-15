@@ -85,23 +85,32 @@ in order to recompute DB caches.
 
 ## Testing
 
-Run all tests (unit, and bdd):
+### make test
+To execute all tests (unit and bdd) with race detection and collect the test code coverage you can run:
 ```
 make test
 ```
-You can filter with a certain directory and the name of the test function you want to run:
+
+This mode is the slowest one, it doesn't use the cache, and it always runs all tests. It is useful to run before pushing code to the repository.
+
+### make test-dev
+
+To get test results faster during development, you may want to run all tests without race detection and without collecting the test code coverage to get advantage of Golang per-package caching:
 ```
-make DIRECTORY=./app/database FILTER=TestItemStore_TriggerBeforeInsert_SetsPlatformID test
+make test-dev
 ```
-Only unit tests who are marked with the "unit" tag. For unit tests not marked, use `make test`:
+
+### make test-unit
+
+You may want to run only unit tests that are marked with the "unit" tag:
 ```
 make test-unit
 ```
-You can also use the filters:
-```
-make DIRECTORY=./app/database FILTER=TestItemStore_TriggerBeforeInsert_SetsPlatformID test-unit
-```
-Only Gherkin tests defined in *.feature files, using the database connection:
+`make test-unit` doesn't cache test results, all the matching tests will be run. For unit tests not marked as "unit", use `make test` or `make test-dev` instead.
+
+### make test-bdd
+
+It is possible to run only Gherkin tests defined in *.feature files:
 ```
 make test-bdd
 ```
@@ -112,9 +121,19 @@ DIRECTORY=./app/api/answers/ TAGS=wip make test-bdd
 ```
 To add a tag to a test, just precede it by @wip on the line above it in the *.feature file. This is useful to only execute appropriate tests.
 
+`make test-bdd` doesn't cache test results, all the matching tests will be run.
+
+### Tests filtering
+For all `make test*` it is possible to filter with a certain directory and the name of the test function you want to run:
+```
+make DIRECTORY=./app/database FILTER=TestItemStore_TriggerBeforeInsert_SetsPlatformID test
+```
+Note that `FILTER` is not currently supported for `make test-bdd`.
+
+
 ## Install the git hooks
 
-Copy `githooks/pre-commit` to `.git/hooks/pre-commit`. You may want to adapt the content in case you have personnal hooks.
+Copy `githooks/pre-commit` to `.git/hooks/pre-commit`. You may want to adapt the content in case you have personal hooks.
 
 ## Style
 
