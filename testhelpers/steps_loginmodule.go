@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/thingful/httpmock"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
 )
 
 func (ctx *TestContext) appAuthConfig() *viper.Viper {

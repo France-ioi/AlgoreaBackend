@@ -15,7 +15,7 @@ import (
 	"github.com/cucumber/godog/colors"
 	"github.com/zenovich/flowmingo"
 
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 )
 
 var defaultGodogOptions = godog.Options{

@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 // AppHandler is a type that implements http.Handler and makes handling

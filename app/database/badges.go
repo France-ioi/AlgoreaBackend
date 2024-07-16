@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 // BadgeGroupPathElement represents an element of a badge's group path.

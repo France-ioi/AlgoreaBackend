@@ -18,8 +18,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 // Config contains parsed keys and PlatformName.

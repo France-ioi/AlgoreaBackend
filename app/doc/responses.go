@@ -3,7 +3,7 @@ package doc
 import (
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // These definitions are unused by code, just used to generate documentation

@@ -11,15 +11,15 @@ import (
 	"github.com/go-chi/render"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/api"
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	_ "github.com/France-ioi/AlgoreaBackend/v2/app/doc" // for doc generation
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
 )
 
 // Application is the core state of the app.

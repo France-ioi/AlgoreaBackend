@@ -3,7 +3,7 @@ package items
 import (
 	"net/http"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /items/{item_id}/dependencies items itemDependenciesView

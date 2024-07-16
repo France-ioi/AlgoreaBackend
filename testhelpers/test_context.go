@@ -18,10 +18,10 @@ import (
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 	"github.com/thingful/httpmock"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	log "github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 type dbquery struct {

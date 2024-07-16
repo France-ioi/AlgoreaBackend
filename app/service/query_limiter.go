@@ -3,7 +3,7 @@ package service
 import (
 	"net/http"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // QueryLimiter applies the limit parameter from an HTTP request to a given DB query (see QueryLimiter.Apply()).

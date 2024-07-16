@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // RawGeneratedPermissionFields represents DB data fields for item permissions used by item-related services.

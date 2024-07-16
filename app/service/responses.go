@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 )
 
 // Response is used for generating non-data responses, i.e. on error or on POST/PUT/PATCH/DELETE request.

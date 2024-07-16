@@ -18,10 +18,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pmezard/go-difflib/difflib"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
-	"github.com/France-ioi/AlgoreaBackend/app/payloads"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/encrypt"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nolint

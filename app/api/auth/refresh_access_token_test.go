@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
@@ -16,9 +16,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
 )
 
 func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
