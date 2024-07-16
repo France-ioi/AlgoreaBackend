@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 const MockCtxSessionID = int64(1)

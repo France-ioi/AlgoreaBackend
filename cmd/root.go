@@ -10,7 +10,7 @@ import (
 	_ "github.com/aws/aws-lambda-go/lambda" // force algnhsa dependency
 	"github.com/spf13/cobra"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
 )
 
 var rootCmd = &cobra.Command{

@@ -20,7 +20,7 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // FormData can parse JSON, validate it and construct a map for updating DB.
@@ -454,7 +454,7 @@ func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 		t reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if t.Name() != "Anything" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/formdata" {
+		if t.Name() != "Anything" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/formdata" {
 			return data, nil
 		}
 
@@ -490,7 +490,7 @@ func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc 
 		t reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if f.Kind() != reflect.String || t.Name() != "Time" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/database" {
+		if f.Kind() != reflect.String || t.Name() != "Time" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/database" {
 			return data, nil
 		}
 		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, f, reflect.TypeOf((*time.Time)(nil)).Elem(), data)

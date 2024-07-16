@@ -18,8 +18,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/luna-duclos/instrumentedsql"
 
-	log "github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 // DB contains information for current db connection (wraps *gorm.DB).

@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func TestQueryLimiter_Apply(t *testing.T) {

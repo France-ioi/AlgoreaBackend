@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 // DataStore gather all stores for database operations on business data.

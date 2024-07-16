@@ -1,7 +1,7 @@
 package items
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // RawCommonItemFields represents DB data fields that are common for itemView & itemChildrenView.

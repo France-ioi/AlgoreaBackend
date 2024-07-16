@@ -4,7 +4,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 
-	"github.com/France-ioi/AlgoreaBackend/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 )
 
 // Hint represents a hint token.

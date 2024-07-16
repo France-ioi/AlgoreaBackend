@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // FieldType represents a type of tie-breaker field's value.

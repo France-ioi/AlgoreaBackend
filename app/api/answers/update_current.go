@@ -3,7 +3,7 @@ package answers
 import (
 	"net/http"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation PUT /items/{item_id}/attempts/{attempt_id}/answers/current answers currentAnswerUpdate

@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 )
 
 func TestNewRawDBLogger_TextLog(t *testing.T) {

@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/encrypt"
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model generateProfileEditTokenResponse

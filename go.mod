@@ -1,4 +1,4 @@
-module github.com/France-ioi/AlgoreaBackend
+module github.com/France-ioi/AlgoreaBackend/v2
 
 go 1.20
 

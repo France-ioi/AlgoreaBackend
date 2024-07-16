@@ -9,7 +9,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /groups/{group_id}/team-progress-csv groups groupTeamProgressCSV

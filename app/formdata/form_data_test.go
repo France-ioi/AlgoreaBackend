@@ -11,7 +11,7 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func TestFormData_IsSet(t *testing.T) {

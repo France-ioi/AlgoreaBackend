@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database/mysqldb"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
 )
 
 const DuplicateEntryErrorKey = "key"

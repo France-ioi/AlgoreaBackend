@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
-	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
 var taskTokenFromAlgoreaPlatform = []byte(

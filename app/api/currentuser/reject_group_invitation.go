@@ -3,7 +3,7 @@ package currentuser
 import (
 	"net/http"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /current-user/group-invitations/{group_id}/reject group-memberships groupInvitationReject

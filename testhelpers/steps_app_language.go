@@ -10,9 +10,9 @@ import (
 
 	"github.com/cucumber/godog"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
 )
 
 const (

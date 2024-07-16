@@ -16,8 +16,8 @@ import (
 	"github.com/CloudyKit/jet"
 	"github.com/SermoDigital/jose/crypto"
 
-	"github.com/France-ioi/AlgoreaBackend/app/token"
-	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
 var (

@@ -4,7 +4,7 @@ package auth
 import (
 	"context"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // UserFromContext retrieves a user from a context set by the middleware.

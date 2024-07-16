@@ -4,18 +4,18 @@ linters-settings:
     settings:
       printf:
         funcs:
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Debugf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Infof
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Warnf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Errorf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Panicf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Fatalf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Debugf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Infof
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Warnf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Errorf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Panicf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Fatalf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Debugf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Infof
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Warnf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Errorf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Panicf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Fatalf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Debugf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Infof
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Warnf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Errorf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Panicf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Fatalf
   golint:
     min-confidence: 0
   gocyclo:
@@ -38,7 +38,7 @@ linters-settings:
   lll:
     line-length: 140
   goimports:
-    local-prefixes: github.com/France-ioi/AlgoreaBackend
+    local-prefixes: github.com/France-ioi/AlgoreaBackend/v2
   gocritic:
     enabled-tags:
       - performance

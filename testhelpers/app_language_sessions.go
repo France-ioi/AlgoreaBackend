@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
 
 	"github.com/jinzhu/gorm"
 

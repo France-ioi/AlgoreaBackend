@@ -11,9 +11,9 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 const (

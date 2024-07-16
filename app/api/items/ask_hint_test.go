@@ -10,11 +10,11 @@ import (
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/payloads"
-	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
-	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
 func TestAskHintRequest_UnmarshalJSON(t *testing.T) {

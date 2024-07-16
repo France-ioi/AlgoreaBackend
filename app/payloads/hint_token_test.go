@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
 
 func TestHintToken_UnmarshalJSON_InvalidJSON(t *testing.T) {
