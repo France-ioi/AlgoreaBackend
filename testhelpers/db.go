@@ -248,6 +248,9 @@ func emptyDB(db *sql.DB, dbName string) error {
 			_ = tx.Rollback()
 			return scanErr
 		}
+		if tableName == dbName+".user_batches" { // skip this broken table
+			continue
+		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
 		_, err = tx.Exec("DELETE FROM " + tableName)
 		if err != nil {

@@ -22,7 +22,7 @@ Feature: List user batches (userBatchesView)
       | test2        | 13       | 0         |
       | test3        | 21       | 1         |
       | test4        | 14       | 1         |
-    And the database has the following table 'user_batches':
+    And the database has the following table 'user_batches_new':
       | group_prefix | custom_prefix | size | creator_id |
       | test         | custom        | 100  | null       |
       | test         | custom1       | 200  | 13         |
