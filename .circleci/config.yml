@@ -129,6 +129,9 @@ jobs:
           name: Download a large dump of data
           command: curl -o - $LARGE_DUMP_URL | gunzip > dump.sql
       - run:
+          name: Patch the dump data
+          command: sed -i "s/\`custom_prefix\` varchar(14) NOT NULL COMMENT \'Second part of the full login prefix, given by the user that created the batch\',/\`custom_prefix\` VARCHAR(14) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT \'Second part of the full login prefix, given by the user that created the batch\',/g; s/CONSTRAINT \`ck_user_batches_custom_prefix\` CHECK (regexp_like(cast(\`custom_prefix\` as char charset binary),_utf8mb4'\\^\\[a-z0-9-\\]+\\$'))/CONSTRAINT \`ck_user_batches_custom_prefix\` CHECK (REGEXP_LIKE(\`custom_prefix\`, '^[a-z0-9-]+$'))/g" dump.sql
+      - run:
           name: Seed database
           command: mysql -h 127.0.0.1 -u root -proot --protocol=TCP algorea_example < dump.sql
       - run:
