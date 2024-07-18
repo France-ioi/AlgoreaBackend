@@ -90,7 +90,7 @@ Feature: Create a user batch
         ]
       }
       """
-    And the table "user_batches" should be:
+    And the table "user_batches_new" should be:
       | group_prefix | custom_prefix | size | creator_id | created_at          |
       | test         | custom        | 2    | 21         | 2019-07-16 22:02:28 |
     And the table "users" should be:
