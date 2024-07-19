@@ -3,3 +3,4 @@
 !db/schema/*
 !db/migrations/*
 log/
+test-results/
