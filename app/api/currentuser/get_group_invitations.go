@@ -109,11 +109,12 @@ type groupWithApprovals struct {
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
-	query := srv.GetStore(r).GroupMembershipChanges().
+	query := store.GroupPendingRequests().
 		Select(`
-			group_membership_changes.group_id,
-			group_membership_changes.at,
+			group_pending_requests.group_id,
+			latest_change.at,
 			users.group_id AS inviting_user__id,
 			users.login AS inviting_user__login,
 			users.first_name AS inviting_user__first_name,
@@ -122,29 +123,30 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.name AS group__name,
 			groups.description AS group__description,
 			groups.type AS group__type,
-		  groups.require_personal_info_access_approval AS group__require_personal_info_access_approval,
+			groups.require_personal_info_access_approval AS group__require_personal_info_access_approval,
 			groups.require_lock_membership_approval_until AS group__require_lock_membership_approval_until,
 			groups.require_watch_approval AS group__require_watch_approval
 		`).
-		Joins("JOIN users ON users.group_id = initiator_id AND action = 'invitation_created'").
-		Joins("JOIN `groups` ON `groups`.id = group_membership_changes.group_id").
-		Joins(`
-			JOIN group_pending_requests
-				ON group_pending_requests.group_id = group_membership_changes.group_id AND
-					group_pending_requests.member_id = group_membership_changes.member_id AND
-					(SELECT MAX(latest_change.at) FROM group_membership_changes AS latest_change
-					 WHERE latest_change.group_id = group_pending_requests.group_id AND
-						latest_change.member_id = group_pending_requests.member_id AND
-						latest_change.action = group_membership_changes.action) = group_membership_changes.at`).
-		Where("group_membership_changes.member_id = ?", user.GroupID)
+		Joins("JOIN LATERAL (?) AS latest_change ON 1",
+			store.GroupMembershipChanges().
+				Select("initiator_id, at").
+				Where("group_membership_changes.group_id = group_pending_requests.group_id").
+				Where("group_membership_changes.member_id = group_pending_requests.member_id").
+				Where("group_membership_changes.action = 'invitation_created'").
+				Order("group_membership_changes.at DESC").
+				Limit(1).SubQuery()).
+		Joins("JOIN users ON users.group_id = initiator_id").
+		Joins("JOIN `groups` ON `groups`.id = group_pending_requests.group_id").
+		Where("group_pending_requests.member_id = ?", user.GroupID).
+		Where("group_pending_requests.type='invitation'")
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"at":       {ColumnName: "group_membership_changes.at"},
-				"group_id": {ColumnName: "group_membership_changes.group_id"},
+				"at":       {ColumnName: "latest_change.at"},
+				"group_id": {ColumnName: "group_pending_requests.group_id"},
 			},
 			DefaultRules: "-at,group_id",
 			TieBreakers: service.SortingAndPagingTieBreakers{
