@@ -18,6 +18,8 @@ Feature: Get group invitations for the current user
       | 21 | User    | owner self                    |                               | none                                  | null                                   | false                  |
       | 33 | Class   | Other group with invitation   | Other group with invitation   | view                                  | null                                   | false                  |
       | 34 | Class   | Other group with invitation 2 | Other group with invitation 2 | edit                                  | null                                   | false                  |
+      | 35 | Class   | Group with broken change log  | Group with broken change log  | edit                                  | null                                   | false                  |
+      | 36 | Class   | Group without inviting user   | Group without inviting user   | edit                                  | null                                   | false                  |
     And the database has the following table 'users':
       | login       | temp_user | group_id | first_name  | last_name | grade |
       | owner       | 0         | 21       | Jean-Michel | Blanquer  | 3     |
@@ -39,6 +41,8 @@ Feature: Get group invitations for the current user
       | 34       | 21        | invitation_created    | {{relativeTime("-190h")}} | 13           |
       | 34       | 21        | invitation_refused    | {{relativeTime("-180h")}} | 21           |
       | 34       | 21        | invitation_created    | {{relativeTime("-166h")}} | 12           |
+      | 35       | 21        | invitation_accepted   | {{relativeTime("-186h")}} | 12           |
+      | 36       | 21        | invitation_created    | {{relativeTime("-200h")}} | null         |
       | 5        | 21        | invitation_accepted   | {{relativeTime("-165h")}} | 12           |
       | 6        | 21        | join_request_accepted | {{relativeTime("-164h")}} | 12           |
       | 7        | 21        | removed               | {{relativeTime("-163h")}} | 21           |
@@ -48,12 +52,14 @@ Feature: Get group invitations for the current user
       | 10       | 21        | joined_by_code        | {{relativeTime("-180h")}} | null         |
       | 11       | 21        | joined_by_badge       | {{relativeTime("-190h")}} | null         |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         |
-      | 1        | 21        | invitation   |
-      | 33       | 21        | invitation   |
-      | 34       | 21        | invitation   |
-      | 3        | 21        | join_request |
-      | 1        | 12        | invitation   |
+      | group_id | member_id | type         | at                                             |
+      | 1        | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
+      | 33       | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
+      | 34       | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
+      | 35       | 21        | invitation   | {{relativeTime("-200h")}}                      |
+      | 36       | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
+      | 3        | 21        | join_request | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
+      | 1        | 12        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
 
   Scenario: Show all invitations
     Given I am the user with id "21"
@@ -118,6 +124,34 @@ Feature: Get group invitations for the current user
           "require_watch_approval": true
         },
         "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}"
+      },
+      {
+        "group_id": "35",
+        "inviting_user": null,
+        "group": {
+          "id": "35",
+          "name": "Group with broken change log",
+          "description": "Group with broken change log",
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_lock_membership_approval_until": null,
+          "require_watch_approval": false
+        },
+        "at": "{{timeToRFC(db("group_pending_requests[4][at]"))}}"
+      },
+      {
+        "group_id": "36",
+        "inviting_user": null,
+        "group": {
+          "id": "36",
+          "name": "Group without inviting user",
+          "description": "Group without inviting user",
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_lock_membership_approval_until": null,
+          "require_watch_approval": false
+        },
+        "at": "{{timeToRFC(db("group_membership_changes[10][at]"))}}"
       }
     ]
     """

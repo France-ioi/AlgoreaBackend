@@ -18,9 +18,9 @@ type invitationsViewResponseRow struct {
 	// required: true
 	At database.Time `json:"at"`
 
-	// the user that invited
+	// the user that invited (Nullable)
 	// required: true
-	InvitingUser invitingUser `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+	InvitingUser *invitingUser `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
 
 	// required: true
 	Group groupWithApprovals `json:"group" gorm:"embedded;embedded_prefix:group__"`
@@ -114,7 +114,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 	query := store.GroupPendingRequests().
 		Select(`
 			group_pending_requests.group_id,
-			latest_change.at,
+			IFNULL(latest_change.at, group_pending_requests.at) AS at,
 			users.group_id AS inviting_user__id,
 			users.login AS inviting_user__login,
 			users.first_name AS inviting_user__first_name,
@@ -127,15 +127,19 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.require_lock_membership_approval_until AS group__require_lock_membership_approval_until,
 			groups.require_watch_approval AS group__require_watch_approval
 		`).
-		Joins("JOIN LATERAL (?) AS latest_change ON 1",
+		// 'LEFT JOIN' as there can be no corresponding membership change
+		Joins(`
+			LEFT JOIN LATERAL (?) AS latest_change
+				ON latest_change.action = 'invitation_created'`,
 			store.GroupMembershipChanges().
-				Select("initiator_id, at").
+				Select("initiator_id, action, at").
 				Where("group_membership_changes.group_id = group_pending_requests.group_id").
 				Where("group_membership_changes.member_id = group_pending_requests.member_id").
-				Where("group_membership_changes.action = 'invitation_created'").
 				Order("group_membership_changes.at DESC").
-				Limit(1).SubQuery()).
-		Joins("JOIN users ON users.group_id = initiator_id").
+				Limit(1).QueryExpr()).
+		// 'LEFT JOIN' as there can be no corresponding membership change and
+		// 'initiator_id' can be NULL even if there is an invitation_created action
+		Joins("LEFT JOIN users ON users.group_id = initiator_id").
 		Joins("JOIN `groups` ON `groups`.id = group_pending_requests.group_id").
 		Where("group_pending_requests.member_id = ?", user.GroupID).
 		Where("group_pending_requests.type='invitation'")
@@ -145,7 +149,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"at":       {ColumnName: "latest_change.at"},
+				"at":       {ColumnName: "IFNULL(latest_change.at, group_pending_requests.at)"},
 				"group_id": {ColumnName: "group_pending_requests.group_id"},
 			},
 			DefaultRules: "-at,group_id",
@@ -160,6 +164,12 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 
 	var result []invitationsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
+
+	for index := range result {
+		if result[index].InvitingUser.ID == 0 {
+			result[index].InvitingUser = nil
+		}
+	}
 
 	render.Respond(w, r, result)
 	return service.NoError
