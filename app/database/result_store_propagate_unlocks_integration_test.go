@@ -59,7 +59,7 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	prepareDependencies(db, t)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)
@@ -117,7 +117,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 	prepareDependencies(db, t)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)
@@ -155,7 +155,7 @@ func testRegularUnlocks(db *database.DB, t *testing.T) {
 
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)
@@ -208,7 +208,7 @@ func testExplicitEntryUnlocks(db *database.DB, t *testing.T) {
 	prepareDependencies(db, t)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	})
 	assert.NoError(t, err)

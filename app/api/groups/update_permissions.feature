@@ -54,7 +54,7 @@ Feature: Change item access rights for a group
       | attempt_id | participant_id | item_id |
       | 0          | 21             | 103     |
 
-  Scenario Outline: Create a new permissions_granted row (with results propagation)
+  Scenario Outline: Create a new permissions_granted row
     Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
@@ -99,7 +99,7 @@ Feature: Change item access rights for a group
     | {"can_view":"info","can_make_session_official":true} | info     | none           | none      | none     | false    | true                      | info               | none                     | none                | none               | none                | none                      | none                 | none                |
     | {"is_owner":true}                                    | none     | none           | none      | none     | true     | false                     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | content             | solution                  | answer               | all                 |
 
-  Scenario Outline: Create a new permissions_granted row (without results propagation)
+  Scenario Outline: Create a new permissions_granted row (more)
     Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
@@ -129,9 +129,10 @@ Feature: Change item access rights for a group
       | 23       | 102     | none               | none                     | none                | none               | false              |
       | 23       | 103     | none               | none                     | none                | none               | false              |
     And the table "attempts" should stay unchanged
-    And the table "results_propagate" should be:
-      | attempt_id | participant_id | item_id | state            |
-      | 0          | 21             | 103     | to_be_propagated |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id |
+      | 0          | 21             | 102     |
+      | 0          | 21             | 103     |
   Examples:
     | json                                       | can_enter_from      | can_enter_until     |
     | {"can_enter_from":"2019-05-30T11:00:00Z"}  | 2019-05-30 11:00:00 | 9999-12-31 23:59:59 |

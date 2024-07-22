@@ -168,7 +168,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			assert.NoError(t, dataStore.Table("groups_propagate").UpdateColumn("ancestors_computation_state", "done").Error())
 
 			assert.NoError(t, dataStore.InTransaction(func(s *database.DataStore) error {
-				s.SchedulePermissionsPropagation()
+				s.SchedulePropagation([]string{"permissions"})
 				return nil
 			}))
 			err := dataStore.InTransaction(func(s *database.DataStore) error {

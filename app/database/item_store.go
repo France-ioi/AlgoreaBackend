@@ -318,9 +318,9 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 		}))
 		mustNotBeError(s.Items().ByID(itemID).Delete().Error())
 
-		s.ScheduleItemsAncestorsPropagation()
-		s.SchedulePermissionsPropagation()
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"items_ancestors"})
+		s.SchedulePropagation([]string{"permissions"})
+		s.SchedulePropagation([]string{"results"})
 
 		return nil
 	})

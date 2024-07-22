@@ -60,7 +60,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		// and it might not work if we call CreateRelation again in this same transaction.
 		s.createNewAncestorsInsideTransaction("groups", "group")
 
-		s.ScheduleResultsPropagation()
+		s.SchedulePropagation([]string{"results"})
 		return nil
 	}))
 	return err
@@ -119,7 +119,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			s.ScheduleGroupsAncestorsPropagation()
 
 			if shouldPropagatePermissions {
-				s.SchedulePermissionsPropagation()
+				s.SchedulePropagation([]string{"permissions"})
 			}
 		}
 
@@ -183,7 +183,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// cascading deletes from many tables including groups_ancestors, groups_propagate, permission_granted & permissions_generated
 	mustNotBeError(s.Groups().Delete("id IN (?)", idsToDelete).Error())
 
-	s.SchedulePermissionsPropagation()
+	s.SchedulePropagation([]string{"permissions"})
 }
 
 func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {

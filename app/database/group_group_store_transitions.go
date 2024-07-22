@@ -455,9 +455,9 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		if shouldCreateNewAncestors {
 			dataStore.ScheduleGroupsAncestorsPropagation()
 			if shouldPropagatePermissions {
-				dataStore.SchedulePermissionsPropagation()
+				dataStore.SchedulePropagation([]string{"permissions"})
 			}
-			dataStore.ScheduleResultsPropagation()
+			dataStore.SchedulePropagation([]string{"results"})
 		}
 		return nil
 	}))
