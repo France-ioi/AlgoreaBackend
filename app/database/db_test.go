@@ -99,6 +99,23 @@ func TestDB_inTransaction_Panic(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_inTransaction_PanicWithString(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := "some error"
+
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+
+	assert.PanicsWithValue(t, expectedError, func() {
+		_ = db.inTransaction(func(db *DB) error {
+			panic(expectedError)
+		})
+	})
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
