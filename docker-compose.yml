@@ -20,6 +20,26 @@ services:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+  db_test:
+    image: mysql:8.0.28
+    command: --default-authentication-plugin=mysql_native_password --innodb_lock_wait_timeout=1
+    restart: always
+    ports:
+      - "3307:3306"
+      - "33070:33060"
+    volumes:
+      - type: tmpfs
+        target: /var/lib/mysql
+        tmpfs:
+          size: 314572800 # Size in bytes, 300MB
+    environment:
+      MYSQL_ROOT_PASSWORD: a_root_db_password
+      MYSQL_USER: algorea
+      MYSQL_PASSWORD: a_db_password
+      MYSQL_DATABASE: algorea_db
+      MYSQL_ROOT_HOST: "%"
+    security_opt:
+      - seccomp:unconfined
   backend:
     build: .
     ports:

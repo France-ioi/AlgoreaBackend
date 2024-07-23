@@ -19,7 +19,7 @@ token:
 database:
   user: algorea
   passwd: a_db_password
-  addr: localhost # TEST CONFIG WARNING: Running the tests erases the database, DO NOT USE A LIVE DATABASE
+  addr: localhost:3307 # TEST CONFIG WARNING: Running the tests erases the database, DO NOT USE A LIVE DATABASE
   net: tcp
   #dbname: algorea_db
   allownativepasswords: true
