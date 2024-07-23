@@ -36,6 +36,8 @@ Feature: Get group invitations for the current user
       | 3        | 21        | join_request_created  | {{relativeTime("-167h")}} | 21           |
       | 33       | 21        | invitation_created    | {{relativeTime("-167h")}} | 13           |
       | 4        | 21        | join_request_refused  | {{relativeTime("-166h")}} | 12           |
+      | 34       | 21        | invitation_created    | {{relativeTime("-190h")}} | 13           |
+      | 34       | 21        | invitation_refused    | {{relativeTime("-180h")}} | 21           |
       | 34       | 21        | invitation_created    | {{relativeTime("-166h")}} | 12           |
       | 5        | 21        | invitation_accepted   | {{relativeTime("-165h")}} | 12           |
       | 6        | 21        | join_request_accepted | {{relativeTime("-164h")}} | 12           |
@@ -77,7 +79,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}"
+        "at": "{{timeToRFC(db("group_membership_changes[8][at]"))}}"
       },
       {
         "group_id": "33",
@@ -144,7 +146,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeToRFC(db("group_membership_changes[6][at]"))}}"
+        "at": "{{timeToRFC(db("group_membership_changes[8][at]"))}}"
       }
     ]
     """
