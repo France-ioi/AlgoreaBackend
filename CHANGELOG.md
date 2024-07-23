@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.21.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.0...v2.21.1) - 2024-07-23
+- speed up the `invitationsView` service
+- many refactoring and internal improvements
+
 ## [v2.21.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.20.1...v2.21.0) - 2024-07-09
 - change of the `invitationsView` service API
 
