@@ -21,6 +21,7 @@ import (
 var defaultGodogOptions = godog.Options{
 	Output: colors.Colored(os.Stdout),
 	Format: "progress",
+	Strict: true,
 }
 
 var godogFlagsBound bool
