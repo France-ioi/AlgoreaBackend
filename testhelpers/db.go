@@ -245,12 +245,14 @@ func emptyDB(db *sql.DB, dbName string) error {
 	for rows.Next() {
 		var tableName string
 		if scanErr := rows.Scan(&tableName); scanErr != nil {
+			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return scanErr
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
 		_, err = tx.Exec("DELETE FROM " + tableName)
 		if err != nil {
+			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return err
 		}
