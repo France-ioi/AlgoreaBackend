@@ -37,7 +37,7 @@ Feature: Remove user batch (userBatchRemove) - robustness
       | test2        | 13       | 0         |
       | test3        | 21       | 1         |
       | test4        | 14       | 1         |
-    And the database has the following table 'user_batches_new':
+    And the database has the following table 'user_batches_v2':
       | group_prefix | custom_prefix | size | creator_id |
       | test         | custom        | 100  | null       |
       | test         | custom1       | 200  | 13         |
@@ -55,7 +55,7 @@ Feature: Remove user batch (userBatchRemove) - robustness
     When I send a DELETE request to "/user-batches/<group_prefix>/<custom_prefix>"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
   Examples:
@@ -68,7 +68,7 @@ Feature: Remove user batch (userBatchRemove) - robustness
     When I send a DELETE request to "/user-batches/test/custom"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
 
@@ -77,7 +77,7 @@ Feature: Remove user batch (userBatchRemove) - robustness
     When I send a DELETE request to "/user-batches/test/custom"
     Then the response code should be 422
     And the response error message should contain "There are users with locked membership"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And logs should contain:
@@ -94,7 +94,7 @@ Feature: Remove user batch (userBatchRemove) - robustness
     When I send a DELETE request to "/user-batches/test1/custom"
     Then the response code should be 500
     And the response error message should contain "Login module failed"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And logs should contain:
