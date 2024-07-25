@@ -17,6 +17,7 @@ func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
+	s.Step(`^(@\w+) is a child of the group (@\w+)$`, ctx.GroupIsAChildOfTheGroup)
 	s.Step(
 		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
 		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
@@ -27,7 +28,7 @@ func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 	s.Step(`^(@\w+) should not be a member of the group (@\w+)$`, ctx.UserShouldNotBeAMemberOfTheGroup)
 	s.Step(`^(@\w+) should be a member of the group (@\w+)$`, ctx.UserShouldBeAMemberOfTheGroup)
 
-	s.Step(`^the group (@\w+) is a descendant of the group (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
+	s.Step(`^the group (@\w+) is a descendant of the group (@\w+) via (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
 }
 
 // getGroupPrimaryKey returns the primary key of a group.
@@ -257,11 +258,8 @@ func (ctx *TestContext) UserShouldBeAMemberOfTheGroup(user, group string) error 
 	return nil
 }
 
-// theGroupIsADescendantOfTheGroup sets a group as a descendant of another.
-func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent string) error {
-	// we add another group in between to increase the robustness of the tests.
-	middle := parent + " -> X -> " + referenceToName(descendant)
-
+// theGroupIsADescendantOfTheGroup sets a group as a descendant of another via a third group.
+func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent, middle string) error {
 	groups := []string{descendant, middle, parent}
 	for _, group := range groups {
 		err := ctx.ThereIsAGroup(group)

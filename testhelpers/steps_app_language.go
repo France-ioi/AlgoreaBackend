@@ -383,30 +383,18 @@ func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
 	canWatchMembers := "0"
 	canGrantGroupAccess := "0"
 	canManage := "none"
-	watchedGroupName := group["user_id"] + " manages " + referenceToName(group["name"])
 
 	if group["can_watch_members"] == strTrue {
 		canWatchMembers = "1"
-		watchedGroupName += " with can_watch_members"
 	}
 	if group["can_grant_group_access"] == strTrue {
 		canGrantGroupAccess = "1"
-		watchedGroupName += " with can_grant_group_access"
 	}
 	if _, ok := group["can_manage"]; ok {
 		canManage = group["can_manage"]
-		watchedGroupName += " with can_manage_memberships_and_groups"
 	}
 
-	// We create a parent group of which the user is the manager.
-	err = ctx.ThereIsAGroup(watchedGroupName)
-	if err != nil {
-		return err
-	}
-
-	ctx.IsAMemberOfTheGroup(group["id"], watchedGroupName)
-
-	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers, canGrantGroupAccess, canManage)
+	ctx.addGroupManager(group["user_id"], group["id"], canWatchMembers, canGrantGroupAccess, canManage)
 
 	return nil
 }
