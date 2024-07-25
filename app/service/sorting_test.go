@@ -449,6 +449,24 @@ func TestApplySorting(t *testing.T) {
 			wantSQLArguments: []driver.Value{"2006-01-02 12:04:05", "2006-01-02 12:04:05", 1},
 			wantAPIError:     NoError,
 		},
+		{
+			name: "paging by time with milliseconds",
+			args: args{
+				urlParameters: "?from.submitted_at=" + url.QueryEscape("2006-01-02T15:04:05.001+03:00") + "&from.id=1",
+				sortingAndPagingParameters: &SortingAndPagingParameters{
+					Fields: map[string]*FieldSortingParams{
+						"submitted_at": {ColumnName: "submitted_at"},
+						"id":           {ColumnName: "id"},
+					},
+					DefaultRules: "submitted_at,id",
+					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64, "submitted_at": FieldTypeTime},
+				},
+			},
+			wantSQL: "SELECT id FROM `users`  WHERE ((submitted_at > ?) OR (submitted_at = ? AND id > ?)) " +
+				"ORDER BY submitted_at ASC, id ASC",
+			wantSQLArguments: []driver.Value{"2006-01-02 12:04:05.001", "2006-01-02 12:04:05.001", 1},
+			wantAPIError:     NoError,
+		},
 	}
 
 	for _, tt := range tests {

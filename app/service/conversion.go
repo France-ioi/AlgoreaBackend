@@ -94,5 +94,5 @@ func ConvertDBTimeToJSONTime(data interface{}) string {
 	if err != nil {
 		panic(err)
 	}
-	return parsedTime.Format(time.RFC3339)
+	return parsedTime.Format(time.RFC3339Nano)
 }

@@ -424,9 +424,15 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 				time.FixedZone("+0700", 7*3600)),
 		},
 		{
+			desc:        "correct value with milliseconds given",
+			queryString: "time=" + url.QueryEscape("2006-01-02T15:04:05.002+07:00"),
+			expectedValue: time.Date(2006, 1, 2, 15, 4, 5, int(2*time.Millisecond),
+				time.FixedZone("+0700", 7*3600)),
+		},
+		{
 			desc:           "wrong value given",
 			queryString:    "time=2006-01-02",
-			expectedErrMsg: "wrong value for time (should be time (rfc3339))",
+			expectedErrMsg: "wrong value for time (should be time (rfc3339Nano))",
 		},
 	}
 	for _, testCase := range testCases {
