@@ -6,7 +6,9 @@ import (
 	"database/sql"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 	messages "github.com/cucumber/messages/go/v21"
@@ -467,14 +469,17 @@ func (ctx *TestContext) dataTableMatchesSQLRows(data *godog.Table, sqlRows *sql.
 		for shouldSkipRow(data, iDataRow, columnIndexes, values, rowTransformation) {
 			iDataRow++
 		}
-		if iDataRow >= len(data.Rows) {
-			return fmt.Errorf("there are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
-		}
 
 		// We need pointers to differentiate null values
 		sqlRowValues, err := getStringPtrFromSQLRow(sqlRows, len(tableColumns))
 		if err != nil {
 			return err
+		}
+
+		if iDataRow >= len(data.Rows) {
+			nextRow := ctx.formatSQLRowValuesAsTableRow(sqlRowValues)
+			return fmt.Errorf("there are more rows in the SQL results than expected. expected: %d, the next row:\n%s",
+				len(data.Rows)-1, nextRow)
 		}
 
 		err = ctx.dataRowMatchesSQLRow(data.Rows[iDataRow], sqlRowValues, tableColumns, iDataRow)
@@ -494,6 +499,37 @@ func (ctx *TestContext) dataTableMatchesSQLRows(data *godog.Table, sqlRows *sql.
 	}
 
 	return nil
+}
+
+func (ctx *TestContext) formatSQLRowValuesAsTableRow(sqlRowValues []*string) string {
+	sqlRowValuesStr := make([]string, len(sqlRowValues))
+	for i, value := range sqlRowValues {
+		if value == nil {
+			sqlRowValuesStr[i] = "null"
+			continue
+		}
+
+		sqlRowValuesStr[i] = *value
+
+		if id, err := strconv.ParseInt(sqlRowValuesStr[i], 10, 64); err == nil {
+			if reference, ok := ctx.idToReferenceMap[id]; ok {
+				sqlRowValuesStr[i] = reference
+			}
+			continue
+		}
+
+		if sqlRowValuesStr[i] == time.Now().Format("2006-01-02 15:04:05") {
+			sqlRowValuesStr[i] = "{{currentTimeDB()}}"
+			continue
+		}
+
+		if sqlRowValuesStr[i] == time.Now().Format("2006-01-02 15:04:05.000") {
+			sqlRowValuesStr[i] = "{{currentTimeDBMs()}}"
+			continue
+		}
+	}
+
+	return "| " + strings.Join(sqlRowValuesStr, " | ") + " |"
 }
 
 // dataRowMatchesSQLRow checks that a data row matches a row from database.

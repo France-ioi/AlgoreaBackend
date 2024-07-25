@@ -46,6 +46,7 @@ type TestContext struct {
 	templateSet          *jet.Set
 	requestHeaders       map[string][]string
 	referenceToIDMap     map[string]int64
+	idToReferenceMap     map[int64]string
 	dbTables             map[string]map[string]map[string]interface{}
 	currentThreadKey     string
 	allUsersGroup        string
@@ -87,15 +88,17 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	}
 }
 
-// initReferences initializes the referenceToIDMap
+// initReferences initializes the referenceToIDMap and idToReferenceMap
 // generating unique IDs for references. The generated IDs have the same
 // sorting order as the references.
 func (ctx *TestContext) initReferences(sc *godog.Scenario) {
 	collectedReferences := collectReferences(sc)
 	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
+	ctx.idToReferenceMap = make(map[int64]string, len(collectedReferences))
 	for index, reference := range collectedReferences {
 		id := int64(1000000000000000000) + int64(index)
 		ctx.referenceToIDMap[reference] = id
+		ctx.idToReferenceMap[id] = reference
 	}
 }
 
