@@ -29,11 +29,11 @@ Feature: Generate Profile Edit Token - robustness
 
   Scenario Outline: Should be forbidden when the group managed by the current-user doesn't have `require_personal_info_access_approval` === 'edit'
     Given there are the following groups:
-      | group     | parent | members        | require_personal_info_access_approval   |
-      | @AllUsers |        | @Manager,@User |                                         |
-      | @Class    |        | @User          | <require_personal_info_access_approval> |
+      | group     | parent       | members        | require_personal_info_access_approval   |
+      | @AllUsers |              | @Manager,@User |                                         |
+      | @Class    | @ClassParent | @User          | <require_personal_info_access_approval> |
     And I am @Manager
-    And I am a manager of the group @Class
+    And I am a manager of the group @ClassParent
     When I send a POST request to "/users/@User/generate-profile-edit-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

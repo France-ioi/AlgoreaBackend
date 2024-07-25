@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sort"
 
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
@@ -44,7 +45,7 @@ type TestContext struct {
 	dbTableData          map[string]*godog.Table
 	templateSet          *jet.Set
 	requestHeaders       map[string][]string
-	identifierReferences map[string]int64
+	referenceToIDMap     map[string]int64
 	dbTables             map[string]map[string]map[string]interface{}
 	currentThreadKey     string
 	allUsersGroup        string
@@ -71,9 +72,10 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	ctx.db = ctx.openDB()
 	ctx.dbTableData = make(map[string]*godog.Table)
 	ctx.templateSet = ctx.constructTemplateSet()
-	ctx.identifierReferences = make(map[string]int64)
 	ctx.dbTables = make(map[string]map[string]map[string]interface{})
 	ctx.needPopulateDatabase = false
+
+	ctx.initReferences(sc)
 
 	// reset the seed to get predictable results on PRNG for tests
 	rand.Seed(1)
@@ -83,6 +85,60 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 		fmt.Println("Unable to empty db")
 		panic(err)
 	}
+}
+
+// initReferences initializes the referenceToIDMap
+// generating unique IDs for references. The generated IDs have the same
+// sorting order as the references.
+func (ctx *TestContext) initReferences(sc *godog.Scenario) {
+	collectedReferences := collectReferences(sc)
+	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
+	for index, reference := range collectedReferences {
+		id := int64(1000000000000000000) + int64(index)
+		ctx.referenceToIDMap[reference] = id
+	}
+}
+
+func collectReferencesInText(text string, referencesMap map[string]struct{}) {
+	for _, match := range referenceRegexp.FindAllString(text, -1) {
+		if match[0] != ReferencePrefix {
+			match = match[1:]
+		}
+		referencesMap[match] = struct{}{}
+	}
+}
+
+// collectReferences collects all references in a scenario and returns them sorted.
+func collectReferences(sc *godog.Scenario) []string {
+	referencesMap := make(map[string]struct{})
+
+	for _, step := range sc.Steps {
+		collectReferencesInText(step.Text, referencesMap)
+		if step.Argument == nil {
+			continue
+		}
+		if table := step.Argument.DataTable; table != nil {
+			for _, row := range table.Rows {
+				for _, cell := range row.Cells {
+					collectReferencesInText(cell.Value, referencesMap)
+				}
+			}
+		}
+		if docString := step.Argument.DocString; docString != nil {
+			collectReferencesInText(docString.Content, referencesMap)
+		}
+	}
+
+	// Add globally defined references
+	referencesMap["@AllUsers"] = struct{}{}
+
+	references := make([]string, 0, len(referencesMap))
+	for reference := range referencesMap {
+		references = append(references, reference)
+	}
+	sort.Strings(references)
+
+	return references
 }
 
 func (ctx *TestContext) setupApp() {

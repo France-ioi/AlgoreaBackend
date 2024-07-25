@@ -7,7 +7,6 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io"
-	"math/rand"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -21,8 +20,8 @@ import (
 )
 
 var (
-	dbPathRegexp            = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
-	replaceReferencesRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
+	dbPathRegexp    = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
+	referenceRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
 )
 
 // getOrCreateReferenceFor gets the ID from a reference, or create the reference if it doesn't exist.
@@ -31,21 +30,18 @@ func (ctx *TestContext) getReference(reference string) int64 {
 		return id
 	}
 
-	if value, ok := ctx.identifierReferences[reference]; ok {
+	if value, ok := ctx.referenceToIDMap[reference]; ok {
 		return value
 	}
 
-	id := rand.Int63()
-	ctx.identifierReferences[reference] = id
-
-	return id
+	panic(fmt.Sprintf("reference %q not found", reference))
 }
 
 // replaceReferencesByIDs changes the references (@ref) in a string by the referenced identifiers (ID).
 func (ctx *TestContext) replaceReferencesByIDs(str string) string {
 	// a reference should either be at the beginning of the string (^), or after a non alpha-num character (\W).
 	// we don't want to rewrite email addresses.
-	return replaceReferencesRegexp.ReplaceAllStringFunc(str, func(capture string) string {
+	return referenceRegexp.ReplaceAllStringFunc(str, func(capture string) string {
 		// capture is either:
 		// - @Reference
 		// - /@Reference (or another non-alphanum character in front)
