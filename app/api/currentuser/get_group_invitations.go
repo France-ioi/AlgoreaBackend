@@ -14,6 +14,7 @@ type invitationsViewResponseRow struct {
 	// `group_membership_changes.group_id`
 	// required: true
 	GroupID int64 `json:"group_id,string"`
+
 	// `groups_groups.type_changed_at`
 	// required: true
 	At database.Time `json:"at"`
@@ -26,6 +27,7 @@ type invitationsViewResponseRow struct {
 	Group groupWithApprovals `json:"group" gorm:"embedded;embedded_prefix:group__"`
 }
 
+// The user that invited; Nullable.
 type invitingUser struct {
 	// `users.group_id`
 	// required: true
