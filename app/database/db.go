@@ -116,7 +116,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadLock(txFunc, count, p.(error), rollbackErr, &err) {
+			if conn.handleDeadLock(txFunc, count, p, rollbackErr, &err) {
 				return
 			}
 			panic(p) // re-throw panic after rollback
@@ -137,11 +137,13 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 	return err
 }
 
-func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle, rollbackErr error,
+func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
 	returnErr *error,
 ) bool {
+	errToHandleError, _ := errToHandle.(error)
+
 	// Error 1213: Deadlock found when trying to get lock; try restarting transaction
-	if errToHandle != nil && IsLockDeadlockError(errToHandle) {
+	if errToHandle != nil && IsLockDeadlockError(errToHandleError) {
 		if rollbackErr != nil {
 			panic(rollbackErr)
 		}

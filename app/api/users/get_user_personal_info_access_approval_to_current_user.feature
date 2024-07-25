@@ -1,16 +1,16 @@
 Feature: Manager of a user gets `personal_info_access_approval_to_current_user` in the response
   Scenario Outline: Should return the max permission of all the groups the current-user manages and which the user is a descendant of
     Given there are the following groups:
-      | group                         | parent  | members        | require_personal_info_access_approval |
-      | @AllUsers                     |         | @Manager,@User |                                       |
-      | @School                       |         |                | <school_permission>                   |
-      | @Class                        | @School | @User          | <class_permission>                    |
-      | @OtherManagedGroupWithoutUser |         |                | edit                                  |
-      | @OtherManagedGroupWithUser    |         | @User          | <other_permission>                    |
-      | @NonManagedGroupWithUser      |         | @User          | edit                                  |
+      | group                         | parent                           | members        | require_personal_info_access_approval |
+      | @AllUsers                     |                                  | @Manager,@User |                                       |
+      | @School                       | @SchoolParent                    |                | <school_permission>                   |
+      | @Class                        | @School                          | @User          | <class_permission>                    |
+      | @OtherManagedGroupWithoutUser |                                  |                | edit                                  |
+      | @OtherManagedGroupWithUser    | @OtherManagedGroupWithUserParent | @User          | <other_permission>                    |
+      | @NonManagedGroupWithUser      |                                  | @User          | edit                                  |
     And I am @Manager
-    And I am a manager of the group @School
-    And I am a manager of the group @OtherManagedGroupWithUser
+    And I am a manager of the group @SchoolParent
+    And I am a manager of the group @OtherManagedGroupWithUserParent
     When I send a GET request to "/users/@User"
     Then the response code should be 200
     And the response at $.personal_info_access_approval_to_current_user should be "<result>"
