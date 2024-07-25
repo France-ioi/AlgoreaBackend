@@ -97,8 +97,8 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 		Where("user_batch_prefixes.group_id IN (?)", managedByUser.QueryExpr()).
 		Select(`
 			group_prefix, group_id, max_users,
-			(SELECT COUNT(*) FROM user_batches
-			 WHERE user_batches.group_prefix = user_batch_prefixes.group_prefix) AS total_size`)
+			(SELECT COUNT(*) FROM user_batches_v2
+			 WHERE user_batches_v2.group_prefix = user_batch_prefixes.group_prefix) AS total_size`)
 
 	query, apiErr := service.ApplySortingAndPaging(
 		r, query,
