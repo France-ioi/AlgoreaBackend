@@ -152,7 +152,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	})
 
 	addRelativeTimeDBMsFunction(set)
-	addTimeDBToJSFunction(set)
+	addTimeDBToRFCFunction(set)
 
 	set.AddGlobal("taskPlatformPublicKey", tokentest.TaskPlatformPublicKey)
 	set.AddGlobal("taskPlatformPrivateKey", tokentest.TaskPlatformPrivateKey)
@@ -172,9 +172,9 @@ func addRelativeTimeDBMsFunction(set *jet.Set) *jet.Set {
 	})
 }
 
-func addTimeDBToJSFunction(set *jet.Set) {
-	set.AddGlobalFunc("timeDBToJS", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("timeDBToJS", 1, 1)
+func addTimeDBToRFCFunction(set *jet.Set) {
+	set.AddGlobalFunc("timeDBToRFC", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("timeDBToRFC", 1, 1)
 		dbTime := a.Get(0).Interface().(string)
 		parsedTime, err := time.Parse("2006-01-02 15:04:05.999999999", dbTime)
 		if err != nil {
