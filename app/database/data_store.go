@@ -160,7 +160,7 @@ func (s *DataStore) Threads() *ThreadStore {
 
 // UserBatches returns a UserBatchStore.
 func (s *DataStore) UserBatches() *UserBatchStore {
-	return &UserBatchStore{NewDataStoreWithTable(s.DB, "user_batches")}
+	return &UserBatchStore{NewDataStoreWithTable(s.DB, "user_batches_v2")}
 }
 
 // UserBatchPrefixes returns a UserBatchPrefixStore.

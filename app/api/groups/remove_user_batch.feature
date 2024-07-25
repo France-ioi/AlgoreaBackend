@@ -32,7 +32,7 @@ Feature: Remove user batch (userBatchRemove)
       | test         | 13       | 1         |
       | test1        | 13       | 1         |
       | test2        | 13       | 0         |
-    And the database has the following table 'user_batches':
+    And the database has the following table 'user_batches_v2':
       | group_prefix | custom_prefix | size | creator_id |
       | test         | custom        | 100  | null       |
       | test         | custom1       | 200  | 13         |
@@ -57,8 +57,8 @@ Feature: Remove user batch (userBatchRemove)
     """
     {"success": true, "message": "deleted"}
     """
-    And the table "user_batches" should stay unchanged but the rows with group_prefix "test"
-    And the table "user_batches" at group_prefix "test" should be:
+    And the table "user_batches_v2" should stay unchanged but the rows with group_prefix "test"
+    And the table "user_batches_v2" at group_prefix "test" should be:
       | group_prefix | custom_prefix | size | creator_id |
       | test         | custom1       | 200  | 13         |
     And the table "users" should stay unchanged but the rows with login "test_custom_user,test_custom_another_user"
