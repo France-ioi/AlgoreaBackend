@@ -6,8 +6,9 @@ Feature: Get permissions can_request_help for an item
       | @School             |         | @TeacherGroup         |
       | @TeacherGroup       |         | @Teacher              |
       | @ClassParent        |         | @Class                |
+      | @ClassAnotherParent |         | @Class                |
       | @Class              | @School | @Student,@HelperGroup |
-    And @Teacher is a manager of the group @Class and can watch its members
+    And @Teacher is a manager of the group @ClassAnotherParent and can watch its members
     And there are the following items:
       | item                          | type    |
       | @Chapter1                     | Chapter |
