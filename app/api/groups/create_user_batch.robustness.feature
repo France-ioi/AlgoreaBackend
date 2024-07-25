@@ -24,7 +24,7 @@ Feature: Create a user batch - robustness
       | test         | 3        | 1         | 2         |
       | test2        | 2        | 1         | 2         |
       | test3        | 3        | 0         | 2         |
-    And the database has the following table 'user_batches_new':
+    And the database has the following table 'user_batches_v2':
       | group_prefix | custom_prefix | size |
       | test         | custom        | 1    |
     And the application config is:
@@ -61,7 +61,7 @@ Feature: Create a user batch - robustness
       }
     }
     """
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -95,7 +95,7 @@ Feature: Create a user batch - robustness
       }
     }
     """
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -130,7 +130,7 @@ Feature: Create a user batch - robustness
       }
     }
     """
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -164,7 +164,7 @@ Feature: Create a user batch - robustness
       }
     }
     """
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -184,7 +184,7 @@ Feature: Create a user batch - robustness
     """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -209,7 +209,7 @@ Feature: Create a user batch - robustness
     """
     Then the response code should be 400
     And the response error message should contain "'postfix_length' is too small"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -229,7 +229,7 @@ Feature: Create a user batch - robustness
     """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -249,7 +249,7 @@ Feature: Create a user batch - robustness
     """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -269,7 +269,7 @@ Feature: Create a user batch - robustness
     """
     Then the response code should be 400
     And the response error message should contain "'user_batch_prefix.max_users' exceeded"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -289,7 +289,7 @@ Feature: Create a user batch - robustness
     """
     Then the response code should be 400
     And the response error message should contain "'custom_prefix' already exists for the given 'group_prefix'"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -313,7 +313,7 @@ Feature: Create a user batch - robustness
     """
     Then the response code should be 500
     And the response error message should contain "Login module failed"
-    And the table "user_batches_new" should stay unchanged
+    And the table "user_batches_v2" should stay unchanged
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged

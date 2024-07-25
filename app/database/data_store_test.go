@@ -44,7 +44,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"AccessTokens", func(store *DataStore) *DB { return store.AccessTokens().Where("") }, "`access_tokens`"},
 		{"Threads", func(store *DataStore) *DB { return store.Threads().Where("") }, "`threads`"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
-		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches_new`"},
+		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches_v2`"},
 		{"UserBatchPrefixes", func(store *DataStore) *DB { return store.UserBatchPrefixes().Where("") }, "`user_batch_prefixes`"},
 	}
 	for _, tt := range tests {

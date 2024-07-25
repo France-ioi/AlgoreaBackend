@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS `user_batch_prefixes` (
 ) ENGINE=InnoDB CHARSET=utf8
     COMMENT='Authorized login prefixes for user batch creation. A prefix cannot be deleted without deleting batches using it.';
 
-CREATE TABLE `user_batches_new` (
+CREATE TABLE `user_batches_v2` (
     `group_prefix` VARCHAR(13) NOT NULL COMMENT 'Authorized (first) part of the full login prefix',
     `custom_prefix` VARCHAR(14) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL
         COMMENT 'Second part of the full login prefix, given by the user that created the batch',
@@ -21,13 +21,13 @@ CREATE TABLE `user_batches_new` (
     `creator_id` BIGINT(20) DEFAULT NULL,
     `created_at` DATETIME NOT NULL DEFAULT NOW(),
     PRIMARY KEY (`group_prefix`, `custom_prefix`),
-    CONSTRAINT `ck_user_batches_new_custom_prefix` CHECK (REGEXP_LIKE(`custom_prefix`, '^[a-z0-9-]+$')),
-    CONSTRAINT `fk_user_batches_new_group_prefix_user_batch_prefixes_group_pref`
+    CONSTRAINT `ck_user_batches_v2_custom_prefix` CHECK (REGEXP_LIKE(`custom_prefix`, '^[a-z0-9-]+$')),
+    CONSTRAINT `fk_user_batches_v2_group_prefix_user_batch_prefixes_group_pref`
         FOREIGN KEY (`group_prefix`) REFERENCES `user_batch_prefixes`(`group_prefix`) ON DELETE RESTRICT,
-    CONSTRAINT `fk_user_batches_new_creator_id_users_group_id`
+    CONSTRAINT `fk_user_batches_v2_creator_id_users_group_id`
         FOREIGN KEY (`creator_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB CHARSET=utf8
-    COMMENT='Batches of users that were created';
+    COMMENT='Batches of users that were created (replaces user_batches which has been broken by a MySQL update)';
 
 INSERT INTO `user_batch_prefixes` (`group_prefix`, `group_id`, `max_users`)
 SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`), 2)), 13) AS group_prefix,
@@ -36,7 +36,7 @@ SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`)
 FROM `groups_login_prefixes`
 GROUP BY group_prefix;
 
-INSERT INTO `user_batches_new` (`group_prefix`, `custom_prefix`, `size`, `creator_id`, `created_at`)
+INSERT INTO `user_batches_v2` (`group_prefix`, `custom_prefix`, `size`, `creator_id`, `created_at`)
 SELECT LEFT(LEFT(`prefix`, CHAR_LENGTH(`prefix`) - LOCATE('_', REVERSE(`prefix`), 2)), 13) AS `group_prefix`,
        LEFT(REVERSE(SUBSTR(REVERSE(SUBSTRING_INDEX(`prefix`, '_', -2)), 2)), 14) AS `custom_prefix`,
        (SELECT COUNT(*) FROM `users` WHERE BINARY `login` LIKE REPLACE(CONCAT(`prefix`, '%'), '_', '\_') LIMIT 1) AS `size`,
@@ -67,7 +67,7 @@ INSERT INTO `groups_login_prefixes` (`group_id`, `prefix`)
 SELECT
     user_batch_prefixes.group_id,
     CONCAT(`group_prefix`, '_', `custom_prefix`) AS `prefix`
-FROM `user_batches_new` LEFT JOIN `user_batch_prefixes` USING (`group_prefix`)
+FROM `user_batches_v2` LEFT JOIN `user_batch_prefixes` USING (`group_prefix`)
 GROUP BY group_prefix, custom_prefix;
 
 ALTER TABLE `users`
@@ -75,7 +75,7 @@ ALTER TABLE `users`
         COMMENT 'Set to enable login module accounts manager'
             AFTER `notifications_read_at`;
 
-DROP TABLE IF EXISTS `user_batches_new`;
+DROP TABLE IF EXISTS `user_batches_v2`;
 /* We don't drop the table `user_batch_prefixes` because the broken user_batches references it */
 -- DROP TABLE `user_batch_prefixes`;
 /* Instead we empty it */
