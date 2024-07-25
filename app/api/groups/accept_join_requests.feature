@@ -55,13 +55,13 @@ Feature: Accept group requests
       | group_id | manager_id | can_manage  |
       | 14       | 21         | memberships |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
-      | 13       | 11        | invitation   | 0                           | 0                        | 0              | 2019-06-05 00:00:00 |
-      | 13       | 21        | join_request | 0                           | 0                        | 0              | 2019-06-06 00:00:00 |
-      | 14       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00 |
-      | 14       | 31        | join_request | 1                           | 0                        | 0              | 2019-06-02 00:00:00 |
-      | 14       | 141       | join_request | 1                           | 1                        | 1              | 2019-06-03 00:00:00 |
-      | 14       | 161       | join_request | 0                           | 0                        | 0              | 2019-06-04 00:00:00 |
+      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                      |
+      | 13       | 11        | invitation   | 0                           | 0                        | 0              | 2019-06-05 00:00:00.000 |
+      | 13       | 21        | join_request | 0                           | 0                        | 0              | 2019-06-06 00:00:00.000 |
+      | 14       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00.000 |
+      | 14       | 31        | join_request | 1                           | 0                        | 0              | 2019-06-02 00:00:00.000 |
+      | 14       | 141       | join_request | 1                           | 1                        | 1              | 2019-06-03 00:00:00.000 |
+      | 14       | 161       | join_request | 0                           | 0                        | 0              | 2019-06-04 00:00:00.000 |
     When I send a POST request to "/groups/14/join-requests/accept?group_ids=31,141,21,11,13,122,151"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -129,12 +129,12 @@ Feature: Accept group requests
       | group_id | manager_id | can_manage  |
       | 14       | 21         | memberships |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
-      | 14       | 11        | invitation   | 0                           | 0                        | 0              | 2019-06-05 00:00:00 |
-      | 14       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00 |
-      | 14       | 31        | join_request | 1                           | 0                        | 0              | 2019-06-02 00:00:00 |
-      | 14       | 141       | join_request | 1                           | 1                        | 1              | 2019-06-03 00:00:00 |
-      | 14       | 161       | join_request | 0                           | 0                        | 0              | 2019-06-04 00:00:00 |
+      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                      |
+      | 14       | 11        | invitation   | 0                           | 0                        | 0              | 2019-06-05 00:00:00.000 |
+      | 14       | 21        | invitation   | 0                           | 0                        | 0              | 2019-06-01 00:00:00.000 |
+      | 14       | 31        | join_request | 1                           | 0                        | 0              | 2019-06-02 00:00:00.000 |
+      | 14       | 141       | join_request | 1                           | 1                        | 1              | 2019-06-03 00:00:00.000 |
+      | 14       | 161       | join_request | 0                           | 0                        | 0              | 2019-06-04 00:00:00.000 |
     When I send a POST request to "/groups/14/join-requests/accept?group_ids=31,141,21,11,13,122,151"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -166,9 +166,9 @@ Feature: Accept group requests
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | personal_info_view_approved   | lock_membership_approved   | watch_approved   | at                  |
-      | 13       | 21        | invitation   | 0                             | 0                          | 0                | 2019-06-01 00:00:00 |
-      | 13       | 31        | join_request | <personal_info_view_approved> | <lock_membership_approved> | <watch_approved> | <at>                |
+      | group_id | member_id | type         | personal_info_view_approved   | lock_membership_approved   | watch_approved   | at                      |
+      | 13       | 21        | invitation   | 0                             | 0                          | 0                | 2019-06-01 00:00:00.000 |
+      | 13       | 31        | join_request | <personal_info_view_approved> | <lock_membership_approved> | <watch_approved> | <at>                    |
     When I send a POST request to "/groups/13/join-requests/accept?group_ids=31"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -213,10 +213,10 @@ Feature: Accept group requests
     And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
   Examples:
-    | result  | personal_info_view_approved | lock_membership_approved | watch_approved | at                  | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at   |
-    | success | 1                           | 0                        | 0              | 2019-06-01 00:00:00 | 2019-06-01 00:00:00            | null                        | null                |
-    | success | 0                           | 1                        | 0              | 2019-06-03 00:00:00 | null                           | 2019-06-03 00:00:00         | null                |
-    | success | 0                           | 0                        | 1              | 2019-06-04 00:00:00 | null                           | null                        | 2019-06-04 00:00:00 |
+    | result  | personal_info_view_approved | lock_membership_approved | watch_approved | at                      | personal_info_view_approved_at | lock_membership_approved_at | watch_approved_at   |
+    | success | 1                           | 0                        | 0              | 2019-06-01 00:00:00.000 | 2019-06-01 00:00:00            | null                        | null                |
+    | success | 0                           | 1                        | 0              | 2019-06-03 00:00:00.000 | null                           | 2019-06-03 00:00:00         | null                |
+    | success | 0                           | 0                        | 1              | 2019-06-04 00:00:00.000 | null                           | null                        | 2019-06-04 00:00:00 |
 
   Scenario: Accept requests for a team while skipping members of other teams participating in the same contests
     Given I am the user with id "21"
@@ -235,8 +235,8 @@ Feature: Accept group requests
       | 13             | 1  | 1234         |
       | 444            | 2  | 1234         |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
-      | 13       | 31        | join_request | 1                           | 1                        | 1              | 2019-06-04 00:00:00 |
+      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                      |
+      | 13       | 31        | join_request | 1                           | 1                        | 1              | 2019-06-04 00:00:00.000 |
     When I send a POST request to "/groups/13/join-requests/accept?group_ids=31"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -271,8 +271,8 @@ Feature: Accept group requests
       | participant_id | attempt_id | item_id | started_at          |
       | 13             | 1          | 1       | 2019-05-30 11:00:00 |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
-      | 13       | 31        | join_request | 1                           | 1                        | 1              | 2019-06-04 00:00:00 |
+      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                      |
+      | 13       | 31        | join_request | 1                           | 1                        | 1              | 2019-06-04 00:00:00.000 |
     When I send a POST request to "/groups/13/join-requests/accept?group_ids=31"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -298,8 +298,8 @@ Feature: Accept group requests
       | group_id | manager_id | can_manage            |
       | 14       | 21         | memberships_and_group |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                  |
-      | 14       | 21        | join_request | 0                           | 0                        | 0              | 2019-06-06 00:00:00 |
+      | group_id | member_id | type         | personal_info_view_approved | lock_membership_approved | watch_approved | at                      |
+      | 14       | 21        | join_request | 0                           | 0                        | 0              | 2019-06-06 00:00:00.000 |
     When I send a POST request to "/groups/14/join-requests/accept?group_ids=21"
     Then the response code should be 200
     And the response body should be, in JSON:

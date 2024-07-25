@@ -808,8 +808,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				for _, id := range []int64{30, 20} {
 					assert.NoError(t, dataStore.Exec(`
 						INSERT INTO group_pending_requests (
-							group_id, member_id, type, personal_info_view_approved, lock_membership_approved, watch_approved
-						) VALUES (20, ?, ?, 1, 1, 1)`,
+							group_id, member_id, type, personal_info_view_approved, lock_membership_approved, watch_approved, at
+						) VALUES (20, ?, ?, 1, 1, 1, NOW(3))`,
 						id, tt.createPendingCycleWithType).Error())
 				}
 			}
@@ -1016,7 +1016,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 				users:
 					- {group_id: 111}
 				group_pending_requests:
-					- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00,
+					- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00.001,
 					   personal_info_view_approved: %d, lock_membership_approved: %d, watch_approved: %d}`,
 				tt.requirePersonalInfoAccessApproval, tt.requireLockMembershipApprovalUntil, tt.requireWatchApproval,
 				tt.personalInfoViewApproved, tt.lockMembershipApproved, tt.watchApproved))
@@ -1085,7 +1085,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 				users:
 					- {group_id: 111}
 				group_pending_requests:
-					- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00,
+					- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00.001,
 					   personal_info_view_approved: 0, lock_membership_approved: 0, watch_approved: 0}`)
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)
@@ -1121,7 +1121,7 @@ func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEno
 		users:
 			- {group_id: 111}
 		group_pending_requests:
-			- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00,
+			- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00.001,
 				 personal_info_view_approved: 0, lock_membership_approved: 0, watch_approved: 0}`)
 	defer func() { _ = db.Close() }()
 	dataStore := database.NewDataStore(db)
@@ -1161,7 +1161,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 				users:
 					- {group_id: 111}
 				group_pending_requests:
-					- {group_id: 20, member_id: 3, type: invitation, at: 2019-05-30 11:00:00}`,
+					- {group_id: 20, member_id: 3, type: invitation, at: 2019-05-30 11:00:00.001}`,
 				tt.requirePersonalInfoAccessApproval, tt.requireLockMembershipApprovalUntil, tt.requireWatchApproval))
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)

@@ -347,7 +347,7 @@ func refuseSentGroupRequestsIfNeeded(
 					WHEN 'leave_request' THEN 'leave_request_refused'
 					WHEN 'invitation' THEN 'invitation_withdrawn'
 				END,
-				NOW(), ?
+				NOW(3), ?
 			FROM group_pending_requests
 			WHERE group_id = ? AND type IN (?)
 			FOR UPDATE`, initiatorID, groupID, pendingTypesToRefuse).Error())

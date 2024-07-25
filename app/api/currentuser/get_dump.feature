@@ -45,10 +45,10 @@ Feature: Export the short version of the current user's data
       | 3        | 11        | join_request |
       | 1        | 31        | invitation   |
     And the database has the following table 'group_membership_changes':
-      | group_id | member_id | action               | at                  | initiator_id |
-      | 4        | 11        | join_request_refused | 2019-07-10 00:02:28 | 11           |
-      | 7        | 11        | removed              | 2019-07-10 03:02:28 | 31           |
-      | 8        | 11        | left                 | 2019-07-10 04:02:28 | 11           |
+      | group_id | member_id | action               | at                      | initiator_id |
+      | 4        | 11        | join_request_refused | 2019-07-10 00:02:28.001 | 11           |
+      | 7        | 11        | removed              | 2019-07-10 03:02:28.002 | 31           |
+      | 8        | 11        | left                 | 2019-07-10 04:02:28.003 | 11           |
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 404 | fr                   |

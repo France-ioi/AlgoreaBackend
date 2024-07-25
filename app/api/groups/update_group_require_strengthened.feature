@@ -13,8 +13,8 @@ Feature:
       | @Class    | @ClassParent | @Student1,@Student2 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
       | @SubGroup | @Class       | @Student3,@Student4 |                                             |                                              |                              |
     And @Teacher is a manager of the group @ClassParent and can manage memberships and group
-    And the time now is "2020-01-01T01:00:00Z"
-    And the DB time now is "2020-01-01 01:00:00"
+    And the time now is "2020-01-01T01:00:00.001Z"
+    And the DB time now is "2020-01-01 01:00:00.001"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -30,10 +30,10 @@ Feature:
     And @SubGroup should be a member of the group @Class
     And @Student3 should be a member of the group @SubGroup
     And @Student4 should be a member of the group @SubGroup
-    And there should be the following group membership changes:
-      | group_id | member_id | action                         | at                  | initiator_id |
-      | @Class   | @Student1 | removed_due_to_approval_change | 2020-01-01 01:00:00 | @Teacher     |
-      | @Class   | @Student2 | removed_due_to_approval_change | 2020-01-01 01:00:00 | @Teacher     |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action                         | at                    | initiator_id |
+      | @Class   | @Student1 | removed_due_to_approval_change | {{currentTimeDBMs()}} | @Teacher     |
+      | @Class   | @Student2 | removed_due_to_approval_change | {{currentTimeDBMs()}} | @Teacher     |
     Examples:
       | require_field                          | new_value              | new_value_db        | old_require_personal_info_access_approval | old_require_lock_membership_approval_until | old_require_watch_approval |
       | require_personal_info_access_approval  | "view"                 | view                | none                                      |                                            |                            |
@@ -51,7 +51,7 @@ Feature:
       | @School |              | @Teacher        |                                             |                                              |                              |
       | @Class  | @ClassParent | <group_members> | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
     And @Teacher is a manager of the group @ClassParent and can manage memberships and group
-    And the time now is "2020-01-01T01:00:00Z"
+    And the time now is "2020-01-01T01:00:00.001Z"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -103,18 +103,20 @@ Feature:
 
   Scenario: Should reject all pending requests when approval_change_action = 'empty'
     Given I am @Teacher
+    And the time now is "2020-01-01T01:00:00.001Z"
+    And the DB time now is "2020-01-01 01:00:00.001"
     And there are the following groups:
       | group   | parent       | members                       | require_watch_approval |
       | @School |              | @Teacher                      |                        |
       | @Class  | @ClassParent | @Student1,@Student2           | false                  |
       | @Other  |              | @Student3,@Student4,@Student5 |                        |
-    And there are the following group pending requests:
-      | group  | member    | type          |
-      | @Class | @Student1 | leave_request |
-      | @Class | @Student3 | join_request  |
-      | @Class | @Student4 | join_request  |
-      | @Class | @Student5 | invitation    |
-      | @Other | @Student5 | join_request  |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type          | at                      |
+      | @Class   | @Student1 | leave_request | 2020-01-01 00:00:01.000 |
+      | @Class   | @Student3 | join_request  | 2020-01-01 00:00:03.000 |
+      | @Class   | @Student4 | join_request  | 2020-01-01 00:00:04.000 |
+      | @Class   | @Student5 | invitation    | 2020-01-01 00:00:05.000 |
+      | @Other   | @Student5 | join_request  | 2020-01-01 00:00:15.000 |
     And @Teacher is a manager of the group @ClassParent and can manage memberships and group
     When I send a PUT request to "/groups/@Class" with the following body:
     """
@@ -125,10 +127,16 @@ Feature:
     """
     Then the response should be "updated"
     And there should be no group pending requests for the group @Class with the type "join_request"
-    And there should be the following group pending requests:
-      | group_id | member_id | type         |
-      | @Class   | @Student5 | invitation   |
-      | @Other   | @Student5 | join_request |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type         | at                      |
+      | @Class   | @Student5 | invitation   | 2020-01-01 00:00:05.000 |
+      | @Other   | @Student5 | join_request | 2020-01-01 00:00:15.000 |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | at                    | action                         | initiator_id |
+      | @Class   | @Student1 | {{currentTimeDBMs()}} | removed_due_to_approval_change | @Teacher     |
+      | @Class   | @Student2 | {{currentTimeDBMs()}} | removed_due_to_approval_change | @Teacher     |
+      | @Class   | @Student3 | {{currentTimeDBMs()}} | join_request_refused           | @Teacher     |
+      | @Class   | @Student4 | {{currentTimeDBMs()}} | join_request_refused           | @Teacher     |
 
   Scenario: Should reject all pending requests and send invitations to the past members when approval_change_action = 'reinvite'
     Given I am @Teacher
@@ -137,16 +145,16 @@ Feature:
       | @School |              | @Teacher                      |                        |
       | @Class  | @ClassParent | @Student1,@Student2           | false                  |
       | @Other  |              | @Student3,@Student4,@Student5 |                        |
-    And there are the following group pending requests:
-      | group  | member    | type          |
-      | @Class | @Student1 | leave_request |
-      | @Class | @Student3 | join_request  |
-      | @Class | @Student4 | join_request  |
-      | @Class | @Student5 | invitation    |
-      | @Other | @Student5 | join_request  |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type          | at                      |
+      | @Class   | @Student1 | leave_request | 2020-01-01 00:00:01.000 |
+      | @Class   | @Student3 | join_request  | 2020-01-01 00:00:03.000 |
+      | @Class   | @Student4 | join_request  | 2020-01-01 00:00:04.000 |
+      | @Class   | @Student5 | invitation    | 2020-01-01 00:00:05.000 |
+      | @Other   | @Student5 | join_request  | 2020-01-01 00:00:15.000 |
     And @Teacher is a manager of the group @ClassParent and can manage memberships and group
-    And the time now is "2020-01-01T01:00:00Z"
-    And the DB time now is "2020-01-01 01:00:00"
+    And the time now is "2020-01-01T01:00:00.001Z"
+    And the DB time now is "2020-01-01 01:00:00.001"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -155,18 +163,17 @@ Feature:
     }
     """
     Then the response should be "updated"
-    And there should be no group pending requests for the group @Class with the type "join_request"
-    And there should be the following group pending requests:
-      | group_id | member_id | type         |
-      | @Class   | @Student2 | invitation   |
-      | @Class   | @Student5 | invitation   |
-      | @Other   | @Student5 | join_request |
-    And there should be the following group membership changes:
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type         | at                      |
+      | @Class   | @Student2 | invitation   | {{currentTimeDB()}}     |
+      | @Class   | @Student5 | invitation   | 2020-01-01 00:00:05.000 |
+      | @Other   | @Student5 | join_request | 2020-01-01 00:00:15.000 |
+    And the table "group_membership_changes" should be:
       | group_id | member_id | action                         | at                  | initiator_id |
-      | @Class   | @Student1 | removed_due_to_approval_change | 2020-01-01 01:00:00 | @Teacher     |
-      | @Class   | @Student2 | invitation_created             | 2020-01-01 01:00:00 | @Teacher     |
-      | @Class   | @Student3 | join_request_refused           | 2020-01-01 01:00:00 | @Teacher     |
-      | @Class   | @Student4 | join_request_refused           | 2020-01-01 01:00:00 | @Teacher     |
+      | @Class   | @Student1 | removed_due_to_approval_change | {{currentTimeDB()}} | @Teacher     |
+      | @Class   | @Student2 | invitation_created             | {{currentTimeDB()}} | @Teacher     |
+      | @Class   | @Student3 | join_request_refused           | {{currentTimeDB()}} | @Teacher     |
+      | @Class   | @Student4 | join_request_refused           | {{currentTimeDB()}} | @Teacher     |
 
   Scenario: Should empty the group when approval_change_action = "reinvite"
     Given I am @Teacher
@@ -195,21 +202,22 @@ Feature:
 
   Scenario: Should reject all pending leave requests when require_lock_membership_approval_until is strengthened and approval_change_action = 'empty'
     Given I am @Teacher
-    And the time now is "2020-01-01T01:00:00Z"
+    And the time now is "2020-01-01T01:00:00.001Z"
+    And the DB time now is "2020-01-01 01:00:00.001"
     And there are the following groups:
       | group   | parent       | members                       | require_lock_membership_approval_until |
       | @School |              | @Teacher                      |                                        |
       | @Class  | @ClassParent | @Student1,@Student2,@Student3 | 2020-01-01 12:00:00                    |
       | @Other  |              | @Student4,@Student5,@Student6 |                                        |
-    And there are the following group pending requests:
-      | group  | member    | type          |
-      | @Class | @Student1 | leave_request |
-      | @Class | @Student2 | leave_request |
-      | @Class | @Student4 | join_request  |
-      | @Class | @Student5 | join_request  |
-      | @Class | @Student6 | invitation    |
-      | @Other | @Student5 | leave_request |
-      | @Other | @Student6 | join_request  |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type          | at                      |
+      | @Class   | @Student1 | leave_request | 2020-01-01 00:00:01.000 |
+      | @Class   | @Student2 | leave_request | 2020-01-01 00:00:02.000 |
+      | @Class   | @Student4 | join_request  | 2020-01-01 00:00:04.000 |
+      | @Class   | @Student5 | join_request  | 2020-01-01 00:00:05.000 |
+      | @Class   | @Student6 | invitation    | 2020-01-01 00:00:06.000 |
+      | @Other   | @Student5 | leave_request | 2020-01-01 00:00:15.000 |
+      | @Other   | @Student6 | join_request  | 2020-01-01 00:00:16.000 |
     And @Teacher is a manager of the group @ClassParent and can manage memberships and group
     When I send a PUT request to "/groups/@Class" with the following body:
     """
@@ -219,9 +227,15 @@ Feature:
     }
     """
     Then the response should be "updated"
-    And there should be no group pending requests for the group @Class with the type "leave_request"
-    And there should be the following group pending requests:
-      | group_id | member_id | type          |
-      | @Class   | @Student6 | invitation    |
-      | @Other   | @Student5 | leave_request |
-      | @Other   | @Student6 | join_request  |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type          | at                      |
+      | @Class   | @Student6 | invitation    | 2020-01-01 00:00:06.000 |
+      | @Other   | @Student5 | leave_request | 2020-01-01 00:00:15.000 |
+      | @Other   | @Student6 | join_request  | 2020-01-01 00:00:16.000 |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | at                    | action                         | initiator_id |
+      | @Class   | @Student1 | {{currentTimeDBMs()}} | removed_due_to_approval_change | @Teacher     |
+      | @Class   | @Student2 | {{currentTimeDBMs()}} | removed_due_to_approval_change | @Teacher     |
+      | @Class   | @Student3 | {{currentTimeDBMs()}} | removed_due_to_approval_change | @Teacher     |
+      | @Class   | @Student4 | {{currentTimeDBMs()}} | join_request_refused           | @Teacher     |
+      | @Class   | @Student5 | {{currentTimeDBMs()}} | join_request_refused           | @Teacher     |

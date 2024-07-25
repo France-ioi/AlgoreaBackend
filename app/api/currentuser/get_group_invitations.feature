@@ -31,35 +31,37 @@ Feature: Get group invitations for the current user
       | 6               | 21             |
       | 9               | 21             |
       | 10              | 21             |
+    And the time now is "2020-01-01T01:00:00.001Z"
+    And the DB time now is "2020-01-01 01:00:00.001"
     And the database has the following table 'group_membership_changes':
-      | group_id | member_id | action                | at                          | initiator_id |
-      | 1        | 21        | invitation_created    | {{relativeTimeDB("-169h")}} | 12           |
-      | 2        | 21        | invitation_refused    | {{relativeTimeDB("-168h")}} | 21           |
-      | 3        | 21        | join_request_created  | {{relativeTimeDB("-167h")}} | 21           |
-      | 33       | 21        | invitation_created    | {{relativeTimeDB("-167h")}} | 13           |
-      | 4        | 21        | join_request_refused  | {{relativeTimeDB("-166h")}} | 12           |
-      | 34       | 21        | invitation_created    | {{relativeTimeDB("-190h")}} | 13           |
-      | 34       | 21        | invitation_refused    | {{relativeTimeDB("-180h")}} | 21           |
-      | 34       | 21        | invitation_created    | {{relativeTimeDB("-166h")}} | 12           |
-      | 35       | 21        | invitation_accepted   | {{relativeTimeDB("-186h")}} | 12           |
-      | 36       | 21        | invitation_created    | {{relativeTimeDB("-200h")}} | null         |
-      | 5        | 21        | invitation_accepted   | {{relativeTimeDB("-165h")}} | 12           |
-      | 6        | 21        | join_request_accepted | {{relativeTimeDB("-164h")}} | 12           |
-      | 7        | 21        | removed               | {{relativeTimeDB("-163h")}} | 21           |
-      | 8        | 21        | left                  | {{relativeTimeDB("-162h")}} | 21           |
-      | 9        | 21        | added_directly        | {{relativeTimeDB("-161h")}} | 12           |
-      | 1        | 12        | invitation_created    | {{relativeTimeDB("-170h")}} | 12           |
-      | 10       | 21        | joined_by_code        | {{relativeTimeDB("-180h")}} | null         |
-      | 11       | 21        | joined_by_badge       | {{relativeTimeDB("-190h")}} | null         |
+      | group_id | member_id | action                | at                            | initiator_id |
+      | 1        | 21        | invitation_created    | {{relativeTimeDBMs("-169h")}} | 12           |
+      | 2        | 21        | invitation_refused    | {{relativeTimeDBMs("-168h")}} | 21           |
+      | 3        | 21        | join_request_created  | {{relativeTimeDBMs("-167h")}} | 21           |
+      | 33       | 21        | invitation_created    | {{relativeTimeDBMs("-167h")}} | 13           |
+      | 4        | 21        | join_request_refused  | {{relativeTimeDBMs("-166h")}} | 12           |
+      | 34       | 21        | invitation_created    | {{relativeTimeDBMs("-190h")}} | 13           |
+      | 34       | 21        | invitation_refused    | {{relativeTimeDBMs("-180h")}} | 21           |
+      | 34       | 21        | invitation_created    | {{relativeTimeDBMs("-166h")}} | 12           |
+      | 35       | 21        | invitation_accepted   | {{relativeTimeDBMs("-186h")}} | 12           |
+      | 36       | 21        | invitation_created    | {{relativeTimeDBMs("-200h")}} | null         |
+      | 5        | 21        | invitation_accepted   | {{relativeTimeDBMs("-165h")}} | 12           |
+      | 6        | 21        | join_request_accepted | {{relativeTimeDBMs("-164h")}} | 12           |
+      | 7        | 21        | removed               | {{relativeTimeDBMs("-163h")}} | 21           |
+      | 8        | 21        | left                  | {{relativeTimeDBMs("-162h")}} | 21           |
+      | 9        | 21        | added_directly        | {{relativeTimeDBMs("-161h")}} | 12           |
+      | 1        | 12        | invitation_created    | {{relativeTimeDBMs("-170h")}} | 12           |
+      | 10       | 21        | joined_by_code        | {{relativeTimeDBMs("-180h")}} | null         |
+      | 11       | 21        | joined_by_badge       | {{relativeTimeDBMs("-190h")}} | null         |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | at                                             |
-      | 1        | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
-      | 33       | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
-      | 34       | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
-      | 35       | 21        | invitation   | {{relativeTimeDB("-200h")}}                    |
-      | 36       | 21        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
-      | 3        | 21        | join_request | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
-      | 1        | 12        | invitation   | {{currentTimeInFormat("2006-01-02 15:04:05")}} |
+      | group_id | member_id | type         | at                            |
+      | 1        | 21        | invitation   | {{currentTimeDBMs()}}         |
+      | 33       | 21        | invitation   | {{currentTimeDBMs()}}         |
+      | 34       | 21        | invitation   | {{currentTimeDBMs()}}         |
+      | 35       | 21        | invitation   | {{relativeTimeDBMs("-200h")}} |
+      | 36       | 21        | invitation   | {{currentTimeDBMs()}}         |
+      | 3        | 21        | join_request | {{currentTimeDBMs()}}         |
+      | 1        | 12        | invitation   | {{currentTimeDBMs()}}         |
 
   Scenario: Show all invitations
     Given I am the user with id "21"

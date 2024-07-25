@@ -18,8 +18,8 @@ Feature: User creates a request to leave a group - robustness
       | 15              | 21             | null                        |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type          | at                  |
-      | 14       | 21        | leave_request | 2019-05-30 11:00:00 |
+      | group_id | member_id | type          | at                      |
+      | 14       | 21        | leave_request | 2019-05-30 11:00:00.001 |
 
   Scenario: User tries to send a leave request while not being a member of the group
     Given I am the user with id "21"

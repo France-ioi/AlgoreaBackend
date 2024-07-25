@@ -560,8 +560,8 @@ func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int
 		insertQuery := `
 			INSERT INTO group_pending_requests
 				(group_id, member_id, ` + "`type`" + `, personal_info_view_approved,
-				 lock_membership_approved, watch_approved)`
-		valuesTemplate := "(?, ?, ?, ?, ?, ?)"
+				 lock_membership_approved, watch_approved, at)`
+		valuesTemplate := "(?, ?, ?, ?, ?, ?, NOW(3))"
 		insertQuery += " VALUES " +
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertPending)-1) +
 			valuesTemplate // #nosec
