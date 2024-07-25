@@ -28,7 +28,7 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 	logger := SharedLogger.WithField("type", "db")
 
 	switch level {
-	case "sql":
+	case sqlString:
 		duration := float64(values[2].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
 		sql := fillSQLPlaceholders(values[3].(string), values[4].([]interface{}))
 		logger.WithFields(map[string]interface{}{
@@ -75,7 +75,7 @@ func fillSQLPlaceholders(query string, values []interface{}) string {
 				formattedValue = fmt.Sprintf("%v", typedValue)
 			}
 		} else {
-			formattedValue = "NULL"
+			formattedValue = nullString
 		}
 		formattedValues = append(formattedValues, formattedValue)
 	}
