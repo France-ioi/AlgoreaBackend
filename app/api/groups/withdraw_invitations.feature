@@ -27,12 +27,12 @@ Feature: Withdraw group invitations
       | 22              | 13             |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | at                        |
-      | 13       | 21        | join_request | {{relativeTime("-170h")}} |
-      | 13       | 31        | invitation   | {{relativeTime("-168h")}} |
-      | 14       | 11        | join_request | {{relativeTime("-167h")}} |
-      | 14       | 21        | invitation   | {{relativeTime("-166h")}} |
-      | 13       | 141       | invitation   | {{relativeTime("-165h")}} |
+      | group_id | member_id | type         | at                          |
+      | 13       | 21        | join_request | {{relativeTimeDB("-170h")}} |
+      | 13       | 31        | invitation   | {{relativeTimeDB("-168h")}} |
+      | 14       | 11        | join_request | {{relativeTimeDB("-167h")}} |
+      | 14       | 21        | invitation   | {{relativeTimeDB("-166h")}} |
+      | 13       | 141       | invitation   | {{relativeTimeDB("-165h")}} |
 
   Scenario Outline: Withdraw invitations
     Given I am the user with id "21"
