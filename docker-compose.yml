@@ -8,6 +8,8 @@ services:
     ports:
       - "3306:3306"
       - "33060:33060"
+    volumes:
+      - mysql-volume:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: a_root_db_password
       MYSQL_USER: algorea
@@ -67,3 +69,5 @@ services:
         sleep 2;
         AlgoreaBackend serve;
       "
+volumes:
+  mysql-volume:
