@@ -29,39 +29,39 @@ Feature: Get activity log
       | 1  | 11             |
     And the database has the following table 'results':
       | attempt_id | item_id | participant_id | started_at          | validated_at        | latest_submission_at |
-      | 0          | 200     | 11             | 2020-01-01 00:41:00 | 2020-01-01 00:44:00 | 2020-05-29 06:38:38  |
+      | 0          | 200     | 11             | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2020-05-29 06:38:38  |
       | 0          | 200     | 30             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
-      | 0          | 201     | 11             | 2020-01-01 00:32:00 | null                | 2020-05-29 06:38:38  |
-      | 0          | 202     | 11             | 2020-01-01 00:30:00 | 2020-01-01 00:57:00 | 2020-05-29 06:38:38  |
+      | 0          | 201     | 11             | 2017-05-29 06:38:00 | null                | 2020-05-29 06:38:38  |
+      | 0          | 202     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 0          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
-      | 1          | 200     | 11             | 2020-01-01 00:33:00 | 2020-01-01 00:59:00 | 2020-05-29 06:38:38  |
+      | 1          | 200     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 1          | 200     | 31             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
-      | 1          | 200     | 41             | 2020-01-01 00:28:00 | 2020-01-01 00:29:00 | 2020-05-29 06:38:38  |
-      | 1          | 201     | 11             | null                | 2020-01-01 00:40:00 | 2020-05-29 06:38:38  |
-      | 1          | 202     | 11             | 2020-01-01 00:31:00 | 2020-01-01 00:58:00 | 2020-05-29 06:38:38  |
+      | 1          | 200     | 41             | 2016-05-29 06:38:00 | 2016-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 1          | 201     | 11             | null                | 2017-05-29 06:38:38 | 2020-05-29 06:38:38  |
+      | 1          | 202     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 1          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
     And the database has the following table 'answers':
       | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
-      | 1  | 11        | 11             | 0          | 201     | Submission | State1  | 2020-01-01 00:39:00 |
-      | 4  | 11        | 11             | 1          | 201     | Saved      | State4  | 2020-01-01 00:51:00 |
-      | 5  | 11        | 11             | 1          | 201     | Current    | State5  | 2020-01-01 00:52:00 |
-      | 7  | 31        | 11             | 0          | 201     | Submission | State7  | 2020-01-01 00:38:00 |
-      | 11 | 11        | 11             | 0          | 200     | Submission | State11 | 2020-01-01 00:43:00 |
-      | 12 | 11        | 11             | 1          | 200     | Submission | State12 | 2020-01-01 00:46:00 |
-      | 13 | 41        | 41             | 1          | 200     | Submission | State13 | 2020-01-01 00:53:00 |
-      | 14 | 11        | 11             | 1          | 200     | Saved      | State14 | 2020-01-01 00:55:00 |
-      | 15 | 11        | 11             | 1          | 200     | Current    | State15 | 2020-01-01 00:56:00 |
-      | 16 | 31        | 11             | 1          | 200     | Submission | State16 | 2020-01-01 00:45:00 |
-      | 17 | 31        | 11             | 0          | 200     | Submission | State17 | 2020-01-01 00:42:00 |
-      | 18 | 31        | 11             | 1          | 200     | Submission | State18 | 2020-01-01 00:54:00 |
-      | 21 | 11        | 11             | 0          | 202     | Submission | State21 | 2020-01-01 00:35:00 |
-      | 22 | 11        | 11             | 1          | 202     | Submission | State22 | 2020-01-01 00:37:00 |
-      | 23 | 11        | 11             | 1          | 202     | Submission | State23 | 2020-01-01 00:48:00 |
-      | 24 | 11        | 11             | 1          | 202     | Saved      | State24 | 2020-01-01 00:49:00 |
-      | 25 | 11        | 11             | 1          | 202     | Current    | State25 | 2020-01-01 00:50:00 |
-      | 26 | 31        | 11             | 1          | 202     | Submission | State26 | 2020-01-01 00:36:00 |
-      | 27 | 31        | 11             | 0          | 202     | Submission | State27 | 2020-01-01 00:34:00 |
-      | 28 | 31        | 11             | 1          | 202     | Submission | State28 | 2020-01-01 00:47:00 |
+      | 1  | 11        | 11             | 0          | 201     | Submission | State1 | 2017-05-29 06:38:38 |
+      | 4  | 11        | 11             | 1          | 201     | Saved      | State4 | 2017-05-30 06:38:38 |
+      | 5  | 11        | 11             | 1          | 201     | Current    | State5 | 2017-05-30 06:38:38 |
+      | 7  | 31        | 11             | 0          | 201     | Submission | State7 | 2017-05-29 06:38:38 |
+      | 11 | 11        | 11             | 0          | 200     | Submission | State11 | 2017-05-29 06:38:38 |
+      | 12 | 11        | 11             | 1          | 200     | Submission | State12 | 2017-05-29 06:38:38 |
+      | 13 | 41        | 41             | 1          | 200     | Submission | State13 | 2017-05-30 06:38:38 |
+      | 14 | 11        | 11             | 1          | 200     | Saved      | State14 | 2017-05-30 06:38:38 |
+      | 15 | 11        | 11             | 1          | 200     | Current    | State15 | 2017-05-30 06:38:38 |
+      | 16 | 31        | 11             | 1          | 200     | Submission | State16 | 2017-05-29 06:38:38 |
+      | 17 | 31        | 11             | 0          | 200     | Submission | State17 | 2017-05-29 06:38:38 |
+      | 18 | 31        | 11             | 1          | 200     | Submission | State18 | 2017-05-30 06:38:38 |
+      | 21 | 11        | 11             | 0          | 202     | Submission | State21 | 2017-05-29 06:38:38 |
+      | 22 | 11        | 11             | 1          | 202     | Submission | State22 | 2017-05-29 06:38:38 |
+      | 23 | 11        | 11             | 1          | 202     | Submission | State23 | 2017-05-30 06:38:38 |
+      | 24 | 11        | 11             | 1          | 202     | Saved      | State24 | 2017-05-30 06:38:38 |
+      | 25 | 11        | 11             | 1          | 202     | Current    | State25 | 2017-05-30 06:38:38 |
+      | 26 | 31        | 11             | 1          | 202     | Submission | State26 | 2017-05-29 06:38:38 |
+      | 27 | 31        | 11             | 0          | 202     | Submission | State27 | 2017-05-29 06:38:38 |
+      | 28 | 31        | 11             | 1          | 202     | Submission | State28 | 2017-05-30 06:38:38 |
       | 31 | 11        | 11             | 0          | 203     | Submission | State31 | 2017-05-29 06:38:38 |
       | 32 | 11        | 11             | 1          | 203     | Submission | State32 | 2017-05-29 06:38:38 |
       | 33 | 11        | 11             | 1          | 203     | Submission | State33 | 2017-05-30 06:38:38 |
@@ -119,7 +119,7 @@ Feature: Get activity log
     And the database has the following table 'languages':
       | tag |
       | fr  |
-    
+
   Scenario Outline: User is a manager of the group and there are visible descendants of the item
       This spec also checks:
       1) activities ordering,
@@ -649,7 +649,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:59:00Z",
+        "at": "2017-05-30T12:00:00Z",
         "attempt_id": "1",
         "from_answer_id": "-1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -659,7 +659,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:58:00Z",
+        "at": "2017-05-30T12:00:00Z",
         "attempt_id": "1",
         "from_answer_id": "-1",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -669,7 +669,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:57:00Z",
+        "at": "2017-05-30T12:00:00Z",
         "attempt_id": "0",
         "from_answer_id": "-1",
         "item": {"id": "202", "string": { "title": "Chapitre 2"}, "type": "Chapter"},
@@ -680,7 +680,7 @@ Feature: Get activity log
       {
         "activity_type": "current_answer",
         "answer_id": "15",
-        "at": "2020-01-01T00:56:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "15",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -691,7 +691,7 @@ Feature: Get activity log
       {
         "activity_type": "saved_answer",
         "answer_id": "14",
-        "at": "2020-01-01T00:55:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -702,7 +702,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "18",
-        "at": "2020-01-01T00:54:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "18",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -713,7 +713,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "13",
-        "at": "2020-01-01T00:53:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "13",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -724,7 +724,7 @@ Feature: Get activity log
       {
         "activity_type": "current_answer",
         "answer_id": "5",
-        "at": "2020-01-01T00:52:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "5",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -736,7 +736,7 @@ Feature: Get activity log
       {
         "activity_type": "saved_answer",
         "answer_id": "4",
-        "at": "2020-01-01T00:51:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "4",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -748,7 +748,7 @@ Feature: Get activity log
       {
         "activity_type": "current_answer",
         "answer_id": "25",
-        "at": "2020-01-01T00:50:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "25",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -759,7 +759,7 @@ Feature: Get activity log
       {
         "activity_type": "saved_answer",
         "answer_id": "24",
-        "at": "2020-01-01T00:49:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "24",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -770,7 +770,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "23",
-        "at": "2020-01-01T00:48:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "23",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -781,7 +781,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "28",
-        "at": "2020-01-01T00:47:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "28",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -792,7 +792,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "12",
-        "at": "2020-01-01T00:46:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "12",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -803,7 +803,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "16",
-        "at": "2020-01-01T00:45:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "16",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -813,7 +813,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:44:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "16",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -824,7 +824,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "11",
-        "at": "2020-01-01T00:43:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "11",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -835,7 +835,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "17",
-        "at": "2020-01-01T00:42:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "17",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -845,7 +845,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:41:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "17",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -855,7 +855,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:40:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "17",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -866,7 +866,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "1",
-        "at": "2020-01-01T00:39:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -878,7 +878,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "7",
-        "at": "2020-01-01T00:38:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "7",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -890,7 +890,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "22",
-        "at": "2020-01-01T00:37:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "22",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -901,7 +901,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "26",
-        "at": "2020-01-01T00:36:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "26",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -912,7 +912,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "21",
-        "at": "2020-01-01T00:35:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "21",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -923,7 +923,7 @@ Feature: Get activity log
       {
         "activity_type": "submission",
         "answer_id": "27",
-        "at": "2020-01-01T00:34:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "attempt_id": "0",
         "from_answer_id": "27",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -933,7 +933,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:33:00Z",
+        "at": "2017-05-29T06:38:00Z",
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -943,7 +943,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:32:00Z",
+        "at": "2017-05-29T06:38:00Z",
         "attempt_id": "0",
         "from_answer_id": "27",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -953,7 +953,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:31:00Z",
+        "at": "2017-05-29T06:38:00Z",
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -963,7 +963,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:30:00Z",
+        "at": "2017-05-29T06:38:00Z",
         "attempt_id": "0",
         "from_answer_id": "27",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
@@ -973,7 +973,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:29:00Z",
+        "at": "2016-05-30T12:00:00Z",
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -983,7 +983,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:28:00Z",
+        "at": "2016-05-29T06:38:00Z",
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
