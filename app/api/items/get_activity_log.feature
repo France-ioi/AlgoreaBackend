@@ -119,7 +119,7 @@ Feature: Get activity log
     And the database has the following table 'languages':
       | tag |
       | fr  |
-
+    
   Scenario Outline: User is a manager of the group and there are visible descendants of the item
       This spec also checks:
       1) activities ordering,
@@ -134,7 +134,7 @@ Feature: Get activity log
     [
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:59:00Z",
+        "at": "2017-05-30T12:00:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -145,7 +145,7 @@ Feature: Get activity log
       {
         "activity_type": "current_answer",
         "answer_id": "15",
-        "at": "2020-01-01T00:56:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "15",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -156,7 +156,7 @@ Feature: Get activity log
       {
         "activity_type": "saved_answer",
         "answer_id": "14",
-        "at": "2020-01-01T00:55:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -166,7 +166,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:54:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "answer_id": "18",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
@@ -177,7 +177,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:53:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "answer_id": "13",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
@@ -189,7 +189,7 @@ Feature: Get activity log
       {
         "activity_type": "current_answer",
         "answer_id": "5",
-        "at": "2020-01-01T00:52:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "5",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -201,7 +201,7 @@ Feature: Get activity log
       {
         "activity_type": "saved_answer",
         "answer_id": "4",
-        "at": "2020-01-01T00:51:00Z",
+        "at": "2017-05-30T06:38:38Z",
         "attempt_id": "1",
         "from_answer_id": "4",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -212,7 +212,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:46:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "answer_id": "12",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
@@ -223,7 +223,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:45:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "answer_id": "16",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
@@ -234,7 +234,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:44:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -244,7 +244,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:43:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "answer_id": "11",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
@@ -255,7 +255,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:42:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "answer_id": "17",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
@@ -266,7 +266,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:41:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -276,7 +276,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:40:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -286,7 +286,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:39:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "answer_id": "1",
         "score": 99,
         "participant": {"id": "11", "name": "user", "type": "User"},
@@ -298,7 +298,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "submission",
-        "at": "2020-01-01T00:38:00Z",
+        "at": "2017-05-29T06:38:38Z",
         "answer_id": "7",
         "score": 98,
         "participant": {"id": "11", "name": "user", "type": "User"},
@@ -310,7 +310,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:33:00Z",
+        "at": "2017-05-29T06:38:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -320,7 +320,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:32:00Z",
+        "at": "2017-05-29T06:38:00Z",
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
@@ -330,7 +330,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_validated",
-        "at": "2020-01-01T00:29:00Z",
+        "at": "2016-05-30T12:00:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
@@ -340,7 +340,7 @@ Feature: Get activity log
       },
       {
         "activity_type": "result_started",
-        "at": "2020-01-01T00:28:00Z",
+        "at": "2016-05-29T06:38:00Z",
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
