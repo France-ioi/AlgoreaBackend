@@ -415,7 +415,6 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	answersQuery, _ = service.ApplySortingAndPaging(
 		nil, answersQuery,
 		&service.SortingAndPagingParameters{
-			// An index is defined for this query: answers.c_at_desc_item_id_part_id_attempt_id_desc_type_desc_answers.
 			Fields: service.SortingAndPagingFields{
 				"at":             {ColumnName: "answers.created_at"},
 				"item_id":        {ColumnName: "answers.item_id"},
