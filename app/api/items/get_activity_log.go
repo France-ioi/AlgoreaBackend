@@ -358,6 +358,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 				WHEN 'Saved' THEN 4
 				WHEN 'Current' THEN 5
 			END AS activity_type_int,
+			answers.type + 0 AS type,
 			answers.created_at AS at,
 			answers.id AS answer_id,
 			answers.attempt_id, answers.participant_id,
@@ -382,6 +383,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
 			1 AS activity_type_int,
+			65535 AS type, /* results don't have a type */
 			started_at AS at,
 			-1 AS answer_id,
 			started_results.attempt_id, started_results.participant_id, started_results.item_id, started_results.participant_id AS user_id,
@@ -398,6 +400,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
 			3 AS activity_type_int,
+			65535 AS type, /* results don't have a type */
 			validated_results.validated_at AS at,
 			-1 AS answer_id,
 			validated_results.attempt_id, validated_results.participant_id,
@@ -420,17 +423,10 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 				"item_id":        {ColumnName: "answers.item_id"},
 				"participant_id": {ColumnName: "answers.participant_id"},
 				"attempt_id":     {ColumnName: "answers.attempt_id"},
-				"activity_type_int": {
-					ColumnName: `
-						CASE answers.type
-							WHEN 'Submission' THEN 2
-							WHEN 'Saved' THEN 4
-							WHEN 'Current' THEN 5
-						END`,
-				},
-				"answer_id": {ColumnName: "answers.id"},
+				"type":           {ColumnName: `answers.type`},
+				"answer_id":      {ColumnName: "answers.id"},
 			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type_int,answer_id",
+			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-type,answer_id",
 			IgnoreSortParameter:  true,
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
