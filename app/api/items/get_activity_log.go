@@ -25,7 +25,7 @@ type itemActivityLogResponseRow struct {
 	AttemptID int64 `json:"attempt_id,string"`
 	// `answers.id`
 	AnswerID *int64 `json:"answer_id,string,omitempty"`
-	// use this as `{from.asnwer_id}` for pagination
+	// use this as `{from.answer_id}` for pagination
 	// required: true
 	FromAnswerID int64    `json:"from_answer_id,string"`
 	Score        *float32 `json:"score,omitempty"`
