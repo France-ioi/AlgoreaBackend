@@ -485,11 +485,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	query := store.Raw(`
 		WITH items_to_show AS ?, participants AS ?, start_from_row AS ?, un AS ?
 		SELECT STRAIGHT_JOIN
-			CASE activity_type
-				WHEN 'current' THEN 'current_answer'
-				WHEN 'saved' THEN 'saved_answer'
-				ELSE activity_type
-			END AS activity_type,
+			activity_type,
 			at, answer_id, attempt_id, participant_id, score,
 			items.id AS item__id, items.type AS item__type,
 			permissions_generated.can_watch_generated_value >= ? AS can_watch_item_answer,
