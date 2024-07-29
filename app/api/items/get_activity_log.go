@@ -352,7 +352,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			(answers.participant_id IN (SELECT id FROM participants))`,
 		visibleItemDescendantsSubQuery, participantsQuerySubQuery).Scan(&cnt).Error())
 
-	answersQuerySelect := `
+	const answersQueryDefaultSelect = `
 			CASE answers.type
 				WHEN 'Submission' THEN 2
 				WHEN 'Saved' THEN 4
@@ -362,22 +362,24 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			answers.created_at AS at,
 			answers.id AS answer_id,
 			answers.attempt_id, answers.participant_id,
-			answers.item_id, author_id AS user_id`
-	answersQuery := store.Answers().
-		Where("answers.participant_id IN (SELECT id FROM participants)").
-		Where("answers.item_id IN (SELECT id FROM items_to_show)")
+			answers.item_id,
+			author_id AS user_id`
+	answersQuerySelect := answersQueryDefaultSelect
+
+	answersQuery := store.Answers().DB
 
 	if cnt.Cnt > itemActivityLogStraightJoinBoundary || r.Context().Value("forceStraightJoinInItemActivityLog") == "force" {
 		// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
-		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQuerySelect
-		answersQuery = answersQuery.
+		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
+		// also, we need to FORCE INDEX to do the sorted index scan
+		answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_type_d_id_autho)").
 			Where("answers.created_at <= NOW()").
 			Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
 			Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
 			Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
 			Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
 	}
-	answersQuery = answersQuery.Select(answersQuerySelect)
+	answersQuery = applyMandatoryAnswersConditions(answersQuery.Select(answersQuerySelect))
 
 	startedResultsQuery := store.Table("results AS started_results").
 		Select(`
@@ -411,7 +413,9 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		Where("validated_results.participant_id IN (SELECT id FROM participants)")
 
 	startFromRowSubQuery, startFromRowCTESubQuery := srv.generateSubQueriesForPagination(
-		store, r.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery, answersQuery, fromValues)
+		store, r.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery,
+		applyMandatoryAnswersConditions(store.Answers().Select(answersQueryDefaultSelect)),
+		fromValues)
 
 	answersQuery = service.NewQueryLimiter().Apply(r, answersQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
@@ -524,6 +528,12 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		WithPersonalInfoViewApprovals(user).
 		JoinsUserAndDefaultItemStrings(user)
 	return query, service.NoError
+}
+
+func applyMandatoryAnswersConditions(answersQuery *database.DB) *database.DB {
+	return answersQuery.
+		Where("answers.participant_id IN (SELECT id FROM participants)").
+		Where("answers.item_id IN (SELECT id FROM items_to_show)")
 }
 
 func (srv *Service) generateSubQueriesForPagination(
