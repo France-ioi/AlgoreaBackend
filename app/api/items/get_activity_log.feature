@@ -42,10 +42,10 @@ Feature: Get activity log
       | 1          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
     And the database has the following table 'answers':
       | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
-      | 1  | 11        | 11             | 0          | 201     | Submission | State1 | 2017-05-29 06:38:38 |
-      | 4  | 11        | 11             | 1          | 201     | Saved      | State4 | 2017-05-30 06:38:38 |
-      | 5  | 11        | 11             | 1          | 201     | Current    | State5 | 2017-05-30 06:38:38 |
-      | 7  | 31        | 11             | 0          | 201     | Submission | State7 | 2017-05-29 06:38:38 |
+      | 1  | 11        | 11             | 0          | 201     | Submission | State1  | 2017-05-29 06:38:38 |
+      | 4  | 11        | 11             | 1          | 201     | Saved      | State4  | 2017-05-30 06:38:38 |
+      | 5  | 11        | 11             | 1          | 201     | Current    | State5  | 2017-05-30 06:38:38 |
+      | 7  | 31        | 11             | 0          | 201     | Submission | State7  | 2017-05-29 06:38:38 |
       | 11 | 11        | 11             | 0          | 200     | Submission | State11 | 2017-05-29 06:38:38 |
       | 12 | 11        | 11             | 1          | 200     | Submission | State12 | 2017-05-29 06:38:38 |
       | 13 | 41        | 41             | 1          | 200     | Submission | State13 | 2017-05-30 06:38:38 |
