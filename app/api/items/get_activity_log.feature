@@ -11,6 +11,8 @@ Feature: Get activity log
       | 13 | Class | Our Class  |
       | 20 | Other | Some Group |
       | 30 | Team  | Our Team   |
+      | 40 | Club  | Our Club   |
+      | 50 | Club  | Team Club  |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_watch_members |
       | 11       | 31         | true              |
@@ -22,6 +24,8 @@ Feature: Get activity log
       | 13              | 41             | 2019-05-30 11:00:00            |
       | 20              | 21             | null                           |
       | 30              | 21             | null                           |
+      | 40              | 21             | null                           |
+      | 50              | 30             | null                           |
     And the groups ancestors are computed
     And the database has the following table 'attempts':
       | id | participant_id |
@@ -32,8 +36,10 @@ Feature: Get activity log
       | 0          | 200     | 11             | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2020-05-29 06:38:38  |
       | 0          | 200     | 30             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 0          | 201     | 11             | 2017-05-29 06:38:00 | null                | 2020-05-29 06:38:38  |
+      | 0          | 201     | 30             | 2017-05-29 06:37:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 0          | 202     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 0          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
+      | 0          | 204     | 30             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 1          | 200     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 1          | 200     | 31             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 1          | 200     | 41             | 2016-05-29 06:38:00 | 2016-05-30 12:00:00 | 2020-05-29 06:38:38  |
@@ -97,10 +103,13 @@ Feature: Get activity log
       | 21       | 203     | none               | result              |
       | 21       | 204     | content            | none                |
       | 30       | 200     | content            | answer              |
+      | 30       | 201     | content            | result              |
       | 31       | 200     | content            | answer              |
       | 31       | 201     | content            | answer              |
       | 31       | 202     | content            | answer              |
       | 31       | 203     | content            | none                |
+      | 40       | 201     | content            | answer              |
+      | 50       | 204     | content            | answer              |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 200              | 201           |
@@ -124,7 +133,8 @@ Feature: Get activity log
       This spec also checks:
       1) activities ordering,
       2) filtering by users groups,
-      3) that a user cannot see names of other users without approval
+      3) that a user cannot see names of other users without approval,
+      4) that 'can_watch_item_answer' is set correctly respecting implicit permission propagation from ancestor groups.
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13"
@@ -193,7 +203,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "5",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -205,7 +215,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "4",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -280,7 +290,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "17"
       },
@@ -292,7 +302,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "1"
       },
@@ -304,7 +314,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "7"
       },
@@ -324,7 +334,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "7"
       },
@@ -541,7 +551,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "17"
       }
@@ -600,7 +610,6 @@ Feature: Get activity log
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
-        "can_watch_item_answer": true,
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }
@@ -608,6 +617,8 @@ Feature: Get activity log
     """
 
   Scenario: A user can view activity of his team
+      This spec also checks that only items visible to the team are shown,
+      not the items visible to the user.
     Given I am the user with id "21"
     When I send a GET request to "/items/200/log?as_team_id=30"
     Then the response code should be 200
@@ -620,7 +631,22 @@ Feature: Get activity log
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "204", "string": {"title": null}, "type": "Task"},
         "from_answer_id": "-1"
       },
       {
@@ -629,7 +655,22 @@ Feature: Get activity log
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "204", "string": {"title": null}, "type": "Task"},
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:37:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
         "from_answer_id": "-1"
       }
     ]
@@ -639,7 +680,8 @@ Feature: Get activity log
       This spec also checks:
       1) activities ordering,
       2) filtering by users groups,
-      3) that a user cannot see names of other users without approval
+      3) that a user cannot see names of other users without approval,
+      4) that 'can_watch_item_answer' is set correctly respecting implicit permission propagation from ancestor groups.
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/log?watched_group_id=13"
@@ -728,7 +770,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "5",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -740,7 +782,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "4",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -859,7 +901,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "17",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -870,7 +912,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 99,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -882,7 +924,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "7",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 98,
         "user": {"id": "31", "login": "jane"}
@@ -947,7 +989,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "27",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_item_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -1012,7 +1054,6 @@ Feature: Get activity log
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
-        "can_watch_item_answer": true,
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       },
@@ -1022,7 +1063,6 @@ Feature: Get activity log
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
-        "can_watch_item_answer": true,
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }
@@ -1047,7 +1087,6 @@ Feature: Get activity log
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
-        "can_watch_item_answer": true,
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }
@@ -1072,7 +1111,6 @@ Feature: Get activity log
         "participant": {"id": "31", "name": "jane", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Task 1"}, "type": "Task"},
-        "can_watch_item_answer": true,
         "user": {"id": "31", "first_name": "Jane", "last_name": "Doe", "login": "jane"},
         "from_answer_id": "-1"
       }
