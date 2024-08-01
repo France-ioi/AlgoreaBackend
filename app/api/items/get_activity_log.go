@@ -65,7 +65,7 @@ type itemActivityLogResponseRow struct {
 		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
 	// only when `{watched_group_id}` is given
-	CanWatchItemAnswer *bool `json:"can_watch_item_answer,omitempty"`
+	CanWatchAnswer *bool `json:"can_watch_answer,omitempty"`
 }
 
 // swagger:operation GET /items/{ancestor_item_id}/log items itemActivityLogForItem
@@ -507,7 +507,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		golang.LazyIf(watchedGroupIDIsSet,
 			func() string {
 				return fmt.Sprintf(`
-			permissions.can_watch_generated_value >= %d AS can_watch_item_answer,`,
+			permissions.can_watch_generated_value >= %d AS can_watch_answer,`,
 					store.PermissionsGranted().WatchIndexByName("answer"))
 			})+`
 			groups.id AS participant__id,

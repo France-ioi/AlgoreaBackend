@@ -134,7 +134,7 @@ Feature: Get activity log
       1) activities ordering,
       2) filtering by users groups,
       3) that a user cannot see names of other users without approval,
-      4) that 'can_watch_item_answer' is set correctly respecting implicit permission propagation from ancestor groups.
+      4) that 'can_watch_answer' is set correctly respecting implicit permission propagation from ancestor groups.
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/200/log?watched_group_id=13"
@@ -148,7 +148,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "-1"
       },
@@ -159,7 +159,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "15",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -170,7 +170,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -181,7 +181,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       },
@@ -192,7 +192,7 @@ Feature: Get activity log
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "13"
       },
@@ -203,7 +203,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "5",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -215,7 +215,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "4",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -227,7 +227,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "12"
       },
@@ -238,7 +238,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "16"
       },
@@ -248,7 +248,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "16"
       },
@@ -259,7 +259,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "11"
       },
@@ -270,7 +270,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "17"
       },
@@ -280,7 +280,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "17"
       },
@@ -290,7 +290,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "17"
       },
@@ -302,7 +302,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "1"
       },
@@ -314,7 +314,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "7"
       },
@@ -325,7 +325,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "from_answer_id": "7"
       },
       {
@@ -334,7 +334,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "7"
       },
@@ -344,7 +344,7 @@ Feature: Get activity log
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       },
@@ -354,7 +354,7 @@ Feature: Get activity log
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       }
@@ -379,7 +379,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "-1"
       }
@@ -405,7 +405,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "15",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -416,7 +416,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       }
@@ -442,7 +442,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -453,7 +453,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       }
@@ -479,7 +479,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "31", "login": "jane"},
         "from_answer_id": "18"
       },
@@ -490,7 +490,7 @@ Feature: Get activity log
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "13"
       }
@@ -515,7 +515,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "16"
       },
@@ -526,7 +526,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "11"
       }
@@ -551,7 +551,7 @@ Feature: Get activity log
         "participant": {"id": "11", "name": "user", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "user": {"id": "11", "first_name": "John", "last_name": "Doe", "login": "user"},
         "from_answer_id": "17"
       }
@@ -576,7 +576,7 @@ Feature: Get activity log
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       },
@@ -586,7 +586,7 @@ Feature: Get activity log
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "attempt_id": "1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "user": {"id": "41", "first_name": "Paul", "last_name": "Smith", "login": "paul"},
         "from_answer_id": "7"
       }
@@ -681,7 +681,7 @@ Feature: Get activity log
       1) activities ordering,
       2) filtering by users groups,
       3) that a user cannot see names of other users without approval,
-      4) that 'can_watch_item_answer' is set correctly respecting implicit permission propagation from ancestor groups.
+      4) that 'can_watch_answer' is set correctly respecting implicit permission propagation from ancestor groups.
     Given I am the user with id "21"
     And the context variable "forceStraightJoinInItemActivityLog" is "<forceStraightJoinInItemActivityLog>"
     When I send a GET request to "/items/log?watched_group_id=13"
@@ -695,7 +695,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "-1",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -705,7 +705,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "-1",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -715,7 +715,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "-1",
         "item": {"id": "202", "string": { "title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -726,7 +726,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "15",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -737,7 +737,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "14",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -748,7 +748,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "18",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -759,7 +759,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "13",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
       },
@@ -770,7 +770,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "5",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -782,7 +782,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "4",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 100,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -794,7 +794,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "25",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -805,7 +805,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "24",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -816,7 +816,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "23",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -827,7 +827,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "28",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -838,7 +838,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "12",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -849,7 +849,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "16",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -859,7 +859,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "16",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -870,7 +870,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "11",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -881,7 +881,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "17",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -891,7 +891,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "17",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -901,7 +901,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "17",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -912,7 +912,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "1",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 99,
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
@@ -924,7 +924,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "7",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "score": 98,
         "user": {"id": "31", "login": "jane"}
@@ -936,7 +936,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "22",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -947,7 +947,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "26",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -958,7 +958,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "21",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -969,7 +969,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "27",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"id": "31", "login": "jane"}
       },
@@ -979,7 +979,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -989,7 +989,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "27",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "can_watch_item_answer": true,
+        "can_watch_answer": true,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -999,7 +999,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -1009,7 +1009,7 @@ Feature: Get activity log
         "attempt_id": "0",
         "from_answer_id": "27",
         "item": {"id": "202", "string": {"title": "Chapitre 2"}, "type": "Chapter"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "11", "name": "user", "type": "User"},
         "user": {"first_name": "John", "id": "11", "last_name": "Doe", "login": "user"}
       },
@@ -1019,7 +1019,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
       },
@@ -1029,7 +1029,7 @@ Feature: Get activity log
         "attempt_id": "1",
         "from_answer_id": "27",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "can_watch_item_answer": false,
+        "can_watch_answer": false,
         "participant": {"id": "41", "name": "paul", "type": "User"},
         "user": {"first_name": "Paul", "id": "41", "last_name": "Smith", "login": "paul"}
       }
