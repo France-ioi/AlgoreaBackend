@@ -28,7 +28,7 @@ type createNewAncestorsQueries struct {
 // - before_insert_items_items/groups_groups
 // - before_delete_items_items/groups_groups.
 func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /* #nosec */
-	BeforePropagationStep(golang.IfElse(objectName == groups, PropagationStepGroupAncestorsInit, PropagationStepItemAncestorsInit))
+	CallBeforePropagationStepHook(golang.IfElse(objectName == groups, PropagationStepGroupAncestorsInit, PropagationStepItemAncestorsInit))
 
 	mustNotBeError(s.InTransaction(func(s *DataStore) error {
 		initTransactionTime := time.Now()
@@ -44,7 +44,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	hasChanges := true
 	for hasChanges {
-		BeforePropagationStep(golang.IfElse(objectName == groups, PropagationStepGroupAncestorsMain, PropagationStepItemAncestorsMain))
+		CallBeforePropagationStepHook(golang.IfElse(objectName == groups, PropagationStepGroupAncestorsMain, PropagationStepItemAncestorsMain))
 
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
 			initStepTransactionTime := time.Now()

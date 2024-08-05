@@ -1,6 +1,10 @@
 package database
 
-import "github.com/France-ioi/AlgoreaBackend/v2/golang"
+import (
+	"sync"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+)
 
 // PropagationStep represents a step in the propagation process.
 type PropagationStep string
@@ -61,5 +65,31 @@ func PropagationStepSetResults() *golang.Set[PropagationStep] {
 	).MarkImmutable()
 }
 
-// BeforePropagationStep is a hook that is called before each propagation step.
-var BeforePropagationStep = func(step PropagationStep) {}
+// BeforePropagationStepHookFunc is a type of a function that is called before each propagation step.
+type BeforePropagationStepHookFunc func(step PropagationStep)
+
+var (
+	// beforePropagationStepHook is a hook that is called before each propagation step.
+	beforePropagationStepHook BeforePropagationStepHookFunc = func(step PropagationStep) {}
+	// beforePropagationStepMutex protects beforePropagationStepHook.
+	beforePropagationStepMutex sync.RWMutex
+)
+
+// SetBeforePropagationStepHook sets a hook that is called before each propagation step.
+func SetBeforePropagationStepHook(newHook BeforePropagationStepHookFunc) {
+	beforePropagationStepMutex.Lock()
+	defer beforePropagationStepMutex.Unlock()
+	beforePropagationStepHook = newHook
+}
+
+// GetBeforePropagationStepHook returns a hook that is called before each propagation step.
+func GetBeforePropagationStepHook() BeforePropagationStepHookFunc {
+	beforePropagationStepMutex.RLock()
+	defer beforePropagationStepMutex.RUnlock()
+	return beforePropagationStepHook
+}
+
+// CallBeforePropagationStepHook calls the hook that is called before each propagation step.
+func CallBeforePropagationStepHook(step PropagationStep) {
+	GetBeforePropagationStepHook()(step)
+}
