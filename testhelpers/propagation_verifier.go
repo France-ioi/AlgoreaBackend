@@ -101,21 +101,21 @@ func (pv *PropagationVerifier) Run(
 	dataStore = database.NewDataStore(db)
 
 	// set up the hook
-	oldBeforePropagationStep := database.BeforePropagationStep
-	defer func() { database.BeforePropagationStep = oldBeforePropagationStep }()
+	oldBeforePropagationStepHook := database.GetBeforePropagationStepHook()
+	defer func() { database.SetBeforePropagationStepHook(oldBeforePropagationStepHook) }()
 	calledPropagationSteps := make(map[database.PropagationStep]int)
 	stepCounter := 0
-	database.BeforePropagationStep = func(step database.PropagationStep) {
+	database.SetBeforePropagationStepHook(func(step database.PropagationStep) {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf("BeforePropagationStep(%q) panicked: %v", step, r)
+				t.Errorf("beforePropagationStep(%q) panicked: %v", step, r)
 			}
 		}()
 
 		// Restore the original hook until the end of this function
-		ourBeforePropagationStep := database.BeforePropagationStep
-		database.BeforePropagationStep = oldBeforePropagationStep
-		defer func() { database.BeforePropagationStep = ourBeforePropagationStep }()
+		ourBeforePropagationStepHook := database.GetBeforePropagationStepHook()
+		database.SetBeforePropagationStepHook(oldBeforePropagationStepHook)
+		defer func() { database.SetBeforePropagationStepHook(ourBeforePropagationStepHook) }()
 
 		stepCounter++
 
@@ -133,11 +133,11 @@ func (pv *PropagationVerifier) Run(
 		if pv.hookFunc != nil {
 			pv.hookFunc(step, stepCounter, calledPropagationSteps[step], dataStore, appServer)
 		}
-	}
+	})
 
 	// Execute the code that should be executed before the propagation steps just to make sure it doesn't fail
 	t.Log("sanity check before all propagations")
-	database.BeforePropagationStep(PropagationStepSanityCheck)
+	database.CallBeforePropagationStepHook(PropagationStepSanityCheck)
 	if t.Failed() {
 		return
 	}
@@ -146,7 +146,7 @@ func (pv *PropagationVerifier) Run(
 	codeTriggeringPropagations(dataStore, appServer)
 
 	t.Log("after all propagations")
-	database.BeforePropagationStep(PropagationStepAfterAllPropagations)
+	database.CallBeforePropagationStepHook(PropagationStepAfterAllPropagations)
 
 	pv.assertAllRequiredStepsCalled(t, calledPropagationSteps)
 }

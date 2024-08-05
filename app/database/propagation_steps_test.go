@@ -52,3 +52,25 @@ func TestPropagationStepSets(t *testing.T) {
 		})
 	}
 }
+
+func TestBeforePropagationStepHook(t *testing.T) {
+	var steps []PropagationStep
+	oldHook := GetBeforePropagationStepHook()
+	defer SetBeforePropagationStepHook(oldHook)
+	SetBeforePropagationStepHook(func(step PropagationStep) {
+		steps = append(steps, step)
+	})
+	CallBeforePropagationStepHook(PropagationStepGroupAncestorsInit)
+	assert.Equal(t, []PropagationStep{PropagationStepGroupAncestorsInit}, steps)
+	SetBeforePropagationStepHook(func(step PropagationStep) {
+		steps = append(steps, step, step)
+	})
+	CallBeforePropagationStepHook(PropagationStepGroupAncestorsMain)
+	assert.Equal(t,
+		[]PropagationStep{
+			PropagationStepGroupAncestorsInit,
+			PropagationStepGroupAncestorsMain,
+			PropagationStepGroupAncestorsMain,
+		},
+		steps)
+}

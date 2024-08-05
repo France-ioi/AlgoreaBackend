@@ -102,7 +102,7 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	// ------------------------------------------------------------------------------------
 	hasChanges := true
 	for hasChanges {
-		BeforePropagationStep(PropagationStepAccessMain)
+		CallBeforePropagationStepHook(PropagationStepAccessMain)
 
 		mustNotBeError(s.InTransaction(func(store *DataStore) error {
 			initTransactionTime := time.Now()

@@ -35,15 +35,15 @@ func (s *ResultStore) propagate() (err error) {
 	var groupsUnlocked int64
 	defer recoverPanics(&err)
 
-	BeforePropagationStep(PropagationStepResultsNamedLockAcquire)
+	CallBeforePropagationStepHook(PropagationStepResultsNamedLockAcquire)
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
-		BeforePropagationStep(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate)
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate)
 
 		s.setResultsPropagationFromResultsPropagateItems()
 
-		BeforePropagationStep(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
 
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
 			initTransactionTime := time.Now()
@@ -171,7 +171,7 @@ func (s *ResultStore) propagate() (err error) {
 		hasChanges := true
 
 		for hasChanges {
-			BeforePropagationStep(PropagationStepResultsInsideNamedLockMain)
+			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMain)
 
 			mustNotBeError(s.InTransaction(func(s *DataStore) error {
 				initTransactionTime := time.Now()
@@ -304,7 +304,7 @@ func (s *ResultStore) propagate() (err error) {
 			}))
 		}
 
-		BeforePropagationStep(PropagationStepResultsInsideNamedLockItemUnlocking)
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockItemUnlocking)
 
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
 			initTransactionTime := time.Now()
@@ -359,7 +359,7 @@ func (s *ResultStore) propagate() (err error) {
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		BeforePropagationStep(PropagationStepResultsPropagationScheduling)
+		CallBeforePropagationStepHook(PropagationStepResultsPropagationScheduling)
 
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
 			// generate permissions_generated from permissions_granted
