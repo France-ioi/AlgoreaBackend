@@ -178,7 +178,7 @@ func (requestData *SubmitRequest) UnmarshalJSON(raw []byte) error {
 
 // Bind checks that all the needed request parameters (task_token & answer) are present and
 // all the needed values are valid.
-func (requestData *SubmitRequest) Bind(r *http.Request) error {
+func (requestData *SubmitRequest) Bind(_ *http.Request) error {
 	if requestData.TaskToken == nil {
 		return errors.New("missing task_token")
 	}

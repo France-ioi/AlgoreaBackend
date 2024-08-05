@@ -30,15 +30,15 @@ func (ctx *TestContext) getGroupPendingRequestPrimaryKey(groupID, memberID int64
 	return strconv.FormatInt(groupID, 10) + "," + strconv.FormatInt(memberID, 10)
 }
 
-// addGroup adds a group in database.
+// addGroup adds a group to the database.
 func (ctx *TestContext) addGroupPendingRequest(group, member, requestType string) {
-	groupID := ctx.getReference(group)
-	memberID := ctx.getReference(member)
+	groupID := ctx.getIDOfReference(group)
+	memberID := ctx.getIDOfReference(member)
 
 	primaryKey := ctx.getGroupPendingRequestPrimaryKey(groupID, memberID)
 
 	if !ctx.isInDatabase("group_pending_requests", primaryKey) {
-		ctx.addInDatabase("group_pending_requests", primaryKey, map[string]interface{}{
+		ctx.addToDatabase("group_pending_requests", primaryKey, map[string]interface{}{
 			"group_id":  groupID,
 			"member_id": memberID,
 			"type":      requestType,
@@ -85,7 +85,7 @@ func (ctx *TestContext) ThereShouldBeNoGroupPendingRequestsForTheMemberWithTheTy
 	return nil
 }
 
-// ThereShouldBeTheFollowingGroupPendingRequests checks that rows are present in the group_pending_requests table in database.
+// ThereShouldBeTheFollowingGroupPendingRequests checks that rows are present in the group_pending_requests table of the database.
 func (ctx *TestContext) ThereShouldBeTheFollowingGroupPendingRequests(entries *godog.Table) error {
 	for i := 1; i < len(entries.Rows); i++ {
 		change := ctx.getRowMap(i, entries)

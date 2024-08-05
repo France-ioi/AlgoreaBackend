@@ -12,12 +12,18 @@ import (
 )
 
 const (
+	// OriginGroupMembership is the origin for permissions granted to the group via membership in another group.
 	OriginGroupMembership = "group_membership"
-	OriginItemUnlocking   = "item_unlocking"
-	OriginSelf            = "self"
-	OriginOther           = "other"
-	OriginComputed        = "computed"
-	OriginGranted         = "granted"
+	// OriginItemUnlocking is the origin for permissions granted to the group via unlocking an item.
+	OriginItemUnlocking = "item_unlocking"
+	// OriginSelf is the origin for permissions granted to the creator of the item.
+	OriginSelf = "self"
+	// OriginOther is the origin for permissions granted to the group via other means.
+	OriginOther = "other"
+	// OriginComputed is a fake origin for computed permissions used by algorithms related to adding CanRequestHelpTo into output.
+	OriginComputed = "computed"
+	// OriginGranted is a fake origin for computed permissions used by algorithms related to adding CanRequestHelpTo into output.
+	OriginGranted = "granted"
 )
 
 type permissionsStruct struct {

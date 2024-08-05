@@ -107,7 +107,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		ctx.TableShouldStayUnchangedButTheRowWithColumnValue)
 	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with ([^"]*) "([^"]*)" should be deleted$`,
 		ctx.TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted)
-	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DbTimeNow)
+	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DBTimeNow)
 
 	s.Step(`^"([^"]+)" is a token signed by (.+) with the following payload:$`, ctx.SignedTokenIsDistributed)
 	s.Step(`^"([^"]+)" is a falsified token signed by (.+) with the following payload:$`, ctx.FalsifiedSignedTokenIsDistributed)

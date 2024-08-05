@@ -262,6 +262,7 @@ func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) erro
 	})
 }
 
+// IsInTransaction returns true if the store operates in a DB transaction at the moment.
 func (s *DataStore) IsInTransaction() bool {
 	return s.DB.isInTransaction()
 }

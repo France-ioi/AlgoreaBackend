@@ -104,7 +104,7 @@ func (ctx *TestContext) initReferences(sc *godog.Scenario) {
 
 func collectReferencesInText(text string, referencesMap map[string]struct{}) {
 	for _, match := range referenceRegexp.FindAllString(text, -1) {
-		if match[0] != ReferencePrefix {
+		if match[0] != referencePrefix {
 			match = match[1:]
 		}
 		referencesMap[match] = struct{}{}

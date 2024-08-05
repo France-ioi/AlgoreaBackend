@@ -357,7 +357,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		Where("answers.participant_id IN (SELECT id FROM participants)").
 		Where("answers.item_id IN (SELECT id FROM items_to_show)")
 
-	if cnt.Cnt > itemActivityLogStraightJoinBoundary || r.Context().Value("forceStraightJoinInItemActivityLog") == "force" {
+	if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
+		r.Context().Value(service.APIServiceContextVariableName("forceStraightJoinInItemActivityLog")) == "force" {
 		// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
 		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQuerySelect
 		answersQuery = answersQuery.
