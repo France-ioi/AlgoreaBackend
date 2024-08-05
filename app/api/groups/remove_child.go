@@ -55,7 +55,7 @@ import (
 //			enum: [0,1]
 //			default: 0
 //	responses:
-//		"201":
+//		"200":
 //			"$ref": "#/responses/deletedResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
