@@ -67,12 +67,6 @@ func (pv *PropagationVerifier) Run(
 ) {
 	t.Helper()
 
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("propagation verifier panicked: %v", r)
-		}
-	}()
-
 	db := SetupDBWithFixtureString(pv.fixture)
 
 	dataStore := database.NewDataStore(db)
