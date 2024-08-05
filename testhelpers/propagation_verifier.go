@@ -102,7 +102,9 @@ func (pv *PropagationVerifier) Run(
 	database.SetBeforePropagationStepHook(func(step database.PropagationStep) {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf("beforePropagationStep(%q) panicked: %v", step, r)
+				if !t.Failed() {
+					t.Errorf("beforePropagationStep(%q) panicked: %v", step, r)
+				}
 			}
 		}()
 
