@@ -5,10 +5,7 @@ package testhelpers
 import (
 	"database/sql"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"sort"
 
@@ -175,37 +172,6 @@ func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) {
 	}()
 
 	ctx.tearDownApp()
-}
-
-func testRequest(ts *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (*http.Response, string, error) {
-	req, err := http.NewRequest(method, ts.URL+path, body)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// add headers
-	for name, values := range headers {
-		for _, value := range values {
-			req.Header.Add(name, value)
-		}
-	}
-
-	client := http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
-		return http.ErrUseLastResponse
-	}}
-	// execute the query
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, "", err
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, "", err
-	}
-	defer func() { /* #nosec */ _ = resp.Body.Close() }()
-
-	return resp, string(respBody), nil
 }
 
 // openDB opens a connection to the database.

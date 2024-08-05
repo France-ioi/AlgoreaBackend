@@ -69,7 +69,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	// do request
-	response, body, err := testRequest(testServer, method, path, headers, strings.NewReader(reqBody))
+	response, body, err := SendTestHTTPRequest(testServer, method, path, headers, strings.NewReader(reqBody))
 	defer func() { _ = response.Body.Close() }()
 	if err != nil {
 		return err
