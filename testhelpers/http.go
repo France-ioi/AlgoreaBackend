@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -92,14 +91,16 @@ func VerifyTestHTTPRequestWithToken(t *testing.T, hookedAppServer *httptest.Serv
 
 	response, responseBody, err := SendTestHTTPRequest(
 		hookedAppServer, method, path, headersWithToken, bodyReader)
-	_ = response.Body.Close()
-
 	if err != nil {
-		panic(fmt.Errorf("cannot send %s request to %s with token '%s': %v", method, path, token, err))
+		t.Errorf("cannot send %s request to %s with token '%s': %v", method, path, token, err)
+		return
 	}
-	if response != nil && response.StatusCode != expectedStatusCode {
-		t.Errorf("unexpected status code %d (expected %d) of %s request to %s with token '%s', status: %s, response body: %s",
-			response.StatusCode, expectedStatusCode, method, path, token, response.Status, responseBody)
+	if response != nil {
+		_ = response.Body.Close()
+		if response.StatusCode != expectedStatusCode {
+			t.Errorf("unexpected status code %d (expected %d) of %s request to %s with token '%s', status: %s, response body: %s",
+				response.StatusCode, expectedStatusCode, method, path, token, response.Status, responseBody)
+		}
 	}
 }
 
