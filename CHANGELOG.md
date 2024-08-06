@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## [v2.21.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.2...v2.21.3) - 2024-08-06
+- fixing doc of `invitationsView` (after change from previous version)
+- refactoring and internal improvements
+
 ## [v2.21.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.1...v2.21.2) - 2024-07-25
 - update invitationsView doc as the invitation initiator may be null
 - many refactoring and internal improvements
