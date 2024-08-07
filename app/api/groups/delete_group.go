@@ -41,7 +41,7 @@ import (
 //			format: int64
 //			required: true
 //	responses:
-//		"201":
+//		"200":
 //			"$ref": "#/responses/deletedResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
