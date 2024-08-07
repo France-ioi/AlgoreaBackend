@@ -540,18 +540,18 @@ func requireLockMembershipApprovalUntilIsStrengthened(groupHasParticipants bool,
 
 		// The field is considered strengthened only if the new value is > NOW().
 		return newValueDate.After(time.Now())
-	} else {
-		newValueDate := (*time.Time)(newValue)
-
-		// The field is not considered strengthened if the new value is <= NOW().
-		if newValueDate != nil && newValueDate.Before(time.Now().Add(time.Second)) {
-			return false
-		}
-
-		oldValueDate := (*time.Time)(oldValue)
-
-		return newValue != nil && newValueDate.Compare(*oldValueDate) == 1
 	}
+
+	newValueDate := (*time.Time)(newValue)
+
+	// The field is not considered strengthened if the new value is <= NOW().
+	if newValueDate != nil && newValueDate.Before(time.Now().Add(time.Second)) {
+		return false
+	}
+
+	oldValueDate := (*time.Time)(oldValue)
+
+	return newValue != nil && newValueDate.Compare(*oldValueDate) == 1
 }
 
 // requireWatchApprovalIsStrengthened checks whether the field `require_watch_approval` is strengthened.
@@ -602,11 +602,10 @@ func constructStrengtheningRequiresFieldValidator(
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
 		if !fieldIsStrengthened(fl, groupHasParticipants, currentGroupData) {
 			return true
-		} else {
-			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").String()
-
-			return approvalChangeAction != ""
 		}
+
+		approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").String()
+		return approvalChangeAction != ""
 	})
 }
 
@@ -620,7 +619,7 @@ func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, 
 		// because this validator is called only if it is (it has omitempty).
 
 		// There must be no require_* fields strengthened.
-		if requirePersonalInfoAccessApprovalIsStrengthened(
+		return requirePersonalInfoAccessApprovalIsStrengthened(
 			groupHasParticipants,
 			currentGroupData.RequirePersonalInfoAccessApproval,
 			newRequirePersonalInfoAccessApproval,
@@ -634,10 +633,6 @@ func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, 
 				groupHasParticipants,
 				currentGroupData.RequireWatchApproval,
 				newRequireWatchApproval,
-			) {
-			return true
-		} else {
-			return false
-		}
+			)
 	}
 }

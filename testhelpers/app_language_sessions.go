@@ -28,21 +28,21 @@ func (ctx *TestContext) registerFeaturesForSessions(s *godog.ScenarioContext) {
 	s.Step(`^there is no access token "([^"]*)"$`, ctx.ThereIsNoAccessToken)
 }
 
-// addSession adds a session in database.
+// addSession adds a session to the database.
 func (ctx *TestContext) addSession(session, user, refreshToken string) {
-	sessionID := ctx.getReference(session)
-	userID := ctx.getReference(user)
+	sessionID := ctx.getIDOfReference(session)
+	userID := ctx.getIDOfReference(user)
 
-	ctx.addInDatabase("sessions", strconv.FormatInt(sessionID, 10), map[string]interface{}{
+	ctx.addToDatabase("sessions", strconv.FormatInt(sessionID, 10), map[string]interface{}{
 		"session_id":    sessionID,
 		"user_id":       userID,
 		"refresh_token": refreshToken,
 	})
 }
 
-// addAccessToken adds an access token in database.
+// addAccessToken adds an access token to the database.
 func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt string) {
-	sessionID := ctx.getReference(session)
+	sessionID := ctx.getIDOfReference(session)
 
 	issuedAtDate, err := time.Parse(utils.DateTimeFormat, issuedAt)
 	if err != nil {
@@ -54,7 +54,7 @@ func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt strin
 		panic(err)
 	}
 
-	ctx.addInDatabase("access_tokens", token, map[string]interface{}{
+	ctx.addToDatabase("access_tokens", token, map[string]interface{}{
 		"session_id": sessionID,
 		"token":      token,
 		"issued_at":  issuedAtDate,
@@ -69,7 +69,7 @@ func (ctx *TestContext) IAm(name string) error {
 		return err
 	}
 
-	err = ctx.IAmUserWithID(ctx.getReference(name))
+	err = ctx.IAmUserWithID(ctx.getIDOfReference(name))
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *godog.Table) erro
 
 // ThereAreCountSessionsForUser checks if there are a given number of sessions for a given user.
 func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) error {
-	userID := ctx.getReference(user)
+	userID := ctx.getIDOfReference(user)
 
 	var sessionCount int
 	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?", userID).
@@ -142,8 +142,9 @@ func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) err
 	return nil
 }
 
+// ThereIsNoSessionID checks that a session with given session ID doesn't exist.
 func (ctx *TestContext) ThereIsNoSessionID(session string) error {
-	sessionID := ctx.getReference(session)
+	sessionID := ctx.getIDOfReference(session)
 
 	var sessionCount int
 	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE session_id = ?", sessionID).
@@ -177,7 +178,7 @@ func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *godog.Tab
 
 // ThereAreCountAccessTokensForUser checks if there are a given number of access tokens for a given user.
 func (ctx *TestContext) ThereAreCountAccessTokensForUser(count int, user string) error {
-	userID := ctx.getReference(user)
+	userID := ctx.getIDOfReference(user)
 
 	var accessTokensCount int
 	err := ctx.db.QueryRow(`

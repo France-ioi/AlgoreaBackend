@@ -21,6 +21,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
@@ -127,6 +128,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 	return nil
 }
 
+// FalsifiedSignedTokenIsDistributed generates a falsified token and sets it in a global template variable.
 func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 	varName, signerName string,
 	jsonPayload *godog.DocString,
@@ -160,7 +162,7 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
-	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesByIDs(yamlConfig.Content))
+	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesWithIDs(yamlConfig.Content))
 	if err != nil {
 		return err
 	}
@@ -181,7 +183,7 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 }
 
 // TheContextVariableIs sets a context variable in the request http.Request as the provided value.
-// Can be retrieved from the request with r.Context().Value("variableName").
+// Can be retrieved from the request with r.Context().Value(service.APIServiceContextVariableName("variableName")).
 func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	preprocessed, err := ctx.preprocessString(value)
 	if err != nil {
@@ -191,7 +193,8 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	oldHTTPHandler := ctx.application.HTTPHandler
 	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
+			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(),
+				service.APIServiceContextVariableName(variableName), preprocessed)))
 		})
 	}).(*chi.Mux)
 	ctx.application.HTTPHandler.Mount("/", oldHTTPHandler)

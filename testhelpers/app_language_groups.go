@@ -36,14 +36,14 @@ func (ctx *TestContext) getGroupPrimaryKey(groupID int64) string {
 	return strconv.FormatInt(groupID, 10)
 }
 
-// addGroup adds a group in database.
+// addGroup adds a group to the database.
 func (ctx *TestContext) addGroup(group string) {
-	groupID := ctx.getReference(group)
+	groupID := ctx.getIDOfReference(group)
 
 	primaryKey := ctx.getGroupPrimaryKey(groupID)
 
 	if !ctx.isInDatabase("groups", primaryKey) {
-		ctx.addInDatabase("groups", primaryKey, map[string]interface{}{
+		ctx.addToDatabase("groups", primaryKey, map[string]interface{}{
 			"id": groupID,
 			// All the other fields are set to default values.
 			"name":                                   "Group " + referenceToName(group),
@@ -74,7 +74,7 @@ func (ctx *TestContext) setGroupFieldInDatabase(primaryKey, field string, value 
 func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 	for i := 1; i < len(groups.Rows); i++ {
 		group := ctx.getRowMap(i, groups)
-		groupID := ctx.getReference(group["group"])
+		groupID := ctx.getIDOfReference(group["group"])
 
 		err := ctx.ThereIsAGroup(group["group"])
 		mustNotBeError(err)
@@ -195,7 +195,7 @@ func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) error {
 		return err
 	}
 
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(group))
+	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getIDOfReference(group))
 	ctx.setGroupFieldInDatabase(groupPrimaryKey, "name", "AllUsers")
 	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "Base")
 

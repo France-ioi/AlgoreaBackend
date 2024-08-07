@@ -257,7 +257,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 }
 
 // Bind of AskHintRequest checks that the asked hint is present.
-func (requestData *AskHintRequest) Bind(r *http.Request) error {
+func (requestData *AskHintRequest) Bind(_ *http.Request) error {
 	if len(requestData.HintToken.AskedHint.Bytes()) == 0 || bytes.Equal([]byte("null"), requestData.HintToken.AskedHint.Bytes()) {
 		return fmt.Errorf("asked hint should not be empty")
 	}

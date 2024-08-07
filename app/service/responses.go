@@ -19,7 +19,7 @@ type Response struct {
 }
 
 // Render generates the HTTP response from Response.
-func (resp *Response) Render(w http.ResponseWriter, r *http.Request) error {
+func (resp *Response) Render(_ http.ResponseWriter, r *http.Request) error {
 	if resp.Success && resp.Message == "" {
 		resp.Message = "success"
 	}

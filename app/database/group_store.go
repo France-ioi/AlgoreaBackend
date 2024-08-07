@@ -281,8 +281,8 @@ func (s *GroupStore) HasParticipants(groupID int64) bool {
 	return hasParticipants
 }
 
-// GetSearchForPossibleSubgroupsQuery returns a query for searching for possible subgroups of a user.
-func (s *GroupStore) GetSearchForPossibleSubgroupsQuery(user *User, searchString string) *DB {
+// PossibleSubgroupsBySearchString returns a query for searching for possible subgroups of a user.
+func (s *GroupStore) PossibleSubgroupsBySearchString(user *User, searchString string) *DB {
 	return s.ManagedBy(user).
 		Where("group_managers.can_manage = 'memberships_and_group'").
 		Group("groups.id").
@@ -295,7 +295,8 @@ func (s *GroupStore) GetSearchForPossibleSubgroupsQuery(user *User, searchString
 			groups.description`)
 }
 
-func (s *GroupStore) GetSearchForAvailableGroupsQuery(user *User, searchString string) *DB {
+// AvailableGroupsBySearchString returns a query for searching for available groups of a user.
+func (s *GroupStore) AvailableGroupsBySearchString(user *User, searchString string) *DB {
 	skipGroups := s.ActiveGroupGroups().
 		Select("groups_groups_active.parent_group_id").
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).

@@ -7,6 +7,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
+// MockCtxSessionID is a fixed session ID to be used by the mock user middleware.
 const MockCtxSessionID = int64(1)
 
 // MockUserMiddleware is a middleware to be used to mock a fixed user in the context.

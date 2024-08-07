@@ -2,6 +2,7 @@ package database
 
 import "github.com/jinzhu/gorm"
 
+// AccessTokenMaxLength is the maximum length of an access token.
 const AccessTokenMaxLength = 2000
 
 // AccessTokenStore implements database operations on `access_tokens`.

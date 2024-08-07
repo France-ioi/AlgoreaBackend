@@ -24,8 +24,8 @@ var (
 	referenceRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
 )
 
-// getOrCreateReferenceFor gets the ID from a reference, or create the reference if it doesn't exist.
-func (ctx *TestContext) getReference(reference string) int64 {
+// getIDOfReference returns the ID of a reference.
+func (ctx *TestContext) getIDOfReference(reference string) int64 {
 	if id, err := strconv.ParseInt(reference, 10, 64); err == nil {
 		return id
 	}
@@ -37,8 +37,8 @@ func (ctx *TestContext) getReference(reference string) int64 {
 	panic(fmt.Sprintf("reference %q not found", reference))
 }
 
-// replaceReferencesByIDs changes the references (@ref) in a string by the referenced identifiers (ID).
-func (ctx *TestContext) replaceReferencesByIDs(str string) string {
+// replaceReferencesWithIDs changes the references (@ref) in a string with the referenced identifiers (ID).
+func (ctx *TestContext) replaceReferencesWithIDs(str string) string {
 	// a reference should either be at the beginning of the string (^), or after a non alpha-num character (\W).
 	// we don't want to rewrite email addresses.
 	return referenceRegexp.ReplaceAllStringFunc(str, func(capture string) string {
@@ -46,16 +46,16 @@ func (ctx *TestContext) replaceReferencesByIDs(str string) string {
 		// - @Reference
 		// - /@Reference (or another non-alphanum character in front)
 
-		if capture[0] == ReferencePrefix {
-			return strconv.FormatInt(ctx.getReference(capture), 10)
+		if capture[0] == referencePrefix {
+			return strconv.FormatInt(ctx.getIDOfReference(capture), 10)
 		}
 
-		return string(capture[0]) + strconv.FormatInt(ctx.getReference(capture[1:]), 10)
+		return string(capture[0]) + strconv.FormatInt(ctx.getIDOfReference(capture[1:]), 10)
 	})
 }
 
 func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
-	jsonBody = ctx.replaceReferencesByIDs(jsonBody)
+	jsonBody = ctx.replaceReferencesWithIDs(jsonBody)
 	tmpl, err := ctx.templateSet.Parse("template", jsonBody)
 	if err != nil {
 		return "", err

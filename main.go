@@ -1,3 +1,6 @@
+/*
+Package main - the entry point of the application
+*/
 package main
 
 import (

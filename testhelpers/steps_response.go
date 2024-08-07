@@ -61,7 +61,7 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %v", jsonPath, value, err)
 	}
 
-	value = ctx.replaceReferencesByIDs(value)
+	value = ctx.replaceReferencesWithIDs(value)
 	if jsonPathResultMatchesValue(jsonPathRes, value) {
 		return nil
 	}
@@ -238,7 +238,7 @@ func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 		for j := 0; j < len(headerCells); j++ {
 			curHeader := headerCells[j].Value
 
-			curWant[curHeader] = ctx.replaceReferencesByIDs(wantRow.Cells[j].Value)
+			curWant[curHeader] = ctx.replaceReferencesWithIDs(wantRow.Cells[j].Value)
 			sortedWants[i-1] = curWant
 
 			// The header is a JSONPath (e.g. "title", "strings.title").
@@ -295,7 +295,7 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 	sortedWants := make([]string, len(wants.Rows))
 	for i := 0; i < len(wants.Rows); i++ {
 		sortedResults[i] = stringifyJSONPathResultValue(jsonPathResArr[i])
-		sortedWants[i] = ctx.replaceReferencesByIDs(wants.Rows[i].Cells[0].Value)
+		sortedWants[i] = ctx.replaceReferencesWithIDs(wants.Rows[i].Cells[0].Value)
 	}
 
 	sort.Strings(sortedResults)
@@ -498,14 +498,11 @@ func (ctx *TestContext) TheResponseShouldBe(kind string) error {
 	if err := ctx.TheResponseCodeShouldBe(expectedCode); err != nil {
 		return err
 	}
-	if err := ctx.TheResponseBodyShouldBeJSON(&godog.DocString{
+	return ctx.TheResponseBodyShouldBeJSON(&godog.DocString{
 		Content: `
 		{
 			"message": "` + kind + `",
 			"success": true
 		}`,
-	}); err != nil {
-		return err
-	}
-	return nil
+	})
 }

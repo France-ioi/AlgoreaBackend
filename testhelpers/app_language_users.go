@@ -35,13 +35,13 @@ func (ctx *TestContext) getUserPrimaryKey(groupID int64) string {
 	return strconv.FormatInt(groupID, 10)
 }
 
-// addUser adds a user in database.
+// addUser adds a user to the database.
 func (ctx *TestContext) addUser(user string) {
-	primaryKey := ctx.getUserPrimaryKey(ctx.getReference(user))
+	primaryKey := ctx.getUserPrimaryKey(ctx.getIDOfReference(user))
 
 	if !ctx.isInDatabase("users", primaryKey) {
-		ctx.addInDatabase("users", primaryKey, map[string]interface{}{
-			"group_id": ctx.getReference(user),
+		ctx.addToDatabase("users", primaryKey, map[string]interface{}{
+			"group_id": ctx.getIDOfReference(user),
 			"login":    referenceToName(user),
 			// All the other fields are set to default values.
 			"login_id":   nil,
@@ -74,7 +74,7 @@ func (ctx *TestContext) ThereIsAUser(name string) error {
 	err := ctx.ThereIsAGroup(name)
 	mustNotBeError(err)
 
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(name))
+	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getIDOfReference(name))
 	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "User")
 
 	return nil
@@ -85,7 +85,7 @@ func (ctx *TestContext) ThereAreTheFollowingUsers(users *godog.Table) error {
 	for i := 1; i < len(users.Rows); i++ {
 		user := ctx.getRowMap(i, users)
 
-		groupID := ctx.getReference(user["user"])
+		groupID := ctx.getIDOfReference(user["user"])
 
 		err := ctx.ThereIsAUser(user["user"])
 		mustNotBeError(err)

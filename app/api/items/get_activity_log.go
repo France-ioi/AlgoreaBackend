@@ -370,7 +370,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 
 	answersQuery := store.Answers().DB
 
-	if cnt.Cnt > itemActivityLogStraightJoinBoundary || r.Context().Value("forceStraightJoinInItemActivityLog") == "force" {
+	if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
+		r.Context().Value(service.APIServiceContextVariableName("forceStraightJoinInItemActivityLog")) == "force" {
 		// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
 		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
 		// also, we need to FORCE INDEX to do the sorted index scan
