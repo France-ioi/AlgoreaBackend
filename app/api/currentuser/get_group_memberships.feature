@@ -32,16 +32,16 @@ Feature: Get group memberships for the current user
       | 32              | 21             | null                        |
     And the groups ancestors are computed
     And the database has the following table 'group_membership_changes':
-      | group_id | member_id | action                | at                  |
-      | 1        | 21        | invitation_created    | 2017-02-28 06:38:38 |
-      | 2        | 21        | invitation_refused    | 2017-03-29 06:38:38 |
-      | 3        | 21        | join_request_created  | 2017-04-29 06:38:38 |
-      | 4        | 21        | join_request_refused  | 2017-05-29 06:38:38 |
-      | 5        | 21        | invitation_accepted   | 2017-06-29 06:38:38 |
-      | 6        | 21        | join_request_accepted | 2017-07-29 06:38:38 |
-      | 7        | 21        | removed               | 2017-08-29 06:38:38 |
-      | 8        | 21        | left                  | 2017-09-29 06:38:38 |
-      | 1        | 11        | added_directly        | 2017-11-29 06:38:38 |
+      | group_id | member_id | action                | at                      |
+      | 1        | 21        | invitation_created    | 2017-02-28 06:38:38.001 |
+      | 2        | 21        | invitation_refused    | 2017-03-29 06:38:38.001 |
+      | 3        | 21        | join_request_created  | 2017-04-29 06:38:38.001 |
+      | 4        | 21        | join_request_refused  | 2017-05-29 06:38:38.001 |
+      | 5        | 21        | invitation_accepted   | 2017-06-29 06:38:38.001 |
+      | 6        | 21        | join_request_accepted | 2017-07-29 06:38:38.001 |
+      | 7        | 21        | removed               | 2017-08-29 06:38:38.001 |
+      | 8        | 21        | left                  | 2017-09-29 06:38:38.001 |
+      | 1        | 11        | added_directly        | 2017-11-29 06:38:38.001 |
     And the database has the following table 'items':
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
@@ -66,7 +66,7 @@ Feature: Get group memberships for the current user
           "description": "Another class group",
           "type": "Class"
         },
-        "member_since": "2017-07-29T06:38:38Z",
+        "member_since": "2017-07-29T06:38:38.001Z",
         "action": "join_request_accepted",
         "is_membership_locked": true
       },
@@ -77,7 +77,7 @@ Feature: Get group memberships for the current user
           "description": "Group for other people",
           "type": "Other"
         },
-        "member_since": "2017-06-29T06:38:38Z",
+        "member_since": "2017-06-29T06:38:38.001Z",
         "action": "invitation_accepted",
         "is_membership_locked": false
       },
@@ -133,7 +133,7 @@ Feature: Get group memberships for the current user
           "description": "Another class group",
           "type": "Class"
         },
-        "member_since": "2017-07-29T06:38:38Z",
+        "member_since": "2017-07-29T06:38:38.001Z",
         "action": "join_request_accepted",
         "is_membership_locked": true
       }
@@ -154,7 +154,7 @@ Feature: Get group memberships for the current user
           "description": "Group for other people",
           "type": "Other"
         },
-        "member_since": "2017-06-29T06:38:38Z",
+        "member_since": "2017-06-29T06:38:38.001Z",
         "action": "invitation_accepted",
         "is_membership_locked": false
       }

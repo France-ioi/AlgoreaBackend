@@ -10,8 +10,8 @@ Feature: User sends a request to join a group
       | 21       |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | at                  |
-      | 14       | 21        | join_request | 2019-05-30 11:00:00 |
+      | group_id | member_id | type         | at                      |
+      | 14       | 21        | join_request | 2019-05-30 11:00:00.001 |
     And the database has the following table 'items':
       | id | default_language_tag |
       | 20 | fr                   |

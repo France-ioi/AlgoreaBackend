@@ -113,9 +113,9 @@ func ResolveURLQueryGetTimeField(httpReq *http.Request, name string) (time.Time,
 	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
 		return time.Time{}, err
 	}
-	result, err := time.Parse(time.RFC3339, httpReq.URL.Query().Get(name))
+	result, err := time.Parse(time.RFC3339Nano, httpReq.URL.Query().Get(name))
 	if err != nil {
-		return time.Time{}, fmt.Errorf("wrong value for %s (should be time (rfc3339))", name)
+		return time.Time{}, fmt.Errorf("wrong value for %s (should be time (rfc3339Nano))", name)
 	}
 	return result, nil
 }

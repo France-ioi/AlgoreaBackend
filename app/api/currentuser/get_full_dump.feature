@@ -44,15 +44,15 @@ Feature: Export the current user's data
       | 6        | 9          | memberships           | 1                      | 1                 |
       | 9        | 8          | none                  | 0                      | 0                 |
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | at                  |
-      | 1        | 11        | invitation   | 2019-08-10 00:00:00 |
-      | 3        | 11        | join_request | 2019-08-11 00:00:00 |
-      | 1        | 21        | invitation   | 2019-08-12 00:00:00 |
+      | group_id | member_id | type         | at                      |
+      | 1        | 11        | invitation   | 2019-08-10 00:00:00.001 |
+      | 3        | 11        | join_request | 2019-08-11 00:00:00.002 |
+      | 1        | 21        | invitation   | 2019-08-12 00:00:00.003 |
     And the database has the following table 'group_membership_changes':
-      | group_id | member_id | action               | at                  | initiator_id |
-      | 4        | 11        | join_request_refused | 2019-07-10 00:02:28 | 11           |
-      | 7        | 11        | removed              | 2019-07-10 03:02:28 | 31           |
-      | 8        | 11        | left                 | 2019-07-10 04:02:28 | 11           |
+      | group_id | member_id | action               | at                      | initiator_id |
+      | 4        | 11        | join_request_refused | 2019-07-10 00:02:28.001 | 11           |
+      | 7        | 11        | removed              | 2019-07-10 03:02:28.002 | 31           |
+      | 8        | 11        | left                 | 2019-07-10 04:02:28.003 | 11           |
     And the database has the following table 'items':
       | id  | default_language_tag |
       | 404 | fr                   |
@@ -189,15 +189,15 @@ Feature: Export the current user's data
       ],
       "group_membership_changes": [
         {
-          "action": "left", "at": "2019-07-10T04:02:28Z", "group_id": "8", "initiator_id": "11",
+          "action": "left", "at": "2019-07-10T04:02:28.003Z", "group_id": "8", "initiator_id": "11",
           "member_id": "11", "name": "Another Club"
         },
         {
-          "action": "removed", "at": "2019-07-10T03:02:28Z", "group_id": "7", "initiator_id": "31",
+          "action": "removed", "at": "2019-07-10T03:02:28.002Z", "group_id": "7", "initiator_id": "31",
           "member_id": "11", "name": "Another Team"
         },
         {
-          "action": "join_request_refused", "at": "2019-07-10T00:02:28Z", "group_id": "4", "initiator_id": "11",
+          "action": "join_request_refused", "at": "2019-07-10T00:02:28.001Z", "group_id": "4", "initiator_id": "11",
           "member_id": "11", "name": "Our Friends"
         }
       ],
@@ -205,12 +205,12 @@ Feature: Export the current user's data
         {
           "group_id": "1", "member_id": "11", "name": "Our Class", "type": "invitation",
           "lock_membership_approved": 0, "personal_info_view_approved": 0,
-          "watch_approved": 0, "at": "2019-08-10T00:00:00Z"
+          "watch_approved": 0, "at": "2019-08-10T00:00:00.001Z"
         },
         {
           "group_id": "3", "member_id": "11", "name": "Our Club", "type": "join_request",
           "lock_membership_approved": 0, "personal_info_view_approved": 0,
-          "watch_approved": 0, "at": "2019-08-11T00:00:00Z"
+          "watch_approved": 0, "at": "2019-08-11T00:00:00.002Z"
         }
       ],
       "joined_groups": [

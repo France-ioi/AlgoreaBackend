@@ -62,4 +62,4 @@ Feature: List threads - robustness
     Given I am @John
     When I send a GET request to "/threads?is_mine=1&latest_update_gt=2023-01-01T00:00:99"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for latest_update_gt (should be time (rfc3339))"
+    And the response error message should contain "Wrong value for latest_update_gt (should be time (rfc3339Nano))"

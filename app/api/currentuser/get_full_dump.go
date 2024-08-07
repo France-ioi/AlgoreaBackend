@@ -240,8 +240,8 @@ func writeValue(w io.Writer, value interface{}) {
 				((len(key) > 3 && key[len(key)-3:] == "_id") || key == "id") {
 				valueMap[key] = strconv.FormatInt(int64Number, 10)
 			} else if stringValue, isString := valueMap[key].(string); isString && isDateColumnName(key) {
-				parsedTime, _ := time.Parse("2006-01-02 15:04:05", stringValue)
-				valueMap[key] = parsedTime.Format(time.RFC3339)
+				parsedTime, _ := time.Parse("2006-01-02 15:04:05.999999999", stringValue)
+				valueMap[key] = parsedTime.Format(time.RFC3339Nano)
 			}
 		}
 	}

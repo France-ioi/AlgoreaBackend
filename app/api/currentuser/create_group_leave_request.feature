@@ -14,8 +14,8 @@ Feature: User sends a request to leave a group
       | 14              | 21             | 2019-06-30 11:00:00         |
     And the groups ancestors are computed
     And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type          | at                  |
-      | 14       | 21        | leave_request | 2019-05-30 11:00:00 |
+      | group_id | member_id | type          | at                      |
+      | 14       | 21        | leave_request | 2019-05-30 11:00:00.001 |
 
   Scenario: Successfully send a request
     Given I am the user with id "21"

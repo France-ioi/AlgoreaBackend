@@ -138,10 +138,7 @@ Feature: Join a group using a code (groupsJoinByCode)
       | parent_group_id | child_group_id |
       | 12              | 21             |
       | 17              | 21             |
-    And the table "group_pending_requests" should be:
-      | group_id | member_id | type         |
-      | 11       | 21        | invitation   |
-      | 14       | 21        | join_request |
+    And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be:
       | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 12       | 21        | joined_by_code | 21           | 1                                         |

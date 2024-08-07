@@ -18,9 +18,9 @@ Feature: Delete the current user
       | 100      | 21        | 2019-05-30 11:00:00 |
       | 100      | 31        | 2019-05-30 11:00:00 |
     And the database has the following table 'group_membership_changes':
-      | group_id | member_id | at                  |
-      | 100      | 21        | 2019-05-30 11:00:00 |
-      | 100      | 31        | 2019-05-30 11:00:00 |
+      | group_id | member_id | at                      |
+      | 100      | 21        | 2019-05-30 11:00:00.001 |
+      | 100      | 31        | 2019-05-30 11:00:00.001 |
     And the database has the following table 'users':
       | temp_user | login    | group_id | login_id |
       | 0         | user     | 21       | 1234567  |
