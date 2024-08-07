@@ -121,7 +121,9 @@ func (pv *PropagationVerifier) Run(
 		calledPropagationSteps[step]++
 
 		if calledPropagationSteps[step] > 10 {
-			t.Fatalf("looks like an infinite loop in propagation step %q, called %d times", step, calledPropagationSteps[step])
+			_ = application.Database.Close() // stop all the app's API handlers
+			t.Errorf("looks like an infinite loop in propagation step %q, called %d times", step, calledPropagationSteps[step])
+			return
 		}
 
 		t.Logf("before propagation step %d: %q (%d)\n", stepCounter, step, calledPropagationSteps[step])
