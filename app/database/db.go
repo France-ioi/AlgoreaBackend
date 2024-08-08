@@ -647,13 +647,15 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(returnErr *error) { // nolint:gocritic
+func recoverPanics(returnErr *error) {
 	if p := recover(); p != nil {
 		switch e := p.(type) {
 		case runtime.Error:
 			panic(e)
+		case error:
+			*returnErr = e
 		default:
-			*returnErr = p.(error)
+			panic(p)
 		}
 	}
 }
