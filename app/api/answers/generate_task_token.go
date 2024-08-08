@@ -156,7 +156,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 			observerItemPerms.SubQuery(), observerParticipantPerms.SubQuery()).
 		Where("answers.id = ?", answerID).
 		Where("items.type = 'Task'").
-		WhereUserHaveStartedResultOnItem(user).
+		WhereItemHasResultStartedByUser(user).
 		Limit(1).
 		Take(&answerInfos).Error()
 

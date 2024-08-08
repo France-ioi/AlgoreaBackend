@@ -137,7 +137,7 @@ func (u *User) CanWatchGroupMembers(s *DataStore, groupID int64) bool {
 func (u *User) HasStartedResultOnItem(s *DataStore, itemID int64) bool {
 	hasStartedResultOntem, err := s.Items().
 		Where("items.id = ?", itemID).
-		WhereUserHaveStartedResultOnItem(u).
+		WhereItemHasResultStartedByUser(u).
 		Limit(1).
 		HasRows()
 	mustNotBeError(err)
