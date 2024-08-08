@@ -1046,20 +1046,24 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 					- {id: 4, regexp: "^2.*", priority: 2}
 					- {id: 2, regexp: "^1.*", priority: 3}
 					- {id: 1, regexp: "^4.*", priority: 4}
-				languages: [{tag: fr}]`)
+				languages: [{tag: fr}]
+				items: [{id: 1000, url: "4", default_language_tag: fr}]`)
 			defer func() { _ = db.Close() }()
 
 			itemStore := database.NewDataStore(db).Items()
 			assert.NoError(t, itemStore.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
 				return store.Items().InsertMap(map[string]interface{}{
+					"id":                   1,
 					"url":                  test.url,
 					"default_language_tag": "fr",
 				})
 			}))
 			var platformID *int64
-			assert.NoError(t, itemStore.PluckFirst("platform_id", &platformID).Error())
+			assert.NoError(t, itemStore.ByID(1).PluckFirst("platform_id", &platformID).Error())
 			if test.wantPlatformID == nil {
-				assert.Nil(t, platformID)
+				if platformID != nil {
+					t.Errorf("wanted platform_id to be nil, but got %d", *platformID)
+				}
 			} else {
 				assert.NotNil(t, platformID)
 				if platformID != nil {
@@ -1104,7 +1108,9 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 			var platformID *int64
 			assert.NoError(t, itemStore.ByID(1).PluckFirst("platform_id", &platformID).Error())
 			if test.wantPlatformID == nil {
-				assert.Nil(t, platformID)
+				if platformID != nil {
+					t.Errorf("wanted platform_id to be nil, but got %d", *platformID)
+				}
 			} else {
 				assert.NotNil(t, platformID)
 				if platformID != nil {
