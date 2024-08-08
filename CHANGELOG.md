@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## [v2.21.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.3...v2.21.4) - 2024-08-08
+- speed up the `itemActivityLogForItem` service
+- `itemActivityLogForItem`: fix `can_watch_answer` and how `can_watch_answer` is handled
+- fix `generateProfileEditToken`, use loginIDs instead of group ids
+- refactoring and internal improvements
+
 ## [v2.21.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.2...v2.21.3) - 2024-08-06
 - fixing doc of `invitationsView` (after change from previous version)
 - refactoring and internal improvements
