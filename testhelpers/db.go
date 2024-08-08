@@ -219,7 +219,9 @@ func emptyDB(db *sql.DB, dbName string) error {
                          FROM   information_schema.tables
                          WHERE  table_type   = 'BASE TABLE'
                            AND  table_schema = '` + dbName + `'
-                           AND  table_name  != 'gorp_migrations'`)
+                           AND  table_name  != 'gorp_migrations'
+                           AND  table_name  != 'user_batches'
+                         ORDER BY table_name`)
 	if err != nil {
 		return err
 	}
@@ -248,9 +250,6 @@ func emptyDB(db *sql.DB, dbName string) error {
 			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return scanErr
-		}
-		if tableName == dbName+".user_batches" { // skip this broken table
-			continue
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
 		_, err = tx.Exec("DELETE FROM " + tableName)

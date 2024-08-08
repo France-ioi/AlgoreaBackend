@@ -81,7 +81,7 @@ func TestDB_WhereUserHaveStartedResultOnItem(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := db.Table("items").WhereUserHaveStartedResultOnItem(&user).Scan(&result).Error()
+	err := db.Table("items").WhereItemHasResultStartedByUser(&user).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
