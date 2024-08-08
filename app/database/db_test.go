@@ -1271,6 +1271,28 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 	assert.Equal(t, "runtime error: index out of range [0] with length 0", panicValue.(error).Error())
 }
 
+func Test_recoverPanics_PanicsOnRecoveringValueOfNonErrorType(t *testing.T) {
+	expectedPanicValue := "some panic"
+	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
+		defer func() {
+			if p := recover(); p != nil {
+				didPanic = true
+				panicValue = p
+			}
+		}()
+
+		_ = func() (err error) {
+			defer recoverPanics(&err)
+			panic(expectedPanicValue)
+		}()
+
+		return false, nil
+	}()
+
+	assert.True(t, didPanic)
+	assert.Equal(t, expectedPanicValue, panicValue)
+}
+
 func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
