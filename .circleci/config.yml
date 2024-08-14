@@ -182,12 +182,15 @@ jobs:
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -b "`awk '/##.*/{n++;next};n==1;n==2{exit}' CHANGELOG.md`" -delete ${CIRCLE_TAG} ./bin/
   swagger-gen:
     docker:
-      - image: quay.io/goswagger/swagger:v0.30.5
+      - image: quay.io/goswagger/swagger:v0.31.0
     steps:
+      - run: go install github.com/France-ioi/go-swagger/cmd/swagger@ebf60e5c
+      - run: apk add npm
+      - run: npm install -g swagger2openapi
+      - run: npm install -g @redocly/cli@latest
       - checkout
       - run: go build -v # do not use 'make' as the image does not support '-race' arg
-      - run: swagger generate spec --scan-models -o ./swagger.yaml
-      - run: swagger validate ./swagger.yaml
+      - run: make swagger-generate
       - persist_to_workspace:
           root: ./
           paths:
@@ -200,7 +203,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "<html><body><redoc spec-url='//franceioi-algorea.s3.eu-west-3.amazonaws.com/spec/swagger-${CIRCLE_TAG}.yaml'></redoc><script src="//cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script></body></html>" > "spec.html"
+      - run: echo "<html><body><redoc spec-url='//franceioi-algorea.s3.eu-west-3.amazonaws.com/spec/swagger-${CIRCLE_TAG}.yaml'></redoc><script src="//cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script></body></html>" > "spec.html"
       - aws-cli/setup
       - run: |
           aws s3 cp ./swagger.yaml s3://franceioi-algorea/spec/swagger-${CIRCLE_TAG}.yaml --acl public-read

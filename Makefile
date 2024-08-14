@@ -99,11 +99,15 @@ lint:
 	$(MAKE) $(GOLANGCILINT)
 	$(GOLANGCILINT) run -v --deadline 10m0s
 
-validate-swagger:
-	swagger generate spec --scan-models -o ./swagger.yaml && swagger validate ./swagger.yaml
+swagger-generate:
+	swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
+		swagger validate ./swagger.yaml && \
+		swagger2openapi --refSiblings allOf --yaml swagger.yaml | sed 's/x-nullable:/nullable:/g' > openapi3.yaml && \
+		mv openapi3.yaml swagger.yaml && \
+		redocly lint --skip-rule security-defined --skip-rule spec --skip-rule no-identical-paths swagger.yaml
 
-serve-swagger: validate-swagger
-	swagger serve ./swagger.yaml --no-open
+swagger-serve: swagger-generate
+	redocly preview-docs swagger.yaml
 
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)

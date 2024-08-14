@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
 
 	"github.com/jinzhu/gorm"
 
@@ -44,12 +43,12 @@ func (ctx *TestContext) addSession(session, user, refreshToken string) {
 func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt string) {
 	sessionID := ctx.getIDOfReference(session)
 
-	issuedAtDate, err := time.Parse(utils.DateTimeFormat, issuedAt)
+	issuedAtDate, err := time.Parse(time.DateTime, issuedAt)
 	if err != nil {
 		panic(err)
 	}
 
-	expiresAtDate, err := time.Parse(utils.DateTimeFormat, expiresAt)
+	expiresAtDate, err := time.Parse(time.DateTime, expiresAt)
 	if err != nil {
 		panic(err)
 	}

@@ -12,7 +12,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
 )
 
 const (
@@ -356,7 +355,7 @@ func (ctx *TestContext) addThread(item, participant, helperGroup, status, messag
 	participantID := ctx.getIDOfReference(participant)
 	helperGroupID := ctx.getIDOfReference(helperGroup)
 
-	latestUpdateAtDate, err := time.Parse(utils.DateTimeFormat, latestUpdateAt)
+	latestUpdateAtDate, err := time.Parse(time.DateTime, latestUpdateAt)
 	if err != nil {
 		panic(err)
 	}
@@ -789,7 +788,7 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 
 	// add latest update at
 	if _, ok := thread["latest_update_at"]; !ok {
-		thread["latest_update_at"] = time.Now().Format(utils.DateTimeFormat)
+		thread["latest_update_at"] = time.Now().Format(time.DateTime)
 	}
 
 	ctx.currentThreadKey = ctx.getThreadKey(
