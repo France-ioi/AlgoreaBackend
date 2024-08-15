@@ -34,7 +34,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", apiErr.Error, debug.Stack())
 			}
 		}
-		if apiErr != NoError { // apiErr is an APIError, not builtin.Error
+		if apiErr != NoError { // apiErr is an APIError, not builtin.error
 			_ = render.Render(w, r, apiErr.httpResponse()) // nolint, never fails
 		}
 	}()
