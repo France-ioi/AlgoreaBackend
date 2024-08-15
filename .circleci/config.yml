@@ -184,7 +184,7 @@ jobs:
     docker:
       - image: quay.io/goswagger/swagger:v0.31.0
     steps:
-      - run: go install github.com/France-ioi/go-swagger/cmd/swagger@ebf60e5c
+      - run: go install github.com/France-ioi/go-swagger/cmd/swagger@00200fa
       - run: apk add npm
       - run: npm install -g swagger2openapi
       - run: npm install -g @redocly/cli@latest

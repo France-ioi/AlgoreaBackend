@@ -156,7 +156,7 @@ Each time the code is pushed in the "master" branch, the CI generates the spec f
 
 To perform the spec generation locally, install our patched version of Go-Swagger from source (requires Go 1.21+):
 ```
-go install github.com/France-ioi/go-swagger/cmd/swagger@ebf60e5c
+go install github.com/France-ioi/go-swagger/cmd/swagger@00200fa
 ```
 
 and swagger2openapi:
