@@ -95,3 +95,10 @@ func MustNotBeError(err error) {
 		panic(err)
 	}
 }
+
+// MustBeNoError panics if the APIError is not NoError.
+func MustBeNoError(apiError APIError) {
+	if apiError != NoError {
+		panic(apiError)
+	}
+}

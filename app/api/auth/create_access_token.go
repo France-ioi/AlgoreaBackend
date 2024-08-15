@@ -204,9 +204,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 	}
 
 	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustBeNoError(apiError)
 
 	code, codeGiven := requestData["code"]
 	if codeGiven {
@@ -216,32 +214,34 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		}
 	} else {
 		// The code is not given, requesting a new token from the given token.
-		requestContext, isSuccess, authErr := auth.ValidatesUserAuthentication(srv.Base, w, r)
-		if isSuccess {
+		requestContext, authorized, reason, err := auth.ValidatesUserAuthentication(srv.Base, w, r)
+		service.MustNotBeError(err)
+
+		if authorized {
 			service.AppHandler(srv.refreshAccessToken).
 				ServeHTTP(w, r.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
-		} else {
-			createTempUser, err := service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
-			if err != nil {
-				return service.ErrInvalidRequest(err)
-			}
+			return service.NoError
+		}
 
-			if createTempUser {
-				// createTempUser checks that the Authorization header is not present.
-				// But from here, we want to be able to create a temporary user if the authorization is invalid,
-				// for example, because it expired.
-				// Since we don't need its value anymore, we just delete it.
-				r.Header.Del("Authorization")
+		createTempUser, err := service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
 
-				service.AppHandler(srv.createTempUser).
-					ServeHTTP(w, r)
-			} else {
-				return service.APIError{
-					HTTPStatusCode: auth.GetAuthErrorCodeFromError(authErr),
-					Error:          authErr,
-				}
+		if !createTempUser {
+			return service.APIError{
+				HTTPStatusCode: http.StatusUnauthorized,
+				Error:          errors.New(reason),
 			}
 		}
+
+		// createTempUser checks that the Authorization header is not present.
+		// But from here, we want to be able to create a temporary user if the authorization is invalid,
+		// for example, because it expired.
+		// Since we don't need its value anymore, we just delete it.
+		r.Header.Del("Authorization")
+
+		service.AppHandler(srv.createTempUser).ServeHTTP(w, r)
 
 		return service.NoError
 	}

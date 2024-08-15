@@ -61,7 +61,7 @@ func TestUserMiddleware(t *testing.T) {
 			dbError:                  errors.New("some error"),
 			expectedStatusCode:       500,
 			expectedServiceWasCalled: false,
-			expectedBody:             `{"success":false,"message":"Internal server error","error_text":"Can't validate the access token"}` + "\n",
+			expectedBody:             `{"success":false,"message":"Internal server error"}` + "\n",
 			expectedLogs:             `level=error msg="Can't validate an access token: some error"`,
 		},
 		{
