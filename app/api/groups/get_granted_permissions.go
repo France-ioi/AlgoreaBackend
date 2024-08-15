@@ -43,7 +43,7 @@ type grantedPermissionsViewResultRow struct {
 		Title *string `json:"title"`
 		// required: true
 		// enum: Chapter,Task,Skill
-		Type *string `json:"type"`
+		Type string `json:"type"`
 		// required: true
 		LanguageTag string `json:"language_tag"`
 		// required: true

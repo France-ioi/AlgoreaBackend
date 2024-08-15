@@ -33,7 +33,7 @@ type item struct {
 	ID int64 `json:"id,string"`
 	// required:true
 	// enum: Chapter,Task,Skill
-	Type *string `json:"type"`
+	Type string `json:"type"`
 	// required:true
 	Title *string `json:"title"`
 	// required:true
