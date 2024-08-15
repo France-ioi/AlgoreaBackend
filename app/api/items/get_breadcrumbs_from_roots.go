@@ -26,9 +26,9 @@ type breadcrumbPath struct {
 type breadcrumbElement struct {
 	// required: true
 	ID int64 `json:"id,string"`
-	// Nullable
 	// required: true
 	Title *string `json:"title"`
+	// Potentially null as the `items.type` field is nullable in the database.
 	// required: true
 	// enum: Chapter,Task,Course,Skill
 	Type *string `json:"type"`

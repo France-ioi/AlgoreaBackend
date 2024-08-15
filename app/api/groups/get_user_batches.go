@@ -16,7 +16,6 @@ type userBatch struct {
 	CustomPrefix string `json:"custom_prefix"`
 	// required: true
 	Size int `json:"size"`
-	// Nullable
 	// required: true
 	CreatorID *int64 `json:"creator_id,string"`
 }

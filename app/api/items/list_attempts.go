@@ -21,10 +21,8 @@ type attemptsListResponseRow struct {
 	ScoreComputed float32 `json:"score_computed"`
 	// required: true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required: true
 	StartedAt *database.Time `json:"started_at"`
-	// Nullable
 	// required: true
 	EndedAt *database.Time `json:"ended_at"`
 	// required: true
@@ -33,7 +31,8 @@ type attemptsListResponseRow struct {
 	LatestActivityAt database.Time `json:"latest_activity_at"`
 	// required: true
 	HelpRequested bool `json:"help_requested"`
-	UserCreator   *struct {
+	// required: true
+	UserCreator *struct {
 		// required: true
 		Login string `json:"login"`
 

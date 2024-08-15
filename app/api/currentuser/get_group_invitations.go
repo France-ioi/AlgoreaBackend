@@ -19,7 +19,7 @@ type invitationsViewResponseRow struct {
 	// required: true
 	At database.Time `json:"at"`
 
-	// the user that invited (Nullable)
+	// the user who invited
 	// required: true
 	InvitingUser *invitingUser `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
 
@@ -27,19 +27,16 @@ type invitationsViewResponseRow struct {
 	Group groupWithApprovals `json:"group" gorm:"embedded;embedded_prefix:group__"`
 }
 
-// The user that invited; Nullable.
 type invitingUser struct {
 	// `users.group_id`
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
 	Login string `json:"login"`
-	// Nullable
 	// required: true
-	FirstName string `json:"first_name"`
-	// Nullable
+	FirstName *string `json:"first_name"`
 	// required: true
-	LastName string `json:"last_name"`
+	LastName *string `json:"last_name"`
 }
 
 type groupWithApprovals struct {
@@ -48,7 +45,6 @@ type groupWithApprovals struct {
 	ID int64 `json:"id,string"`
 	// required: true
 	Name string `json:"name"`
-	// Nullable
 	// required: true
 	Description *string `json:"description"`
 	// required: true
@@ -57,7 +53,6 @@ type groupWithApprovals struct {
 	// enum: none,view,edit
 	// required: true
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true

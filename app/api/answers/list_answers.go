@@ -177,7 +177,6 @@ type answersResponseAnswer struct {
 	Type string `json:"type"`
 	// required: true
 	CreatedAt database.Time `json:"created_at"`
-	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
 

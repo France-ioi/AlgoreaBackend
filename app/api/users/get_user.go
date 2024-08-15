@@ -41,10 +41,8 @@ type userViewResponse struct {
 	TempUser bool `json:"temp_user"`
 	// required: true
 	Login string `json:"login"`
-	// Nullable
 	// required: true
 	FreeText *string `json:"free_text"`
-	// Nullable
 	// required: true
 	WebSite *string `json:"web_site"`
 

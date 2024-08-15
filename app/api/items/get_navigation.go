@@ -18,7 +18,6 @@ type itemNavigationResponse struct {
 
 	// required: true
 	AttemptID int64 `json:"attempt_id,string"`
-	// Nullable
 	// required: true
 	Children []navigationItemChild `json:"children"`
 }

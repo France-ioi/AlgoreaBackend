@@ -15,7 +15,6 @@ type managedGroupsGetResponseRow struct {
 	ID int64 `json:"id,string"`
 	// required:true
 	Name string `json:"name"`
-	// Nullable
 	// required:true
 	Description *string `json:"description"`
 	// required:true

@@ -57,12 +57,10 @@ type ItemResult struct {
 	ScoreComputed float32 `json:"score_computed"`
 	// required:true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required:true
 	StartedAt *time.Time `json:"started_at"`
 	// required:true
 	LatestActivityAt time.Time `json:"latest_activity_at"`
-	// Nullable
 	// required:true
 	EndedAt *time.Time `json:"ended_at"`
 	// required:true
@@ -81,8 +79,6 @@ type GroupShortInfo struct {
 
 // UserPersonalInfo contains first_name and last_name.
 type UserPersonalInfo struct {
-	// Nullable
 	FirstName *string `json:"first_name"`
-	// Nullable
-	LastName *string `json:"last_name"`
+	LastName  *string `json:"last_name"`
 }

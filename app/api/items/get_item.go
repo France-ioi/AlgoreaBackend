@@ -18,20 +18,16 @@ import (
 type itemStringCommon struct {
 	// required: true
 	LanguageTag string `json:"language_tag"`
-	// Nullable
 	// required: true
 	Title *string `json:"title"`
-	// Nullable
 	// required: true
-	ImageURL *string `json:"image_url"`
-	// Nullable; only if `can_view` >= 'content'
-	Subtitle *string `json:"subtitle"`
-	// Nullable; only if `can_view` >= 'content'
+	ImageURL    *string `json:"image_url"`
+	Subtitle    *string `json:"subtitle"`
 	Description *string `json:"description"`
 }
 
 type itemStringRootNodeWithSolutionAccess struct {
-	// Nullable; only if the user has access to solutions
+	// only if the user has access to solutions
 	EduComment *string `json:"edu_comment"`
 }
 
@@ -61,7 +57,6 @@ type commonItemFields struct {
 	// required: true
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type"`
-	// Nullable
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	// required: true
@@ -91,9 +86,9 @@ type itemPermissionsWithCanRequestHelpTo struct {
 }
 
 type itemRootNodeNotChapterFields struct {
-	// Nullable; only if not a chapter
+	// only if not a chapter
 	URL *string `json:"url"`
-	// Nullable; only if not a chapter
+	// only if not a chapter
 	Options *string `json:"options"`
 	// only if not a chapter
 	UsesAPI bool `json:"uses_api"`
@@ -103,6 +98,7 @@ type itemRootNodeNotChapterFields struct {
 
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
+	// only if the current can watch the item or grant permissions to both the watched group and the item
 	Permissions *itemPermissionsWithCanRequestHelpTo `json:"permissions,omitempty"`
 
 	// Average score of all "end-members" within the watched group
@@ -127,7 +123,6 @@ type itemResponse struct {
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 	// required: true
 	TitleBarVisible bool `json:"title_bar_visible"`
-	// Nullable
 	// required: true
 	TextID *string `json:"text_id"`
 	// required: true
@@ -186,8 +181,7 @@ type itemResponse struct {
 //							 otherwise the "forbidden" error is returned.
 //
 //						 * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
-//							 otherwise the "forbidden" error is returned. Permissions of the watched group are only shown if the current user
-//							 can watch the item or grant permissions to both the watched group and the item.
+//							 otherwise the "forbidden" error is returned.
 //	parameters:
 //		- name: item_id
 //			in: path
@@ -467,7 +461,13 @@ func constructItemResponseFromDBData(
 			},
 		},
 		String: itemStringRoot{
-			itemStringCommon: constructItemStringCommon(rawData),
+			itemStringCommon: &itemStringCommon{
+				LanguageTag: rawData.StringLanguageTag,
+				Title:       rawData.StringTitle,
+				ImageURL:    rawData.StringImageURL,
+				Subtitle:    rawData.StringSubtitle,
+				Description: rawData.StringDescription,
+			},
 		},
 		EntryMinAdmittedMembersRatio: rawData.EntryMinAdmittedMembersRatio,
 		EntryFrozenTeams:             rawData.EntryFrozenTeams,
@@ -512,14 +512,4 @@ func constructItemResponseFromDBData(
 	}
 
 	return result
-}
-
-func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
-	return &itemStringCommon{
-		LanguageTag: rawData.StringLanguageTag,
-		Title:       rawData.StringTitle,
-		ImageURL:    rawData.StringImageURL,
-		Subtitle:    rawData.StringSubtitle,
-		Description: rawData.StringDescription,
-	}
 }

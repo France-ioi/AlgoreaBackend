@@ -12,9 +12,9 @@ import (
 type GroupManagersViewResponseRowUser struct {
 	// Displayed only for users
 	Login string `json:"login"`
-	// Nullable; displayed only for users
+	// Displayed only for users
 	FirstName *string `json:"first_name"`
-	// Nullable; displayed only for users
+	// Displayed only for users
 	LastName *string `json:"last_name"`
 }
 

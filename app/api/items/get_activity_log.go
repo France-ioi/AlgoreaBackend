@@ -59,7 +59,6 @@ type itemActivityLogResponseRow struct {
 		Type string `json:"type"`
 		// required: true
 		String struct {
-			// Nullable
 			// required: true
 			Title *string `json:"title"`
 		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
