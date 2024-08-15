@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 )
 
@@ -38,7 +38,7 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 		{
 			name: "with info", participantID: 11, attemptID: 2, itemID: 12,
 			wantHintsInfo: &database.HintsInfo{
-				HintsRequested: utils.Ptr(`[0,1,"hint",null]`),
+				HintsRequested: golang.Ptr(`[0,1,"hint",null]`),
 				HintsCached:    4,
 			},
 		},
