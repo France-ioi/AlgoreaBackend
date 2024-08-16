@@ -142,9 +142,6 @@ issues:
     - text: "SA1019:" # io/util has been deprecated since Go 1.19
       linters:
         - staticcheck
-    - text: "SA1029:" # should not use built'in type string as key for value; define your own type to avoid collisions
-      linters:
-        - staticcheck
     - text: "ptrToRefParam:"
       linters:
         - gocritic

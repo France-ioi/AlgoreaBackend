@@ -56,7 +56,6 @@ type setCanRequestHelpTo struct {
 	// The given group must be visible by both the current user and `group_id`.
 	// Can be set to `null` to set the helper group to no group.
 	// Optional
-	// Nullable
 	ID *int64 `json:"id" sql:"column:can_request_help_to"`
 	// Optional
 	IsAllUsersGroup bool `json:"is_all_users_group"`

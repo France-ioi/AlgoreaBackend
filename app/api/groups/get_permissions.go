@@ -51,7 +51,6 @@ type grantedPermissionsStruct struct {
 	CanEnterFrom string `json:"can_enter_from"`
 	// required: true
 	CanEnterUntil string `json:"can_enter_until"`
-	// Nullable
 	// required: true
 	CanRequestHelpTo *canRequestHelpTo `json:"can_request_help_to"`
 }

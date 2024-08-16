@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 )
 
@@ -214,7 +214,7 @@ var generatedPermissionsUnchanged = []permissionsGeneratedResultRow{
 }
 
 var (
-	currentTimePtr = (*database.Time)(utils.Ptr(time.Now().UTC()))
+	currentTimePtr = (*database.Time)(golang.Ptr(time.Now().UTC()))
 	userID         = int64(111)
 	userIDPtr      = &userID
 )
@@ -284,7 +284,7 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipan
 		name:              name,
 		action:            action,
 		relationsToChange: allTheIDs,
-		maxParticipants:   utils.Ptr(8),
+		maxParticipants:   golang.Ptr(8),
 		wantResult: database.GroupGroupTransitionResults{
 			1: "full", 2: "full", 3: "full", 6: "full", 7: "full",
 
@@ -341,7 +341,7 @@ func testTransitionAcceptingPendingRequestEnforcingMaxParticipants(name string, 
 		action:                     action,
 		relationsToChange:          allTheIDs,
 		createPendingCycleWithType: pendingType.PendingType(),
-		maxParticipants:            utils.Ptr(5),
+		maxParticipants:            golang.Ptr(5),
 		wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 			acceptedID: "full", 30: "cycle",
 		}),
@@ -433,7 +433,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action:                     database.AdminCreatesInvitation,
 			createPendingCycleWithType: "join_request",
 			relationsToChange:          allTheIDs,
-			maxParticipants:            utils.Ptr(9),
+			maxParticipants:            golang.Ptr(9),
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 3: "success", 6: "success", 7: "success",
 				2: "unchanged",
@@ -467,7 +467,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action:                     database.AdminCreatesInvitation,
 			createPendingCycleWithType: "join_request",
 			relationsToChange:          allTheIDs,
-			maxParticipants:            utils.Ptr(8),
+			maxParticipants:            golang.Ptr(8),
 			wantResult: database.GroupGroupTransitionResults{
 				1: "full", 3: "full", 6: "full", 7: "full",
 				2: "unchanged",
@@ -525,7 +525,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			name:              "UserCreatesJoinRequest (max participants limit is not exceeded)",
 			action:            database.UserCreatesJoinRequest,
 			relationsToChange: allTheIDs,
-			maxParticipants:   utils.Ptr(6),
+			maxParticipants:   golang.Ptr(6),
 			approvals: map[int64]database.GroupApprovals{
 				1: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
 				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
@@ -570,7 +570,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
 				7: {PersonalInfoViewApproval: false, LockMembershipApproval: false, WatchApproval: true},
 			},
-			maxParticipants: utils.Ptr(5),
+			maxParticipants: golang.Ptr(5),
 			wantResult: database.GroupGroupTransitionResults{
 				1: "full", 6: "full", 7: "full",
 				3: "unchanged",
@@ -601,7 +601,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		testTransitionAcceptingPendingRequest("AdminAcceptsJoinRequest",
 			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, true, nil),
 		testTransitionAcceptingPendingRequest("AdminAcceptsJoinRequest (max participants limit is not exceeded)",
-			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, false, utils.Ptr(7)),
+			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, false, golang.Ptr(7)),
 		testTransitionAcceptingPendingRequestEnforcingMaxParticipants(
 			"AdminAcceptsJoinRequest", database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated),
 		{
@@ -754,20 +754,20 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserCreatesAcceptedJoinRequest", database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, true, nil),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserCreatesAcceptedJoinRequest (max participants limit is not exceeded)",
-			database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false, utils.Ptr(9)),
+			database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false, golang.Ptr(9)),
 		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
 			"UserCreatesAcceptedJoinRequest (enforce max participants)",
 			database.UserCreatesAcceptedJoinRequest, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByBadge", database.UserJoinsGroupByBadge, database.JoinedByBadge, true, nil),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserJoinsGroupByBadge (max participants limit is not exceeded)",
-			database.UserJoinsGroupByBadge, database.JoinedByBadge, false, utils.Ptr(9)),
+			database.UserJoinsGroupByBadge, database.JoinedByBadge, false, golang.Ptr(9)),
 		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
 			"UserJoinsGroupByBadge (enforce max participants)", database.UserJoinsGroupByBadge, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, true, nil),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserJoinsGroupByCode (max participants limit is not exceeded)",
-			database.UserJoinsGroupByCode, database.JoinedByCode, false, utils.Ptr(9)),
+			database.UserJoinsGroupByCode, database.JoinedByCode, false, golang.Ptr(9)),
 		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
 			"UserJoinsGroupByCode (enforce max participants)", database.UserJoinsGroupByCode, false),
 		{
@@ -1004,7 +1004,7 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 }
 
 func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoinRequests(t *testing.T) {
-	expectedTime := (*database.Time)(utils.Ptr(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
+	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
 	for _, tt := range generateApprovalsTests(expectedTime) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -1146,7 +1146,7 @@ func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEno
 
 func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvitations(t *testing.T) {
 	const success = "success"
-	expectedTime := (*database.Time)(utils.Ptr(time.Date(2019, 6, 1, 0, 0, 0, 0, time.UTC)))
+	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 6, 1, 0, 0, 0, 0, time.UTC)))
 	database.MockNow("2019-06-01 00:00:00")
 	defer database.RestoreNow()
 

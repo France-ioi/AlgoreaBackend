@@ -21,7 +21,6 @@ type groupParticipantProgressResponseCommon struct {
 	// Whether the participant or one of his teams has the item validated
 	// required:true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required:true
 	LatestActivityAt *database.Time `json:"latest_activity_at"`
 	// Number of hints requested for the result with the best score (if multiple, take the first one, chronologically).
@@ -58,10 +57,12 @@ type groupParticipantProgressResponseChild struct {
 	String structures.ItemString `json:"string"`
 
 	// required: true
+	// Extensions:
+	// ---
+	// x-nullable: false
 	CurrentUserPermissions *structures.ItemPermissions `json:"current_user_permissions"`
 
 	// The minimum `started_at` on a result among all attempts.
-	// Nullable
 	// required:true
 	StartedAt *database.Time `json:"started_at"`
 }

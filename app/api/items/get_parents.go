@@ -28,7 +28,6 @@ type parentItem struct {
 	// max among all attempts of the user (or of the team given in `{as_team_id}`)
 	// required: true
 	BestScore float32 `json:"best_score"`
-	// Nullable
 	// required:true
 	Result *structures.ItemResult `json:"result"`
 

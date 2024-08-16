@@ -160,7 +160,6 @@ type teamDescendantMember struct {
 
 	// required:true
 	Login string `json:"login"`
-	// Nullable
 	// required:true
 	Grade *int32 `json:"grade"`
 

@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation POST /items/{item_id}/attempts/{attempt_id}/generate-task-token items itemTaskTokenGenerate
@@ -170,12 +170,12 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 
 	taskToken := token.Task{
 		AccessSolutions:    &accessSolutions,
-		SubmissionPossible: utils.Ptr(true),
+		SubmissionPossible: golang.Ptr(true),
 		HintsAllowed:       &itemInfo.HintsAllowed,
 		HintsRequested:     resultInfo.HintsRequested,
-		HintsGivenCount:    utils.Ptr(strconv.Itoa(int(resultInfo.HintsCachedCount))),
-		IsAdmin:            utils.Ptr(false),
-		ReadAnswers:        utils.Ptr(true),
+		HintsGivenCount:    golang.Ptr(strconv.Itoa(int(resultInfo.HintsCachedCount))),
+		IsAdmin:            golang.Ptr(false),
+		ReadAnswers:        golang.Ptr(true),
 		UserID:             strconv.FormatInt(user.GroupID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,

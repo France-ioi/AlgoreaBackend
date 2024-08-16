@@ -17,17 +17,24 @@ type AppHandler func(http.ResponseWriter, *http.Request) APIError
 
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	apiErr := NoError
+	var shouldLogError bool
 	defer func() {
 		if p := recover(); p != nil {
 			switch err := p.(type) {
+			case APIError:
+				apiErr = err
 			case error:
 				apiErr = ErrUnexpected(err)
+				shouldLogError = true
 			default:
 				apiErr = ErrUnexpected(fmt.Errorf("unknown error: %+v", err))
+				shouldLogError = true
 			}
-			logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", apiErr.Error, debug.Stack())
+			if shouldLogError {
+				logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", apiErr.Error, debug.Stack())
+			}
 		}
-		if apiErr != NoError { // apiErr is an APIError, not os.Error
+		if apiErr != NoError { // apiErr is an APIError, not builtin.error
 			_ = render.Render(w, r, apiErr.httpResponse()) // nolint, never fails
 		}
 	}()

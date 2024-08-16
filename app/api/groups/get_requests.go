@@ -15,7 +15,6 @@ type groupRequestsViewResponseRow struct {
 	// `group_membership_changes.member_id`
 	// required: true
 	MemberID int64 `json:"member_id,string"`
-	// Nullable
 	// required: true
 	At *database.Time `json:"at"`
 	// `group_membership_changes.action`
@@ -27,30 +26,29 @@ type groupRequestsViewResponseRow struct {
 	JoiningUser struct {
 		// `users.group_id`
 		// required: true
-		GroupID *int64 `json:"group_id,string"`
+		GroupID int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
 
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
-		// Nullable
 		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"joining_user" gorm:"embedded;embedded_prefix:joining_user__"`
 
-	// Nullable
 	// required: true
 	InvitingUser *struct {
 		// `users.group_id`
 		// required: true
+		// Extensions:
+		// ---
+		// x-nullable: false
 		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
 		// required: true
 		FirstName *string `json:"first_name"`
-		// Nullable
 		// required: true
 		LastName *string `json:"last_name"`
 	} `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
@@ -71,7 +69,7 @@ type groupRequestsViewResponseRow struct {
 //		When `old_rejections_weeks` is given, only those rejected invitations/requests
 //		(`group_membership_changes.action` is "invitation_refused" or "join_request_refused") are shown
 //		that are created in the last `old_rejections_weeks` weeks.
-//		Otherwise all rejected invitations/requests are shown.
+//		Otherwise, all rejected invitations/requests are shown.
 //
 //
 //		`first_name` and `last_name` are only shown for joining users whose personal info is visible to the current user.

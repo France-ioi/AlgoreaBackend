@@ -15,11 +15,11 @@ import (
 // These fields are only displayed if the current user is a manager of the group.
 // swagger:ignore
 type GroupGetResponseCodePart struct {
-	// Nullable; returned only if the current user is a manager
+	// Returned only if the current user is a manager
 	Code *string `json:"code"`
-	// Nullable; returned only if the current user is a manager
+	// Returned only if the current user is a manager
 	CodeLifetime *int32 `json:"code_lifetime"`
-	// Nullable; returned only if the current user is a manager
+	// Returned only if the current user is a manager
 	CodeExpiresAt *database.Time `json:"code_expires_at"`
 }
 
@@ -41,19 +41,15 @@ type ManagerPermissionsPart struct {
 type groupGetResponse struct {
 	// required:true
 	Grade int32 `json:"grade"`
-	// Nullable
 	// required:true
 	Description *string `json:"description"`
-	// Nullable
 	// required:true
 	CreatedAt *database.Time `json:"created_at"`
 	// required:true
 	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
-	// Nullable
 	// required:true
 	RootActivityID *int64 `json:"root_activity_id,string"`
-	// Nullable
 	// required:true
 	RootSkillID *int64 `json:"root_skill_id,string"`
 	// required:true
@@ -94,7 +90,6 @@ type groupGetResponse struct {
 	// required: true
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true

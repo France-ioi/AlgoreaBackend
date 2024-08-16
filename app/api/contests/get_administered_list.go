@@ -9,7 +9,6 @@ import (
 )
 
 type parentTitle struct {
-	// Nullable
 	// required: true
 	Title *string `json:"title"`
 	// required: true
@@ -20,7 +19,6 @@ type parentTitle struct {
 type contestAdminListRow struct {
 	// required: true
 	ItemID int64 `json:"id,string"`
-	// Nullable
 	// required: true
 	Title *string `gorm:"column:title_translation" json:"title"`
 	// required: true
