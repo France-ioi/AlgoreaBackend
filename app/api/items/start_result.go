@@ -22,9 +22,7 @@ type updatedStartResultResponse struct { // nolint:unused
 		// required: true
 		Success bool `json:"success"`
 		// required: true
-		// Extensions:
-		// x-nullable: false
-		Data *attemptsListResponseRow `json:"data"`
+		Data attemptsListResponseRow `json:"data"`
 	}
 }
 
