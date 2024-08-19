@@ -128,6 +128,6 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess[*struct{}](nil)))
 	return service.NoError
 }

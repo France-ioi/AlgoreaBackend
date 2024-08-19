@@ -31,8 +31,8 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 	case database.Full:
 		return service.ErrConflict(errors.New("the group is full"))
 	case database.ApprovalsMissing:
-		errorResponse := &service.ErrorResponse{
-			Response: service.Response{
+		errorResponse := &service.ErrorResponse[map[string]interface{}]{
+			Response: service.Response[map[string]interface{}]{
 				HTTPStatusCode: http.StatusUnprocessableEntity,
 				Success:        false,
 				Message:        "Unprocessable Entity",

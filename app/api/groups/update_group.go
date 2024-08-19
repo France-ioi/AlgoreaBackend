@@ -236,7 +236,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	}
 	service.MustNotBeError(err)
 
-	response := service.Response{Success: true, Message: "updated"}
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
 	return service.NoError

@@ -85,7 +85,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 	}
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
 
 	return service.NoError
 }

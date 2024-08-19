@@ -99,6 +99,6 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 	if !result {
 		message = "failed"
 	}
-	render.Respond(w, r, &service.Response{Success: result, Message: message})
+	render.Respond(w, r, &service.Response[*struct{}]{Success: result, Message: message})
 	return service.NoError
 }

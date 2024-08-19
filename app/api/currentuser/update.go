@@ -45,7 +45,7 @@ func (srv *Service) update(w http.ResponseWriter, r *http.Request) service.APIEr
 	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
 	service.MustNotBeError(srv.GetStore(r).Users().ByID(user.GroupID).UpdateColumn(requestData).Error())
 
-	response := service.Response{Success: true, Message: "updated"}
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
 	return service.NoError

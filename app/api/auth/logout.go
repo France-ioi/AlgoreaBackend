@@ -36,6 +36,6 @@ func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIEr
 		http.SetCookie(w, cookieAttributes.SessionCookie("", -1000))
 	}
 
-	render.Respond(w, r, &service.Response{Success: true, Message: "success"})
+	render.Respond(w, r, &service.Response[*struct{}]{Success: true, Message: "success"})
 	return service.NoError
 }

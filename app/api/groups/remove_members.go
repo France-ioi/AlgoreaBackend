@@ -110,7 +110,7 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		results[id] = result
 	}
 
-	response := service.Response{
+	response := service.Response[database.GroupGroupTransitionResults]{
 		Success: true,
 		Message: "deleted",
 		Data:    results,

@@ -123,9 +123,9 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 
 	var result render.Renderer
 	if isCurrent {
-		result = service.UpdateSuccess(nil)
+		result = service.UpdateSuccess[*struct{}](nil)
 	} else {
-		result = service.CreationSuccess(nil)
+		result = service.CreationSuccess[*struct{}](nil)
 	}
 
 	service.MustNotBeError(render.Render(rw, httpReq, result))

@@ -82,7 +82,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
 	}
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], newToken,
+		time.Now().Add(time.Duration(expiresIn)*time.Second),
 		cookieAttributes)
 	return service.NoError
 }

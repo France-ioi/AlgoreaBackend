@@ -111,6 +111,6 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

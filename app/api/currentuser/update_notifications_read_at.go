@@ -27,7 +27,7 @@ func (srv *Service) updateNotificationsReadAt(w http.ResponseWriter, r *http.Req
 	service.MustNotBeError(srv.GetStore(r).Users().ByID(user.GroupID).
 		UpdateColumn("notifications_read_at", database.Now()).Error())
 
-	response := service.Response{Success: true, Message: "updated"}
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
 	return service.NoError

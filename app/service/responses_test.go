@@ -68,7 +68,7 @@ func TestUnchangedSuccess(t *testing.T) {
 }
 
 func TestResponse_Render(t *testing.T) {
-	response := &Response{HTTPStatusCode: http.StatusOK, Message: "", Success: true}
+	response := &Response[*struct{}]{HTTPStatusCode: http.StatusOK, Message: "", Success: true}
 	recorder := httpResponseForResponse(response)
 	assertlib.Equal(t, `{"success":true,"message":"success"}`+"\n", recorder.Body.String())
 	assertlib.Equal(t, http.StatusOK, recorder.Code)

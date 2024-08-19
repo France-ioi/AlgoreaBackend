@@ -284,12 +284,12 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		return nil
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, token.AccessToken, token.Expiry, cookieAttributes)
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], token.AccessToken, token.Expiry, cookieAttributes)
 	return service.NoError
 }
 
 func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
-	rendererGenerator func(interface{}) render.Renderer, token string, expiresIn time.Time,
+	rendererGenerator func(map[string]interface{}) render.Renderer, token string, expiresIn time.Time,
 	cookieAttributes *auth.SessionCookieAttributes,
 ) {
 	secondsUntilExpiry := int32(time.Until(expiresIn).Round(time.Second) / time.Second)

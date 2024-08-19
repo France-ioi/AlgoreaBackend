@@ -53,6 +53,6 @@ func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) service.A
 		store.Groups().Where("id = ?", groupID).
 			UpdateColumn("code", nil).Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

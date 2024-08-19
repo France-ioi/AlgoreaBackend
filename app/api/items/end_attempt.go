@@ -101,6 +101,6 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
 	return service.NoError
 }
