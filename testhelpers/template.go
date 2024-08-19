@@ -153,6 +153,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 
 	addRelativeTimeDBMsFunction(set)
 	addTimeDBToRFCFunction(set)
+	addTimeDBMsToRFCFunction(set)
 
 	set.AddGlobal("taskPlatformPublicKey", tokentest.TaskPlatformPublicKey)
 	set.AddGlobal("taskPlatformPrivateKey", tokentest.TaskPlatformPrivateKey)
@@ -176,7 +177,19 @@ func addTimeDBToRFCFunction(set *jet.Set) {
 	set.AddGlobalFunc("timeDBToRFC", func(a jet.Arguments) reflect.Value {
 		a.RequireNumOfArguments("timeDBToRFC", 1, 1)
 		dbTime := a.Get(0).Interface().(string)
-		parsedTime, err := time.Parse("2006-01-02 15:04:05.999999999", dbTime)
+		parsedTime, err := time.Parse("2006-01-02 15:04:05", dbTime)
+		if err != nil {
+			a.Panicf("can't parse mysql datetime: %s", err.Error())
+		}
+		return reflect.ValueOf(parsedTime.Format(time.RFC3339))
+	})
+}
+
+func addTimeDBMsToRFCFunction(set *jet.Set) {
+	set.AddGlobalFunc("timeDBMsToRFC", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("timeDBMsToRFC", 1, 1)
+		dbTime := a.Get(0).Interface().(string)
+		parsedTime, err := time.Parse("2006-01-02 15:04:05.999", dbTime)
 		if err != nil {
 			a.Panicf("can't parse mysql datetime: %s", err.Error())
 		}
