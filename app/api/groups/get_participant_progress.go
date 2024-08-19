@@ -58,7 +58,6 @@ type groupParticipantProgressResponseChild struct {
 
 	// required: true
 	// Extensions:
-	// ---
 	// x-nullable: false
 	CurrentUserPermissions *structures.ItemPermissions `json:"current_user_permissions"`
 
