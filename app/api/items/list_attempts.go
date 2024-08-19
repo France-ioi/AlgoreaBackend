@@ -116,27 +116,15 @@ type attemptsListResponseRow struct {
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, groupID, parentAttemptID, apiError := srv.resolveParametersForListAttempts(r)
+	itemID, participantID, parentAttemptID, apiError := srv.resolveParametersForListAttempts(r)
 	if apiError != service.NoError {
 		return apiError
 	}
 	user := srv.GetUser(r)
 
-	query := srv.GetStore(r).Results().Where("results.participant_id = ?", groupID).
-		Where("item_id = ?", itemID).
-		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
-		Joins("LEFT JOIN users ON users.group_id = attempts.creator_id").
-		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID).
-		WithPersonalInfoViewApprovals(user).
-		Select(`
-			attempts.id, attempts.created_at, attempts.allows_submissions_until,
-			results.score_computed, results.validated, attempts.ended_at,
-			results.started_at, results.latest_activity_at, results.help_requested,
-			users.login AS user_creator__login,
-			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
-			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
+	query := constructQueryForGettingAttemptsList(srv.GetStore(r), participantID, itemID, user).
+		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID)
+
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError = service.ApplySortingAndPaging(
 		r, query,
@@ -163,6 +151,23 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 
 	render.Respond(w, r, result)
 	return service.NoError
+}
+
+func constructQueryForGettingAttemptsList(store *database.DataStore, participantID, itemID int64, user *database.User) *database.DB {
+	return store.Results().Where("results.participant_id = ?", participantID).
+		Where("item_id = ?", itemID).
+		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
+		Joins("LEFT JOIN users ON users.group_id = attempts.creator_id").
+		WithPersonalInfoViewApprovals(user).
+		Select(`
+			attempts.id, attempts.created_at, attempts.allows_submissions_until,
+			results.score_computed, results.validated, attempts.ended_at,
+			results.started_at, results.latest_activity_at, results.help_requested,
+			users.login AS user_creator__login,
+			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
+			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
 }
 
 func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
