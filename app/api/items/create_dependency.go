@@ -130,7 +130,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
 
 	return service.NoError
 }

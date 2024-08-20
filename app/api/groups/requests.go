@@ -10,7 +10,7 @@ import (
 )
 
 func renderGroupGroupTransitionResults(w http.ResponseWriter, r *http.Request, results database.GroupGroupTransitionResults) {
-	response := service.Response{
+	response := service.Response[database.GroupGroupTransitionResults]{
 		Success: true,
 		Message: "updated",
 		Data:    results,

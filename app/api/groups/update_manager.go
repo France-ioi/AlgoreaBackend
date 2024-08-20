@@ -97,6 +97,6 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) s
 	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
 	return service.NoError
 }

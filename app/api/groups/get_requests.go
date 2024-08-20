@@ -42,7 +42,6 @@ type groupRequestsViewResponseRow struct {
 		// `users.group_id`
 		// required: true
 		// Extensions:
-		// ---
 		// x-nullable: false
 		GroupID *int64 `json:"group_id,string"`
 		// required: true

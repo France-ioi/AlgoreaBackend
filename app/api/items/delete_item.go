@@ -81,6 +81,6 @@ func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) service.A
 	}
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

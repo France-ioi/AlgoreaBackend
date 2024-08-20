@@ -128,7 +128,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		return err
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess,
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}],
 		token, time.Now().Add(time.Duration(expiresIn)*time.Second), cookieAttributes)
 	return service.NoError
 }

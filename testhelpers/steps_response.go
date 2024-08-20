@@ -472,7 +472,7 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(
 
 // TheResponseErrorMessageShouldContain checks that the response contains the provided string.
 func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) {
-	errorResp := service.ErrorResponse{}
+	errorResp := service.ErrorResponse[interface{}]{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
 		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)

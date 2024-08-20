@@ -11,8 +11,8 @@ import (
 )
 
 // ErrorResponse is an extension of the response for returning errors.
-type ErrorResponse struct {
-	Response
+type ErrorResponse[T any] struct {
+	Response[T]
 	ErrorText string      `json:"error_text,omitempty"` // application-level error message, for debugging
 	Errors    interface{} `json:"errors,omitempty"`     // form errors
 }
@@ -31,12 +31,12 @@ var NoError = APIError{0, nil}
 var InsufficientAccessRightsError = ErrForbidden(errors.New("insufficient access rights"))
 
 func (e APIError) httpResponse() render.Renderer {
-	response := Response{
+	response := Response[*struct{}]{
 		HTTPStatusCode: e.HTTPStatusCode,
 		Success:        false,
 		Message:        http.StatusText(e.HTTPStatusCode),
 	}
-	result := ErrorResponse{Response: response}
+	result := ErrorResponse[*struct{}]{Response: response}
 	if e.Error == nil {
 		return &result
 	}

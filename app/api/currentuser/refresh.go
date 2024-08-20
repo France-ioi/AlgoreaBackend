@@ -41,7 +41,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 		return nil
 	}))
 
-	response := service.UpdateSuccess(nil)
+	response := service.UpdateSuccess[*struct{}](nil)
 	render.Respond(w, r, &response)
 
 	return service.NoError

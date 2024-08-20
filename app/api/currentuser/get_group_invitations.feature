@@ -87,7 +87,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBToRFC(db("group_membership_changes[8][at]"))}}"
+        "at": "{{timeDBMsToRFC(db("group_membership_changes[8][at]"))}}"
       },
       {
         "group_id": "33",
@@ -106,7 +106,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBToRFC(db("group_membership_changes[4][at]"))}}"
+        "at": "{{timeDBMsToRFC(db("group_membership_changes[4][at]"))}}"
       },
       {
         "group_id": "1",
@@ -125,7 +125,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": "{{timeDBToRFC(db("groups[1][require_lock_membership_approval_until]"))}}",
           "require_watch_approval": true
         },
-        "at": "{{timeDBToRFC(db("group_membership_changes[1][at]"))}}"
+        "at": "{{timeDBMsToRFC(db("group_membership_changes[1][at]"))}}"
       },
       {
         "group_id": "35",
@@ -139,7 +139,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBToRFC(db("group_pending_requests[4][at]"))}}"
+        "at": "{{timeDBMsToRFC(db("group_pending_requests[4][at]"))}}"
       },
       {
         "group_id": "36",
@@ -153,7 +153,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBToRFC(db("group_membership_changes[10][at]"))}}"
+        "at": "{{timeDBMsToRFC(db("group_membership_changes[10][at]"))}}"
       }
     ]
     """
@@ -182,14 +182,14 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBToRFC(db("group_membership_changes[8][at]"))}}"
+        "at": "{{timeDBMsToRFC(db("group_membership_changes[8][at]"))}}"
       }
     ]
     """
 
   Scenario: Request the second row
     Given I am the user with id "21"
-    And the template constant "from_at" is "{{timeDBToRFC(db("group_membership_changes[4][at]"))}}"
+    And the template constant "from_at" is "{{timeDBMsToRFC(db("group_membership_changes[4][at]"))}}"
     When I send a GET request to "/current-user/group-invitations?limit=1&from.group_id=4&from.at={{from_at}}"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -212,7 +212,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBToRFC(db("group_membership_changes[4][at]"))}}"
+        "at": "{{timeDBMsToRFC(db("group_membership_changes[4][at]"))}}"
       }
     ]
     """

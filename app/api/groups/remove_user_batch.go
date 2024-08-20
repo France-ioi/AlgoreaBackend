@@ -126,6 +126,6 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 			Where("group_prefix = ?", groupPrefix).
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

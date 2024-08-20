@@ -73,6 +73,6 @@ func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Reque
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(rw, httpReq, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

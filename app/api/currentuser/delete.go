@@ -82,7 +82,7 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 		}
 	}
 
-	render.Respond(w, r, service.DeletionSuccess(nil))
+	render.Respond(w, r, service.DeletionSuccess[*struct{}](nil))
 
 	return service.NoError
 }

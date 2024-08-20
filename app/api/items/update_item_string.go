@@ -123,7 +123,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
 	return service.NoError
 }
 

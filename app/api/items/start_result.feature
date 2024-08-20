@@ -1,6 +1,7 @@
 Feature: Start a result for an item
   Background:
-    Given the database has the following table 'groups':
+    Given time is frozen
+    And the database has the following table 'groups':
       | id  | type  | root_activity_id | root_skill_id |
       | 90  | Class | 10               | null          |
       | 91  | Other | 50               | null          |
@@ -61,7 +62,19 @@ Feature: Start a result for an item
       """
       {
         "message": "updated",
-        "success": true
+        "success": true,
+        "data": {
+          "allows_submissions_until": "9999-12-31T23:59:59Z",
+          "created_at": "2019-05-30T11:00:00Z",
+          "ended_at": null,
+          "help_requested": false,
+          "id": "0",
+          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "score_computed": 0,
+          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "user_creator": null,
+          "validated": false
+        }
       }
       """
     And the table "attempts" should stay unchanged
@@ -84,7 +97,19 @@ Feature: Start a result for an item
       """
       {
         "message": "updated",
-        "success": true
+        "success": true,
+        "data": {
+          "allows_submissions_until": "9999-12-31T23:59:59Z",
+          "created_at": "2019-05-30T11:00:00Z",
+          "ended_at": null,
+          "help_requested": false,
+          "id": "0",
+          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "score_computed": 0,
+          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "user_creator": null,
+          "validated": false
+        }
       }
       """
     And the table "attempts" should stay unchanged
@@ -100,7 +125,19 @@ Feature: Start a result for an item
       """
       {
         "message": "updated",
-        "success": true
+        "success": true,
+        "data": {
+          "allows_submissions_until": "9999-12-31T23:59:59Z",
+          "created_at": "2019-05-30T11:00:00Z",
+          "ended_at": null,
+          "help_requested": false,
+          "id": "0",
+          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "score_computed": 0,
+          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "user_creator": null,
+          "validated": false
+        }
       }
       """
     And the table "attempts" should stay unchanged
@@ -123,7 +160,19 @@ Feature: Start a result for an item
       """
       {
         "message": "updated",
-        "success": true
+        "success": true,
+        "data": {
+          "allows_submissions_until": "9999-12-31T23:59:59Z",
+          "created_at": "2019-05-30T11:00:00Z",
+          "ended_at": null,
+          "help_requested": false,
+          "id": "1",
+          "latest_activity_at": "2019-05-30T11:00:00Z",
+          "score_computed": 0,
+          "started_at": "2019-05-30T11:00:00Z",
+          "user_creator": null,
+          "validated": false
+        }
       }
       """
     And the table "attempts" should stay unchanged
@@ -144,7 +193,19 @@ Feature: Start a result for an item
       """
       {
         "message": "updated",
-        "success": true
+        "success": true,
+        "data": {
+          "allows_submissions_until": "9999-12-31T23:59:59Z",
+          "created_at": "2019-05-30T11:00:00Z",
+          "ended_at": null,
+          "help_requested": false,
+          "id": "1",
+          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "score_computed": 0,
+          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "user_creator": null,
+          "validated": false
+        }
       }
       """
     And the table "attempts" should stay unchanged

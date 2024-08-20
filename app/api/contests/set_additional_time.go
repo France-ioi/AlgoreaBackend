@@ -110,7 +110,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, service.UpdateSuccess(nil))
+	render.Respond(w, r, service.UpdateSuccess[*struct{}](nil))
 	return service.NoError
 }
 
