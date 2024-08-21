@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.4...v2.22.0) - 2024-08-21
+- fix documentation generation, and the doc of several services:
+  1. In responses of `invitationsView`, `inviting_user.first_name` & `inviting_user.last_name` become nullable (they should be as corresponding columns are nullable in the DB).
+  2. In responses of `listThreads`, `participant.first_name` & `participant.last_name` are only shown if the current user has rights to view them (similarly to other services).
+- change CORS to expose `Backend-Version` and `Date`, and hide `Link` headers
+- return the modified result data (together with the linked attempt data) in the format of `attemptsList` response row on success in `resultStart`
 
 ## [v2.21.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.3...v2.21.4) - 2024-08-08
 - speed up the `itemActivityLogForItem` service
