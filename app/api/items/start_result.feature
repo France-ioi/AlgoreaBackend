@@ -70,9 +70,9 @@ Feature: Start a result for an item
           "ended_at": null,
           "help_requested": false,
           "id": "0",
-          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "latest_activity_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "score_computed": 0,
-          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "started_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "user_creator": null,
           "validated": false
         }
@@ -105,9 +105,9 @@ Feature: Start a result for an item
           "ended_at": null,
           "help_requested": false,
           "id": "0",
-          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "latest_activity_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "score_computed": 0,
-          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "started_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "user_creator": null,
           "validated": false
         }
@@ -133,9 +133,9 @@ Feature: Start a result for an item
           "ended_at": null,
           "help_requested": false,
           "id": "0",
-          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "latest_activity_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "score_computed": 0,
-          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "started_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "user_creator": null,
           "validated": false
         }
@@ -201,9 +201,9 @@ Feature: Start a result for an item
           "ended_at": null,
           "help_requested": false,
           "id": "1",
-          "latest_activity_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "latest_activity_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "score_computed": 0,
-          "started_at": "{{timeDBToRFC(currentTimeDB())}}",
+          "started_at": "{{timeDBToRFC3339(currentTimeDB())}}",
           "user_creator": null,
           "validated": false
         }
