@@ -106,7 +106,7 @@ func (f *FormData) RegisterValidation(tag string, fn validator.Func) {
 func (f *FormData) RegisterTranslation(tag, text string) {
 	_ = f.validate.RegisterTranslation(tag, f.trans,
 		func(ut ut.Translator) (err error) {
-			err = ut.Add(tag, text, false)
+			err = ut.Add(tag, text, true) // Silently override the translation
 			if err != nil {
 				panic(err)
 			}
