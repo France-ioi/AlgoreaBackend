@@ -152,8 +152,8 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	})
 
 	addRelativeTimeDBMsFunction(set)
-	addTimeDBToRFCFunction(set)
-	addTimeDBMsToRFCFunction(set)
+	addtimeDBToRFC3339Function(set)
+	addTimeDBMsToRFC3339Function(set)
 
 	set.AddGlobal("taskPlatformPublicKey", tokentest.TaskPlatformPublicKey)
 	set.AddGlobal("taskPlatformPrivateKey", tokentest.TaskPlatformPrivateKey)
@@ -173,9 +173,9 @@ func addRelativeTimeDBMsFunction(set *jet.Set) *jet.Set {
 	})
 }
 
-func addTimeDBToRFCFunction(set *jet.Set) {
-	set.AddGlobalFunc("timeDBToRFC", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("timeDBToRFC", 1, 1)
+func addtimeDBToRFC3339Function(set *jet.Set) {
+	set.AddGlobalFunc("timeDBToRFC3339", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("timeDBToRFC3339", 1, 1)
 		dbTime := a.Get(0).Interface().(string)
 		parsedTime, err := time.Parse("2006-01-02 15:04:05.999999999", dbTime)
 		if err != nil {
@@ -186,9 +186,9 @@ func addTimeDBToRFCFunction(set *jet.Set) {
 	})
 }
 
-func addTimeDBMsToRFCFunction(set *jet.Set) {
-	set.AddGlobalFunc("timeDBMsToRFC", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("timeDBMsToRFC", 1, 1)
+func addTimeDBMsToRFC3339Function(set *jet.Set) {
+	set.AddGlobalFunc("timeDBMsToRFC3339", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("timeDBMsToRFC3339", 1, 1)
 		dbTime := a.Get(0).Interface().(string)
 		parsedTime, err := time.Parse("2006-01-02 15:04:05.999", dbTime)
 		if err != nil {
