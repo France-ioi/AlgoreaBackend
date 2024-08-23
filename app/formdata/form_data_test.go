@@ -44,15 +44,22 @@ func TestFormData_decodeMapIntoStruct_PanicsWhenMapstructureNewDecoderFails(t *t
 	f.decodeMapIntoStruct(map[string]interface{}{})
 }
 
+func TestFormData_RegisterTranslation_OverridesConflictingTranslationsSilently(t *testing.T) {
+	f := NewFormData(&struct{}{})
+	f.RegisterTranslation("", "")
+	assert.NotPanics(t, func() {
+		f.RegisterTranslation("", "")
+	})
+}
+
 func TestFormData_RegisterTranslation_PanicsOnError(t *testing.T) {
 	f := NewFormData(&struct{}{})
 	defer func() {
 		p := recover()
 		assert.NotNil(t, p)
-		assert.IsType(t, (*ut.ErrConflictingTranslation)(nil), p)
+		assert.IsType(t, (*ut.ErrMissingBracket)(nil), p)
 	}()
-	f.RegisterTranslation("", "")
-	f.RegisterTranslation("", "")
+	f.RegisterTranslation("", "{")
 }
 
 func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T) {
