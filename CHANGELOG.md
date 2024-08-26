@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.0...v2.22.1) - 2024-08-26
+- fix a bug: translation may be registered several times in a transaction, causing a crash
+
 ## [v2.22.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.4...v2.22.0) - 2024-08-21
 - fix documentation generation, and the doc of several services:
   1. In responses of `invitationsView`, `inviting_user.first_name` & `inviting_user.last_name` become nullable (they should be as corresponding columns are nullable in the DB).
