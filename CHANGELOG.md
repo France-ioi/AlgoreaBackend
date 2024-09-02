@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.1...v2.22.2) - 2024-09-02
+- add a delay parameter to delete-temp-users command
+
 ## [v2.22.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.0...v2.22.1) - 2024-08-26
 - fix a bug: translation may be registered several times in a transaction, causing a crash
 
