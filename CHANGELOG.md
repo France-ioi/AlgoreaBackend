@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.2...v2.22.3) - 2024-09-13
+- add parameter to the propagation command to disable result propagation
+
 ## [v2.22.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.1...v2.22.2) - 2024-09-02
 - add a delay parameter to delete-temp-users command
 
