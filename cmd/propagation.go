@@ -21,6 +21,8 @@ const (
 )
 
 func init() { //nolint:gochecknoinits
+	var resultsPropagationIsDisabled bool
+
 	propagationCmd := &cobra.Command{
 		Use:   "propagation [environment]",
 		Short: "apply propagation to the database",
@@ -66,7 +68,9 @@ func init() { //nolint:gochecknoinits
 				return s.InTransaction(func(store *database.DataStore) error {
 					store.ScheduleItemsAncestorsPropagation()
 					store.SchedulePermissionsPropagation()
-					store.ScheduleResultsPropagation()
+					if !resultsPropagationIsDisabled {
+						store.ScheduleResultsPropagation()
+					}
 
 					return nil
 				})
@@ -85,6 +89,9 @@ func init() { //nolint:gochecknoinits
 			}
 		},
 	}
+
+	propagationCmd.Flags().BoolVar(&resultsPropagationIsDisabled, "disable-results-propagation", false,
+		"disable results propagation")
 
 	rootCmd.AddCommand(propagationCmd)
 }
