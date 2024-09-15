@@ -44,8 +44,7 @@ type TestContext struct {
 	requestHeaders       map[string][]string
 	referenceToIDMap     map[string]int64
 	idToReferenceMap     map[int64]string
-	dbTables             map[string]map[string]map[string]interface{}
-	currentThreadKey     string
+	currentThreadKey     map[string]string
 	allUsersGroup        string
 	needPopulateDatabase bool
 }
@@ -70,7 +69,6 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	ctx.db = ctx.openDB()
 	ctx.dbTableData = make(map[string]*godog.Table)
 	ctx.templateSet = ctx.constructTemplateSet()
-	ctx.dbTables = make(map[string]map[string]map[string]interface{})
 	ctx.needPopulateDatabase = false
 
 	ctx.initReferences(sc)

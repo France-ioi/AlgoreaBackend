@@ -54,9 +54,9 @@ func (ctx *TestContext) replaceReferencesWithIDs(str string) string {
 	})
 }
 
-func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
-	jsonBody = ctx.replaceReferencesWithIDs(jsonBody)
-	tmpl, err := ctx.templateSet.Parse("template", jsonBody)
+func (ctx *TestContext) preprocessString(str string) (string, error) {
+	str = ctx.replaceReferencesWithIDs(str)
+	tmpl, err := ctx.templateSet.Parse("template", str)
 	if err != nil {
 		return "", err
 	}
@@ -65,9 +65,9 @@ func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	jsonBody = buffer.String()
+	str = buffer.String()
 
-	return jsonBody, nil
+	return str, nil
 }
 
 func (ctx *TestContext) constructTemplateSet() *jet.Set {

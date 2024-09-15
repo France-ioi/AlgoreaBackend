@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
@@ -106,15 +107,6 @@ func (ctx *TestContext) populateDatabase() error {
 			return err
 		}
 
-		for tableName, tableRows := range ctx.dbTables {
-			for _, tableRow := range tableRows {
-				err = database.NewDataStoreWithTable(store.DB, tableName).InsertOrUpdateMap(tableRow, nil)
-				if err != nil {
-					return fmt.Errorf("populateDatabase %s %+v: %v", tableName, tableRow, err)
-				}
-			}
-		}
-
 		return nil
 	})
 	if err != nil {
@@ -129,32 +121,8 @@ func (ctx *TestContext) populateDatabase() error {
 	return ctx.DBGroupsAncestorsAreComputed()
 }
 
-func (ctx *TestContext) isInDatabase(tableName, key string) bool {
-	if ctx.dbTables[tableName] == nil {
-		return false
-	}
-
-	_, ok := ctx.dbTables[tableName][key]
-	return ok
-}
-
-func mergeFields(oldValues, newValues map[string]interface{}) map[string]interface{} {
-	merged := oldValues
-	for key, newValue := range newValues {
-		merged[key] = newValue
-	}
-
-	return merged
-}
-
-func (ctx *TestContext) addToDatabase(tableName, key string, row map[string]interface{}) {
-	ctx.needPopulateDatabase = true
-
-	if ctx.dbTables[tableName] == nil {
-		ctx.dbTables[tableName] = make(map[string]map[string]interface{})
-	}
-
-	ctx.dbTables[tableName][key] = row
+func (ctx *TestContext) isInDatabase(tableName string, primaryKey map[string]string) bool {
+	return ctx.getDBTableRowIndexForPrimaryKey(tableName, primaryKey) != -1
 }
 
 // addPersonalInfoViewApprovedFor adds a permission generated in the database.
@@ -162,18 +130,21 @@ func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroup, parentGroup s
 	parentGroupID := ctx.getIDOfReference(parentGroup)
 	childGroupID := ctx.getIDOfReference(childGroup)
 
-	groupGroupTable := "groups_groups"
+	const groupGroupTable = "groups_groups"
 	key := ctx.getGroupGroupKey(parentGroupID, childGroupID)
 	if !ctx.isInDatabase(groupGroupTable, key) {
 		ctx.addGroupGroup(parentGroup, childGroup)
 	}
 
-	ctx.dbTables[groupGroupTable][key]["personal_info_view_approved_at"] = time.Now()
+	ctx.setDBTableRowColumnValue(groupGroupTable, key, "personal_info_view_approved_at", time.Now().UTC().Format(time.DateTime))
 }
 
 // getGroupGroupKey gets a group group unique key for the groupgroup's map.
-func (ctx *TestContext) getGroupGroupKey(parentGroupID, childGroupID int64) string {
-	return strconv.FormatInt(parentGroupID, 10) + "," + strconv.FormatInt(childGroupID, 10)
+func (ctx *TestContext) getGroupGroupKey(parentGroupID, childGroupID int64) map[string]string {
+	return map[string]string{
+		"parent_group_id": strconv.FormatInt(parentGroupID, 10),
+		"child_group_id":  strconv.FormatInt(childGroupID, 10),
+	}
 }
 
 // addGroupGroup adds a group-group in the database.
@@ -181,10 +152,16 @@ func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
 	parentGroupID := ctx.getIDOfReference(parentGroup)
 	childGroupID := ctx.getIDOfReference(childGroup)
 
-	ctx.addToDatabase("groups_groups", ctx.getGroupGroupKey(parentGroupID, childGroupID), map[string]interface{}{
-		"parent_group_id": parentGroupID,
-		"child_group_id":  childGroupID,
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("groups_groups", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{{Value: "parent_group_id"}, {Value: "child_group_id"}}},
+			{Cells: []*messages.PickleTableCell{{Value: strconv.FormatInt(parentGroupID, 10)}, {Value: strconv.FormatInt(childGroupID, 10)}}},
+		},
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // addGroupManager adds a group manager in the database.
@@ -192,38 +169,56 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 	managerID := ctx.getIDOfReference(manager)
 	groupID := ctx.getIDOfReference(group)
 
-	ctx.addToDatabase(
-		"group_managers",
-		strconv.FormatInt(managerID, 10)+","+strconv.FormatInt(groupID, 10),
-		map[string]interface{}{
-			"manager_id":             managerID,
-			"group_id":               groupID,
-			"can_watch_members":      canWatchMembers,
-			"can_grant_group_access": canGrantGroupAccess,
-			"can_manage":             canManage,
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("group_managers", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{
+				{Value: "manager_id"},
+				{Value: "group_id"},
+				{Value: "can_watch_members"},
+				{Value: "can_grant_group_access"},
+				{Value: "can_manage"},
+			}},
+			{Cells: []*messages.PickleTableCell{
+				{Value: strconv.FormatInt(managerID, 10)},
+				{Value: strconv.FormatInt(groupID, 10)},
+				{Value: canWatchMembers},
+				{Value: canGrantGroupAccess},
+				{Value: canManage},
+			}},
 		},
-	)
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // addPermissionsGranted adds a permission granted in the database.
 func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, permission, permissionValue string) {
-	groupID := ctx.getIDOfReference(group)
-	sourceGroupID := ctx.getIDOfReference(sourceGroup)
-	itemID := ctx.getIDOfReference(item)
+	groupIDString := strconv.FormatInt(ctx.getIDOfReference(group), 10)
+	sourceGroupIDString := strconv.FormatInt(ctx.getIDOfReference(sourceGroup), 10)
+	itemIDString := strconv.FormatInt(ctx.getIDOfReference(item), 10)
 
-	permissionsGrantedTable := "permissions_granted"
-	key := strconv.FormatInt(groupID, 10) + "," +
-		strconv.FormatInt(itemID, 10) + "," +
-		strconv.FormatInt(sourceGroupID, 10) + "," +
-		origin
+	const permissionsGrantedTable = "permissions_granted"
+	primaryKey := map[string]string{
+		"group_id": groupIDString, "item_id": itemIDString, "source_group_id": sourceGroupIDString, "origin": origin,
+	}
 
-	if !ctx.isInDatabase(permissionsGrantedTable, key) {
-		ctx.addToDatabase(permissionsGrantedTable, key, map[string]interface{}{
-			"group_id":        groupID,
-			"source_group_id": sourceGroupID,
-			"item_id":         itemID,
-			"origin":          origin,
+	if !ctx.isInDatabase(permissionsGrantedTable, primaryKey) {
+		ctx.needPopulateDatabase = true
+		err := ctx.DBHasTable(permissionsGrantedTable, &godog.Table{
+			Rows: []*messages.PickleTableRow{
+				{Cells: []*messages.PickleTableCell{
+					{Value: "group_id"}, {Value: "source_group_id"}, {Value: "item_id"}, {Value: "origin"},
+				}},
+				{Cells: []*messages.PickleTableCell{
+					{Value: groupIDString}, {Value: sourceGroupIDString}, {Value: itemIDString}, {Value: origin},
+				}},
+			},
 		})
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if permission == "can_request_help_to" {
@@ -237,16 +232,7 @@ func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, p
 		permissionValue = strconv.FormatInt(canRequestHelpToGroupID, 10)
 	}
 
-	if permission == "is_owner" {
-		boolValue, err := strconv.ParseBool(permissionValue)
-		if err != nil {
-			panic(fmt.Sprintf("%v cannot be parsed as a boolean", boolValue))
-		}
-
-		ctx.dbTables[permissionsGrantedTable][key][permission] = boolValue
-	} else {
-		ctx.dbTables[permissionsGrantedTable][key][permission] = permissionValue
-	}
+	ctx.setDBTableRowColumnValue(permissionsGrantedTable, primaryKey, permission, permissionValue)
 }
 
 // addAttempt adds an attempt to the database.
@@ -254,14 +240,16 @@ func (ctx *TestContext) addAttempt(item, participant string) {
 	itemID := ctx.getIDOfReference(item)
 	participantID := ctx.getIDOfReference(participant)
 
-	ctx.addToDatabase(
-		`attempts`,
-		strconv.FormatInt(itemID, 10)+","+strconv.FormatInt(participantID, 10),
-		map[string]interface{}{
-			"id":             itemID,
-			"participant_id": participantID,
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("attempts", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{{Value: "id"}, {Value: "participant_id"}}},
+			{Cells: []*messages.PickleTableCell{{Value: strconv.FormatInt(itemID, 10)}, {Value: strconv.FormatInt(participantID, 10)}}},
 		},
-	)
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // addValidatedResult adds a validated result to the database.
@@ -269,20 +257,28 @@ func (ctx *TestContext) addValidatedResult(attemptID, participant, item string, 
 	participantID := ctx.getIDOfReference(participant)
 	itemID := ctx.getIDOfReference(item)
 
-	ctx.addToDatabase(
-		"results",
-		attemptID+","+strconv.FormatInt(participantID, 10)+","+strconv.FormatInt(itemID, 10),
-		map[string]interface{}{
-			"attempt_id":     attemptID,
-			"participant_id": participantID,
-			"item_id":        itemID,
-			"validated_at":   validatedAt,
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("results", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{{Value: "attempt_id"}, {Value: "participant_id"}, {Value: "item_id"}, {Value: "validated_at"}}},
+			{Cells: []*messages.PickleTableCell{
+				{Value: attemptID},
+				{Value: strconv.FormatInt(participantID, 10)},
+				{Value: strconv.FormatInt(itemID, 10)},
+				{Value: validatedAt.UTC().Format(time.DateTime)},
+			}},
 		},
-	)
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-func (ctx *TestContext) getItemItemKey(parentItemID, childItemID int64) string {
-	return strconv.FormatInt(parentItemID, 10) + "," + strconv.FormatInt(childItemID, 10)
+func (ctx *TestContext) getItemItemPrimaryKey(parentItemID, childItemID int64) map[string]string {
+	return map[string]string{
+		"parent_item_id": strconv.FormatInt(parentItemID, 10),
+		"child_item_id":  strconv.FormatInt(childItemID, 10),
+	}
 }
 
 // addItemItem adds an item-item in the database.
@@ -290,26 +286,58 @@ func (ctx *TestContext) addItemItem(parentItem, childItem string) {
 	parentItemID := ctx.getIDOfReference(parentItem)
 	childItemID := ctx.getIDOfReference(childItem)
 
-	ctx.addToDatabase(
-		"items_items",
-		ctx.getItemItemKey(parentItemID, childItemID),
-		map[string]interface{}{
-			"parent_item_id": parentItemID,
-			"child_item_id":  childItemID,
-			"child_order":    rand.Int31n(1000),
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("items_items", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{{Value: "parent_item_id"}, {Value: "child_item_id"}, {Value: "child_order"}}},
+			{Cells: []*messages.PickleTableCell{
+				{Value: strconv.FormatInt(parentItemID, 10)},
+				{Value: strconv.FormatInt(childItemID, 10)},
+				{Value: strconv.FormatInt((parentItemID+childItemID)%1000, 10)},
+			}},
 		},
-	)
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (ctx *TestContext) addItemItemPropagation(parent, child, propagation, propagationValue string) {
-	key := ctx.getItemItemKey(ctx.getIDOfReference(parent), ctx.getIDOfReference(child))
-
-	ctx.dbTables["items_items"][key][propagation] = propagationValue
+	primaryKey := ctx.getItemItemPrimaryKey(ctx.getIDOfReference(parent), ctx.getIDOfReference(child))
+	ctx.setDBTableRowColumnValue("items_items", primaryKey, propagation, propagationValue)
 }
 
 // addItem adds an item in the database.
 func (ctx *TestContext) addItem(fields map[string]string) {
-	dbFields := make(map[string]interface{})
+	dbFields, primaryKey, oldRowIndex := ctx.constructDBFieldsForAddItem(fields)
+
+	ctx.needPopulateDatabase = true
+
+	if oldRowIndex != -1 {
+		ctx.setDBTableRowColumnValues("items", primaryKey, dbFields)
+		return
+	}
+
+	columnNameCells := make([]*messages.PickleTableCell, 0, len(dbFields))
+	columnValues := make([]*messages.PickleTableCell, 0, len(dbFields))
+	for key, value := range dbFields {
+		columnNameCells = append(columnNameCells, &messages.PickleTableCell{Value: key})
+		columnValues = append(columnValues, &messages.PickleTableCell{Value: value})
+	}
+	err := ctx.DBHasTable("items", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: columnNameCells}, {Cells: columnValues},
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (ctx *TestContext) constructDBFieldsForAddItem(fields map[string]string) (
+	dbFields, primaryKey map[string]string, oldRowIndex int,
+) {
+	dbFields = make(map[string]string, len(fields))
 	for key, value := range fields {
 		if key == "item" {
 			key = "id"
@@ -317,7 +345,7 @@ func (ctx *TestContext) addItem(fields map[string]string) {
 
 		switch {
 		case strings.HasSuffix(key, "id"):
-			dbFields[key] = ctx.getIDOfReference(value)
+			dbFields[key] = strconv.FormatInt(ctx.getIDOfReference(value), 10)
 		case value[0] == referencePrefix:
 			dbFields[key] = value[1:]
 		default:
@@ -325,28 +353,42 @@ func (ctx *TestContext) addItem(fields map[string]string) {
 		}
 	}
 
-	itemKey := strconv.FormatInt(dbFields["id"].(int64), 10)
+	primaryKey = map[string]string{"id": dbFields["id"]}
+	oldRowIndex = ctx.getDBTableRowIndexForPrimaryKey("items", primaryKey)
+	ctx.setDefaultValuesInDBFieldsForAddItem(dbFields, fields, oldRowIndex)
 
-	if oldFields, ok := ctx.dbTables["items"][itemKey]; ok {
-		dbFields = mergeFields(oldFields, dbFields)
-	}
-
-	if _, ok := dbFields["type"]; !ok {
-		dbFields["type"] = "Task"
-	}
-	if _, ok := dbFields["default_language_tag"]; !ok {
-		dbFields["default_language_tag"] = "en"
-	}
-	if _, ok := dbFields["text_id"]; !ok && fields["item"][0] == referencePrefix {
-		dbFields["text_id"] = fields["item"][1:]
-	}
-
-	ctx.addToDatabase("items", itemKey, dbFields)
+	return dbFields, primaryKey, oldRowIndex
 }
 
-// getThreadKey gets a thread unique key for the thread's map.
-func (ctx *TestContext) getThreadKey(itemID, participantID int64) string {
-	return strconv.FormatInt(itemID, 10) + "," + strconv.FormatInt(participantID, 10)
+func (ctx *TestContext) setDefaultValuesInDBFieldsForAddItem(dbFields, fields map[string]string, oldRowIndex int) {
+	_, typeIsSet := dbFields["type"]
+	_, defaultLanguageTagIsSet := dbFields["default_language_tag"]
+	_, textIDIsSet := dbFields["text_id"]
+
+	if oldRowIndex != -1 {
+		dbTable := ctx.dbTableData["items"]
+		typeIsSet = typeIsSet || isDBTableColumnSetInRow(dbTable, "type", oldRowIndex)
+		defaultLanguageTagIsSet = defaultLanguageTagIsSet || isDBTableColumnSetInRow(dbTable, "default_language_tag", oldRowIndex)
+		textIDIsSet = typeIsSet || isDBTableColumnSetInRow(dbTable, "text_id", oldRowIndex)
+	}
+
+	if !typeIsSet {
+		dbFields["type"] = "Task"
+	}
+	if !defaultLanguageTagIsSet {
+		dbFields["default_language_tag"] = "en"
+	}
+	if !textIDIsSet && fields["item"][0] == referencePrefix {
+		dbFields["text_id"] = fields["item"][1:]
+	}
+}
+
+// getThreadKey gets a thread unique key for the thread's DB table.
+func (ctx *TestContext) getThreadKey(itemID, participantID int64) map[string]string {
+	return map[string]string{
+		"participant_id": strconv.FormatInt(participantID, 10),
+		"item_id":        strconv.FormatInt(itemID, 10),
+	}
 }
 
 // addThread adds a thread to the database.
@@ -355,19 +397,34 @@ func (ctx *TestContext) addThread(item, participant, helperGroup, status, messag
 	participantID := ctx.getIDOfReference(participant)
 	helperGroupID := ctx.getIDOfReference(helperGroup)
 
-	latestUpdateAtDate, err := time.Parse(time.DateTime, latestUpdateAt)
+	_, err := time.Parse(time.DateTime, latestUpdateAt)
 	if err != nil {
 		panic(err)
 	}
 
-	ctx.addToDatabase("threads", ctx.getThreadKey(itemID, participantID), map[string]interface{}{
-		"item_id":          itemID,
-		"participant_id":   participantID,
-		"helper_group_id":  helperGroupID,
-		"status":           status,
-		"message_count":    messageCount,
-		"latest_update_at": latestUpdateAtDate,
+	err = ctx.DBHasTable("threads", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{
+				{Value: "item_id"},
+				{Value: "participant_id"},
+				{Value: "helper_group_id"},
+				{Value: "status"},
+				{Value: "message_count"},
+				{Value: "latest_update_at"},
+			}},
+			{Cells: []*messages.PickleTableCell{
+				{Value: strconv.FormatInt(itemID, 10)},
+				{Value: strconv.FormatInt(participantID, 10)},
+				{Value: strconv.FormatInt(helperGroupID, 10)},
+				{Value: status},
+				{Value: messageCount},
+				{Value: latestUpdateAt},
+			}},
+		},
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // UserIsAManagerOfTheGroupWith sets the current user as the manager of a group.
@@ -762,8 +819,9 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	// add helper_group_id
 	if _, ok := thread["helper_group_id"]; !ok {
 		helperGroupID := rand.Int63()
+		helperGroupIDString := strconv.FormatInt(helperGroupID, 10)
 
-		err := ctx.ThereIsAGroup(strconv.FormatInt(helperGroupID, 10))
+		err := ctx.ThereIsAGroup(helperGroupIDString)
 		if err != nil {
 			return err
 		}
@@ -821,12 +879,17 @@ func (ctx *TestContext) ThereIsNoThreadWith(parameters string) error {
 
 // IAmPartOfTheHelperGroupOfTheThread states that user is a member of the helper group, of a given thread.
 func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
-	threadHelperGroupID := ctx.dbTables["threads"][ctx.currentThreadKey]["helper_group_id"].(int64)
+	rowIndex := ctx.getDBTableRowIndexForPrimaryKey("threads", ctx.currentThreadKey)
+	if rowIndex == -1 {
+		panic(fmt.Sprintf("IAmPartOfTheHelperGroupOfTheThread: thread %v not found", ctx.currentThreadKey))
+	}
+	columnIndex := getDBTableColumnIndex(ctx.dbTableData["threads"], "helper_group_id")
+	if columnIndex == -1 {
+		panic("IAmPartOfTheHelperGroupOfTheThread: helper_group_id column not found")
+	}
+	threadHelperGroupIDString := ctx.dbTableData["threads"].Rows[rowIndex].Cells[columnIndex].Value
 
-	ctx.IsAMemberOfTheGroup(
-		ctx.user,
-		strconv.FormatInt(threadHelperGroupID, 10),
-	)
+	ctx.IsAMemberOfTheGroup(ctx.user, threadHelperGroupIDString)
 
 	return nil
 }

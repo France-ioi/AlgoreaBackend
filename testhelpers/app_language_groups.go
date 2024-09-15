@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 )
 
 // registerFeaturesForGroups registers the Gherkin features related to groups.
@@ -32,42 +33,46 @@ func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 }
 
 // getGroupPrimaryKey returns the primary key of a group.
-func (ctx *TestContext) getGroupPrimaryKey(groupID int64) string {
-	return strconv.FormatInt(groupID, 10)
+func (ctx *TestContext) getGroupPrimaryKey(groupID int64) map[string]string {
+	return map[string]string{"id": strconv.FormatInt(groupID, 10)}
 }
 
 // addGroup adds a group to the database.
 func (ctx *TestContext) addGroup(group string) {
 	groupID := ctx.getIDOfReference(group)
-
 	primaryKey := ctx.getGroupPrimaryKey(groupID)
 
 	if !ctx.isInDatabase("groups", primaryKey) {
-		ctx.addToDatabase("groups", primaryKey, map[string]interface{}{
-			"id": groupID,
-			// All the other fields are set to default values.
-			"name":                                   "Group " + referenceToName(group),
-			"type":                                   "Class",
-			"require_personal_info_access_approval":  "none",
-			"require_lock_membership_approval_until": nil,
-			"require_watch_approval":                 false,
+		ctx.needPopulateDatabase = true
+		err := ctx.DBHasTable("groups", &godog.Table{
+			Rows: []*messages.PickleTableRow{
+				{Cells: []*messages.PickleTableCell{
+					{Value: "id"},
+					{Value: "name"},
+					{Value: "type"},
+					{Value: "require_personal_info_access_approval"},
+					{Value: "require_lock_membership_approval_until"},
+					{Value: "require_watch_approval"},
+				}},
+				{Cells: []*messages.PickleTableCell{
+					{Value: strconv.FormatInt(groupID, 10)},
+					{Value: "Group " + referenceToName(group)},
+					{Value: "Class"},
+					{Value: "none"},
+					{Value: "null"},
+					{Value: "false"},
+				}},
+			},
 		})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
 // setGroupFieldInDatabase sets a specific field of a group in the database.
-func (ctx *TestContext) setGroupFieldInDatabase(primaryKey, field string, value interface{}) {
-	if value == tableValueNull {
-		value = nil
-	}
-	if value == tableValueFalse {
-		value = false
-	}
-	if value == tableValueTrue {
-		value = true
-	}
-
-	ctx.dbTables["groups"][primaryKey][field] = value
+func (ctx *TestContext) setGroupFieldInDatabase(primaryKey map[string]string, field, value string) {
+	ctx.setDBTableRowColumnValue("groups", primaryKey, field, value)
 }
 
 // ThereAreTheFollowingGroups defines groups.
