@@ -421,3 +421,22 @@ func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestProhibitResultsPropagation(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataStore := NewDataStore(db)
+	assert.False(t, dataStore.IsResultsPropagationProhibited())
+
+	dbMock.ExpectBegin()
+	dbMock.ExpectCommit()
+
+	ProhibitResultsPropagation(db)
+	assert.True(t, dataStore.IsResultsPropagationProhibited())
+	assert.NoError(t, dataStore.InTransaction(func(dataStore *DataStore) error {
+		dataStore.ScheduleResultsPropagation()
+		return nil
+	}))
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}

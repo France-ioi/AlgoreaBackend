@@ -35,6 +35,11 @@ func ProhibitResultsPropagation(conn *DB) {
 	conn.ctx = context.WithValue(conn.ctx, prohibitedPropagationsContextKey, prohibitedPropagations)
 }
 
+// IsResultsPropagationProhibited returns true if the propagation of results is prohibited in the context of the current DB connection.
+func (s *DataStore) IsResultsPropagationProhibited() bool {
+	return getProhibitedPropagationsFromContext(s.DB.ctx).Results
+}
+
 func getProhibitedPropagationsFromContext(ctx context.Context) propagationsBitField {
 	prohibitedPropagations := ctx.Value(prohibitedPropagationsContextKey)
 	if prohibitedPropagations == nil {

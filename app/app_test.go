@@ -3,6 +3,7 @@ package app
 import (
 	crand "crypto/rand"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -254,4 +255,36 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	}
 	defer func() { _ = response.Body.Close() }()
 	assert.Equal(404, response.StatusCode)
+}
+
+func TestNew_DisableResultsPropagation(t *testing.T) {
+	for _, configSettingValue := range []bool{true, false} {
+		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
+			oldEnvValue := os.Getenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION")
+			defer func() { _ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", oldEnvValue) }()
+
+			_ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", fmt.Sprintf("%t", configSettingValue))
+			assert := assertlib.New(t)
+
+			app, _ := New()
+			assert.Equal(configSettingValue, database.NewDataStore(app.Database).IsResultsPropagationProhibited())
+
+			router := app.HTTPHandler
+			router.Get("/dummy", func(_ http.ResponseWriter, r *http.Request) {
+				assert.Equal(configSettingValue, database.NewDataStoreWithContext(r.Context(), app.Database).IsResultsPropagationProhibited())
+			})
+
+			srv := httptest.NewServer(router)
+			defer srv.Close()
+
+			request, _ := http.NewRequest("GET", srv.URL+"/dummy", http.NoBody)
+			response, err := http.DefaultClient.Do(request)
+			assert.NoError(err)
+			if err != nil {
+				return
+			}
+			_, _ = ioutil.ReadAll(response.Body)
+			_ = response.Body.Close()
+		})
+	}
 }
