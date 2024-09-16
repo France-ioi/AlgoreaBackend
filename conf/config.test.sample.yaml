@@ -4,6 +4,7 @@ server:
   compress: false # whether compression is enabled by default
   # domainOverride: dev.algorea.org # use this domain name for cookies and per-domain configuration choosing
   propagation_endpoint: "" # Endpoint to schedule the propagation asynchronously. If empty, propagation is synchronous.
+  disable_results_propagation: false # Disable the propagation of results.
 auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"

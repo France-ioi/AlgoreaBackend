@@ -5,6 +5,7 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -78,11 +79,21 @@ func (app *Application) Reset(config *viper.Viper) error {
 		return err
 	}
 
+	if serverConfig.GetBool("disableResultsPropagation") {
+		database.ProhibitResultsPropagation(db)
+	}
+
 	// Set up responder.
 	render.Respond = service.AppResponder
 
 	// Set up middlewares
 	router := chi.NewRouter()
+
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r.WithContext(database.NewDataStore(app.Database).MergeContext(r.Context())))
+		})
+	})
 
 	router.Use(version.AddVersionHeader)
 
