@@ -7,23 +7,29 @@ import (
 )
 
 const (
-	propagateLockName    = "listener_propagate"
-	propagateLockTimeout = 10 * time.Second
+	resultsPropagationLockName        = "listener_propagate"
+	resultsPropagationLockWaitTimeout = 10 * time.Second
+	resultsPropagationChunkSize       = 20000
 )
 
 // propagate recomputes fields of results
-// For results marked as 'to_be_propagated'/'to_be_recomputed':
-//  1. We mark all their ancestors in results as 'to_be_recomputed'
-//     (we consider a row in results as an ancestor if
+// For results marked as 'to_be_propagated':
+//  1. We take the first chunk of them and mark them as 'propagating'.
+//  2. We mark all parents of 'propagating' results as 'to_be_recomputed'
+//     (we consider a row in results as a parent if
 //     a) it has the same value in group_id
-//     b) its item_id is an ancestor of the original row's item_id
+//     b) its item_id is a parent of the original row's item_id
 //     c) its attempt_id is equal to the original row's attempt_id for original rows with root_item_id != item_id or
 //     its attempt_id is equal to the original row's parent_attempt_id for original rows with root_item_id = item_id).
-//  2. We process all objects that are marked as 'to_be_recomputed' and that have no children marked as 'to_be_recomputed'.
+//  4. If the results_propagate table is empty, we exit the loop.
+//  3. For results marked as 'propagating', we insert new permissions_granted for each unlocked item
+//     according to corresponding item_dependencies.
+//  4. We unmark all results marked as 'propagating'.
+//  5. We process all objects that are marked as 'to_be_recomputed' and that have no children marked as 'to_be_recomputed'.
 //     Then, if an object has children, we update
 //     latest_activity_at, tasks_tried, tasks_with_help, validated_at.
-//     This step is repeated until no records are updated.
-//  3. We insert new permissions_granted for each unlocked item according to corresponding item_dependencies.
+//  6. We mark all results marked as 'to_be_recomputed' as 'to_be_propagated'.
+//  7. We repeat from step 1.
 //
 // The `results_propagation` rows are marked in code as well as in the following SQL Triggers:
 // - after_insert_groups_groups/items_items
@@ -31,32 +37,69 @@ const (
 // - after_update_groups_groups/items_items
 // - after_update_permissions_generated
 // - before_delete_items_items.
+//
+//	Not: The function may loop endlessly if items_items is a cyclic graph.
 func (s *ResultStore) propagate() (err error) {
-	var groupsUnlocked int64
+	var itemsUnlocked int64
 	defer recoverPanics(&err)
 
 	CallBeforePropagationStepHook(PropagationStepResultsNamedLockAcquire)
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(propagateLockName, propagateLockTimeout, func(s *DataStore) error {
+	mustNotBeError(s.WithNamedLock(resultsPropagationLockName, resultsPropagationLockWaitTimeout, func(s *DataStore) error {
 		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate)
+		setResultsPropagationFromResultsPropagateItems(s)
 
-		s.setResultsPropagationFromResultsPropagateItems()
+		// Initially there can be results of any kind
+		for {
+			// First we take a chunk of results marked as 'to_be_propagated' and mark them as 'propagating'.
+			// Then we create missing results for their parents and mark those parent results as 'to_be_recomputed'.
+			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
+			markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s, resultsPropagationChunkSize)
 
-		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
+			// Now we unlock dependent items for results marked as 'propagating' and unmark them.
+			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockItemUnlocking)
+			itemsUnlocked += unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s)
+
+			resultsPropagateTableIsNotEmpty, err := s.Table("results_propagate").HasRows()
+			mustNotBeError(err)
+			if !resultsPropagateTableIsNotEmpty {
+				break
+			}
+
+			// Now there are no 'propagating' results left, so we can recompute results marked as 'to_be_recomputed'
+			// and mark them as 'to_be_propagated'.
+			recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s)
+
+			// From here, there can be only results marked as 'to_be_propagated'.
+		}
+		return nil
+	}))
+
+	// If items have been unlocked, need to recompute access
+	if itemsUnlocked > 0 {
+		CallBeforePropagationStepHook(PropagationStepResultsPropagationScheduling)
 
 		mustNotBeError(s.InTransaction(func(s *DataStore) error {
-			initTransactionTime := time.Now()
+			// generate permissions_generated from permissions_granted
+			s.SchedulePermissionsPropagation()
+			// we should compute attempts again as new permissions were set and
+			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
+			s.ScheduleResultsPropagation()
 
-			// We mark as 'to_be_recomputed' results of all ancestors of items marked as 'to_be_recomputed'/'to_be_propagated'
-			// with appropriate attempt_id.
-			// Also, we insert missing results for chapters having descendants with results marked as 'to_be_recomputed'/'to_be_propagated'.
-			// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
-			// to solve the descendant items. Chapters requiring explicit entry or placed outside of the scope
-			// of the attempts' root item are skipped).
-			// (This query can take more than 30 seconds to run when executed for the first time after the db migration)
-			mustNotBeError(s.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
-			mustNotBeError(s.Exec(`
+			return nil
+		}))
+	}
+
+	return nil
+}
+
+func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s *DataStore, chunkSize int) {
+	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		initTransactionTime := time.Now()
+
+		mustNotBeError(s.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
+		mustNotBeError(s.Exec(`
 			CREATE TEMPORARY TABLE results_to_mark (
 				participant_id BIGINT(20) NOT NULL,
 				attempt_id BIGINT(20) NOT NULL,
@@ -64,11 +107,17 @@ func (s *ResultStore) propagate() (err error) {
 				result_exists TINYINT(1) NOT NULL,
 				KEY result_exists (result_exists)
 			)`).Error())
-			defer func() { mustNotBeError(s.Exec("DROP TEMPORARY TABLE results_to_mark").Error()) }()
+		defer func() { mustNotBeError(s.Exec("DROP TEMPORARY TABLE results_to_mark").Error()) }()
 
-			result := s.db.Exec(`
+		// We mark as 'to_be_recomputed' results of all parents of a chunk of results marked as 'to_be_propagated'.
+		// Also, we insert missing results for chapters having children with results marked as 'to_be_propagated'.
+		// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
+		// to solve the child items. Chapters requiring explicit entry or placed outside the scope
+		// of the attempts' root item are skipped).
+		mustNotBeError(s.Exec("UPDATE results_propagate SET state = 'propagating' WHERE state = 'to_be_propagated' LIMIT ?", chunkSize).Error())
+		result := s.db.Exec(`
 			INSERT INTO results_to_mark (participant_id, attempt_id, item_id, result_exists)
-			WITH RECURSIVE results_to_insert (participant_id, attempt_id, item_id, result_exists) AS (
+			WITH results_to_insert (participant_id, attempt_id, item_id, result_exists) AS (
 					SELECT results.participant_id,
 								 IF(attempts.root_item_id = results.item_id, attempts.parent_attempt_id, results.attempt_id) AS attempt_id,
 								 items_items.parent_item_id AS item_id,
@@ -85,31 +134,13 @@ func (s *ResultStore) propagate() (err error) {
 					LEFT JOIN results_propagate AS existing_propagate
 						ON existing_propagate.participant_id = existing.participant_id AND existing_propagate.attempt_id = existing.attempt_id AND
                existing_propagate.item_id = existing.item_id
-					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.participant_id IS NULL OR existing_propagate.state IS NULL OR existing_propagate.state != 'to_be_recomputed')
-				UNION
-					SELECT results_to_insert.participant_id,
-								 IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AS attempt_id,
-								 items_items.parent_item_id AS item_id,
-								 existing.participant_id IS NOT NULL AS result_exists
-					FROM results_to_insert
-					JOIN attempts ON attempts.participant_id = results_to_insert.participant_id AND attempts.id = results_to_insert.attempt_id
-					JOIN items_items ON items_items.child_item_id = results_to_insert.item_id
-					JOIN items ON items.id = items_items.parent_item_id
-					LEFT JOIN results AS existing
-						ON existing.participant_id = results_to_insert.participant_id AND
-							 existing.attempt_id =
-						     IF(attempts.root_item_id = results_to_insert.item_id, attempts.parent_attempt_id, results_to_insert.attempt_id) AND
-							 existing.item_id = items_items.parent_item_id
-					LEFT JOIN results_propagate AS existing_propagate
-						ON existing_propagate.participant_id = existing.participant_id AND existing_propagate.attempt_id = existing.attempt_id AND
-               existing_propagate.item_id = existing.item_id
-					WHERE NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
-								(existing.participant_id IS NULL OR existing_propagate.state IS NULL OR existing_propagate.state != 'to_be_recomputed')
+					WHERE
+						results_propagate.state = 'propagating' AND
+						NOT (items.requires_explicit_entry AND existing.participant_id IS NULL) AND
+						(existing.participant_id IS NULL OR existing_propagate.state IS NULL OR existing_propagate.state != 'to_be_recomputed')
 			)
 			SELECT
-				results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id,
-        MAX(results_to_insert.result_exists) AS result_exists
+				results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id, results_to_insert.result_exists
 			FROM results_to_insert
 			JOIN attempts ON attempts.participant_id = results_to_insert.participant_id AND attempts.id = results_to_insert.attempt_id
 			LEFT JOIN items_ancestors AS root_item_descendant
@@ -138,58 +169,59 @@ func (s *ResultStore) propagate() (err error) {
 						groups_ancestors_active.child_group_id = results_to_insert.participant_id
 			)) AND (
 				attempts.root_item_id IS NULL OR attempts.root_item_id = results_to_insert.item_id OR
-				root_item_descendant.ancestor_item_id IS NOT NULL))
-			GROUP BY results_to_insert.participant_id, results_to_insert.attempt_id, results_to_insert.item_id
-		`)
-			mustNotBeError(result.Error)
+				root_item_descendant.ancestor_item_id IS NOT NULL))`)
+		mustNotBeError(result.Error)
 
-			if result.RowsAffected > 0 {
-				mustNotBeError(s.Exec(`
+		if result.RowsAffected > 0 {
+			mustNotBeError(s.Exec(`
 				INSERT IGNORE INTO results (participant_id, attempt_id, item_id, latest_activity_at)
 				SELECT
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, '1000-01-01 00:00:00'
 				FROM results_to_mark
 				WHERE NOT result_exists`).Error())
 
-				mustNotBeError(s.Exec(`
+			mustNotBeError(s.Exec(`
 				INSERT INTO results_propagate (participant_id, attempt_id, item_id, state)
 				SELECT
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
 				FROM results_to_mark
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
-			}
+		}
 
-			logging.Debugf(
-				"Duration of step of results propagation: %d rows affected, took %v",
-				result.RowsAffected,
-				time.Since(initTransactionTime),
-			)
+		logging.Debugf(
+			"Duration of step of results propagation: %d rows affected, took %v",
+			result.RowsAffected,
+			time.Since(initTransactionTime),
+		)
 
-			return nil
-		}))
+		return nil
+	}))
+}
 
-		hasChanges := true
+func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataStore) {
+	hasChanges := true
 
-		for hasChanges {
-			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMain)
+	for hasChanges {
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMain)
 
-			mustNotBeError(s.InTransaction(func(s *DataStore) error {
-				initTransactionTime := time.Now()
+		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			initTransactionTime := time.Now()
 
-				// We process only those objects that were marked as 'to_be_recomputed' and
-				// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
-				// This way we prevent infinite looping as we never process items that are ancestors of themselves
-				//
-				// For every object, we compute all the characteristics based on the children:
-				//  - latest_activity_at as the max of children's
-				//  - tasks_with_help, tasks_tried as the sum of children's per-item maximums
-				//  - children_validated as the number of children items with validated == 1
-				//  - validated, depending on the items_items.category and items.validation_type
-				//    (an item should have at least one validated child to become validated itself by the propagation)
-				const updateQuery = `
+			// We process only those objects that were marked as 'to_be_recomputed' and
+			// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
+			// This way we prevent undefined behavior of calculating the result and its children in the same operation.
+			// We prevent infinite looping by disallowing to create cycles in the items graph, so an item can never be an ancestor of itself.
+			//
+			// For every object, we compute all the characteristics based on the children:
+			//  - latest_activity_at as the max of children's
+			//  - tasks_with_help, tasks_tried as the sum of children's per-item maximums
+			//  - children_validated as the number of children items with validated == 1
+			//  - validated, depending on the items_items.category and items.validation_type
+			//    (an item should have at least one validated child to become validated itself by the propagation)
+			const updateQuery = `
 					UPDATE results_propagate AS target_propagate ` +
-					// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
-					`JOIN (
+				// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
+				`JOIN (
 						SELECT *
 						FROM (
 							WITH marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
@@ -238,10 +270,10 @@ func (s *ResultStore) propagate() (err error) {
 							SUM(IFNULL(aggregated_children_results.score_computed, 0) * items_items.score_weight) /
 								COALESCE(NULLIF(SUM(items_items.score_weight), 0), 1) AS average_score
 						FROM items_items ` +
-					// We use LEFT JOIN LATERAL to aggregate results grouped by target_results.participant_id & items_items.child_item_id.
-					// The usual LEFT JOIN conditions in the ON clause would group results before joining which would produce
-					// wrong results.
-					`	LEFT JOIN LATERAL (
+				// We use LEFT JOIN LATERAL to aggregate results grouped by target_results.participant_id & items_items.child_item_id.
+				// The usual LEFT JOIN conditions in the ON clause would group results before joining which would produce
+				// wrong results.
+				`	LEFT JOIN LATERAL (
 							SELECT
 								MAX(validated) AS validated,
 								MIN(validated_at) AS validated_at,
@@ -294,23 +326,23 @@ func (s *ResultStore) propagate() (err error) {
 							END, 0), 100)), 0),
 						target_propagate.state = 'to_be_propagated'`
 
-				rowsAffected := s.Exec(updateQuery).RowsAffected()
+			rowsAffected := s.Exec(updateQuery).RowsAffected()
 
-				logging.Debugf("Duration of step of results propagation: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
+			logging.Debugf("Duration of step of results propagation: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
 
-				hasChanges = rowsAffected > 0
+			hasChanges = rowsAffected > 0
 
-				return nil
-			}))
-		}
+			return nil
+		}))
+	}
+}
 
-		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockItemUnlocking)
+func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore) (itemsUnlocked int64) {
+	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		initTransactionTime := time.Now()
 
-		mustNotBeError(s.InTransaction(func(s *DataStore) error {
-			initTransactionTime := time.Now()
-
-			canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
-			result := s.db.Exec(`
+		canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
+		result := s.db.Exec(`
 			INSERT INTO permissions_granted
 				(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
 				SELECT
@@ -326,7 +358,7 @@ func (s *ResultStore) propagate() (err error) {
 				JOIN item_dependencies ON item_dependencies.item_id = results.item_id AND
 					item_dependencies.score <= results.score_computed AND item_dependencies.grant_content_view
 				JOIN items ON items.id = item_dependencies.dependent_item_id
-				WHERE results_propagate.state = 'to_be_propagated'
+				WHERE results_propagate.state = 'propagating'
 			ON DUPLICATE KEY UPDATE
 				latest_update_at = IF(
 					VALUES(can_view) = 'content' AND can_view_value < ? OR
@@ -337,46 +369,27 @@ func (s *ResultStore) propagate() (err error) {
 				can_enter_from = IF(
 					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_from > VALUES(can_enter_from),
 					VALUES(can_enter_from), can_enter_from)`,
-				canViewContentIndex, canViewContentIndex)
+			canViewContentIndex, canViewContentIndex)
 
-			mustNotBeError(result.Error)
-			groupsUnlocked += result.RowsAffected
+		mustNotBeError(result.Error)
+		itemsUnlocked = result.RowsAffected
 
-			err = s.db.Exec(`DELETE FROM results_propagate WHERE state = 'to_be_propagated'`).Error
-			mustNotBeError(err)
+		mustNotBeError(s.Exec("DELETE FROM results_propagate WHERE state = 'propagating'").Error())
 
-			logging.Debugf(
-				"Duration of final step of results propagation: %d rows affected, took %v",
-				result.RowsAffected,
-				time.Since(initTransactionTime),
-			)
-
-			return nil
-		}))
+		logging.Debugf(
+			"Duration of final step of results propagation: %d rows affected, took %v",
+			result.RowsAffected,
+			time.Since(initTransactionTime),
+		)
 
 		return nil
 	}))
 
-	// If items have been unlocked, need to recompute access
-	if groupsUnlocked > 0 {
-		CallBeforePropagationStepHook(PropagationStepResultsPropagationScheduling)
-
-		mustNotBeError(s.InTransaction(func(s *DataStore) error {
-			// generate permissions_generated from permissions_granted
-			s.SchedulePermissionsPropagation()
-			// we should compute attempts again as new permissions were set and
-			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-			s.ScheduleResultsPropagation()
-
-			return nil
-		}))
-	}
-
-	return nil
+	return itemsUnlocked
 }
 
 // setResultsPropagationFromResultsPropagateItems inserts results_propagate rows from results_propagate_items.
-func (s *DataStore) setResultsPropagationFromResultsPropagateItems() {
+func setResultsPropagationFromResultsPropagateItems(s *DataStore) {
 	const maxInserts = 5000
 
 	const fromResultsWithItemIDToPropagateQueryPart = `
