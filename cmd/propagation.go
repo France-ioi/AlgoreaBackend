@@ -57,12 +57,6 @@ func init() { //nolint:gochecknoinits
 			}
 
 			fmt.Println("Propagation done.")
-
-			// Close database connection.
-			if application.Database.Close() != nil {
-				fmt.Println("Cannot close DB connection:", err)
-				os.Exit(1)
-			}
 		},
 	}
 
