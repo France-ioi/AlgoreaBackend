@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.4...v2.22.5) - 2024-09-19
+- split the results propagation process into small atomic chunks
+
 ## [v2.22.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.3...v2.22.4) - 2024-09-16
 - add a config to disable result propagation completely
 - remove parameter to the propagation command to disable result propagation
