@@ -48,7 +48,7 @@ func (s *ResultStore) propagate() (err error) {
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(resultsPropagationLockName, resultsPropagationLockWaitTimeout, func(s *DataStore) error {
 		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate)
-		setResultsPropagationFromResultsPropagateItems(s)
+		setResultsPropagationFromTableResultsRecomputeForItems(s)
 
 		// Initially there can be results of any kind
 		for {
@@ -388,67 +388,52 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore)
 	return itemsUnlocked
 }
 
-// setResultsPropagationFromResultsPropagateItems inserts results_propagate rows from results_propagate_items.
-func setResultsPropagationFromResultsPropagateItems(s *DataStore) {
-	const maxInserts = 5000
+// setResultsPropagationFromTableResultsRecomputeForItems inserts results_propagate rows from results_recompute_for_items.
+func setResultsPropagationFromTableResultsRecomputeForItems(s *DataStore) {
+	const chunkSize = 20000
 
-	const fromResultsWithItemIDToPropagateQueryPart = `
-		FROM results
-		WHERE item_id IN (SELECT item_id FROM results_propagate_items ORDER BY item_id)
-	`
+	// Mark all rows from results_recompute_for_items as processing.
+	mustNotBeError(s.Exec("UPDATE results_recompute_for_items SET is_being_processed = 1").Error())
 
-	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+	for {
+		var rowsAffected int64
 		initTransactionTime := time.Now()
+		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+			// Insert a chunk of results for items marked as processing in results_recompute_for_items into results_propagate.
+			result := s.Exec(`
+				INSERT INTO results_propagate
+					(
+						SELECT results.participant_id, results.attempt_id, results.item_id, 'to_be_recomputed' AS state
+						FROM results
+						LEFT JOIN results_propagate
+							ON results_propagate.participant_id = results.participant_id AND
+								results_propagate.attempt_id = results.attempt_id AND
+								results_propagate.item_id = results.item_id AND
+								results_propagate.state = 'to_be_recomputed'
+						WHERE
+							results.item_id IN (
+								SELECT item_id FROM results_recompute_for_items WHERE is_being_processed
+							) AND
+							results_propagate.participant_id IS NULL
+						LIMIT ?
+					)
+				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'
+			`, chunkSize)
+			mustNotBeError(result.Error())
+			rowsAffected = result.RowsAffected()
+			if rowsAffected == 0 {
+				mustNotBeError(s.Exec("DELETE FROM results_recompute_for_items WHERE is_being_processed").Error())
+			}
 
-		// First we count the number of rows that need to be processed, then we use LIMIT/OFFSET.
-		// Because we want the transaction to take a reasonable time to execute,
-		// we also don't want to have too many small transactions running, that's why we don't loop on item_id.
-		//
-		// We can't use rowsAffected to know whether all rows are updated, because it counts:
-		// - 0 when a row exists and is not updated
-		// - 1 when a row is inserted
-		// - 2 when a row exists and is updated
-		// So we can have rowsAffected == 0 if nothing has to be updated in the first `maxInserts` rows,
-		// even when there is still work to be done at a later offset.
-		var res struct {
-			Count int64 `json:"count"`
-		}
-		mustNotBeError(
-			s.Raw(`SELECT COUNT(*) AS count ` + fromResultsWithItemIDToPropagateQueryPart).
-				Scan(&res).
-				Error(),
-		)
-
-		totalRowsAffected := int64(0)
-		offset := int64(0)
-		for ; offset < res.Count; offset += maxInserts {
-			rowsAffected := s.Exec(`
-							INSERT INTO results_propagate
-								(
-								 	SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state
-									`+fromResultsWithItemIDToPropagateQueryPart+`
-									ORDER BY participant_id, attempt_id, item_id
-									LIMIT ? OFFSET ?
-								)
-							ON DUPLICATE KEY UPDATE state = 'to_be_recomputed';
-					`, maxInserts, offset).
-				RowsAffected()
-
-			totalRowsAffected += rowsAffected
-		}
-
-		mustNotBeError(
-			s.Exec("DELETE FROM `results_propagate_items`").
-				Error(),
-		)
-
+			return nil
+		}))
 		logging.Debugf(
-			"Duration of step of results propagation insertion from results_propagate_items: took %v with %d rows affected and last offset %d",
+			"Duration of step of results propagation insertion from results_recompute_for_items: took %v with %d rows affected",
 			time.Since(initTransactionTime),
-			totalRowsAffected,
-			offset,
+			rowsAffected,
 		)
-
-		return nil
-	}))
+		if rowsAffected == 0 {
+			break
+		}
+	}
 }
