@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.5...v2.22.6) - 2024-09-24
+- use smaller iterations for result propagation
+- rework processing of results_propagate_items table
+- do not close the db connection explicitly in the propagation command
+
 ## [v2.22.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.4...v2.22.5) - 2024-09-19
 - split the results propagation process into small atomic chunks
 
