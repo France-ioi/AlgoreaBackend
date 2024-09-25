@@ -9,7 +9,7 @@ import (
 const (
 	resultsPropagationLockName        = "listener_propagate"
 	resultsPropagationLockWaitTimeout = 10 * time.Second
-	resultsPropagationChunkSize       = 1000
+	resultsPropagationChunkSize       = 200
 )
 
 // propagate recomputes fields of results
