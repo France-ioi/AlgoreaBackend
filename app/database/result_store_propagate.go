@@ -253,7 +253,7 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 												 children.item_id = items_items.child_item_id
 										WHERE items_items.parent_item_id = inner_parent.item_id
 									)
-									LIMIT ?
+								LIMIT ?
 							) tmp
 						)
 					UPDATE results_propagate AS target_results_propagate
