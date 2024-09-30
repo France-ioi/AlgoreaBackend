@@ -15,7 +15,7 @@ BEGIN
       NEW.score_computed <=> OLD.score_computed AND
       -- We always consider results with the default latest_activity_at as changed
       -- because they look like a newly inserted result for a chapter/skill.
-      -- It makes sure that the newly inserted result is propagated.
+      -- This way we make sure that a newly inserted result is propagated.
       NEW.latest_activity_at <> '1000-01-01 00:00:00',
       'unchanged',
       'modified');
