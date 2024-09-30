@@ -45,7 +45,7 @@ Background:
     | 0  | 11             |
   And the database has the following table 'results':
     | attempt_id | participant_id | item_id | score_computed |
-    | 0          | 11             | 21      | 0              |
+    | 0          | 11             | 21      | 1              |
     | 0          | 11             | 50      | 10             |
     | 0          | 11             | 70      | 20             |
   And the database has the following table 'languages':
@@ -317,9 +317,10 @@ Background:
       | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
     And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "50"
-    And the table "results" at item_id "50" should be:
+    And the table "results" should stay unchanged but the rows with item_ids "21,50"
+    And the table "results" at item_ids "21,50" should be:
       | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 21      | 0              |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
 
@@ -358,9 +359,10 @@ Background:
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "50"
-    And the table "results" at item_id "50" should be:
+    And the table "results" should stay unchanged but the rows with item_ids "21,50"
+    And the table "results" at item_ids "21,50" should be:
       | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 21      | 0              |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
 

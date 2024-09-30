@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	resultsPropagationLockName        = "listener_propagate"
-	resultsPropagationLockWaitTimeout = 10 * time.Second
-	resultsPropagationChunkSize       = 200
+	resultsPropagationLockName               = "listener_propagate"
+	resultsPropagationLockWaitTimeout        = 10 * time.Second
+	resultsPropagationPropagationChunkSize   = 200
+	resultsPropagationRecomputationChunkSize = 1000
 )
 
 // propagate recomputes fields of results
@@ -28,7 +29,8 @@ const (
 //  5. We process all objects that are marked as 'to_be_recomputed' and that have no children marked as 'to_be_recomputed'.
 //     Then, if an object has children, we update
 //     latest_activity_at, tasks_tried, tasks_with_help, validated_at.
-//  6. We mark all results marked as 'to_be_recomputed' as 'to_be_propagated'.
+//  6. We mark all modified results marked as 'to_be_recomputed' as 'to_be_propagated' and
+//     unmark all unchanged results marked as 'to_be_recomputed'.
 //  7. We repeat from step 1.
 //
 // The `results_propagation` rows are marked in code as well as in the following SQL Triggers:
@@ -55,7 +57,7 @@ func (s *ResultStore) propagate() (err error) {
 			// First we take a chunk of results marked as 'to_be_propagated' and mark them as 'propagating'.
 			// Then we create missing results for their parents and mark those parent results as 'to_be_recomputed'.
 			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
-			markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s, resultsPropagationChunkSize)
+			markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s, resultsPropagationPropagationChunkSize)
 
 			// Now we unlock dependent items for results marked as 'propagating' and unmark them.
 			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockItemUnlocking)
@@ -69,7 +71,7 @@ func (s *ResultStore) propagate() (err error) {
 
 			// Now there are no 'propagating' results left, so we can recompute results marked as 'to_be_recomputed'
 			// and mark them as 'to_be_propagated'.
-			recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s)
+			recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s, resultsPropagationRecomputationChunkSize)
 
 			// From here, there can be only results marked as 'to_be_propagated'.
 		}
@@ -198,7 +200,7 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 	}))
 }
 
-func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataStore) {
+func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataStore, chunkSize int) {
 	hasChanges := true
 
 	for hasChanges {
@@ -218,42 +220,58 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 			//  - children_validated as the number of children items with validated == 1
 			//  - validated, depending on the items_items.category and items.validation_type
 			//    (an item should have at least one validated child to become validated itself by the propagation)
+
+			// Process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'.
+			// Start from marking them as 'recomputing'. It's important that the 'recomputing' state never leaks outside the transaction.
+			// Instead of marking all the suitable results as 'recomputing' at once, we do it in chunks to avoid locking the table for too long.
+			result := s.Exec(`
+					WITH
+						marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed'),
+						results_to_recompute AS (
+							SELECT * FROM (
+								SELECT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
+								FROM marked_to_be_recomputed AS inner_parent
+								WHERE
+									NOT EXISTS (
+										SELECT 1
+										FROM items_items
+										JOIN marked_to_be_recomputed AS children
+											ON children.participant_id = inner_parent.participant_id AND
+												 children.attempt_id = inner_parent.attempt_id AND
+												 children.item_id = items_items.child_item_id
+										WHERE items_items.parent_item_id = inner_parent.item_id
+									) AND NOT EXISTS (
+										SELECT 1
+										FROM items_items
+										JOIN attempts
+											ON attempts.participant_id = inner_parent.participant_id AND
+												 attempts.parent_attempt_id = inner_parent.attempt_id AND
+												 attempts.root_item_id = items_items.child_item_id
+										JOIN marked_to_be_recomputed AS children
+											ON children.participant_id = inner_parent.participant_id AND
+												 children.attempt_id = attempts.id AND
+												 children.item_id = items_items.child_item_id
+										WHERE items_items.parent_item_id = inner_parent.item_id
+									)
+									LIMIT ?
+							) tmp
+						)
+					UPDATE results_propagate AS target_results_propagate
+					JOIN results_to_recompute USING (participant_id, attempt_id, item_id)
+					SET state = 'recomputing'`, chunkSize)
+			mustNotBeError(result.Error())
+			rowsAffected := result.RowsAffected()
+
+			if rowsAffected == 0 {
+				hasChanges = false
+				return nil
+			}
+
 			const updateQuery = `
-					UPDATE results_propagate AS target_propagate ` +
-				// process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'
-				`JOIN (
-						SELECT *
-						FROM (
-							WITH marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
-							SELECT DISTINCT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
-							FROM marked_to_be_recomputed AS inner_parent
-							WHERE
-								NOT EXISTS (
-									SELECT 1
-									FROM items_items
-									JOIN marked_to_be_recomputed AS children
-										ON children.participant_id = inner_parent.participant_id AND
-										   children.attempt_id = inner_parent.attempt_id AND
-										   children.item_id = items_items.child_item_id
-									WHERE items_items.parent_item_id = inner_parent.item_id
-								) AND NOT EXISTS (
-									SELECT 1
-									FROM items_items
-									JOIN attempts
-										ON attempts.participant_id = inner_parent.participant_id AND
-										   attempts.parent_attempt_id = inner_parent.attempt_id AND
-										   attempts.root_item_id = items_items.child_item_id
-									JOIN marked_to_be_recomputed AS children
-										ON children.participant_id = inner_parent.participant_id AND
-											 children.attempt_id = attempts.id AND
-										   children.item_id = items_items.child_item_id
-									WHERE items_items.parent_item_id = inner_parent.item_id
-								)
-						) AS tmp2
-					) AS tmp USING(participant_id, attempt_id, item_id)
-					JOIN results AS target_results USING(participant_id, attempt_id, item_id)
+					UPDATE results AS target_results
+					JOIN results_propagate USING (participant_id, attempt_id, item_id)
 					JOIN items
-						ON items.id = target_propagate.item_id
+						ON items.id = target_results.item_id
 					LEFT JOIN LATERAL (
 						SELECT
 							target_results.participant_id,
@@ -323,14 +341,31 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 								WHEN 'set' THEN target_results.score_edit_value
 								WHEN 'diff' THEN children_stats.average_score + target_results.score_edit_value
 								ELSE children_stats.average_score
-							END, 0), 100)), 0),
-						target_propagate.state = 'to_be_propagated'`
+							END, 0), 100)), 0),` +
+				// We set the 'recomputing_state' to 'recomputing' asking the before_update_results trigger to check if the result has changed.
+				// The trigger will set it to 'modified' if the result has changed and to 'unchanged' otherwise.
+				// Results with latest_activity_at = '1000-01-01 00:00:00' are always considered modified in order
+				// to propagate the newly created results.
+				`
+						target_results.recomputing_state = 'recomputing'
+					WHERE results_propagate.state = 'recomputing'`
 
-			rowsAffected := s.Exec(updateQuery).RowsAffected()
+			mustNotBeError(s.Exec(updateQuery).Error())
 
-			logging.Debugf("Duration of step of results propagation: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
+			// We mark all modified results marked as 'recomputing' as 'to_be_propagated'.
+			result = s.Exec(`
+				UPDATE results_propagate
+				JOIN results USING(participant_id, attempt_id, item_id)
+				SET results_propagate.state = 'to_be_propagated'
+				WHERE results_propagate.state = 'recomputing' AND results.recomputing_state = 'modified'`)
+			mustNotBeError(result.Error())
+			rowsModified := result.RowsAffected()
 
-			hasChanges = rowsAffected > 0
+			// Finally we unmark all unchanged results marked as 'recomputing'.
+			mustNotBeError(s.Exec(`DELETE FROM results_propagate WHERE state = 'recomputing'`).Error())
+
+			logging.Debugf("Duration of step of results propagation: %d rows affected, %d rows modified, took %v",
+				rowsAffected, rowsModified, time.Since(initTransactionTime))
 
 			return nil
 		}))
