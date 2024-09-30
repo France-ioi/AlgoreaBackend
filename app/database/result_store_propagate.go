@@ -225,40 +225,34 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 			// Start from marking them as 'recomputing'. It's important that the 'recomputing' state never leaks outside the transaction.
 			// Instead of marking all the suitable results as 'recomputing' at once, we do it in chunks to avoid locking the table for too long.
 			result := s.Exec(`
-					WITH
-						marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed'),
-						results_to_recompute AS (
-							SELECT * FROM (
-								SELECT inner_parent.participant_id, inner_parent.attempt_id, inner_parent.item_id
-								FROM marked_to_be_recomputed AS inner_parent
-								WHERE
-									NOT EXISTS (
-										SELECT 1
-										FROM items_items
-										JOIN marked_to_be_recomputed AS children
-											ON children.participant_id = inner_parent.participant_id AND
-												 children.attempt_id = inner_parent.attempt_id AND
-												 children.item_id = items_items.child_item_id
-										WHERE items_items.parent_item_id = inner_parent.item_id
-									) AND NOT EXISTS (
-										SELECT 1
-										FROM items_items
-										JOIN attempts
-											ON attempts.participant_id = inner_parent.participant_id AND
-												 attempts.parent_attempt_id = inner_parent.attempt_id AND
-												 attempts.root_item_id = items_items.child_item_id
-										JOIN marked_to_be_recomputed AS children
-											ON children.participant_id = inner_parent.participant_id AND
-												 children.attempt_id = attempts.id AND
-												 children.item_id = items_items.child_item_id
-										WHERE items_items.parent_item_id = inner_parent.item_id
-									)
-								LIMIT ?
-							) tmp
-						)
-					UPDATE results_propagate AS target_results_propagate
-					JOIN results_to_recompute USING (participant_id, attempt_id, item_id)
-					SET state = 'recomputing'`, chunkSize)
+				WITH
+					marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
+				UPDATE results_propagate AS target_results_propagate
+				SET state = 'recomputing'
+				WHERE
+					state = 'to_be_recomputed' AND
+					NOT EXISTS (
+						SELECT 1
+						FROM items_items
+						JOIN marked_to_be_recomputed AS children
+							ON children.participant_id = target_results_propagate.participant_id AND
+							   children.attempt_id = target_results_propagate.attempt_id AND
+							   children.item_id = items_items.child_item_id
+						WHERE items_items.parent_item_id = target_results_propagate.item_id
+					) AND NOT EXISTS (
+						SELECT 1
+						FROM items_items
+						JOIN attempts
+							ON attempts.participant_id = target_results_propagate.participant_id AND
+							   attempts.parent_attempt_id = target_results_propagate.attempt_id AND
+							   attempts.root_item_id = items_items.child_item_id
+						JOIN marked_to_be_recomputed AS children
+							ON children.participant_id = target_results_propagate.participant_id AND
+							   children.attempt_id = attempts.id AND
+							   children.item_id = items_items.child_item_id
+						WHERE items_items.parent_item_id = target_results_propagate.item_id
+					)
+				LIMIT ?`, chunkSize)
 			mustNotBeError(result.Error())
 			rowsAffected := result.RowsAffected()
 
@@ -305,8 +299,8 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 								   attempts.id = children_results.attempt_id
 							WHERE children_results.participant_id = target_results.participant_id AND
 								children_results.item_id = items_items.child_item_id AND
-							  (children_results.attempt_id = target_results.attempt_id OR
-							    (attempts.root_item_id = items_items.child_item_id AND
+								(children_results.attempt_id = target_results.attempt_id OR
+									(attempts.root_item_id = items_items.child_item_id AND
 									 attempts.parent_attempt_id = target_results.attempt_id))
 							GROUP BY children_results.participant_id, children_results.item_id
 						) AS aggregated_children_results ON 1
