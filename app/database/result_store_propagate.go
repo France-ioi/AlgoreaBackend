@@ -26,12 +26,15 @@ const (
 //  3. For results marked as 'propagating', we insert new permissions_granted for each unlocked item
 //     according to corresponding item_dependencies.
 //  4. We unmark all results marked as 'propagating'.
-//  5. We process all objects that are marked as 'to_be_recomputed' and that have no children marked as 'to_be_recomputed'.
-//     Then, if an object has children, we update
-//     latest_activity_at, tasks_tried, tasks_with_help, validated_at.
-//  6. We mark all modified results marked as 'to_be_recomputed' as 'to_be_propagated' and
+//  5. We atomically process results marked as 'to_be_recomputed' by chunks.
+//     a) We mark as 'recomputing' a chunk of results that are marked as 'to_be_recomputed' and
+//     that have no children marked as 'to_be_recomputed'.
+//     b) For each object marked as 'recomputing', we update
+//     latest_activity_at, tasks_tried, tasks_with_help, validated_at, score_computed.
+//     c) We mark all modified results marked as 'recomputing' as 'to_be_propagated' and
 //     unmark all unchanged results marked as 'to_be_recomputed'.
-//  7. We repeat from step 1.
+//     We repeat this step until there are no more results marked as 'to_be_recomputed'.
+//  6. We repeat from step 1.
 //
 // The `results_propagation` rows are marked in code as well as in the following SQL Triggers:
 // - after_insert_groups_groups/items_items
