@@ -34,7 +34,7 @@ func init() { //nolint:gochecknoinits
 			}
 
 			store := database.NewDataStore(application.Database)
-			itemNumber := -1
+			itemNumber := 0
 			err = store.Items().Where("type = 'Chapter' OR type = 'Skill'").Select("id").
 				ScanAndHandleMaps(func(item map[string]interface{}) error {
 					itemNumber++
