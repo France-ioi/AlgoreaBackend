@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.7...v2.22.8) - 2024-10-01
+- speed up the results propagation and make it less locking
+- introduce a command recomputing all the results of chapters/skills
+
 ## [v2.22.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.6...v2.22.7) - 2024-09-25
 - use even smaller iterations (200) for result propagation
 
