@@ -11,17 +11,17 @@ Feature: Get members of group_id
       | jeff  | 71       | Jeff        | Bezos      | 7     |
       | larry | 81       | Larry       | Ellison    | 8     |
       | lp    | 91       | Larry       | Page       | 6     |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id |
       | 13 |
       | 14 |
       | 22 |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id |
       | 13       | 21         |
       | 13       | 91         |
       | 22       | 21         |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          | personal_info_view_approved_at |
       | 13              | 51             | 9999-12-31 23:59:59 | null                           | # still shows personal info because of 22-51
       | 13              | 61             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
@@ -33,7 +33,7 @@ Feature: Get members of group_id
       | 22              | 13             | 9999-12-31 23:59:59 | null                           |
       | 22              | 51             | 9999-12-31 23:59:59 | 2019-05-30 11:00:00            |
     And the groups ancestors are computed
-    And the database has the following table 'group_membership_changes':
+    And the database has the following table "group_membership_changes":
       | group_id | member_id | action                | at                  | initiator_id |
       | 13       | 11        | invitation_refused    | 2017-11-29 06:38:38 | 31           |
       | 13       | 21        | invitation_created    | 2017-10-29 06:38:38 | 11           |

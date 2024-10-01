@@ -1,6 +1,6 @@
 Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name        | type    |
       | 10 | Parent      | Club    |
       | 11 | Group A     | Friends |
@@ -14,14 +14,14 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 41 | jane        | User    |
       | 51 | jack        | User    |
       | 61 | jack        | User    |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | owner | 21       |
       | john  | 31       |
       | jane  | 41       |
       | jack  | 51       |
       | paul  | 61       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 11       | 21         | true                   | true              |
       | 13       | 21         | false                  | false             |
@@ -31,7 +31,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 17       | 21         | false                  | false             |
       | 31       | 21         | false                  | false             |
       | 41       | 21         | false                  | false             |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 11             |
       | 10              | 13             |
@@ -47,22 +47,22 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 15              | 31             |
       | 15              | 41             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | duration | entry_participant_type | default_language_tag |
       | 50 | 00:00:00 | User                   | fr                   |
       | 60 | 00:00:01 | Team                   | fr                   |
       | 10 | 00:00:02 | User                   | fr                   |
       | 70 | 00:00:03 | Team                   | fr                   |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
       | 10               | 70            |
       | 60               | 70            |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 51       | 50      | 51              | 9999-12-31 23:59:58 | 9999-12-31 23:59:59 |
       | 61       | 50      | 61              | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 10       | 50      | none                     | none                     | none                |
       | 11       | 50      | none                     | none                     | none                |
@@ -78,7 +78,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 31       | 70      | content_with_descendants | none                     | none                |
       | 41       | 50      | info                     | none                     | none                |
       | 41       | 70      | content                  | none                     | none                |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -92,7 +92,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 31       | 50      | 00:01:00        |
       | 31       | 70      | 00:01:00        |
       | 41       | 70      | 00:01:00        |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | participant_id | id | root_item_id |
       | 13             | 1  | 60           |
       | 15             | 1  | 60           |

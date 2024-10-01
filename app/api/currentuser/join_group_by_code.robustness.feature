@@ -1,6 +1,6 @@
 Feature: Join a group using a code (groupsJoinByCode) - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type  | code       | code_expires_at     | code_lifetime | require_watch_approval | frozen_membership | max_participants | enforce_max_participants |
       | 11 | Club  | 3456789abc | 2017-04-29 06:38:38 | null          | 0                      | false             | 0                | false                    |
       | 12 | Team  | abc3456789 | null                | null          | 1                      | false             | 0                | false                    |
@@ -10,21 +10,21 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 19 | Other | 987654abcd | null                | null          | 0                      | false             | 0                | true                     |
       | 21 | User  | null       | null                | null          | 0                      | false             | 0                | false                    |
       | 22 | User  | 3333333333 | null                | null          | 0                      | false             | 0                | false                    |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | temp_user |
       | john  | 21       | false     |
       | tmp   | 22       | true      |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag |
       | 1234 | fr                   |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 14              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type       |
       | 11       | 21        | invitation |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | participant_id | id | root_item_id |
       | 14             | 1  | 1234         |
       | 17             | 2  | 1234         |
@@ -155,13 +155,13 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
 
   Scenario: Cannot join if joining breaks entry conditions for the team
     Given I am the user with id "21"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table 'attempts' has also the following row:
+    And the database table "attempts" has also the following row:
       | participant_id | id | root_item_id |
       | 12             | 1  | 2            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id | started_at          |
       | 12             | 1          | 2       | 2019-05-30 11:00:00 |
     When I send a POST request to "/current-user/group-memberships/by-code?code=abc3456789&approvals=watch"

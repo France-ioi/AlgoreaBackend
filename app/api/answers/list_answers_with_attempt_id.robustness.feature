@@ -1,33 +1,33 @@
 Feature: List answers by attempt_id - robustness
 Background:
-  Given the database has the following table 'groups':
+  Given the database has the following table "groups":
     | id | name    | grade | type  |
     | 11 | jdoe    | -2    | User  |
     | 13 | Group B | -2    | Class |
     | 21 | guest   | -2    | User  |
-  And the database has the following table 'users':
+  And the database has the following table "users":
     | login | temp_user | group_id |
     | jdoe  | 0         | 11       |
     | guest | 0         | 21       |
-  And the database has the following table 'groups_groups':
+  And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 13              | 11             |
   And the groups ancestors are computed
-  And the database has the following table 'items':
+  And the database has the following table "items":
     | id  | type    | no_score | default_language_tag |
     | 190 | Chapter | false    | fr                   |
     | 200 | Chapter | false    | fr                   |
     | 210 | Chapter | false    | fr                   |
-  And the database has the following table 'permissions_generated':
+  And the database has the following table "permissions_generated":
     | group_id | item_id | can_view_generated       |
     | 13       | 190     | none                     |
     | 13       | 200     | content_with_descendants |
     | 13       | 210     | info                     |
     | 21       | 190     | content_with_descendants |
-  And the database has the following table 'attempts':
+  And the database has the following table "attempts":
     | id | participant_id |
     | 1  | 13             |
-  And the database has the following table 'results':
+  And the database has the following table "results":
     | attempt_id | participant_id | item_id |
     | 1          | 13             | 190     |
     | 1          | 13             | 210     |

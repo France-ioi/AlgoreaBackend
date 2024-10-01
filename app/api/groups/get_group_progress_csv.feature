@@ -1,6 +1,6 @@
 Feature: Export the current progress of a group on a subset of items as a CSV file (groupGroupProgressCsv)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | name           |
       | 1  | Base    | Root 1         |
       | 3  | Base    | Root 2         |
@@ -25,7 +25,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 65 | User    | janec          |
       | 67 | User    | janed          |
       | 69 | User    | janee          |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | default_language |
       | owner | 21       | en               |
       | johna | 51       | fr               |
@@ -38,11 +38,11 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | janec | 65       | fr               |
       | janed | 67       | fr               |
       | janee | 69       | fr               |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 1        | 4          | true              |
       | 3        | 21         | true              |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 11             |
       | 1               | 12             |
@@ -73,7 +73,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 17              | 59             |
       | 20              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | type    | default_language_tag |
       | 200  | Chapter | fr                   |
       | 210  | Chapter | fr                   |
@@ -119,7 +119,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 418  | Task    | fr                   |
       | 419  | Task    | fr                   |
       | 1010 | Task    | fr                   |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title         |
       | 200     | fr           | Chapitre 200  |
       | 210     | fr           | Chapitre 210  |
@@ -166,7 +166,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 418     | fr           | Item 418      |
       | 419     | fr           | Item 419      |
       | 1010    | fr           | Chapitre 1010 |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
       | 200            | 220           | 1           |
@@ -208,7 +208,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 410            | 417           | 6           |
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_watch_generated |
       | 21       | 210     | none                     | result              |
       | 21       | 211     | info                     | none                |
@@ -251,7 +251,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 21       | 418     | none                     | none                |
       | 20       | 419     | none                     | none                |
       | 4        | 1010    | none                     | answer_with_grant   |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          |
       | 0  | 14             | 2017-05-29 06:38:38 |
       | 1  | 14             | 2017-05-29 06:38:38 |
@@ -271,7 +271,7 @@ Feature: Export the current progress of a group on a subset of items as a CSV fi
       | 5  | 15             | 2017-03-29 06:38:38 |
       | 9  | 14             | 2017-05-29 06:38:38 |
       | 8  | 15             | 2017-03-29 06:38:38 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        |
       | 0          | 14             | 210     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 125          | 127         | null                |
       | 0          | 14             | 211     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | null                |

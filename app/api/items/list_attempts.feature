@@ -1,6 +1,6 @@
 Feature: List attempts for current user and item_id
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type  |
       | 11 | jdoe    | User  |
       | 13 | Group B | Class |
@@ -8,12 +8,12 @@ Feature: List attempts for current user and item_id
       | 23 | Group C | Team  |
       | 24 | jane    | User  |
       | 25 | Group D | Club  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name | last_name |
       | jdoe  | 11       | John       | Doe       |
       | other | 21       | George     | Bush      |
       | jane  | 24       | Jane       | Joe       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 13              | 11             | null                           |
       | 13              | 21             | null                           |
@@ -21,30 +21,30 @@ Feature: List attempts for current user and item_id
       | 23              | 24             | null                           |
       | 23              | 31             | null                           |
       | 25              | 24             | 2019-05-30 11:00:00            |
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | personal_info_view_approved |
       | 25       | 21        | true                        |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id |
       | 25       | 13         |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | allows_multiple_attempts | default_language_tag |
       | 200 | 0                        | fr                   |
       | 210 | 1                        | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | content                  |
       | 13       | 210     | info                     |
       | 23       | 210     | content_with_descendants |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | ended_at            |
       | 1  | 11             | 2018-05-29 05:38:38 | 21         | 0                 | 210          | 2018-05-29 05:38:38 |
       | 2  | 11             | 2018-05-29 05:38:38 | 11         | 1                 | 200          | 2018-05-29 05:38:38 |
       | 0  | 11             | 2018-05-29 05:38:38 | null       | null              | null         | null                |
       | 0  | 23             | 2019-05-29 05:38:38 | 11         | null              | null         | null                |
       | 1  | 23             | 2019-05-29 05:38:38 | 24         | 0                 | 210          | null                |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | score_computed | validated_at        | started_at          | latest_activity_at  | help_requested |
       | 0          | 11             | 200     | 99             | null                | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 | false          |
       | 0          | 23             | 210     | 99             | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 2019-05-29 06:38:39 | true           |

@@ -3,22 +3,22 @@ Feature: Submit a new answer - robustness
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 22              | 13             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | read_only | default_language_tag |
       | 50 | 1         | fr                   |
       | 60 | 0         | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
       | 101      | 60      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | participant_id | id | allows_submissions_until |
       | 101            | 1  | 2019-05-30 11:00:00      |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id |
       | 101            | 1          | 60      |
 

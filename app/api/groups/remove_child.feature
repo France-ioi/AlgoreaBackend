@@ -1,34 +1,34 @@
 Feature: Remove a direct parent-child relation between two groups
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type  |
       | 11 | Group A | Class |
       | 13 | Group B | Class |
       | 14 | Group C | Class |
       | 21 | Self    | User  |
       | 22 | Group   | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 14       | 21         | none        |
       | 22       | 21         | memberships |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |
       | 22              | 11             |
       | 22              | 13             |
       | 22              | 14             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type       |
       | 13       | 11        | invitation |
       | 22       | 11        | invitation |
       | 22       | 13        | invitation |
       | 22       | 14        | invitation |
-    And the database has the following table 'group_membership_changes':
+    And the database has the following table "group_membership_changes":
       | group_id | member_id |
       | 13       | 11        |
       | 22       | 11        |

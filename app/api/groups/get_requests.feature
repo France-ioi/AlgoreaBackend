@@ -8,7 +8,7 @@ Feature: Get requests for group_id
       | jane    | 0         | 31       | Jane        | Doe       | 2     |
       | mark    | 0         | 41       | Mark        | Moe       | 2     |
       | larry   | 0         | 51       | Larry       | Loe       | 2     |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id  |
       | 13  |
       | 14  |
@@ -20,11 +20,11 @@ Feature: Get requests for group_id
       | 124 |
       | 125 |
       | 131 |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 14       | 15         | none        |
       | 13       | 21         | memberships |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 13              | 21             | null                           |
       | 13              | 11             | null                           |
@@ -43,7 +43,7 @@ Feature: Get requests for group_id
       | 13              | 124            | null                           |
       | 13              | 125            | null                           |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         | at                          | personal_info_view_approved |
       | 13       | 21        | invitation   | {{relativeTimeDB("-170h")}} | false                       |
       | 13       | 31        | join_request | {{relativeTimeDB("-168h")}} | true                        |
@@ -53,7 +53,7 @@ Feature: Get requests for group_id
       | 14       | 21        | join_request | 2017-05-27 06:38:38         | false                       |
       | 14       | 22        | join_request | 2017-05-27 06:38:38         | false                       |
       | 15       | 22        | join_request | 2017-05-27 06:38:38         | true                        |
-    And the database has the following table 'group_membership_changes':
+    And the database has the following table "group_membership_changes":
       | group_id | member_id | action                | at                          | initiator_id |
       | 13       | 21        | invitation_created    | {{relativeTimeDB("-170h")}} | 11           |
       | 13       | 11        | invitation_refused    | {{relativeTimeDB("-169h")}} | null         |

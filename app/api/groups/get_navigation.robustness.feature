@@ -1,17 +1,17 @@
 Feature: Get navigation data (groupNavigationView) - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name            | type  | is_public |
       | 1  | Team            | Team  | true      |
       | 2  | Managed By Team | Class | false     |
       | 41 | user            | User  | true      |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name |
       | owner | 41       | Jean-Michel | Blanquer  |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 1          |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 1               | 41             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed

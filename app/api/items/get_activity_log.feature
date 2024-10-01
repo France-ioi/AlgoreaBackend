@@ -6,19 +6,19 @@ Feature: Get activity log
       | user  | 0         | 11       | John        | Doe       | en               |
       | jane  | 0         | 31       | Jane        | Doe       | en               |
       | paul  | 0         | 41       | Paul        | Smith     | en               |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | type  | name       |
       | 13 | Class | Our Class  |
       | 20 | Other | Some Group |
       | 30 | Team  | Our Team   |
       | 40 | Club  | Our Club   |
       | 50 | Club  | Team Club  |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 11       | 31         | true              |
       | 13       | 21         | true              |
       | 31       | 31         | true              |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 13              | 11             | 2019-05-30 11:00:00            |
       | 13              | 41             | 2019-05-30 11:00:00            |
@@ -27,11 +27,11 @@ Feature: Get activity log
       | 40              | 21             | null                           |
       | 50              | 30             | null                           |
     And the groups ancestors are computed
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 11             |
       | 1  | 11             |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | item_id | participant_id | started_at          | validated_at        | latest_submission_at |
       | 0          | 200     | 11             | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2020-05-29 06:38:38  |
       | 0          | 200     | 30             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
@@ -46,7 +46,7 @@ Feature: Get activity log
       | 1          | 201     | 11             | null                | 2017-05-29 06:38:38 | 2020-05-29 06:38:38  |
       | 1          | 202     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
       | 1          | 203     | 11             | 2017-05-29 06:38:00 | 2017-05-30 12:00:00 | 2020-05-29 06:38:38  |
-    And the database has the following table 'answers':
+    And the database has the following table "answers":
       | id | author_id | participant_id | attempt_id | item_id | type       | state   | created_at          |
       | 1  | 11        | 11             | 0          | 201     | Submission | State1  | 2017-05-29 06:38:38 |
       | 4  | 11        | 11             | 1          | 201     | Saved      | State4  | 2017-05-30 06:38:38 |
@@ -77,7 +77,7 @@ Feature: Get activity log
       | 37 | 31        | 11             | 0          | 203     | Submission | State37 | 2017-05-29 06:38:38 |
       | 38 | 31        | 11             | 1          | 203     | Submission | State38 | 2017-05-30 06:38:38 |
       | 39 | 31        | 11             | 1          | 204     | Submission | State39 | 2017-05-30 06:38:38 |
-    And the database has the following table 'gradings':
+    And the database has the following table "gradings":
       | answer_id | graded_at           | score |
       | 2         | 2017-05-29 06:38:38 | 100   |
       | 1         | 2017-05-29 06:38:38 | 99    |
@@ -87,14 +87,14 @@ Feature: Get activity log
       | 6         | 2017-05-29 06:38:38 | 100   |
       | 7         | 2017-05-29 06:38:38 | 98    |
       | 8         | 2017-05-30 06:38:38 | 100   |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type    | no_score | default_language_tag |
       | 200 | Task    | false    | fr                   |
       | 201 | Chapter | false    | fr                   |
       | 202 | Chapter | false    | fr                   |
       | 203 | Chapter | false    | fr                   |
       | 204 | Task    | false    | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_watch_generated |
       | 20       | 200     | none               | result              |
       | 21       | 200     | info               | none                | # user 21 is in group 20, so he has can_watch=result on item 200
@@ -110,12 +110,12 @@ Feature: Get activity log
       | 31       | 203     | content            | none                |
       | 40       | 201     | content            | answer              |
       | 50       | 204     | content            | answer              |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 200              | 201           |
       | 200              | 203           |
       | 200              | 204           |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title      | image_url                  | subtitle     | description   | edu_comment    |
       | 200     | en           | Task 1     | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
       | 200     | fr           | Tache 1    | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
@@ -125,7 +125,7 @@ Feature: Get activity log
       | 202     | fr           | Chapitre 2 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
       | 203     | en           | Chapter 3  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
       | 203     | fr           | Chapitre 3 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | fr  |
 

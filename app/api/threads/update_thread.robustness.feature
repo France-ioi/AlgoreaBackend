@@ -1,6 +1,6 @@
 Feature: Update thread - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | name           | type  |
       | 1   | john           | User  |
       | 2   | manager        | User  |
@@ -18,7 +18,7 @@ Feature: Update thread - robustness
       | 100 | Group          | Class |
       | 300 | Group          | Class |
       | 310 | Group          | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login          | group_id |
       | john           | 1        |
       | manager        | 2        |
@@ -26,7 +26,7 @@ Feature: Update thread - robustness
       | managernowatch | 4        |
       | jess           | 5        |
       | owner          | 6        |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 12              | 11             |
       | 11              | 10             |
@@ -44,10 +44,10 @@ Feature: Update thread - robustness
       | 300             | 1              |
       | 310             | 3              |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 12       | 4          | false             |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag | type    |
       | 110  | en                   | Task    |
       | 120  | en                   | Task    |
@@ -68,7 +68,7 @@ Feature: Update thread - robustness
       | 3002 | en                   | Chapter |
       | 3003 | en                   | Chapter |
       | 3010 | en                   | Task    |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | request_help_propagation | child_order |
       | 3000           | 3001          | 1                        | 1           |
       | 3000           | 1004          | 1                        | 2           |
@@ -79,7 +79,7 @@ Feature: Update thread - robustness
       | 3003           | 2004          | 0                        | 1           |
       | 2004           | 1007          | 1                        | 1           |
       | 2004           | 1008          | 0                        | 2           |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | source_group_id | item_id | can_request_help_to | is_owner |
       | 100      | 100             | 240     | 100                 | 0        |
       | 100      | 100             | 250     | 100                 | 0        |
@@ -88,7 +88,7 @@ Feature: Update thread - robustness
       | 12       | 3               | 3000    | 10                  | 0        |
       | 12       | 3               | 3001    | 12                  | 0        |
       | 6        | 6               | 3010    | null                | 1        |
-    And the database has the following table 'threads':
+    And the database has the following table "threads":
       | item_id | participant_id | status | helper_group_id | latest_update_at |
 
   Scenario: Should be logged in

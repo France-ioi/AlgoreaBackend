@@ -110,7 +110,7 @@ Feature:
       | @School |              | @Teacher                      |                        |
       | @Class  | @ClassParent | @Student1,@Student2           | false                  |
       | @Other  |              | @Student3,@Student4,@Student5 |                        |
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          | at                      |
       | @Class   | @Student1 | leave_request | 2020-01-01 00:00:01.000 |
       | @Class   | @Student3 | join_request  | 2020-01-01 00:00:03.000 |
@@ -145,7 +145,7 @@ Feature:
       | @School |              | @Teacher                      |                        |
       | @Class  | @ClassParent | @Student1,@Student2           | false                  |
       | @Other  |              | @Student3,@Student4,@Student5 |                        |
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          | at                      |
       | @Class   | @Student1 | leave_request | 2020-01-01 00:00:01.000 |
       | @Class   | @Student3 | join_request  | 2020-01-01 00:00:03.000 |
@@ -209,7 +209,7 @@ Feature:
       | @School |              | @Teacher                      |                                        |
       | @Class  | @ClassParent | @Student1,@Student2,@Student3 | 2020-01-01 12:00:00                    |
       | @Other  |              | @Student4,@Student5,@Student6 |                                        |
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          | at                      |
       | @Class   | @Student1 | leave_request | 2020-01-01 00:00:01.000 |
       | @Class   | @Student2 | leave_request | 2020-01-01 00:00:02.000 |

@@ -1,16 +1,16 @@
 Feature: User rejects an invitation to join a group - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id |
       | 11 |
       | 13 |
       | 14 |
       | 21 |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | login |
       | 21       | john  |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 11       | 21        | join_request |
       | 13       | 21        | invitation   |

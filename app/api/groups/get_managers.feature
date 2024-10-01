@@ -11,20 +11,20 @@ Feature: Get managers of group_id
       | jeff  | 71       | Jeff        | Joe        |
       | larry | 81       | null        | null       |
       | lp    | 91       | null        | null       |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | name        | type    |
       | 12 | Our Club    | Club    |
       | 13 | Our Class   | Class   |
       | 14 | Our Friends | Friends |
       | 15 | Other       | Other   |
       | 16 | Team        | Team    |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 12              | 13             |
       | 13              | 71             |
       | 15              | 13             |
       | 16              | 81             |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 12       | 81         | memberships           | 1                      | 0                 |
       | 13       | 14         | none                  | 0                      | 0                 |

@@ -106,20 +106,20 @@ Feature: List threads
     And @LaboratoryMember_WithApprovedAccessPersonalInfo is a member of the group @Laboratory who has approved access to his personal info
     And @LaboratoryMember_WithoutApprovedAccessPersonalInfo is a member of the group @Laboratory
     And @LaboratoryMember_WithApprovedAccessPersonalInfoNull is a member of the group @Laboratory who has approved access to his personal info
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | type | default_language_tag |
       | 1  | Task | fr                   |
       | 2  | Task | en                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id                   | item_id | can_view_generated |
       | @LaboratoryManagerCanWatch | 1       | content            |
       | @LaboratoryManagerCanWatch | 2       | content            |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title      |
       | 1       | en           | Beginning  |
       | 1       | fr           | Debut      |
       | 2       | en           | Experiment |
-    And the database has the following table 'threads':
+    And the database has the following table "threads":
       | item_id | participant_id                                       | status                  | message_count | latest_update_at    | helper_group_id |
       | 1       | @LaboratoryMember_WithApprovedAccessPersonalInfo     | waiting_for_trainer     | 0             | 2023-01-01 00:00:01 | @Laboratory     |
       | 2       | @LaboratoryMember_WithApprovedAccessPersonalInfoNull | waiting_for_participant | 1             | 2023-01-01 00:00:02 | @Laboratory     |

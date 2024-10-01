@@ -1,6 +1,6 @@
 Feature: Get group by groupID (groupView)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | grade | description     | created_at          | type  | root_activity_id    | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_personal_info_access_approval | require_watch_approval | require_lock_membership_approval_until | frozen_membership |
       | 8  | Other   | -4    | Parent of 9     | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | efghijklmn | null          | null                | false                      | none                                  | false                  | null                                   | false             |
       | 9  | Club    | -4    | Club            | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
@@ -19,7 +19,7 @@ Feature: Get group by groupID (groupView)
       | 61 | ian     | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
       | 71 | dirk    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
       | 81 | chuck   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | owner | 21       |
       | john  | 31       |
@@ -28,7 +28,7 @@ Feature: Get group by groupID (groupView)
       | ian   | 61       |
       | dirk  | 71       |
       | chuck | 81       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 8               | 9              | null                        |
       | 9               | 21             | null                        |
@@ -45,19 +45,19 @@ Feature: Get group by groupID (groupView)
       | 19              | 81             | null                        |
       | 15              | 11             | null                        |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 13       | 21         | none                  | false                  | false             |
       | 15       | 21         | memberships_and_group | true                   | true              |
       | 16       | 9          | none                  | false                  | false             |
       | 19       | 21         | none                  | false                  | false             |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table 'attempts' has also the following row:
+    And the database table "attempts" has also the following row:
       | participant_id | id | root_item_id |
       | 17             | 1  | 2            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id | started_at          |
       | 17             | 1          | 2       | 2019-05-30 11:00:00 |
 

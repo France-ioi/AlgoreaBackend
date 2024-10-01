@@ -1,6 +1,6 @@
 Feature: Update thread
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type  |
       | 1  | john    | User  |
       | 2  | manager | User  |
@@ -15,14 +15,14 @@ Feature: Update thread
       | 50 | Group   | Class |
       | 51 | Group   | Class |
       | 60 | Group   | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login   | group_id |
       | john    | 1        |
       | manager | 2        |
       | jack    | 3        |
       | jess    | 4        |
       | owner   | 5        |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 2              |
       | 10              | 3              |
@@ -38,7 +38,7 @@ Feature: Update thread
       | 51              | 4              |
       | 60              | 5              |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag | type    |
       | 2000 | en                   | Task    |
       | 2001 | en                   | Task    |
@@ -52,7 +52,7 @@ Feature: Update thread
       | 3005 | en                   | Chapter |
       | 3006 | en                   | Chapter |
       | 3010 | en                   | Task    |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | request_help_propagation | child_order |
       | 3004           | 3005          | 1                        | 1           |
       | 3004           | 2007          | 1                        | 2           |
@@ -60,7 +60,7 @@ Feature: Update thread
       | 3005           | 2008          | 1                        | 2           |
       | 3006           | 2009          | 1                        | 1           |
       | 3006           | 2010          | 1                        | 2           |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | source_group_id | item_id | can_request_help_to | is_owner |
       | 3        | 11              | 2000    | 12                  | 0        |
       | 3        | 11              | 2001    | 12                  | 0        |
@@ -68,7 +68,7 @@ Feature: Update thread
       | 11       | 11              | 2002    | 12                  | 0        |
       | 11       | 11              | 2003    | 12                  | 0        |
       | 12       | 11              | 3004    | 12                  | 0        |
-    And the database has the following table 'threads':
+    And the database has the following table "threads":
       | item_id | participant_id | status | helper_group_id | latest_update_at |
     And the time now is "2022-01-01T00:00:00Z"
 

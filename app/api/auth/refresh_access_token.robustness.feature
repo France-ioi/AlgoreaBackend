@@ -1,16 +1,16 @@
 Feature: Refresh an access token - robustness
   Background:
     Given the DB time now is "2020-01-01 01:00:00"
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | name        | type |
       | 13 | jane        | User |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | login       | temp_user |
       | 13       | jane        | false     |
-    And the database has the following table 'sessions':
+    And the database has the following table "sessions":
       | session_id | user_id | refresh_token |
       | 1          | 13      |               |
-    And the database has the following table 'access_tokens':
+    And the database has the following table "access_tokens":
       | session_id | issued_at           | expires_at          | token              |
       | 1          | 2019-01-01 00:00:00 | 2019-01-01 02:00:00 | jane_expired_token |
       | 1          | 2020-01-01 00:00:00 | 2020-01-01 02:00:00 | jane_current_token |

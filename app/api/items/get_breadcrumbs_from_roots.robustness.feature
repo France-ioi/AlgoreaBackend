@@ -1,53 +1,53 @@
 Feature: Find all breadcrumbs to an item - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  | root_activity_id | root_skill_id |
       | 90  | Class | 10               | null          |
       | 91  | Other | 50               | null          |
       | 101 | User  | null             | null          |
       | 102 | Team  | 60               | null          |
       | 111 | User  | null             | null          |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | default_language |
       | john  | 101      | en               |
       | jane  | 111      | fr               |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 90              | 102            |
       | 91              | 111            |
       | 102             | 101            |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id | can_watch_members |
       | 91         | 90       | true              |
       | 111        | 111      | false             |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | url                    | type    | default_language_tag | requires_explicit_entry | text_id |
       | 10 | null                   | Chapter | en                   | false                   | id10    |
       | 60 | http://taskplatform/60 | Task    | en                   | false                   | id60    |
       | 70 | http://taskplatform/70 | Task    | fr                   | false                   | id70    |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title            |
       | 10      | fr           | Graphe: Methodes |
       | 10      | en           | Graph: Methods   |
       | 60      | en           | Reduce Graph     |
       | 70      | fr           | null             |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
       | 60             | 70            | 2           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
       | 10               | 70            |
       | 60               | 70            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 102      | 60      | info               |
       | 111      | 10      | info               |
       | 111      | 60      | none               |
       | 111      | 70      | none               |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |
       | 0  | 101            | null         | null              |
       | 0  | 102            | null         | null              |
@@ -56,7 +56,7 @@ Feature: Find all breadcrumbs to an item - robustness
       | 2  | 102            | 10           | null              |
       | 3  | 102            | 10           | null              |
       | 4  | 102            | 10           | null              |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 102            | 10      | 2020-01-01 00:00:00 |
       | 2          | 102            | 10      | 2020-01-01 00:00:00 |

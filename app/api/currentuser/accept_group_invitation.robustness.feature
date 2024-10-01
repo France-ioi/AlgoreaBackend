@@ -1,6 +1,6 @@
 Feature: User accepts an invitation to join a group - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | require_personal_info_access_approval | frozen_membership |
       | 11 | Class   | none                                  | false             |
       | 13 | Friends | none                                  | false             |
@@ -10,19 +10,19 @@ Feature: User accepts an invitation to join a group - robustness
       | 17 | Team    | none                                  | true              |
       | 21 | User    | none                                  | false             |
       | 22 | User    | none                                  | false             |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | login | temp_user |
       | 21       | john  | false     |
       | 22       | tmp   | true      |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag |
       | 1234 | fr                   |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 14              | 21             |
       | 21              | 13             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 11       | 21        | join_request |
       | 13       | 21        | invitation   |
@@ -30,7 +30,7 @@ Feature: User accepts an invitation to join a group - robustness
       | 14       | 22        | invitation   |
       | 16       | 21        | invitation   |
       | 17       | 21        | invitation   |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | participant_id | id | root_item_id |
       | 14             | 1  | 1234         |
       | 15             | 2  | 1234         |
@@ -82,13 +82,13 @@ Feature: User accepts an invitation to join a group - robustness
 
   Scenario: User tries to accept an invitation to join a team while entry conditions would not be met if he joins
     Given I am the user with id "21"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | entry_max_team_size |
       | 2  | fr                   | 0                   |
-    And the database table 'attempts' has also the following row:
+    And the database table "attempts" has also the following row:
       | participant_id | id | root_item_id |
       | 16             | 1  | 2            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id | started_at          |
       | 16             | 1          | 2       | 2019-05-30 11:00:00 |
     When I send a POST request to "/current-user/group-invitations/16/accept?approvals=personal_info_view"

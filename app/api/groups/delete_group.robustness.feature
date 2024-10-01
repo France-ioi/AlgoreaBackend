@@ -1,21 +1,21 @@
 Feature: Delete a group - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name     | type  |
       | 11 | Group A  | Class |
       | 21 | owner    | User  |
       | 23 | teacher  | User  |
       | 55 | User     | User  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login   | group_id | first_name  | last_name |
       | owner   | 21       | Jean-Michel | Blanquer  |
       | teacher | 23       | John        | Smith     |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 11       | 21         | memberships_and_group |
       | 11       | 23         | memberships           |
       | 55       | 23         | memberships_and_group |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 55             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed

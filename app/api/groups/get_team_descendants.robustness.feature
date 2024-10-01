@@ -4,10 +4,10 @@ Feature: List team descendants of the group (groupTeamDescendantView) - robustne
       | login | group_id |
       | owner | 21       |
       | user  | 11       |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id |
       | 13 |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id |
       | 13       | 21         |
     And the groups ancestors are computed

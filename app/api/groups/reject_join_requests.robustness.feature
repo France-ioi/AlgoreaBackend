@@ -1,6 +1,6 @@
 Feature: Reject group requests - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  |
       | 11  | User  |
       | 12  | User  |
@@ -14,17 +14,17 @@ Feature: Reject group requests - robustness
       | 123 | User  |
       | 131 | User  |
       | 141 | User  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 11       | John        | Doe       | 1     |
       | jane  | 12       | Jane        | Doe       | 1     |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 12       | 12         | memberships |
       | 13       | 21         | memberships |
       | 13       | 12         | none        |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 111            |
       | 13              | 121            |

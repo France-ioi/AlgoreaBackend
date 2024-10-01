@@ -1,6 +1,6 @@
 Feature: Get group by name (contestGetGroupByName) - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type |
       | 12 | Group A | Team |
       | 13 | Group B | Team |
@@ -8,17 +8,17 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 15 | Group A | Team |
       | 21 | owner   | User |
       | 31 | john    | User |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | owner | 21       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 13       | 21         | true                   | true              |
       | 14       | 21         | true                   | false             |
       | 15       | 21         | false                  | true              |
       | 31       | 21         | true                   | true              |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | duration | default_language_tag | entry_participant_type |
       | 10 | 00:00:02 | fr                   | Team                   |
       | 11 | 00:00:02 | fr                   | Team                   |
@@ -27,7 +27,7 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 60 | null     | fr                   | User                   |
       | 70 | 00:00:03 | fr                   | Team                   |
       | 80 | 00:00:03 | fr                   | Team                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 13       | 10      | info                     | none                     | none                |
       | 13       | 11      | info                     | none                     | none                |

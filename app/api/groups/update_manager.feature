@@ -1,21 +1,21 @@
 Feature: Update the group manager's permissions (groupManagerEdit)
 
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name  | type  |
       | 1  | Group | Class |
       | 2  | Team  | Team  |
       | 21 | owner | User  |
       | 22 | john  | User  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
       | john  | 22       | John        | Doe       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 2              |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id | can_manage            |
       | 21         | 1        | memberships_and_group |
       | 21         | 2        | none                  |

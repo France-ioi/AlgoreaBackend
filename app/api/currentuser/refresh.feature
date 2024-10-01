@@ -53,10 +53,10 @@ Feature: Update the local user info cache
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     | time_zone | notify_news | photo_autoload | public_first_name | public_last_name |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 2019-06-15 22:05:44    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 | null      | false       | false          | false             | false            |
       | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | null                   | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 | null      | false       | false          | false             | false            |
-    And the database has the following table 'sessions':
+    And the database has the following table "sessions":
       | session_id | user_id |
       | 1          | 11      |
-    And the database has the following table 'access_tokens':
+    And the database has the following table "access_tokens":
       | session_id | token       | expires_at          | issued_at           |
       | 1          | accesstoken | 2020-06-16 22:02:49 | 2019-06-16 22:02:28 |
     And the login module "account" endpoint for token "accesstoken" returns 200 with body:
@@ -89,10 +89,10 @@ Feature: Update the local user info cache
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     | time_zone | notify_news | photo_autoload | public_first_name | public_last_name |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 | null      | false       | false          | false             | false            |
       | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 | null      | false       | false          | false             | false            |
-    And the database has the following table 'sessions':
+    And the database has the following table "sessions":
       | session_id | user_id |
       | 1          | 11      |
-    And the database has the following table 'access_tokens':
+    And the database has the following table "access_tokens":
       | session_id | token       | expires_at          | issued_at           |
       | 1          | accesstoken | 2020-06-16 22:02:49 | 2019-06-16 22:02:28 |
     And the login module "account" endpoint for token "accesstoken" returns 200 with body:

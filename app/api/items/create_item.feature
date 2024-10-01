@@ -1,29 +1,29 @@
 Feature: Create item
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type    | root_activity_id | root_skill_id |
       | 10 | Friends | Friends | null             | null          |
       | 11 | jdoe    | User    | null             | null          |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | entry_frozen_teams | no_score | default_language_tag |
       | 21 | true               | false    | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 21      | solution           | children           |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | can_edit | source_group_id | latest_update_at    |
       | 11       | 21      | solution | children | 11              | 2019-05-30 11:00:00 |
     And the groups ancestors are computed
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 11             |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id |
       | 0          | 11             | 21      |
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | sl  |
 
@@ -76,7 +76,7 @@ Feature: Create item
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (not a skill)
     Given I am the user with id "11"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 10       | 11         | memberships_and_group |
     When I send a POST request to "/items" with the following body:
@@ -125,17 +125,17 @@ Feature: Create item
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (skill with children)
     Given I am the user with id "11"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 10       | 11         | memberships_and_group |
-    And the database table 'items' has also the following rows:
+    And the database table "items" has also the following rows:
       | id | default_language_tag |
       | 12 | fr                   |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 10       | 21      | none                     | content                  | none                | none               | 0                  |
       | 11       | 12      | content_with_descendants | solution                 | answer              | all                | 0                  |
-    And the database table 'permissions_granted' has also the following rows:
+    And the database table "permissions_granted" has also the following rows:
       | group_id | item_id | can_view                 | can_grant_view      | can_watch         | can_edit       | is_owner | source_group_id | latest_update_at    |
       | 11       | 12      | content_with_descendants | solution            | answer            | all            | 0        | 11              | 2019-05-30 11:00:00 |
     When I send a POST request to "/items" with the following body:
@@ -192,22 +192,22 @@ Feature: Create item
 
   Scenario: Set can_request_help for children
     Given I am the user with id "11"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 10       | 11         | memberships_and_group |
-    And the database table 'items' has also the following rows:
+    And the database table "items" has also the following rows:
       | id   | default_language_tag |
       | 1001 | fr                   |
       | 1002 | fr                   |
       | 1003 | fr                   |
       | 1004 | fr                   |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 1001    | content_with_descendants | content                  | answer              | none               | 0                  |
       | 11       | 1002    | content_with_descendants | enter                    | answer              | none               | 0                  |
       | 11       | 1003    | content_with_descendants | content                  | answer              | none               | 0                  |
       | 11       | 1004    | content_with_descendants | enter                    | answer              | none               | 0                  |
-    And the database table 'permissions_granted' has also the following rows:
+    And the database table "permissions_granted" has also the following rows:
       | group_id | item_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 1001    | content_with_descendants | content        | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 1002    | content_with_descendants | enter          | answer    | none     | 0        | 11              | 2019-05-30 11:00:00 |
@@ -249,20 +249,20 @@ Feature: Create item
 
   Scenario Outline: Valid (all the fields are set)
     Given I am the user with id "11"
-    And the database table 'items' has also the following rows:
+    And the database table "items" has also the following rows:
       | id | default_language_tag |
       | 12 | fr                   |
       | 34 | fr                   |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 10       | 21      | none                     | content                  | none                | none               | 0                  |
       | 11       | 12      | content_with_descendants | solution                 | answer              | all                | 0                  |
       | 11       | 34      | solution                 | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
-    And the database table 'permissions_granted' has also the following rows:
+    And the database table "permissions_granted" has also the following rows:
       | group_id | item_id | can_view                 | can_grant_view      | can_watch         | can_edit       | is_owner | source_group_id | latest_update_at    |
       | 11       | 12      | content_with_descendants | solution            | answer            | all            | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 34      | solution                 | solution_with_grant | answer_with_grant | all_with_grant | 0        | 11              | 2019-05-30 11:00:00 |
-    And the database table 'results' has also the following rows:
+    And the database table "results" has also the following rows:
       | attempt_id | participant_id | item_id |
       | 0          | 11             | 12      |
     When I send a POST request to "/items" with the following body:
@@ -381,18 +381,18 @@ Feature: Create item
 
   Scenario: Valid when type=Skill
     Given I am the user with id "11"
-    And the database table 'items' has also the following rows:
+    And the database table "items" has also the following rows:
       | id | default_language_tag | type    |
       | 12 | fr                   | Skill   |
       | 34 | fr                   | Chapter |
       | 50 | fr                   | Skill   |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 10       | 21      | none                     | content                  | none                | none               | 0                  |
       | 11       | 12      | content_with_descendants | solution                 | answer              | all                | 0                  |
       | 11       | 34      | solution                 | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
       | 11       | 50      | solution                 | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
-    And the database table 'permissions_granted' has also the following rows:
+    And the database table "permissions_granted" has also the following rows:
       | group_id | item_id | can_view                 | can_grant_view      | can_watch         | can_edit       | is_owner | source_group_id | latest_update_at    |
       | 11       | 12      | content_with_descendants | solution            | answer            | all            | 0        | 11              | 2019-05-30 11:00:00 |
       | 11       | 34      | solution                 | solution_with_grant | answer_with_grant | all_with_grant | 0        | 11              | 2019-05-30 11:00:00 |

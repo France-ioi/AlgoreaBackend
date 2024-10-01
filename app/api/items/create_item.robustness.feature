@@ -4,10 +4,10 @@ Feature: Create item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
       | tmp   | 1         | 12       |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | name    | type    |
       | 30 | Friends | Friends |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | no_score | default_language_tag | type    | text_id        |
       | 4  | false    | fr                   | Chapter | null           |
       | 5  | false    | fr                   | Skill   | null           |
@@ -20,13 +20,13 @@ Feature: Create item - robustness
       | 27 | false    | fr                   | Chapter | null           |
       | 28 | false    | fr                   | Chapter | existingTextId |
 
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 4                | 21            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 4       | solution           | children           |
       | 11       | 5       | solution           | children           |
@@ -35,13 +35,13 @@ Feature: Create item - robustness
       | 11       | 24      | solution           | none               |
       | 11       | 25      | info               | none               |
       | 11       | 26      | info               | none               |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | source_group_id | can_edit |
       | 11       | 4       | solution | 11              | children |
       | 11       | 21      | solution | 11              | children |
       | 11       | 23      | solution | 11              | none     |
     And the groups ancestors are computed
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | sl  |
 
@@ -497,10 +497,10 @@ Feature: Create item - robustness
 
   Scenario Outline: Parent item cannot have children
     Given I am the user with id "11"
-    And the database table 'items' has also the following row:
+    And the database table "items" has also the following row:
       | id | default_language_tag | type   |
       | 90 | fr                   | <type> |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" has also the following row:
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 90      | content            | children           |
     When I send a POST request to "/items" with the following body:
@@ -642,10 +642,10 @@ Feature: Create item - robustness
 
   Scenario Outline: Not enough permissions for setting propagation in children items_items
     Given I am the user with id "11"
-    And the database table 'items' has also the following row:
+    And the database table "items" has also the following row:
       | id | default_language_tag |
       | 90 | fr                   |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" has also the following row:
       | group_id | item_id | <permission_column> | can_view_generated |
       | 11       | 90      | <permission_value>  | info               |
     When I send a POST request to "/items" with the following body:

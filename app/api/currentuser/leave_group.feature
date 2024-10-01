@@ -1,14 +1,14 @@
 Feature: User leaves a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | require_lock_membership_approval_until |
       | 11 | 2019-08-20 00:00:00                    |
       | 14 | 2019-08-20 00:00:00                    |
       | 21 | null                                   |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id |
       | 21       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 11              | 21             | 2019-05-30 11:00:00         |
       | 14              | 21             | null                        |

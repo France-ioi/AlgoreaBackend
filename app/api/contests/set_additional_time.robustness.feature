@@ -1,24 +1,24 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime) - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type  |
       | 12 | Group A | Class |
       | 13 | Group B | Other |
       | 14 | Group C | Other |
       | 21 | owner   | User  |
       | 31 | john    | User  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | owner | 21       |
       | john  | 31       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 12       | 21         | false                  | true              |
       | 13       | 21         | true                   | true              |
       | 14       | 21         | true                   | false             |
       | 31       | 21         | true                   | true              |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | duration | entry_participant_type | default_language_tag |
       | 50 | 00:00:00 | User                   | fr                   |
       | 60 | null     | User                   | fr                   |
@@ -27,7 +27,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 80 | 00:00:04 | Team                   | fr                   |
       | 90 | 00:00:04 | Team                   | fr                   |
       | 95 | 00:00:04 | Team                   | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 13       | 50      | content                  | enter                    | result              |
       | 13       | 60      | content_with_descendants | enter                    | result              |
@@ -38,7 +38,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 80      | content                  | enter                    | result              |
       | 21       | 90      | content                  | enter                    | none                |
       | 21       | 95      | info                     | enter                    | result              |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 13       | 50      | 01:00:00        |
       | 13       | 60      | 01:01:00        |

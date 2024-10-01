@@ -1,25 +1,25 @@
 Feature: Generate a task token with a refreshed attempt for an item - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  |
       | 101 | User  |
       | 102 | Team  |
       | 103 | Class |
       | 104 | Team  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 103             | 101            |
       | 104             | 101            |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | url                                                                     | type    | entry_participant_type | default_language_tag |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | User                   | fr                   |
       | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | Team                   | fr                   |
       | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | Team                   | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |
       | 101      | 60      | content            |
@@ -29,7 +29,7 @@ Feature: Generate a task token with a refreshed attempt for an item - robustness
       | 102      | 60      | content            |
       | 103      | 60      | content            |
       | 104      | 60      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | allows_submissions_until |
       | 0  | 101            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
       | 0  | 102            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
@@ -37,7 +37,7 @@ Feature: Generate a task token with a refreshed attempt for an item - robustness
       | 0  | 104            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
       | 1  | 101            | 2017-05-29 05:38:38 | 2019-05-30 11:00:00      |
       | 2  | 101            | 2017-05-29 05:38:38 | 9999-12-31 23:59:59      |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
       | 0          | 101            | 50      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
       | 0          | 101            | 90      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
