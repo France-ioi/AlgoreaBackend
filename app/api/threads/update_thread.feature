@@ -149,7 +149,7 @@ Feature: Update thread
     Given I am the user with id "4"
     And there is a thread with "item_id=40,participant_id=3"
     And I am part of the helper group of the thread
-    And I have validated the item with id "40"
+    And I have a validated result on the item 40
     When I send a PUT request to "/items/40/participant/3/thread" with the following body:
       """
       {
@@ -303,7 +303,7 @@ Feature: Update thread
 
   Scenario Outline: Can switch to open if part of the group the participant has requested help to AND have validated the item
     Given I am the user with id "4"
-    And I have validated the item with id "<item_id>"
+    And I have a validated result on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>,helper_group_id=50"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """

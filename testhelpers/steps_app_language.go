@@ -722,7 +722,7 @@ func (ctx *TestContext) UserCanRequestHelpToOnItemWithID(canRequestHelpTo, user,
 	return ctx.UserSetPermissionOnItemWithID("can_request_help_to", canRequestHelpTo, user, item)
 }
 
-func (ctx *TestContext) userHasAValidatedItemWithID(user, item string) error {
+func (ctx *TestContext) userHasValidatedResultOnItem(user, item string) error {
 	attemptID := rand.Int63()
 
 	ctx.addAttempt(item, user)
@@ -745,7 +745,7 @@ func (ctx *TestContext) ThereAreTheFollowingResults(results *godog.Table) error 
 			"item": result["item"],
 		})
 
-		err := ctx.userHasAValidatedItemWithID(result["participant"], result["item"])
+		err := ctx.userHasValidatedResultOnItem(result["participant"], result["item"])
 		if err != nil {
 			return err
 		}
@@ -754,9 +754,9 @@ func (ctx *TestContext) ThereAreTheFollowingResults(results *godog.Table) error 
 	return nil
 }
 
-// IHaveValidatedItemWithID states that user has validated an item.
-func (ctx *TestContext) IHaveValidatedItemWithID(item string) error {
-	return ctx.userHasAValidatedItemWithID(ctx.user, item)
+// IHaveValidatedResultOnItem states that the current user has a validated result on the item.
+func (ctx *TestContext) IHaveValidatedResultOnItem(item string) error {
+	return ctx.userHasValidatedResultOnItem(ctx.user, item)
 }
 
 // ThereAreTheFollowingThreads create threads.

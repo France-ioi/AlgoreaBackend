@@ -218,7 +218,7 @@ Feature: Update thread - robustness
   Should return access error when the status is not set and
   "can write to thread" condition (3) is not met: user is not part of the help group
     Given I am the user with id "1"
-    And I have validated the item with id "40"
+    And I have a validated result on the item 40
     And I have the watch permission set to "answer" on the item 40
     And there is a thread with "item_id=40,participant_id=3"
     When I send a PUT request to "/items/40/participant/3/thread" with the following body:
@@ -438,7 +438,7 @@ Feature: Update thread - robustness
 
   Scenario: Cannot switch between open status if only item validated but not a part of the helper group, and cannot watch participant
     Given I am the user with id "1"
-    And I have validated the item with id "160"
+    And I have a validated result on the item 160
     And there is a thread with "item_id=160,participant_id=3,status=waiting_for_trainer"
     When I send a PUT request to "/items/160/participant/3/thread" with the following body:
       """
@@ -677,7 +677,7 @@ Feature: Update thread - robustness
   Scenario: If participant is the user and helper_group_id is given, it must be a descendant or a group he "can_request_help_to"
     Given I am the user with id "3"
     And I have the watch permission set to "answer_with_grant" on the item 430
-    And I have validated the item with id "430"
+    And I have a validated result on the item 430
     And there is a thread with "item_id=430,participant_id=3"
     When I send a PUT request to "/items/430/participant/3/thread" with the following body:
       """

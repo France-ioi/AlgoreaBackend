@@ -69,7 +69,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	ctx.registerFeaturesForGroupPendingRequests(s)
 
 	s.Step(`^there are the following results:$`, ctx.ThereAreTheFollowingResults)
-	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
+	s.Step(`^I have a validated result on the item (.+)$`, ctx.IHaveValidatedResultOnItem)
 
 	s.Step(`^there are the following threads:$`, ctx.ThereAreTheFollowingThreads)
 	s.Step(`^there is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
