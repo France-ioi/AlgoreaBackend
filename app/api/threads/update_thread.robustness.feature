@@ -352,7 +352,7 @@ Feature: Update thread - robustness
 
   Scenario Outline: Should not switch to open if can_watch_members on the participant but can_watch<answer when thread exists
     Given I am the user with id "2"
-    And I can watch the participant with id "3"
+    And I can watch for submissions from the group 3 and its descendants
     And I have the watch permission set to "<can_watch>" on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=closed"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
@@ -371,7 +371,7 @@ Feature: Update thread - robustness
 
   Scenario Outline: Should not switch to open if can_watch_members on the participant but can_watch<answer when thread doesn't exists
     Given I am the user with id "2"
-    And I can watch the participant with id "3"
+    And I can watch for submissions from the group 3 and its descendants
     And I have the watch permission set to "<can_watch>" on the item <item_id>
     And there is no thread with "item_id=<item_id>,participant_id=3"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
@@ -632,7 +632,7 @@ Feature: Update thread - robustness
 
   Scenario Outline: A user with can_watch_members on the participant cannot switch a thread to an open status
     Given I am the user with id "2"
-    And I can watch the participant with id "3"
+    And I can watch for submissions from the group 3 and its descendants
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """

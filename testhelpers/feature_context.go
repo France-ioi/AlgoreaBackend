@@ -58,8 +58,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
 	s.Step(`^there are the following item relations:$`, ctx.ThereAreTheFollowingItemRelations)
-	s.Step(`^I can watch the group (@\w+)$`, ctx.ICanWatchGroup)
-	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
+	s.Step(`^I can watch for submissions from the group (.+) and its descendants$`, ctx.ICanWatchGroupWithID)
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
 		ctx.ICanViewOnItemWithID)
 	s.Step(`^I have the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`, ctx.ICanWatchOnItemWithID)
