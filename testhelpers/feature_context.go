@@ -46,11 +46,14 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (@\w+)$`, ctx.IAmAManagerOfTheGroup)
-	s.Step(`^(@\w+) is a manager of the group (@\w+) and can watch its members$`, ctx.UserIsAManagerOfTheGroupAndCanWatchItsMembers)
-	s.Step(`^I am a manager of the group (@\w+) and can watch its members$`, ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
-	s.Step(`(@\w+) is a manager of the group (@\w+) and can grant group access`, ctx.UserIsAManagerOfTheGroupAndCanGrantGroupAccess)
+	s.Step(`^I am a manager of the group (.+) and can watch for submissions from the group and its descendants$`,
+		ctx.ICanWatchGroupWithID)
+	s.Step(`^the group (@\w+) is a manager of the group (@\w+) and can watch for submissions from the group and its descendants$`,
+		ctx.UserIsAManagerOfTheGroupAndCanWatchItsMembers)
+	s.Step(`^the group (@\w+) is a manager of the group (@\w+) and can grant group access`,
+		ctx.UserIsAManagerOfTheGroupAndCanGrantGroupAccess)
 	s.Step(
-		`(@\w+) is a manager of the group (@\w+) and can manage memberships and group`,
+		`^the group (@\w+) is a manager of the group (@\w+) and can can manage memberships and the group`,
 		ctx.UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
 	)
 
@@ -58,8 +61,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
 	s.Step(`^there are the following item relations:$`, ctx.ThereAreTheFollowingItemRelations)
-	s.Step(`^I can watch for submissions from the group (.+) and its descendants$`, ctx.ICanWatchGroupWithID)
-	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
+	s.Step(`^I can view (none|info|content|content_with_descendants|solution) of the item (.+)$`,
 		ctx.ICanViewOnItemWithID)
 	s.Step(`^I have the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`, ctx.ICanWatchOnItemWithID)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,

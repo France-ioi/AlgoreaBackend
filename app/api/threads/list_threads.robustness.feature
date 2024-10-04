@@ -42,7 +42,7 @@ Feature: List threads - robustness
   Scenario Outline: Should not have watched_group_id and is_mine set a the same time
     Given I am @John
     And there is a group @Classroom
-    And I am a manager of the group @ClassroomParent and can watch its members
+    And I am a manager of the group @ClassroomParent and can watch for submissions from the group and its descendants
     And the group @Classroom is a child of the group @ClassroomParent
     When I send a GET request to "/threads?watched_group_id=@Classroom&is_mine=<is_mine>"
     Then the response code should be 400

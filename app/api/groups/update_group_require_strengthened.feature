@@ -12,7 +12,7 @@ Feature:
       | @School   |              | @Teacher            |                                             |                                              |                              |
       | @Class    | @ClassParent | @Student1,@Student2 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
       | @SubGroup | @Class       | @Student3,@Student4 |                                             |                                              |                              |
-    And @Teacher is a manager of the group @ClassParent and can manage memberships and group
+    And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     And the time now is "2020-01-01T01:00:00.001Z"
     And the DB time now is "2020-01-01 01:00:00.001"
     When I send a PUT request to "/groups/@Class" with the following body:
@@ -50,7 +50,7 @@ Feature:
       | group   | parent       | members         | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       |
       | @School |              | @Teacher        |                                             |                                              |                              |
       | @Class  | @ClassParent | <group_members> | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
-    And @Teacher is a manager of the group @ClassParent and can manage memberships and group
+    And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     And the time now is "2020-01-01T01:00:00.001Z"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
@@ -91,7 +91,7 @@ Feature:
       | group   | parent       | members   | require_lock_membership_approval_until |
       | @School |              | @Teacher  |                                        |
       | @Class  | @ClassParent | @Student1 | 2020-01-01 12:00:00                    |
-    And @Teacher is a manager of the group @ClassParent and can manage memberships and group
+    And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -117,7 +117,7 @@ Feature:
       | @Class   | @Student4 | join_request  | 2020-01-01 00:00:04.000 |
       | @Class   | @Student5 | invitation    | 2020-01-01 00:00:05.000 |
       | @Other   | @Student5 | join_request  | 2020-01-01 00:00:15.000 |
-    And @Teacher is a manager of the group @ClassParent and can manage memberships and group
+    And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -152,7 +152,7 @@ Feature:
       | @Class   | @Student4 | join_request  | 2020-01-01 00:00:04.000 |
       | @Class   | @Student5 | invitation    | 2020-01-01 00:00:05.000 |
       | @Other   | @Student5 | join_request  | 2020-01-01 00:00:15.000 |
-    And @Teacher is a manager of the group @ClassParent and can manage memberships and group
+    And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     And the time now is "2020-01-01T01:00:00.001Z"
     And the DB time now is "2020-01-01 01:00:00.001"
     When I send a PUT request to "/groups/@Class" with the following body:
@@ -182,7 +182,7 @@ Feature:
       | @School   |              | @Teacher            |                        |
       | @Class    | @ClassParent | @Student1,@Student2 | false                  |
       | @SubGroup | @Class       | @Student3,@Student4 |                        |
-    And @Teacher is a manager of the group @ClassParent and can manage memberships and group
+    And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -218,7 +218,7 @@ Feature:
       | @Class   | @Student6 | invitation    | 2020-01-01 00:00:06.000 |
       | @Other   | @Student5 | leave_request | 2020-01-01 00:00:15.000 |
       | @Other   | @Student6 | join_request  | 2020-01-01 00:00:16.000 |
-    And @Teacher is a manager of the group @ClassParent and can manage memberships and group
+    And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {

@@ -16,7 +16,7 @@ Feature: Change item access rights for a group - can_request_help_to
       | @School      |              | @Teacher |
       | @Class       | @ClassParent |          |
       | @HelperGroup |              |          |
-    And @Teacher is a manager of the group @ClassParent and can grant group access
+    And the group @Teacher is a manager of the group @ClassParent and can grant group access
     And there are the following tasks:
       | item  |
       | @Item |
@@ -114,7 +114,7 @@ Feature: Change item access rights for a group - can_request_help_to
   Scenario: Should be access denied when trying to set can_request_help_to to a group not visible by the giver (current-user)
     Given I am @Teacher
     # This is the only case for @HelperGroup to be visible by @Class and not @Teacher. Details in comment in update_permissions.go.
-    And @Class is a manager of the group @HelperGroupParent and can watch its members
+    And the group @Class is a manager of the group @HelperGroupParent and can watch for submissions from the group and its descendants
     And the group @HelperGroup is a child of the group @HelperGroupParent
     And there are the following item permissions:
       | item  | group    | can_grant_view |
