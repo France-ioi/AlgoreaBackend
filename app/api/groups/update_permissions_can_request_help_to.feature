@@ -82,7 +82,7 @@ Feature: Change item access rights for a group - can_request_help_to
     Given I am @Teacher
     # This is the only case for @HelperGroup to be visible by @Class and not @Teacher. Details in comment in update_permissions.go.
     And @Class is a manager of the group @HelperGroupParent and can watch its members
-    And @HelperGroup is a child of the group @HelperGroupParent
+    And the group @HelperGroup is a child of the group @HelperGroupParent
     And there are the following item permissions:
       | item  | group    | can_view | can_grant_view | can_request_help_to |
       | @Item | @Teacher |          | content        |                     |

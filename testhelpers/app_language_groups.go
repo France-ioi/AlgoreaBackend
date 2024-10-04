@@ -18,7 +18,7 @@ func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
-	s.Step(`^(@\w+) is a child of the group (@\w+)$`, ctx.GroupIsAChildOfTheGroup)
+	s.Step(`^the group (@\w+) is a child of the group (@\w+)$`, ctx.GroupIsAChildOfTheGroup)
 	s.Step(
 		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
 		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,

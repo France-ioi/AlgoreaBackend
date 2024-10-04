@@ -11,7 +11,7 @@ Feature: List threads
       | @B_Class      | @B_Section    |                                                       |
       | @OtherGroup   |               | @OtherGroupMember                                     |
     And @A_UniversityManagerCanWatch is a manager of the group @A_UniversityParent and can watch its members
-    And @A_University is a child of the group @A_UniversityParent
+    And the group @A_University is a child of the group @A_UniversityParent
     And there are the following tasks:
       | item                                            |
       | @B_SectionMember2_CanViewInfo                   |
@@ -97,7 +97,7 @@ Feature: List threads
   Scenario: Should have all the fields properly set, including first_name and last_name when the access is approved
     Given I am @LaboratoryManagerCanWatch
     And I am a manager of the group @LaboratoryParent and can watch its members
-    And @Laboratory is a child of the group @LaboratoryParent
+    And the group @Laboratory is a child of the group @LaboratoryParent
     And there are the following users:
       | user                                                 | first_name            | last_name            |
       | @LaboratoryMember_WithApprovedAccessPersonalInfo     | FirstName_Approved    | LastName_Approved    |

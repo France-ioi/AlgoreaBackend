@@ -63,7 +63,7 @@ Feature: Generate Profile Edit Token
     And the time now is "2020-01-01T00:00:00Z"
     And I am @Manager
     And I am a manager of the group @CityParent
-    And @City is a child of the group @CityParent
+    And the group @City is a child of the group @CityParent
     When I send a POST request to "/users/@User/generate-profile-edit-token"
     Then the response code should be 200
     And the response at $.token should be the base64 of an AES-256-GCM encrypted JSON object containing:
