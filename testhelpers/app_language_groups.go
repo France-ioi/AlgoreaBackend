@@ -146,7 +146,7 @@ func (ctx *TestContext) IAmAMemberOfTheGroupWithID(group string) error {
 		return err
 	}
 
-	ctx.IsAMemberOfTheGroup(
+	ctx.GroupIsAMemberOfTheGroup(
 		ctx.user,
 		group,
 	)
@@ -166,7 +166,7 @@ func (ctx *TestContext) GroupIsAChildOfTheGroup(childGroup, parentGroup string) 
 		return err
 	}
 
-	ctx.IsAMemberOfTheGroup(childGroup, parentGroup)
+	ctx.GroupIsAMemberOfTheGroup(childGroup, parentGroup)
 
 	return nil
 }
@@ -273,8 +273,8 @@ func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent, midd
 		}
 	}
 
-	ctx.IsAMemberOfTheGroup(middle, parent)
-	ctx.IsAMemberOfTheGroup(descendant, middle)
+	ctx.GroupIsAMemberOfTheGroup(middle, parent)
+	ctx.GroupIsAMemberOfTheGroup(descendant, middle)
 
 	return nil
 }

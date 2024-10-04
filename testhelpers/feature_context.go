@@ -47,14 +47,14 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (@\w+)$`, ctx.IAmAManagerOfTheGroup)
 	s.Step(`^I am a manager of the group (.+) and can watch for submissions from the group and its descendants$`,
-		ctx.ICanWatchGroupWithID)
+		ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
 	s.Step(`^the group (@\w+) is a manager of the group (@\w+) and can watch for submissions from the group and its descendants$`,
-		ctx.UserIsAManagerOfTheGroupAndCanWatchItsMembers)
+		ctx.GroupIsAManagerOfTheGroupAndCanWatchItsMembers)
 	s.Step(`^the group (@\w+) is a manager of the group (@\w+) and can grant group access`,
-		ctx.UserIsAManagerOfTheGroupAndCanGrantGroupAccess)
+		ctx.GroupIsAManagerOfTheGroupAndCanGrantGroupAccess)
 	s.Step(
 		`^the group (@\w+) is a manager of the group (@\w+) and can can manage memberships and the group`,
-		ctx.UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
+		ctx.GroupIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
 	)
 
 	s.Step(`^there are the following items:$`, ctx.ThereAreTheFollowingItems)
@@ -62,8 +62,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
 	s.Step(`^there are the following item relations:$`, ctx.ThereAreTheFollowingItemRelations)
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) of the item (.+)$`,
-		ctx.ICanViewOnItemWithID)
-	s.Step(`^I have the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`, ctx.ICanWatchOnItemWithID)
+		ctx.IHaveViewPermissionOnItem)
+	s.Step(`^I have the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`, ctx.IHaveWatchPermissionOnItem)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
 

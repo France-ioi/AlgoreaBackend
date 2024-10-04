@@ -165,12 +165,17 @@ func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
 }
 
 // addGroupManager adds a group manager in the database.
-func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess, canManage string) {
+func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess, canManage string) error {
+	err := ctx.ThereIsAGroup(group)
+	if err != nil {
+		return err
+	}
+
 	managerID := ctx.getIDOfReference(manager)
 	groupID := ctx.getIDOfReference(group)
 
 	ctx.needPopulateDatabase = true
-	err := ctx.DBHasTable("group_managers", &godog.Table{
+	err = ctx.DBHasTable("group_managers", &godog.Table{
 		Rows: []*messages.PickleTableRow{
 			{Cells: []*messages.PickleTableCell{
 				{Value: "manager_id"},
@@ -191,10 +196,11 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 	if err != nil {
 		panic(err)
 	}
+	return nil
 }
 
-// addPermissionsGranted adds a permission granted in the database.
-func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, permission, permissionValue string) {
+// setGrantedPermission sets a granted permission in the database.
+func (ctx *TestContext) setGrantedPermission(group, item, sourceGroup, origin, permission, permissionValue string) {
 	groupIDString := strconv.FormatInt(ctx.getIDOfReference(group), 10)
 	sourceGroupIDString := strconv.FormatInt(ctx.getIDOfReference(sourceGroup), 10)
 	itemIDString := strconv.FormatInt(ctx.getIDOfReference(item), 10)
@@ -427,101 +433,35 @@ func (ctx *TestContext) addThread(item, participant, helperGroup, status, messag
 	}
 }
 
-// UserIsAManagerOfTheGroupWith sets the current user as the manager of a group.
-func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
-	group := ctx.getParameterMap(parameters)
-
-	err := ctx.ThereIsAGroup(group["id"])
-	if err != nil {
-		return err
-	}
-
-	canWatchMembers := "0"
-	canGrantGroupAccess := "0"
-	canManage := "none"
-
-	if group["can_watch_members"] == strTrue {
-		canWatchMembers = "1"
-	}
-	if group["can_grant_group_access"] == strTrue {
-		canGrantGroupAccess = "1"
-	}
-	if _, ok := group["can_manage"]; ok {
-		canManage = group["can_manage"]
-	}
-
-	ctx.addGroupManager(group["user_id"], group["id"], canWatchMembers, canGrantGroupAccess, canManage)
-
-	return nil
-}
-
-// IAmAManagerOfTheGroupWithID sets the user as a manager of a group with an id.
+// IAmAManagerOfTheGroupWithID sets the current user as a manager of a group with an id.
 func (ctx *TestContext) IAmAManagerOfTheGroupWithID(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"can_watch_members": "false",
-	}))
+	return ctx.addGroupManager(ctx.user, group, "0", "0", "none")
 }
 
-// IAmAManagerOfTheGroup sets the user as a manager of a group with an id.
+// IAmAManagerOfTheGroup sets the current user as a manager of the given group with can_watch_members=false.
 func (ctx *TestContext) IAmAManagerOfTheGroup(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"name":              group,
-		"can_watch_members": "false",
-	}))
+	return ctx.addGroupManager(ctx.user, group, "0", "0", "none")
 }
 
-// IAmAManagerOfTheGroupAndCanWatchItsMembers sets the user as a manager of a group with can_watch permission.
-func (ctx *TestContext) IAmAManagerOfTheGroupAndCanWatchItsMembers(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"name":              group,
-		"can_watch_members": strTrue,
-	}))
+// GroupIsAManagerOfTheGroupAndCanWatchItsMembers sets the user as a manager of the group with can_watch_members permission.
+func (ctx *TestContext) GroupIsAManagerOfTheGroupAndCanWatchItsMembers(managerGroup, group string) error {
+	return ctx.addGroupManager(managerGroup, group, "1", "0", "none")
 }
 
-// UserIsAManagerOfTheGroupAndCanWatchItsMembers sets the user as a manager of the group with can_watch permission.
-func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanWatchItsMembers(user, group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           user,
-		"name":              group,
-		"can_watch_members": strTrue,
-	}))
+// GroupIsAManagerOfTheGroupAndCanGrantGroupAccess sets the group as a manager of the given group with can_grant_group_access permission.
+func (ctx *TestContext) GroupIsAManagerOfTheGroupAndCanGrantGroupAccess(managerGroup, group string) error {
+	return ctx.addGroupManager(managerGroup, group, "0", "1", "none")
 }
 
-// UserIsAManagerOfTheGroupAndCanGrantGroupAccess sets the user as a manager of the group with can_grant_group_access permission.
-func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanGrantGroupAccess(user, group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                     group,
-		"user_id":                user,
-		"name":                   group,
-		"can_grant_group_access": strTrue,
-	}))
-}
-
-// UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup adds the user as a manager of the group
+// GroupIsAManagerOfTheGroupAndCanManageMembershipsAndGroup sets the group as a manager of the group
 // with the can_manage=memberships_and_groups permission.
-func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup(user, group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":         group,
-		"user_id":    user,
-		"name":       group,
-		"can_manage": "memberships_and_group",
-	}))
+func (ctx *TestContext) GroupIsAManagerOfTheGroupAndCanManageMembershipsAndGroup(managerGroup, group string) error {
+	return ctx.addGroupManager(managerGroup, group, "0", "0", "memberships_and_group")
 }
 
-// ICanWatchGroupWithID adds the permission for the user to watch a group.
-func (ctx *TestContext) ICanWatchGroupWithID(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"can_watch_members": strTrue,
-	}))
+// IAmAManagerOfTheGroupAndCanWatchItsMembers adds the permission for the current user to watch a group.
+func (ctx *TestContext) IAmAManagerOfTheGroupAndCanWatchItsMembers(group string) error {
+	return ctx.addGroupManager(ctx.user, group, "1", "0", "none")
 }
 
 // ThereAreTheFollowingItems defines items.
@@ -587,7 +527,7 @@ func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]str
 
 	for _, permissionKey := range itemPermissionKeys {
 		if permissionValue, ok := itemPermission[permissionKey]; ok {
-			err := ctx.UserSetPermissionExtendedOnItemWithID(
+			err := ctx.SetGroupPermissionWithSourceGroupAndOriginOnItem(
 				permissionKey,
 				permissionValue,
 				itemPermission["group"],
@@ -646,89 +586,75 @@ func (ctx *TestContext) applyItemRelation(itemRelation map[string]string) error 
 	return nil
 }
 
-// ICanWatchGroup adds the permission for the user to watch a group.
-func (ctx *TestContext) ICanWatchGroup(groupName string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                groupName,
-		"user_id":           ctx.user,
-		"name":              groupName,
-		"can_watch_members": strTrue,
-	}))
-}
-
-// IsAMemberOfTheGroup Puts a group in a group.
-func (ctx *TestContext) IsAMemberOfTheGroup(childGroupName, parentGroupName string) {
+// GroupIsAMemberOfTheGroup Puts a group into a group.
+func (ctx *TestContext) GroupIsAMemberOfTheGroup(childGroupName, parentGroupName string) {
 	ctx.addGroupGroup(parentGroupName, childGroupName)
 }
 
-// ItemRelationSetPropagation adds a propagation on an item relation.
-func (ctx *TestContext) ItemRelationSetPropagation(propagation, value, parent, item string) error {
-	ctx.addItemItemPropagation(parent, item, propagation, value)
+// SetGroupPermissionWithSourceGroupAndOriginOnItem gives a group a permission on an item with a specific source_group and origin.
+func (ctx *TestContext) SetGroupPermissionWithSourceGroupAndOriginOnItem(permission, value, group, item, sourceGroup, origin string) error {
+	ctx.setGrantedPermission(group, item, sourceGroup, origin, permission, value)
 
 	return nil
 }
 
-// UserSetPermissionExtendedOnItemWithID gives a user a permission on an item with a specific source_group and origin.
-func (ctx *TestContext) UserSetPermissionExtendedOnItemWithID(permission, value, user, item, sourceGroup, origin string) error {
-	ctx.addPermissionGranted(user, item, sourceGroup, origin, permission, value)
+// SetGroupPermissionOnItem grants a group a permission on an item with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) SetGroupPermissionOnItem(permission, value, group, item string) error {
+	ctx.setGrantedPermission(group, item, group, "group_membership", permission, value)
 
 	return nil
 }
 
-// UserSetPermissionOnItemWithID gives a user a permission on an item.
-func (ctx *TestContext) UserSetPermissionOnItemWithID(permission, value, user, item string) error {
-	ctx.addPermissionGranted(user, item, user, "group_membership", permission, value)
-
-	return nil
+// IHavePermissionOnItem gives the current user a permission on an item with source_group_id=user and origin="group_membership".
+func (ctx *TestContext) IHavePermissionOnItem(permType, permValue, item string) error {
+	return ctx.SetGroupPermissionOnItem(permType, permValue, ctx.user, item)
 }
 
-// ICanOnItemWithID gives the user a permission on an item.
-func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue, item string) error {
-	return ctx.UserSetPermissionOnItemWithID(watchType, watchValue, ctx.user, item)
+// GroupHasViewPermissionOnItem gives a group a "view" permission on an item with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) GroupHasViewPermissionOnItem(group, viewPermissionValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_view", viewPermissionValue, group, item)
 }
 
-// UserCanViewOnItemWithID gives a user a can_view permission on an item.
-func (ctx *TestContext) UserCanViewOnItemWithID(viewValue, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, user, item)
+// IHaveViewPermissionOnItem gives the current user a "view" permission on an item with source_group_id=user and origin="group_membership".
+func (ctx *TestContext) IHaveViewPermissionOnItem(viewValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_view", viewValue, ctx.user, item)
 }
 
-// ICanViewOnItemWithID gives the user a "view" permission on an item.
-func (ctx *TestContext) ICanViewOnItemWithID(viewValue, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, ctx.user, item)
+// GroupHasGrantViewPermissionOnItem gives a group a "grant_view" permission on an item
+// with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) GroupHasGrantViewPermissionOnItem(viewValue, group, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_grant_view", viewValue, group, item)
 }
 
-// UserCanGrantViewOnItemWithID gives a user a can_grant_view permission on an item.
-func (ctx *TestContext) UserCanGrantViewOnItemWithID(viewValue, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_grant_view", viewValue, user, item)
+// GroupHasWatchPermissionOnItem gives a group a "watch" permission on an item with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) GroupHasWatchPermissionOnItem(group, watchValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_watch", watchValue, group, item)
 }
 
-// UserCanWatchOnItemWithID gives a user a "watch" permission on an item.
-func (ctx *TestContext) UserCanWatchOnItemWithID(watchValue, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, user, item)
+// IHaveWatchPermissionOnItem gives the current user a "watch" permission on an item
+// with source_group_id=user and origin="group_membership".
+func (ctx *TestContext) IHaveWatchPermissionOnItem(watchValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_watch", watchValue, ctx.user, item)
 }
 
-// ICanWatchOnItemWithID gives the user a "watch" permission on an item.
-func (ctx *TestContext) ICanWatchOnItemWithID(watchValue, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, ctx.user, item)
+// UserIsOwnerOfItem sets the is_owner permission.
+func (ctx *TestContext) UserIsOwnerOfItem(isOwner, user, item string) error {
+	return ctx.SetGroupPermissionOnItem("is_owner", isOwner, user, item)
 }
 
-// UserIsOwnerOfItemWithID sets the is_owner permission.
-func (ctx *TestContext) UserIsOwnerOfItemWithID(isOwner, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("is_owner", isOwner, user, item)
+// UserCanRequestHelpToOnItem sets the can_request_help_to permission.
+func (ctx *TestContext) UserCanRequestHelpToOnItem(helperGroup, user, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_request_help_to", helperGroup, user, item)
 }
 
-// UserCanRequestHelpToOnItemWithID sets the can_request_help_to permission.
-func (ctx *TestContext) UserCanRequestHelpToOnItemWithID(canRequestHelpTo, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_request_help_to", canRequestHelpTo, user, item)
-}
-
-func (ctx *TestContext) userHasValidatedResultOnItem(user, item string) error {
+// GroupHasValidatedResultOnItem adds a validated result of the group on the item to the database.
+func (ctx *TestContext) GroupHasValidatedResultOnItem(group, item string) error {
 	attemptID := rand.Int63()
 
-	ctx.addAttempt(item, user)
+	ctx.addAttempt(item, group)
 	ctx.addValidatedResult(
 		strconv.FormatInt(attemptID, 10),
-		user,
+		group,
 		item,
 		time.Now(),
 	)
@@ -745,7 +671,7 @@ func (ctx *TestContext) ThereAreTheFollowingResults(results *godog.Table) error 
 			"item": result["item"],
 		})
 
-		err := ctx.userHasValidatedResultOnItem(result["participant"], result["item"])
+		err := ctx.GroupHasValidatedResultOnItem(result["participant"], result["item"])
 		if err != nil {
 			return err
 		}
@@ -756,7 +682,7 @@ func (ctx *TestContext) ThereAreTheFollowingResults(results *godog.Table) error 
 
 // IHaveValidatedResultOnItem states that the current user has a validated result on the item.
 func (ctx *TestContext) IHaveValidatedResultOnItem(item string) error {
-	return ctx.userHasValidatedResultOnItem(ctx.user, item)
+	return ctx.GroupHasValidatedResultOnItem(ctx.user, item)
 }
 
 // ThereAreTheFollowingThreads create threads.
@@ -788,7 +714,7 @@ func (ctx *TestContext) ThereAreTheFollowingThreads(threads *godog.Table) error 
 		}
 
 		if thread["visible_by_participant"] == "1" {
-			err := ctx.UserCanViewOnItemWithID("content", thread["participant"], thread["item"])
+			err := ctx.GroupHasViewPermissionOnItem(thread["participant"], "content", thread["item"])
 			if err != nil {
 				return err
 			}
@@ -889,7 +815,7 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 	}
 	threadHelperGroupIDString := ctx.dbTableData["threads"].Rows[rowIndex].Cells[columnIndex].Value
 
-	ctx.IsAMemberOfTheGroup(ctx.user, threadHelperGroupIDString)
+	ctx.GroupIsAMemberOfTheGroup(ctx.user, threadHelperGroupIDString)
 
 	return nil
 }
@@ -897,5 +823,5 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 // ICanRequestHelpToTheGroupWithIDOnTheItemWithID gives the user the permission to request help from a given group
 // to a given item.
 func (ctx *TestContext) ICanRequestHelpToTheGroupWithIDOnTheItemWithID(group, item string) error {
-	return ctx.UserCanRequestHelpToOnItemWithID(group, ctx.user, item)
+	return ctx.UserCanRequestHelpToOnItem(group, ctx.user, item)
 }
