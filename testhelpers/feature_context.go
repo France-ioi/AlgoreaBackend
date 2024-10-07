@@ -70,7 +70,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	ctx.registerFeaturesForGroupMembershipChanges(s)
 	ctx.registerFeaturesForGroupPendingRequests(s)
 
-	s.Step(`^there are the following results:$`, ctx.ThereAreTheFollowingResults)
+	s.Step(`^there are the following validated results:$`, ctx.ThereAreTheFollowingValidatedResults)
 	s.Step(`^I have a validated result on the item (.+)$`, ctx.IHaveValidatedResultOnItem)
 
 	s.Step(`^there are the following threads:$`, ctx.ThereAreTheFollowingThreads)

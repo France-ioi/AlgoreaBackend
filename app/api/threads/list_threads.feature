@@ -60,7 +60,7 @@ Feature: List threads
       | @A_UniversityManagerCanWatch_CanViewInfo        | @A_UniversityManagerCanWatch | info                     |           |
       | @Item1                                          | @A_UniversityManagerCanWatch | content                  |           |
       | @Item2                                          | @A_UniversityManagerCanWatch | content                  |           |
-    And there are the following results:
+    And there are the following validated results:
       | item                              | participant         | validated |
       | @B_UniversityMember_HasValidated1 | @B_UniversityMember | 1         |
       | @B_UniversityMember_HasValidated2 | @B_UniversityMember | 1         |

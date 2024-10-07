@@ -662,8 +662,8 @@ func (ctx *TestContext) GroupHasValidatedResultOnItem(group, item string) error 
 	return nil
 }
 
-// ThereAreTheFollowingResults creates validated results described in the given Godog table.
-func (ctx *TestContext) ThereAreTheFollowingResults(results *godog.Table) error {
+// ThereAreTheFollowingValidatedResults creates validated results described in the given Godog table.
+func (ctx *TestContext) ThereAreTheFollowingValidatedResults(results *godog.Table) error {
 	for i := 1; i < len(results.Rows); i++ {
 		result := ctx.getRowMap(i, results)
 
