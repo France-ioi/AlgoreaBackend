@@ -196,8 +196,7 @@ type itemAnswerGetResponse struct {
 		AuthorID int64 `json:"author_id,string"`
 		// required:true
 		ItemID int64 `json:"item_id,string"`
-		// Nullable
-		// format:integer
+		// format:int64
 		// required:true
 		AttemptID *string `json:"attempt_id,string"`
 		// Can be `null` when there is no applicable existing answer for the user.
@@ -206,18 +205,14 @@ type itemAnswerGetResponse struct {
 		// required:true
 		// enum:Submission,Saved,Current
 		Type string `json:"type"`
-		// Nullable
 		// required:true
 		State *string `json:"state"`
-		// Nullable
 		// required:true
 		Answer *string `json:"answer"`
 		// required:true
 		CreatedAt time.Time `json:"created_at"`
-		// Nullable
 		// required:true
 		Score *float32 `json:"score"`
-		// Nullable
 		// required:true
 		GradedAt *time.Time `json:"graded_at"`
 	}
@@ -236,7 +231,6 @@ type itemEnterResponse struct {
 		Success bool `json:"success"`
 		// required: true
 		Data struct {
-			// Nullable
 			// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 			// example: 838:59:59
 			// required: true
