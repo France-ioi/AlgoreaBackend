@@ -63,7 +63,11 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^there are the following item relations:$`, ctx.ThereAreTheFollowingItemRelations)
 	s.Step(`^I can view (none|info|content|content_with_descendants|solution) of the item (.+)$`,
 		ctx.IHaveViewPermissionOnItem)
+	s.Step(`^the group (\@\w+) can view (none|info|content|content_with_descendants|solution) of the item (.+)$`,
+		ctx.GroupHasViewPermissionOnItem)
 	s.Step(`^I have the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`, ctx.IHaveWatchPermissionOnItem)
+	s.Step(`^the group (.+) has the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`,
+		ctx.GroupHasWatchPermissionOnItem)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
 
@@ -72,6 +76,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 	s.Step(`^there are the following validated results:$`, ctx.ThereAreTheFollowingValidatedResults)
 	s.Step(`^I have a validated result on the item (.+)$`, ctx.IHaveValidatedResultOnItem)
+	s.Step(`^the group (.+) has a validated result on the item (.+)$`, ctx.GroupHasValidatedResultOnItem)
 
 	s.Step(`^there are the following threads:$`, ctx.ThereAreTheFollowingThreads)
 	s.Step(`^there is a thread with "(.*)"$`, ctx.ThereIsAThreadWith)
