@@ -74,7 +74,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I have a validated result on the item (.+)$`, ctx.IHaveValidatedResultOnItem)
 
 	s.Step(`^there are the following threads:$`, ctx.ThereAreTheFollowingThreads)
-	s.Step(`^there is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
+	s.Step(`^there is a thread with "(.*)"$`, ctx.ThereIsAThreadWith)
 	s.Step(`^there is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
 	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
 

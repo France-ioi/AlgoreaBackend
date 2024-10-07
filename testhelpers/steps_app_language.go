@@ -17,7 +17,6 @@ import (
 
 const (
 	referencePrefix = '@'
-	strTrue         = "true"
 )
 
 var (
@@ -27,8 +26,13 @@ var (
 
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
+	preprocessed, err := ctx.preprocessString(parameters)
+	if err != nil {
+		panic(err)
+	}
+
 	parameterMap := make(map[string]string)
-	arrayParameters := strings.Split(parameters, ",")
+	arrayParameters := strings.Split(preprocessed, ",")
 	for _, paramKeyValue := range arrayParameters {
 		keyVal := strings.Split(paramKeyValue, "=")
 
