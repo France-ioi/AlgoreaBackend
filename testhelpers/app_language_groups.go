@@ -15,6 +15,7 @@ import (
 func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
 	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
+	s.Step(`^there is a team (@\w+)$`, ctx.ThereIsATeam)
 	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
@@ -38,7 +39,7 @@ func (ctx *TestContext) getGroupPrimaryKey(groupID int64) map[string]string {
 }
 
 // addGroup adds a group to the database.
-func (ctx *TestContext) addGroup(group string) {
+func (ctx *TestContext) addGroup(group, groupType string) {
 	groupID := ctx.getIDOfReference(group)
 	primaryKey := ctx.getGroupPrimaryKey(groupID)
 
@@ -57,7 +58,7 @@ func (ctx *TestContext) addGroup(group string) {
 				{Cells: []*messages.PickleTableCell{
 					{Value: strconv.FormatInt(groupID, 10)},
 					{Value: "Group " + referenceToName(group)},
-					{Value: "Class"},
+					{Value: groupType},
 					{Value: "none"},
 					{Value: "null"},
 					{Value: "false"},
@@ -127,9 +128,16 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 	return nil
 }
 
-// ThereIsAGroup creates a new group.
+// ThereIsAGroup creates a new group (type=Class).
 func (ctx *TestContext) ThereIsAGroup(group string) error {
-	ctx.addGroup(group)
+	ctx.addGroup(group, "Class")
+
+	return nil
+}
+
+// ThereIsATeam creates a new team.
+func (ctx *TestContext) ThereIsATeam(group string) error {
+	ctx.addGroup(group, "Team")
 
 	return nil
 }
