@@ -1,6 +1,6 @@
 Feature: Reject requests to leave a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type    |
       | 11  | Class   |
       | 13  | Team    |
@@ -16,10 +16,10 @@ Feature: Reject requests to leave a group
       | 151 | User    |
       | 161 | User    |
       | 444 | Team    |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 31             |
       | 13              | 111            |
@@ -28,7 +28,7 @@ Feature: Reject requests to leave a group
       | 13              | 141            |
       | 13              | 151            |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
       | 13       | 31        | leave_request |
@@ -39,7 +39,7 @@ Feature: Reject requests to leave a group
 
   Scenario: Reject requests to leave a group
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
     When I send a POST request to "/groups/13/leave-requests/reject?group_ids=31,141,21,11,13,122,151"

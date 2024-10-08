@@ -1,6 +1,6 @@
 Feature: Get group by name (contestGetGroupByName)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type  |
       | 6  | Group B | Team  |
       | 7  | Group B | Team  |
@@ -14,12 +14,12 @@ Feature: Get group by name (contestGetGroupByName)
       | 31 | john    | User  |
       | 41 | jane    | User  |
       | 50 | Group D | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | owner | 21       |
       | john  | 31       |
       | jane  | 41       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 6        | 21         | false                  | true              |
       | 7        | 21         | true                   | false             |
@@ -28,7 +28,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 16       | 21         | true                   | true              |
       | 31       | 21         | true                   | true              |
       | 41       | 21         | true                   | true              |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 11             |
       | 10              | 13             |
@@ -42,19 +42,19 @@ Feature: Get group by name (contestGetGroupByName)
       | 50              | 15             |
       | 50              | 31             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | duration | entry_participant_type | default_language_tag |
       | 50 | 00:00:00 | Team                   | fr                   |
       | 60 | 00:00:01 | Team                   | fr                   |
       | 10 | 00:00:02 | User                   | fr                   |
       | 70 | 00:00:03 | Team                   | fr                   |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 60               | 70            |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 16       | 70      | 16              | 9999-12-31 23:59:58 | 9999-12-31 23:59:59 |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 10       | 50      | content                  | enter                    | result              |
       | 11       | 50      | none                     | none                     | none                |
@@ -73,7 +73,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 31       | 70      | content_with_descendants | none                     | none                |
       | 41       | 10      | content                  | none                     | none                |
       | 41       | 70      | content                  | none                     | none                |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |

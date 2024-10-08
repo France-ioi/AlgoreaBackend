@@ -8,19 +8,19 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | admin          | 51       | en               |
       | guest          | 61       | en               |
       | panas          | 71       | uk               |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | type  | name       |
       | 80 | Other | Some group |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 80              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | en  |
       | fr  |
       | sl  |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | duration | default_language_tag | allows_multiple_attempts | entry_participant_type | requires_explicit_entry |
       | 10 | 00:00:02 | en                   | 0                        | Team                   | true                    |
       | 40 | 00:00:00 | fr                   | 0                        | Team                   | false                   |
@@ -29,13 +29,13 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 70 | 00:00:03 | fr                   | 0                        | User                   | true                    |
       | 80 | 00:00:03 | sl                   | 0                        | Team                   | true                    |
       | 90 | 00:00:03 | sl                   | 0                        | User                   | true                    |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 0           |
       | 10             | 70            | 1           |
       | 60             | 70            | 0           |
       | 90             | 80            | 0           |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title      |
       | 10      | en           | Chapter    |
       | 10      | fr           | Chapitre   |
@@ -45,7 +45,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 70      | fr           | Concours 2 |
       | 80      | sl           | null       |
       | 90      | sl           | null       |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 21       | 40      | solution                 | enter                    | result              |
       | 21       | 50      | solution                 | enter                    | result              |

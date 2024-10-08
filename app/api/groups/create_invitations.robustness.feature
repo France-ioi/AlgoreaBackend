@@ -1,17 +1,17 @@
 Feature: Invite users - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  |
       | 11  | User  |
       | 13  | Class |
       | 21  | User  |
       | 22  | User  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
       | user  | 11       | John        | Doe       |
       | jane  | 22       | Jane        | Doe       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 13       | 22         | none        |

@@ -3,35 +3,35 @@ Feature: Ask for a hint - robustness
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 22              | 13             |
     And the groups ancestors are computed
-    And the database has the following table 'platforms':
+    And the database has the following table "platforms":
       | id | regexp                     | public_key                | priority |
       | 10 | https://platformwithkey    | {{taskPlatformPublicKey}} | 0        |
       | 11 | https://nokeyplatform.test |                           | 1        |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | platform_id | url                           | read_only | default_language_tag |
       | 50 | 10          | https://platformwithkey/50    | 1         | fr                   |
       | 10 | 10          | https://platformwithkey/10    | 0         | fr                   |
       | 51 | 11          | https://nokeyplatform.test/51 | 1         | fr                   |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 0           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 101      | 10      | content            |
       | 101      | 50      | content            |
       | 101      | 51      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | allows_submissions_until |
       | 0  | 101            | 9999-12-31 23:59:59      |
       | 1  | 101            | 2019-05-30 11:00:00      |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | hints_requested        |
       | 0          | 101            | 50      | [0,  1, "hint" , null] |
       | 0          | 101            | 51      | [0,  1, "hint" , null] |

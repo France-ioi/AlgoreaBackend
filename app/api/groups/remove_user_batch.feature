@@ -1,6 +1,6 @@
 Feature: Remove user batch (userBatchRemove)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name                      | type  | require_lock_membership_approval_until |
       | 13 | class                     | Class | 9999-12-31 23:59:59                    |
       | 21 | user                      | User  | null                                   |
@@ -10,7 +10,7 @@ Feature: Remove user batch (userBatchRemove)
       | 25 | test_custom1_another_user | User  | null                                   |
       | 26 | test1_custom_user         | User  | null                                   |
       | 27 | test1_custom_another_user | User  | null                                   |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login                     | group_id |
       | owner                     | 21       |
       | test1_custom_another_user | 27       |
@@ -19,20 +19,20 @@ Feature: Remove user batch (userBatchRemove)
       | test_custom_user          | 22       |
       | test_custom1_another_user | 25       |
       | test_custom1_user         | 24       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 13              | 21             | null                        |
       | 13              | 22             | 2019-05-30 11:00:00         |
     And the groups ancestors are computed
-    And the database has the following table 'user_batch_prefixes':
+    And the database has the following table "user_batch_prefixes":
       | group_prefix | group_id | allow_new |
       | test         | 13       | 1         |
       | test1        | 13       | 1         |
       | test2        | 13       | 0         |
-    And the database has the following table 'user_batches_v2':
+    And the database has the following table "user_batches_v2":
       | group_prefix | custom_prefix | size | creator_id |
       | test         | custom        | 100  | null       |
       | test         | custom1       | 200  | 13         |

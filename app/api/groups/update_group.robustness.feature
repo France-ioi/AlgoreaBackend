@@ -1,6 +1,6 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | grade | description     | created_at          | type  | root_activity_id    | is_official_session | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
       | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class | 1672978871462145361 | false               | true    | true      | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       | 0                 | none                                  | null                                   | false                  | null             | false                    |
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | 1672978871462145461 | false               | true    | true      | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       | 1                 | none                                  | null                                   | false                  | 5                | true                     |
@@ -11,12 +11,12 @@ Feature: Update a group (groupEdit) - robustness
       | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 | none                                  | null                                   | false                  | null             | false                    |
       | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 | none                                  | null                                   | false                  | null             | false                    |
       | 41 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 | none                                  | null                                   | false                  | null             | false                    |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | temp_user | group_id | first_name  | last_name |
       | owner | 0         | 21       | Jean-Michel | Blanquer  |
       | user  | 0         | 31       | John        | Doe       |
       | jane  | 0         | 41       | Jane        | Doe       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
       | 14       | 21         | memberships_and_group |
@@ -26,23 +26,23 @@ Feature: Update a group (groupEdit) - robustness
       | 17       | 31         | none                  |
       | 17       | 41         | memberships_and_group |
     And the groups ancestors are computed
-    And the database table 'groups_ancestors' has also the following rows:
+    And the database table "groups_ancestors" has also the following rows:
       | ancestor_group_id | child_group_id | expires_at          |
       | 17                | 21             | 2019-05-30 11:00:00 |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag | type   |
       | 123  | fr                   | Task   |
       | 124  | fr                   | Task   |
       | 5678 | fr                   | Task   |
       | 6789 | fr                   | Skill  |
       | 7890 | fr                   | Skill  |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 21       | 123     | info               |
       | 21       | 124     | info               |
       | 21       | 5678    | none               |
       | 21       | 6789    | info               |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_make_session_official | source_group_id |
       | 21       | 123     | false                     | 13              |
       | 17       | 124     | true                      | 13              |
@@ -333,20 +333,20 @@ Feature: Update a group (groupEdit) - robustness
   Scenario Outline: Should return an error if a require_* field is strengthened, and there is at least one user in the group, but approval_change_action is not given
     Given I am the user with id "21"
     And the time now is "2020-01-01T01:00:00Z"
-    And the database table 'groups' has also the following rows:
+    And the database table "groups" has also the following rows:
       | id  | name  | grade | description | created_at          | type  | root_activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       | max_participants | enforce_max_participants |
       | 101 | Group | 1     | Group       | 2020-01-01 00:00:00 | Class | null             | true                | true    | true      | null | null          | 2020-01-01 00:00:00 | true                       | 0                 | <require_personal_info_access_approval_old> | <require_lock_membership_approval_until_old> | <require_watch_approval_old> | 1                | false                    |
       | 110 | Team  | 1     | Team        | 2020-01-01 00:00:00 | Team  | null             | true                | true    | true      | null | null          | 2020-01-01 00:00:00 | true                       | 0                 | <require_personal_info_access_approval_old> | <require_lock_membership_approval_until_old> | <require_watch_approval_old> | 1                | false                    |
-    And the database table 'group_managers' has also the following rows:
+    And the database table "group_managers" has also the following rows:
       | group_id | manager_id | can_manage            |
       | 101      | 21         | memberships_and_group |
     # There must be at least one user in the group. Otherwise it's not considered a strengthening.
-    And the database table 'groups_groups' has also the following row:
+    And the database table "groups_groups" has also the following row:
       | parent_group_id | child_group_id |
       | 101             | 110            |
     And the groups ancestors are computed
     # There is at least one user in the group
-    And the database table 'groups_ancestors' has also the following rows:
+    And the database table "groups_ancestors" has also the following rows:
       | ancestor_group_id | child_group_id | expires_at          |
       | 101               | 21             | 2021-01-01 00:00:00 |
     When I send a PUT request to "/groups/101" with the following body:

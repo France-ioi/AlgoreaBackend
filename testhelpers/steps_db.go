@@ -83,6 +83,115 @@ func (ctx *TestContext) initializeOrCombineDBTableData(tableName string, data *g
 	}
 }
 
+func (ctx *TestContext) setDBTableRowColumnValues(tableName string, primaryKey, columnValues map[string]string) {
+	if ctx.dbTableData[tableName] == nil {
+		panic(fmt.Sprintf("cannot set value: table %q is not initialized", tableName))
+	}
+
+	columns := make([]string, 0, len(columnValues))
+	values := make([]string, 0, len(columnValues))
+	for column, value := range columnValues {
+		columns = append(columns, column)
+		values = append(values, value)
+	}
+
+	columnIndexes := getColumnIndexes(ctx.dbTableData[tableName], columns)
+	for i, columnIndex := range columnIndexes {
+		if columnIndex == -1 {
+			ctx.dbTableData[tableName] = combinePickleTables(
+				ctx.dbTableData[tableName],
+				&godog.Table{Rows: []*messages.PickleTableRow{{Cells: []*messages.PickleTableCell{{Value: columns[i]}}}}},
+			)
+			columnIndexes[i] = len(ctx.dbTableData[tableName].Rows[0].Cells) - 1
+		}
+	}
+
+	rowIndex := ctx.getDBTableRowIndexForPrimaryKey(tableName, primaryKey)
+	if rowIndex == -1 {
+		panic(fmt.Sprintf("no such row in table %q with primary key %v", tableName, primaryKey))
+	}
+
+	row := ctx.dbTableData[tableName].Rows[rowIndex]
+	for i, columnIndex := range columnIndexes {
+		if row.Cells[columnIndex] == nil {
+			row.Cells[columnIndex] = &messages.PickleTableCell{}
+		}
+		row.Cells[columnIndex].Value = values[i]
+	}
+
+	ctx.executeOrQueueDBDataRowUpdate(tableName, primaryKey, columns, values)
+}
+
+func (ctx *TestContext) executeOrQueueDBDataRowUpdate(tableName string, primaryKey map[string]string, columns, values []string) {
+	queryValues := make([]interface{}, 0, len(values)+len(primaryKey))
+	quotedColumns := make([]string, 0, len(columns))
+	for i, column := range columns {
+		quotedColumns = append(quotedColumns, database.QuoteName(column)+" = ?")
+		queryValues = append(queryValues, dbDataTableValue(values[i]))
+	}
+
+	primaryKeyColumns := make([]string, 0, len(primaryKey))
+	for primaryKeyColumn, primaryKeyValue := range primaryKey {
+		primaryKeyColumns = append(primaryKeyColumns, database.QuoteName(primaryKeyColumn))
+		queryValues = append(queryValues, dbDataTableValue(primaryKeyValue))
+	}
+
+	err := ctx.executeOrQueueDBDataInsertionQuery("UPDATE "+database.QuoteName(tableName)+
+		" SET "+strings.Join(quotedColumns, ", ")+" WHERE "+
+		strings.Join(primaryKeyColumns, " = ? AND ")+" = ?", queryValues)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (ctx *TestContext) setDBTableRowColumnValue(tableName string, primaryKey map[string]string, column, value string) {
+	ctx.setDBTableRowColumnValues(tableName, primaryKey, map[string]string{column: value})
+}
+
+func getDBTableColumnIndex(dbTable *godog.Table, columnName string) int {
+	for i, cell := range dbTable.Rows[0].Cells {
+		if cell.Value == columnName {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func isDBTableColumnSetInRow(dbTable *godog.Table, columnName string, rowIndex int) bool {
+	columnIndex := getDBTableColumnIndex(dbTable, columnName)
+	return columnIndex != -1 && dbTable.Rows[rowIndex].Cells[columnIndex] != nil
+}
+
+func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primaryKey map[string]string) int {
+	if _, ok := ctx.dbTableData[tableName]; !ok {
+		return -1
+	}
+
+	primaryKeyIndexes := make(map[string]int, len(primaryKey))
+	for primaryKeyColumn := range primaryKey {
+		primaryKeyIndexes[primaryKeyColumn] = getDBTableColumnIndex(ctx.dbTableData[tableName], primaryKeyColumn)
+		if primaryKeyIndexes[primaryKeyColumn] == -1 {
+			return -1
+		}
+	}
+
+	for i := 1; i < len(ctx.dbTableData[tableName].Rows); i++ {
+		row := ctx.dbTableData[tableName].Rows[i]
+		match := true
+		for primaryKeyColumn, primaryKeyIndex := range primaryKeyIndexes {
+			if row.Cells[primaryKeyIndex] == nil || row.Cells[primaryKeyIndex].Value != primaryKey[primaryKeyColumn] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return i
+		}
+	}
+	return -1
+}
+
 func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
 	if ctx.inScenario {
 		tx, err := ctx.db.Begin()
@@ -545,7 +654,7 @@ func (ctx *TestContext) formatDBRowAsTableRow(dbRow []*string) string {
 			continue
 		}
 
-		if dbRowValuesStr[i] == time.Now().Format("2006-01-02 15:04:05") {
+		if dbRowValuesStr[i] == time.Now().Format(time.DateTime) {
 			dbRowValuesStr[i] = "{{currentTimeDB()}}"
 			continue
 		}

@@ -1,6 +1,6 @@
 Feature: Remove members from a group (groupRemoveMembers)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  |
       | 13  |
       | 14  |
@@ -17,7 +17,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 121 |
       | 131 |
       | 132 |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login  | group_id |
       | owner  | 21       |
       | john   | 31       |
@@ -30,7 +30,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | jenna  | 101      |
       | jannet | 111      |
       | judith | 121      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 51             |
       | 13              | 61             |
@@ -39,7 +39,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 13              | 131            |
       | 14              | 41             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
       | 13       | 41        | join_request |
@@ -48,7 +48,7 @@ Feature: Remove members from a group (groupRemoveMembers)
 
   Scenario Outline: Remove members
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage   |
       | 13       | 21         | <can_manage> |
     When I send a DELETE request to "/groups/13/members?user_ids=31,41,51,61,71,81,91,101,111,121,131,404"

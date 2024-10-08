@@ -1,7 +1,7 @@
 Feature: Get item parents
 
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name       | grade | type  |
       | 11 | jdoe       | -2    | User  |
       | 13 | Group B    | -2    | Team  |
@@ -10,18 +10,18 @@ Feature: Get item parents
       | 17 | fr         | -2    | User  |
       | 22 | info       | -2    | User  |
       | 26 | team       | -2    | Team  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login      | temp_user | group_id | default_language |
       | jdoe       | 0         | 11       |                  |
       | nosolution | 0         | 14       |                  |
       | fr         | 0         | 17       | fr               |
       | info       | 0         | 22       |                  |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
       | 200 | Task    | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://someurl | true     | true          |
       | 210 | Chapter | en                   | true     | true                      | All             | false                   | true                     | User                   | 10:20:31 | true              | true      | forceYes    | true            | null           | true     | true          |
       | 220 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null           | true     | true          |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
       | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
       | 210     | en           | Chapter A   | http://example.com/my1.jpg | Subtitle 1   | Description 1 | Some comment   |
@@ -29,7 +29,7 @@ Feature: Get item parents
       | 200     | fr           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
       | 210     | fr           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire |
       | 220     | fr           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |
       | 13              | 17             |
@@ -38,14 +38,14 @@ Feature: Get item parents
       | 26              | 11             |
       | 26              | 22             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id | can_watch_members |
       | 22         | 15       | true              |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order | category  |
       | 210            | 200           | 2           | Discovery |
       | 220            | 200           | 1           | Discovery |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
       | 11       | 200     | solution                 | enter                    | children           | result              | true               |
       | 11       | 210     | solution                 | none                     | none               | none                | true               |
@@ -63,10 +63,10 @@ Feature: Get item parents
       | 26       | 200     | solution                 | none                     | none               | none                | false              |
       | 26       | 210     | info                     | none                     | none               | none                | false              |
       | 26       | 220     | info                     | none                     | none               | none                | false              |
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | fr  |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | root_item_id | parent_attempt_id |
       | 0  | 11             | 2019-05-30 10:00:00 | null         | null              |
       | 0  | 13             | 2019-05-30 10:00:00 | null         | null              |
@@ -75,7 +75,7 @@ Feature: Get item parents
       | 1  | 11             | 2019-05-30 11:00:00 | null         | null              |
       | 1  | 13             | 2019-05-30 11:00:00 | null         | null              |
       | 1  | 17             | 2019-05-30 10:00:00 | 200          | 0                 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at        |
       | 0          | 11             | 200     | null                | 2019-05-30 11:00:01 | 11.1           | null                |
       | 0          | 11             | 210     | null                | 2018-05-30 11:00:01 | 12.2           | null                |

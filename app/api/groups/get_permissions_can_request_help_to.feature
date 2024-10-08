@@ -19,8 +19,8 @@ Feature: Get permissions can_request_help_to for a group
       | @ClassParent             | @ClassParentParent       |          |
       | @Class                   | @ClassParent             |          |
       | @OtherSourceGroup        |                          |          |
-    And @Teacher is a manager of the group @ClassAnotherParent and can grant group access
-    And @Class is a child of the group @ClassAnotherParent
+    And the group @Teacher is a manager of the group @ClassAnotherParent and can grant group access
+    And the group @Class is a child of the group @ClassAnotherParent
     And there are the following items:
       | item                        | type    |
       | @ChapterParent              | Chapter |

@@ -1,25 +1,25 @@
 Feature: Create an attempt for an item - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  | root_activity_id | root_skill_id |
       | 101 | User  | null             | null          |
       | 102 | Team  | null             | null          |
       | 103 | Class | 50               | 90            |
       | 104 | Team  | 50               | 90            |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 103             | 101            |
       | 104             | 101            |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | url                                                                     | type   | allows_multiple_attempts | default_language_tag |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 0                        | fr                   |
       | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task   | 1                        | fr                   |
       | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Skill  | 1                        | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |
       | 101      | 60      | content            |
@@ -96,13 +96,13 @@ Feature: Create an attempt for an item - robustness
 
   Scenario: There is an attempt for the (group, item) pair already, but items.allows_multiple_attempts = 0
     Given I am the user with id "101"
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" has also the following row:
       | group_id | item_id | can_view_generated |
       | 104      | 50      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 104            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 104            | 50      | 2019-05-30 11:00:00 |
     When I send a POST request to "/items/50/attempts?as_team_id=104&parent_attempt_id=0"
@@ -112,7 +112,7 @@ Feature: Create an attempt for an item - robustness
 
   Scenario: Not enough permissions for the last item in the path
     Given I am the user with id "101"
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" has also the following row:
       | group_id | item_id | can_view_generated |
       | 104      | 50      | info               |
     When I send a POST request to "/items/50/attempts?as_team_id=104&parent_attempt_id=0"

@@ -1,6 +1,6 @@
 Feature: Get thread
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name       | type  |
       | 1  | john       | User  |
       | 2  | manager    | User  |
@@ -8,17 +8,17 @@ Feature: Get thread
       | 4  | helper     | User  |
       | 10 | Group      | Class |
       | 20 | Help Group | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login   | group_id |
       | john    | 1        |
       | manager | 2        |
       | jack    | 3        |
       | helper  | 4        |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 20              | 4              |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag |
       | 10 | en                   |
       | 20 | en                   |
@@ -27,16 +27,16 @@ Feature: Get thread
       | 30 | en                   |
       | 40 | en                   |
       | 50 | en                   |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | validated_at        |
       | 0          | 4              | 40      | 2020-01-01 00:00:00 |
       | 0          | 4              | 50      | 2020-01-01 00:00:00 |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_watch_generated |
       | 1        | 10      | content                  | none                |
       | 1        | 21      | content_with_descendants | none                |
       | 2        | 30      | none                     | answer              |
-    And the database has the following table 'threads':
+    And the database has the following table "threads":
       | item_id | participant_id | status                  | helper_group_id | latest_update_at    |
       | 10      | 2              | closed                  | 2               | 2019-01-01 00:00:00 |
       | 20      | 1              | closed                  | 10              | 2019-01-01 00:00:00 |

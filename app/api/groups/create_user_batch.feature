@@ -1,24 +1,24 @@
 Feature: Create a user batch
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | name     | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
       | 2  | Base    | AllUsers | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
       | 3  | Club    | Club     | 2017-08-10 12:34:55 | view                                  | 3030-01-01 00:00:00                    | 1                      |
       | 4  | Friends | Friends  | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
       | 21 | User    | owner    | 2016-08-10 12:34:55 | none                                  | null                                   | 0                      |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | default_language |
       | owner | 21       | Jean-Michel | Blanquer  | en               |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 3        | 21         | memberships           |
       | 4        | 21         | memberships_and_group |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 21             |
       | 3               | 4              |
     And the groups ancestors are computed
-    And the database has the following table 'user_batch_prefixes':
+    And the database has the following table "user_batch_prefixes":
       | group_prefix | group_id | allow_new | max_users |
       | test         | 3        | 1         | 2         |
     And the application config is:

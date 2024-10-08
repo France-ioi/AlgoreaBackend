@@ -1,6 +1,6 @@
 Feature: Find all breadcrumbs to an item
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  | root_activity_id | root_skill_id |
       | 90  | Class | 10               | null          |
       | 91  | Other | 50               | null          |
@@ -10,11 +10,11 @@ Feature: Find all breadcrumbs to an item
       | 101 | User  | null             | null          |
       | 102 | Team  | 100              | 60            |
       | 111 | User  | null             | null          |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | default_language |
       | john  | 101      | en               |
       | jane  | 111      | fr               |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 90              | 111            |
       | 90              | 102            |
@@ -22,12 +22,12 @@ Feature: Find all breadcrumbs to an item
       | 94              | 93             |
       | 102             | 101            |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id | can_watch_members |
       | 91         | 90       | true              |
       | 91         | 94       | false             |
       | 111        | 92       | false             |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | url                    | type    | default_language_tag | text_id               | requires_explicit_entry |
       | 10  | null                   | Chapter | en                   | id10                  | false                   |
       | 50  | http://taskplatform/50 | Task    | en                   | -_ '#&?:=/\.,+%¤€aéàd | false                   |
@@ -37,7 +37,7 @@ Feature: Find all breadcrumbs to an item
       | 90  | null                   | Chapter | en                   | id90                  | false                   |
       | 100 | null                   | Chapter | en                   | id100                 | false                   |
       | 101 | null                   | Task    | en                   | id101                 | true                    |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title                                         |
       | 10      | fr           | Graphe: Methodes                              |
       | 10      | en           | Graph: Methods                                |
@@ -48,20 +48,20 @@ Feature: Find all breadcrumbs to an item
       | 90      | en           | Queues                                        |
       | 100     | en           | Chapter Containing Explicit Entry Not Started |
       | 101     | en           | Explicit Entry Not Started                    |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
       | 60             | 70            | 1           |
       | 80             | 90            | 1           |
       | 100            | 101           | 1           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
       | 10               | 70            |
       | 60               | 70            |
       | 80               | 90            |
       | 100              | 101           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 102      | 60      | none                     |
       | 111      | 10      | content_with_descendants |
@@ -72,7 +72,7 @@ Feature: Find all breadcrumbs to an item
       | 111      | 90      | info                     |
       | 111      | 100     | content                  |
       | 111      | 101     | content                  |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |
       | 0  | 101            | null         | null              |
       | 0  | 102            | null         | null              |
@@ -81,7 +81,7 @@ Feature: Find all breadcrumbs to an item
       | 1  | 102            | 10           | null              |
       | 2  | 102            | 10           | null              |
       | 3  | 102            | 60           | 1                 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 102            | 10      | 2020-01-01 00:00:00 |
       | 2          | 102            | 60      | 2020-01-01 00:00:00 |
@@ -111,35 +111,35 @@ Feature: Find all breadcrumbs to an item
     | /items/by-text-id/id90/breadcrumbs-from-roots                                                                 | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
 
   Scenario: Should return a breadcrumb when there are missing results, like path-from-root
-    Given the database has the following table 'users':
+    Given the database has the following table "users":
       | login | group_id | default_language |
       | user  | 1000     | en               |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id   | type  | root_activity_id |
       | 1000 | User  | null             |
       | 1001 | Class | 1010             |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1001            | 1000           |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | url                      | type    | default_language_tag | text_id |
       | 1010 | null                     | Chapter | en                   | id1010  |
       | 1011 | null                     | Chapter | en                   | id1011  |
       | 1012 | null                     | Chapter | en                   | id1012  |
       | 1020 | http://taskplatform/1020 | Task    | en                   | id1020  |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title     |
       | 1010    | en           | Chapter 1 |
       | 1011    | en           | Chapter 2 |
       | 1012    | en           | Chapter 3 |
       | 1020    | en           | Item      |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 1010           | 1011          | 1           |
       | 1011           | 1012          | 1           |
       | 1012           | 1020          | 1           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 1010             | 1011          |
       | 1010             | 1012          |
@@ -147,16 +147,16 @@ Feature: Find all breadcrumbs to an item
       | 1011             | 1012          |
       | 1011             | 1020          |
       | 1012             | 1020          |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 1000     | 1010    | content_with_descendants |
       | 1000     | 1011    | content_with_descendants |
       | 1000     | 1012    | content_with_descendants |
       | 1000     | 1020    | content                  |
-      And the database has the following table 'attempts':
+      And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |
       | 0  | 1000           | null         | null              |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 1000           | 1010    | 2020-01-01 00:00:00 |
     And I am the user with id "1000"

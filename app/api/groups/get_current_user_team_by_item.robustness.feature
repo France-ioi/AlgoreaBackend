@@ -1,6 +1,6 @@
 Feature: Get current user's team for item (teamGetByItemID) - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type  |
       | 11 | User  |
       | 12 | User  |
@@ -12,7 +12,7 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 19 | User  |
       | 20 | Team  |
       | 21 | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login  | group_id |
       | owner  | 11       |
       | user   | 12       |
@@ -22,7 +22,7 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | james  | 16       |
       | jeremy | 17       |
       | jacob  | 19       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 21              | 19             |
 

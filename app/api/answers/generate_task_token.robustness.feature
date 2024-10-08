@@ -1,6 +1,6 @@
 Feature: Generate a read-only task token for an item from an answer - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | name | type |
       | 101 | john     | User |
       | 102 | team     | Team |
@@ -8,32 +8,32 @@ Feature: Generate a read-only task token for an item from an answer - robustness
       | 104 | jess     | User |
       | 105 | jim      | User |
       | 106 | Groupe A | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | john  | 101      |
       | jack  | 103      |
       | jess  | 104      |
       | jim   | 105      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 102             | 101            |
       | 106             | 101            |
       | 106             | 103            |
       | 106             | 104            |
       | 106             | 105            |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 106      | 103        | 0                 |
       | 106      | 104        | 1                 |
       | 106      | 105        | 1                 |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | url                                                                     | type    | entry_participant_type | default_language_tag | text_id |
       | 10 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | Team                   | fr                   | task10  |
       | 20 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | User                   | fr                   | task20  |
       | 30 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | Team                   | fr                   | task30  |
       | 40 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | User                   | fr                   | task40  |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_watch_generated |
       | 101      | 10      | content            | none                |
       | 101      | 20      | info               | none                |
@@ -43,14 +43,14 @@ Feature: Generate a read-only task token for an item from an answer - robustness
       | 104      | 40      | content            | none                |
       | 105      | 40      | content            | answer              |
       | 106      | 40      | content            | none                |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 0  | 102            |
       | 0  | 103            |
       | 0  | 104            |
       | 0  | 105            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 101            | 10      | 2020-01-01 01:01:01 |
       | 0          | 101            | 20      | 2020-01-01 01:01:01 |
@@ -63,7 +63,7 @@ Feature: Generate a read-only task token for an item from an answer - robustness
       | 0          | 103            | 40      | 2020-01-01 01:01:01 |
       | 0          | 104            | 40      | 2020-01-01 01:01:01 |
       | 0          | 105            | 40      | null                |
-    And the database has the following table 'answers':
+    And the database has the following table "answers":
       | id | participant_id | attempt_id | item_id | author_id  | created_at          |
       | 1  | 101            | 0          | 10      | 101        | 2020-01-01 01:01:01 |
       | 2  | 101            | 0          | 20      | 101        | 2020-01-01 01:01:01 |

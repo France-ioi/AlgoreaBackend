@@ -17,7 +17,7 @@ Feature: Change item access rights for a group - can_request_help_to
       | @Class          | @ClassParent |          |
       | @OldHelperGroup |              |          |
       | @NewHelperGroup |              |          |
-    And @Teacher is a manager of the group @ClassParent and can grant group access
+    And the group @Teacher is a manager of the group @ClassParent and can grant group access
     And there are the following tasks:
       | item  |
       | @Item |
@@ -81,8 +81,8 @@ Feature: Change item access rights for a group - can_request_help_to
   Scenario: Should work when trying to set can_request_help_to to a group not visible by the giver (current-user) if it was already set at the same value previously
     Given I am @Teacher
     # This is the only case for @HelperGroup to be visible by @Class and not @Teacher. Details in comment in update_permissions.go.
-    And @Class is a manager of the group @HelperGroupParent and can watch its members
-    And @HelperGroup is a child of the group @HelperGroupParent
+    And the group @Class is a manager of the group @HelperGroupParent and can watch for submissions from the group and its descendants
+    And the group @HelperGroup is a child of the group @HelperGroupParent
     And there are the following item permissions:
       | item  | group    | can_view | can_grant_view | can_request_help_to |
       | @Item | @Teacher |          | content        |                     |

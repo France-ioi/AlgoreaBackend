@@ -1,7 +1,7 @@
 Feature: Export the current user's data
   Background:
     Given the DB time now is "2019-07-16 22:02:28"
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | type    | name               | description            |
       | 1  | Class   | Our Class          | Our class group        |
       | 2  | Team    | Our Team           | Our team group         |
@@ -16,20 +16,20 @@ Feature: Export the current user's data
       | 11 | User    | user self          |                        |
       | 21 | User    | jack               |                        |
       | 31 | User    | jane               |                        |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name | last_name | grade |
       | user  | 11       | John       | Doe       | 1     |
       | jack  | 21       | Jack       | Smith     | 2     |
       | jane  | 31       | Jane       | Doe       | 2     |
-    And the database has the following table 'sessions':
+    And the database has the following table "sessions":
       | session_id | user_id | refresh_token    |
       | 1          | 21      | refreshTokenFor1 |
       | 2          | 11      | refreshTokenFor2 |
-    And the database has the following table 'access_tokens':
+    And the database has the following table "access_tokens":
       | session_id | token     | issued_at           | expires_at          |
       | 1          | tokenFor1 | 2020-01-01 00:00:00 | 2020-01-01 02:00:00 |
       | 2          | tokenFor2 | 2020-01-01 00:00:00 | 2020-01-01 02:00:00 |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 11             |
       | 5               | 11             |
@@ -37,37 +37,37 @@ Feature: Export the current user's data
       | 9               | 11             |
       | 10              | 11             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 1        | 11         | memberships           | 1                      | 0                 |
       | 2        | 11         | memberships_and_group | 0                      | 1                 |
       | 6        | 9          | memberships           | 1                      | 1                 |
       | 9        | 8          | none                  | 0                      | 0                 |
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         | at                      |
       | 1        | 11        | invitation   | 2019-08-10 00:00:00.001 |
       | 3        | 11        | join_request | 2019-08-11 00:00:00.002 |
       | 1        | 21        | invitation   | 2019-08-12 00:00:00.003 |
-    And the database has the following table 'group_membership_changes':
+    And the database has the following table "group_membership_changes":
       | group_id | member_id | action               | at                      | initiator_id |
       | 4        | 11        | join_request_refused | 2019-07-10 00:02:28.001 | 11           |
       | 7        | 11        | removed              | 2019-07-10 03:02:28.002 | 31           |
       | 8        | 11        | left                 | 2019-07-10 04:02:28.003 | 11           |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 404 | fr                   |
       | 405 | fr                   |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          |
       | 0  | 11             | 2019-05-28 11:00:00 |
       | 0  | 2              | 2019-05-28 11:00:00 |
       | 0  | 1              | 2019-05-28 11:00:00 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | latest_activity_at  |
       | 0          | 11             | 404     | 2019-05-30 11:00:00 |
       | 0          | 2              | 404     | 2019-05-29 11:00:00 |
       | 0          | 1              | 405     | 2019-05-28 11:00:00 |
-    And the database has the following table 'answers':
+    And the database has the following table "answers":
       | id | author_id | participant_id | attempt_id | item_id | created_at          |
       | 1  | 11        | 11             | 0          | 404     | 2019-07-09 21:02:28 |
       | 2  | 21        | 1              | 0          | 405     | 2019-07-09 21:02:28 |

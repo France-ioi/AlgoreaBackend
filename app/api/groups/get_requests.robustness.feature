@@ -5,10 +5,10 @@ Feature: Get requests for group_id - robustness
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 0         | 11       | John        | Doe       | 1     |
       | jane  | 0         | 31       | Jane        | Doe       | 2     |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id |
       | 13 |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 13       | 31         | none        |

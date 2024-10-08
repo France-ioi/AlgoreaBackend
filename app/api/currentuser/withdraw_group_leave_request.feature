@@ -1,19 +1,19 @@
 Feature: User withdraws a request to leave a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id |
       | 11 |
       | 14 |
       | 21 |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id |
       | 21       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 11              | 21             |
       | 14              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          | at                  |
       | 11       | 21        | leave_request | 2019-05-30 11:00:00 |
       | 14       | 21        | leave_request | 2019-05-30 11:00:00 |

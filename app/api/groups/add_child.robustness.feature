@@ -1,7 +1,7 @@
 Feature: Add a parent-child relation between two groups - robustness
 
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name     | type  |
       | 11 | Group A  | Class |
       | 13 | Group B  | Class |
@@ -14,12 +14,12 @@ Feature: Add a parent-child relation between two groups - robustness
       | 77 | Group C  | Class |
       | 78 | Group D  | Class |
       | 79 | Group E  | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login   | group_id | first_name  | last_name |
       | owner   | 21       | Jean-Michel | Blanquer  |
       | student | 25       | Jane        | Doe       |
       | admin   | 27       | John        | Doe       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 11       | 21         | memberships_and_group |
       | 13       | 21         | memberships           |
@@ -31,7 +31,7 @@ Feature: Add a parent-child relation between two groups - robustness
       | 16       | 27         | memberships_and_group |
       | 18       | 27         | memberships_and_group |
       | 19       | 27         | memberships_and_group |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |
     And the groups ancestors are computed

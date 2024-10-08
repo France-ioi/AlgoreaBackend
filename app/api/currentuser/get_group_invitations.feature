@@ -1,6 +1,6 @@
 Feature: Get group invitations for the current user
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | name                          | description                   | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
       | 1  | Class   | Our Class                     | Our class group               | none                                  | {{relativeTimeDB("+96h")}}             | true                   |
       | 2  | Team    | Our Team                      | Our team group                | none                                  | null                                   | false                  |
@@ -20,12 +20,12 @@ Feature: Get group invitations for the current user
       | 34 | Class   | Other group with invitation 2 | Other group with invitation 2 | edit                                  | null                                   | false                  |
       | 35 | Class   | Group with broken change log  | Group with broken change log  | edit                                  | null                                   | false                  |
       | 36 | Class   | Group without inviting user   | Group without inviting user   | edit                                  | null                                   | false                  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login       | temp_user | group_id | first_name  | last_name | grade |
       | owner       | 0         | 21       | Jean-Michel | Blanquer  | 3     |
       | user        | 0         | 12       | John        | Doe       | 1     |
       | anotheruser | 0         | 13       | Another     | User      | 1     |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 5               | 21             |
       | 6               | 21             |
@@ -33,7 +33,7 @@ Feature: Get group invitations for the current user
       | 10              | 21             |
     And the time now is "2020-01-01T01:00:00.001Z"
     And the DB time now is "2020-01-01 01:00:00.001"
-    And the database has the following table 'group_membership_changes':
+    And the database has the following table "group_membership_changes":
       | group_id | member_id | action                | at                            | initiator_id |
       | 1        | 21        | invitation_created    | {{relativeTimeDBMs("-169h")}} | 12           |
       | 2        | 21        | invitation_refused    | {{relativeTimeDBMs("-168h")}} | 21           |
@@ -53,7 +53,7 @@ Feature: Get group invitations for the current user
       | 1        | 12        | invitation_created    | {{relativeTimeDBMs("-170h")}} | 12           |
       | 10       | 21        | joined_by_code        | {{relativeTimeDBMs("-180h")}} | null         |
       | 11       | 21        | joined_by_badge       | {{relativeTimeDBMs("-190h")}} | null         |
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         | at                            |
       | 1        | 21        | invitation   | {{currentTimeDBMs()}}         |
       | 33       | 21        | invitation   | {{currentTimeDBMs()}}         |

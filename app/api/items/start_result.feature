@@ -2,41 +2,41 @@ Feature: Start a result for an item
   Background:
     Given time is frozen
     And the DB time now is "{{currentTimeDB()}}"
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id  | type  | root_activity_id | root_skill_id |
       | 90  | Class | 10               | null          |
       | 91  | Other | 50               | null          |
       | 101 | User  | null             | null          |
       | 102 | Team  | 60               | null          |
       | 111 | User  | null             | 80            |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | john  | 101      |
       | jane  | 111      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 90              | 111            |
       | 90              | 102            |
       | 91              | 111            |
       | 102             | 101            |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | url                                                                     | type    | allows_multiple_attempts | default_language_tag |
       | 10 | null                                                                    | Chapter | 1                        | fr                   |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
       | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
       | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | fr                   |
       | 80 | null                                                                    | Skill   | 0                        | fr                   |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
       | 60             | 70            | 1           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
       | 10               | 70            |
       | 60               | 70            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 101      | 50      | content                  |
       | 102      | 10      | content                  |
@@ -45,13 +45,13 @@ Feature: Start a result for an item
       | 111      | 10      | content_with_descendants |
       | 111      | 50      | content_with_descendants |
       | 111      | 80      | content                  |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          |
       | 0  | 101            | 2019-05-30 11:00:00 |
       | 0  | 102            | 2019-05-30 11:00:00 |
       | 0  | 111            | 2019-05-30 11:00:00 |
       | 1  | 102            | 2019-05-30 11:00:00 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
       | 1          | 102            | 10      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
 
@@ -152,7 +152,7 @@ Feature: Start a result for an item
 
   Scenario: Keeps the previous started_at value
     Given I am the user with id "101"
-    And the database table 'results' has also the following rows:
+    And the database table "results" has also the following rows:
       | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
       | 1          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
     When I send a POST request to "/items/10/60/start-result?as_team_id=102&attempt_id=1"
@@ -185,7 +185,7 @@ Feature: Start a result for an item
 
   Scenario: Sets started_at of an existing result
     Given I am the user with id "101"
-    And the database table 'results' has also the following rows:
+    And the database table "results" has also the following rows:
       | attempt_id | participant_id | item_id | started_at | latest_activity_at  |
       | 1          | 102            | 60      | null       | 2019-05-30 11:00:00 |
     When I send a POST request to "/items/10/60/start-result?as_team_id=102&attempt_id=1"

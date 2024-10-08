@@ -1,19 +1,19 @@
 Feature: User sends a request to leave a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | require_lock_membership_approval_until |
       | 11 | 3000-01-01 00:00:00                    |
       | 14 | 4000-01-01 00:00:00                    |
       | 21 | null                                   |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id |
       | 21       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 11              | 21             | 2019-05-30 11:00:00         |
       | 14              | 21             | 2019-06-30 11:00:00         |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          | at                      |
       | 14       | 21        | leave_request | 2019-05-30 11:00:00.001 |
 

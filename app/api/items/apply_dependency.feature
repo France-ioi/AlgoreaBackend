@@ -1,6 +1,6 @@
 Feature: Apply an item dependency
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name       | grade | type  |
       | 11 | jdoe       | -2    | User  |
       | 13 | Group B    | -2    | Team  |
@@ -10,20 +10,20 @@ Feature: Apply an item dependency
       | 22 | info       | -2    | User  |
       | 23 | jane       | -2    | User  |
       | 26 | team       | -2    | Team  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login      | temp_user | group_id | default_language |
       | jdoe       | 0         | 11       |                  |
       | nosolution | 0         | 14       |                  |
       | fr         | 0         | 17       | fr               |
       | info       | 0         | 22       |                  |
       | jane       | 0         | 23       |                  |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type    | default_language_tag | requires_explicit_entry |
       | 100 | Task    | en                   | true                    |
       | 200 | Task    | en                   | true                    |
       | 210 | Chapter | en                   | false                   |
       | 220 | Chapter | en                   | false                   |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |
       | 13              | 17             |
@@ -33,21 +33,21 @@ Feature: Apply an item dependency
       | 26              | 11             |
       | 26              | 22             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id | can_watch_members |
       | 22         | 15       | true              |
-    And the database has the following table 'item_dependencies':
+    And the database has the following table "item_dependencies":
       | item_id | dependent_item_id | score | grant_content_view |
       | 100     | 200               | 22    | true               |
       | 100     | 220               | 10    | true               |
       | 200     | 210               | 20    | true               |
       | 200     | 220               | 30    | false              |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | source_group_id | origin         | latest_update_at    | can_view                 | can_enter_from      | can_enter_until     | can_grant_view | can_watch | can_edit | can_make_session_official | is_owner |
       | 22       | 200     | 22              | item_unlocking | 2019-05-30 11:00:00 | info                     | 3019-12-31 23:59:59 | 2020-01-31 23:59:59 | none           | none      | none     | false                     | false    |
       | 22       | 210     | 22              | item_unlocking | 2019-05-30 11:00:00 | info                     | 2019-12-31 23:59:59 | 2020-01-31 23:59:59 | none           | none      | none     | false                     | false    |
       | 26       | 210     | 26              | item_unlocking | 2019-05-30 11:00:00 | content_with_descendants | 2019-12-31 23:59:59 | 2020-01-31 23:59:59 | none           | none      | none     | false                     | false    |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
       | 11       | 200     | solution                 | content                  | children           | result              | true               |
       | 11       | 210     | solution                 | none                     | all                | none                | true               |
@@ -67,10 +67,10 @@ Feature: Apply an item dependency
       | 26       | 200     | solution                 | none                     | none               | none                | false              |
       | 26       | 210     | content_with_descendants | none                     | none               | none                | false              |
       | 26       | 220     | info                     | none                     | none               | none                | false              |
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | fr  |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | root_item_id | parent_attempt_id |
       | 0  | 11             | 2019-05-30 10:00:00 | null         | null              |
       | 0  | 13             | 2019-05-30 10:00:00 | null         | null              |
@@ -80,7 +80,7 @@ Feature: Apply an item dependency
       | 1  | 13             | 2019-05-30 11:00:00 | null         | null              |
       | 1  | 17             | 2019-05-30 10:00:00 | 200          | 0                 |
       | 1  | 26             | 2019-05-30 10:00:00 | null         | null              |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at        |
       | 0          | 11             | 100     | null                | 2019-05-30 11:00:01 | 22             | null                |
       | 0          | 11             | 200     | null                | 2019-05-30 11:00:01 | 11.1           | null                |

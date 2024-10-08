@@ -1,6 +1,6 @@
 Feature: Update thread
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type  |
       | 1  | john    | User  |
       | 2  | manager | User  |
@@ -15,14 +15,14 @@ Feature: Update thread
       | 50 | Group   | Class |
       | 51 | Group   | Class |
       | 60 | Group   | Class |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login   | group_id |
       | john    | 1        |
       | manager | 2        |
       | jack    | 3        |
       | jess    | 4        |
       | owner   | 5        |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 2              |
       | 10              | 3              |
@@ -38,7 +38,7 @@ Feature: Update thread
       | 51              | 4              |
       | 60              | 5              |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag | type    |
       | 2000 | en                   | Task    |
       | 2001 | en                   | Task    |
@@ -52,7 +52,7 @@ Feature: Update thread
       | 3005 | en                   | Chapter |
       | 3006 | en                   | Chapter |
       | 3010 | en                   | Task    |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | request_help_propagation | child_order |
       | 3004           | 3005          | 1                        | 1           |
       | 3004           | 2007          | 1                        | 2           |
@@ -60,7 +60,7 @@ Feature: Update thread
       | 3005           | 2008          | 1                        | 2           |
       | 3006           | 2009          | 1                        | 1           |
       | 3006           | 2010          | 1                        | 2           |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | source_group_id | item_id | can_request_help_to | is_owner |
       | 3        | 11              | 2000    | 12                  | 0        |
       | 3        | 11              | 2001    | 12                  | 0        |
@@ -68,7 +68,7 @@ Feature: Update thread
       | 11       | 11              | 2002    | 12                  | 0        |
       | 11       | 11              | 2003    | 12                  | 0        |
       | 12       | 11              | 3004    | 12                  | 0        |
-    And the database has the following table 'threads':
+    And the database has the following table "threads":
       | item_id | participant_id | status | helper_group_id | latest_update_at |
     And the time now is "2022-01-01T00:00:00Z"
 
@@ -114,8 +114,8 @@ Feature: Update thread
   Scenario: Can write to thread condition (2) when status is not set
     Given I am the user with id "2"
     And there is a thread with "item_id=20,participant_id=3"
-    And I can watch answer on item with id "20"
-    And I can watch the participant with id "3"
+    And I have the watch permission set to "answer" on the item 20
+    And I am a manager of the group 3 and can watch for submissions from the group and its descendants
     When I send a PUT request to "/items/20/participant/3/thread" with the following body:
       """
       {
@@ -132,7 +132,7 @@ Feature: Update thread
     Given I am the user with id "2"
     And there is a thread with "item_id=30,participant_id=3"
     And I am part of the helper group of the thread
-    And I can watch answer on item with id "30"
+    And I have the watch permission set to "answer" on the item 30
     When I send a PUT request to "/items/30/participant/3/thread" with the following body:
       """
       {
@@ -149,7 +149,7 @@ Feature: Update thread
     Given I am the user with id "4"
     And there is a thread with "item_id=40,participant_id=3"
     And I am part of the helper group of the thread
-    And I have validated the item with id "40"
+    And I have a validated result on the item 40
     When I send a PUT request to "/items/40/participant/3/thread" with the following body:
       """
       {
@@ -215,7 +215,7 @@ Feature: Update thread
   Scenario Outline: Participant of a thread can always switch the thread from open to any other status
     Given I am the user with id "3"
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>"
-    And I can watch none on item with id "<item_id>"
+    And I have the watch permission set to "none" on the item <item_id>
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
       {
@@ -236,8 +236,8 @@ Feature: Update thread
 
   Scenario Outline: A user who has can_watch>=answer on the item AND can_watch_members on the participant can always switch to an open status when thread exists
     Given I am the user with id "2"
-    And I can watch answer on item with id "<item_id>"
-    And I can watch the participant with id "3"
+    And I have the watch permission set to "answer" on the item <item_id>
+    And I am a manager of the group 3 and can watch for submissions from the group and its descendants
     And there is a thread with "item_id=<item_id>,participant_id=3,status=closed"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
@@ -260,8 +260,8 @@ Feature: Update thread
 
   Scenario Outline: A user who has can_watch>=answer on the item AND can_watch_members on the participant can always switch to an open status when thread doesn't exists
     Given I am the user with id "2"
-    And I can watch answer on item with id "<item_id>"
-    And I can watch the participant with id "3"
+    And I have the watch permission set to "answer" on the item <item_id>
+    And I am a manager of the group 3 and can watch for submissions from the group and its descendants
     And there is no thread with "item_id=<item_id>,participant_id=3"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
@@ -282,7 +282,7 @@ Feature: Update thread
 
   Scenario Outline: Can switch to open if part of the group the participant has requested help to AND can_watch>=answer on the item
     Given I am the user with id "4"
-    And I can watch answer on item with id "<item_id>"
+    And I have the watch permission set to "answer" on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>,helper_group_id=50"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
@@ -303,7 +303,7 @@ Feature: Update thread
 
   Scenario Outline: Can switch to open if part of the group the participant has requested help to AND have validated the item
     Given I am the user with id "4"
-    And I have validated the item with id "<item_id>"
+    And I have a validated result on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>,helper_group_id=50"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
@@ -324,7 +324,7 @@ Feature: Update thread
 
   Scenario: If status is open and not provided (no change): update helper_group_id
     Given I am the user with id "2"
-    And I can watch answer on item with id "260"
+    And I have the watch permission set to "answer" on the item 260
     And there is a thread with "item_id=260,participant_id=3,helper_group_id=10"
     When I send a PUT request to "/items/260/participant/3/thread" with the following body:
       """
@@ -339,7 +339,7 @@ Feature: Update thread
 
   Scenario Outline: Participant of a thread can switch from non-open to open status when allowed to request help on the item
     Given I am the user with id "3"
-    And I can watch none on item with id "<item_id>"
+    And I have the watch permission set to "none" on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=closed,helper_group_id=<old_helper_group_id>"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
@@ -362,7 +362,7 @@ Feature: Update thread
 
   Scenario Outline: Participant of a thread can switch from non-open to open status when allowed to request help on the item when thread doesn't exists
     Given I am the user with id "3"
-    And I can watch none on item with id "<item_id>"
+    And I have the watch permission set to "none" on the item <item_id>
     And there is no thread with "item_id=<item_id>,participant_id=3"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """

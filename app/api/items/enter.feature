@@ -1,6 +1,6 @@
 Feature: Enters a contest as a group (user self or team) (contestEnter)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name         | type                | root_activity_id |
       | 10 | Class        | Class               | 10               |
       | 11 | Team 2       | Team                | 60               |
@@ -10,31 +10,31 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 51 | jack         | User                | null             |
       | 98 | item60-group | ContestParticipants | null             |
       | 99 | item50-group | ContestParticipants | null             |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
       | john  | 31       | John        | Doe       |
       | jane  | 41       | Jane        | null      |
       | jack  | 51       | Jack        | Daniel    |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 31             |
       | 11              | 31             |
       | 11              | 41             |
       | 11              | 51             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag |
       | 10 | fr                   |
       | 20 | fr                   |
       | 30 | fr                   |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 20               | 30            |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 20             | 30            | 1           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 11       | 30      | content            |
       | 31       | 30      | content            |
@@ -42,11 +42,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 98       | 20      | info               |
       | 99       | 10      | info               |
       | 99       | 20      | info               |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          |
       | 0  | 11             | 2019-05-30 11:00:00 |
       | 0  | 31             | 2019-05-30 11:00:00 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 11             | 30      | null                |
       | 0          | 31             | 10      | 2019-05-30 11:00:00 |
@@ -54,25 +54,25 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the DB time now is "3019-10-10 10:10:10"
 
   Scenario: Enter an individual contest
-    Given the database table 'items' has also the following row:
+    Given the database table "items" has also the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag | entering_time_min   | entering_time_max   |
       | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   | 2007-01-01 00:00:00 | 5000-01-01 00:00:00 |
-    And the database table 'items_ancestors' has also the following row:
+    And the database table "items_ancestors" has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
-    And the database table 'items_items' has also the following row:
+    And the database table "items_items" has also the following row:
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 1           |
-    And the database table 'permissions_granted' has also the following rows:
+    And the database table "permissions_granted" has also the following rows:
       | group_id | item_id | can_enter_from      | can_enter_until     | source_group_id |
       | 11       | 50      | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 | 11              |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 10      | content                  |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
@@ -122,23 +122,23 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Enter a team-only contest
-    Given the database table 'items' has also the following row:
+    Given the database table "items" has also the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
       | 60 | 05:05:05 | 1                       | Team                   | Half                             | 3                   | 98                    | fr                   |
-    And the database table 'items_ancestors' has also the following row:
+    And the database table "items_ancestors" has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
-    And the database table 'items_items' has also the following row:
+    And the database table "items_items" has also the following row:
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
-    And the database table 'permissions_granted' has also the following rows:
+    And the database table "permissions_granted" has also the following rows:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | content                  |
       | 21       | 60      | content_with_descendants |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 11       | 60      | 01:01:01        |
       | 31       | 60      | 02:02:02        |
@@ -192,26 +192,26 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Reenter a contest as a team
-    Given the database table 'items' has also the following row:
+    Given the database table "items" has also the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
       | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                             | 10                  | 99                    | fr                   |
-    And the database table 'groups_groups' has also the following row:
+    And the database table "groups_groups" has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 99              | 11             | 2019-05-30 11:00:00 |
-    And the database table 'permissions_granted' has also the following rows:
+    And the database table "permissions_granted" has also the following rows:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | solution                 |
       | 31       | 60      | content_with_descendants |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 11       | 60      | 02:02:02        |
-    And the database table 'attempts' has also the following row:
+    And the database table "attempts" has also the following row:
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 1  | 11             | 2019-05-29 11:00:00 | 31         | 0                 | 60           | 2019-05-30 11:00:00      |
-    And the database table 'results' has also the following row:
+    And the database table "results" has also the following row:
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 11             | 60      | 2019-05-29 11:00:00 |
     And I am the user with id "31"
@@ -264,18 +264,18 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Enter a contest that doesn't have items.participants_group_id set
-    Given the database table 'items' has also the following row:
+    Given the database table "items" has also the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | default_language_tag |
       | 50 | 01:01:01 | 1                       | User                   | None                             | fr                   |
-    And the database table 'permissions_granted' has also the following row:
+    And the database table "permissions_granted" has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" has also the following row:
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
@@ -312,24 +312,24 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       """
 
   Scenario: Enter a contest with empty duration
-    Given the database table 'items' has also the following row:
+    Given the database table "items" has also the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
       | 50 | null     | 1                       | User                   | None                             | 99                    | fr                   |
-    And the database table 'items_ancestors' has also the following row:
+    And the database table "items_ancestors" has also the following row:
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
-    And the database table 'items_items' has also the following row:
+    And the database table "items_items" has also the following row:
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 1           |
-    And the database table 'permissions_granted' has also the following row:
+    And the database table "permissions_granted" has also the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 50      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
-    And the database table 'permissions_generated' has also the following rows:
+    And the database table "permissions_generated" has also the following rows:
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"

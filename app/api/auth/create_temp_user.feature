@@ -8,11 +8,11 @@ Feature: Create a temporary user
           allUsersGroup: 2
           tempUsersGroup: 4
       """
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | name      | type | text_id   |
       | 2  | AllUsers  | Base | AllUsers  |
       | 4  | TempUsers | User | TempUsers |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 4              |
     And the time now is "2020-07-16T22:02:28Z"

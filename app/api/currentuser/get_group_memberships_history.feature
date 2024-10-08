@@ -1,6 +1,6 @@
 Feature: Get group memberships history for the current user
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | name               |
       | 1  | Class   | Our Class          |
       | 2  | Team    | Our Team           |
@@ -14,12 +14,12 @@ Feature: Get group memberships history for the current user
       | 11 | User    | user               |
       | 13 | User    | jane               |
       | 21 | User    | owner              |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | grade | notifications_read_at |
       | owner | 21       | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38   |
       | user  | 11       | John        | Doe       | 1     | null                  |
       | jane  | 13       | Jane        | Doe       | 2     | 2019-06-29 06:38:38   |
-    And the database has the following table 'group_membership_changes':
+    And the database has the following table "group_membership_changes":
       | group_id | member_id | action                | at                      |
       | 1        | 21        | invitation_created    | 2017-02-28 06:38:38.001 |
       | 2        | 21        | invitation_refused    | 2017-03-29 06:38:38.001 |

@@ -1,6 +1,6 @@
 Feature: End an attempt (itemAttemptEnd) - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type                |
       | 101 | User                |
       | 102 | Team                |
@@ -8,11 +8,11 @@ Feature: End an attempt (itemAttemptEnd) - robustness
       | 201 | ContestParticipants |
       | 202 | ContestParticipants |
       | 203 | ContestParticipants |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | john  | 101      |
       | jane  | 111      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 102             | 101            | 9999-12-31 23:59:59 |
       | 201             | 101            | 9999-12-31 23:59:59 |
@@ -24,24 +24,24 @@ Feature: End an attempt (itemAttemptEnd) - robustness
       | 203             | 102            | 2019-12-31 23:59:59 |
       | 203             | 111            | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | url                                                                     | type    | allows_multiple_attempts | participants_group_id | default_language_tag |
       | 10 | null                                                                    | Chapter | 0                        | 201                   | fr                   |
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0                        | 202                   | fr                   |
       | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | 203                   | fr                   |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 1           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 101      | 50      | content                  |
       | 102      | 60      | content                  |
       | 111      | 10      | content_with_descendants |
       | 111      | 50      | content_with_descendants |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id | allows_submissions_until | ended_at            |
       | 0  | 101            | 10           | null              | 9999-12-31 23:59:59      | null                |
       | 0  | 102            | 10           | null              | 9999-12-31 23:59:59      | null                |

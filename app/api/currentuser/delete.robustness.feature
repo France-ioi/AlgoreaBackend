@@ -1,19 +1,19 @@
 Feature: Delete the current user - robustness
   Background:
     Given the DB time now is "2019-08-09 23:59:59"
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | type  | name      | require_lock_membership_approval_until |
       | 2  | Base  | AllUsers  | null                                   |
       | 4  | Base  | TempUsers | null                                   |
       | 21 | User  | user      | null                                   |
       | 50 | Class | Our class | 2019-08-10 00:00:00                    |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 2               | 4              | null                        |
       | 2               | 21             | null                        |
       | 50              | 21             | 2019-05-30 11:00:00         |
     And the groups ancestors are computed
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | temp_user | login | group_id | login_id |
       | 0         | user  | 21       | 1234567  |
     And the application config is:

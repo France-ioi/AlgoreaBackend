@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-
+	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 	"github.com/jinzhu/gorm"
 
-	"github.com/cucumber/godog"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // registerFeaturesForSessions registers the Gherkin features related to sessions and access tokens.
@@ -32,33 +32,44 @@ func (ctx *TestContext) addSession(session, user, refreshToken string) {
 	sessionID := ctx.getIDOfReference(session)
 	userID := ctx.getIDOfReference(user)
 
-	ctx.addToDatabase("sessions", strconv.FormatInt(sessionID, 10), map[string]interface{}{
-		"session_id":    sessionID,
-		"user_id":       userID,
-		"refresh_token": refreshToken,
+	err := ctx.DBHasTable("sessions", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{
+				{Value: "session_id"}, {Value: "user_id"}, {Value: "refresh_token"},
+			}},
+			{Cells: []*messages.PickleTableCell{
+				{Value: strconv.FormatInt(sessionID, 10)}, {Value: strconv.FormatInt(userID, 10)}, {Value: refreshToken},
+			}},
+		},
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // addAccessToken adds an access token to the database.
 func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt string) {
 	sessionID := ctx.getIDOfReference(session)
 
-	issuedAtDate, err := time.Parse(time.DateTime, issuedAt)
+	_, err := time.Parse(time.DateTime, issuedAt)
 	if err != nil {
 		panic(err)
 	}
 
-	expiresAtDate, err := time.Parse(time.DateTime, expiresAt)
+	_, err = time.Parse(time.DateTime, expiresAt)
 	if err != nil {
 		panic(err)
 	}
 
-	ctx.addToDatabase("access_tokens", token, map[string]interface{}{
-		"session_id": sessionID,
-		"token":      token,
-		"issued_at":  issuedAtDate,
-		"expires_at": expiresAtDate,
+	err = ctx.DBHasTable("access_tokens", &godog.Table{
+		Rows: []*messages.PickleTableRow{
+			{Cells: []*messages.PickleTableCell{{Value: "session_id"}, {Value: "token"}, {Value: "issued_at"}, {Value: "expires_at"}}},
+			{Cells: []*messages.PickleTableCell{{Value: strconv.FormatInt(sessionID, 10)}, {Value: token}, {Value: issuedAt}, {Value: expiresAt}}},
+		},
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // IAm Sets the current user.
