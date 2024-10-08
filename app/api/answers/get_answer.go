@@ -28,7 +28,7 @@ import (
 //				The user is considered as an observer if (s)he is a manager with `can_watch_members`
 //		 		of an ancestor of `answers.participant_id` group.
 //
-//			  The user is considered as a helper if (s)he is an ancestor of the thread's `helper_group_id`
+//			  The user is considered as a helper if (s)he is a descendent of the thread's `helper_group_id`
 //	      for the `answers.participant_id`-`answers.item_id` pair while the thread is active or
 //	      closed less than 2 weeks ago.
 //
