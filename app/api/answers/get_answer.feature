@@ -289,11 +289,11 @@ Feature: Get an answer by id
     }
     """
 
-  Scenario Outline: User has can_watch>=answer on the item and is a thread reader
+  Scenario: User has can_watch>=answer on the item and the thread exists
     Given I am @User
     And I have the watch permission set to "answer" on the item @Item2
     And I am a member of the group @Helper
-    And there is a thread with "item_id=@Item2,participant_id=@Participant,helper_group_id=@Helper,status=<thread_status>,latest_update_at=<thread_latest_update_at>"
+    And there is a thread with "item_id=@Item2,participant_id=@Participant,helper_group_id=@Author,status=closed,latest_update_at={{relativeTimeDB("-1000h")}}"
     And the database has the following table "answers":
       | id  | author_id | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 104 | @Author   | @Participant   | 2          | @Item2  | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
@@ -315,19 +315,13 @@ Feature: Get an answer by id
       "graded_at": null
     }
     """
-  Examples:
-    | thread_status           | thread_latest_update_at        |
-    | waiting_for_participant | 2020-05-30 12:00:00            |
-    | waiting_for_trainer     | 2020-05-30 12:00:00            |
-    | closed                  | {{relativeTimeDB("-335h59m")}} |
 
-  Scenario Outline: User has can_watch>=answer (via an ancestor) on the item and is a thread reader
+  Scenario: User has can_watch>=answer (via an ancestor) on the item and the thread exists
     Given I am @User
     And I am a member of the group @ChildGroupAbleToWatch
     And the group @ChildGroupAbleToWatch is a child of the group @GroupAbleToWatch
     And the group @GroupAbleToWatch has the watch permission set to "answer" on the item @Item2
-    And I am a member of the group @Helper
-    And there is a thread with "item_id=@Item2,participant_id=@Participant,helper_group_id=@Helper,status=<thread_status>,latest_update_at=<thread_latest_update_at>"
+    And there is a thread with "item_id=@Item2,participant_id=@Participant,helper_group_id=@Author,status=closed,latest_update_at={{relativeTimeDB("-1000h")}}"
     And the database has the following table "answers":
       | id  | author_id | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 104 | @Author   | @Participant   | 2          | @Item2  | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
@@ -349,11 +343,6 @@ Feature: Get an answer by id
       "graded_at": null
     }
     """
-  Examples:
-    | thread_status           | thread_latest_update_at        |
-    | waiting_for_participant | 2020-05-30 12:00:00            |
-    | waiting_for_trainer     | 2020-05-30 12:00:00            |
-    | closed                  | {{relativeTimeDB("-335h59m")}} |
 
   Scenario Outline: User has can_watch>=result on the item and is a thread reader, and has a validated result on the item
     Given I am @User

@@ -105,12 +105,12 @@ Feature: Get user's answer by id
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: No access rights to the answer (the user is from the helper group with can_watch>=answer, but the thread has been expired)
+  Scenario: No access rights to the answer (the user has can_watch>=answer, but the thread doesn't exist)
     Given I am @User
-    And I am a member of the group @Helper
     And I have the watch permission set to "answer" on the item 200
     And there is a user @Participant
-    And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Helper,status=closed,latest_update_at={{relativeTimeDBMs("-336h")}}"
+    And there is a thread with "item_id=200,participant_id=@User,helper_group_id=@Helper,status=closed,latest_update_at={{relativeTimeDBMs("-1h")}}"
+    And there is a thread with "item_id=210,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
     And the database table "answers" has also the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
@@ -148,10 +148,12 @@ Feature: Get user's answer by id
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: No access rights to the answer (the user is from the helper group with can_watch>=answer, but there is no thread for the participant-item pair for this helper group)
+  Scenario: No access rights to the answer (the user is from the helper group with can_watch>=result and has a validated results,
+            but there is no thread for the participant-item pair for this helper group)
     Given I am @User
     And I am a member of the group @Helper
-    And I have the watch permission set to "answer" on the item 200
+    And I have the watch permission set to "result" on the item 200
+    And I have a validated result on the item 200
     And there is a user @Participant
     And there is a thread with "item_id=200,participant_id=@User,helper_group_id=@Helper,status=waiting_for_participant"
     And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Participant,status=waiting_for_participant"
