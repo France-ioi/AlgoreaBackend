@@ -68,9 +68,8 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 		return err
 	}
 
-	// do request
+	//nolint:bodyclose // the body is closed in SendTestHTTPRequest
 	response, body, err := SendTestHTTPRequest(testServer, method, path, headers, strings.NewReader(reqBody))
-	defer func() { _ = response.Body.Close() }()
 	if err != nil {
 		return err
 	}
