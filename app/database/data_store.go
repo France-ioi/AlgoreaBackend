@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
@@ -219,14 +220,14 @@ const (
 // InTransaction executes the given function in a transaction and commits.
 // If a propagation is scheduled, it will be run after the transaction commit,
 // so we can run each step of the propagation in a separate transaction.
-func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
+func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
 	s.DB.ctx = context.WithValue(s.DB.ctx, awaitingPropagationsContextKey, &propagationsBitField{})
 	err := s.inTransaction(func(db *DB) error {
 		dataStore := NewDataStoreWithTable(db, s.tableName)
 		err := txFunc(dataStore)
 
 		return err
-	})
+	}, txOptions...)
 	if err != nil {
 		return err
 	}
