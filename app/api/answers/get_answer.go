@@ -27,7 +27,7 @@ import (
 //
 //			- If the user is a thread reader (when the thread for the `answers.participant_id`-`answers.item_id` pair exists)
 //				- (s)he should have `can_watch` >= 'answer' permission on the `answers.item_id` OR
-//				- (s)he should be a descendent of the thread's `helper_group_id` and have `can_watch` >= 'result' permission
+//				- (s)he should be a descendant of the thread's `helper_group_id` and have `can_watch` >= 'result' permission
 //				  on the `answers.item_id` together with a validated result (personally or as a team) on the `answers.item_id`
 //				  while the thread should be active or closed less than 2 weeks ago.
 //
