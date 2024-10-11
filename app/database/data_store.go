@@ -289,10 +289,10 @@ func (s *DataStore) SchedulePermissionsPropagation() {
 
 // WithForeignKeyChecksDisabled executes the given function with foreign keys checking disabled
 // (wraps it up in a transaction if no transaction started).
-func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) error) error {
+func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
 	return s.withForeignKeyChecksDisabled(func(db *DB) error {
 		return blockFunc(NewDataStoreWithTable(db, s.tableName))
-	})
+	}, txOptions...)
 }
 
 // IsInTransaction returns true if the store operates in a DB transaction at the moment.
