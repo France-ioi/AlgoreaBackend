@@ -21,7 +21,12 @@ func IsForeignConstraintError(err error) bool {
 	return mysqldb.IsMysqlError(err, mysqldb.ForeignConstraintError)
 }
 
-// IsLockDeadlockError checks whether an error corresponds to a deadlock when trying to get a lock.
-func IsLockDeadlockError(err error) bool {
-	return mysqldb.IsMysqlError(err, mysqldb.LockDeadlockError)
+// IsDeadlockError checks whether an error corresponds to a deadlock when trying to get a lock.
+func IsDeadlockError(err error) bool {
+	return mysqldb.IsMysqlError(err, mysqldb.DeadlockError)
+}
+
+// IsLockWaitTimeoutExceededError checks whether an error corresponds to a lock wait timeout exceeded.
+func IsLockWaitTimeoutExceededError(err error) bool {
+	return mysqldb.IsMysqlError(err, mysqldb.LockWaitTimeoutExceededError)
 }

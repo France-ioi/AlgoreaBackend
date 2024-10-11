@@ -13,8 +13,10 @@ type MysqlErrorNumber uint16
 const (
 	// DuplicateEntryError represents a mysql Duplicate Entry Error.
 	DuplicateEntryError MysqlErrorNumber = 1062
-	// LockDeadlockError represents a mysql Lock Deadlock Error.
-	LockDeadlockError MysqlErrorNumber = 1213
+	// LockWaitTimeoutExceededError represents a mysql Lock Wait Timeout Exceeded Error.
+	LockWaitTimeoutExceededError MysqlErrorNumber = 1205
+	// DeadlockError represents the mysql error "Deadlock found when trying to get lock; try restarting transaction".
+	DeadlockError MysqlErrorNumber = 1213
 	// ForeignConstraintError represents a mysql Foreign Constraint Error.
 	ForeignConstraintError MysqlErrorNumber = 1452
 )
