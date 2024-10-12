@@ -148,7 +148,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		if err != nil {
 			a.Panicf("can't parse duration: %s", err.Error())
 		}
-		return reflect.ValueOf(time.Now().UTC().Add(duration).Truncate(time.Second).Format("2006-01-02 15:04:05"))
+		return reflect.ValueOf(time.Now().UTC().Add(duration).Truncate(time.Second).Format(time.DateTime))
 	})
 
 	addRelativeTimeDBMsFunction(set)

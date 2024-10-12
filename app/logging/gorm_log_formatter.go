@@ -119,7 +119,7 @@ func formatGormDBLog(values ...interface{}) (messages []interface{}) {
 		sql             string
 		formattedValues []string
 		level           = values[0]
-		currentTime     = "\n\033[33m[" + gorm.NowFunc().Format("2006-01-02 15:04:05") + "]\033[0m"
+		currentTime     = "\n\033[33m[" + gorm.NowFunc().Format(time.DateTime) + "]\033[0m"
 		source          = fmt.Sprintf("\033[35m(%v)\033[0m", values[1])
 	)
 

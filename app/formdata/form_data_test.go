@@ -154,7 +154,7 @@ func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 			data:     "2019-05-30T14:00:00ZZ",
 			want:     database.Time(time.Time{}),
 			wantErr: &time.ParseError{
-				Layout:     "2006-01-02T15:04:05Z07:00",
+				Layout:     time.RFC3339,
 				Value:      "2019-05-30T14:00:00ZZ",
 				LayoutElem: "",
 				ValueElem:  "Z",

@@ -45,7 +45,7 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 		"results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
-	oldTS := time.Now().UTC().Add(-time.Minute).Format("2006-01-02 15:04:05")
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
 		generateGrantedPermissionsRow("1001", "content", oldTS, "9999-12-31 23:59:58", oldTS),
 		generateGrantedPermissionsRow("1002", "content_with_descendants", oldTS, "9999-12-31 23:59:58", oldTS),
@@ -103,7 +103,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
-	oldTS := time.Now().UTC().Add(-time.Minute).Format("2006-01-02 15:04:05")
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
 		generateGrantedPermissionsRow("1001", "content", oldTS, "9999-12-31 23:59:59", oldTS),
 		generateGrantedPermissionsRow("1002", "content", oldTS, "9999-12-31 23:59:59", oldTS),
@@ -133,8 +133,8 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
-	oldTS := time.Now().UTC().Add(-time.Minute).Format("2006-01-02 15:04:05")
-	futureTS := time.Now().UTC().Add(time.Minute).Format("2006-01-02 15:04:05")
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
+	futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
 		generateGrantedPermissionsRow("1001", "none", futureTS, "9999-12-31 23:59:59", oldTS),
 		generateGrantedPermissionsRow("1002", "none", futureTS, "9999-12-31 23:59:59", oldTS),
