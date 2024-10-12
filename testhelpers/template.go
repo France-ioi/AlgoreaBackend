@@ -81,11 +81,11 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	})
 
 	set.AddGlobalFunc("currentTimeDB", func(a jet.Arguments) reflect.Value {
-		return reflect.ValueOf(time.Now().UTC().Round(time.Microsecond).Format("2006-01-02 15:04:05.999999"))
+		return reflect.ValueOf(time.Now().UTC().Truncate(time.Microsecond).Format("2006-01-02 15:04:05.999999"))
 	})
 
 	set.AddGlobalFunc("currentTimeDBMs", func(a jet.Arguments) reflect.Value {
-		return reflect.ValueOf(time.Now().UTC().Round(time.Millisecond).Format("2006-01-02 15:04:05.000"))
+		return reflect.ValueOf(time.Now().UTC().Truncate(time.Millisecond).Format("2006-01-02 15:04:05.000"))
 	})
 
 	set.AddGlobalFunc("generateToken", func(a jet.Arguments) reflect.Value {
@@ -148,7 +148,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		if err != nil {
 			a.Panicf("can't parse duration: %s", err.Error())
 		}
-		return reflect.ValueOf(time.Now().UTC().Add(duration).Round(time.Second).Format("2006-01-02 15:04:05"))
+		return reflect.ValueOf(time.Now().UTC().Add(duration).Truncate(time.Second).Format("2006-01-02 15:04:05"))
 	})
 
 	addRelativeTimeDBMsFunction(set)
@@ -169,7 +169,7 @@ func addRelativeTimeDBMsFunction(set *jet.Set) *jet.Set {
 		if err != nil {
 			a.Panicf("can't parse duration: %s", err.Error())
 		}
-		return reflect.ValueOf(time.Now().UTC().Add(duration).Round(time.Millisecond).Format("2006-01-02 15:04:05.000"))
+		return reflect.ValueOf(time.Now().UTC().Add(duration).Truncate(time.Millisecond).Format("2006-01-02 15:04:05.000"))
 	})
 }
 
@@ -181,7 +181,7 @@ func addtimeDBToRFC3339Function(set *jet.Set) {
 		if err != nil {
 			a.Panicf("can't parse mysql datetime: %s", err.Error())
 		}
-		parsedTime = parsedTime.Round(time.Second)
+		parsedTime = parsedTime.Truncate(time.Second)
 		return reflect.ValueOf(parsedTime.Format(time.RFC3339))
 	})
 }
