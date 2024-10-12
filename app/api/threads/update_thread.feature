@@ -70,7 +70,7 @@ Feature: Update thread
       | 12       | 11              | 3004    | 12                  | 0        |
     And the database has the following table "threads":
       | item_id | participant_id | status | helper_group_id | latest_update_at |
-    And the server time now is "2022-01-01T00:00:00Z"
+    And the DB time now is "2022-01-01 00:00:00"
 
   Scenario: Create a thread if it doesn't exist
     Given I am the user with id "3"
