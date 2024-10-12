@@ -28,7 +28,7 @@ Feature: Ask for a hint
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
       | 201      | 50      | content            |
-    And time is frozen
+    And the server time is frozen
 
   Scenario: User is able to ask for a hint
     Given the database has the following table "attempts":

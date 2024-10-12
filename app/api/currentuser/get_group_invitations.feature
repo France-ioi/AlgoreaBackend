@@ -32,7 +32,6 @@ Feature: Get group invitations for the current user
       | 9               | 21             |
       | 10              | 21             |
     And the time now is "2020-01-01T01:00:00.001Z"
-    And the DB time now is "2020-01-01 01:00:00.001"
     And the database has the following table "group_membership_changes":
       | group_id | member_id | action                | at                            | initiator_id |
       | 1        | 21        | invitation_created    | {{relativeTimeDBMs("-169h")}} | 12           |

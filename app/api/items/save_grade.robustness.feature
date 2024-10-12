@@ -37,7 +37,7 @@ Feature: Save grading result - robustness
     And the database has the following table "answers":
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
-    And time is frozen
+    And the server time is frozen
 
   Scenario: Wrong JSON in request
     When I send a POST request to "/items/save-grade" with the following body:
@@ -62,7 +62,7 @@ Feature: Save grading result - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: Expired score_token
-    Given the time now is "2020-01-01T00:00:00Z"
+    Given the server time now is "2020-01-01T00:00:00Z"
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -74,7 +74,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    Then the time now is "2020-01-03T00:00:00Z"
+    Then the server time now is "2020-01-03T00:00:00Z"
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
@@ -131,7 +131,7 @@ Feature: Save grading result - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is expired
-    Given the time now is "2020-01-01T00:00:00Z"
+    Given the server time now is "2020-01-01T00:00:00Z"
     And "answerToken" is a token signed by the app with the following payload:
       """
       {
@@ -143,7 +143,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    Then the time now is "2020-01-03T00:00:00Z"
+    Then the server time now is "2020-01-03T00:00:00Z"
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {

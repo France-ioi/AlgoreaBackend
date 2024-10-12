@@ -54,7 +54,6 @@ Feature: Get user's answer by id
       | 13       | 15         | false             |
       | 13       | 16         | true              |
       | 13       | 17         | true              |
-    And the DB time now is "2024-10-07 20:13:14"
     And the time now is "2024-10-07T20:13:14Z"
 
   Scenario: Wrong answer_id

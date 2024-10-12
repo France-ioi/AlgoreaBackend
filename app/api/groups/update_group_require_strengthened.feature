@@ -14,7 +14,6 @@ Feature:
       | @SubGroup | @Class       | @Student3,@Student4 |                                             |                                              |                              |
     And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     And the time now is "2020-01-01T01:00:00.001Z"
-    And the DB time now is "2020-01-01 01:00:00.001"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -51,7 +50,7 @@ Feature:
       | @School |              | @Teacher        |                                             |                                              |                              |
       | @Class  | @ClassParent | <group_members> | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
     And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
-    And the time now is "2020-01-01T01:00:00.001Z"
+    And the server time now is "2020-01-01T01:00:00.001Z"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -104,7 +103,6 @@ Feature:
   Scenario: Should reject all pending requests when approval_change_action = 'empty'
     Given I am @Teacher
     And the time now is "2020-01-01T01:00:00.001Z"
-    And the DB time now is "2020-01-01 01:00:00.001"
     And there are the following groups:
       | group   | parent       | members                       | require_watch_approval |
       | @School |              | @Teacher                      |                        |
@@ -154,7 +152,6 @@ Feature:
       | @Other   | @Student5 | join_request  | 2020-01-01 00:00:15.000 |
     And the group @Teacher is a manager of the group @ClassParent and can can manage memberships and the group
     And the time now is "2020-01-01T01:00:00.001Z"
-    And the DB time now is "2020-01-01 01:00:00.001"
     When I send a PUT request to "/groups/@Class" with the following body:
     """
     {
@@ -203,7 +200,6 @@ Feature:
   Scenario: Should reject all pending leave requests when require_lock_membership_approval_until is strengthened and approval_change_action = 'empty'
     Given I am @Teacher
     And the time now is "2020-01-01T01:00:00.001Z"
-    And the DB time now is "2020-01-01 01:00:00.001"
     And there are the following groups:
       | group   | parent       | members                       | require_lock_membership_approval_until |
       | @School |              | @Teacher                      |                                        |

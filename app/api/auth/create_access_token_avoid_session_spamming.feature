@@ -13,7 +13,6 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
           TempUsersGroup: @TempUsers
       """
     And the time now is "2020-01-01T01:00:00Z"
-    And the DB time now is "2020-01-01 01:00:00"
     # login_id is used to match with the "id" returned by the login module
     And there are the following users:
       | user                  | login_id |

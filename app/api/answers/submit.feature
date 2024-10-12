@@ -36,7 +36,7 @@ Feature: Submit a new answer
       | 1          | 201            | 50      | [{"rotorIndex":0,"cellRank":0}] | 2            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
 
   Scenario: User is able to submit a new answer
-    Given time is frozen
+    Given the server time is frozen
     And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
@@ -88,7 +88,7 @@ Feature: Submit a new answer
     And the table "results_propagate" should be empty
 
   Scenario: User is able to submit a new answer for his team (participant_id is the first integer in the idAttempt in the task token)
-    Given time is frozen
+    Given the server time is frozen
     And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
@@ -140,7 +140,7 @@ Feature: Submit a new answer
   And the table "results_propagate" should be empty
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
-    Given time is frozen
+    Given the server time is frozen
     And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
