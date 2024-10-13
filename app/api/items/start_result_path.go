@@ -165,9 +165,9 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Select("root_activity_id, root_skill_id")
 	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
-		groupsManagedByParticipant.Select("groups.root_activity_id").SubQuery())
+		groupsManagedByParticipant.Select("groups.root_activity_id"))
 	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
-		groupsManagedByParticipant.Select("groups.root_skill_id").SubQuery())
+		groupsManagedByParticipant.Select("groups.root_skill_id"))
 
 	query := store.Table("items as items0").WithWriteLock()
 	for i := 0; i < len(ids); i++ {

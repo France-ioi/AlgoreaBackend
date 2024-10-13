@@ -251,13 +251,13 @@ func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
 }
 
 // Union specifies UNION of two queries (receiver UNION query).
-func (conn *DB) Union(query interface{}) *DB {
-	return conn.New().Raw("? UNION ?", conn.db.SubQuery(), query)
+func (conn *DB) Union(query *DB) *DB {
+	return conn.New().Raw("? UNION ?", conn.SubQuery(), query.SubQuery())
 }
 
 // UnionAll specifies UNION ALL of two queries (receiver UNION ALL query).
-func (conn *DB) UnionAll(query interface{}) *DB {
-	return conn.New().Raw("? UNION ALL ?", conn.db.SubQuery(), query)
+func (conn *DB) UnionAll(query *DB) *DB {
+	return conn.New().Raw("? UNION ALL ?", conn.SubQuery(), query.SubQuery())
 }
 
 // With adds a common table expression (CTE) to the query.

@@ -78,7 +78,6 @@ func patchDatabaseDBMethods(timeStr string) {
 	patchDatabaseDBMethodsWithIntQueryAndArgs(timeStr)
 	patchDatabaseDBMethodsWithStringQueryAndArgs(timeStr)
 	patchDatabaseDBMethodsWithStringQuery(timeStr)
-	patchDatabaseDBMethodsWithIntQuery(timeStr)
 	var orderGuard *monkey.PatchGuard
 	orderGuard = monkey.PatchInstanceMethod(
 		reflect.TypeOf(&database.DB{}), "Order",
@@ -132,30 +131,6 @@ func patchDatabaseDBMethods(timeStr string) {
 			return db.Delete(where...)
 		})
 	patchedMethods = append(patchedMethods, deleteGuard)
-}
-
-func patchDatabaseDBMethodsWithIntQuery(timeStr string) {
-	interfaceDBMethods := [...]string{
-		"Union", "UnionAll",
-	}
-	interfaceDBGuards := make(map[string]*monkey.PatchGuard, len(interfaceDBMethods))
-	for _, methodName := range interfaceDBMethods {
-		methodName := methodName
-		interfaceDBGuards[methodName] = monkey.PatchInstanceMethod(
-			reflect.TypeOf(&database.DB{}), methodName,
-			func(db *database.DB, query interface{}) *database.DB {
-				interfaceDBGuards[methodName].Unpatch()
-				defer interfaceDBGuards[methodName].Restore()
-				if queryStr, ok := query.(string); ok {
-					query = nowRegexp.ReplaceAllString(queryStr, timeStr)
-				}
-				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
-				reflArgs := []reflect.Value{reflect.ValueOf(query)}
-
-				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
-			})
-		patchedMethods = append(patchedMethods, interfaceDBGuards[methodName])
-	}
 }
 
 func patchDatabaseDBMethodsWithStringQuery(timeStr string) {

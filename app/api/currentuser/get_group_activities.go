@@ -263,12 +263,12 @@ func getRootItemsFromDB(
 			Where("groups_ancestors_active.child_group_id IN(?)",
 				groupManagedByUserOrCurrentQuery.SubQuery())
 	} else {
-		groupsQuery := store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
-			groupsManagedByUserQuery.SubQuery(),
-			store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
-				Select("child_group_id").QueryExpr(), // descendants of managed groups
-			store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
-				Select("ancestor_group_id").QueryExpr()) // ancestors of managed groups
+		groupsQuery := store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
+			Select("child_group_id"). // descendants of managed groups
+			UnionAll(
+				store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
+					Select("ancestor_group_id")). // ancestors of managed groups
+			With("managed_groups", groupsManagedByUserQuery)
 		itemsWithResultsQuery = itemsWithResultsQuery.
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", groupsQuery.QueryExpr())
 		groupID = watchedGroupID

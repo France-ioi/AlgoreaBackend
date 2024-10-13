@@ -392,18 +392,18 @@ func TestDB_QueryConstructors(t *testing.T) {
 			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
 				dbTwo := db.Table("otherTable")
 				dbs = append(dbs, dbTwo)
-				return db.Union(dbTwo.QueryExpr()), dbs
+				return db.Union(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION SELECT * FROM `otherTable`",
+			expectedQuery: "(SELECT * FROM `myTable` ) UNION (SELECT * FROM `otherTable` )",
 		},
 		{
 			name: "UnionAll",
 			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
 				dbTwo := db.Table("otherTable")
 				dbs = append(dbs, dbTwo)
-				return db.UnionAll(dbTwo.QueryExpr()), dbs
+				return db.UnionAll(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION ALL SELECT * FROM `otherTable`",
+			expectedQuery: "(SELECT * FROM `myTable` ) UNION ALL (SELECT * FROM `otherTable` )",
 		},
 		{
 			name: "With",
