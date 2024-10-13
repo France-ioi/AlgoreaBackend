@@ -36,5 +36,5 @@ func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString stri
 		query = query.Where(condition, searchPattern, searchPattern)
 	}
 
-	return newDB(conn.ctx, query)
+	return newDB(conn.ctx, query, conn.ctes)
 }
