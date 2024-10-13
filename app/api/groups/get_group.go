@@ -141,6 +141,34 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	store := srv.GetStore(r)
 
 	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
+		With("user_ancestors", ancestorsOfUserQuery(store, user)).
+		Select(`
+			groups.id, groups.type, groups.name,
+			`+currentUserMembershipSQLColumn(user)+`,
+			`+currentUserManagershipSQLColumn+`,
+			groups.grade, groups.description, groups.created_at,
+			groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
+			groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until, groups.require_watch_approval,
+			IF(manager_access.found, groups.code, NULL) AS code,
+			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
+			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
+			groups.open_activity_when_joining,
+			IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
+			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
+			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
+			groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until AS is_membership_locked,
+			IF(parent_group_id IS NOT NULL AND groups.type = 'Team',
+				IF(groups.frozen_membership,
+					'frozen_membership',
+					IF(?,
+						'would_break_entry_conditions',
+						'free_to_leave'
+					)
+				),
+				NULL
+			) AS can_leave_team`,
+			store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+				gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
 		Joins(`
 			LEFT JOIN ? AS manager_access ON child_group_id = groups.id`,
 			store.GroupAncestors().ManagedByUser(user).
@@ -161,31 +189,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Limit(1)
 
 	var result groupGetResponse
-	err = selectGroupsDataForMenu(store, query, user,
-		`groups.grade, groups.description, groups.created_at,
-		groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
-		groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until, groups.require_watch_approval,
-		IF(manager_access.found, groups.code, NULL) AS code,
-		IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
-		IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
-		groups.open_activity_when_joining,
-		IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
-		IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
-		IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
-		groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until AS is_membership_locked,
-		IF(parent_group_id IS NOT NULL AND groups.type = 'Team',
-			IF(groups.frozen_membership,
-				'frozen_membership',
-				IF(?,
-					'would_break_entry_conditions',
-					'free_to_leave'
-				)
-			),
-			NULL
-		) AS can_leave_team`,
-		store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
-			gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
-		Scan(&result).Error()
+	err = query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}

@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -52,7 +53,12 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	innerQuery := store.Groups().
+	query := store.Groups().
+		With("user_ancestors", ancestorsOfUserQuery(store, user)).
+		Select(`
+				groups.id, groups.type, groups.name,
+				`+currentUserMembershipSQLColumn(user)+`,
+				`+currentUserManagershipSQLColumn).
 		Where(`
 			groups.id IN(?) OR groups.id IN(?)`,
 			store.Groups().AncestorsOfJoinedGroups(store, user).QueryExpr(),
@@ -70,29 +76,26 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 		Order("groups.name")
 
 	var result []groupRootsViewResponseRow
-	service.MustNotBeError(selectGroupsDataForMenu(store, innerQuery, user, "").Scan(&result).Error())
+	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
 	return service.NoError
 }
 
-func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *database.User,
-	otherColumns string, otherColumnValues ...interface{},
-) *database.DB {
-	usersAncestorsQuery := store.ActiveGroupAncestors().
-		Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
+// ancestorsOfUserQuery returns a query to get the ancestors of the given user (as ancestor_group_id).
+func ancestorsOfUserQuery(store *database.DataStore, user *database.User) *database.DB {
+	return store.ActiveGroupAncestors().Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
+}
 
-	if otherColumns != "" {
-		otherColumns = ", " + otherColumns
-	}
-
-	db = db.Select(`
-		groups.id as id, groups.name, groups.type,
+// currentUserMembershipSQLColumn returns an SQL column expression to get the current user membership
+// (direct/descendant/none)in the group. The column name is `current_user_membership`.
+func currentUserMembershipSQLColumn(currentUser *database.User) string {
+	return fmt.Sprintf(`
 		IF(
 			EXISTS(
 				SELECT 1 FROM groups_groups_active
 				WHERE groups_groups_active.parent_group_id = groups.id AND
-				  	  groups_groups_active.child_group_id = ?
+				      groups_groups_active.child_group_id = %d
 			),
 			'direct',
 			IF(
@@ -100,19 +103,24 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 					SELECT 1 FROM groups_groups_active
 					JOIN groups_ancestors_active AS group_descendants
 						ON group_descendants.ancestor_group_id = groups.id AND
-					     group_descendants.child_group_id = groups_groups_active.parent_group_id
-					WHERE groups_groups_active.child_group_id = ?
+						   group_descendants.child_group_id = groups_groups_active.parent_group_id
+					WHERE groups_groups_active.child_group_id = %d
 				),
 				'descendant',
 				'none'
 			)
-		) AS 'current_user_membership',
+		) AS 'current_user_membership'`, currentUser.GroupID, currentUser.GroupID)
+}
+
+// currentUserManagershipSQLColumn is an SQL column expression to get the current user managership
+// (direct/ancestor/descendant/none) of the group. The column name is `current_user_managership`.
+const currentUserManagershipSQLColumn = `
 		IF(
 			EXISTS(
 				SELECT 1 FROM user_ancestors
 				JOIN group_managers
 					ON group_managers.group_id = groups.id AND
-				  	 group_managers.manager_id = user_ancestors.ancestor_group_id
+					   group_managers.manager_id = user_ancestors.ancestor_group_id
 			),
 			'direct',
 			IF(
@@ -130,9 +138,9 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 						JOIN group_managers ON group_managers.manager_id = user_ancestors.ancestor_group_id
 						JOIN groups_ancestors_active AS managed_groups
 							ON managed_groups.ancestor_group_id = group_managers.group_id
-						JOIN `+"`groups`"+` AS managed_descendant
+						JOIN ` + "`groups`" + ` AS managed_descendant
 							ON managed_descendant.id = managed_groups.child_group_id AND
-						     managed_descendant.type != 'User'
+							   managed_descendant.type != 'User'
 						JOIN groups_ancestors_active AS group_descendants
 							ON group_descendants.ancestor_group_id = groups.id AND
 							   group_descendants.child_group_id = managed_descendant.id
@@ -141,7 +149,4 @@ func selectGroupsDataForMenu(store *database.DataStore, db *database.DB, user *d
 					'none'
 				)
 			)
-		) AS 'current_user_managership'`+otherColumns, user.GroupID, user.GroupID, otherColumnValues)
-
-	return db.With("user_ancestors", usersAncestorsQuery)
-}
+		) AS 'current_user_managership'`
