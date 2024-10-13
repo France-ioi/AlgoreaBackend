@@ -36,7 +36,7 @@ type groupRootsViewResponseRow struct {
 //	---
 //	summary: List root groups
 //	description: >
-//		Returns groups which are ancestors of a joined groups or managed non-user groups
+//		Returns groups which are ancestors of joined groups or managed non-user groups
 //		and do not have parents. Groups of type "Base" or "User" are ignored.
 //	responses:
 //		"200":
@@ -53,18 +53,19 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	query := store.Groups().
+	const columns = "ancestor_group.id, ancestor_group.type, ancestor_group.name"
+	matchingGroupsQuery := store.Groups().AncestorsOfJoinedGroups(store, user).Select(columns).
+		Union(ancestorsOfManagedGroupsQuery(store, user).Select(columns))
+
+	query := store.
+		With("matching_groups", matchingGroupsQuery).
 		With("user_ancestors", ancestorsOfUserQuery(store, user)).
+		Table("matching_groups AS `groups`").
 		Select(`
 				groups.id, groups.type, groups.name,
-				`+currentUserMembershipSQLColumn(user)+`,
-				`+currentUserManagershipSQLColumn).
-		Where(`
-			groups.id IN(?) OR groups.id IN(?)`,
-			store.Groups().AncestorsOfJoinedGroups(store, user).QueryExpr(),
-			store.Groups().ManagedUsersAndAncestorsOfManagedGroups(store, user).QueryExpr()).
-		Where("groups.type != 'Base' and groups.type != 'User'").
-		Where("groups.id != ?", user.GroupID).
+				` + currentUserMembershipSQLColumn(user) + `,
+				` + currentUserManagershipSQLColumn).
+		Where("groups.type != 'Base'").
 		Where(`
 			NOT EXISTS(
 				SELECT 1 FROM ` + "`groups`" + ` AS parent_group
@@ -85,6 +86,19 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 // ancestorsOfUserQuery returns a query to get the ancestors of the given user (as ancestor_group_id).
 func ancestorsOfUserQuery(store *database.DataStore, user *database.User) *database.DB {
 	return store.ActiveGroupAncestors().Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
+}
+
+// ancestorsOfManagedGroupsQuery returns a query to get the ancestors of the groups (excluding users) managed by
+// the given user (as ancestor_group_id).
+func ancestorsOfManagedGroupsQuery(store *database.DataStore, user *database.User) *database.DB {
+	return store.ActiveGroupAncestors().ManagedByUser(user).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type != 'User'").
+		Joins(`
+			JOIN groups_ancestors_active AS ancestors_of_managed
+				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id`).
+		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
+		Where("ancestor_group.type != 'ContestParticipants'").
+		Select("ancestors_of_managed.ancestor_group_id")
 }
 
 // currentUserMembershipSQLColumn returns an SQL column expression to get the current user membership
