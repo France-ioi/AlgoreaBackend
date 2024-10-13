@@ -146,6 +146,7 @@ func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
 			testResultStorePropagateCreatesNew(t, &test)
 		})
 	}

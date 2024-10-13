@@ -14,6 +14,8 @@ import (
 )
 
 func TestResultStore_Propagate_RecomputesResultsForItemsFromTableResultsRecomputeForItems(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}, {id: 2}, {id: 3}]
 		items:

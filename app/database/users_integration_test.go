@@ -13,6 +13,8 @@ import (
 )
 
 func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	tests := []struct {
 		name   string
 		teamID int64
@@ -92,6 +94,8 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 		for _, withLock := range []bool{true, false} {
 			withLock := withLock
 			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
+				testhelpers.SuppressOutputIfPasses(t)
+
 				store := database.NewDataStore(db)
 				var got bool
 				var err error

@@ -39,6 +39,8 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := setupDBForDeleteWithTrapsTests(t, currentTime)
 			defer func() { _ = db.Close() }()
 
@@ -51,6 +53,8 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 }
 
 func TestUserStore_DeleteWithTraps(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	currentTime := time.Now().UTC().Truncate(time.Second)
 	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
 	defer testhelpers.RestoreDBTime()
@@ -66,6 +70,8 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 }
 
 func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	currentTime := time.Now().UTC().Truncate(time.Second)
 	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
 	defer testhelpers.RestoreDBTime()
