@@ -209,12 +209,6 @@ func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroupsForGroup(store *Data
 		Select("ancestors_of_managed.ancestor_group_id")
 }
 
-// ManagedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
-// and all users who are descendants from managed groups, for a user.
-func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, user *User) *DB {
-	return s.ManagedUsersAndAncestorsOfManagedGroupsForGroup(store, user.GroupID)
-}
-
 // PickVisibleGroupsForGroup returns a query filtering only group which are visible for a group.
 func (s *GroupStore) PickVisibleGroupsForGroup(db *DB, visibleForGroupID int64) *DB {
 	AncestorsOfJoinedGroupsQuery := s.AncestorsOfJoinedGroupsForGroup(NewDataStore(db.New()), visibleForGroupID).QueryExpr()
