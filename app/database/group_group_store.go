@@ -144,9 +144,9 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	mustNotBeError(s.deleteObjectsLinkedToGroups([]int64{groupID}).Error())
 
 	// recalculate relations
-	// This propagation has to be called right now, in the current transaction,
-	// because it's result is used the following steps.
-	s.createNewAncestorsInsideTransaction("groups", "group")
+	// It seems (to be verified), that this propagation has to be called right now
+	// because it's result is uin the following steps.
+	// s.createNewAncestors("groups", "group")
 
 	var idsToDelete []int64
 	// besides the group with id = groupID, we also want to delete its descendants
