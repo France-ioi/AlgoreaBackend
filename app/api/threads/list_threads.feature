@@ -10,7 +10,8 @@ Feature: List threads
       | @A_Class      | @A_Section    | @A_ClassMember1,@A_ClassMember2                       |
       | @B_Class      | @B_Section    |                                                       |
       | @OtherGroup   |               | @OtherGroupMember                                     |
-    And @A_UniversityManagerCanWatch is a manager of the group @A_University and can watch its members
+    And the group @A_UniversityManagerCanWatch is a manager of the group @A_UniversityParent and can watch for submissions from the group and its descendants
+    And the group @A_University is a child of the group @A_UniversityParent
     And there are the following tasks:
       | item                                            |
       | @B_SectionMember2_CanViewInfo                   |
@@ -59,7 +60,7 @@ Feature: List threads
       | @A_UniversityManagerCanWatch_CanViewInfo        | @A_UniversityManagerCanWatch | info                     |           |
       | @Item1                                          | @A_UniversityManagerCanWatch | content                  |           |
       | @Item2                                          | @A_UniversityManagerCanWatch | content                  |           |
-    And there are the following results:
+    And there are the following validated results:
       | item                              | participant         | validated |
       | @B_UniversityMember_HasValidated1 | @B_UniversityMember | 1         |
       | @B_UniversityMember_HasValidated2 | @B_UniversityMember | 1         |
@@ -95,35 +96,56 @@ Feature: List threads
 
   Scenario: Should have all the fields properly set, including first_name and last_name when the access is approved
     Given I am @LaboratoryManagerCanWatch
-    And I am a manager of the group @Laboratory and can watch its members
+    And I am a manager of the group @LaboratoryParent and can watch for submissions from the group and its descendants
+    And the group @Laboratory is a child of the group @LaboratoryParent
     And there are the following users:
-      | user                                                | first_name            | last_name            |
-      | @LaboratoryMember_WithApprovedAccessPersonalInfo    | FirstName_Approved    | LastName_Approved    |
-      | @LaboratoryMember_WithoutApprovedAccessPersonalInfo | FirstName_NotApproved | LastName_NotApproved |
+      | user                                                 | first_name            | last_name            |
+      | @LaboratoryMember_WithApprovedAccessPersonalInfo     | FirstName_Approved    | LastName_Approved    |
+      | @LaboratoryMember_WithApprovedAccessPersonalInfoNull | null                  | null                 |
+      | @LaboratoryMember_WithoutApprovedAccessPersonalInfo  | FirstName_NotApproved | LastName_NotApproved |
     And @LaboratoryMember_WithApprovedAccessPersonalInfo is a member of the group @Laboratory who has approved access to his personal info
     And @LaboratoryMember_WithoutApprovedAccessPersonalInfo is a member of the group @Laboratory
-    And the database has the following table 'items':
+    And @LaboratoryMember_WithApprovedAccessPersonalInfoNull is a member of the group @Laboratory who has approved access to his personal info
+    And the database has the following table "items":
       | id | type | default_language_tag |
       | 1  | Task | fr                   |
       | 2  | Task | en                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id                   | item_id | can_view_generated |
       | @LaboratoryManagerCanWatch | 1       | content            |
       | @LaboratoryManagerCanWatch | 2       | content            |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title      |
       | 1       | en           | Beginning  |
       | 1       | fr           | Debut      |
       | 2       | en           | Experiment |
-    And the database has the following table 'threads':
-      | item_id | participant_id                                      | status                  | message_count | latest_update_at    | helper_group_id |
-      | 1       | @LaboratoryMember_WithApprovedAccessPersonalInfo    | waiting_for_trainer     | 0             | 2023-01-01 00:00:01 | @Laboratory     |
-      | 2       | @LaboratoryMember_WithoutApprovedAccessPersonalInfo | waiting_for_participant | 1             | 2023-01-01 00:00:02 | @Laboratory     |
+    And the database has the following table "threads":
+      | item_id | participant_id                                       | status                  | message_count | latest_update_at    | helper_group_id |
+      | 1       | @LaboratoryMember_WithApprovedAccessPersonalInfo     | waiting_for_trainer     | 0             | 2023-01-01 00:00:01 | @Laboratory     |
+      | 2       | @LaboratoryMember_WithApprovedAccessPersonalInfoNull | waiting_for_participant | 1             | 2023-01-01 00:00:02 | @Laboratory     |
+      | 2       | @LaboratoryMember_WithoutApprovedAccessPersonalInfo  | waiting_for_participant | 1             | 2023-01-01 00:00:02 | @Laboratory     |
     When I send a GET request to "/threads?watched_group_id=@Laboratory"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       [
+        {
+          "item": {
+            "id": "2",
+            "language_tag": "en",
+            "title": "Experiment",
+            "type": "Task"
+          },
+          "latest_update_at": "2023-01-01T00:00:02Z",
+          "message_count": 1,
+          "participant": {
+            "id": "@LaboratoryMember_WithApprovedAccessPersonalInfoNull",
+            "login": "LaboratoryMember_WithApprovedAccessPersonalInfoNull",
+            "first_name": null,
+            "last_name": null
+          },
+          "status": "waiting_for_participant"
+        },
         {
           "item": {
             "id": "2",

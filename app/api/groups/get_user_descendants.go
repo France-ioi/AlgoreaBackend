@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:operation GET /groups/{group_id}/user-descendants group-memberships groupUserDescendantView
@@ -139,7 +139,6 @@ type userDescendantUser struct {
 
 	// required:true
 	Login string `json:"login"`
-	// Nullable
 	// required:true
 	Grade *int32 `json:"grade"`
 }

@@ -4,13 +4,13 @@ Feature: Get managers of group_id - robustness
       | login | group_id |
       | owner | 21       |
       | user  | 11       |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id |
       | 13 |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id |
       | 13       | 21         |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 13              | 11             | 2019-05-30 11:00:00 |
     And the groups ancestors are computed

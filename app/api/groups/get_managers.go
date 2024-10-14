@@ -5,16 +5,16 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // GroupManagersViewResponseRowUser contains names of a manager.
 type GroupManagersViewResponseRowUser struct {
 	// Displayed only for users
 	Login string `json:"login"`
-	// Nullable; displayed only for users
+	// Displayed only for users
 	FirstName *string `json:"first_name"`
-	// Nullable; displayed only for users
+	// Displayed only for users
 	LastName *string `json:"last_name"`
 }
 

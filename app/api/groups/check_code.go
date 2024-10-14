@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // Only if valid.
@@ -17,15 +17,12 @@ type groupCodeCheckResponseGroup struct {
 	// required: true
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true
 	RequireWatchApproval bool `json:"require_watch_approval"`
-	// Nullable
 	// required: true
 	RootActivityID *int64 `json:"root_activity_id,string"`
-	// Nullable
 	// required: true
 	RootSkillID *int64 `json:"root_skill_id,string"`
 	// required: true
@@ -34,10 +31,8 @@ type groupCodeCheckResponseGroup struct {
 		ID int64 `json:"id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
 		// required: true
 		FirstName *string `json:"first_name"`
-		// Nullable
 		// required: true
 		LastName *string `json:"last_name"`
 	} `json:"managers"`

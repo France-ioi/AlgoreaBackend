@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 )
 
 // UserStore implements database operations on `users`.
@@ -16,7 +17,7 @@ func (s *UserStore) ByID(id int64) *DB {
 
 const deleteWithTrapsBatchSize = 1000
 
-// DeleteTemporaryWithTraps deletes temporary users who don't have active sessions.
+// DeleteTemporaryWithTraps deletes temporary users who don't have sessions or whose sessions expired more than `delay` ago.
 // It also removes linked rows in the tables:
 //  1. [`filters`, `sessions`, `access_tokens`]
 //     having `user_id` = `users.group_id`;
@@ -28,17 +29,17 @@ const deleteWithTrapsBatchSize = 1000
 //  5. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
 //  6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal to `users.group_id`;
 //  7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`.
-func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
+func (s *UserStore) DeleteTemporaryWithTraps(delay time.Duration) (err error) {
 	defer recoverPanics(&err)
 
 	s.executeBatchesInTransactions(func(store *DataStore) int {
 		userScope := store.Users().
 			Joins("LEFT JOIN sessions ON sessions.user_id = users.group_id").
-			Joins("LEFT JOIN access_tokens ON access_tokens.session_id = sessions.session_id AND access_tokens.expires_at > NOW()").
-			// We don't want to delete users who have active sessions, so we retrieve all temp users who:
-			// - Have no session at all (sessions.session_id IS NULL)
-			// - Have a session, but there is no non-expired access token (all access tokens are expired: access_tokens.session_id IS NULL)
-			Where("sessions.session_id IS NULL OR access_tokens.session_id IS NULL").
+			Joins(`
+				LEFT JOIN access_tokens ON access_tokens.session_id = sessions.session_id AND
+					access_tokens.expires_at > NOW() - INTERVAL ? SECOND`,
+				uint64(delay.Round(time.Second)/time.Second)).
+			Where("access_tokens.session_id IS NULL").
 			Where("temp_user = 1")
 		return store.Users().deleteWithTraps(userScope)
 	})

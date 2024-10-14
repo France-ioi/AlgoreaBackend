@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:model groupsMembersViewResponseRow
@@ -30,7 +30,6 @@ type groupsMembersViewResponseRow struct {
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
-		// Nullable
 		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`

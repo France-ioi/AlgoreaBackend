@@ -1,9 +1,9 @@
 Feature: Check if the group code is valid - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type  |
       | 21 | User  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | temp_user |
       | john  | 21       | false     |
 

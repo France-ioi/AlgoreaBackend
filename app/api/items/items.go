@@ -8,11 +8,11 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 // Service is the mount point for services related to `items`.

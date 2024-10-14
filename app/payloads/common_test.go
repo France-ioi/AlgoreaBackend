@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestPayloads_ParseMap(t *testing.T) {
@@ -30,15 +30,15 @@ func TestPayloads_ParseMap(t *testing.T) {
 				LocalItemID:        "901756573345831409",
 				PlatformName:       "test_dmitry",
 				RandomSeed:         "556371821693219925",
-				HintsGivenCount:    utils.Ptr("0"),
-				HintsAllowed:       utils.Ptr(false),
-				HintPossible:       utils.Ptr(true),
-				AccessSolutions:    utils.Ptr(true),
-				ReadAnswers:        utils.Ptr(true),
-				Login:              utils.Ptr("test"),
-				SubmissionPossible: utils.Ptr(true),
-				SupportedLangProg:  utils.Ptr("*"),
-				IsAdmin:            utils.Ptr(false),
+				HintsGivenCount:    golang.Ptr("0"),
+				HintsAllowed:       golang.Ptr(false),
+				HintPossible:       golang.Ptr(true),
+				AccessSolutions:    golang.Ptr(true),
+				ReadAnswers:        golang.Ptr(true),
+				Login:              golang.Ptr("test"),
+				SubmissionPossible: golang.Ptr(true),
+				SupportedLangProg:  golang.Ptr("*"),
+				IsAdmin:            golang.Ptr(false),
 				Converted: TaskTokenConverted{
 					UserID:        556371821693219925,
 					LocalItemID:   901756573345831409,

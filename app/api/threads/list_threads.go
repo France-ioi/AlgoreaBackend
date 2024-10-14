@@ -7,8 +7,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:model thread
@@ -31,11 +32,9 @@ type item struct {
 	// required:true
 	ID int64 `json:"id,string"`
 	// required:true
-	// Nullable
 	// enum: Chapter,Task,Skill
-	Type *string `json:"type"`
+	Type string `json:"type"`
 	// required:true
-	// Nullable
 	Title *string `json:"title"`
 	// required:true
 	LanguageTag string `json:"language_tag"`
@@ -46,10 +45,9 @@ type participant struct {
 	ID int64 `json:"id,string"`
 	// required:true
 	Login string `json:"login"`
-	// Nullable
-	FirstName *string `json:"first_name,omitempty"`
-	// Nullable
-	LastName *string `json:"last_name,omitempty"`
+
+	*structures.UserPersonalInfo
+	ShowPersonalInfo bool `json:"-"`
 }
 
 type listThreadParameters struct {
@@ -172,6 +170,12 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	err := queryDB.Scan(&threads).Error()
 	service.MustNotBeError(err)
 
+	for index := range threads {
+		if !threads[index].Participant.ShowPersonalInfo {
+			threads[index].Participant.UserPersonalInfo = nil
+		}
+	}
+
 	render.Respond(rw, r, threads)
 	return service.NoError
 }
@@ -248,13 +252,14 @@ func (srv *Service) constructListThreadsQuery(r *http.Request, params listThread
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS item__language_tag,
 			COALESCE(user_strings.title, default_strings.title) AS item__title,
 			threads.participant_id AS participant__id,
+			threads.participant_id = ? OR personal_info_view_approvals.approved AS participant__show_personal_info,
 			IF(threads.participant_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS participant__first_name,
 			IF(threads.participant_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS participant__last_name,
 			users.login AS participant__login,
 			threads.status AS status,
 			threads.message_count AS message_count,
 			threads.latest_update_at AS latest_update_at
-		`, user.GroupID, user.GroupID)
+		`, user.GroupID, user.GroupID, user.GroupID)
 
 	var apiError service.APIError
 	queryDB, apiError = applySortingAndPaging(r, queryDB)

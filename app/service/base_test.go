@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func TestBase_GetUser(t *testing.T) {

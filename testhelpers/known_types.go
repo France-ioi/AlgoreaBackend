@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/France-ioi/AlgoreaBackend/app/api/answers"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api/answers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 type answersSubmitResponse struct {

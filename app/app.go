@@ -5,21 +5,22 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/api"
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	_ "github.com/France-ioi/AlgoreaBackend/v2/app/doc" // for doc generation
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
 )
 
 // Application is the core state of the app.
@@ -78,11 +79,21 @@ func (app *Application) Reset(config *viper.Viper) error {
 		return err
 	}
 
+	if serverConfig.GetBool("disableResultsPropagation") {
+		database.ProhibitResultsPropagation(db)
+	}
+
 	// Set up responder.
 	render.Respond = service.AppResponder
 
 	// Set up middlewares
 	router := chi.NewRouter()
+
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r.WithContext(database.NewDataStore(app.Database).MergeContext(r.Context())))
+		})
+	})
 
 	router.Use(version.AddVersionHeader)
 

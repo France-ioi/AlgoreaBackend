@@ -8,14 +8,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/France-ioi/AlgoreaBackend/app/doc"
-
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/doc"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 // SubmitRequest represents a JSON request body format needed by answers.submit()
@@ -179,7 +178,7 @@ func (requestData *SubmitRequest) UnmarshalJSON(raw []byte) error {
 
 // Bind checks that all the needed request parameters (task_token & answer) are present and
 // all the needed values are valid.
-func (requestData *SubmitRequest) Bind(r *http.Request) error {
+func (requestData *SubmitRequest) Bind(_ *http.Request) error {
 	if requestData.TaskToken == nil {
 		return errors.New("missing task_token")
 	}

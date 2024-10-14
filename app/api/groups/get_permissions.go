@@ -5,19 +5,25 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 const (
+	// OriginGroupMembership is the origin for permissions granted to the group via membership in another group.
 	OriginGroupMembership = "group_membership"
-	OriginItemUnlocking   = "item_unlocking"
-	OriginSelf            = "self"
-	OriginOther           = "other"
-	OriginComputed        = "computed"
-	OriginGranted         = "granted"
+	// OriginItemUnlocking is the origin for permissions granted to the group via unlocking an item.
+	OriginItemUnlocking = "item_unlocking"
+	// OriginSelf is the origin for permissions granted to the creator of the item.
+	OriginSelf = "self"
+	// OriginOther is the origin for permissions granted to the group via other means.
+	OriginOther = "other"
+	// OriginComputed is a fake origin for computed permissions used by algorithms related to adding CanRequestHelpTo into output.
+	OriginComputed = "computed"
+	// OriginGranted is a fake origin for computed permissions used by algorithms related to adding CanRequestHelpTo into output.
+	OriginGranted = "granted"
 )
 
 type permissionsStruct struct {
@@ -45,7 +51,6 @@ type grantedPermissionsStruct struct {
 	CanEnterFrom string `json:"can_enter_from"`
 	// required: true
 	CanEnterUntil string `json:"can_enter_until"`
-	// Nullable
 	// required: true
 	CanRequestHelpTo *canRequestHelpTo `json:"can_request_help_to"`
 }

@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 type grantedPermissionsViewResultRowGroup struct {
@@ -25,7 +25,6 @@ type grantedPermissionsViewResultPermissions struct {
 	CanEnterFrom database.Time `json:"can_enter_from"`
 	// required: true
 	CanEnterUntil database.Time `json:"can_enter_until"`
-	// Nullable
 	// required: true
 	CanRequestHelpTo *int64 `json:"can_request_help_to"`
 }
@@ -40,12 +39,11 @@ type grantedPermissionsViewResultRow struct {
 	Item struct {
 		// required: true
 		ID int64 `json:"id,string"`
-		// Nullable
 		// required: true
 		Title *string `json:"title"`
 		// required: true
 		// enum: Chapter,Task,Skill
-		Type *string `json:"type"`
+		Type string `json:"type"`
 		// required: true
 		LanguageTag string `json:"language_tag"`
 		// required: true

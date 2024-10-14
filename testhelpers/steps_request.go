@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
@@ -27,7 +27,7 @@ func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
 	return nil
 }
 
-func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *messages.PickleStepArgument_PickleDocString) error { // nolint
+func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *godog.DocString) error { // nolint
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 
@@ -69,7 +69,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	// do request
-	response, body, err := testRequest(testServer, method, path, headers, strings.NewReader(reqBody))
+	response, body, err := SendTestHTTPRequest(testServer, method, path, headers, strings.NewReader(reqBody))
 	defer func() { _ = response.Body.Close() }()
 	if err != nil {
 		return err

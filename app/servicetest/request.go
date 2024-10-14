@@ -12,11 +12,11 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // GetResponseForRouteWithMockedDBAndUser executes a route for unit tests

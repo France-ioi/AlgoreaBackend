@@ -1,25 +1,25 @@
 Feature: User creates a request to leave a group - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | require_lock_membership_approval_until | frozen_membership |
       | 11 | 2019-05-30 11:00:00                    | false             |
       | 14 | null                                   | false             |
       | 15 | null                                   | true              |
       | 21 | null                                   | false             |
       | 22 | null                                   | false             |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | login |
       | 21       | john  |
       | 22       | jane  |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 11              | 21             | null                        |
       | 14              | 22             | 2019-05-30 11:00:00         |
       | 15              | 21             | null                        |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type          | at                  |
-      | 14       | 21        | leave_request | 2019-05-30 11:00:00 |
+    And the database has the following table "group_pending_requests":
+      | group_id | member_id | type          | at                      |
+      | 14       | 21        | leave_request | 2019-05-30 11:00:00.001 |
 
   Scenario: User tries to send a leave request while not being a member of the group
     Given I am the user with id "21"

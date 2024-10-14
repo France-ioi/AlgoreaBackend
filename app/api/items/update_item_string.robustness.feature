@@ -1,29 +1,29 @@
 Feature: Update an item string entry - robustness
 
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name | type |
       | 11 | jdoe | User |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag |
       | 21 | en                   |
       | 22 | en                   |
       | 50 | en                   |
       | 60 | sl                   |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title  | image_url                  | subtitle        | description        |
       | 50      | en           | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | Item 2 Description |
       | 50      | sl           | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
       | 11       | 21      | solution           | children           | false              |
       | 11       | 22      | info               | all                | false              |
       | 11       | 50      | solution           | all                | true               |
     And the groups ancestors are computed
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | en  |
       | sl  |

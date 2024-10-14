@@ -10,9 +10,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
 )
 
 func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {

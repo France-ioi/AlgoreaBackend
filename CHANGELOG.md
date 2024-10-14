@@ -1,6 +1,59 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.22.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.7...v2.22.8) - 2024-10-01
+- speed up the results propagation and make it less locking
+- introduce a command recomputing all the results of chapters/skills
+
+## [v2.22.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.6...v2.22.7) - 2024-09-25
+- use even smaller iterations (200) for result propagation
+
+## [v2.22.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.5...v2.22.6) - 2024-09-24
+- use smaller iterations (1000) for result propagation
+- rework processing of results_propagate_items table
+- do not close the db connection explicitly in the propagation command
+
+## [v2.22.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.4...v2.22.5) - 2024-09-19
+- split the results propagation process into small atomic chunks
+
+## [v2.22.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.3...v2.22.4) - 2024-09-16
+- add a config to disable result propagation completely
+- remove parameter to the propagation command to disable result propagation
+
+## [v2.22.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.2...v2.22.3) - 2024-09-13
+- add parameter to the propagation command to disable result propagation
+
+## [v2.22.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.1...v2.22.2) - 2024-09-02
+- add a delay parameter to delete-temp-users command
+
+## [v2.22.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.0...v2.22.1) - 2024-08-26
+- fix a bug: translation may be registered several times in a transaction, causing a crash
+
+## [v2.22.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.4...v2.22.0) - 2024-08-21
+- fix documentation generation, and the doc of several services:
+  1. In responses of `invitationsView`, `inviting_user.first_name` & `inviting_user.last_name` become nullable (they should be as corresponding columns are nullable in the DB).
+  2. In responses of `listThreads`, `participant.first_name` & `participant.last_name` are only shown if the current user has rights to view them (similarly to other services).
+- change CORS to expose `Backend-Version` and `Date`, and hide `Link` headers
+- return the modified result data (together with the linked attempt data) in the format of `attemptsList` response row on success in `resultStart`
+
+## [v2.21.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.3...v2.21.4) - 2024-08-08
+- speed up the `itemActivityLogForItem` service
+- `itemActivityLogForItem`: fix `can_watch_answer` and how `can_watch_answer` is handled
+- fix `generateProfileEditToken`, use loginIDs instead of group ids
+- refactoring and internal improvements
+
+## [v2.21.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.2...v2.21.3) - 2024-08-06
+- fixing doc of `invitationsView` (after change from previous version)
+- refactoring and internal improvements
+
+## [v2.21.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.1...v2.21.2) - 2024-07-25
+- update invitationsView doc as the invitation initiator may be null
+- many refactoring and internal improvements
+
+## [v2.21.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.21.0...v2.21.1) - 2024-07-23
+- speed up the `invitationsView` service
+- many refactoring and internal improvements
+
 ## [v2.21.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.20.1...v2.21.0) - 2024-07-09
 - change of the `invitationsView` service API
 

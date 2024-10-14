@@ -5,23 +5,21 @@ package testhelpers
 import (
 	"database/sql"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
+	"sort"
 
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 	_ "github.com/go-sql-driver/mysql"      // use to force database/sql to use mysql
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 	"github.com/thingful/httpmock"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	log "github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 type dbquery struct {
@@ -41,12 +39,12 @@ type TestContext struct {
 	logsRestoreFunc      func()
 	inScenario           bool
 	db                   *sql.DB
-	dbTableData          map[string]*messages.PickleStepArgument_PickleTable
+	dbTableData          map[string]*godog.Table
 	templateSet          *jet.Set
 	requestHeaders       map[string][]string
-	identifierReferences map[string]int64
-	dbTables             map[string]map[string]map[string]interface{}
-	currentThreadKey     string
+	referenceToIDMap     map[string]int64
+	idToReferenceMap     map[int64]string
+	currentThreadKey     map[string]string
 	allUsersGroup        string
 	needPopulateDatabase bool
 }
@@ -57,9 +55,7 @@ const (
 )
 
 // SetupTestContext initializes the test context. Called before each scenario.
-func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
-	log.WithField("type", "test").Infof("Starting test scenario: %s", pickle.Name)
-
+func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
 	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
@@ -71,11 +67,11 @@ func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
 	ctx.inScenario = true
 	ctx.requestHeaders = map[string][]string{}
 	ctx.db = ctx.openDB()
-	ctx.dbTableData = make(map[string]*messages.PickleStepArgument_PickleTable)
+	ctx.dbTableData = make(map[string]*godog.Table)
 	ctx.templateSet = ctx.constructTemplateSet()
-	ctx.identifierReferences = make(map[string]int64)
-	ctx.dbTables = make(map[string]map[string]map[string]interface{})
 	ctx.needPopulateDatabase = false
+
+	ctx.initReferences(sc)
 
 	// reset the seed to get predictable results on PRNG for tests
 	rand.Seed(1)
@@ -85,6 +81,62 @@ func (ctx *TestContext) SetupTestContext(pickle *messages.Pickle) {
 		fmt.Println("Unable to empty db")
 		panic(err)
 	}
+}
+
+// initReferences initializes the referenceToIDMap and idToReferenceMap
+// generating unique IDs for references. The generated IDs have the same
+// sorting order as the references.
+func (ctx *TestContext) initReferences(sc *godog.Scenario) {
+	collectedReferences := collectReferences(sc)
+	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
+	ctx.idToReferenceMap = make(map[int64]string, len(collectedReferences))
+	for index, reference := range collectedReferences {
+		id := int64(1000000000000000000) + int64(index)
+		ctx.referenceToIDMap[reference] = id
+		ctx.idToReferenceMap[id] = reference
+	}
+}
+
+func collectReferencesInText(text string, referencesMap map[string]struct{}) {
+	for _, match := range referenceRegexp.FindAllString(text, -1) {
+		if match[0] != referencePrefix {
+			match = match[1:]
+		}
+		referencesMap[match] = struct{}{}
+	}
+}
+
+// collectReferences collects all references in a scenario and returns them sorted.
+func collectReferences(sc *godog.Scenario) []string {
+	referencesMap := make(map[string]struct{})
+
+	for _, step := range sc.Steps {
+		collectReferencesInText(step.Text, referencesMap)
+		if step.Argument == nil {
+			continue
+		}
+		if table := step.Argument.DataTable; table != nil {
+			for _, row := range table.Rows {
+				for _, cell := range row.Cells {
+					collectReferencesInText(cell.Value, referencesMap)
+				}
+			}
+		}
+		if docString := step.Argument.DocString; docString != nil {
+			collectReferencesInText(docString.Content, referencesMap)
+		}
+	}
+
+	// Add globally defined references
+	referencesMap["@AllUsers"] = struct{}{}
+
+	references := make([]string, 0, len(referencesMap))
+	for reference := range referencesMap {
+		references = append(references, reference)
+	}
+	sort.Strings(references)
+
+	return references
 }
 
 func (ctx *TestContext) setupApp() {
@@ -105,7 +157,7 @@ func (ctx *TestContext) tearDownApp() {
 }
 
 // ScenarioTeardown is called after each scenario to remove stubs.
-func (ctx *TestContext) ScenarioTeardown(*messages.Pickle, error) {
+func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()
 	ctx.logsRestoreFunc()
@@ -118,37 +170,6 @@ func (ctx *TestContext) ScenarioTeardown(*messages.Pickle, error) {
 	}()
 
 	ctx.tearDownApp()
-}
-
-func testRequest(ts *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (*http.Response, string, error) {
-	req, err := http.NewRequest(method, ts.URL+path, body)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// add headers
-	for name, values := range headers {
-		for _, value := range values {
-			req.Header.Add(name, value)
-		}
-	}
-
-	client := http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
-		return http.ErrUseLastResponse
-	}}
-	// execute the query
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, "", err
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, "", err
-	}
-	defer func() { /* #nosec */ _ = resp.Body.Close() }()
-
-	return resp, string(respBody), nil
 }
 
 // openDB opens a connection to the database.

@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /groups/{group_id} groups groupDelete
@@ -41,7 +41,7 @@ import (
 //			format: int64
 //			required: true
 //	responses:
-//		"201":
+//		"200":
 //			"$ref": "#/responses/deletedResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
@@ -93,6 +93,6 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

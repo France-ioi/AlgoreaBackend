@@ -6,13 +6,13 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model membershipsViewResponseRow
 type membershipsViewResponseRow struct {
-	// MAX(`group_membership_changes.at`); Nullable
+	// MAX(`group_membership_changes.at`)
 	// required: true
 	MemberSince *database.Time `json:"member_since"`
 	// `group_membership_changes.action` of the latest change
@@ -27,7 +27,6 @@ type membershipsViewResponseRow struct {
 		ID int64 `json:"id,string"`
 		// required: true
 		Name string `json:"name"`
-		// Nullable
 		// required: true
 		Description *string `json:"description"`
 		// required: true

@@ -10,10 +10,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func Test_validateUpdateGroupInput(t *testing.T) {
@@ -203,10 +203,10 @@ func Test_int64PtrEqualValues(t *testing.T) {
 		want bool
 	}{
 		{name: "both are nils", args: args{a: nil, b: nil}, want: true},
-		{name: "a is nil, b is not nil", args: args{a: nil, b: utils.Ptr(int64(1))}, want: false},
-		{name: "a is not nil, b is nil", args: args{a: utils.Ptr(int64(0)), b: nil}, want: false},
-		{name: "both are not nils, but not equal", args: args{a: utils.Ptr(int64(0)), b: utils.Ptr(int64(1))}, want: false},
-		{name: "both are not nils, equal", args: args{a: utils.Ptr(int64(1)), b: utils.Ptr(int64(1))}, want: true},
+		{name: "a is nil, b is not nil", args: args{a: nil, b: golang.Ptr(int64(1))}, want: false},
+		{name: "a is not nil, b is nil", args: args{a: golang.Ptr(int64(0)), b: nil}, want: false},
+		{name: "both are not nils, but not equal", args: args{a: golang.Ptr(int64(0)), b: golang.Ptr(int64(1))}, want: false},
+		{name: "both are not nils, equal", args: args{a: golang.Ptr(int64(1)), b: golang.Ptr(int64(1))}, want: true},
 	}
 	for _, tt := range tests {
 		tt := tt

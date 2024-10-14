@@ -1,7 +1,7 @@
 package items
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // RawWatchedGroupStatFields represents DB data fields for watched group stats used by itemNavigationView & itemChildrenView.

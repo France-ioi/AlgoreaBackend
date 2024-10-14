@@ -5,11 +5,10 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 type parentTitle struct {
-	// Nullable
 	// required: true
 	Title *string `json:"title"`
 	// required: true
@@ -20,7 +19,6 @@ type parentTitle struct {
 type contestAdminListRow struct {
 	// required: true
 	ItemID int64 `json:"id,string"`
-	// Nullable
 	// required: true
 	Title *string `gorm:"column:title_translation" json:"title"`
 	// required: true

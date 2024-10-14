@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /items/{dependent_item_id}/prerequisites/{prerequisite_item_id}/apply items itemDependencyApply
@@ -128,6 +128,6 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess[*struct{}](nil)))
 	return service.NoError
 }

@@ -7,12 +7,12 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
 
 // ErrorResponse is an extension of the response for returning errors.
-type ErrorResponse struct {
-	Response
+type ErrorResponse[T any] struct {
+	Response[T]
 	ErrorText string      `json:"error_text,omitempty"` // application-level error message, for debugging
 	Errors    interface{} `json:"errors,omitempty"`     // form errors
 }
@@ -31,12 +31,12 @@ var NoError = APIError{0, nil}
 var InsufficientAccessRightsError = ErrForbidden(errors.New("insufficient access rights"))
 
 func (e APIError) httpResponse() render.Renderer {
-	response := Response{
+	response := Response[*struct{}]{
 		HTTPStatusCode: e.HTTPStatusCode,
 		Success:        false,
 		Message:        http.StatusText(e.HTTPStatusCode),
 	}
-	result := ErrorResponse{Response: response}
+	result := ErrorResponse[*struct{}]{Response: response}
 	if e.Error == nil {
 		return &result
 	}
@@ -93,5 +93,12 @@ func ErrUnexpected(err error) APIError {
 func MustNotBeError(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+// MustBeNoError panics if the APIError is not NoError.
+func MustBeNoError(apiError APIError) {
+	if apiError != NoError {
+		panic(apiError)
 	}
 }

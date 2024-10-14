@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 // A Client is the login module client.

@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 // computeAllAccess recomputes fields of permissions_generated.
@@ -102,6 +102,8 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	// ------------------------------------------------------------------------------------
 	hasChanges := true
 	for hasChanges {
+		CallBeforePropagationStepHook(PropagationStepAccessMain)
+
 		mustNotBeError(s.InTransaction(func(store *DataStore) error {
 			initTransactionTime := time.Now()
 

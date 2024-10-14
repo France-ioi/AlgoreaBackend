@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /groups/{parent_group_id}/relations/{child_group_id} group-memberships groupAddChild
@@ -85,7 +85,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 	}
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
 
 	return service.NoError
 }

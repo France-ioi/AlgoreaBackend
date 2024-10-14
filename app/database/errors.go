@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database/mysqldb"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
 )
 
 // IsDuplicateEntryError checks whether an error corresponds to a duplicate of primary keys on insertion.

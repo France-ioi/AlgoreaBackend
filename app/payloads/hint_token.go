@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
 
 // HintToken represents data inside a hint token.

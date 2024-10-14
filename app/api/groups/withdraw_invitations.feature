@@ -1,6 +1,6 @@
 Feature: Withdraw group invitations
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  |
       | 11  |
       | 13  |
@@ -15,10 +15,10 @@ Feature: Withdraw group invitations
       | 131 |
       | 141 |
       | 151 |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 111            |
       | 13              | 121            |
@@ -26,17 +26,17 @@ Feature: Withdraw group invitations
       | 13              | 151            |
       | 22              | 13             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type         | at                        |
-      | 13       | 21        | join_request | {{relativeTime("-170h")}} |
-      | 13       | 31        | invitation   | {{relativeTime("-168h")}} |
-      | 14       | 11        | join_request | {{relativeTime("-167h")}} |
-      | 14       | 21        | invitation   | {{relativeTime("-166h")}} |
-      | 13       | 141       | invitation   | {{relativeTime("-165h")}} |
+    And the database has the following table "group_pending_requests":
+      | group_id | member_id | type         | at                          |
+      | 13       | 21        | join_request | {{relativeTimeDB("-170h")}} |
+      | 13       | 31        | invitation   | {{relativeTimeDB("-168h")}} |
+      | 14       | 11        | join_request | {{relativeTimeDB("-167h")}} |
+      | 14       | 21        | invitation   | {{relativeTimeDB("-166h")}} |
+      | 13       | 141       | invitation   | {{relativeTimeDB("-165h")}} |
 
   Scenario Outline: Withdraw invitations
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage   |
       | 13       | 21         | <can_manage> |
     When I send a POST request to "/groups/13/invitations/withdraw?group_ids=31,141,21,11,13,22,151"

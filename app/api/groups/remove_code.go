@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /groups/{group_id}/code groups groupCodeRemove
@@ -53,6 +53,6 @@ func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) service.A
 		store.Groups().Where("id = ?", groupID).
 			UpdateColumn("code", nil).Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 func TestStructuredDBLogger_Print_SQL(t *testing.T) {
@@ -98,8 +98,10 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 
 func TestStructuredDBLogger_Print_RawSQLWithDuration(t *testing.T) {
 	assert := assertlib.New(t)
-	logger, hook := test.NewNullLogger()
-	structuredLogger := logging.NewStructuredDBLogger(logger)
+	var hook *test.Hook
+	logging.SharedLogger.Logger, hook = test.NewNullLogger()
+	defer logging.ResetShared()
+	structuredLogger := logging.NewStructuredDBLogger()
 	structuredLogger.Print("rawsql", nil, "sql-stmt-exec",
 		map[string]interface{}{
 			"query":    "SELECT 1",

@@ -9,10 +9,10 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 type sessionIDsInProgressMap sync.Map
@@ -82,7 +82,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
 	}
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, newToken, time.Now().Add(time.Duration(expiresIn)*time.Second),
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], newToken,
+		time.Now().Add(time.Duration(expiresIn)*time.Second),
 		cookieAttributes)
 	return service.NoError
 }

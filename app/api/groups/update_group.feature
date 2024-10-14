@@ -1,6 +1,6 @@
 Feature: Update a group (groupEdit)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | grade | description     | created_at          | type    | root_activity_id    | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | is_official_session | require_members_to_join_parent | organizer | address_line1 | address_line2 | address_postcode | address_city | address_country | expected_start      | frozen_membership | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
       | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class   | 1672978871462145361 | null          | true    | true      | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class   | 1672978871462145461 | null          | true    | true      | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | edit                                  | 2020-01-01 00:00:00                    | true                   | 5                | true                     |
@@ -15,12 +15,12 @@ Feature: Update a group (groupEdit)
       | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 41 | john    | -4    | john            | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 50 | Admins  | -4    | Admins          | 2019-04-06 09:26:40 | Club    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | temp_user | group_id | first_name  | last_name | default_language |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
       | other | 0         | 24       | John        | Doe       | en               |
       | jane  | 0         | 25       | Jane        | Doe       | en               |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
       | 14       | 21         | none                  |
@@ -29,26 +29,26 @@ Feature: Update a group (groupEdit)
       | 16       | 25         | none                  |
       | 17       | 25         | none                  |
       | 18       | 25         | memberships           |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 41             |
       | 50              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
       | 13       | 24        | join_request  |
       | 13       | 31        | join_request  |
       | 13       | 41        | leave_request |
       | 14       | 31        | join_request  |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag | type    |
       | 123  | fr                   | Task    |
       | 4567 | fr                   | Skill   |
       | 5678 | fr                   | Chapter |
       | 6789 | fr                   | Task    |
       | 7890 | fr                   | Task    |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 21       | 4567    | info               |
       | 21       | 5678    | info               |
@@ -56,7 +56,7 @@ Feature: Update a group (groupEdit)
       | 21       | 7890    | info               |
       | 24       | 123     | info               |
       | 50       | 123     | info               |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_make_session_official | is_owner | source_group_id |
       | 24       | 123     | true                      | false    | 13              |
       | 50       | 123     | false                     | true     | 13              |
@@ -325,21 +325,21 @@ Feature: Update a group (groupEdit)
 
   Scenario: Should be able to update the description, root_activity_id and root_skill_id from a value to null
     Given I am the user with id "100"
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login   | group_id |
       | manager | 100      |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 101      | 100        | memberships_and_group |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id  | name    | description       | root_activity_id | root_skill_id |
       | 100 | manager |                   | null             | null          |
       | 101 | Group   | Group description | 200              | 100           |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 101             | 100            |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag | type  |
       | 100 | fr                   | Skill |
     When I send a PUT request to "/groups/101" with the following body:

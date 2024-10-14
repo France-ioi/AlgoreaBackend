@@ -8,11 +8,11 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /auth/temp-user auth tempUserCreate
@@ -128,7 +128,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		return err
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess,
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}],
 		token, time.Now().Add(time.Duration(expiresIn)*time.Second), cookieAttributes)
 	return service.NoError
 }

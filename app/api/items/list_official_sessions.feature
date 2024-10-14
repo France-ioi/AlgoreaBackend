@@ -1,6 +1,6 @@
 Feature: List official sessions for item_id
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name          | description | type    | is_official_session | is_public | root_activity_id | require_lock_membership_approval_until | require_personal_info_access_approval | require_watch_approval | require_members_to_join_parent | open_activity_when_joining | expected_start      | organizer              | address_city | address_country | address_line1               | address_line2        | address_postcode |
       | 11 | jdoe          | null        | User    | false               | false     | null             | null                                   | none                                  | false                  | false                          | false                      | null                | null                   | null         | null            | null                        | null                 | null             |
       | 13 | Group B       | null        | Class   | false               | false     | null             | null                                   | none                                  | false                  | false                          | false                      | null                | null                   | null         | null            | null                        | null                 | null             |
@@ -16,11 +16,11 @@ Feature: List official sessions for item_id
       | 72 | Parent        | null        | Club    | false               | false     | null             | null                                   | none                                  | false                  | false                          | false                      | null                | null                   | null         | null            | null                        | null                 | null             |
       | 73 | Parent2       | null        | Friends | false               | false     | null             | null                                   | none                                  | false                  | false                          | false                      | null                | null                   | null         | null            | null                        | null                 | null             |
       | 80 | Group         | null        | Friends | false               | false     | null             | null                                   | none                                  | false                  | false                          | false                      | null                | null                   | null         | null            | null                        | null                 | null             |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name | last_name |
       | jdoe  | 11       | John       | Doe       |
       | other | 21       | George     | Bush      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |
       | 13              | 21             |
@@ -34,14 +34,14 @@ Feature: List official sessions for item_id
       | 73              | 50             |
       | 80              | 71             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id |
       | 13         | 80       |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | allows_multiple_attempts | default_language_tag |
       | 200 | 0                        | fr                   |
       | 210 | 1                        | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | info                     |
       | 13       | 210     | content                  |

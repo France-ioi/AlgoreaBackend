@@ -3,33 +3,33 @@ Feature: Submit a new answer
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id  | name | type |
       | 201 | team | Team |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 22              | 13             |
       | 201             | 101            |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag |
       | 10 | fr                   |
       | 50 | fr                   |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 1           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
       | 201      | 50      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 1  | 101            |
       | 1  | 201            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | latest_activity_at  | started_at          |
       | 1          | 101            | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
       | 1          | 101            | 10      | null                            | 0            | 0           | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |

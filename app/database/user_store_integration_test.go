@@ -9,8 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 )
 
 func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
@@ -18,38 +19,35 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
 	defer testhelpers.RestoreDBTime()
 
-	db := setupDBForDeleteWithTrapsTests(t, currentTime)
-	defer func() { _ = db.Close() }()
+	for _, test := range []struct {
+		name                                      string
+		delay                                     time.Duration
+		expectDeletedUsers, expectDeletedSessions *golang.Set[int64]
+	}{
+		{
+			name:                  "no delay",
+			delay:                 0,
+			expectDeletedUsers:    golang.NewSet[int64](5000, 5003),
+			expectDeletedSessions: golang.NewSet[int64](1),
+		},
+		{
+			name:                  "delay 1 second",
+			delay:                 1 * time.Second,
+			expectDeletedUsers:    golang.NewSet[int64](5003),
+			expectDeletedSessions: golang.NewSet[int64](),
+		},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db := setupDBForDeleteWithTrapsTests(t, currentTime)
+			defer func() { _ = db.Close() }()
 
-	store := database.NewDataStore(db)
-	assert.NoError(t, store.Users().DeleteTemporaryWithTraps())
+			store := database.NewDataStore(db)
+			assert.NoError(t, store.Users().DeleteTemporaryWithTraps(test.delay))
 
-	assertTableColumn(t, db, "users", "group_id", []int64{5001, 5002})
-	assertTableColumn(t, db, "groups", "id", []int64{1, 5001, 5002, 7000})
-	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5001, 5002, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5001, 5002, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5001, 5002, 7000})
-	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5001, 5002})
-	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5001, 5002, 7000})
-	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5001, 5002})
-	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 5002, 7000})
-	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001, 5002})
-	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 5002, 7000})
-	for _, table := range []string{"permissions_granted", "permissions_generated"} {
-		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002})
+			assertUserRelatedTablesAfterDeletingWithTraps(t, db, test.expectDeletedUsers, test.expectDeletedSessions)
+		})
 	}
-	for _, table := range []string{"attempts", "results"} {
-		assertTableColumn(t, db, table, "participant_id", []int64{5001, 5002})
-	}
-	assertTableColumn(t, db, "sessions", "user_id", []int64{5001, 5002})
-	assertTableColumn(t, db, "access_tokens", "session_id", []int64{2, 3})
-	assertTableColumn(t, db, "answers", "author_id", []int64{5001, 5002})
-	assertTableColumn(t, db, "filters", "user_id", []int64{5001, 5002})
-
-	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
-	found, err := store.GroupAncestors().Where("ancestor_group_id = 1 AND child_group_id = 7000").HasRows()
-	assert.NoError(t, err)
-	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
 }
 
 func TestUserStore_DeleteWithTraps(t *testing.T) {
@@ -64,32 +62,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	assert.NoError(t, store.Users().DeleteWithTraps(
 		&database.User{GroupID: 5001}))
 
-	assertTableColumn(t, db, "users", "group_id", []int64{5000, 5002, 5003})
-	assertTableColumn(t, db, "groups", "id", []int64{1, 5000, 5002, 5003, 7000})
-	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5000, 5002, 5003, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5000, 5002, 5003, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5000, 5002, 5003, 7000})
-	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5000, 5002, 5003})
-	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5000, 5002, 5003, 7000})
-	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5000, 5002, 5003})
-	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5000, 5002, 5003, 7000})
-	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5000, 5002, 5003})
-	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5000, 5002, 5003, 7000})
-	for _, table := range []string{"permissions_generated", "permissions_granted"} {
-		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002, 5003})
-	}
-	for _, table := range []string{"attempts", "results"} {
-		assertTableColumn(t, db, table, "participant_id", []int64{5000, 5002, 5003})
-	}
-	assertTableColumn(t, db, "sessions", "user_id", []int64{5000, 5002})
-	assertTableColumn(t, db, "access_tokens", "session_id", []int64{1, 3})
-	assertTableColumn(t, db, "answers", "author_id", []int64{5000, 5002, 5003})
-	assertTableColumn(t, db, "filters", "user_id", []int64{5000, 5002, 5003})
-
-	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
-	found, err := store.GroupAncestors().Where("ancestor_group_id = 1 AND child_group_id = 7000").HasRows()
-	assert.NoError(t, err)
-	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
+	assertUserRelatedTablesAfterDeletingWithTraps(t, db, golang.NewSet[int64](5001), golang.NewSet[int64](2))
 }
 
 func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
@@ -105,32 +78,7 @@ func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
 		return store.Users().Where("group_id % 2 = 0")
 	}))
 
-	assertTableColumn(t, db, "users", "group_id", []int64{5001, 5003})
-	assertTableColumn(t, db, "groups", "id", []int64{1, 5001, 5003, 7000})
-	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5001, 5003, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5001, 5003, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5001, 5003, 7000})
-	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5001, 5003})
-	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5001, 5003, 7000})
-	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5001, 5003})
-	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 5003, 7000})
-	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001, 5003})
-	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 5003, 7000})
-	for _, table := range []string{"permissions_generated", "permissions_granted"} {
-		assertTableColumn(t, db, table, "group_id", []int64{5001, 5003})
-	}
-	for _, table := range []string{"attempts", "results"} {
-		assertTableColumn(t, db, table, "participant_id", []int64{5001, 5003})
-	}
-	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
-	assertTableColumn(t, db, "access_tokens", "session_id", []int64{2})
-	assertTableColumn(t, db, "answers", "author_id", []int64{5001, 5003})
-	assertTableColumn(t, db, "filters", "user_id", []int64{5001, 5003})
-
-	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
-	found, err := store.GroupAncestors().Where("ancestor_group_id = 1 AND child_group_id = 7000").HasRows()
-	assert.NoError(t, err)
-	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
+	assertUserRelatedTablesAfterDeletingWithTraps(t, db, golang.NewSet[int64](5000, 5002), golang.NewSet[int64](1, 3))
 }
 
 func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *database.DB {
@@ -208,7 +156,64 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 }
 
 func assertTableColumn(t *testing.T, db *database.DB, table, column string, expectedValues interface{}) {
+	t.Helper()
+
 	reflValues := reflect.New(reflect.TypeOf(expectedValues))
 	assert.NoError(t, db.Table(table).Order(column).Pluck("DISTINCT "+column, reflValues.Interface()).Error())
 	assert.EqualValues(t, expectedValues, reflValues.Elem().Interface(), "wrong %s in %s", column, table)
+}
+
+func assertUserRelatedTablesAfterDeletingWithTraps(
+	t *testing.T, db *database.DB, expectDeletedUsers, expectDeletedSessions *golang.Set[int64],
+) {
+	t.Helper()
+
+	allUsers := filterIDs([]int64{5000, 5001, 5002, 5003}, expectDeletedUsers)
+	allGroups := filterIDs([]int64{1, 5000, 5001, 5002, 5003, 7000}, expectDeletedUsers)
+	allParentGroups := filterIDs([]int64{1, 5000, 5001, 5002, 5003}, expectDeletedUsers)
+	allChildGroups := filterIDs([]int64{5000, 5001, 5002, 5003, 7000}, expectDeletedUsers)
+	allPendingRequestGroups := filterIDs([]int64{1, 5000, 5001, 5002, 5003}, expectDeletedUsers)
+	allPendingRequestMembers := filterIDs([]int64{5000, 5001, 5002, 5003, 7000}, expectDeletedUsers)
+	otherTablesGroups := filterIDs([]int64{5000, 5001, 5002, 5003}, expectDeletedUsers)
+	userIDsInSessions := filterIDs([]int64{5000, 5001, 5002}, expectDeletedUsers)
+	sessions := filterIDs([]int64{1, 2, 3}, expectDeletedSessions)
+
+	assertTableColumn(t, db, "users", "group_id", allUsers)
+	assertTableColumn(t, db, "groups", "id", allGroups)
+	assertTableColumn(t, db, "groups_propagate", "id", allGroups)
+	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", allGroups)
+	assertTableColumn(t, db, "groups_ancestors", "child_group_id", allGroups)
+	assertTableColumn(t, db, "groups_groups", "parent_group_id", allParentGroups)
+	assertTableColumn(t, db, "groups_groups", "child_group_id", allChildGroups)
+	assertTableColumn(t, db, "group_pending_requests", "group_id", allPendingRequestGroups)
+	assertTableColumn(t, db, "group_pending_requests", "member_id", allPendingRequestMembers)
+	assertTableColumn(t, db, "group_membership_changes", "group_id", allPendingRequestGroups)
+	assertTableColumn(t, db, "group_membership_changes", "member_id", allPendingRequestMembers)
+	for _, table := range []string{"permissions_granted", "permissions_generated"} {
+		assertTableColumn(t, db, table, "group_id", otherTablesGroups)
+	}
+	for _, table := range []string{"attempts", "results"} {
+		assertTableColumn(t, db, table, "participant_id", otherTablesGroups)
+	}
+	assertTableColumn(t, db, "sessions", "user_id", userIDsInSessions)
+	assertTableColumn(t, db, "access_tokens", "session_id", sessions)
+	assertTableColumn(t, db, "answers", "author_id", otherTablesGroups)
+	assertTableColumn(t, db, "filters", "user_id", otherTablesGroups)
+
+	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
+
+	store := database.NewDataStore(db)
+	found, err := store.GroupAncestors().Where("ancestor_group_id = 1 AND child_group_id = 7000").HasRows()
+	assert.NoError(t, err)
+	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
+}
+
+func filterIDs(ids []int64, idsToExclude *golang.Set[int64]) (filtered []int64) {
+	filtered = make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if !idsToExclude.Contains(id) {
+			filtered = append(filtered, id)
+		}
+	}
+	return
 }

@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:model itemNavigationResponse
@@ -18,7 +18,6 @@ type itemNavigationResponse struct {
 
 	// required: true
 	AttemptID int64 `json:"attempt_id,string"`
-	// Nullable
 	// required: true
 	Children []navigationItemChild `json:"children"`
 }

@@ -6,18 +6,14 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/sirupsen/logrus" //nolint:depguard
 )
 
 // StructuredDBLogger is a database structured logger.
-type StructuredDBLogger struct {
-	logger *logrus.Logger
-}
+type StructuredDBLogger struct{}
 
 // NewStructuredDBLogger created a database structured logger.
-func NewStructuredDBLogger(logger *logrus.Logger) *StructuredDBLogger {
-	return &StructuredDBLogger{logger}
+func NewStructuredDBLogger() *StructuredDBLogger {
+	return &StructuredDBLogger{}
 }
 
 var (
@@ -29,10 +25,10 @@ var (
 // values: 0: level, 1: source file, 2: duration in ns, 3: query, 4: slice of parameters, 5: rows affected or returned
 func (l *StructuredDBLogger) Print(values ...interface{}) {
 	level := values[0]
-	logger := l.logger.WithField("type", "db")
+	logger := SharedLogger.WithField("type", "db")
 
 	switch level {
-	case "sql":
+	case sqlString:
 		duration := float64(values[2].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
 		sql := fillSQLPlaceholders(values[3].(string), values[4].([]interface{}))
 		logger.WithFields(map[string]interface{}{
@@ -79,7 +75,7 @@ func fillSQLPlaceholders(query string, values []interface{}) string {
 				formattedValue = fmt.Sprintf("%v", typedValue)
 			}
 		} else {
-			formattedValue = "NULL"
+			formattedValue = nullString
 		}
 		formattedValues = append(formattedValues, formattedValue)
 	}

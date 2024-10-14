@@ -1,21 +1,21 @@
 Feature: List official sessions for item_id - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    |
       | 11 | jdoe    |
       | 13 | Group B |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name | last_name |
       | jdoe  | 11       | John       | Doe       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | allows_multiple_attempts | default_language_tag |
       | 200 | 0                        | fr                   |
       | 210 | 1                        | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | none                     |
       | 13       | 210     | info                     |

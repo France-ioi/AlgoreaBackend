@@ -5,23 +5,21 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 type listItemStringNotInfo struct {
-	// Nullable; only if `can_view` >= 'content'
+	// Only if `can_view` >= 'content'
 	Subtitle *string `json:"subtitle"`
 }
 
 type listItemString struct {
 	// required: true
 	LanguageTag string `json:"language_tag"`
-	// Nullable
 	// required: true
 	Title *string `json:"title"`
-	// Nullable
 	// required: true
 	ImageURL *string `json:"image_url"`
 
@@ -58,7 +56,7 @@ type visibleChildItemFields struct {
 	// only for visible items
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type"`
-	// Nullable, only for visible items
+	// only for visible items
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	Duration *string `json:"duration"`

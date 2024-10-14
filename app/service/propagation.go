@@ -5,10 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
+// PropagationEndpointTimeout is the timeout for the propagation endpoint.
 const PropagationEndpointTimeout = 3 * time.Second
 
 // SchedulePropagation schedules asynchronous propagation of the given types.

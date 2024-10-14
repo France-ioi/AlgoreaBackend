@@ -1,12 +1,13 @@
 package database
 
-import "github.com/France-ioi/AlgoreaBackend/app/database/mysqldb"
+import "github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
 
 // SessionStore implements database operations on `sessions`.
 type SessionStore struct {
 	*DataStore
 }
 
+// GetUserAndSessionIDByValidAccessToken returns the user and session ID associated with the given access token.
 func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user User, sessionID int64, err error) {
 	result := struct {
 		User      User `gorm:"embedded"`

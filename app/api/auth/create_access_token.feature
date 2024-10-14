@@ -12,11 +12,11 @@ Feature: Create an access token
           allUsersGroup: 2
           TempUsersGroup: 4
       """
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | name      | type | created_at          |
       | 2  | AllUsers  | Base | 2020-01-01 00:00:00 |
       | 4  | TempUsers | Base | 2020-01-01 00:00:00 |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 4              |
 
@@ -184,24 +184,24 @@ Feature: Create an access token
         "badges":null,"client_id":null,"verification":null,"subscription_news":false
       }
       """
-    And the database table 'groups' has also the following rows:
+    And the database table "groups" has also the following rows:
       | id | name     | type | description | created_at          | is_open | send_emails |
       | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false   | true        |
       | 13 | john     | User | john        | 2018-05-10 10:42:11 | false   | false       |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     | time_zone     | notify_news | photo_autoload | public_first_name | public_last_name |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 | Europe/Moscow | true        | false          | false             | false            |
       | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 | null          | true        | false          | false             | false            |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 11             |
       | 2               | 13             |
     And the groups ancestors are computed
-    And the database has the following table 'sessions':
+    And the database has the following table "sessions":
       | session_id | user_id | refresh_token         |
       | 1          | 11      | previousrefreshtoken1 |
       | 2          | 13      | previousrefreshtoken2 |
-    And the database has the following table 'access_tokens':
+    And the database has the following table "access_tokens":
       | session_id | token                | expires_at          | issued_at           |
       | 1          | previousaccesstoken1 | 2020-06-16 22:02:49 | 2019-07-16 22:02:28 |
       | 2          | previousaccesstoken2 | 2020-06-16 22:02:49 | 2019-07-16 22:02:28 |
@@ -267,10 +267,10 @@ Feature: Create an access token
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
       """
     And the template constant "code_from_oauth" is "somecode"
-    And the database table 'groups' has also the following rows:
+    And the database table "groups" has also the following rows:
       | id | name     | type | description | created_at          | is_open | send_emails |
       | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false   | true        |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
     And the groups ancestors are computed
@@ -392,24 +392,24 @@ Feature: Create an access token
     And the template constant "code_from_oauth" is "someanothercode"
     And the template constant "access_token_from_oauth" is "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImU3ODI4N2I2MjhhMjhlYmQ0NGU3ZDYwMGI3YzQ2MmQzMzFiZWUyZjg2ZWE2NGQ4MzNiOTBhMjJkYTNkYThmZjRlYzMyYTFiN2EyNDA2MWZmIn0.eyJhdWQiOiIxIiwianRpIjoiZTc4Mjg3YjYyOGEyOGViZDQ0ZTdkNjAwYjdjNDYyZDMzMWJlZTJmODZlYTY0ZDgzM2I5MGEyMmRhM2RhOGZmNGVjMzJhMWI3YTI0MDYxZmYiLCJpYXQiOjE1NjM4NDg4MjIsIm5iZiI6MTU2Mzg0ODgyMiwiZXhwIjoxNTk1NDcxMjIyLCJzdWIiOiIxMDAwMDAwMDEiLCJzY29wZXMiOlsiYWNjb3VudCJdfQ.W6aP5IdCRTGGlNp8IK-YF4lzoKD07ilv4xhNoNjyVdJkGic8eP4lnTE4s1NSvNxsrXkiYvwt78QAbQL6uCTqhdI-NHxDYOW-2EWUFYwRZxuLXqYuNkZD7iq9bN6kwLaZEUy-YpBIegC1bHUtKrUAHtS_4ZulNsJaN57V6M_W0VtiYDdox9OXzfAswWtHgedx6lNo-WfRhxfLf8gkWVHd6pRzYcKTWB3eeEy_lxNdw_v78IOM1WcdClp59pZT5C66OtQPhpOkHe33hMZgPuiVq887pwbIN3eaqXbX0D1CiELy_3NXMGFQoMBY8JHkch-2yJmOS-nA0vlUOpj4ddjfW8Rt15Yjq6Nuwy0okvzy5hlcK5vHnx9ORyyW9iEF2IK8Nt07nBrk-9scIhNLverdyL62gKJdrWvcn1gEHbCdY3A-0WPYhZ6sjH1NG2wmIcctjHe3ZCaP9JmEtdKH9RGQ5tnxoaA9H0ouJiXBrcc5uZ5h4nQqwZ5Cwf6--inkMe9kGmlq5AgqWZqpXpY11I9XInK6zjBngn2fEwgg0nRz72RK1i3s65YO8p7MiDTSE1_dMy72OQrA943HvrPd51SoJUmPI_VprG6Ayekyl_CJzIhF4vCyH6uWl8K4l83xxx6lXiVxfv0gl4bdQLBKlpku55rzMCNt34bHZHvH4vL4qzk"
     And the template constant "refresh_token_from_oauth" is "def502004ce3901576b99f1db359f8a5d2192336218515e7ca08fd2b923df4eb87c163d1660997f90cc16f4da734b9cb1ebff982574e4bc85c7d2de97cf4712dee42b7b729732c62d957a2e3c74d5b306d5b23bdf7be64074988a8f95e629709101a7f62f1ee36c3ece2e4ddf2f83ada76048276a3317ac6773a79968f1bc9ab5f16cb561e7547210a3bca354bfa36228da67dada8f68b5ad3d0d98b54222b18fdd46ad5ef47ce29cecbba63c6611604e8338dadeaa27de719fbe8479ffe49d8831d78ee825b37521215997ba139ae0d39534dc543f9d31e67a50dd03cd1c46fbf0990bcf89921307c4c85dd94c28158a5e28f3fd88d12b581d7da6aa2615930844329579c18ef1c1390cd17b1baf7236d82c59e80cbc7e68ed6c0ae35cabce1bfeb9ea29b50cd087ed1caadca5cad8f680d1c9ce5296da2da40479849d66b6ef31e1f2bc4f9bb094d288d331e94fe1e4e52526145b0f03a2a7b1c7743cd99ae79e2abaf2b92b87081bc014fcc65304cb1cb"
-    And the database table 'groups' has also the following rows:
+    And the database table "groups" has also the following rows:
       | id | name     | type | description | created_at          | is_open | send_emails |
       | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false   | true        |
       | 13 | john     | User | john        | 2018-05-10 10:42:11 | false   | false       |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
       | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 11             |
       | 2               | 13             |
     And the groups ancestors are computed
-    And the database has the following table 'sessions':
+    And the database has the following table "sessions":
       | session_id | user_id | refresh_token         |
       | 1          | 11      | previousrefreshtoken1 |
       | 2          | 13      | previousrefreshtoken2 |
-    And the database has the following table 'access_tokens':
+    And the database has the following table "access_tokens":
       | session_id | token                | expires_at          | issued_at           |
       | 1          | previousaccesstoken1 | 2020-06-16 22:02:49 | 2019-06-16 22:02:28 |
       | 2          | previousaccesstoken2 | 2020-06-16 22:02:49 | 2019-06-16 22:02:28 |
@@ -827,7 +827,7 @@ Feature: Create an access token
         ],
       "client_id":1,"verification":[],"subscription_news":true}
       """
-    And the database table 'groups' has also the following rows:
+    And the database table "groups" has also the following rows:
       | id                  | name       | type  | description | is_open | send_emails | text_id                                 | require_personal_info_access_approval |
       | 8674665223082153551 | Example #1 | Other | null        | false   | false       | https://badges.example.com/examples/one | edit                                  |
     When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"

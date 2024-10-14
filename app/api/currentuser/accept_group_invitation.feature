@@ -1,44 +1,44 @@
 Feature: User accepts an invitation to join a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | require_personal_info_access_approval |
       | 11 | none                                  |
       | 14 | none                                  |
       | 15 | view                                  |
       | 21 | none                                  |
       | 22 | none                                  |
-    Given the database has the following table 'users':
+    Given the database has the following table "users":
       | group_id |
       | 21       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 14              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag |
       | 20 | fr                   |
       | 30 | fr                   |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 20               | 30            |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 20             | 30            | 1           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 11       | 20      | content            |
       | 15       | 20      | info               |
       | 21       | 30      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 21             |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id |
       | 0          | 21             | 30      |
 
   Scenario: Successfully accept an invitation
     Given I am the user with id "21"
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type       |
       | 11       | 21        | invitation |
     When I send a POST request to "/current-user/group-invitations/11/accept"
@@ -77,7 +77,7 @@ Feature: User accepts an invitation to join a group
 
   Scenario: Successfully accept an invitation into a group that requires approvals
     Given I am the user with id "21"
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type       |
       | 15       | 21        | invitation |
     When I send a POST request to "/current-user/group-invitations/15/accept?approvals=personal_info_view,lock_membership,watch"

@@ -1,8 +1,11 @@
+/*
+Package main - the entry point of the application
+*/
 package main
 
 import (
-	appVersion "github.com/France-ioi/AlgoreaBackend/app/version"
-	"github.com/France-ioi/AlgoreaBackend/cmd"
+	appVersion "github.com/France-ioi/AlgoreaBackend/v2/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/cmd"
 )
 
 var (

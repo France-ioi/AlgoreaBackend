@@ -1,18 +1,17 @@
 package cmd
 
 import (
-	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 const (
@@ -34,55 +33,30 @@ func init() { //nolint:gochecknoinits
 				appenv.SetEnv(args[0])
 			}
 
-			appConfig := app.LoadConfig()
-
-			// Connect to database.
-			var db *sql.DB
-			databaseConfig, err := app.DBConfig(appConfig)
+			var application *app.Application
+			application, err = app.New()
 			if err != nil {
-				fmt.Println("Unable to load the database config: ", err)
-				os.Exit(1)
-			}
-
-			db, err = database.OpenRawDBConnection(databaseConfig.FormatDSN())
-			if err != nil {
-				fmt.Println("Cannot open database connection: ", err)
-				os.Exit(1)
-			}
-
-			// Initialize the logger to log the SQL queries.
-			loggingConfig := app.LoggingConfig(appConfig)
-			logging.SharedLogger.Configure(loggingConfig)
-
-			gormDB, err := database.Open(db)
-			if err != nil {
-				fmt.Println("Cannot retrieve GORM instance: ", err)
-				os.Exit(1)
+				log.Fatal(err)
 			}
 
 			// Propagation.
 			// We use a lock because we don't want this process to be called concurrently.
-			err = database.NewDataStore(gormDB).WithNamedLock(propagationLockName, propagationLockTimeout, func(s *database.DataStore) error {
-				return s.InTransaction(func(store *database.DataStore) error {
-					store.ScheduleItemsAncestorsPropagation()
-					store.SchedulePermissionsPropagation()
-					store.ScheduleResultsPropagation()
+			err = database.NewDataStore(application.Database).
+				WithNamedLock(propagationLockName, propagationLockTimeout, func(s *database.DataStore) error {
+					return s.InTransaction(func(store *database.DataStore) error {
+						store.ScheduleItemsAncestorsPropagation()
+						store.SchedulePermissionsPropagation()
+						store.ScheduleResultsPropagation()
 
-					return nil
+						return nil
+					})
 				})
-			})
 			if err != nil {
 				fmt.Println("Error while doing propagation: ", err)
 				os.Exit(1)
 			}
 
 			fmt.Println("Propagation done.")
-
-			// Close database connection.
-			if db.Close() != nil {
-				fmt.Println("Cannot close DB connection:", err)
-				os.Exit(1)
-			}
 		},
 	}
 

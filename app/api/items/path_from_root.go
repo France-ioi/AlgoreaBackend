@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // ItemPath represents a path to an item.
@@ -109,7 +109,10 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 type PathRootType int
 
 const (
+	// PathRootParticipant is used by FindItemPaths() to specify that we want to get root items from groups managed by the participant.
 	PathRootParticipant PathRootType = iota
+	// PathRootUser is used by FindItemPaths() to specify that we want to get root items from groups managed by the user.
+	// The only service using this is itemBreadcrumbsFromRootsByTextIdGet which seems to be a mistake.
 	PathRootUser
 )
 

@@ -83,22 +83,28 @@ test: $(TEST_REPORT_DIR)
 	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
 	$(Q)$(GOTEST) -gcflags=all=-l -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
+test-dev:
+	$(Q)$(GOTEST) -gcflags=all=-l $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
-	$(Q)$(GOTEST) -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
+	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
 lint:
 	@[ -e $(GOLANGCILINT) ] && \
 		($(GOLANGCILINT) --version | grep -F "version $(GOLANGCILINT_VERSION) built" > /dev/null || rm $(GOLANGCILINT)) || true
 	$(MAKE) $(GOLANGCILINT)
 	$(GOLANGCILINT) run -v --deadline 10m0s
 
-validate-swagger:
-	swagger generate spec --scan-models -o ./swagger.yaml && swagger validate ./swagger.yaml
+swagger-generate:
+	swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
+		swagger validate ./swagger.yaml && \
+		swagger2openapi --refSiblings allOf --yaml swagger.yaml | sed 's/x-nullable:/nullable:/g' > openapi3.yaml && \
+		mv openapi3.yaml swagger.yaml && \
+		redocly lint --skip-rule security-defined --skip-rule spec --skip-rule no-identical-paths swagger.yaml
 
-serve-swagger: validate-swagger
-	swagger serve ./swagger.yaml --no-open
+swagger-serve: swagger-generate
+	redocly preview-docs swagger.yaml
 
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)

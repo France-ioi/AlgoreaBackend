@@ -11,13 +11,13 @@ Feature: Change item access rights for a group - can_request_help_to
   Background:
     Given allUsersGroup is defined as the group @AllUsers
     And there are the following groups:
-      | group           | parent | members  |
-      | @AllUsers       |        |          |
-      | @School         |        | @Teacher |
-      | @Class          |        |          |
-      | @OldHelperGroup |        |          |
-      | @NewHelperGroup |        |          |
-    And @Teacher is a manager of the group @Class and can grant group access
+      | group           | parent       | members  |
+      | @AllUsers       |              |          |
+      | @School         |              | @Teacher |
+      | @Class          | @ClassParent |          |
+      | @OldHelperGroup |              |          |
+      | @NewHelperGroup |              |          |
+    And the group @Teacher is a manager of the group @ClassParent and can grant group access
     And there are the following tasks:
       | item  |
       | @Item |
@@ -28,13 +28,13 @@ Feature: Change item access rights for a group - can_request_help_to
   Scenario Outline: Should update can_request_help_to to the desired value when rights are appropriate
     Given I am @Teacher
     # @OldHelperGroup is visible by @Teacher
-    And the group @Teacher is a descendant of the group @OldHelperGroup
+    And the group @Teacher is a descendant of the group @OldHelperGroup via @OldHelperGroupChild1
     # @OldHelperGroup is visible by @Class
-    And the group @Class is a descendant of the group @OldHelperGroup
+    And the group @Class is a descendant of the group @OldHelperGroup via @OldHelperGroupChild2
     # @NewHelperGroup is visible by @Teacher
-    And the group @Teacher is a descendant of the group @NewHelperGroup
+    And the group @Teacher is a descendant of the group @NewHelperGroup via @NewHelperGroupChild1
     # @NewHelperGroup is visible by @Class
-    And the group @Class is a descendant of the group @NewHelperGroup
+    And the group @Class is a descendant of the group @NewHelperGroup via @NewHelperGroupChild2
     And there are the following item permissions:
       | item  | group  | can_view | can_request_help_to           |
       | @Item | @Class | info     | <initial_can_request_help_to> |
@@ -81,7 +81,8 @@ Feature: Change item access rights for a group - can_request_help_to
   Scenario: Should work when trying to set can_request_help_to to a group not visible by the giver (current-user) if it was already set at the same value previously
     Given I am @Teacher
     # This is the only case for @HelperGroup to be visible by @Class and not @Teacher. Details in comment in update_permissions.go.
-    And @Class is a manager of the group @HelperGroup and can watch its members
+    And the group @Class is a manager of the group @HelperGroupParent and can watch for submissions from the group and its descendants
+    And the group @HelperGroup is a child of the group @HelperGroupParent
     And there are the following item permissions:
       | item  | group    | can_view | can_grant_view | can_request_help_to |
       | @Item | @Teacher |          | content        |                     |
@@ -100,7 +101,7 @@ Feature: Change item access rights for a group - can_request_help_to
   Scenario: Should work when trying to set can_request_help_to to a group no visible by the receiver if it was already set at the same value previously
     Given I am @Teacher
     # @HelperGroup is visible by @Teacher
-    And the group @Teacher is a descendant of the group @HelperGroup
+    And the group @Teacher is a descendant of the group @HelperGroup via @HelperGroupChild
     And there are the following item permissions:
       | item  | group    | can_view | can_grant_view | can_request_help_to |
       | @Item | @Teacher |          | content        |                     |

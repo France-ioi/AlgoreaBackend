@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 const minSearchStringLength = 3
@@ -97,7 +97,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	query := store.Groups().GetSearchForAvailableGroupsQuery(user, searchString)
+	query := store.Groups().AvailableGroupsBySearchString(user, searchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(

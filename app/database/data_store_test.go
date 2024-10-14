@@ -44,7 +44,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"AccessTokens", func(store *DataStore) *DB { return store.AccessTokens().Where("") }, "`access_tokens`"},
 		{"Threads", func(store *DataStore) *DB { return store.Threads().Where("") }, "`threads`"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
-		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches`"},
+		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches_v2`"},
 		{"UserBatchPrefixes", func(store *DataStore) *DB { return store.UserBatchPrefixes().Where("") }, "`user_batch_prefixes`"},
 	}
 	for _, tt := range tests {
@@ -419,5 +419,24 @@ func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
 		NewDataStore(db).ScheduleResultsPropagation()
 	})
 
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestProhibitResultsPropagation(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataStore := NewDataStore(db)
+	assert.False(t, dataStore.IsResultsPropagationProhibited())
+
+	dbMock.ExpectBegin()
+	dbMock.ExpectCommit()
+
+	ProhibitResultsPropagation(db)
+	assert.True(t, dataStore.IsResultsPropagationProhibited())
+	assert.NoError(t, dataStore.InTransaction(func(dataStore *DataStore) error {
+		dataStore.ScheduleResultsPropagation()
+		return nil
+	}))
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

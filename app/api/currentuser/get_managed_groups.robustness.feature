@@ -1,9 +1,9 @@
 Feature: List groups managed by the current user - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name          | type  | description |
       | 21 | owner         | User  | null        |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | owner | 21       |
 

@@ -1,22 +1,22 @@
 Feature: Remove members from a group (groupRemoveMembers)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type |
       | 11 | User |
       | 13 | Club |
       | 21 | User |
       | 31 | User |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 11       | John        | Doe       | 1     |
       | jane  | 31       | Jane        | Doe       | 1     |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |
       | 13              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 31         | none                  |
       | 13       | 21         | memberships_and_group |

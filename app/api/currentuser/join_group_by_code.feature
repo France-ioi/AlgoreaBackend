@@ -1,6 +1,6 @@
 Feature: Join a group using a code (groupsJoinByCode)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type  | code       | code_expires_at     | code_lifetime | require_watch_approval |
       | 11 | Team  | 3456789abc | 2037-05-29 06:38:38 | 3723          | 0                      |
       | 12 | Team  | abc3456789 | null                | 45296         | 0                      |
@@ -9,28 +9,28 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 16 | Class | 2345668999 | null                | null          | 0                      |
       | 17 | Team  | null       | null                | null          | 0                      |
       | 21 | User  | null       | null                | null          | 0                      |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id |
       | 21       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 17              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 11       | 21        | invitation   |
       | 14       | 21        | join_request |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 20 | fr                   | All                              |
       | 30 | fr                   | All                              |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 20               | 30            |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 20             | 30            | 1           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 11       | 20      | content            |
       | 12       | 20      | content            |
@@ -38,14 +38,14 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 15       | 20      | info               |
       | 16       | 20      | info               |
       | 21       | 30      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | root_item_id |
       | 0  | 16             | 30           |
       | 0  | 17             | 30           |
       | 0  | 21             | null         |
       | 1  | 16             | 30           |
       | 1  | 21             | 30           |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 0          | 17             | 30      | 2019-05-30 11:00:00 |
       | 0          | 21             | 30      | 2019-05-30 11:00:00 |
@@ -138,10 +138,7 @@ Feature: Join a group using a code (groupsJoinByCode)
       | parent_group_id | child_group_id |
       | 12              | 21             |
       | 17              | 21             |
-    And the table "group_pending_requests" should be:
-      | group_id | member_id | type         |
-      | 11       | 21        | invitation   |
-      | 14       | 21        | join_request |
+    And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should be:
       | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 12       | 21        | joined_by_code | 21           | 1                                         |

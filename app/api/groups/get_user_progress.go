@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model groupUserProgressResponseTableCell
@@ -24,7 +24,6 @@ type groupUserProgressResponseTableCell struct {
 	// Whether the user or one of his teams has the item validated
 	// required:true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required:true
 	LatestActivityAt *database.Time `json:"latest_activity_at"`
 	// Number of hints requested for the result with the best score (if multiple, take the first one, chronologically).

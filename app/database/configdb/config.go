@@ -4,8 +4,8 @@ package configdb
 import (
 	"fmt"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 )
 
 // CheckConfig checks that the database contains all the data needed by the config_check.

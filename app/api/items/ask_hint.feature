@@ -3,38 +3,38 @@ Feature: Ask for a hint
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id  | name | type |
       | 201 | team | Team |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 22              | 13             |
       | 201             | 101            |
     And the groups ancestors are computed
-    And the database has the following table 'platforms':
+    And the database has the following table "platforms":
       | id | regexp                                            | public_key                |
       | 10 | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | platform_id | url                                                                     | default_language_tag |
       | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | fr                   |
       | 10 | null        | null                                                                    | fr                   |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 0           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
       | 201      | 50      | content            |
     And time is frozen
 
   Scenario: User is able to ask for a hint
-    Given the database has the following table 'attempts':
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | hints_requested        | hints_cached | started_at          |
       | 0          | 101            | 50      | [0,  1, "hint" , null] | 4            | 2019-05-30 11:00:00 |
       | 0          | 101            | 10      | null                   | 0            | 2019-05-30 11:00:00 |
@@ -94,10 +94,10 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
 
   Scenario: User is able to ask for a hint for a team (participant_id is the first integer in idAttempt in the task token)
-    Given the database has the following table 'attempts':
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 201            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | hints_requested        | hints_cached | started_at          |
       | 0          | 201            | 50      | [0,  1, "hint" , null] | 4            | 2020-01-01 00:00:00 |
       | 0          | 201            | 10      | null                   | 0            | 2020-01-01 00:00:00 |
@@ -157,10 +157,10 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
 
   Scenario: User is able to ask for a hint with a minimal hint token
-    Given the database has the following table 'attempts':
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | hints_requested        | started_at          |
       | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
       | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
@@ -220,10 +220,10 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
 
   Scenario: User is able to ask for an already given hint
-    Given the database has the following table 'attempts':
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | hints_requested        | started_at          |
       | 0          | 101            | 50      | [0,  1, "hint" , null] | 2019-05-30 11:00:00 |
       | 0          | 101            | 10      | null                   | 2019-05-30 11:00:00 |
@@ -283,10 +283,10 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
 
   Scenario: Can't parse hints_requested
-    Given the database has the following table 'attempts':
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | hints_requested | started_at          |
       | 0          | 101            | 50      | not an array    | 2019-05-30 11:00:00 |
       | 0          | 101            | 10      | null            | 2019-05-30 11:00:00 |

@@ -1,4 +1,4 @@
-package utils
+package golang
 
 // Ptr returns a pointer to a literal.
 // Use for initializations.

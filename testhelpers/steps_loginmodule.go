@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 	"github.com/spf13/viper"
 	"github.com/thingful/httpmock"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
 )
 
 func (ctx *TestContext) appAuthConfig() *viper.Viper {
@@ -24,7 +24,7 @@ func (ctx *TestContext) appAuthConfig() *viper.Viper {
 func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(
 	code string,
 	statusCode int,
-	body *messages.PickleStepArgument_PickleDocString,
+	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
@@ -54,7 +54,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(
 func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns(
 	code, codeVerifier string,
 	statusCode int,
-	body *messages.PickleStepArgument_PickleDocString,
+	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
@@ -90,7 +90,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns(
 	code, codeVerifier, redirectURI string,
 	statusCode int,
-	body *messages.PickleStepArgument_PickleDocString,
+	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode, err := ctx.preprocessString(code)
@@ -131,7 +131,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedi
 func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(
 	refreshToken string,
 	statusCode int,
-	body *messages.PickleStepArgument_PickleDocString,
+	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)
@@ -161,7 +161,7 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(
 func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(
 	authToken string,
 	statusCode int,
-	body *messages.PickleStepArgument_PickleDocString,
+	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedToken, err := ctx.preprocessString(authToken)
@@ -182,7 +182,7 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(
 // TheLoginModuleUnlinkClientEndpointForUserIDReturns mocks the return of the login module /platform_api/accounts_manager/unlink_client
 // with the provided user_id.
 func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns(
-	userID string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+	userID string, statusCode int, body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedUserID, err := ctx.preprocessString(userID)
@@ -213,7 +213,7 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns(
 // TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns mocks the return of the login module
 // /platform_api/lti_result/send with the provided user_id, content_id, and score.
 func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns(
-	userID, contentID, score string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+	userID, contentID, score string, statusCode int, body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedUserID, err := ctx.preprocessString(userID)
@@ -257,7 +257,7 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 // TheLoginModuleCreateEndpointWithParamsReturns mocks the return of the login module
 // /platform_api/accounts_manager/create with the provided parameters, return status, and body.
 func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns(
-	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+	params string, statusCode int, body *godog.DocString,
 ) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create", params, statusCode, body)
 }
@@ -265,13 +265,13 @@ func (ctx *TestContext) TheLoginModuleCreateEndpointWithParamsReturns(
 // TheLoginModuleDeleteEndpointWithParamsReturns mocks the return of the login module
 // /platform_api/accounts_manager/delete with the provided parameters, return status, and body.
 func (ctx *TestContext) TheLoginModuleDeleteEndpointWithParamsReturns(
-	params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+	params string, statusCode int, body *godog.DocString,
 ) error {
 	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("delete", params, statusCode, body)
 }
 
 func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns(
-	endpoint, params string, statusCode int, body *messages.PickleStepArgument_PickleDocString,
+	endpoint, params string, statusCode int, body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedParams, err := ctx.preprocessString(params)

@@ -1,17 +1,17 @@
 Feature: List answers - robustness
 Background:
-  Given the database has the following table 'groups':
+  Given the database has the following table "groups":
     | id | name | type |
     | 1  | jdoe | User |
-  And the database has the following table 'users':
+  And the database has the following table "users":
     | login | temp_user | group_id |
     | jdoe  | 0         | 1        |
   And the groups ancestors are computed
-  And the database has the following table 'items':
+  And the database has the following table "items":
     | id  | type    | no_score | default_language_tag |
     | 190 | Chapter | false    | fr                   |
     | 200 | Chapter | false    | fr                   |
-  And the database has the following table 'permissions_generated':
+  And the database has the following table "permissions_generated":
     | group_id | item_id | can_view_generated       |
     | 1        | 190     | content_with_descendants |
     | 1        | 200     | none                     |

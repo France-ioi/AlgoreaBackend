@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model officialSessionsListResponseRow
@@ -17,7 +17,6 @@ type officialSessionsListResponseRow struct {
 	GroupID int64 `json:"group_id,string"`
 	// required: true
 	Name string `json:"name"`
-	// Nullable
 	// required: true
 	Description *string `json:"description"`
 	// required: true
@@ -25,7 +24,6 @@ type officialSessionsListResponseRow struct {
 	// required: true
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true
@@ -34,25 +32,18 @@ type officialSessionsListResponseRow struct {
 	RequireMembersToJoinParent bool `json:"require_members_to_join_parent"`
 	// required: true
 	IsPublic bool `json:"is_public"`
-	// Nullable
 	// required: true
 	Organizer *string `json:"organizer"`
-	// Nullable
 	// required: true
 	AddressLine1 *string `json:"address_line1"`
-	// Nullable
 	// required: true
 	AddressLine2 *string `json:"address_line2"`
-	// Nullable
 	// required: true
 	AddressPostcode *string `json:"address_postcode"`
-	// Nullable
 	// required: true
 	AddressCity *string `json:"address_city"`
-	// Nullable
 	// required: true
 	AddressCountry *string `json:"address_country"`
-	// Nullable
 	// required: true
 	ExpectedStart *database.Time `json:"expected_start"`
 	// required:true

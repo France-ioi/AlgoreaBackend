@@ -7,10 +7,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /user-batches/{group_prefix}/{custom_prefix} groups userBatchRemove
@@ -126,6 +126,6 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 			Where("group_prefix = ?", groupPrefix).
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
 	return service.NoError
 }

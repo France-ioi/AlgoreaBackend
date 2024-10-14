@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 const (
@@ -41,10 +41,8 @@ type userViewResponse struct {
 	TempUser bool `json:"temp_user"`
 	// required: true
 	Login string `json:"login"`
-	// Nullable
 	// required: true
 	FreeText *string `json:"free_text"`
-	// Nullable
 	// required: true
 	WebSite *string `json:"web_site"`
 

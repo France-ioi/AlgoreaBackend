@@ -1,6 +1,6 @@
 Feature: Accept group requests - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  | frozen_membership |
       | 11  | User  | false             |
       | 12  | User  | false             |
@@ -15,25 +15,25 @@ Feature: Accept group requests - robustness
       | 123 | User  | false             |
       | 131 | User  | false             |
       | 141 | User  | false             |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 11       | John        | Doe       | 1     |
       | jane  | 12       | Jane        | Doe       | 1     |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 12       | 12         | memberships |
       | 13       | 21         | memberships |
       | 13       | 12         | none        |
       | 15       | 21         | memberships |
       | 31       | 21         | memberships |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 111            |
       | 13              | 121            |
       | 13              | 123            |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
       | 13       | 31        | join_request |

@@ -10,7 +10,7 @@ import (
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 )
 
 func Test_ConnectionOfWrappedDriverImplementsDriverSessionResetter(t *testing.T) {

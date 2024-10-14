@@ -4,13 +4,14 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
 )
 
 func responseForError(e service.APIError) *httptest.ResponseRecorder {
@@ -115,6 +116,18 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert.Contains(hook.GetAllLogs(), "unexpected error: some error")
 }
 
+func TestRendersRecoveredAPIErrorOnPanicWithAPIError(t *testing.T) {
+	assert := assertlib.New(t)
+	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+		panic(service.InsufficientAccessRightsError)
+	}))
+	recorder := responseForHTTPHandler(handler)
+	assert.Equal(`{"success":false,"message":"Forbidden","error_text":"Insufficient access rights"}`+"\n",
+		recorder.Body.String())
+	assert.Equal(http.StatusForbidden, recorder.Code)
+	assert.NotContains(strings.ToLower(hook.GetAllLogs()), "error")
+}
+
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
@@ -138,5 +151,18 @@ func TestMustNotBeError_PanicsOnError(t *testing.T) {
 func TestMustNotBeError_NotPanicsIfNoError(t *testing.T) {
 	assertlib.NotPanics(t, func() {
 		service.MustNotBeError(nil)
+	})
+}
+
+func TestMustBeNoError_PanicsOnAPIError(t *testing.T) {
+	expectedError := service.InsufficientAccessRightsError
+	assertlib.PanicsWithValue(t, expectedError, func() {
+		service.MustBeNoError(expectedError)
+	})
+}
+
+func TestMustBeNoError_NotPanicsIfNoError(t *testing.T) {
+	assertlib.NotPanics(t, func() {
+		service.MustBeNoError(service.NoError)
 	})
 }

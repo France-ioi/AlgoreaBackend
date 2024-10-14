@@ -5,10 +5,10 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation PUT /current-user/refresh users userDataRefresh
@@ -41,7 +41,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 		return nil
 	}))
 
-	response := service.UpdateSuccess(nil)
+	response := service.UpdateSuccess[*struct{}](nil)
 	render.Respond(w, r, &response)
 
 	return service.NoError

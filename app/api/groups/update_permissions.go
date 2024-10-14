@@ -8,10 +8,10 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // Access rights to be set
@@ -56,7 +56,6 @@ type setCanRequestHelpTo struct {
 	// The given group must be visible by both the current user and `group_id`.
 	// Can be set to `null` to set the helper group to no group.
 	// Optional
-	// Nullable
 	ID *int64 `json:"id" sql:"column:can_request_help_to"`
 	// Optional
 	IsAllUsersGroup bool `json:"is_all_users_group"`
@@ -213,7 +212,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 
 	service.MustNotBeError(err)
 
-	response := service.Response{Success: true, Message: "updated"}
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
 	return service.NoError

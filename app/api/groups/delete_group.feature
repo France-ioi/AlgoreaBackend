@@ -1,6 +1,6 @@
 Feature: Delete a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name              | type  |
       | 11 | Group A           | Class |
       | 13 | Group B           | Class |
@@ -17,16 +17,16 @@ Feature: Delete a group
           domains: [127.0.0.1]
           allUsersGroup: 31
       """
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 14       | 21         | none                  |
       | 15       | 14         | memberships_and_group |
       | 22       | 21         | memberships           |
       | 30       | 21         | memberships_and_group |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 13              | 11             | 2019-05-30 11:00:00 |
       | 14              | 21             | 9999-12-31 23:59:59 |
@@ -36,23 +36,23 @@ Feature: Delete a group
       | 22              | 14             | 9999-12-31 23:59:59 |
       | 31              | 21             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type       |
       | 13       | 11        | invitation |
       | 22       | 11        | invitation |
       | 22       | 13        | invitation |
       | 22       | 14        | invitation |
-    And the database has the following table 'group_membership_changes':
+    And the database has the following table "group_membership_changes":
       | group_id | member_id |
       | 13       | 11        |
       | 22       | 11        |
       | 22       | 13        |
       | 22       | 14        |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag |
       | 1  | fr                   |
       | 2  | fr                   |
-    And the database has the following table 'threads':
+    And the database has the following table "threads":
       | participant_id | item_id | status                  | helper_group_id |
       | 21             | 1       | waiting_for_participant | 30              |
       | 21             | 2       | waiting_for_participant | 22              |

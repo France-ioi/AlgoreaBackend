@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 // DataStore gather all stores for database operations on business data.
@@ -26,6 +26,33 @@ func NewDataStoreWithContext(ctx context.Context, conn *DB) *DataStore {
 // NewDataStoreWithTable returns a specialized DataStore.
 func NewDataStoreWithTable(conn *DB, tableName string) *DataStore {
 	return &DataStore{conn.Table(tableName), tableName}
+}
+
+// ProhibitResultsPropagation marks the context inside the DB connection as prohibiting the propagation of results.
+func ProhibitResultsPropagation(conn *DB) {
+	prohibitedPropagations := getProhibitedPropagationsFromContext(conn.ctx)
+	prohibitedPropagations.Results = true
+	conn.ctx = context.WithValue(conn.ctx, prohibitedPropagationsContextKey, prohibitedPropagations)
+}
+
+// IsResultsPropagationProhibited returns true if the propagation of results is prohibited in the context of the current DB connection.
+func (s *DataStore) IsResultsPropagationProhibited() bool {
+	return getProhibitedPropagationsFromContext(s.DB.ctx).Results
+}
+
+func getProhibitedPropagationsFromContext(ctx context.Context) propagationsBitField {
+	prohibitedPropagations := ctx.Value(prohibitedPropagationsContextKey)
+	if prohibitedPropagations == nil {
+		return propagationsBitField{}
+	}
+	return prohibitedPropagations.(propagationsBitField)
+}
+
+// MergeContext returns a new context based on the given one, with DB-related values copied
+// from the context of the current DB connection.
+func (s *DataStore) MergeContext(ctx context.Context) context.Context {
+	prohibitedPropagations := getProhibitedPropagationsFromContext(s.DB.ctx)
+	return context.WithValue(ctx, prohibitedPropagationsContextKey, prohibitedPropagations)
 }
 
 // ActiveGroupGroups returns a GroupGroupStore working with the `groups_groups_active` view.
@@ -160,7 +187,7 @@ func (s *DataStore) Threads() *ThreadStore {
 
 // UserBatches returns a UserBatchStore.
 func (s *DataStore) UserBatches() *UserBatchStore {
-	return &UserBatchStore{NewDataStoreWithTable(s.DB, "user_batches")}
+	return &UserBatchStore{NewDataStoreWithTable(s.DB, "user_batches_v2")}
 }
 
 // UserBatchPrefixes returns a UserBatchPrefixStore.
@@ -175,21 +202,25 @@ func (s *DataStore) NewID() int64 {
 	return rand.Int63()
 }
 
-type awaitingTriggers struct {
+type propagationsBitField struct {
 	ItemAncestors  bool
 	GroupAncestors bool
 	Permissions    bool
 	Results        bool
 }
+
 type dbContextKey string
 
-var triggersContextKey = dbContextKey("triggers")
+const (
+	awaitingPropagationsContextKey   = dbContextKey("awaitingPropagations")
+	prohibitedPropagationsContextKey = dbContextKey("prohibitedPropagations")
+)
 
 // InTransaction executes the given function in a transaction and commits.
 // If a propagation is scheduled, it will be run after the transaction commit,
 // so we can run each step of the propagation in a separate transaction.
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
-	s.DB.ctx = context.WithValue(s.DB.ctx, triggersContextKey, &awaitingTriggers{})
+	s.DB.ctx = context.WithValue(s.DB.ctx, awaitingPropagationsContextKey, &propagationsBitField{})
 	err := s.inTransaction(func(db *DB) error {
 		dataStore := NewDataStoreWithTable(db, s.tableName)
 		err := txFunc(dataStore)
@@ -200,22 +231,23 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 		return err
 	}
 
-	triggersToRun := s.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	propagationsToRun := s.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx)
 
-	if triggersToRun.GroupAncestors {
-		triggersToRun.GroupAncestors = false
+	if propagationsToRun.GroupAncestors && !prohibitedPropagations.GroupAncestors {
+		propagationsToRun.GroupAncestors = false
 		s.createNewAncestors("groups", "group")
 	}
-	if triggersToRun.ItemAncestors {
-		triggersToRun.ItemAncestors = false
+	if propagationsToRun.ItemAncestors && !prohibitedPropagations.ItemAncestors {
+		propagationsToRun.ItemAncestors = false
 		s.createNewAncestors("items", "item")
 	}
-	if triggersToRun.Permissions {
-		triggersToRun.Permissions = false
+	if propagationsToRun.Permissions && !prohibitedPropagations.Permissions {
+		propagationsToRun.Permissions = false
 		s.PermissionsGranted().computeAllAccess()
 	}
-	if triggersToRun.Results {
-		triggersToRun.Results = false
+	if propagationsToRun.Results && !prohibitedPropagations.Results {
+		propagationsToRun.Results = false
 		err = s.Results().propagate()
 	}
 
@@ -226,32 +258,32 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 func (s *DataStore) ScheduleResultsPropagation() {
 	s.mustBeInTransaction()
 
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.Results = true
+	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun.Results = true
 }
 
 // ScheduleGroupsAncestorsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
 func (s *DataStore) ScheduleGroupsAncestorsPropagation() {
 	s.mustBeInTransaction()
 
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.GroupAncestors = true
+	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun.GroupAncestors = true
 }
 
 // ScheduleItemsAncestorsPropagation schedules a run of the items ancestors propagation after the transaction commit.
 func (s *DataStore) ScheduleItemsAncestorsPropagation() {
 	s.mustBeInTransaction()
 
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.ItemAncestors = true
+	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun.ItemAncestors = true
 }
 
 // SchedulePermissionsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
 func (s *DataStore) SchedulePermissionsPropagation() {
 	s.mustBeInTransaction()
 
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.Permissions = true
+	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun.Permissions = true
 }
 
 // WithForeignKeyChecksDisabled executes the given function with foreign keys checking disabled
@@ -262,6 +294,7 @@ func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) erro
 	})
 }
 
+// IsInTransaction returns true if the store operates in a DB transaction at the moment.
 func (s *DataStore) IsInTransaction() bool {
 	return s.DB.isInTransaction()
 }

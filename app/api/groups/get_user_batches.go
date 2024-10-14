@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model userBatch
@@ -16,7 +16,6 @@ type userBatch struct {
 	CustomPrefix string `json:"custom_prefix"`
 	// required: true
 	Size int `json:"size"`
-	// Nullable
 	// required: true
 	CreatorID *int64 `json:"creator_id,string"`
 }
@@ -92,15 +91,15 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 		Joins("JOIN user_batch_prefixes USING(group_prefix)").
 		Where(`user_batch_prefixes.group_id IN(?)`, managedByUser.QueryExpr()).
 		Where(`user_batch_prefixes.group_id IN(?)`, prefixAncestors.QueryExpr()).
-		Select("user_batches.group_prefix, user_batches.custom_prefix, user_batches.size, user_batches.creator_id")
+		Select("user_batches_v2.group_prefix, user_batches_v2.custom_prefix, user_batches_v2.size, user_batches_v2.creator_id")
 
 	query, apiErr := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"group_prefix":  {ColumnName: "user_batches.group_prefix"},
-				"custom_prefix": {ColumnName: "user_batches.custom_prefix"},
-				"size":          {ColumnName: "user_batches.size"},
+				"group_prefix":  {ColumnName: "user_batches_v2.group_prefix"},
+				"custom_prefix": {ColumnName: "user_batches_v2.custom_prefix"},
+				"size":          {ColumnName: "user_batches_v2.size"},
 			},
 			DefaultRules: "group_prefix,custom_prefix",
 			TieBreakers: service.SortingAndPagingTieBreakers{

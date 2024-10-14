@@ -11,16 +11,14 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // Item represents input fields that are common to itemCreate & itemUpdate.
 type Item struct {
-	// Nullable
-	URL *string `json:"url"`
-	// Nullable
+	URL     *string `json:"url"`
 	Options *string `json:"options" validate:"null|options"`
 	// default: false
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
@@ -28,7 +26,6 @@ type Item struct {
 	NoScore bool `json:"no_score"`
 	// Identifier to reference the task.
 	// Unique
-	// Nullable
 	TextID                 *string `json:"text_id"`
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
 	ReadOnly               bool    `json:"read_only"`
@@ -53,8 +50,6 @@ type Item struct {
 	AllowsMultipleAttempts       bool      `json:"allows_multiple_attempts"`
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type" validate:"oneof=User Team"`
-	// Nullable
-	//
 	// MySQL time (max value is 838:59:59), cannot be set for skills
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
@@ -78,12 +73,9 @@ type ItemWithRequiredType struct {
 // swagger:ignore
 type newItemString struct {
 	// required: true
-	Title string `json:"title" validate:"set"`
-	// Nullable
-	ImageURL *string `json:"image_url"`
-	// Nullable
-	Subtitle *string `json:"subtitle"`
-	// Nullable
+	Title       string  `json:"title" validate:"set"`
+	ImageURL    *string `json:"image_url"`
+	Subtitle    *string `json:"subtitle"`
 	Description *string `json:"description"`
 }
 
@@ -122,7 +114,6 @@ type NewItemRequest struct {
 	Parent          itemParent `json:"parent"`
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
-	// Nullable fields are of pointer types
 	ItemWithRequiredType `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
@@ -153,7 +144,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //	description: >
 //
 //		Creates an item with parameters from the input data with `items.default_language_tag` = `language_tag`.
-//		Also it
+//		Also, it
 //
 //			* inserts a row into `items_strings` with given `language_tag`, `title`, `image_url`, `subtitle`, `description`,
 //

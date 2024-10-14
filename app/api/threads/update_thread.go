@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // threadUpdateFields represents the fields of a thread in database.
@@ -174,7 +174,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
 	return service.NoError
 }
 

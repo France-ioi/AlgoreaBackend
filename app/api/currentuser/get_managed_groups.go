@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model managedGroupsGetResponseRow
@@ -15,7 +15,6 @@ type managedGroupsGetResponseRow struct {
 	ID int64 `json:"id,string"`
 	// required:true
 	Name string `json:"name"`
-	// Nullable
 	// required:true
 	Description *string `json:"description"`
 	// required:true

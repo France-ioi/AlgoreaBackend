@@ -3,8 +3,8 @@ package items
 import (
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // RawItemResultFields represents DB data fields for item results used by itemNavigationView & itemChildrenView.

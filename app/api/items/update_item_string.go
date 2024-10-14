@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // itemStringUpdateRequest is the expected input for item's strings updating
@@ -17,13 +17,10 @@ import (
 type itemStringUpdateRequest struct {
 	// maxLength: 200
 	Title string `json:"title" validate:"max=200"`
-	// Nullable
 	// maxLength: 2048
 	ImageURL *string `json:"image_url" validate:"omitempty,max=2048"`
-	// Nullable
 	// maxLength: 200
-	Subtitle *string `json:"subtitle" validate:"omitempty,max=200"`
-	// Nullable
+	Subtitle    *string `json:"subtitle" validate:"omitempty,max=200"`
 	Description *string `json:"description"`
 }
 
@@ -126,7 +123,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
 	return service.NoError
 }
 

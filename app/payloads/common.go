@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
 
 // Binder is an interface for managing payloads.
@@ -62,7 +62,7 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 func shouldConvert(fieldValue reflect.Value) bool {
 	return fieldValue.Kind() == reflect.Struct &&
 		(fieldValue.Type().Name() != "Anything" ||
-			fieldValue.Type().PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/formdata")
+			fieldValue.Type().PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/formdata")
 }
 
 func resolvePointer(fieldValue reflect.Value) reflect.Value {

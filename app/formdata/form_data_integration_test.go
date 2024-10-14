@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/mapstructure"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
 
 type NamedStruct struct {

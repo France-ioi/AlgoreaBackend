@@ -3,7 +3,7 @@ Feature: Update item - robustness
     Given the database has the following users:
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | type    | requires_explicit_entry | duration | text_id |
       | 4  | fr                   | Chapter | 0                       | null     | id4     |
       | 20 | fr                   | Chapter | 0                       | null     | id20    |
@@ -16,15 +16,15 @@ Feature: Update item - robustness
       | 60 | fr                   | Chapter | 0                       | null     | id60    |
       | 70 | fr                   | Skill   | 0                       | null     | id70    |
       | 80 | fr                   | Task    | 0                       | null     | id80    |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
       | 21             | 50            | 0           |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 4                | 21            |
       | 21               | 50            |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
       | 11       | 4       | solution           | none               | false              |
       | 11       | 20      | info               | all                | false              |
@@ -36,7 +36,7 @@ Feature: Update item - robustness
       | 11       | 50      | solution           | all                | false              |
       | 11       | 70      | solution           | all                | false              |
       | 11       | 80      | solution           | all                | false              |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | can_edit | is_owner | source_group_id |
       | 11       | 4       | solution | none     | false    | 11              |
       | 11       | 20      | info     | all      | false    | 11              |
@@ -48,7 +48,7 @@ Feature: Update item - robustness
       | 11       | 70      | solution | all      | false    | 11              |
       | 11       | 80      | solution | all      | false    | 11              |
     And the groups ancestors are computed
-    And the database has the following table 'languages':
+    And the database has the following table "languages":
       | tag |
       | sl  |
 
@@ -317,10 +317,10 @@ Feature: Update item - robustness
 
   Scenario Outline: Not enough permissions for setting propagation in items_items
     Given I am the user with id "11"
-    And the database table 'items' has also the following row:
+    And the database table "items" has also the following row:
       | id | default_language_tag |
       | 90 | fr                   |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" has also the following row:
       | group_id | item_id | <permission_column> | can_view_generated |
       | 11       | 90      | <permission_value>  | info               |
     When I send a PUT request to "/items/50" with the following body:

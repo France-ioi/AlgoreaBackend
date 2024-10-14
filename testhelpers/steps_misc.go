@@ -14,15 +14,16 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 	"github.com/go-chi/chi"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
-	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api/groups"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
 // TimeNow stubs time.Now to the provided time.
@@ -74,7 +75,7 @@ func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedKey string) error {
 }
 
 // LogsShouldContain checks that the logs contain a provided string.
-func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) LogsShouldContain(docString *godog.DocString) error {
 	preprocessed, err := ctx.preprocessString(docString.Content)
 	if err != nil {
 		return err
@@ -108,7 +109,7 @@ func (ctx *TestContext) getPrivateKeyOf(signerName string) *rsa.PrivateKey {
 // This allows later use inside a request, or a comparison with a response.
 func (ctx *TestContext) SignedTokenIsDistributed(
 	varName, signerName string,
-	jsonPayload *messages.PickleStepArgument_PickleDocString,
+	jsonPayload *godog.DocString,
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
@@ -127,9 +128,10 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 	return nil
 }
 
+// FalsifiedSignedTokenIsDistributed generates a falsified token and sets it in a global template variable.
 func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 	varName, signerName string,
-	jsonPayload *messages.PickleStepArgument_PickleDocString,
+	jsonPayload *godog.DocString,
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
@@ -157,10 +159,10 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 }
 
 // TheApplicationConfigIs specifies variables of the app configuration given in YAML format.
-func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
-	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesByIDs(yamlConfig.Content))
+	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesWithIDs(yamlConfig.Content))
 	if err != nil {
 		return err
 	}
@@ -181,7 +183,7 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *messages.PickleStepAr
 }
 
 // TheContextVariableIs sets a context variable in the request http.Request as the provided value.
-// Can be retrieved from the request with r.Context().Value("variableName").
+// Can be retrieved from the request with r.Context().Value(service.APIServiceContextVariableName("variableName")).
 func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	preprocessed, err := ctx.preprocessString(value)
 	if err != nil {
@@ -191,7 +193,8 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	oldHTTPHandler := ctx.application.HTTPHandler
 	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
+			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(),
+				service.APIServiceContextVariableName(variableName), preprocessed)))
 		})
 	}).(*chi.Mux)
 	ctx.application.HTTPHandler.Mount("/", oldHTTPHandler)

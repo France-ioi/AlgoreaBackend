@@ -18,7 +18,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 const someName = "some name"
@@ -93,6 +93,23 @@ func TestDB_inTransaction_Panic(t *testing.T) {
 		_ = db.inTransaction(func(db *DB) error {
 			var result []interface{}
 			db.Raw("SELECT 1").Scan(&result)
+			panic(expectedError)
+		})
+	})
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_inTransaction_PanicWithString(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := "some error"
+
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+
+	assert.PanicsWithValue(t, expectedError, func() {
+		_ = db.inTransaction(func(db *DB) error {
 			panic(expectedError)
 		})
 	})
@@ -871,7 +888,7 @@ func TestDB_ScanIntoSlices(t *testing.T) {
 	assert.NoError(t, dbScan.Error())
 
 	assert.Equal(t, []int64{1, 2, 3}, ids)
-	assert.Equal(t, []*string{utils.Ptr("value"), utils.Ptr("another value"), nil}, fields)
+	assert.Equal(t, []*string{golang.Ptr("value"), golang.Ptr("another value"), nil}, fields)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -902,11 +919,11 @@ func TestDB_ScanIntoSlices_WipesOldData(t *testing.T) {
 	db = db.Table("myTable")
 
 	ids := []int64{10, 20, 30}
-	fields := []*string{utils.Ptr("old value1"), utils.Ptr("old value2"), utils.Ptr("old value3")}
+	fields := []*string{golang.Ptr("old value1"), golang.Ptr("old value2"), golang.Ptr("old value3")}
 
 	db.ScanIntoSlices(&ids, &fields)
 	assert.Equal(t, []int64{1, 2, 3}, ids)
-	assert.Equal(t, []*string{utils.Ptr("value"), utils.Ptr("another value"), nil}, fields)
+	assert.Equal(t, []*string{golang.Ptr("value"), golang.Ptr("another value"), nil}, fields)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -1252,6 +1269,28 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 	assert.True(t, didPanic)
 	assert.Implements(t, (*runtime.Error)(nil), panicValue)
 	assert.Equal(t, "runtime error: index out of range [0] with length 0", panicValue.(error).Error())
+}
+
+func Test_recoverPanics_PanicsOnRecoveringValueOfNonErrorType(t *testing.T) {
+	expectedPanicValue := "some panic"
+	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
+		defer func() {
+			if p := recover(); p != nil {
+				didPanic = true
+				panicValue = p
+			}
+		}()
+
+		_ = func() (err error) {
+			defer recoverPanics(&err)
+			panic(expectedPanicValue)
+		}()
+
+		return false, nil
+	}()
+
+	assert.True(t, didPanic)
+	assert.Equal(t, expectedPanicValue, panicValue)
 }
 
 func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {

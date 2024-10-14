@@ -13,10 +13,10 @@ import (
 	"github.com/lithammer/dedent"
 	"gopkg.in/yaml.v2"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
@@ -219,7 +219,9 @@ func emptyDB(db *sql.DB, dbName string) error {
                          FROM   information_schema.tables
                          WHERE  table_type   = 'BASE TABLE'
                            AND  table_schema = '` + dbName + `'
-                           AND  table_name  != 'gorp_migrations'`)
+                           AND  table_name  != 'gorp_migrations'
+                           AND  table_name  != 'user_batches'
+                         ORDER BY table_name`)
 	if err != nil {
 		return err
 	}
@@ -245,12 +247,14 @@ func emptyDB(db *sql.DB, dbName string) error {
 	for rows.Next() {
 		var tableName string
 		if scanErr := rows.Scan(&tableName); scanErr != nil {
+			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return scanErr
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
 		_, err = tx.Exec("DELETE FROM " + tableName)
 		if err != nil {
+			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return err
 		}

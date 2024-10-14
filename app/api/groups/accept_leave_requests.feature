@@ -1,6 +1,6 @@
 Feature: Accept requests to leave a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type    |
       | 11  | Class   |
       | 13  | Friends |
@@ -16,10 +16,10 @@ Feature: Accept requests to leave a group
       | 151 | User    |
       | 161 | User    |
       | 444 | Team    |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 13              | 31             | 9999-12-31 23:59:59 |
       | 13              | 111            | 9999-12-31 23:59:59 |
@@ -29,7 +29,7 @@ Feature: Accept requests to leave a group
       | 13              | 151            | 9999-12-31 23:59:59 |
       | 14              | 21             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
       | 13       | 31        | leave_request |
@@ -40,7 +40,7 @@ Feature: Accept requests to leave a group
 
   Scenario: Accept requests to leave a group
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
     When I send a POST request to "/groups/13/leave-requests/accept?group_ids=31,141,21,11,13,122,151"
@@ -102,7 +102,7 @@ Feature: Accept requests to leave a group
 
   Scenario: Accept request to leave a team
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 14       | 21         | memberships |
     When I send a POST request to "/groups/14/leave-requests/accept?group_ids=21"
@@ -153,19 +153,19 @@ Feature: Accept requests to leave a group
 
   Scenario: Accept request to leave a team for which entry conditions would become unsatisfied
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 14       | 21         | memberships |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | participant_id | id | root_item_id |
       | 14             | 1  | 2            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id | started_at          |
       | 14             | 1          | 2       | 2019-05-30 11:00:00 |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | Half                             |
-    And the database table 'groups_groups' has also the following row:
+    And the database table "groups_groups" has also the following row:
       | parent_group_id | child_group_id |
       | 14              | 111            |
     And the groups ancestors are computed

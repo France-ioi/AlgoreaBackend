@@ -6,11 +6,11 @@ import (
 	"strconv"
 
 	"github.com/cucumber/godog"
-	"github.com/cucumber/messages-go/v10"
+	messages "github.com/cucumber/messages/go/v21"
 )
 
 // registerFeaturesForUsers registers the Gherkin features related to users.
-func (ctx *TestContext) registerFeaturesForUsers(s *godog.Suite) {
+func (ctx *TestContext) registerFeaturesForUsers(s *godog.ScenarioContext) {
 	s.Step(`^there is a user (@\w+)$`, ctx.ThereIsAUser)
 	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 }
@@ -21,7 +21,13 @@ func (ctx *TestContext) addUsersIntoAllUsersGroup() error {
 		return nil
 	}
 
-	for userID := range ctx.dbTables["users"] {
+	idColumnIndex := getDBTableColumnIndex(ctx.dbTableData["users"], "group_id")
+	if idColumnIndex == -1 {
+		panic("The users table does not have group_id column")
+	}
+
+	for rowIndex := 1; rowIndex < len(ctx.dbTableData["users"].Rows); rowIndex++ {
+		userID := ctx.dbTableData["users"].Rows[rowIndex].Cells[idColumnIndex].Value
 		err := ctx.UserIsAMemberOfTheGroup(userID, ctx.allUsersGroup)
 		if err != nil {
 			return err
@@ -32,40 +38,46 @@ func (ctx *TestContext) addUsersIntoAllUsersGroup() error {
 }
 
 // getUserPrimaryKey returns the primary key of a group.
-func (ctx *TestContext) getUserPrimaryKey(groupID int64) string {
-	return strconv.FormatInt(groupID, 10)
+func (ctx *TestContext) getUserPrimaryKey(groupID int64) map[string]string {
+	return map[string]string{"group_id": strconv.FormatInt(groupID, 10)}
 }
 
-// addUser adds a user in database.
+// addUser adds a user to the database.
 func (ctx *TestContext) addUser(user string) {
-	primaryKey := ctx.getUserPrimaryKey(ctx.getReference(user))
+	userGroupID := ctx.getIDOfReference(user)
+	primaryKey := ctx.getUserPrimaryKey(userGroupID)
 
 	if !ctx.isInDatabase("users", primaryKey) {
-		ctx.addInDatabase("users", primaryKey, map[string]interface{}{
-			"group_id": ctx.getReference(user),
-			"login":    referenceToName(user),
-			// All the other fields are set to default values.
-			"login_id":   nil,
-			"temp_user":  false,
-			"first_name": nil,
-			"last_name":  nil,
+		err := ctx.DBHasTable("users", &godog.Table{
+			Rows: []*messages.PickleTableRow{
+				{Cells: []*messages.PickleTableCell{
+					{Value: "group_id"},
+					{Value: "login"},
+					{Value: "login_id"},
+					{Value: "temp_user"},
+					{Value: "first_name"},
+					{Value: "last_name"},
+				}},
+				{Cells: []*messages.PickleTableCell{
+					{Value: strconv.FormatInt(userGroupID, 10)},
+					{Value: referenceToName(user)},
+					// All the other fields are set to default values.
+					{Value: "null"},
+					{Value: "false"},
+					{Value: "null"},
+					{Value: "null"},
+				}},
+			},
 		})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
 // setUserFieldInDatabase sets a specific field of a user in the database.
-func (ctx *TestContext) setUserFieldInDatabase(primaryKey, field string, value interface{}) {
-	if value == tableValueNull {
-		value = nil
-	}
-	if value == tableValueFalse {
-		value = false
-	}
-	if value == tableValueTrue {
-		value = true
-	}
-
-	ctx.dbTables["users"][primaryKey][field] = value
+func (ctx *TestContext) setUserFieldInDatabase(primaryKey map[string]string, field, value string) {
+	ctx.setDBTableRowColumnValue("users", primaryKey, field, value)
 }
 
 // ThereIsAUser create a user.
@@ -75,18 +87,18 @@ func (ctx *TestContext) ThereIsAUser(name string) error {
 	err := ctx.ThereIsAGroup(name)
 	mustNotBeError(err)
 
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(name))
+	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getIDOfReference(name))
 	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "User")
 
 	return nil
 }
 
 // ThereAreTheFollowingUsers defines users.
-func (ctx *TestContext) ThereAreTheFollowingUsers(users *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingUsers(users *godog.Table) error {
 	for i := 1; i < len(users.Rows); i++ {
 		user := ctx.getRowMap(i, users)
 
-		groupID := ctx.getReference(user["user"])
+		groupID := ctx.getIDOfReference(user["user"])
 
 		err := ctx.ThereIsAUser(user["user"])
 		mustNotBeError(err)

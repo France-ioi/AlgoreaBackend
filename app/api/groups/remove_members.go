@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /groups/{group_id}/members group-memberships groupRemoveMembers
@@ -110,7 +110,7 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		results[id] = result
 	}
 
-	response := service.Response{
+	response := service.Response[database.GroupGroupTransitionResults]{
 		Success: true,
 		Message: "deleted",
 		Data:    results,

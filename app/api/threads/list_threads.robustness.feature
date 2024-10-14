@@ -27,7 +27,8 @@ Feature: List threads - robustness
   Scenario: The user should be able to watch the watched_group_id group
     Given I am @John
     And there is a group @Classroom
-    And I am a manager of the group @Classroom
+    And I am a manager of the group @ClassroomParent
+    And the group @Classroom is a child of the group @ClassroomParent
     When I send a GET request to "/threads?watched_group_id=@Classroom"
     Then the response code should be 403
     And the response error message should contain "No rights to watch for watched_group_id"
@@ -41,7 +42,8 @@ Feature: List threads - robustness
   Scenario Outline: Should not have watched_group_id and is_mine set a the same time
     Given I am @John
     And there is a group @Classroom
-    And I am a manager of the group @Classroom and can watch its members
+    And I am a manager of the group @ClassroomParent and can watch for submissions from the group and its descendants
+    And the group @Classroom is a child of the group @ClassroomParent
     When I send a GET request to "/threads?watched_group_id=@Classroom&is_mine=<is_mine>"
     Then the response code should be 400
     And the response error message should contain "Must not provide watched_group_id and is_mine at the same time"
@@ -60,4 +62,4 @@ Feature: List threads - robustness
     Given I am @John
     When I send a GET request to "/threads?is_mine=1&latest_update_gt=2023-01-01T00:00:99"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for latest_update_gt (should be time (rfc3339))"
+    And the response error message should contain "Wrong value for latest_update_gt (should be time (rfc3339Nano))"

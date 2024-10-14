@@ -16,9 +16,9 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 )
 
 func TestUserMiddleware(t *testing.T) {
@@ -61,7 +61,7 @@ func TestUserMiddleware(t *testing.T) {
 			dbError:                  errors.New("some error"),
 			expectedStatusCode:       500,
 			expectedServiceWasCalled: false,
-			expectedBody:             `{"success":false,"message":"Internal server error","error_text":"Can't validate the access token"}` + "\n",
+			expectedBody:             `{"success":false,"message":"Internal server error"}` + "\n",
 			expectedLogs:             `level=error msg="Can't validate an access token: some error"`,
 		},
 		{

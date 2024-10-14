@@ -1,17 +1,17 @@
 Feature: Create a group (groupCreate) - robustness
 
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name  | type |
       | 21 | owner | User |
       | 31 | tmp12 | User |
       | 51 | john  | User |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login  | temp_user | group_id |
       | owner  | 0         | 21       |
       | tmp12  | 1         | 31       |
       | john   | 0         | 51       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
     And the groups ancestors are computed
 

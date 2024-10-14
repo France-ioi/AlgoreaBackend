@@ -1,10 +1,10 @@
 Feature: Create a group (groupCreate)
 
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name  | type |
       | 21 | owner | User |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | temp_user | group_id | first_name  | last_name |
       | owner | 0         | 21       | Jean-Michel | Blanquer  |
     And the groups ancestors are computed

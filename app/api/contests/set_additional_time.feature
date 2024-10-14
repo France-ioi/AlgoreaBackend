@@ -1,6 +1,6 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type    |
       | 10 | Parent  | Club    |
       | 11 | Group A | Class   |
@@ -14,18 +14,18 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 34 | item50  | Other   |
       | 35 | item60  | Other   |
       | 36 | item70  | Other   |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id |
       | owner | 21       |
       | john  | 31       |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 13       | 21         | true                   | true              |
       | 14       | 21         | false                  | false             |
       | 15       | 21         | true                   | true              |
       | 16       | 21         | true                   | true              |
       | 31       | 21         | true                   | true              |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
       | 10              | 21             | 9999-12-31 23:59:59 |
@@ -39,21 +39,21 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36              | 16             | 2018-12-31 23:59:59 |
       | 36              | 31             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | duration | participants_group_id | default_language_tag |
       | 10 | 00:00:02 | 33                    | fr                   |
       | 50 | 00:00:00 | 34                    | fr                   |
       | 60 | 00:00:01 | 35                    | fr                   |
       | 70 | 00:00:03 | 36                    | fr                   |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
       | 10               | 70            |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 1           |
       | 10             | 70            | 1           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 10       | 50      | none                     | enter                    | none                |
       | 11       | 50      | none                     | none                     | none                |
@@ -65,7 +65,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 60      | content_with_descendants | none                     | none                |
       | 21       | 70      | content_with_descendants | content                  | answer              |
       | 36       | 10      | info                     | none                     | none                |
-    And the database has the following table 'groups_contest_items':
+    And the database has the following table "groups_contest_items":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -74,7 +74,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 50      | 00:01:00        |
       | 21       | 60      | 00:01:00        |
       | 21       | 70      | 00:01:00        |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until | ended_at            |
       | 1  | 13             | 3018-05-29 06:38:38 | 21         | 0                 | 50           | 2018-12-31 23:59:59      | null                |
       | 1  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      | 2019-05-30 11:00:00 |
@@ -82,7 +82,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 1  | 16             | 3019-05-29 06:38:38 | 21         | 0                 | 70           | 2018-12-31 23:59:59      | null                |
       | 1  | 31             | 3017-05-29 06:38:38 | 21         | 0                 | 70           | 9999-12-31 23:59:59      | null                |
       | 2  | 14             | 3019-05-29 06:38:38 | 21         | 0                 | 50           | 9999-12-31 23:59:59      | null                |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          |
       | 1          | 13             | 50      | 3018-05-29 06:38:38 |
       | 1          | 13             | 70      | 3018-05-29 06:38:38 |

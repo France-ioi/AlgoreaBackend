@@ -1,6 +1,6 @@
 Feature: Get group memberships for the current user
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type                | name                       | description                | frozen_membership | require_lock_membership_approval_until |
       | 1  | Class               | Our Class                  | Our class group            | false             | null                                   |
       | 2  | Team                | Our Team                   | Our team group             | false             | null                                   |
@@ -16,11 +16,11 @@ Feature: Get group memberships for the current user
       | 30 | Team                | Frozen Team                | Frozen Team                | true              | null                                   |
       | 31 | Team                | Team With Entry Conditions | Team With Entry Conditions | false             | null                                   |
       | 32 | ContestParticipants |                            |                            | false             | null                                   |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | temp_user | group_id | first_name  | last_name | grade |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 0         | 11       | John        | Doe       | 1     |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 5               | 21             | 2019-05-30 11:00:00         |
       | 6               | 21             | 2019-05-30 11:00:00         |
@@ -31,24 +31,24 @@ Feature: Get group memberships for the current user
       | 31              | 21             | null                        |
       | 32              | 21             | null                        |
     And the groups ancestors are computed
-    And the database has the following table 'group_membership_changes':
-      | group_id | member_id | action                | at                  |
-      | 1        | 21        | invitation_created    | 2017-02-28 06:38:38 |
-      | 2        | 21        | invitation_refused    | 2017-03-29 06:38:38 |
-      | 3        | 21        | join_request_created  | 2017-04-29 06:38:38 |
-      | 4        | 21        | join_request_refused  | 2017-05-29 06:38:38 |
-      | 5        | 21        | invitation_accepted   | 2017-06-29 06:38:38 |
-      | 6        | 21        | join_request_accepted | 2017-07-29 06:38:38 |
-      | 7        | 21        | removed               | 2017-08-29 06:38:38 |
-      | 8        | 21        | left                  | 2017-09-29 06:38:38 |
-      | 1        | 11        | added_directly        | 2017-11-29 06:38:38 |
-    And the database has the following table 'items':
+    And the database has the following table "group_membership_changes":
+      | group_id | member_id | action                | at                      |
+      | 1        | 21        | invitation_created    | 2017-02-28 06:38:38.001 |
+      | 2        | 21        | invitation_refused    | 2017-03-29 06:38:38.001 |
+      | 3        | 21        | join_request_created  | 2017-04-29 06:38:38.001 |
+      | 4        | 21        | join_request_refused  | 2017-05-29 06:38:38.001 |
+      | 5        | 21        | invitation_accepted   | 2017-06-29 06:38:38.001 |
+      | 6        | 21        | join_request_accepted | 2017-07-29 06:38:38.001 |
+      | 7        | 21        | removed               | 2017-08-29 06:38:38.001 |
+      | 8        | 21        | left                  | 2017-09-29 06:38:38.001 |
+      | 1        | 11        | added_directly        | 2017-11-29 06:38:38.001 |
+    And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table 'attempts' has also the following row:
+    And the database table "attempts" has also the following row:
       | participant_id | id | root_item_id |
       | 31             | 1  | 2            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id | started_at          |
       | 31             | 1          | 2       | 2019-05-30 11:00:00 |
 
@@ -66,7 +66,7 @@ Feature: Get group memberships for the current user
           "description": "Another class group",
           "type": "Class"
         },
-        "member_since": "2017-07-29T06:38:38Z",
+        "member_since": "2017-07-29T06:38:38.001Z",
         "action": "join_request_accepted",
         "is_membership_locked": true
       },
@@ -77,7 +77,7 @@ Feature: Get group memberships for the current user
           "description": "Group for other people",
           "type": "Other"
         },
-        "member_since": "2017-06-29T06:38:38Z",
+        "member_since": "2017-06-29T06:38:38.001Z",
         "action": "invitation_accepted",
         "is_membership_locked": false
       },
@@ -133,7 +133,7 @@ Feature: Get group memberships for the current user
           "description": "Another class group",
           "type": "Class"
         },
-        "member_since": "2017-07-29T06:38:38Z",
+        "member_since": "2017-07-29T06:38:38.001Z",
         "action": "join_request_accepted",
         "is_membership_locked": true
       }
@@ -154,7 +154,7 @@ Feature: Get group memberships for the current user
           "description": "Group for other people",
           "type": "Other"
         },
-        "member_since": "2017-06-29T06:38:38Z",
+        "member_since": "2017-06-29T06:38:38.001Z",
         "action": "invitation_accepted",
         "is_membership_locked": false
       }

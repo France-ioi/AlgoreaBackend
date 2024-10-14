@@ -1,6 +1,6 @@
 Feature: Get permissions granted to group - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name          | type  |
       | 21 | owner         | User  |
       | 23 | user          | User  |
@@ -8,19 +8,19 @@ Feature: Get permissions granted to group - robustness
       | 26 | another class | Class |
       | 27 | third class   | Class |
       | 31 | admin         | User  |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
       | user  | 23       | John        | Doe       |
       | admin | 31       | Allie       | Grater    |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access |
       | 23       | 21         | 1                      |
       | 25       | 21         | 0                      |
       | 25       | 31         | 1                      |
       | 26       | 21         | 1                      |
       | 26       | 31         | 1                      |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 25              | 23             |
       | 25              | 31             |

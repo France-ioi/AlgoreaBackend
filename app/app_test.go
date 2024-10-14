@@ -3,6 +3,7 @@ package app
 import (
 	crand "crypto/rand"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -15,10 +16,11 @@ import (
 	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 )
 
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
@@ -35,7 +37,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(app.Database)
 	assert.NotNil(app.HTTPHandler)
 	assert.NotNil(app.apiCtx)
-	assert.Len(app.HTTPHandler.Middlewares(), 8)
+	assert.Len(app.HTTPHandler.Middlewares(), 9)
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
 	assert.Equal("/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
@@ -46,7 +48,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
 	app, _ := New()
-	assert.Len(app.HTTPHandler.Middlewares(), 7)
+	assert.Len(app.HTTPHandler.Middlewares(), 8)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
@@ -253,4 +255,36 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	}
 	defer func() { _ = response.Body.Close() }()
 	assert.Equal(404, response.StatusCode)
+}
+
+func TestNew_DisableResultsPropagation(t *testing.T) {
+	for _, configSettingValue := range []bool{true, false} {
+		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
+			oldEnvValue := os.Getenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION")
+			defer func() { _ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", oldEnvValue) }()
+
+			_ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", fmt.Sprintf("%t", configSettingValue))
+			assert := assertlib.New(t)
+
+			app, _ := New()
+			assert.Equal(configSettingValue, database.NewDataStore(app.Database).IsResultsPropagationProhibited())
+
+			router := app.HTTPHandler
+			router.Get("/dummy", func(_ http.ResponseWriter, r *http.Request) {
+				assert.Equal(configSettingValue, database.NewDataStoreWithContext(r.Context(), app.Database).IsResultsPropagationProhibited())
+			})
+
+			srv := httptest.NewServer(router)
+			defer srv.Close()
+
+			request, _ := http.NewRequest("GET", srv.URL+"/dummy", http.NoBody)
+			response, err := http.DefaultClient.Do(request)
+			assert.NoError(err)
+			if err != nil {
+				return
+			}
+			_, _ = ioutil.ReadAll(response.Body)
+			_ = response.Body.Close()
+		})
+	}
 }

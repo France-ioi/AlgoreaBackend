@@ -1,23 +1,23 @@
 Feature: User withdraws a request to leave a group - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id |
       | 11 |
       | 14 |
       | 21 |
       | 22 |
-    And the database has the following table 'users':
+    And the database has the following table "users":
       | group_id | login |
       | 21       | john  |
       | 22       | jane  |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 11              | 21             |
       | 14              | 22             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
-      | group_id | member_id | type          | at                  |
-      | 14       | 21        | leave_request | 2019-05-30 11:00:00 |
+    And the database has the following table "group_pending_requests":
+      | group_id | member_id | type          | at                      |
+      | 14       | 21        | leave_request | 2019-05-30 11:00:00.001 |
 
   Scenario: User tries to withdraw a non-existing leave request
     Given I am the user with id "21"

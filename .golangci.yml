@@ -4,18 +4,18 @@ linters-settings:
     settings:
       printf:
         funcs:
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Debugf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Infof
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Warnf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Errorf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Panicf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Fatalf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Debugf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Infof
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Warnf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Errorf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Panicf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Fatalf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Debugf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Infof
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Warnf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Errorf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Panicf
+          - (github.com/France-ioi/AlgoreaBackend/v2/app/logging.SharedLogger).Fatalf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Debugf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Infof
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Warnf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Errorf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Panicf
+          - github.com/France-ioi/AlgoreaBackend/v2/app/logging.Fatalf
   golint:
     min-confidence: 0
   gocyclo:
@@ -38,7 +38,7 @@ linters-settings:
   lll:
     line-length: 140
   goimports:
-    local-prefixes: github.com/France-ioi/AlgoreaBackend
+    local-prefixes: github.com/France-ioi/AlgoreaBackend/v2
   gocritic:
     enabled-tags:
       - performance
@@ -72,13 +72,11 @@ linters:
     - forbidigo        # For update to go1.20
     - gci              # For update to go1.20
     - gochecknoinits   # For update to go1.20
-    - revive           # For update to go1.20
     - asasalint        # For update to go1.20
     - containedctx     # For update to go1.20
     - contextcheck     # For update to go1.20
     - cyclop           # For update to go1.20
     - dupword          # For update to go1.20
-    - revive           # For update to go1.20
     - errchkjson       # For update to go1.20
     - errorlint        # For update to go1.20
     - errname          # For update to go1.20
@@ -142,9 +140,6 @@ issues:
       linters:
         - gocritic
     - text: "SA1019:" # io/util has been deprecated since Go 1.19
-      linters:
-        - staticcheck
-    - text: "SA1029:" # should not use built'in type string as key for value; define your own type to avoid collisions
       linters:
         - staticcheck
     - text: "ptrToRefParam:"

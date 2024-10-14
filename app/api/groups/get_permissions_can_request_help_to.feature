@@ -19,7 +19,8 @@ Feature: Get permissions can_request_help_to for a group
       | @ClassParent             | @ClassParentParent       |          |
       | @Class                   | @ClassParent             |          |
       | @OtherSourceGroup        |                          |          |
-    And @Teacher is a manager of the group @Class and can grant group access
+    And the group @Teacher is a manager of the group @ClassAnotherParent and can grant group access
+    And the group @Class is a child of the group @ClassAnotherParent
     And there are the following items:
       | item                        | type    |
       | @ChapterParent              | Chapter |
@@ -39,7 +40,7 @@ Feature: Get permissions can_request_help_to for a group
     Given I am @Teacher
     And there is a group @HelperGroup
     # @HelperGroup is visible by @Teacher
-    And the group @Teacher is a descendant of the group @HelperGroup
+    And the group @Teacher is a descendant of the group @HelperGroup via @HelperGroupChild
     And there are the following item permissions:
       | item  | group  | is_owner | can_request_help_to |
       | @Item | @Class | false    | @HelperGroup        |
@@ -109,16 +110,16 @@ Feature: Get permissions can_request_help_to for a group
       | @Item | @ClassParent             | @OtherSourceGroup | other            | false    | @HelperOtherSourceGroup4          | other source group                                |
       | @Item | @ClassParentParent       | @OtherSourceGroup | other            | false    | @HelperOtherSourceGroupNotVisible | other source group, not visible                   |
   # The following lines are to make the groups visible by @Teacher
-  And the group @Teacher is a descendant of the group @HelperGroupSelf1
-  And the group @Teacher is a descendant of the group @HelperGroupGroupMembership1
-  And the group @Teacher is a descendant of the group @HelperGroupGroupMembership2
-  And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking
-  And the group @Teacher is a descendant of the group @HelperGroupOther1
-  And the group @Teacher is a descendant of the group @HelperGroupOther2
-  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup1
-  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup2
-  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup3
-  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup4
+  And the group @Teacher is a descendant of the group @HelperGroupSelf1 via @HelperGroupSelf1Child
+  And the group @Teacher is a descendant of the group @HelperGroupGroupMembership1 via @HelperGroupGroupMembership1Child
+  And the group @Teacher is a descendant of the group @HelperGroupGroupMembership2 via @HelperGroupGroupMembership2Child
+  And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking via @HelperGroupItemUnlockingChild
+  And the group @Teacher is a descendant of the group @HelperGroupOther1 via @HelperGroupOther1Child
+  And the group @Teacher is a descendant of the group @HelperGroupOther2 via @HelperGroupOther2Child
+  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup1 via @HelperOtherSourceGroup1Child
+  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup2 via @HelperOtherSourceGroup2Child
+  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup3 via @HelperOtherSourceGroup3Child
+  And the group @Teacher is a descendant of the group @HelperOtherSourceGroup4 via @HelperOtherSourceGroup4Child
   When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
   Then the response code should be 200
   And the response at $.granted_via_self.can_request_help_to[*] should be:
@@ -185,13 +186,13 @@ Feature: Get permissions can_request_help_to for a group
       | @ChapterParent              | @ClassParentParent       | @Class            | other            | false    | @HelperGroupOther2                       |                    |
       | @ChapterParentNoPropagation | @ClassParent             | @OtherSourceGroup | other            | false    | @HelperGroupOtherNoPropagation           | other source group |
   # The following lines are to make the groups visible by @Teacher
-    And the group @Teacher is a descendant of the group @HelperGroupSelf1
-    And the group @Teacher is a descendant of the group @HelperGroupGroupMembership1
-    And the group @Teacher is a descendant of the group @HelperGroupGroupMembership2
-    And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking1
-    And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking2
-    And the group @Teacher is a descendant of the group @HelperGroupOther1
-    And the group @Teacher is a descendant of the group @HelperGroupOther2
+    And the group @Teacher is a descendant of the group @HelperGroupSelf1 via @HelperGroupSelf1Child
+    And the group @Teacher is a descendant of the group @HelperGroupGroupMembership1 via @HelperGroupGroupMembership1Child
+    And the group @Teacher is a descendant of the group @HelperGroupGroupMembership2 via @HelperGroupGroupMembership2Child
+    And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking1 via @HelperGroupItemUnlocking1Child
+    And the group @Teacher is a descendant of the group @HelperGroupItemUnlocking2 via @HelperGroupItemUnlocking2Child
+    And the group @Teacher is a descendant of the group @HelperGroupOther1 via @HelperGroupOther1Child
+    And the group @Teacher is a descendant of the group @HelperGroupOther2 via @HelperGroupOther2Child
     When I send a GET request to "/groups/@Class/permissions/@Class/@Item"
     Then the response code should be 200
     And the response at $.granted_via_self.can_request_help_to should be "[]"

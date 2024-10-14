@@ -3,7 +3,7 @@ package groups
 import (
 	"net/http"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /groups/{parent_group_id}/join-requests/reject group-memberships groupJoinRequestsReject

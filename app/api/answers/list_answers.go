@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:operation GET /items/{item_id}/answers answers answersList
@@ -177,7 +177,6 @@ type answersResponseAnswer struct {
 	Type string `json:"type"`
 	// required: true
 	CreatedAt database.Time `json:"created_at"`
-	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
 

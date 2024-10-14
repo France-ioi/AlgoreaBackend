@@ -7,11 +7,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/encrypt"
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model generateProfileEditTokenResponse
@@ -32,10 +35,10 @@ type generateProfileEditTokenResponse struct {
 // ProfileEditToken permits a requester user to edit the profile of a target user.
 // swagger:model ProfileEditToken
 type ProfileEditToken struct {
-	// User who requested the token.
+	// `loginID` of the user who requested the token.
 	// required:true
 	RequesterID string `json:"requester_id"`
-	// User whose profile is to be edited.
+	// `loginID` of the user whose profile is to be edited.
 	// required:true
 	TargetID string `json:"target_id"`
 	// Expiry date in the number of seconds since 01/01/1970 UTC.
@@ -52,10 +55,11 @@ type ProfileEditToken struct {
 //
 //
 //		Restrictions:
-//			* the `current user` must be a manager of a group of which the `target user` is a member, and
-//			* the group the `target user` is member of, or one of its ancestor, must have `require_personal_info_access_approval` set to `edit`.
+//			* the `current user` must be a manager of a group to which the `target user` is a descendant, and
+//			* this group must have `require_personal_info_access_approval` set to `edit`,
+//			* both the `current user` and the `target user` must have a `login_id`,
 //
-//		Otherwise, a forbidden error is returned.
+//		otherwise, a forbidden error is returned.
 //
 //	parameters:
 //		- name: target_user_id
@@ -87,26 +91,32 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
+	var targetUserLoginID *int64
+	if user.LoginID != nil {
+		targetUserLoginID, err = getLoginIDForProfileEditing(store, user, targetUserID)
+		service.MustNotBeError(err)
+	}
+
 	// Checks rights.
-	if !user.CanEditProfile(store, targetUserID) {
+	if targetUserLoginID == nil {
 		return service.InsufficientAccessRightsError
 	}
 
 	response := new(generateProfileEditTokenResponse)
 
-	response.ProfileEditToken, response.Alg = srv.getProfileEditToken(user.GroupID, targetUserID)
+	response.ProfileEditToken, response.Alg = srv.getProfileEditToken(*user.LoginID, *targetUserLoginID)
 
 	render.Respond(rw, r, response)
 
 	return service.NoError
 }
 
-func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token, algorithm string) {
+func (srv *Service) getProfileEditToken(requesterLoginID, targetLoginID int64) (token, algorithm string) {
 	thirtyMinutesLater := time.Now().Add(time.Minute * 30)
 
 	profileEditToken := ProfileEditToken{
-		RequesterID: strconv.FormatInt(requesterID, 10),
-		TargetID:    strconv.FormatInt(targetID, 10),
+		RequesterID: strconv.FormatInt(requesterLoginID, 10),
+		TargetID:    strconv.FormatInt(targetLoginID, 10),
 		Exp:         thirtyMinutesLater.Unix(),
 	}
 
@@ -119,4 +129,32 @@ func (srv *Service) getProfileEditToken(requesterID, targetID int64) (token, alg
 	hexCipher := hex.EncodeToString(cipherText)
 
 	return hexCipher, "AES-256-GCM"
+}
+
+// getLoginIDForProfileEditing returns `login_id` of the given target user
+// if the requesting user can edit the profile of the target user:
+//  1. the requesting user needs to be a manager of a group to which the target user is a descendant, and
+//  2. this group must have `require_personal_info_access_approval` set to `edit`, and
+//  3. the target user must be a user,
+//
+// otherwise, it returns nil.
+func getLoginIDForProfileEditing(s *database.DataStore, requestingUser *database.User, targetUserID int64) (*int64, error) {
+	var targetUserLoginID *int64
+
+	err := s.ActiveGroupAncestors().
+		ManagedByUser(requestingUser).
+		Joins(`JOIN groups_ancestors AS target_user_group_ancestor
+									 ON target_user_group_ancestor.ancestor_group_id = groups_ancestors_active.child_group_id AND
+											target_user_group_ancestor.child_group_id = ?`, targetUserID).
+		Joins("JOIN `users` AS target_user ON target_user.group_id = target_user_group_ancestor.child_group_id").
+		Joins("JOIN `groups` AS target_user_group ON target_user_group.id = target_user_group_ancestor.ancestor_group_id").
+		Where("target_user_group.require_personal_info_access_approval = 'edit'").
+		PluckFirst("target_user.login_id", &targetUserLoginID).
+		Error()
+
+	if gorm.IsRecordNotFoundError(err) {
+		return nil, nil
+	}
+
+	return targetUserLoginID, err
 }

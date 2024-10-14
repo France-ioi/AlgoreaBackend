@@ -1,27 +1,27 @@
 Feature: Delete the current user
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  | name       | require_lock_membership_approval_until |
       | 2   | Base  | AllUsers   | 9999-12-31 23:59:59                    |
       | 4   | Base  | TempUsers  | null                                   |
       | 21  | User  | user       | null                                   |
       | 31  | User  | tmp-1234   | null                                   |
       | 100 | Class | Some class | null                                   |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 4              |
       | 2               | 21             |
       | 4               | 31             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | at                  |
       | 100      | 21        | 2019-05-30 11:00:00 |
       | 100      | 31        | 2019-05-30 11:00:00 |
-    And the database has the following table 'group_membership_changes':
-      | group_id | member_id | at                  |
-      | 100      | 21        | 2019-05-30 11:00:00 |
-      | 100      | 31        | 2019-05-30 11:00:00 |
-    And the database has the following table 'users':
+    And the database has the following table "group_membership_changes":
+      | group_id | member_id | at                      |
+      | 100      | 21        | 2019-05-30 11:00:00.001 |
+      | 100      | 31        | 2019-05-30 11:00:00.001 |
+    And the database has the following table "users":
       | temp_user | login    | group_id | login_id |
       | 0         | user     | 21       | 1234567  |
       | 1         | tmp-1234 | 31       | null     |

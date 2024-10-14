@@ -8,9 +8,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 const minSearchStringLength = 3
@@ -19,7 +19,7 @@ const minSearchStringLength = 3
 type itemSearchResponseRow struct {
 	// required:true
 	ID int64 `json:"id,string"`
-	// Title (in current user's language); Nullable
+	// Title (in current user's language)
 	// required:true
 	Title *string `json:"title"`
 	// required:true
