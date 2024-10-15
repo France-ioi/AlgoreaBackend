@@ -236,11 +236,11 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 
 	if propagationsToRun.GroupAncestors && !prohibitedPropagations.GroupAncestors {
 		propagationsToRun.GroupAncestors = false
-		s.createNewAncestors("groups", "group")
+		s.GroupGroups().createNewAncestors()
 	}
 	if propagationsToRun.ItemAncestors && !prohibitedPropagations.ItemAncestors {
 		propagationsToRun.ItemAncestors = false
-		s.createNewAncestors("items", "item")
+		s.ItemItems().CreateNewAncestors()
 	}
 	if propagationsToRun.Permissions && !prohibitedPropagations.Permissions {
 		propagationsToRun.Permissions = false

@@ -16,6 +16,11 @@ func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 	}
 }
 
+// CreateNewAncestors populates items_ancestors table.
+func (s *ItemItemStore) CreateNewAncestors() {
+	s.DataStore.createNewAncestors("items", "item")
+}
+
 // ContentViewPropagationNameByIndex returns the content view propagation level name with the given index from the enum.
 func (s *ItemItemStore) ContentViewPropagationNameByIndex(index int) string {
 	getterFunc := func() interface{} { return requireDBEnumNameByIndex("items_items.content_view_propagation", index) }
