@@ -264,12 +264,12 @@ func updateChildrenAndRunListeners(
 			parentChildSpec := constructItemsItemsForChildren(input.Children, itemID)
 			insertItemItems(lockedStore, parentChildSpec)
 
-			propagationsToRun = append(propagationsToRun, "items_ancestors")
+			store.ItemItems().CreateNewAncestors()
 
 			return nil
 		})
 
-		propagationsToRun = append(propagationsToRun, "permissions", "results")
+		propagationsToRun = []string{"permissions", "results"}
 	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
 		// results data of the task will be zeroed
 		service.MustNotBeError(
@@ -277,7 +277,7 @@ func updateChildrenAndRunListeners(
 				store.Results().Where("item_id = ?", itemID).
 					Select("participant_id, attempt_id, item_id, 'to_be_recomputed' AS state").QueryExpr()).Error())
 
-		propagationsToRun = append(propagationsToRun, "results")
+		propagationsToRun = []string{"results"}
 	}
 
 	return propagationsToRun, apiError, err

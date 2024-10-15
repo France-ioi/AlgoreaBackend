@@ -203,10 +203,8 @@ func (s *DataStore) NewID() int64 {
 }
 
 type propagationsBitField struct {
-	ItemAncestors  bool
-	GroupAncestors bool
-	Permissions    bool
-	Results        bool
+	Permissions bool
+	Results     bool
 }
 
 type dbContextKey string
@@ -217,8 +215,6 @@ const (
 )
 
 // InTransaction executes the given function in a transaction and commits.
-// If a propagation is scheduled, it will be run after the transaction commit,
-// so we can run each step of the propagation in a separate transaction.
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	s.DB.ctx = context.WithValue(s.DB.ctx, awaitingPropagationsContextKey, &propagationsBitField{})
 	err := s.inTransaction(func(db *DB) error {
@@ -234,14 +230,6 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	propagationsToRun := s.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx)
 
-	if propagationsToRun.GroupAncestors && !prohibitedPropagations.GroupAncestors {
-		propagationsToRun.GroupAncestors = false
-		s.GroupGroups().createNewAncestors()
-	}
-	if propagationsToRun.ItemAncestors && !prohibitedPropagations.ItemAncestors {
-		propagationsToRun.ItemAncestors = false
-		s.ItemItems().CreateNewAncestors()
-	}
 	if propagationsToRun.Permissions && !prohibitedPropagations.Permissions {
 		propagationsToRun.Permissions = false
 		s.PermissionsGranted().computeAllAccess()
@@ -260,22 +248,6 @@ func (s *DataStore) ScheduleResultsPropagation() {
 
 	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	propagationsToRun.Results = true
-}
-
-// ScheduleGroupsAncestorsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
-func (s *DataStore) ScheduleGroupsAncestorsPropagation() {
-	s.mustBeInTransaction()
-
-	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
-	propagationsToRun.GroupAncestors = true
-}
-
-// ScheduleItemsAncestorsPropagation schedules a run of the items ancestors propagation after the transaction commit.
-func (s *DataStore) ScheduleItemsAncestorsPropagation() {
-	s.mustBeInTransaction()
-
-	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
-	propagationsToRun.ItemAncestors = true
 }
 
 // SchedulePermissionsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
