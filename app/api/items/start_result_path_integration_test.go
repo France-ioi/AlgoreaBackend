@@ -446,9 +446,6 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			var got []map[string]interface{}
 			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
 				s.ScheduleGroupsAncestorsPropagation()
-				return nil
-			}))
-			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
 				got = items.GetDataForResultPathStart(s, tt.args.participantID, tt.args.ids)
 				return nil
 			}))
