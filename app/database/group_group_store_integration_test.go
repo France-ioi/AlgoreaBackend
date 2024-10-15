@@ -372,7 +372,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.ScheduleGroupsAncestorsPropagation()
+				store.GroupGroups().CreateNewAncestors()
 				return nil
 			}))
 			assert.NoError(t, dataStore.GroupGroups().InsertMap(map[string]interface{}{
@@ -459,7 +459,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.ScheduleGroupsAncestorsPropagation()
+				store.GroupGroups().CreateNewAncestors()
 				return nil
 			}))
 			groupGroupStore := dataStore.GroupGroups()

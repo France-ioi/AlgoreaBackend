@@ -58,7 +58,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
 		groupGroupStore.createRelation(parentGroupID, childGroupID)
-		s.ScheduleGroupsAncestorsPropagation()
+		groupGroupStore.createNewAncestors()
 		s.ScheduleResultsPropagation()
 		return nil
 	}))
@@ -82,8 +82,9 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	defer recoverPanics(&err)
 
 	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
+		groupGroupStore := s.GroupGroups()
 		mustNotBeError(s.InsertMaps(relations))
-		s.ScheduleGroupsAncestorsPropagation()
+		groupGroupStore.createNewAncestors()
 		return nil
 	}))
 	return err
@@ -143,8 +144,6 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	mustNotBeError(s.deleteObjectsLinkedToGroups([]int64{groupID}).Error())
 
 	// recalculate relations
-	// It seems (to be verified), that this propagation has to be called right now
-	// because it's result is used in the following steps.
 	s.GroupGroups().createNewAncestors()
 
 	var idsToDelete []int64
@@ -173,7 +172,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 			deleteResult := s.deleteObjectsLinkedToGroups(idsToDelete)
 			mustNotBeError(deleteResult.Error())
 			if deleteResult.RowsAffected() > 0 {
-				s.ScheduleGroupsAncestorsPropagation()
+				s.GroupGroups().createNewAncestors()
 			}
 		}
 	}

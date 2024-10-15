@@ -94,12 +94,13 @@ func init() { //nolint:gochecknoinits
 
 func recomputeDBCaches(gormDB *database.DB) error {
 	return database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+		fmt.Print("Running GroupGroupStore.CreateNewAncestors()\n")
+		assertNoError(store.GroupGroups().CreateNewAncestors(), "Cannot compute groups_groups")
+		fmt.Print("Running ItemItemStore.CreateNewAncestors()\n")
+		assertNoError(store.ItemItems().CreateNewAncestors(), "Cannot compute items_items")
 		fmt.Print("Schedule the propagations\n")
-		store.ScheduleGroupsAncestorsPropagation()
-		store.ScheduleItemsAncestorsPropagation()
 		store.SchedulePermissionsPropagation()
 		store.ScheduleResultsPropagation()
-
 		return nil
 	})
 }
