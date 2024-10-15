@@ -141,7 +141,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// recalculate relations
 	// It seems (to be verified), that this propagation has to be called right now
 	// because it's result is uin the following steps.
-	// s.createNewAncestors("groups", "group")
+	s.createNewAncestors("groups", "group")
 
 	var idsToDelete []int64
 	// besides the group with id = groupID, we also want to delete its descendants
