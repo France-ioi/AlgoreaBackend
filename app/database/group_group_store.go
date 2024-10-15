@@ -116,7 +116,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			shouldPropagatePermissions := permissionsResult.RowsAffected() > 0
 
 			// recalculate relations
-			s.ScheduleGroupsAncestorsPropagation()
+			s.GroupGroups().createNewAncestors()
 
 			if shouldPropagatePermissions {
 				s.SchedulePermissionsPropagation()
@@ -195,6 +195,15 @@ func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
 		LEFT JOIN filters
 			ON filters.group_id = groups.id
 		WHERE groups.id IN(?)`, groupIDs)
+}
+
+// After is a "listener" that calls GroupGroupStore::createNewAncestors().
+func (s *GroupGroupStore) After() (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	s.createNewAncestors()
+	return nil
 }
 
 // WithGroupsRelationsLock wraps the given function in GET_LOCK/RELEASE_LOCK

@@ -319,9 +319,7 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 	}
 
 	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-		store.ScheduleGroupsAncestorsPropagation()
-
-		return nil
+		return store.GroupGroups().After()
 	})
 	if err != nil {
 		return err

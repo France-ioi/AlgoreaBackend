@@ -30,9 +30,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-		trStore.ScheduleGroupsAncestorsPropagation()
-
-		return nil
+		return trStore.GroupGroups().After()
 	}))
 
 	srv := &service.Base{}
