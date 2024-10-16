@@ -244,6 +244,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(tt.fixture)
 			defer func() { _ = db.Close() }()
 

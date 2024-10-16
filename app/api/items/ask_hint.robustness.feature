@@ -37,7 +37,7 @@ Feature: Ask for a hint - robustness
       | 0          | 101            | 51      | [0,  1, "hint" , null] |
       | 0          | 101            | 10      | null                   |
       | 1          | 101            | 10      | null                   |
-    And time is frozen
+    And the server time is frozen
 
   Scenario: Wrong JSON in request
     Given I send a POST request to "/items/ask-hint" with the following body:
@@ -49,7 +49,7 @@ Feature: Ask for a hint - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: Expired task_token
-    Given the time now is "2020-01-01T00:00:00Z"
+    Given the server time now is "2020-01-01T00:00:00Z"
     And "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
@@ -60,7 +60,7 @@ Feature: Ask for a hint - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    Then the time now is "2020-01-03T00:00:00Z"
+    Then the server time now is "2020-01-03T00:00:00Z"
     And "hintRequestToken" is a token signed by the task platform with the following payload:
       """
       {

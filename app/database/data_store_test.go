@@ -1,6 +1,8 @@
 package database
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"regexp"
 	"strconv"
@@ -185,6 +187,33 @@ func TestDataStore_InTransaction_DBError(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
+	var callsCount int
+
+	type ctxKey string
+
+	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	patch := patchBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
+	defer patch.Unpatch()
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	db.ctx = context.WithValue(context.Background(), ctxKey("key"), "value")
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	store := NewDataStoreWithTable(db, "myTable")
+	gotError := store.InTransaction(func(s *DataStore) error {
+		return nil
+	}, txOptions)
+
+	assert.Nil(t, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, 1, callsCount)
+}
+
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -203,6 +232,30 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *
 
 	assert.Equal(t, expectedError, gotError)
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithForeignKeyChecksDisabled_WithTxOptions(t *testing.T) {
+	var callsCount int
+	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	patch := patchBeginTxWithVerifier(t, &callsCount, txOptions, nil)
+	defer patch.Unpatch()
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^SET").WithArgs().WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectExec("^SET").WithArgs().WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectCommit()
+
+	store := NewDataStore(db)
+	gotError := store.WithForeignKeyChecksDisabled(func(*DataStore) error {
+		return nil
+	}, txOptions)
+
+	assert.Nil(t, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, 1, callsCount)
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnCommittingTransaction(t *testing.T) {

@@ -876,7 +876,7 @@ func assertGroupAncestorsEqual(t *testing.T, dataStore *database.DataStore, tt *
 			tt.wantGroupAncestors[i].ExpiresAt = maxDateTime
 		}
 		if tt.shouldRunListeners {
-			parsed, err := time.Parse("2006-01-02 15:04:05", tt.wantGroupAncestors[i].ExpiresAt)
+			parsed, err := time.Parse(time.DateTime, tt.wantGroupAncestors[i].ExpiresAt)
 			assert.NoError(t, err)
 			if parsed.Before(time.Now().UTC()) {
 				newValue := make([]groupAncestor, 0, len(tt.wantGroupAncestors)-1)

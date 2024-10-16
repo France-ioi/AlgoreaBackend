@@ -31,6 +31,8 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.methodToCall, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := setupDB()
 			defer func() { _ = db.Close() }()
 
@@ -54,6 +56,8 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 }
 
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
 
@@ -83,6 +87,8 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				hasAccess, reason, err := store.Items().CheckSubmissionRights(test.participantID, test.itemID)
 				assert.Equal(t, test.wantHasAccess, hasAccess)
@@ -96,6 +102,8 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 }
 
 func TestItemStore_GetItemIDFromTextID(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [
 			{id: 11, text_id: "id11", default_language_tag: fr},
@@ -125,6 +133,8 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				itemID, err := store.Items().GetItemIDFromTextID(test.textID)
 				assert.Equal(t, test.wantItemID, itemID)
@@ -136,6 +146,8 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 }
 
 func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_BreadcrumbsHierarchyForParentAttempt(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
@@ -560,6 +572,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		tt := tt
 		testEachWriteLockMode(t, tt.name+": is valid", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				testhelpers.SuppressOutputIfPasses(t)
+
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
 						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheLastItem, writeLock)
@@ -571,6 +585,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		})
 		testEachWriteLockMode(t, tt.name+": breadcrumbs hierarchy", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				testhelpers.SuppressOutputIfPasses(t)
+
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(
 						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, writeLock)
@@ -592,6 +608,8 @@ func assertBreadcrumbsHierarchy(t *testing.T,
 }
 
 func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
@@ -1003,6 +1021,8 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 		tt := tt
 		testEachWriteLockMode(t, tt.name, func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				testhelpers.SuppressOutputIfPasses(t)
+
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
 						tt.args.ids, tt.args.groupID, tt.args.attemptID, writeLock)
@@ -1040,6 +1060,8 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
@@ -1091,6 +1113,8 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 1, regexp: "^4.*", priority: 4}
@@ -1147,6 +1171,8 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
@@ -1211,6 +1237,8 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
@@ -1240,6 +1268,8 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 }
 
 func Test_ItemStore_DeleteItem(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		languages: [{tag: fr}]
 		items: [{id: 1234, default_language_tag: fr},{id: 1235, default_language_tag: fr}]

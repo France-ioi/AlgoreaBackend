@@ -40,7 +40,7 @@ Feature: Save grading result
       | 201      | 50      | content            |
       | 201      | 60      | content            |
       | 201      | 70      | content            |
-    And time is frozen
+    And the server time is frozen
 
   Scenario: User is able to save the grading result with a high score and attempt_id
     Given I am the user with id "101"

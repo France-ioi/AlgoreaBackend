@@ -14,6 +14,8 @@ import (
 )
 
 func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		attempts:
 			- {participant_id: 11, id: 1, root_item_id: 112, allows_submissions_until: 3019-05-30 12:00:00}
@@ -50,6 +52,8 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				hintsInfo, err := store.Results().GetHintsInfoForActiveAttempt(test.participantID, test.attemptID, test.itemID)
 				assert.Equal(t, test.wantHintsInfo, hintsInfo)
@@ -61,6 +65,8 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 }
 
 func TestResultStore_Propagate(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -74,6 +80,8 @@ func TestResultStore_Propagate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
 				s.ScheduleResultsPropagation()
 				return nil

@@ -28,6 +28,8 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 	for _, markAllResultsAsToBePropagated := range []bool{false, true} {
 		markAllResultsAsToBePropagated := markAllResultsAsToBePropagated
 		t.Run(fmt.Sprintf("mark all as to_be_propagated=%v", markAllResultsAsToBePropagated), func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/aggregates")
 			defer func() { _ = db.Close() }()
 
@@ -111,6 +113,8 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
@@ -133,6 +137,8 @@ func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
@@ -174,6 +180,8 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 			defer func() { _ = db.Close() }()
 

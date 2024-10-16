@@ -4,7 +4,6 @@ Feature: Support for parallel sessions
       | group     | parent | members                                        |
       | @AllUsers |        | @User1,@UserUntouched,@UserWithoutExpiredToken |
     And the time now is "2020-01-01T01:00:00Z"
-    And the DB time now is "2020-01-01 01:00:00"
     And there are the following sessions:
       | session                          | user                     | refresh_token                 |
       | @Session_User1_1                 | @User1                   | rt_user_1_session_1           |

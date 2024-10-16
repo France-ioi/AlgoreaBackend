@@ -47,7 +47,7 @@ Feature: Get thread - robustness
       | 60      | 3              | closed                  | 10              | 2020-01-20 00:00:00 |
       | 70      | 3              | waiting_for_trainer     | 10              | 2020-01-20 00:00:00 |
       | 80      | 3              | waiting_for_participant | 20              | 2020-01-20 00:00:00 |
-    And the time now is "2020-01-20T00:00:00Z"
+    And the DB time now is "2020-01-20 00:00:00"
 
   Scenario: Should be logged
     When I send a GET request to "/items/10/participant/1/thread"

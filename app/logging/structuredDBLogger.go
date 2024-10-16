@@ -33,7 +33,7 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 		sql := fillSQLPlaceholders(values[3].(string), values[4].([]interface{}))
 		logger.WithFields(map[string]interface{}{
 			"duration": duration,
-			"ts":       time.Now().Format("2006-01-02 15:04:05"),
+			"ts":       time.Now().Format(time.DateTime),
 			"rows":     values[5].(int64),
 		}).Println(strings.TrimSpace(sql))
 	case "rawsql":
@@ -47,7 +47,7 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 		if valuesMap["duration"] != nil {
 			valuesMap["duration"] = float64(valuesMap["duration"].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
 		}
-		valuesMap["ts"] = time.Now().Format("2006-01-02 15:04:05")
+		valuesMap["ts"] = time.Now().Format(time.DateTime)
 		logger.WithFields(valuesMap).Println(values[2])
 	default: // level is not "sql"/"rawsql", so typically errors
 		logger.Println(values[2:]...)
@@ -68,7 +68,7 @@ func fillSQLPlaceholders(query string, values []interface{}) string {
 			value = indirectValue.Interface()
 			switch typedValue := value.(type) {
 			case time.Time:
-				formattedValue = fmt.Sprintf("'%v'", typedValue.Format("2006-01-02 15:04:05"))
+				formattedValue = fmt.Sprintf("'%v'", typedValue.Format(time.DateTime))
 			case []byte, string:
 				formattedValue = fmt.Sprintf("%q", typedValue)
 			default:

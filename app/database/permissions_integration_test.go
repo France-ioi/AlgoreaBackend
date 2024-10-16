@@ -39,6 +39,8 @@ const joinsPermissionsForGroupToItemsFixture = `
 				 can_edit_generated: children, is_owner_generated: 1}`
 
 func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(joinsPermissionsForGroupToItemsFixture)
 	defer func() { _ = db.Close() }()
 
@@ -73,6 +75,8 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 	} {
 		test := test
 		t.Run(fmt.Sprintf("ids: %v", test.ids), func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			var result []map[string]interface{}
 			assert.NoError(t, itemStore.Select("items.id, permissions.*").
 				JoinsPermissionsForGroupToItems(5).
@@ -84,6 +88,8 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 }
 
 func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(joinsPermissionsForGroupToItemsFixture)
 	defer func() { _ = db.Close() }()
 
@@ -138,6 +144,8 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 	} {
 		test := test
 		t.Run(fmt.Sprintf("ids: %v, %s>=%s", test.ids, test.permissionKind, test.neededPermission), func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			var result []map[string]interface{}
 			assert.NoError(t, itemStore.Select("items.id, permissions.*").
 				JoinsPermissionsForGroupToItemsWherePermissionAtLeast(5, test.permissionKind, test.neededPermission).

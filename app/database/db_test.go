@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"database/sql/driver"
 	"errors"
@@ -240,6 +241,86 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
+}
+
+func patchBeginTxWithVerifier(
+	t *testing.T, callsCount *int, expectedTxOptions *sql.TxOptions, expectedContextVars map[interface{}]interface{},
+) (patch *monkey.PatchGuard) {
+	patch = monkey.PatchInstanceMethod(reflect.TypeOf(&gorm.DB{}), "BeginTx",
+		func(db *gorm.DB, ctx context.Context, opts *sql.TxOptions) *gorm.DB {
+			*callsCount++
+			assert.Equal(t, expectedTxOptions, opts)
+			if len(expectedContextVars) > 0 {
+				assert.NotNil(t, ctx)
+				for key, value := range expectedContextVars {
+					assert.Equal(t, value, ctx.Value(key), "Wrong context value for key %#v", key)
+				}
+			}
+
+			defer patch.Restore()
+			patch.Unpatch()
+			return db.BeginTx(ctx, opts)
+		})
+	return patch
+}
+
+func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
+	var calledCount int
+	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
+	defer patch.Unpatch()
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	monkey.Patch(time.Sleep, func(d time.Duration) {})
+	defer monkey.UnpatchAll()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").
+		WillReturnError(&mysql.MySQLError{Number: 1213})
+	mock.ExpectRollback()
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	assert.NoError(t, db.inTransaction(func(db *DB) error {
+		var result []interface{}
+		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+		return nil
+	}, txOptions))
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, 2, calledCount)
+}
+
+func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
+	var calledCount int
+	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
+	defer patch.Unpatch()
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	monkey.Patch(time.Sleep, func(d time.Duration) {})
+	defer monkey.UnpatchAll()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").
+		WillReturnError(&mysql.MySQLError{Number: 1213})
+	mock.ExpectRollback()
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	assert.NoError(t, db.inTransaction(func(db *DB) error {
+		var result []interface{}
+		return db.Raw("SELECT 1").Scan(&result).Error()
+	}, txOptions))
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, 2, calledCount)
 }
 
 func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRollbackError(t *testing.T) {
