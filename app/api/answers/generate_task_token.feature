@@ -74,7 +74,7 @@ Feature: Generate a read-only task token for an item from an answer
       | 4  | 102            | 0          | 40      | 105       | 2020-01-01 01:01:01 |
       | 5  | 102            | 0          | 50      | 105       | 2020-01-01 01:01:01 |
       | 6  | 102            | 1          | 60      | 105       | 2020-01-01 01:01:01 |
-    And time is frozen
+    And the server time is frozen
 
   Scenario: User is able to fetch a task token when participant is the current user
     Given I am the user with id "101"

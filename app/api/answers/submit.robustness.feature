@@ -55,7 +55,7 @@ Feature: Submit a new answer - robustness
     And the table "answers" should stay unchanged
 
   Scenario: Expired task_token
-    Given the time now is "2020-01-01T00:00:00Z"
+    Given the server time now is "2020-01-01T00:00:00Z"
     And "userTaskToken" is a token signed by the app with the following payload:
       """
       {
@@ -65,7 +65,7 @@ Feature: Submit a new answer - robustness
         "platformName": "{{app().Config.GetString("token.platformName")}}"
       }
       """
-    Then the time now is "2020-01-03T00:00:00Z"
+    Then the server time now is "2020-01-03T00:00:00Z"
     When I send a POST request to "/answers" with the following body:
       """
       {
