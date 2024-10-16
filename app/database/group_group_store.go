@@ -29,7 +29,7 @@ func (s *GroupGroupStore) createNewAncestors() {
 // create a cycle in the groups_groups graph.
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
-const groupsRelationsLockTimeout = 3 * time.Second
+const groupsRelationsLockTimeout = 50 * time.Second
 
 // ParentChild represents a (ParentID, ChildID) pair.
 type ParentChild struct {
