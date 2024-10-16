@@ -15,16 +15,6 @@ func TestPropagationStepSets(t *testing.T) {
 		expectedContent []PropagationStep
 	}{
 		{
-			name:            "PropagationStepSetGroupAncestors",
-			set:             PropagationStepSetGroupAncestors(),
-			expectedContent: []PropagationStep{PropagationStepGroupAncestorsInit, PropagationStepGroupAncestorsMain},
-		},
-		{
-			name:            "PropagationStepSetItemAncestors",
-			set:             PropagationStepSetItemAncestors(),
-			expectedContent: []PropagationStep{PropagationStepItemAncestorsInit, PropagationStepItemAncestorsMain},
-		},
-		{
 			name:            "PropagationStepSetAccess",
 			set:             PropagationStepSetAccess(),
 			expectedContent: []PropagationStep{PropagationStepAccessMain},
@@ -60,17 +50,17 @@ func TestBeforePropagationStepHook(t *testing.T) {
 	SetBeforePropagationStepHook(func(step PropagationStep) {
 		steps = append(steps, step)
 	})
-	CallBeforePropagationStepHook(PropagationStepGroupAncestorsInit)
-	assert.Equal(t, []PropagationStep{PropagationStepGroupAncestorsInit}, steps)
+	CallBeforePropagationStepHook(PropagationStepAccessMain)
+	assert.Equal(t, []PropagationStep{PropagationStepAccessMain}, steps)
 	SetBeforePropagationStepHook(func(step PropagationStep) {
 		steps = append(steps, step, step)
 	})
-	CallBeforePropagationStepHook(PropagationStepGroupAncestorsMain)
+	CallBeforePropagationStepHook(PropagationStepResultsNamedLockAcquire)
 	assert.Equal(t,
 		[]PropagationStep{
-			PropagationStepGroupAncestorsInit,
-			PropagationStepGroupAncestorsMain,
-			PropagationStepGroupAncestorsMain,
+			PropagationStepAccessMain,
+			PropagationStepResultsNamedLockAcquire,
+			PropagationStepResultsNamedLockAcquire,
 		},
 		steps)
 }
