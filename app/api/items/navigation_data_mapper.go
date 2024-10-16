@@ -96,7 +96,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		},
 	)
 
-	allItemsQuery := itemsQuery.UnionAll(childrenQuery.SubQuery())
+	allItemsQuery := itemsQuery.UnionAll(childrenQuery)
 	service.MustNotBeError(allItemsQuery.Error())
 
 	query := dataStore.Raw(`

@@ -131,7 +131,7 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 	}
 
 	if isAdding {
-		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID).QueryExpr())
+		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID))
 	} else {
 		updatedMemberIDsQuery = updatedMemberIDsQuery.Where("child_group_id != ?", userID)
 	}
@@ -207,12 +207,6 @@ func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroupsForGroup(store *Data
 		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
 		Where("ancestor_group.type != 'ContestParticipants'").
 		Select("ancestors_of_managed.ancestor_group_id")
-}
-
-// ManagedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
-// and all users who are descendants from managed groups, for a user.
-func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, user *User) *DB {
-	return s.ManagedUsersAndAncestorsOfManagedGroupsForGroup(store, user.GroupID)
 }
 
 // PickVisibleGroupsForGroup returns a query filtering only group which are visible for a group.

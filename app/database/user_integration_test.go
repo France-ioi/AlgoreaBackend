@@ -72,6 +72,8 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				groups: [{id: 101}, {id: 111}, {id: 121}]
 				users:

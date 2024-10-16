@@ -151,7 +151,7 @@ func FindItemPaths(
 			Select("groups.id, root_activity_id, root_skill_id")
 	}
 
-	groupsWithRootItems := participantAncestors.Union(groupsManagedByParticipant.SubQuery())
+	groupsWithRootItems := participantAncestors.Union(groupsManagedByParticipant)
 
 	var visibleItems *database.DB
 	if pathRootBy == PathRootParticipant {

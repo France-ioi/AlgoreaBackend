@@ -27,7 +27,7 @@ Feature: Generate a task token with a refreshed attempt for an item
       | 101      | 60      | solution                 |
       | 102      | 60      | solution                 |
       | 111      | 50      | content_with_descendants |
-    And time is frozen
+    And the server time is frozen
 
   Scenario: User is able to fetch a task token
     Given I am the user with id "101"

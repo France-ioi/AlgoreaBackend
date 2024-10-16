@@ -168,7 +168,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			Union(
 				store.ActiveGroupAncestors().
 					Select("child_group_id AS id").
-					Where("ancestor_group_id = ?", groupID).SubQuery())
+					Where("ancestor_group_id = ?", groupID))
 
 		sourceGroupsQuery = store.Groups().
 			Where("groups.type != 'User'").

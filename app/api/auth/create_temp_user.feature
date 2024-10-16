@@ -16,7 +16,6 @@ Feature: Create a temporary user
       | parent_group_id | child_group_id |
       | 2               | 4              |
     And the time now is "2020-07-16T22:02:28Z"
-    And the DB time now is "2020-07-16 22:02:28"
 
   Scenario Outline: Create a new temporary user
     Given the generated auth key is "ny93zqri9a2adn4v1ut6izd76xb3pccw"

@@ -1,7 +1,6 @@
 Feature: Start a result for an item
   Background:
-    Given time is frozen
-    And the DB time now is "{{currentTimeDB()}}"
+    Given the time is frozen
     And the database has the following table "groups":
       | id  | type  | root_activity_id | root_skill_id |
       | 90  | Class | 10               | null          |

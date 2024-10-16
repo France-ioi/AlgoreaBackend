@@ -3,7 +3,6 @@ package threads
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
@@ -197,7 +196,7 @@ func computeNewThreadData(
 	if len(threadData) > 0 {
 		threadData["item_id"] = itemID
 		threadData["participant_id"] = participantID
-		threadData["latest_update_at"] = time.Now()
+		threadData["latest_update_at"] = database.Now()
 
 		if _, ok := threadData["helper_group_id"]; !ok {
 			threadData["helper_group_id"] = oldHelperGroupID

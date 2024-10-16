@@ -34,7 +34,7 @@ Feature: Create a user batch
       """
 
   Scenario: Create a new user batch
-    Given the time now is "2019-07-17T01:02:29+03:00"
+    Given the server time now is "2019-07-17T01:02:29+03:00"
     And the DB time now is "2019-07-16 22:02:28"
     And the login module "create" endpoint with params "amount=2&language=en&login_fixed=1&password_length=6&postfix_length=3&prefix=test_custom_" returns 200 with encoded body:
       """

@@ -59,8 +59,7 @@ func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
 		`).
 		Joins("JOIN access_tokens ON access_tokens.session_id = sessions.session_id").
 		Where("sessions.user_id = ?", userID).
-		Group("access_tokens.session_id").
-		SubQuery()
+		Group("access_tokens.session_id")
 
 	sessionToDeleteQuery := sessionsWithoutAccessTokensQuery.
 		UnionAll(sessionsWithAccessTokensQuery).

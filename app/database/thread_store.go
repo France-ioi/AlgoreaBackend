@@ -1,8 +1,6 @@
 package database
 
 import (
-	"time"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -193,14 +191,11 @@ func (s *ThreadStore) WhereUserCanHelp(user *User) *ThreadStore {
 	// the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
 	// the current-user has validated the item
 
-	now := time.Now()
-	twoWeeksAgo := now.AddDate(0, 0, -14)
-
 	return s.NewThreadStore(
 		s.Joins("JOIN results ON results.item_id = threads.item_id AND results.participant_id = ?", user.GroupID).
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", user.GroupID).
 			Where("threads.helper_group_id = groups_ancestors_active.ancestor_group_id").
-			Where("threads.status != 'closed' OR threads.latest_update_at > ?", twoWeeksAgo).
+			Where("threads.status != 'closed' OR threads.latest_update_at > NOW() - INTERVAL 2 WEEK").
 			Where("results.validated"),
 	)
 }

@@ -332,7 +332,7 @@ Feature: Update a group (groupEdit) - robustness
 
   Scenario Outline: Should return an error if a require_* field is strengthened, and there is at least one user in the group, but approval_change_action is not given
     Given I am the user with id "21"
-    And the time now is "2020-01-01T01:00:00Z"
+    And the server time now is "2020-01-01T01:00:00Z"
     And the database table "groups" has also the following rows:
       | id  | name  | grade | description | created_at          | type  | root_activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       | max_participants | enforce_max_participants |
       | 101 | Group | 1     | Group       | 2020-01-01 00:00:00 | Class | null             | true                | true    | true      | null | null          | 2020-01-01 00:00:00 | true                       | 0                 | <require_personal_info_access_approval_old> | <require_lock_membership_approval_until_old> | <require_watch_approval_old> | 1                | false                    |

@@ -13,6 +13,8 @@ import (
 )
 
 func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
 		users: [{group_id: 5}]
@@ -100,6 +102,8 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
@@ -194,6 +198,8 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			fixures := make([]string, 0, 2)
 			if !test.updateExisting {
 				fixures = append(fixures,
@@ -224,6 +230,8 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 }
 
 func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrItemID(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}]
 		items: [{id: 2, default_language_tag: 2}]

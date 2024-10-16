@@ -227,20 +227,22 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 }
 
 func attachUsersWithApproval(conn *database.DB, user *database.User) *database.DB {
-	return conn.New().Raw("WITH managed_groups AS ?, users_with_approval AS ? ?",
-		database.NewDataStore(conn.New()).ActiveGroupAncestors().ManagedByUser(user).
-			Select("groups_ancestors_active.child_group_id AS id").SubQuery(),
-		conn.New().Table("managed_groups").
-			Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = managed_groups.id").
-			Where("groups_groups_active.personal_info_view_approved").
-			Select("groups_groups_active.child_group_id AS group_id").
-			Group("groups_groups_active.child_group_id").Union(
+	return conn.
+		With("managed_groups",
+			database.NewDataStore(conn.New()).ActiveGroupAncestors().ManagedByUser(user).
+				Select("groups_ancestors_active.child_group_id AS id")).
+		With("users_with_approval",
 			conn.New().Table("managed_groups").
-				Joins("JOIN group_pending_requests ON group_pending_requests.group_id = managed_groups.id").
-				Where("group_pending_requests.personal_info_view_approved").
-				Where("group_pending_requests.type = 'join_request'").
-				Select("group_pending_requests.member_id AS group_id").
-				Group("group_pending_requests.member_id").SubQuery()).
-			Union(conn.New().Raw("SELECT ?", user.GroupID).SubQuery()).SubQuery(),
-		conn.QueryExpr())
+				Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = managed_groups.id").
+				Where("groups_groups_active.personal_info_view_approved").
+				Select("groups_groups_active.child_group_id AS group_id").
+				Group("groups_groups_active.child_group_id").
+				Union(
+					conn.New().Table("managed_groups").
+						Joins("JOIN group_pending_requests ON group_pending_requests.group_id = managed_groups.id").
+						Where("group_pending_requests.personal_info_view_approved").
+						Where("group_pending_requests.type = 'join_request'").
+						Select("group_pending_requests.member_id AS group_id").
+						Group("group_pending_requests.member_id")).
+				Union(conn.New().Raw("SELECT ?", user.GroupID)))
 }

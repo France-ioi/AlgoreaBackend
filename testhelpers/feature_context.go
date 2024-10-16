@@ -35,7 +35,9 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	ctx.registerFeaturesForUsers(s)
 
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
-	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
+	s.Step(`^the server time now is "([^"]*)"$`, ctx.ServerTimeNow)
+	s.Step(`^the time is frozen$`, ctx.TimeIsFrozen)
+	s.Step(`^the server time is frozen$`, ctx.ServerTimeIsFrozen)
 	s.Step(`^the generated group code is "([^"]*)"$`, ctx.TheGeneratedGroupCodeIs)
 	s.Step(`^the generated group codes are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupCodesAre)
 	s.Step(`^the generated auth key is "([^"]*)"$`, ctx.TheGeneratedAuthKeyIs)
