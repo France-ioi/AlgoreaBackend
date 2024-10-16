@@ -19,6 +19,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
@@ -166,6 +168,9 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
 			defer monkey.UnpatchAll()
 
+			logHook, restoreLoggerFunc := logging.MockSharedLoggerHook()
+			defer restoreLoggerFunc()
+
 			mock.ExpectBegin()
 			mock.ExpectQuery("SELECT 1").
 				WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -181,6 +186,9 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 			}))
 			assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
 			assert.NoError(t, mock.ExpectationsWereMet())
+
+			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+			assert.Contains(t, logs, fmt.Sprintf("Retrying transaction (count: 1) after Error %d: ", errorNumber))
 		})
 	}
 }
