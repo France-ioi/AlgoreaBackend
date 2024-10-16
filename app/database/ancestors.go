@@ -23,10 +23,8 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	// We mark as 'todo' all descendants of objects marked as 'todo'
 	query := `
 		INSERT INTO  ` + objectName + `_propagate (id, ancestors_computation_state)
-		SELECT descendants.id, 'todo'
-		FROM ` + QuoteName(objectName) + ` AS descendants
-		JOIN ` + QuoteName(objectName+"_ancestors") + `
-			ON descendants.id = ` + QuoteName(objectName+"_ancestors") + ".child_" + singleObjectName + `_id
+		SELECT ` + QuoteName(objectName+"_ancestors") + ".child_" + singleObjectName + `_id, 'todo'
+		FROM ` + QuoteName(objectName+"_ancestors") + `
 		JOIN ` + QuoteName(objectName+"_propagate") + ` AS ancestors
 			ON ancestors.id = ` + QuoteName(objectName+"_ancestors") + ".ancestor_" + singleObjectName + `_id
 		WHERE ancestors.ancestors_computation_state = 'todo'
