@@ -19,6 +19,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
@@ -156,79 +158,97 @@ func TestDB_inTransaction_ErrorOnCommit(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_inTransaction_RetriesOnDeadLockError(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T) {
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
 
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnError(&mysql.MySQLError{Number: 1213})
-	mock.ExpectRollback()
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-	mock.ExpectCommit()
+			logHook, restoreLoggerFunc := logging.MockSharedLoggerHook()
+			defer restoreLoggerFunc()
 
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		var result []interface{}
-		return db.Raw("SELECT 1").Scan(&result).Error()
-	}))
-	assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnError(&mysql.MySQLError{Number: errorNumber})
+			mock.ExpectRollback()
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+			mock.ExpectCommit()
 
-func TestDB_inTransaction_RetriesOnDeadLockErrorAndPanicsOnRollbackError(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+			assert.NoError(t, db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				return db.Raw("SELECT 1").Scan(&result).Error()
+			}))
+			assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
+			assert.NoError(t, mock.ExpectationsWereMet())
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
-
-	expectedError := errors.New("rollback error")
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnError(&mysql.MySQLError{Number: 1213})
-	mock.ExpectRollback().WillReturnError(expectedError)
-
-	assert.PanicsWithValue(t, expectedError, func() {
-		_ = db.inTransaction(func(db *DB) error {
-			var result []interface{}
-			return db.Raw("SELECT 1").Scan(&result).Error()
+			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+			assert.Contains(t, logs, fmt.Sprintf("Retrying transaction (count: 1) after Error %d: ", errorNumber))
 		})
-	})
-	assert.Zero(t, duration)
-	assert.NoError(t, mock.ExpectationsWereMet())
+	}
 }
 
-func TestDB_inTransaction_RetriesOnDeadLockPanic(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrorsAndPanicsOnRollbackError(t *testing.T) {
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
 
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnError(&mysql.MySQLError{Number: 1213})
-	mock.ExpectRollback()
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-	mock.ExpectCommit()
+			expectedError := errors.New("rollback error")
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnError(&mysql.MySQLError{Number: errorNumber})
+			mock.ExpectRollback().WillReturnError(expectedError)
 
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		var result []interface{}
-		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
-		return nil
-	}))
-	assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
-	assert.NoError(t, mock.ExpectationsWereMet())
+			assert.PanicsWithValue(t, expectedError, func() {
+				_ = db.inTransaction(func(db *DB) error {
+					var result []interface{}
+					return db.Raw("SELECT 1").Scan(&result).Error()
+				})
+			})
+			assert.Zero(t, duration)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T) {
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
+
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
+
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnError(&mysql.MySQLError{Number: errorNumber})
+			mock.ExpectRollback()
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+			mock.ExpectCommit()
+
+			assert.NoError(t, db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+				return nil
+			}))
+			assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
 }
 
 func patchBeginTxWithVerifier(
@@ -311,133 +331,153 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 	assert.Equal(t, 2, calledCount)
 }
 
-func TestDB_inTransaction_RetriesOnDeadLockPanicAndPanicsOnRollbackError(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRollbackError(t *testing.T) {
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
 
-	expectedError := errors.New("rollback error")
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnError(&mysql.MySQLError{Number: 1213})
-	mock.ExpectRollback().WillReturnError(expectedError)
+			expectedError := errors.New("rollback error")
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnError(&mysql.MySQLError{Number: errorNumber})
+			mock.ExpectRollback().WillReturnError(expectedError)
 
-	assert.PanicsWithValue(t, expectedError, func() {
-		_ = db.inTransaction(func(db *DB) error {
-			var result []interface{}
-			mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
-			return nil
+			assert.PanicsWithValue(t, expectedError, func() {
+				_ = db.inTransaction(func(db *DB) error {
+					var result []interface{}
+					mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+					return nil
+				})
+			})
+			assert.Zero(t, duration)
+			assert.NoError(t, mock.ExpectationsWereMet())
 		})
-	})
-	assert.Zero(t, duration)
-	assert.NoError(t, mock.ExpectationsWereMet())
+	}
 }
 
 func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
 
-	for i := 0; i < transactionRetriesLimit; i++ {
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT 1").
-			WillReturnError(&mysql.MySQLError{Number: 1213})
-		mock.ExpectRollback()
+			for i := 0; i < transactionRetriesLimit; i++ {
+				mock.ExpectBegin()
+				mock.ExpectQuery("SELECT 1").
+					WillReturnError(&mysql.MySQLError{Number: errorNumber})
+				mock.ExpectRollback()
+			}
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+			mock.ExpectCommit()
+
+			assert.NoError(t, db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+				return nil
+			}))
+			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
 	}
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-	mock.ExpectCommit()
-
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		var result []interface{}
-		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
-		return nil
-	}))
-	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
 
-	for i := 0; i < transactionRetriesLimit; i++ {
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT 1").
-			WillReturnError(&mysql.MySQLError{Number: 1213})
-		mock.ExpectRollback()
+			for i := 0; i < transactionRetriesLimit; i++ {
+				mock.ExpectBegin()
+				mock.ExpectQuery("SELECT 1").
+					WillReturnError(&mysql.MySQLError{Number: errorNumber})
+				mock.ExpectRollback()
+			}
+			mock.ExpectBegin()
+			mock.ExpectQuery("SELECT 1").
+				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+			mock.ExpectCommit()
+
+			assert.NoError(t, db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				return db.Raw("SELECT 1").Scan(&result).Error()
+			}))
+			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
 	}
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-	mock.ExpectCommit()
-
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		var result []interface{}
-		return db.Raw("SELECT 1").Scan(&result).Error()
-	}))
-	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
 
-	for i := 0; i < transactionRetriesLimit+1; i++ {
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT 1").
-			WillReturnError(&mysql.MySQLError{Number: 1213})
-		mock.ExpectRollback()
+			for i := 0; i < transactionRetriesLimit+1; i++ {
+				mock.ExpectBegin()
+				mock.ExpectQuery("SELECT 1").
+					WillReturnError(&mysql.MySQLError{Number: errorNumber})
+				mock.ExpectRollback()
+			}
+
+			assert.Equal(t, errors.New("transaction retries limit exceeded"),
+				db.inTransaction(func(db *DB) error {
+					var result []interface{}
+					mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+					return nil
+				}))
+			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
 	}
-
-	assert.Equal(t, errors.New("transaction retries limit exceeded"),
-		db.inTransaction(func(db *DB) error {
-			var result []interface{}
-			mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
-			return nil
-		}))
-	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	var duration time.Duration
-	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
-	defer monkey.UnpatchAll()
+			var duration time.Duration
+			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			defer monkey.UnpatchAll()
 
-	for i := 0; i < transactionRetriesLimit+1; i++ {
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT 1").
-			WillReturnError(&mysql.MySQLError{Number: 1213})
-		mock.ExpectRollback()
+			for i := 0; i < transactionRetriesLimit+1; i++ {
+				mock.ExpectBegin()
+				mock.ExpectQuery("SELECT 1").
+					WillReturnError(&mysql.MySQLError{Number: errorNumber})
+				mock.ExpectRollback()
+			}
+
+			assert.Equal(t, errors.New("transaction retries limit exceeded"),
+				db.inTransaction(func(db *DB) error {
+					var result []interface{}
+					return db.Raw("SELECT 1").Scan(&result).Error()
+				}))
+			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
 	}
-
-	assert.Equal(t, errors.New("transaction retries limit exceeded"),
-		db.inTransaction(func(db *DB) error {
-			var result []interface{}
-			return db.Raw("SELECT 1").Scan(&result).Error()
-		}))
-	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_QueryConstructors(t *testing.T) {

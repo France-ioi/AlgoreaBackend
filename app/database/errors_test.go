@@ -25,7 +25,7 @@ func TestIsDuplicateEntryError_matchError(t *testing.T) {
 
 func TestIsDuplicateEntryError_otherErrors(t *testing.T) {
 	lockDeadlockError := mysql.MySQLError{
-		Number:  uint16(mysqldb.LockDeadlockError),
+		Number:  uint16(mysqldb.DeadlockError),
 		Message: "Lock Deadlock Error",
 	}
 
@@ -67,7 +67,7 @@ func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
 	key := DuplicateEntryErrorKey
 
 	lockDeadlockErrorWithKey := mysql.MySQLError{
-		Number:  uint16(mysqldb.LockDeadlockError),
+		Number:  uint16(mysqldb.DeadlockError),
 		Message: fmt.Sprintf("Lock Deadlock Error for key '%s'", key),
 	}
 
@@ -110,12 +110,12 @@ func TestIsForeignConstraintError_otherError(t *testing.T) {
 
 func TestIsLockDeadlockError_matchError(t *testing.T) {
 	lockDeadlockError := mysql.MySQLError{
-		Number:  uint16(mysqldb.LockDeadlockError),
+		Number:  uint16(mysqldb.DeadlockError),
 		Message: "Lock Deadlock Error",
 	}
 
-	if !IsLockDeadlockError(error(&lockDeadlockError)) {
-		t.Error("should be a LockDeadlockError")
+	if !IsDeadlockError(error(&lockDeadlockError)) {
+		t.Error("should be a DeadlockError")
 	}
 }
 
@@ -125,12 +125,12 @@ func TestIsLockDeadlockError_otherError(t *testing.T) {
 		Message: "Foreign Constraint Error",
 	}
 
-	if IsLockDeadlockError(error(&foreignConstraintError)) {
+	if IsDeadlockError(error(&foreignConstraintError)) {
 		t.Error("should not match a Foreign Constraint Error")
 	}
 
 	nonMysqlError := errors.New("other error")
-	if IsLockDeadlockError(nonMysqlError) {
+	if IsDeadlockError(nonMysqlError) {
 		t.Error("should not match a non-mysql error")
 	}
 }

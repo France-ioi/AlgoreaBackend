@@ -127,14 +127,14 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadLock(txFunc, count, p, rollbackErr, &err, txOptions...) {
+			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, p, rollbackErr, &err, txOptions...) {
 				return
 			}
 			panic(p) // re-throw panic after rollback
 		case err != nil:
 			// do not change the err
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadLock(txFunc, count, err, rollbackErr, &err, txOptions...) {
+			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...) {
 				return
 			}
 			if rollbackErr != nil {
@@ -148,17 +148,18 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 	return err
 }
 
-func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
+func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
 	returnErr *error, txOptions ...*sql.TxOptions,
 ) bool {
 	errToHandleError, _ := errToHandle.(error)
 
-	// Error 1213: Deadlock found when trying to get lock; try restarting transaction
-	if errToHandle != nil && IsLockDeadlockError(errToHandleError) {
+	// Deadlock found / lock wait timeout exceeded
+	if errToHandle != nil && (IsDeadlockError(errToHandleError) || IsLockWaitTimeoutExceededError(errToHandleError)) {
 		if rollbackErr != nil {
 			panic(rollbackErr)
 		}
 		// retry
+		log.Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
 		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
 		return true
 	}
