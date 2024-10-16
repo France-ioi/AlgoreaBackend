@@ -16,7 +16,7 @@ import (
 
 func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	currentTime := time.Now().UTC().Truncate(time.Second)
-	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
+	testhelpers.MockDBTime(currentTime.Format(time.DateTime))
 	defer testhelpers.RestoreDBTime()
 
 	for _, test := range []struct {
@@ -52,7 +52,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 
 func TestUserStore_DeleteWithTraps(t *testing.T) {
 	currentTime := time.Now().UTC().Truncate(time.Second)
-	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
+	testhelpers.MockDBTime(currentTime.Format(time.DateTime))
 	defer testhelpers.RestoreDBTime()
 
 	db := setupDBForDeleteWithTrapsTests(t, currentTime)
@@ -67,7 +67,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 
 func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
 	currentTime := time.Now().UTC().Truncate(time.Second)
-	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
+	testhelpers.MockDBTime(currentTime.Format(time.DateTime))
 	defer testhelpers.RestoreDBTime()
 
 	db := setupDBForDeleteWithTrapsTests(t, currentTime)
@@ -112,10 +112,10 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {author_id: 5003, attempt_id: 1, participant_id: 5003, item_id: 1, created_at: 2019-05-30 11:00:00}
 			filters: [{user_id: 5000}, {user_id: 5001}, {user_id: 5002}, {user_id: 5003}]
 			access_tokens:
-				- {session_id: 1, token: "token1", expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
-				- {session_id: 2, token: "token2a", expires_at: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
-				- {session_id: 2, token: "token2b", expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
-				- {session_id: 3, token: "token3", expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
+				- {session_id: 1, token: "token1", expires_at: "`+currentTime.Format(time.DateTime)+`"}
+				- {session_id: 2, token: "token2a", expires_at: "`+currentTime.Add(1*time.Second).Format(time.DateTime)+`"}
+				- {session_id: 2, token: "token2b", expires_at: "`+currentTime.Add(-10*time.Second).Format(time.DateTime)+`"}
+				- {session_id: 3, token: "token3", expires_at: "`+currentTime.Add(-10*time.Second).Format(time.DateTime)+`"}
 			permissions_generated:
 				- {group_id: 5000, item_id: 1}
 				- {group_id: 5001, item_id: 1}

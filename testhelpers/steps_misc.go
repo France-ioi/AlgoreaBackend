@@ -26,8 +26,22 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
-// TimeNow stubs time.Now to the provided time.
+// TimeNow stubs time.Now and mocks the DB function NOW() with the provided time.
 func (ctx *TestContext) TimeNow(timeStr string) error {
+	if err := ctx.ServerTimeNow(timeStr); err != nil {
+		return err
+	}
+	MockDBTime(time.Now().Format(time.DateTime + ".999999999"))
+	return nil
+}
+
+// ServerTimeNow stubs time.Now with the provided time.
+func (ctx *TestContext) ServerTimeNow(timeStr string) error {
+	var err error
+	timeStr, err = ctx.preprocessString(timeStr)
+	if err != nil {
+		return err
+	}
 	testTime, err := time.Parse(time.RFC3339Nano, timeStr)
 	if err == nil {
 		monkey.Patch(time.Now, func() time.Time { return testTime })
@@ -35,8 +49,17 @@ func (ctx *TestContext) TimeNow(timeStr string) error {
 	return err
 }
 
-// TimeIsFrozen stubs time.Now to the current time.
+// TimeIsFrozen stubs time.Now with the current time and mocks the DB function NOW().
 func (ctx *TestContext) TimeIsFrozen() error {
+	if err := ctx.ServerTimeIsFrozen(); err != nil {
+		return err
+	}
+	MockDBTime(time.Now().Format(time.DateTime + ".999999999"))
+	return nil
+}
+
+// ServerTimeIsFrozen stubs time.Now with the current time.
+func (ctx *TestContext) ServerTimeIsFrozen() error {
 	currentTime := time.Now()
 	monkey.Patch(time.Now, func() time.Time { return currentTime })
 	return nil

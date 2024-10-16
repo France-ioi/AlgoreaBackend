@@ -67,7 +67,7 @@ Feature: Sign the current user out
     And the table "users" should stay unchanged
 
   Scenario Outline: The user logs out successfully with the session cookie provided
-    Given the time now is "2019-07-16T22:02:28Z"
+    Given the server time now is "2019-07-16T22:02:28Z"
     And the database table "access_tokens" has also the following row:
       | session_id | token              | expires_at          |
       | 1          | onemoreaccesstoken | 2019-07-16 22:02:40 |

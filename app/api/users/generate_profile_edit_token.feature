@@ -8,7 +8,7 @@ Feature: Generate Profile Edit Token
       | user     | login_id |
       | @Manager | 1        |
       | @User    | 2        |
-    And the time now is "2020-01-01T00:00:00Z"
+    And the server time now is "2020-01-01T00:00:00Z"
     And I am @Manager
     And I am a manager of the group @ClassParent
     When I send a POST request to "/users/@User/generate-profile-edit-token"
@@ -33,7 +33,7 @@ Feature: Generate Profile Edit Token
       | user     | login_id |
       | @Manager | 1        |
       | @User    | 2        |
-    And the time now is "2020-01-01T00:00:00Z"
+    And the server time now is "2020-01-01T00:00:00Z"
     And I am @Manager
     And I am a manager of the group @SchoolParent
     When I send a POST request to "/users/@User/generate-profile-edit-token"
@@ -60,7 +60,7 @@ Feature: Generate Profile Edit Token
       | user     | login_id |
       | @Manager | 1        |
       | @User    | 2        |
-    And the time now is "2020-01-01T00:00:00Z"
+    And the server time now is "2020-01-01T00:00:00Z"
     And I am @Manager
     And I am a manager of the group @CityParent
     And the group @City is a child of the group @CityParent

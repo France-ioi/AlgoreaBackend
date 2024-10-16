@@ -9,7 +9,7 @@ Feature: Update the local user info cache
       """
 
   Scenario Outline: Update an existing user
-    Given the time now is "2019-07-16T22:02:29Z"
+    Given the server time now is "2019-07-16T22:02:29Z"
     And the DB time now is "2019-07-16 22:02:28"
     And the template constant "profile_with_all_fields_set" is:
       """
@@ -83,7 +83,7 @@ Feature: Update the local user info cache
     | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | null         | null                      | null   | false          | null          | false       | false          | false             |
 
   Scenario: Update an existing user with badges
-    Given the time now is "2019-07-16T22:02:29Z"
+    Given the server time now is "2019-07-16T22:02:29Z"
     And the DB time now is "2019-07-16 22:02:28"
     And the database has the following users:
       | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     | time_zone | notify_news | photo_autoload | public_first_name | public_last_name |

@@ -11,7 +11,6 @@ Feature: Create a new access token
       | 13       | jane        | false     |
       | 14       | john        | false     |
     And the time now is "2020-01-01T02:00:00Z"
-    And the DB time now is "2020-01-01 02:00:00"
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token             |
       | 1          | 12      |                           |

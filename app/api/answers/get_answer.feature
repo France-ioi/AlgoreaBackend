@@ -4,7 +4,6 @@ Feature: Get an answer by id
       | id     | default_language_tag |
       | @Item1 | fr                   |
       | @Item2 | fr                   |
-    And the DB time now is "2024-10-07 20:13:14"
     And the time now is "2024-10-07T20:13:14Z"
 
   Scenario: User has can_view>=content on the item and the answers.participant_id = authenticated user's self group

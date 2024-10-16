@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
+	"time"
 
 	"bou.ke/monkey"
 	"github.com/jinzhu/gorm"
@@ -16,28 +18,52 @@ import (
 )
 
 var (
-	nowRegexp      = regexp.MustCompile(`(?i)\bNOW\s*\(\s*(?:\d+\s*)?\)`)
+	nowRegexp      = regexp.MustCompile(`(?i)\bNOW\s*\(\s*(?:(\d+)\s*)?\)`)
 	patchedMethods []*monkey.PatchGuard
 )
 
 // MockDBTime replaces the DB NOW() function call with a given constant value in all the queries.
 func MockDBTime(timeStrRaw string) {
-	timeStr := fmt.Sprintf("%q", timeStrRaw)
+	parsedTime, err := time.Parse(time.DateTime+".999999999", timeStrRaw)
+	if err != nil {
+		panic(err)
+	}
+	nowReplacer := getNowReplacer(parsedTime)
 
-	patchDatabaseDBMethods(timeStr)
-	database.MockNow(timeStrRaw)
-	patchGormMethods(timeStr)
-	patchDBMethods(timeStr)
+	patchDatabaseDBMethods(nowReplacer)
+	database.MockNow(parsedTime.Truncate(time.Second).Format(time.DateTime))
+	patchGormMethods(nowReplacer)
+	patchDBMethods(nowReplacer)
 }
 
-func patchDBMethods(timeStr string) {
+func getNowReplacer(parsedTime time.Time) func(string) string {
+	return func(nowStr string) string {
+		layout := time.DateTime
+		subMatches := nowRegexp.FindStringSubmatch(nowStr)
+		precision := time.Second
+		if subMatches[1] != "" {
+			var err error
+			fsp, err := strconv.Atoi(subMatches[1])
+			if err != nil {
+				panic(err)
+			}
+			layout += fmt.Sprintf(".%0*d", fsp, 0)
+			for i := 0; i < fsp; i++ {
+				precision /= 10
+			}
+		}
+		return fmt.Sprintf("%q", parsedTime.Truncate(precision).Format(layout))
+	}
+}
+
+func patchDBMethods(nowReplacer func(string) string) {
 	var prepareContextGuard, queryContextGuard *monkey.PatchGuard
 	prepareContextGuard = monkey.PatchInstanceMethod(
 		reflect.TypeOf(&sql.DB{}), "PrepareContext",
 		func(db *sql.DB, c context.Context, query string) (*sql.Stmt, error) {
 			prepareContextGuard.Unpatch()
 			defer prepareContextGuard.Restore()
-			query = nowRegexp.ReplaceAllString(query, timeStr)
+			nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 			return db.PrepareContext(c, query)
 		})
 	patchedMethods = append(patchedMethods, prepareContextGuard)
@@ -46,20 +72,20 @@ func patchDBMethods(timeStr string) {
 		func(db *sql.DB, c context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 			queryContextGuard.Unpatch()
 			defer queryContextGuard.Restore()
-			query = nowRegexp.ReplaceAllString(query, timeStr)
+			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 			return db.QueryContext(c, query, args...)
 		})
 	patchedMethods = append(patchedMethods, queryContextGuard)
 }
 
-func patchGormMethods(timeStr string) {
+func patchGormMethods(nowReplacer func(string) string) {
 	var execGuard, rawGuard *monkey.PatchGuard
 	execGuard = monkey.PatchInstanceMethod(
 		reflect.TypeOf(&gorm.DB{}), "Exec",
 		func(db *gorm.DB, query string, args ...interface{}) *gorm.DB {
 			execGuard.Unpatch()
 			defer execGuard.Restore()
-			query = nowRegexp.ReplaceAllString(query, timeStr)
+			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 			return db.Exec(query, args...)
 		})
 	patchedMethods = append(patchedMethods, execGuard)
@@ -68,16 +94,16 @@ func patchGormMethods(timeStr string) {
 		func(db *gorm.DB, query string, args ...interface{}) *gorm.DB {
 			rawGuard.Unpatch()
 			defer rawGuard.Restore()
-			query = nowRegexp.ReplaceAllString(query, timeStr)
+			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 			return db.Raw(query, args...)
 		})
 	patchedMethods = append(patchedMethods, rawGuard)
 }
 
-func patchDatabaseDBMethods(timeStr string) {
-	patchDatabaseDBMethodsWithIntQueryAndArgs(timeStr)
-	patchDatabaseDBMethodsWithStringQueryAndArgs(timeStr)
-	patchDatabaseDBMethodsWithStringQuery(timeStr)
+func patchDatabaseDBMethods(nowReplacer func(string) string) {
+	patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer)
+	patchDatabaseDBMethodsWithStringQueryAndArgs(nowReplacer)
+	patchDatabaseDBMethodsWithStringQuery(nowReplacer)
 	var orderGuard *monkey.PatchGuard
 	orderGuard = monkey.PatchInstanceMethod(
 		reflect.TypeOf(&database.DB{}), "Order",
@@ -85,7 +111,7 @@ func patchDatabaseDBMethods(timeStr string) {
 			orderGuard.Unpatch()
 			defer orderGuard.Restore()
 			if valueStr, ok := value.(string); ok {
-				value = nowRegexp.ReplaceAllString(valueStr, timeStr)
+				value = nowRegexp.ReplaceAllStringFunc(valueStr, nowReplacer)
 			}
 			return db.Order(value, reorder...)
 		})
@@ -97,7 +123,7 @@ func patchDatabaseDBMethods(timeStr string) {
 		func(db *database.DB, column string, values interface{}) *database.DB {
 			pluckGuard.Unpatch()
 			defer pluckGuard.Restore()
-			column = nowRegexp.ReplaceAllString(column, timeStr)
+			column = nowRegexp.ReplaceAllStringFunc(column, nowReplacer)
 			return db.Pluck(column, values)
 		})
 	patchedMethods = append(patchedMethods, pluckGuard)
@@ -110,7 +136,7 @@ func patchDatabaseDBMethods(timeStr string) {
 			defer takeGuard.Restore()
 			if len(where) > 0 {
 				if whereStr, ok := where[0].(string); ok {
-					where[0] = nowRegexp.ReplaceAllString(whereStr, timeStr)
+					where[0] = nowRegexp.ReplaceAllStringFunc(whereStr, nowReplacer)
 				}
 			}
 			return db.Take(out, where...)
@@ -125,7 +151,7 @@ func patchDatabaseDBMethods(timeStr string) {
 			defer deleteGuard.Restore()
 			if len(where) > 0 {
 				if whereStr, ok := where[0].(string); ok {
-					where[0] = nowRegexp.ReplaceAllString(whereStr, timeStr)
+					where[0] = nowRegexp.ReplaceAllStringFunc(whereStr, nowReplacer)
 				}
 			}
 			return db.Delete(where...)
@@ -133,7 +159,7 @@ func patchDatabaseDBMethods(timeStr string) {
 	patchedMethods = append(patchedMethods, deleteGuard)
 }
 
-func patchDatabaseDBMethodsWithStringQuery(timeStr string) {
+func patchDatabaseDBMethodsWithStringQuery(nowReplacer func(string) string) {
 	stringDBMethods := [...]string{
 		"Table", "Group",
 	}
@@ -145,7 +171,7 @@ func patchDatabaseDBMethodsWithStringQuery(timeStr string) {
 			func(db *database.DB, query string) *database.DB {
 				stringDBGuards[methodName].Unpatch()
 				defer stringDBGuards[methodName].Restore()
-				query = nowRegexp.ReplaceAllString(query, timeStr)
+				query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
 				reflArgs := []reflect.Value{reflect.ValueOf(query)}
 
@@ -155,7 +181,7 @@ func patchDatabaseDBMethodsWithStringQuery(timeStr string) {
 	}
 }
 
-func patchDatabaseDBMethodsWithStringQueryAndArgs(timeStr string) {
+func patchDatabaseDBMethodsWithStringQueryAndArgs(nowReplacer func(string) string) {
 	stringAndArgsDBMethods := [...]string{
 		"Joins", "Raw", "Exec",
 	}
@@ -167,7 +193,7 @@ func patchDatabaseDBMethodsWithStringQueryAndArgs(timeStr string) {
 			func(db *database.DB, query string, args ...interface{}) *database.DB {
 				stringAndArgsDBGuards[methodName].Unpatch()
 				defer stringAndArgsDBGuards[methodName].Restore()
-				query = nowRegexp.ReplaceAllString(query, timeStr)
+				query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
 				reflArgs := make([]reflect.Value, 0, len(args))
 				reflArgs = append(reflArgs, reflect.ValueOf(query))
@@ -182,7 +208,7 @@ func patchDatabaseDBMethodsWithStringQueryAndArgs(timeStr string) {
 	}
 }
 
-func patchDatabaseDBMethodsWithIntQueryAndArgs(timeStr string) {
+func patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer func(string) string) {
 	standardDBMethods := [...]string{
 		"Where", "Select", "Having",
 	}
@@ -195,7 +221,7 @@ func patchDatabaseDBMethodsWithIntQueryAndArgs(timeStr string) {
 				standardDBGuards[methodName].Unpatch()
 				defer standardDBGuards[methodName].Restore()
 				if queryStr, ok := query.(string); ok {
-					query = nowRegexp.ReplaceAllString(queryStr, timeStr)
+					query = nowRegexp.ReplaceAllStringFunc(queryStr, nowReplacer)
 				}
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
 				reflArgs := make([]reflect.Value, 0, len(args))

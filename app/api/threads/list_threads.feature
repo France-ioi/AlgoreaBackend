@@ -92,7 +92,7 @@ Feature: List threads
       | @B_SectionMember3   | @B_SectionMember2_CanViewContent2               |               |                         |                     | 18            | @B_SectionMember2 is_mine=1 -> notok: not the participant                                                                     |
       | @B_SectionMember2   | @B_SectionMember2_CanViewContentWithDescendants |               |                         |                     | 19            | @B_SectionMember2 is_mine=1 -> ok: can_view >= content                                                                        |
       | @OtherGroupMember   | @Item2                                          |               |                         |                     | 20            |                                                                                                                               |
-    And the time now is "2022-01-01T00:00:00Z"
+    And the DB time now is "2022-01-01 00:00:00"
 
   Scenario: Should have all the fields properly set, including first_name and last_name when the access is approved
     Given I am @LaboratoryManagerCanWatch
