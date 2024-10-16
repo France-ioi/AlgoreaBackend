@@ -88,8 +88,8 @@ func (conn *DB) New() *DB {
 	return newDB(conn.ctx, conn.db.New())
 }
 
-func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
-	return conn.inTransactionWithCount(txFunc, 0)
+func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
+	return conn.inTransactionWithCount(txFunc, 0, txOptions...)
 }
 
 const (
@@ -97,7 +97,7 @@ const (
 	transactionDelayBetweenRetries = 1000 * time.Millisecond
 )
 
-func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err error) {
+func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
 	if count > transactionRetriesLimit {
 		return errors.New("transaction retries limit exceeded")
 	}
@@ -106,7 +106,12 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
 	}
 
-	txDB := conn.db.Begin()
+	txOpts := &sql.TxOptions{}
+	if len(txOptions) > 0 {
+		txOpts = txOptions[0]
+	}
+
+	txDB := conn.db.BeginTx(conn.ctx, txOpts)
 	if txDB.Error != nil {
 		return txDB.Error
 	}
@@ -116,14 +121,14 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadLock(txFunc, count, p, rollbackErr, &err) {
+			if conn.handleDeadLock(txFunc, count, p, rollbackErr, &err, txOptions...) {
 				return
 			}
 			panic(p) // re-throw panic after rollback
 		case err != nil:
 			// do not change the err
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadLock(txFunc, count, err, rollbackErr, &err) {
+			if conn.handleDeadLock(txFunc, count, err, rollbackErr, &err, txOptions...) {
 				return
 			}
 			if rollbackErr != nil {
@@ -138,7 +143,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 }
 
 func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
-	returnErr *error,
+	returnErr *error, txOptions ...*sql.TxOptions,
 ) bool {
 	errToHandleError, _ := errToHandle.(error)
 
@@ -148,7 +153,7 @@ func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle 
 			panic(rollbackErr)
 		}
 		// retry
-		*returnErr = conn.inTransactionWithCount(txFunc, count+1)
+		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
 		return true
 	}
 	return false
@@ -616,7 +621,7 @@ func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db 
 	return err
 }
 
-func (conn *DB) withForeignKeyChecksDisabled(blockFunc func(*DB) error) (err error) {
+func (conn *DB) withForeignKeyChecksDisabled(blockFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
 	defer recoverPanics(&err)
 
 	innerFunc := func(db *DB) error {
@@ -635,7 +640,7 @@ func (conn *DB) withForeignKeyChecksDisabled(blockFunc func(*DB) error) (err err
 		return blockFunc(db)
 	}
 	if !conn.isInTransaction() {
-		return conn.inTransaction(innerFunc)
+		return conn.inTransaction(innerFunc, txOptions...)
 	} // else {
 	return innerFunc(conn)
 	//}
