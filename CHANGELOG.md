@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.23.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.8...v2.23.0) - 2024-10-16
+- speed up groupRootsView
+- move ancestors recalculation back into initiating transactions + more granular locking during ancestors recalculation
+- retry DB transactions on lock wait timeout errors (similarly to retrying on deadlocks)
+- store the DB time instead of the server time in threads.latest_update_at and compare its value with the DB time instead of the server time as well
+- do not close the response body in iSendrequestGeneric() as it is closed inside SendTestHTTPRequest()
+- allow passing DB transaction options + pass the context for transactions #1186
+- internal: introduce a new method database.DB.With(), rework database.DB.Union() & database.DB.UnionAll()
+- internal: add missing call to testhelpers.SuppressOutputIfPasses() in integration tests
+- rework time mocking in testhelpers
+
 ## [v2.22.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.7...v2.22.8) - 2024-10-01
 - speed up the results propagation and make it less locking
 - introduce a command recomputing all the results of chapters/skills
