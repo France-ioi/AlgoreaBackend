@@ -30,7 +30,8 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		JOIN ` + QuoteName(objectName+"_propagate") + ` AS ancestors
 			ON ancestors.id = ` + QuoteName(objectName+"_ancestors") + ".ancestor_" + singleObjectName + `_id
 		WHERE ancestors.ancestors_computation_state = 'todo'
-		FOR UPDATE
+		FOR SHARE OF ` + QuoteName(objectName+"_ancestors") + `
+		FOR UPDATE OF ancestors
 		ON DUPLICATE KEY UPDATE ancestors_computation_state = 'todo'` /* #nosec */
 
 	mustNotBeError(s.db.Exec(query).Error)
@@ -39,9 +40,10 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	relationsTable := objectName + "_" + objectName
 
-	var additionalJoin string
+	var additionalJoin, additionalLocking string
 	if objectName == groups {
 		additionalJoin = " JOIN `groups` AS parent ON parent.id = groups_groups.parent_group_id AND parent.type != 'Team' "
+		additionalLocking = " FOR SHARE OF parent "
 	}
 	// Next queries will be executed in the loop
 
@@ -49,7 +51,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	// This way we prevent infinite looping as we never process objects that are descendants of themselves
 
 	/* #nosec */
-	query = `
+	markAsProcessingQuery := `
 		UPDATE ` + objectName + `_propagate AS children
 		SET children.ancestors_computation_state='processing'
 		WHERE children.ancestors_computation_state = 'todo' AND NOT EXISTS (
@@ -61,10 +63,13 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 							 ` + objectName + `_propagate.ancestors_computation_state <> 'done'
 					` + additionalJoin + `
 				WHERE ` + relationsTable + `.child_` + singleObjectName + `_id = children.id
-				FOR UPDATE
-			) has_undone_parents FOR UPDATE
+				FOR SHARE OF ` + relationsTable + `
+				FOR UPDATE OF ` + objectName + `_propagate
+				` + additionalLocking + `
+			) has_undone_parents
 		)`
-	markAsProcessing, err := s.db.CommonDB().Prepare(query)
+
+	markAsProcessing, err := s.db.CommonDB().Prepare(markAsProcessingQuery)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsProcessing.Close()) }()
 
@@ -110,6 +115,10 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		recomputeQueries[1] += `
 				AND NOW() < groups_groups.expires_at AND
 				NOW() < LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at)
+			FOR UPDATE OF ` + objectName + `_propagate
+			FOR SHARE OF ` + objectName + `_ancestors_join
+			FOR SHARE OF ` + relationsTable + `
+			FOR SHARE OF parent
 			ON DUPLICATE KEY UPDATE
 				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at))`
 		recomputeQueries = append(recomputeQueries, `
@@ -125,14 +134,18 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			WHERE groups_propagate.ancestors_computation_state = 'processing'
 			FOR UPDATE`) // #nosec
 	} else {
-		recomputeQueries[1] += ` FOR UPDATE`
+		recomputeQueries[1] += `
+			FOR UPDATE OF ` + objectName + `_propagate
+			FOR SHARE OF ` + objectName + `_ancestors_join
+			FOR SHARE OF ` + relationsTable
 		recomputeQueries = append(recomputeQueries, `
 			INSERT IGNORE INTO items_ancestors (ancestor_item_id, child_item_id)
 			SELECT items_items.parent_item_id, items_items.child_item_id
 			FROM items_items
 			JOIN items_propagate ON items_items.child_item_id = items_propagate.id
 			WHERE items_propagate.ancestors_computation_state = 'processing'
-			FOR UPDATE`) // #nosec
+			FOR UPDATE OF items_propagate
+			FOR SHARE OF items_items`) // #nosec
 	}
 
 	recomputeAncestors := make([]*sql.Stmt, len(recomputeQueries))
@@ -144,11 +157,11 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	}
 
 	// Objects marked as 'processing' are now marked as 'done'
-	query = `
+	markAsDoneQuery := `
 		UPDATE ` + objectName + `_propagate
 		SET ancestors_computation_state = 'done'
 		WHERE ancestors_computation_state = 'processing'` // #nosec
-	markAsDone, err := s.db.CommonDB().Prepare(query)
+	markAsDone, err := s.db.CommonDB().Prepare(markAsDoneQuery)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsDone.Close()) }()
 
