@@ -101,6 +101,11 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 	service.MustNotBeError(err)
 
 	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
+		With("user_ancestors", ancestorsOfUserQuery(store, user)).
+		Select(`
+			groups.id, groups.type, groups.name,
+			`+currentUserMembershipSQLColumn(user)+`,
+			`+currentUserManagershipSQLColumn).
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).
@@ -108,7 +113,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 		Order("name")
 	query = service.NewQueryLimiter().Apply(r, query)
 
-	service.MustNotBeError(selectGroupsDataForMenu(store, query, user, "").Scan(&result.Children).Error())
+	service.MustNotBeError(query.Scan(&result.Children).Error())
 
 	render.Respond(w, r, result)
 	return service.NoError
