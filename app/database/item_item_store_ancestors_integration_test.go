@@ -29,8 +29,7 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	testhelpers.RunConcurrently(func() {
 		dataStore := database.NewDataStoreWithContext(context.Background(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
-			ds.ItemItems().CreateNewAncestors()
-			return nil
+			return ds.ItemItems().CreateNewAncestors()
 		}))
 	}, 30)
 
@@ -63,8 +62,7 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 
 	itemItemStore := database.NewDataStore(db).ItemItems()
 	assert.NoError(t, itemItemStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ItemItems().CreateNewAncestors()
-		return nil
+		return ds.ItemItems().CreateNewAncestors()
 	}))
 
 	var result []itemAncestorsResultRow
@@ -98,8 +96,7 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	}
 
 	assert.NoError(t, itemItemStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ItemItems().CreateNewAncestors()
-		return nil
+		return ds.ItemItems().CreateNewAncestors()
 	}))
 
 	var result []itemAncestorsResultRow

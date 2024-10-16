@@ -17,8 +17,11 @@ func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 }
 
 // CreateNewAncestors populates items_ancestors table.
-func (s *ItemItemStore) CreateNewAncestors() {
+func (s *ItemItemStore) CreateNewAncestors() (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
 	s.DataStore.createNewAncestors("items", "item")
+	return nil
 }
 
 // ContentViewPropagationNameByIndex returns the content view propagation level name with the given index from the enum.
