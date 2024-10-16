@@ -2,10 +2,12 @@ package database
 
 import (
 	"errors"
+	"reflect"
 	"regexp"
 	"testing"
 	"time"
 
+	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,6 +53,11 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	var resultsPropagationScheduled bool
+	monkey.PatchInstanceMethod(reflect.TypeOf(&DataStore{}), "ScheduleResultsPropagation",
+		func(s *DataStore) { resultsPropagationScheduled = true })
+	defer monkey.UnpatchAll()
+
 	const (
 		parentGroupID = 1
 		childGroupID  = 2
@@ -93,21 +100,6 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 		WithArgs("groups_groups").
 		WillReturnResult(sqlmock.NewResult(-1, 0))
 
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("listener_propagate", propagateLockTimeout/time.Second).
-		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	mock.ExpectExec("^DROP TEMPORARY TABLE IF EXISTS results_to_mark").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^CREATE TEMPORARY TABLE results_to_mark").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectPrepare("^UPDATE ")
-	mock.ExpectExec("^UPDATE ").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^INSERT ").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^DELETE FROM results_propagate WHERE ").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^DROP TEMPORARY TABLE results_to_mark").WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs("listener_propagate").
-		WillReturnResult(sqlmock.NewResult(-1, 0))
-
 	mock.ExpectCommit()
 
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
@@ -115,6 +107,7 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.True(t, resultsPropagationScheduled)
 }
 
 func TestGroupGroupStore_CreateRelation_MustBeRunInTransaction(t *testing.T) {
