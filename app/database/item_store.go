@@ -333,7 +333,7 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 		}))
 		mustNotBeError(s.Items().ByID(itemID).Delete().Error())
 
-		s.ScheduleItemsAncestorsPropagation()
+		mustNotBeError(s.ItemItems().CreateNewAncestors())
 		s.SchedulePermissionsPropagation()
 		s.ScheduleResultsPropagation()
 

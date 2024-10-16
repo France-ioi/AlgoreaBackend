@@ -71,8 +71,6 @@ func (pv *PropagationVerifier) Run(
 
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(dataStore *database.DataStore) error {
-		dataStore.ScheduleGroupsAncestorsPropagation()
-		dataStore.ScheduleItemsAncestorsPropagation()
 		dataStore.SchedulePermissionsPropagation()
 		dataStore.ScheduleResultsPropagation()
 		return nil

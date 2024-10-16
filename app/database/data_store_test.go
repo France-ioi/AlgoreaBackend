@@ -407,12 +407,6 @@ func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		NewDataStore(db).ScheduleGroupsAncestorsPropagation()
-	})
-	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		NewDataStore(db).ScheduleItemsAncestorsPropagation()
-	})
-	assert.PanicsWithValue(t, ErrNoTransaction, func() {
 		NewDataStore(db).SchedulePermissionsPropagation()
 	})
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
