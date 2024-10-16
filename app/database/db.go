@@ -22,18 +22,24 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
+type cte struct {
+	name     string
+	subQuery interface{}
+}
+
 // DB contains information for current db connection (wraps *gorm.DB).
 type DB struct {
-	db  *gorm.DB
-	ctx context.Context
+	db   *gorm.DB
+	ctx  context.Context
+	ctes []cte
 }
 
 // ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock.
 var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
 
 // newDB wraps *gorm.DB.
-func newDB(ctx context.Context, db *gorm.DB) *DB {
-	return &DB{db: db, ctx: ctx}
+func newDB(ctx context.Context, db *gorm.DB, ctes []cte) *DB {
+	return &DB{db: db, ctx: ctx, ctes: ctes}
 }
 
 // Open connects to the database and tests the connection.
@@ -61,7 +67,7 @@ func Open(source interface{}) (*DB, error) {
 	dbConn.LogMode(logMode)
 	dbConn.SetLogger(logger)
 
-	return newDB(context.Background(), dbConn), err
+	return newDB(context.Background(), dbConn, nil), err
 }
 
 // OpenRawDBConnection creates a new DB connection.
@@ -85,7 +91,7 @@ func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 
 // New clones a new db connection without search conditions.
 func (conn *DB) New() *DB {
-	return newDB(conn.ctx, conn.db.New())
+	return newDB(conn.ctx, conn.db.New(), nil)
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
@@ -138,7 +144,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
-	err = txFunc(newDB(conn.ctx, txDB))
+	err = txFunc(newDB(conn.ctx, txDB, nil))
 	return err
 }
 
@@ -191,46 +197,48 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc fun
 	return
 }
 
-// Close close current db connection.  If database connection is not an io.Closer, returns an error.
+// Close closes current db connection.  If database connection is not an io.Closer, returns an error.
 func (conn *DB) Close() error {
 	return conn.db.Close()
 }
 
 // Limit specifies the number of records to be retrieved.
 func (conn *DB) Limit(limit interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Limit(limit))
+	return newDB(conn.ctx, conn.db.Limit(limit), conn.ctes)
 }
 
 // Offset specifies the offset of the records to be retrieved.
-func (conn *DB) Offset(offset interface{}) *DB { return newDB(conn.ctx, conn.db.Offset(offset)) }
+func (conn *DB) Offset(offset interface{}) *DB {
+	return newDB(conn.ctx, conn.db.Offset(offset), conn.ctes)
+}
 
 // Where returns a new relation, filters records with given conditions, accepts `map`,
 // `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
 func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Where(query, args...))
+	return newDB(conn.ctx, conn.db.Where(query, args...), conn.ctes)
 }
 
 // Joins specifies Joins conditions
 //
 //	db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
 func (conn *DB) Joins(query string, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Joins(query, args...))
+	return newDB(conn.ctx, conn.db.Joins(query, args...), conn.ctes)
 }
 
 // Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
 // When creating/updating, specify fields that you want to save to database.
 func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Select(query, args...))
+	return newDB(conn.ctx, conn.db.Select(query, args...), conn.ctes)
 }
 
 // Table specifies the table you would like to run db operations.
 func (conn *DB) Table(name string) *DB {
-	return newDB(conn.ctx, conn.db.Table(name))
+	return newDB(conn.ctx, conn.db.Table(name), conn.ctes)
 }
 
 // Group specifies the group method on the find.
 func (conn *DB) Group(query string) *DB {
-	return newDB(conn.ctx, conn.db.Group(query))
+	return newDB(conn.ctx, conn.db.Group(query), conn.ctes)
 }
 
 // Order specifies order when retrieve records from database, set reorder to `true` to overwrite defined conditions
@@ -239,22 +247,38 @@ func (conn *DB) Group(query string) *DB {
 //	db.Order("name DESC", true) // reorder
 //	db.Order(gorm.SqlExpr("name = ? DESC", "first")) // sql expression
 func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
-	return newDB(conn.ctx, conn.db.Order(value, reorder...))
+	return newDB(conn.ctx, conn.db.Order(value, reorder...), conn.ctes)
 }
 
 // Having specifies HAVING conditions for GROUP BY.
 func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Having(query, args...))
+	return newDB(conn.ctx, conn.db.Having(query, args...), conn.ctes)
 }
 
 // Union specifies UNION of two queries (receiver UNION query).
-func (conn *DB) Union(query interface{}) *DB {
-	return conn.New().Raw("? UNION ?", conn.db.SubQuery(), query)
+func (conn *DB) Union(query *DB) *DB {
+	return conn.New().Raw("? UNION ?", conn.SubQuery(), query.SubQuery())
 }
 
 // UnionAll specifies UNION ALL of two queries (receiver UNION ALL query).
-func (conn *DB) UnionAll(query interface{}) *DB {
-	return conn.New().Raw("? UNION ALL ?", conn.db.SubQuery(), query)
+func (conn *DB) UnionAll(query *DB) *DB {
+	return conn.New().Raw("? UNION ALL ?", conn.SubQuery(), query.SubQuery())
+}
+
+// With adds a common table expression (CTE) to the query.
+func (conn *DB) With(name string, query *DB) *DB {
+	if conn.ctes != nil {
+		for _, cte := range conn.ctes {
+			if cte.name == name {
+				panic(fmt.Sprintf("CTE with name %q already exists", name))
+			}
+		}
+	}
+
+	newCTEs := make([]cte, 0, len(conn.ctes)+1)
+	newCTEs = append(newCTEs, conn.ctes...)
+	newCTEs = append(newCTEs, cte{name: name, subQuery: query.SubQuery()})
+	return newDB(conn.ctx, conn.db, newCTEs)
 }
 
 // Raw uses raw sql as conditions
@@ -262,34 +286,58 @@ func (conn *DB) UnionAll(query interface{}) *DB {
 //	db.Raw("SELECT name, age FROM users WHERE name = ?", 3).Scan(&result)
 func (conn *DB) Raw(query string, args ...interface{}) *DB {
 	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
-	return newDB(conn.ctx, conn.db.Raw("").Joins(query, args...))
+	return newDB(conn.ctx,
+		conn.db.New().Set("gorm:query_option", "").
+			Raw("").Joins(query, args...), nil)
 }
 
 // Updates update attributes with callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
 func (conn *DB) Updates(values interface{}, ignoreProtectedAttrs ...bool) *DB {
-	return newDB(conn.ctx, conn.db.Updates(values, ignoreProtectedAttrs...))
+	return newDB(conn.ctx, conn.toQuery().Updates(values, ignoreProtectedAttrs...), nil)
 }
 
 // UpdateColumn updates attributes without callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
 func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.UpdateColumn(attrs...))
+	return newDB(conn.ctx, conn.toQuery().UpdateColumn(attrs...), nil)
 }
 
 // SubQuery returns the query as sub query.
 func (conn *DB) SubQuery() interface{} {
 	mustNotBeError(conn.Error())
-	return conn.db.SubQuery()
+	return conn.toQuery().SubQuery()
 }
 
 // QueryExpr returns the query as expr object.
 func (conn *DB) QueryExpr() interface{} {
 	mustNotBeError(conn.Error())
-	return conn.db.QueryExpr()
+	return conn.toQuery().QueryExpr()
+}
+
+func (conn *DB) toQuery() *gorm.DB {
+	if len(conn.ctes) == 0 {
+		return conn.db
+	}
+	strBuilder := new(strings.Builder)
+	strBuilder.WriteString("WITH ")
+	cteSubQueries := make([]interface{}, 0, len(conn.ctes)+1)
+	isFirstCTE := true
+	for _, cte := range conn.ctes {
+		if !isFirstCTE {
+			strBuilder.WriteString(", ")
+		}
+		isFirstCTE = false
+		strBuilder.WriteString(QuoteName(cte.name))
+		strBuilder.WriteString(" AS ?")
+		cteSubQueries = append(cteSubQueries, cte.subQuery)
+	}
+	strBuilder.WriteString(" ?")
+	cteSubQueries = append(cteSubQueries, conn.db.QueryExpr())
+	return conn.Raw(strBuilder.String(), cteSubQueries...).db
 }
 
 // Scan scans value to a struct.
 func (conn *DB) Scan(dest interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Scan(dest))
+	return newDB(conn.ctx, conn.toQuery().Scan(dest), nil)
 }
 
 // ScanIntoSlices scans multiple columns into slices.
@@ -307,7 +355,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 		valuesPointers[index] = reflect.New(reflSlice.Type().Elem()).Interface()
 	}
 
-	rows, err := conn.db.Rows() //nolint:rowserrcheck rows.Err() is checked before return.
+	rows, err := conn.toQuery().Rows() //nolint:rowserrcheck rows.Err() is checked before return.
 	if rows != nil {
 		defer func() {
 			_ = conn.db.AddError(rows.Close())
@@ -346,7 +394,7 @@ func (conn *DB) ScanAndHandleMaps(handler func(map[string]interface{}) error) *D
 		return conn
 	}
 
-	rows, err := conn.db.Rows() //nolint:rowserrcheck rows.Err() is checked before return.
+	rows, err := conn.toQuery().Rows() //nolint:rowserrcheck rows.Err() is checked before return.
 	if rows != nil {
 		defer func() {
 			_ = conn.db.AddError(rows.Close())
@@ -400,7 +448,7 @@ func (conn *DB) Count(dest interface{}) *DB {
 	if conn.Error() != nil {
 		return conn
 	}
-	return newDB(conn.ctx, conn.db.Count(dest))
+	return newDB(conn.ctx, conn.toQuery().Count(dest), nil)
 }
 
 // Pluck is used to query a single column into a slice of values
@@ -423,7 +471,7 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 	if reflectValue.Kind() != reflect.Slice {
 		panic(fmt.Sprintf("values should be a pointer to a slice, not a pointer to %s", reflectValue.Kind()))
 	}
-	return newDB(conn.ctx, conn.db.Pluck(column, values))
+	return newDB(conn.ctx, conn.toQuery().Pluck(column, values), nil)
 }
 
 // PluckFirst is used to query a single column and take the first value
@@ -438,7 +486,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 	valuesPtrReflValue.Elem().Set(valuesReflValue)
 	valuesReflValue = valuesPtrReflValue.Elem()
 	values := valuesPtrReflValue.Interface()
-	result := newDB(conn.ctx, conn.db.Limit(1).Pluck(column, values))
+	result := newDB(conn.ctx, conn.Limit(1).toQuery().Pluck(column, values), nil)
 	if result.Error() != nil {
 		return result
 	}
@@ -452,7 +500,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 
 // Take returns a record that match given conditions, the order will depend on the database implementation.
 func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Take(out, where...))
+	return newDB(conn.ctx, conn.toQuery().Take(out, where...), nil)
 }
 
 // HasRows returns true if at least one row is found.
@@ -467,7 +515,7 @@ func (conn *DB) HasRows() (bool, error) {
 
 // Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition.
 func (conn *DB) Delete(where ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Delete(nil, where...))
+	return newDB(conn.ctx, conn.toQuery().Delete(nil, where...), nil)
 }
 
 // RowsAffected returns the number of rows affected by the last INSERT/UPDATE/DELETE statement.
@@ -482,7 +530,7 @@ func (conn *DB) Error() error {
 
 // Exec executes raw sql.
 func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Exec(sqlQuery, values...))
+	return newDB(conn.ctx, conn.db.Exec(sqlQuery, values...), nil)
 }
 
 // insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
@@ -580,7 +628,7 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 
 // Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting.
 func (conn *DB) Set(name string, value interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Set(name, value))
+	return newDB(conn.ctx, conn.db.Set(name, value), conn.ctes)
 }
 
 // ErrNoTransaction means that a called method/function cannot work outside of a transaction.

@@ -443,7 +443,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 func TestDB_QueryConstructors(t *testing.T) {
 	tests := []struct {
 		name              string
-		funcToPrepare     func(*DB) *DB
+		funcToPrepare     func(*DB, sqlmock.Sqlmock) *DB
 		funcToCall        func(*DB) (*DB, []*DB)
 		expectedQuery     string
 		expectedQueryArgs []driver.Value
@@ -473,18 +473,52 @@ func TestDB_QueryConstructors(t *testing.T) {
 			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
 				dbTwo := db.Table("otherTable")
 				dbs = append(dbs, dbTwo)
-				return db.Union(dbTwo.QueryExpr()), dbs
+				return db.Union(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION SELECT * FROM `otherTable`",
+			expectedQuery: "(SELECT * FROM `myTable` ) UNION (SELECT * FROM `otherTable` )",
 		},
 		{
 			name: "UnionAll",
 			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
 				dbTwo := db.Table("otherTable")
 				dbs = append(dbs, dbTwo)
-				return db.UnionAll(dbTwo.QueryExpr()), dbs
+				return db.UnionAll(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION ALL SELECT * FROM `otherTable`",
+			expectedQuery: "(SELECT * FROM `myTable` ) UNION ALL (SELECT * FROM `otherTable` )",
+		},
+		{
+			name: "With",
+			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
+				dbTwo := db.Table("otherTable")
+				dbs = append(dbs, dbTwo)
+				dbThree := db.Table("thirdTable")
+				dbs = append(dbs, dbThree)
+				dbFour := db.With("t1", dbTwo)
+				dbs = append(dbs, dbFour)
+				return dbFour.With("t2", dbThree), dbs
+			},
+			expectedQuery: "WITH `t1` AS (SELECT * FROM `otherTable` ), `t2` AS (SELECT * FROM `thirdTable` ) SELECT * FROM `myTable`",
+		},
+		{
+			name: "With (with locking)",
+			funcToPrepare: func(db *DB, s sqlmock.Sqlmock) *DB {
+				s.ExpectBegin()
+				s.ExpectCommit()
+				return db
+			},
+			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
+				var queryExpr interface{}
+				mustNotBeError(db.inTransaction(func(db *DB) error {
+					dbTwo := db.Table("otherTable").WithWriteLock()
+					dbs = append(dbs, dbTwo)
+					queryExpr = db.WithWriteLock().With("t1", dbTwo).QueryExpr()
+					return nil
+				}))
+				newDB = db.Raw("?", queryExpr)
+				dbs = append(dbs, newDB)
+				return newDB, dbs
+			},
+			expectedQuery: "WITH `t1` AS (SELECT * FROM `otherTable` FOR UPDATE) SELECT * FROM `myTable` FOR UPDATE",
 		},
 	}
 	for _, testCase := range tests {
@@ -493,14 +527,15 @@ func TestDB_QueryConstructors(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
+			db = db.Table("myTable")
+			if testCase.funcToPrepare != nil {
+				db = testCase.funcToPrepare(db, mock)
+			}
+
 			mock.ExpectQuery("^" + regexp.QuoteMeta(testCase.expectedQuery) + "$").
 				WithArgs(testCase.expectedQueryArgs...).
 				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
-			db = db.Table("myTable")
-			if testCase.funcToPrepare != nil {
-				db = testCase.funcToPrepare(db)
-			}
 			resultDB, oldDBObjects := testCase.funcToCall(db)
 			assert.NotEqual(t, resultDB, db)
 			for _, oldDBObject := range oldDBObjects {
@@ -513,6 +548,18 @@ func TestDB_QueryConstructors(t *testing.T) {
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
+}
+
+func TestDB_With_Duplicate(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.Panics(t, func() {
+		db.Table("myTable").
+			With("t1", db.Table("otherTable")).
+			With("t1", db.Table("thirdTable"))
+	})
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_Count(t *testing.T) {

@@ -268,6 +268,5 @@ func buildQueryForGettingAttemptsOrResults(store *database.DataStore, user *data
 					store.GroupGroups().WhereUserIsMember(user).
 						Select("`groups`.id").
 						Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
-						QueryExpr()).
-				QueryExpr())
+						QueryExpr()))
 }

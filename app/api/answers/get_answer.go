@@ -60,12 +60,12 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 
 	store := srv.GetStore(httpReq)
 
-	userAndHisTeamsSubQuery := store.Raw("SELECT id FROM ? `teams` UNION ALL SELECT ?",
+	userAndHisTeamsQuery := store.Raw("SELECT id FROM ? `teams` UNION ALL SELECT ?",
 		store.ActiveGroupGroups().
 			WhereUserIsMember(user).
 			Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id AND groups.type='Team'").
 			Select("groups.id").SubQuery(),
-		user.GroupID).SubQuery()
+		user.GroupID)
 
 	// a participant should have at least 'content' access to the answers.item_id
 	userHasViewContentPermOnItemSubQuery := store.Permissions().MatchingUserAncestors(user).
@@ -122,42 +122,40 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 			user.GroupID).
 		Select("1").Limit(1).SubQuery()
 
-	err = store.Raw("WITH user_and_his_teams AS ? ?",
-		userAndHisTeamsSubQuery,
-		store.Answers().
-			WithGradings().
-			ByID(answerID).
-			// 1) the user is the participant or a member of the participant team able to view the item,
-			// 2) or an observer with required permissions
-			// 3) or a thread viewer with required permissions
-			Where(`
+	err = store.Answers().
+		WithGradings().
+		ByID(answerID).
+		With("user_and_his_teams", userAndHisTeamsQuery).
+		// 1) the user is the participant or a member of the participant team able to view the item,
+		// 2) or an observer with required permissions
+		// 3) or a thread viewer with required permissions
+		Where(`
 				((? OR ?) AND answers.participant_id IN (SELECT id from user_and_his_teams)) OR
 				(? AND (? OR ?)) OR
 				(? AND ? AND (? OR ?))`,
-				/* ( */
-				/*   ( */
-				userHasViewContentPermOnItemSubQuery /* OR */, userTeamHasViewContentPermOnItemSubQuery,
-				/*   ) */
-				/*   AND [the user/(his team) is the participant] */
-				/* ) */
-				/* OR */
-				/* ( */
-				userHasCanWatchAnswerPermOnItemSubQuery,
-				/*   AND */
-				/*   ( */
-				userIsAManagerThatCanWatchMembersSubQuery /* OR */, theThreadExistsSubQuery,
-				/*   ) */
-				/* ) */
-				/* OR */
-				/* ( */
-				userHasCanWatchResultPermOnItemSubQuery,
-				/*   AND */
-				userOrHisTeamHasValidatedResultOnItemSubQuery,
-				/*   AND */
-				/*   ( */
-				userIsAManagerThatCanWatchMembersSubQuery /* OR */, userIsAHelperAndTheThreadHasNotBeenExpiredSubQuery,
-				/* ) */).
-			SubQuery()).
+			/* ( */
+			/*   ( */
+			userHasViewContentPermOnItemSubQuery /* OR */, userTeamHasViewContentPermOnItemSubQuery,
+			/*   ) */
+			/*   AND [the user/(his team) is the participant] */
+			/* ) */
+			/* OR */
+			/* ( */
+			userHasCanWatchAnswerPermOnItemSubQuery,
+			/*   AND */
+			/*   ( */
+			userIsAManagerThatCanWatchMembersSubQuery /* OR */, theThreadExistsSubQuery,
+			/*   ) */
+			/* ) */
+			/* OR */
+			/* ( */
+			userHasCanWatchResultPermOnItemSubQuery,
+			/*   AND */
+			userOrHisTeamHasValidatedResultOnItemSubQuery,
+			/*   AND */
+			/*   ( */
+			userIsAManagerThatCanWatchMembersSubQuery /* OR */, userIsAHelperAndTheThreadHasNotBeenExpiredSubQuery,
+			/* ) */).
 		ScanIntoSliceOfMaps(&result).Error()
 
 	service.MustNotBeError(err)

@@ -21,7 +21,7 @@ func NewDataStore(conn *DB) *DataStore {
 
 // NewDataStoreWithContext returns a new DataStore with the given context.
 func NewDataStoreWithContext(ctx context.Context, conn *DB) *DataStore {
-	return &DataStore{DB: newDB(ctx, conn.db)}
+	return &DataStore{DB: newDB(ctx, conn.db, conn.ctes)}
 }
 
 // NewDataStoreWithTable returns a specialized DataStore.

@@ -131,7 +131,7 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 	}
 
 	if isAdding {
-		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID).QueryExpr())
+		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID))
 	} else {
 		updatedMemberIDsQuery = updatedMemberIDsQuery.Where("child_group_id != ?", userID)
 	}

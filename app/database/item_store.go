@@ -65,6 +65,20 @@ func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
 		ids, groupID, parentAttemptID, true, requireContentAccessToTheLastItem, "1", withWriteLock).HasRows()
 }
 
+// visibleItemsFromListForGroupQuery returns a query for selecting visible items from a list of item ids for a group.
+// The item is considered visible if the group has at least 'info' view access on it.
+// For each item, the query selects the id, allows_multiple_attempts, and can_view_generated_value.
+func (s *ItemStore) visibleItemsFromListForGroupQuery(itemIDs []int64, groupID int64) *DB {
+	return s.Permissions().MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "info").
+		Where("item_id IN (?)", itemIDs).
+		Joins("JOIN items ON items.id = permissions.item_id").
+		Select(`
+			items.id, items.allows_multiple_attempts,
+			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
+		Group("items.id")
+}
+
 func (s *ItemStore) participationHierarchyForParentAttempt(
 	ids []int64, groupID, parentAttemptID int64, requireAttemptsToBeActive, requireContentAccessToTheLastItem bool,
 	columnsList string, withWriteLock bool,
@@ -77,17 +91,8 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 			Where(fmt.Sprintf("attempts%d.id = ?", len(ids)-2), parentAttemptID)
 	}
 
-	subQuery = subQuery.Select(columnsList)
-	visibleItems := s.Permissions().MatchingGroupAncestors(groupID).
-		WherePermissionIsAtLeast("view", "info").
-		Where("item_id IN (?)", ids).
-		Joins("JOIN items ON items.id = permissions.item_id").
-		Select(`
-			items.id, items.allows_multiple_attempts,
-			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
-		Group("items.id")
-
-	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.SubQuery())
+	return subQuery.Select(columnsList).
+		With("visible_items", s.visibleItemsFromListForGroupQuery(ids, groupID))
 }
 
 func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID int64,
@@ -100,9 +105,9 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 		Joins("JOIN groups_ancestors_active AS managed_descendants ON managed_descendants.ancestor_group_id = group_managers.group_id").
 		Joins("JOIN `groups` ON groups.id = managed_descendants.child_group_id")
 	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
-		groupsManagedByParticipant.Select("groups.root_activity_id").SubQuery())
+		groupsManagedByParticipant.Select("groups.root_activity_id"))
 	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
-		groupsManagedByParticipant.Select("groups.root_skill_id").SubQuery())
+		groupsManagedByParticipant.Select("groups.root_skill_id"))
 
 	if withWriteLock {
 		rootActivities = rootActivities.WithWriteLock()
@@ -275,20 +280,13 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 	}
 
 	subQuery = subQuery.Select(columnsList)
-	visibleItems := s.Permissions().MatchingGroupAncestors(groupID).
-		WherePermissionIsAtLeast("view", "info").
-		Where("item_id IN(?)", ids).
-		Joins("JOIN items ON items.id = permissions.item_id").
-		Select(`
-			items.id, items.allows_multiple_attempts,
-			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
-		Group("items.id")
+	visibleItems := s.visibleItemsFromListForGroupQuery(ids, groupID)
 
 	if withWriteLock {
 		subQuery = subQuery.WithWriteLock()
 		visibleItems = visibleItems.WithWriteLock()
 	}
-	return s.Raw("WITH visible_items AS ? ?", visibleItems.SubQuery(), subQuery.SubQuery())
+	return subQuery.With("visible_items", visibleItems)
 }
 
 // CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),

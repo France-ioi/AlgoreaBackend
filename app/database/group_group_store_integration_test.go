@@ -544,6 +544,6 @@ func queryResultsAndStatesForTests(t *testing.T, s *database.ResultStore, result
 		resultStore.Select(columns).
 			Joins("LEFT JOIN results_propagate USING(participant_id, attempt_id, item_id)").
 			Union(resultStore.Select(columns).
-				Joins("RIGHT JOIN results_propagate USING(participant_id, attempt_id, item_id)").SubQuery()).
+				Joins("RIGHT JOIN results_propagate USING(participant_id, attempt_id, item_id)")).
 			Order("participant_id, attempt_id, item_id").Scan(result).Error())
 }
