@@ -19,6 +19,8 @@ type groupItemsResultRow struct {
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 

@@ -23,6 +23,8 @@ type itemPropagateResultRow struct {
 }
 
 func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
@@ -58,6 +60,8 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common", "item_item_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
 
@@ -85,6 +89,8 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 

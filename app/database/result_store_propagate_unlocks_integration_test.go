@@ -23,6 +23,8 @@ type unlocksResultRow struct {
 }
 
 func TestResultStore_Propagate_Unlocks(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
@@ -30,6 +32,8 @@ func TestResultStore_Propagate_Unlocks(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture(
 		"results_propagation/_common",
 		"results_propagation/unlocks",
@@ -40,6 +44,8 @@ func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture(
 		"results_propagation/_common",
 		"results_propagation/unlocks")
@@ -92,6 +98,8 @@ func generateGrantedPermissionsRow(itemID, canView, canEnterFrom, canEnterUntil,
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
@@ -100,6 +108,8 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T)
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHasBeenSetAlready(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
@@ -130,6 +140,8 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromIsInTheFuture(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
