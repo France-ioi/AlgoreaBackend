@@ -273,18 +273,18 @@ func TestGroupGroupStore_createRelation(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGroupGroupStore_After_MustBeInTransaction(t *testing.T) {
+func TestGroupGroupStore_CreateNewAncestors_MustBeInTransaction(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_ = NewDataStore(db).GroupGroups().After()
+		_ = NewDataStore(db).GroupGroups().CreateNewAncestors()
 	})
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestGroupGroupStore_After_HandlesErrorOfCreateNewAncestors(t *testing.T) {
+func TestGroupGroupStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *testing.T) {
 	expectedError := errors.New("some error")
 
 	db, dbMock := NewDBMock()
@@ -294,7 +294,7 @@ func TestGroupGroupStore_After_HandlesErrorOfCreateNewAncestors(t *testing.T) {
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
-		return NewDataStore(trDB).GroupGroups().After()
+		return NewDataStore(trDB).GroupGroups().CreateNewAncestors()
 	}))
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())

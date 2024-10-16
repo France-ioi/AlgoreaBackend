@@ -372,8 +372,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.GroupGroups().CreateNewAncestors()
-				return nil
+				return store.GroupGroups().CreateNewAncestors()
 			}))
 			assert.NoError(t, dataStore.GroupGroups().InsertMap(map[string]interface{}{
 				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID, "expires_at": test.expiresAt,
@@ -459,8 +458,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.GroupGroups().CreateNewAncestors()
-				return nil
+				return store.GroupGroups().CreateNewAncestors()
 			}))
 			groupGroupStore := dataStore.GroupGroups()
 			result := groupGroupStore.Where("parent_group_id = ?", test.parentGroupID).

@@ -197,8 +197,8 @@ func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
 		WHERE groups.id IN(?)`, groupIDs)
 }
 
-// After is a "listener" that calls GroupGroupStore::createNewAncestors().
-func (s *GroupGroupStore) After() (err error) {
+// CreateNewAncestors creates ancestors for groups marked as 'todo' in `groups_propagate`.
+func (s *GroupGroupStore) CreateNewAncestors() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 

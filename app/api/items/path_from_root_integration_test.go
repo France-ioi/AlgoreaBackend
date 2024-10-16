@@ -818,7 +818,7 @@ func Test_FindItemPath(t *testing.T) {
 			store := database.NewDataStore(db)
 			var got []items.ItemPath
 			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
-				assert.NoError(t, s.GroupGroups().createNewAncestors())
+				assert.NoError(t, s.GroupGroups().CreateNewAncestors())
 				assert.NoError(t, s.ItemItems().CreateNewAncestors())
 				s.SchedulePermissionsPropagation()
 				s.ScheduleResultsPropagation()

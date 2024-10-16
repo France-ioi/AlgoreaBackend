@@ -264,7 +264,7 @@ func updateChildrenAndRunListeners(
 			parentChildSpec := constructItemsItemsForChildren(input.Children, itemID)
 			insertItemItems(lockedStore, parentChildSpec)
 
-			store.ItemItems().CreateNewAncestors()
+			service.MustNotBeError(store.ItemItems().CreateNewAncestors())
 
 			return nil
 		})

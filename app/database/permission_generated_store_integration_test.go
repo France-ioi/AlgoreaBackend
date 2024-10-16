@@ -105,8 +105,7 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.GroupGroups().CreateNewAncestors()
-				return nil
+				return store.GroupGroups().CreateNewAncestors()
 			}))
 			assert.NoError(t, dataStore.InsertMap(map[string]interface{}{
 				"group_id": test.groupID, "item_id": test.itemID, "can_view_generated": test.canView,
@@ -206,8 +205,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.GroupGroups().CreateNewAncestors()
-				return nil
+				return store.GroupGroups().CreateNewAncestors()
 			}))
 			result := dataStore.Where("group_id = ?", test.groupID).
 				Where("item_id = ?", test.itemID).UpdateColumn(map[string]interface{}{

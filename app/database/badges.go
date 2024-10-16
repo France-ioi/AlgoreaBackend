@@ -52,7 +52,7 @@ func (s *GroupStore) StoreBadges(badges []Badge, userID int64, newUser bool) (er
 	}
 
 	if ancestorsCalculationNeeded {
-		mustNotBeError(s.GroupGroups().After())
+		mustNotBeError(s.GroupGroups().CreateNewAncestors())
 		s.ScheduleResultsPropagation()
 	}
 

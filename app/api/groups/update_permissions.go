@@ -729,8 +729,8 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate))
 	s.SchedulePermissionsPropagation()
 	if dbMap["can_view"] != nil && dbMap["can_view"] != none || dbMap["is_owner"] != nil && dbMap["is_owner"].(bool) {
-		// permissionGrantedStore.After() implicitly (via triggers) marks some attempts as to_be_propagated
-		// when an item becomes visible, so we should propagate attempts here
+		// the permissions propagation implicitly (via triggers) marks some results as to_be_propagated
+		// when an item becomes visible, so we should propagate results here
 		s.ScheduleResultsPropagation()
 	}
 }

@@ -457,7 +457,7 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 
 // createContestParticipantsGroup creates a new contest participants group for the given item and
 // gives "can_manage:content" permission on the item to this new group.
-// The method doesn't update `items.participants_group_id` or run ItemItemStore.After()
+// The method doesn't update `items.participants_group_id` or run items ancestors recalculation
 // (a caller should do both on their own).
 func createContestParticipantsGroup(store *database.DataStore, itemID int64) int64 {
 	var participantsGroupID int64
