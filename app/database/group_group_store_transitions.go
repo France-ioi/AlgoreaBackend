@@ -480,7 +480,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		insertGroupMembershipChanges(dataStore, idsChanged, parentGroupID, performedByUserID)
 
 		if shouldCreateNewAncestors {
-			dataStore.ScheduleGroupsAncestorsPropagation()
+			dataStore.GroupGroups().createNewAncestors()
 			if shouldPropagatePermissions {
 				dataStore.SchedulePermissionsPropagation()
 			}

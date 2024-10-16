@@ -46,12 +46,10 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 	if endpoint == "" || endpointFailed {
 		// Sync.
 		if store.IsInTransaction() {
-			store.ScheduleItemsAncestorsPropagation()
 			store.SchedulePermissionsPropagation()
 			store.ScheduleResultsPropagation()
 		} else {
 			err := store.InTransaction(func(store *database.DataStore) error {
-				store.ScheduleItemsAncestorsPropagation()
 				store.SchedulePermissionsPropagation()
 				store.ScheduleResultsPropagation()
 

@@ -204,10 +204,8 @@ func (s *DataStore) NewID() int64 {
 }
 
 type propagationsBitField struct {
-	ItemAncestors  bool
-	GroupAncestors bool
-	Permissions    bool
-	Results        bool
+	Permissions bool
+	Results     bool
 }
 
 type dbContextKey string
@@ -235,14 +233,6 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 	propagationsToRun := s.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx)
 
-	if propagationsToRun.GroupAncestors && !prohibitedPropagations.GroupAncestors {
-		propagationsToRun.GroupAncestors = false
-		s.createNewAncestors("groups", "group")
-	}
-	if propagationsToRun.ItemAncestors && !prohibitedPropagations.ItemAncestors {
-		propagationsToRun.ItemAncestors = false
-		s.createNewAncestors("items", "item")
-	}
 	if propagationsToRun.Permissions && !prohibitedPropagations.Permissions {
 		propagationsToRun.Permissions = false
 		s.PermissionsGranted().computeAllAccess()
@@ -261,22 +251,6 @@ func (s *DataStore) ScheduleResultsPropagation() {
 
 	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	propagationsToRun.Results = true
-}
-
-// ScheduleGroupsAncestorsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
-func (s *DataStore) ScheduleGroupsAncestorsPropagation() {
-	s.mustBeInTransaction()
-
-	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
-	propagationsToRun.GroupAncestors = true
-}
-
-// ScheduleItemsAncestorsPropagation schedules a run of the items ancestors propagation after the transaction commit.
-func (s *DataStore) ScheduleItemsAncestorsPropagation() {
-	s.mustBeInTransaction()
-
-	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
-	propagationsToRun.ItemAncestors = true
 }
 
 // SchedulePermissionsPropagation schedules a run of the groups ancestors propagation after the transaction commit.

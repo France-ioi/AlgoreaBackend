@@ -35,8 +35,7 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	testhelpers.RunConcurrently(func() {
 		dataStore := database.NewDataStoreWithContext(context.Background(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
-			ds.ScheduleGroupsAncestorsPropagation()
-			return nil
+			return ds.GroupGroups().CreateNewAncestors()
 		}))
 	}, 30)
 
@@ -76,8 +75,7 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -115,8 +113,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 	}
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -154,8 +151,7 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=3 AND child_group_id=4").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -199,8 +195,7 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 		UpdateColumn("expires_at", "3024-12-31 20:10:30").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -250,8 +245,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T
 		UpdateColumn("expires_at", "2019-05-11 17:43:24").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow

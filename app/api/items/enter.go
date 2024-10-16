@@ -141,7 +141,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 				ON DUPLICATE KEY UPDATE expires_at = VALUES(expires_at)`,
 				itemInfo.ParticipantsGroupID, entryState.groupID,
 				itemInfo.Now, itemInfo.Duration, totalAdditionalTime).Error())
-			store.ScheduleGroupsAncestorsPropagation()
+			service.MustNotBeError(store.GroupGroups().CreateNewAncestors())
 			// Upserting into groups_groups may mark some attempts as 'to_be_propagated',
 			// so we need to recompute them
 			store.ScheduleResultsPropagation()

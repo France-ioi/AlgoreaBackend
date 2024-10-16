@@ -10,16 +10,6 @@ import (
 type PropagationStep string
 
 const (
-	// PropagationStepGroupAncestorsInit is the first step (initialization) of the group ancestors propagation.
-	PropagationStepGroupAncestorsInit PropagationStep = "group ancestors: init"
-	// PropagationStepGroupAncestorsMain is the main step of the group ancestors propagation.
-	PropagationStepGroupAncestorsMain PropagationStep = "group ancestors: main step"
-
-	// PropagationStepItemAncestorsInit is the first step (initialization) of the item ancestors propagation.
-	PropagationStepItemAncestorsInit PropagationStep = "item ancestors: init"
-	// PropagationStepItemAncestorsMain is the main step of the item ancestors propagation.
-	PropagationStepItemAncestorsMain PropagationStep = "item ancestors: main step"
-
 	// PropagationStepAccessMain is the main step of the access propagation.
 	PropagationStepAccessMain PropagationStep = "access: main step"
 
@@ -37,16 +27,6 @@ const (
 	// PropagationStepResultsPropagationScheduling is the step of scheduling the propagation of permissions and results.
 	PropagationStepResultsPropagationScheduling PropagationStep = "results: propagation scheduling"
 )
-
-// PropagationStepSetGroupAncestors returns a set of group ancestors propagation steps.
-func PropagationStepSetGroupAncestors() *golang.Set[PropagationStep] {
-	return golang.NewSet(PropagationStepGroupAncestorsInit, PropagationStepGroupAncestorsMain).MarkImmutable()
-}
-
-// PropagationStepSetItemAncestors returns a set of item ancestors propagation steps.
-func PropagationStepSetItemAncestors() *golang.Set[PropagationStep] {
-	return golang.NewSet(PropagationStepItemAncestorsInit, PropagationStepItemAncestorsMain).MarkImmutable()
-}
 
 // PropagationStepSetAccess returns a set of access (permissions) propagation steps.
 func PropagationStepSetAccess() *golang.Set[PropagationStep] {

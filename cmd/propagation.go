@@ -44,7 +44,6 @@ func init() { //nolint:gochecknoinits
 			err = database.NewDataStore(application.Database).
 				WithNamedLock(propagationLockName, propagationLockTimeout, func(s *database.DataStore) error {
 					return s.InTransaction(func(store *database.DataStore) error {
-						store.ScheduleItemsAncestorsPropagation()
 						store.SchedulePermissionsPropagation()
 						store.ScheduleResultsPropagation()
 

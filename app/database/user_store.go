@@ -50,7 +50,7 @@ func (s *UserStore) DeleteTemporaryWithTraps(delay time.Duration) (err error) {
 func (s *UserStore) DeleteWithTraps(user *User) (err error) {
 	return s.InTransaction(func(store *DataStore) error {
 		deleteOneBatchOfUsers(store.DB, []int64{user.GroupID})
-		store.ScheduleGroupsAncestorsPropagation()
+		store.GroupGroups().createNewAncestors()
 		return nil
 	})
 }
@@ -96,7 +96,7 @@ func (s *UserStore) deleteWithTraps(userScope *DB) int {
 	}
 
 	deleteOneBatchOfUsers(userScope, userIDs)
-	s.ScheduleGroupsAncestorsPropagation()
+	s.GroupGroups().createNewAncestors()
 
 	return len(userIDs)
 }

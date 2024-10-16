@@ -319,9 +319,7 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 	}
 
 	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-		store.ScheduleGroupsAncestorsPropagation()
-
-		return nil
+		return store.GroupGroups().CreateNewAncestors()
 	})
 	if err != nil {
 		return err
@@ -352,7 +350,10 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
-		store.ScheduleItemsAncestorsPropagation()
+		err = store.ItemItems().CreateNewAncestors()
+		if err != nil {
+			return err
+		}
 		store.SchedulePermissionsPropagation()
 		store.ScheduleResultsPropagation()
 
