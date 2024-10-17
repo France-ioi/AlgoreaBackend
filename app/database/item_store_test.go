@@ -3,6 +3,7 @@ package database
 import (
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +56,7 @@ func TestItemStore_DeleteItem_ShouldUseNamedLock(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("items_items", 3).
+		WithArgs("items_items", itemsRelationsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(0)))
 	mock.ExpectRollback()
 

@@ -7,7 +7,7 @@ type ItemItemStore struct {
 	*DataStore
 }
 
-const itemsRelationsLockTimeout = 3 * time.Second
+const itemsRelationsLockTimeout = 50 * time.Second
 
 // ChildrenOf returns a composable query for selecting children of the given item.
 func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
