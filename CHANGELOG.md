@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.23.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.0...v2.23.1) - 2024-10-17
+- increase the timeout on item/group ancestor recomputation to prevent error 500 on the authentication service
+
 ## [v2.23.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.22.8...v2.23.0) - 2024-10-16
 - speed up groupRootsView
 - move ancestors recalculation back into initiating transactions + more granular locking during ancestors recalculation
