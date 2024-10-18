@@ -228,7 +228,6 @@ Feature: Get navigation for an item
     And the database has the following table "users":
       | login | temp_user | group_id |
       | user  | 0         | 1000     |
-    And the groups ancestors are computed
     And the database has the following table "items":
       | id   | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
       | 1000 | Skill   | en                   | false    | false                   | User                   |

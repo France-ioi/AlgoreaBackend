@@ -11,7 +11,6 @@ Feature: Export the current progress of users on a subset of items as CSV (group
       | group_id | manager_id | can_watch_members |
       | 13       | 11         | false             |
       | 13       | 21         | true              |
-    And the groups ancestors are computed
     And the database has the following table "items":
       | id  | type    | default_language_tag |
       | 200 | Task    | fr                   |

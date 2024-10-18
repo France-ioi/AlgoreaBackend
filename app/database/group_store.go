@@ -57,7 +57,6 @@ func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 }
 
 // CreateNew creates a new group with given name and type.
-// It also runs GroupGroupStore.createNewAncestors().
 func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -78,7 +77,7 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 			"created_at":     Now(),
 		}))
 	}
-	s.GroupGroups().createNewAncestors()
+
 	return groupID, nil
 }
 

@@ -16,7 +16,6 @@ Feature: Create item
     And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | can_edit | source_group_id | latest_update_at    |
       | 11       | 21      | solution | children | 11              | 2019-05-30 11:00:00 |
-    And the groups ancestors are computed
     And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 11             |

@@ -21,7 +21,6 @@ Feature: Update an item string entry
       | 11       | 21      | content            | none               | false              |
       | 11       | 50      | solution           | all                | true               |
       | 11       | 60      | content            | all                | true               |
-    And the groups ancestors are computed
     And the database has the following table "languages":
       | tag |
       | en  |

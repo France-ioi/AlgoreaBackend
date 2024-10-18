@@ -90,7 +90,7 @@ func (s *GroupStore) storeBadge(
 	ancestorsCalculationNeeded *bool, badge *Badge, userID int64, newUser bool,
 	managedBadgeGroups map[int64]struct{}, knownBadgeGroups map[string]int64,
 ) {
-	badgeGroupID, groupCreated := s.findOrCreateBadgeGroup(ancestorsCalculationNeeded, badge.URL, badge.BadgeInfo.Name, knownBadgeGroups)
+	badgeGroupID, groupCreated := s.findOrCreateBadgeGroup(badge.URL, badge.BadgeInfo.Name, knownBadgeGroups)
 
 	if badge.Manager {
 		managedBadgeGroups[badgeGroupID] = struct{}{}
@@ -123,7 +123,7 @@ func (s *GroupStore) storeBadgeGroupPath(
 		var found, groupCreated bool
 		badgeGroupID, found = knownBadgeGroups[ancestorBadge.URL]
 		if !found && createGroupsAndRelations {
-			badgeGroupID = s.createAndCacheBadgeGroup(ancestorsCalculationNeeded, ancestorBadge.URL, ancestorBadge.Name, knownBadgeGroups)
+			badgeGroupID = s.createAndCacheBadgeGroup(ancestorBadge.URL, ancestorBadge.Name, knownBadgeGroups)
 			groupCreated = true
 		}
 		badgeGroupIDValid := found || groupCreated
@@ -182,13 +182,13 @@ func (s *GroupStore) makeUserMemberOfBadgeGroup(ancestorsCalculationNeeded *bool
 }
 
 func (s *GroupStore) findOrCreateBadgeGroup(
-	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64,
+	badgeURL, badgeName string, knownBadgeGroups map[string]int64,
 ) (int64, bool) {
 	var groupCreated bool
 
 	badgeGroupID, found := knownBadgeGroups[badgeURL]
 	if !found {
-		badgeGroupID = s.createAndCacheBadgeGroup(ancestorsCalculationNeeded, badgeURL, badgeName, knownBadgeGroups)
+		badgeGroupID = s.createAndCacheBadgeGroup(badgeURL, badgeName, knownBadgeGroups)
 		groupCreated = true
 	}
 	return badgeGroupID, groupCreated
@@ -212,10 +212,9 @@ func (s *GroupStore) createBadgeGroup(badgeURL, badgeName string) int64 {
 }
 
 func (s *GroupStore) createAndCacheBadgeGroup(
-	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64,
+	badgeURL, badgeName string, knownBadgeGroups map[string]int64,
 ) int64 {
 	badgeGroupID := s.createBadgeGroup(badgeURL, badgeName)
 	knownBadgeGroups[badgeURL] = badgeGroupID
-	*ancestorsCalculationNeeded = true
 	return badgeGroupID
 }

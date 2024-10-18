@@ -41,7 +41,6 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				groups: [{id: 1, text_id: abc}]
 				groups_groups: [{parent_group_id: 1, child_group_id: 5}]
 				groups_ancestors:
-					- {ancestor_group_id: 1, child_group_id: 1}
 					- {ancestor_group_id: 1, child_group_id: 5}`,
 			existingGroups:      []int64{1},
 			existingGroupGroups: [][2]int64{{1, 5}},
@@ -60,7 +59,6 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			userID: 5,
 			fixture: `
 				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]
 				group_managers: [{manager_id: 5, group_id: 1}]`,
 			existingGroups:        []int64{1},
 			existingGroupManagers: [][2]int64{{5, 1}},
@@ -77,8 +75,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			},
 			userID: 5,
 			fixture: `
-				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc}]`,
 			existingGroups:     []int64{1},
 			shouldMakeMemberOf: []string{"abc"},
 		},
@@ -95,8 +92,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			userID:  5,
 			newUser: true,
 			fixture: `
-				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc}]`,
 			existingGroups:     []int64{1},
 			shouldMakeMemberOf: []string{"abc"},
 		},
@@ -113,8 +109,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			},
 			userID: 5,
 			fixture: `
-				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc}]`,
 			existingGroups:      []int64{1},
 			shouldMakeManagerOf: []string{"abc"},
 		},
@@ -131,8 +126,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			},
 			userID: 5,
 			fixture: `
-				groups: [{id: 1, text_id: def}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: def}]`,
 			existingGroups:                  []int64{1},
 			shouldCreateBadgeGroupsForURLs:  []string{"abc"},
 			shouldMakeManagerOf:             []string{"abc"},
@@ -206,8 +200,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				},
 			},
 			fixture: `
-				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]`,
 			existingGroups: []int64{1},
 			userID:         5,
 		},
@@ -222,8 +215,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				},
 			},
 			fixture: `
-				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]`,
 			existingGroups:                  []int64{1},
 			shouldCreateBadgeGroupsForURLs:  []string{"def"},
 			shouldMakeMemberOf:              []string{"def"},
@@ -265,8 +257,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				},
 			},
 			fixture: `
-				groups: [{id: 1, text_id: ghi}, {id: 2, text_id: jkl}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}, {ancestor_group_id: 2, child_group_id: 2}]`,
+				groups: [{id: 1, text_id: ghi}, {id: 2, text_id: jkl}]`,
 			userID:                          5,
 			existingGroups:                  []int64{1, 2},
 			shouldCreateBadgeGroupsForURLs:  []string{"abc"},
@@ -279,9 +270,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(`
 				groups: [{id: 5}]
-				users: [{group_id: 5}]
-				groups_ancestors:
-					- {ancestor_group_id: 5, child_group_id: 5}` + tt.fixture)
+				users: [{group_id: 5}]` + tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			err := store.InTransaction(func(store *database.DataStore) error {
@@ -395,10 +384,7 @@ func TestGroupStore_StoreBadge_PropagatesResults(t *testing.T) {
 				users: [{group_id: 5, login: john}, {group_id: 6, login: jane}]
 				groups_groups: [{parent_group_id: 1, child_group_id: 5}]
 				groups_ancestors:
-					- {ancestor_group_id: 1, child_group_id: 1}
 					- {ancestor_group_id: 1, child_group_id: 5}
-					- {ancestor_group_id: 5, child_group_id: 5}
-					- {ancestor_group_id: 6, child_group_id: 6}
 				items: [{id: 100, default_language_tag: fr}, {id: 101, default_language_tag: fr}]
 				items_items: [{parent_item_id: 100, child_item_id: 101, child_order: 1}]
 				items_ancestors: [{ancestor_item_id: 100, child_item_id: 101}]

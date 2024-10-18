@@ -146,8 +146,7 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 			                           {group_id: 5003, member_id: 7000, at: "2019-05-30 11:00:00"},
 			                           {group_id: 1, member_id: 5000}, {group_id: 1, member_id: 5001},
 			                           {group_id: 1, member_id: 5002}, {group_id: 1, member_id: 5003}]
-			groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1},
-			                   {ancestor_group_id: 5000, child_group_id: 7000}, {ancestor_group_id: 5001, child_group_id: 7000},
+			groups_ancestors: [{ancestor_group_id: 5000, child_group_id: 7000}, {ancestor_group_id: 5001, child_group_id: 7000},
 			                   {ancestor_group_id: 5002, child_group_id: 7000}, {ancestor_group_id: 5003, child_group_id: 7000},
 			                   {ancestor_group_id: 1, child_group_id: 5000}, {ancestor_group_id: 1, child_group_id: 5001},
 			                   {ancestor_group_id: 1, child_group_id: 5002}, {ancestor_group_id: 1, child_group_id: 5003},
@@ -188,7 +187,6 @@ func assertUserRelatedTablesAfterDeletingWithTraps(
 
 	assertTableColumn(t, db, "users", "group_id", allUsers)
 	assertTableColumn(t, db, "groups", "id", allGroups)
-	assertTableColumn(t, db, "groups_propagate", "id", allGroups)
 	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", allGroups)
 	assertTableColumn(t, db, "groups_ancestors", "child_group_id", allGroups)
 	assertTableColumn(t, db, "groups_groups", "parent_group_id", allParentGroups)

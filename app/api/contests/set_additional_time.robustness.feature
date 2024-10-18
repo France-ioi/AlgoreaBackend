@@ -17,7 +17,6 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 13       | 21         | true                   | true              |
       | 14       | 21         | true                   | false             |
       | 31       | 21         | true                   | true              |
-    And the groups ancestors are computed
     And the database has the following table "items":
       | id | duration | entry_participant_type | default_language_tag |
       | 50 | 00:00:00 | User                   | fr                   |

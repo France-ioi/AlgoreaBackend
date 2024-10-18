@@ -18,7 +18,6 @@ Feature: Create a new code for the given group - robustness
       | 13       | 21         | memberships |
       | 13       | 31         | none        |
       | 21       | 31         | memberships |
-    And the groups ancestors are computed
 
   Scenario: User is not a manager of the group
     Given I am the user with id "41"

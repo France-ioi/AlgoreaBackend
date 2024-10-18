@@ -14,7 +14,6 @@ Feature: Add a parent-child relation between two groups
       | 11       | 21         | memberships_and_group |
       | 13       | 21         | memberships           |
       | 14       | 21         | memberships_and_group |
-    And the groups ancestors are computed
     And the database has the following table "items":
       | id | default_language_tag |
       | 20 | fr                   |

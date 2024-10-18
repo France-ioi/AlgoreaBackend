@@ -111,10 +111,9 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 		mustNotBeError(err)
 
 		if !found {
-			err = groupStore.InsertMap(map[string]interface{}{
+			mustNotBeError(groupStore.InsertMap(map[string]interface{}{
 				"id": spec.id, "type": "Base", "name": spec.name, "text_id": spec.name,
-			})
-			mustNotBeError(err)
+			}))
 
 			inserted = true
 		}

@@ -10,7 +10,6 @@ Feature: Get members of group_id - robustness
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 13       | 21         |
-    And the groups ancestors are computed
 
   Scenario: User is not a manager of the group
     Given I am the user with id "11"

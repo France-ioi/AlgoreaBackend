@@ -60,7 +60,6 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -85,6 +84,8 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -123,6 +124,8 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -158,7 +161,6 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{
-		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
@@ -167,7 +169,6 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -217,7 +218,6 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -261,7 +261,6 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},

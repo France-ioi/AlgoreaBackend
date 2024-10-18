@@ -12,7 +12,6 @@ Feature: Update the group manager's permissions (groupManagerEdit) - robustness
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
       | john  | 22       | John        | Doe       |
-    And the groups ancestors are computed
     And the database has the following table "group_managers":
       | manager_id | group_id | can_manage            |
       | 21         | 1        | memberships_and_group |

@@ -83,11 +83,8 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 				groups_groups:
 					- {parent_group_id: 102, child_group_id: 101}
 				groups_ancestors:
-					- {ancestor_group_id: 101, child_group_id: 101}
 					- {ancestor_group_id: 102, child_group_id: 101}
 					- {ancestor_group_id: 102, child_group_id: 102}
-					- {ancestor_group_id: 111, child_group_id: 111}
-					- {ancestor_group_id: 121, child_group_id: 121}
 				languages: [{tag: fr}]
 				items:
 					- {id: 10, default_language_tag: fr}

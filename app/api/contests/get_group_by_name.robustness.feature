@@ -17,7 +17,6 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 14       | 21         | true                   | false             |
       | 15       | 21         | false                  | true              |
       | 31       | 21         | true                   | true              |
-    And the groups ancestors are computed
     And the database has the following table "items":
       | id | duration | default_language_tag | entry_participant_type |
       | 10 | 00:00:02 | fr                   | Team                   |
