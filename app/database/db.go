@@ -669,7 +669,9 @@ func (conn *DB) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DB 
 	var builder strings.Builder
 	if shared.Size() > 0 {
 		builder.WriteString("FOR SHARE OF ")
-		for index, sharedTable := range shared.Values() {
+		tables := shared.Values()
+		sort.Strings(tables)
+		for index, sharedTable := range tables {
 			if index != 0 {
 				builder.WriteString(", ")
 			}
@@ -681,7 +683,9 @@ func (conn *DB) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DB 
 			builder.WriteString(" ")
 		}
 		builder.WriteString("FOR UPDATE OF ")
-		for index, exclusiveTable := range exclusive.Values() {
+		tables := exclusive.Values()
+		sort.Strings(tables)
+		for index, exclusiveTable := range tables {
 			if index != 0 {
 				builder.WriteString(", ")
 			}
