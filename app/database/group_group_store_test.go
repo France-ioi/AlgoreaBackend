@@ -192,8 +192,6 @@ func setMockExpectationsForCreateNewAncestors(mock sqlmock.Sqlmock) {
 	mock.ExpectPrepare("")
 	mock.ExpectPrepare("")
 	mock.ExpectPrepare("")
-	mock.ExpectPrepare("")
-	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))

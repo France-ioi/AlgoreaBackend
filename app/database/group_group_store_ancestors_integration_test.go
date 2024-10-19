@@ -145,7 +145,7 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
-	assert.NoError(t, groupGroupStore.Exec("TRUNCATE TABLE groups_ancestors").Error())
+	assert.NoError(t, groupGroupStore.GroupAncestors().Delete("NOT is_self").Error())
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=2").Error())
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=3").Error())
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=4").Error())
@@ -161,6 +161,7 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{
+		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
