@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"time"
 )
 
 // GroupGroupStore implements database operations on `groups_groups`
@@ -28,8 +27,6 @@ func (s *GroupGroupStore) createNewAncestors() {
 // ErrRelationCycle is returned by CreateRelation() if the relation is impossible because it would
 // create a cycle in the groups_groups graph.
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
-
-const groupsRelationsLockTimeout = 50 * time.Second
 
 // ParentChild represents a (ParentID, ChildID) pair.
 type ParentChild struct {
@@ -200,10 +197,4 @@ func (s *GroupGroupStore) CreateNewAncestors() (err error) {
 
 	s.createNewAncestors()
 	return nil
-}
-
-// WithGroupsRelationsLock wraps the given function in GET_LOCK/RELEASE_LOCK
-// specific for modifying relations between groups.
-func (s *GroupGroupStore) WithGroupsRelationsLock(txFunc func(*DataStore) error) error {
-	return s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, txFunc)
 }
