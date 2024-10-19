@@ -84,14 +84,14 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	user := srv.GetUser(r)
-	apiErr := service.NoError
+	s := srv.GetStore(r)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, deleteRelation)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
+	apiErr := checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, deleteRelation)
+	if apiErr != service.NoError {
+		return apiErr
+	}
 
+	err = s.InTransaction(func(s *database.DataStore) error {
 		// Check that the relation exists
 		var result []struct{}
 		service.MustNotBeError(s.ActiveGroupGroups().WithExclusiveWriteLock().

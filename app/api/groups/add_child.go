@@ -64,16 +64,15 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 	}
 
 	user := srv.GetUser(r)
-	apiErr := service.NoError
+	store := srv.GetStore(r)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
-		var errInTransaction error
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
+	apiErr := checkThatUserHasRightsForDirectRelation(store, user, parentGroupID, childGroupID, createRelation)
+	if apiErr != service.NoError {
+		return apiErr
+	}
 
-		errInTransaction = s.GroupGroups().CreateRelation(parentGroupID, childGroupID)
+	err = store.InTransaction(func(store *database.DataStore) error {
+		errInTransaction := store.GroupGroups().CreateRelation(parentGroupID, childGroupID)
 		if errInTransaction == database.ErrRelationCycle {
 			apiErr = service.ErrForbidden(errInTransaction)
 		}
