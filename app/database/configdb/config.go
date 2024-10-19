@@ -71,6 +71,7 @@ func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []dom
 			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.TempUsersGroup},
 		} {
 			found, err := groupGroupStore.
+				WithExclusiveWriteLock().
 				Where("parent_group_id = ?", spec["parent_group_id"]).
 				Where("child_group_id = ?", spec["child_group_id"]).
 				Limit(1).
@@ -100,6 +101,7 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 	} {
 		found, err := groupStore.
 			ByID(spec.id).
+			WithExclusiveWriteLock().
 			Where("type = 'Base'").
 			Where("name = ?", spec.name).
 			Where("text_id = ?", spec.name).
