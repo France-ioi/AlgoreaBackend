@@ -378,7 +378,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 				require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
 				NOW() < IFNULL(require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
 				require_watch_approval, enforce_max_participants, max_participants`).
-			WithWriteLock().Scan(&groupRequiredApprovalsAndLimits).Error())
+			WithExclusiveWriteLock().Scan(&groupRequiredApprovalsAndLimits).Error())
 
 		// Here we get current states for each childGroupID:
 		// the current state can be one of
@@ -510,12 +510,12 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 	mustNotBeError(dataStore.ActiveGroupGroups().Where("parent_group_id = ?", parentGroupID).
 		Joins("JOIN `groups` ON groups.id = child_group_id").
 		Where("groups.type IN ('User', 'Team')").
-		Where("child_group_id NOT IN(?)", changedIDsList).WithWriteLock().Count(&activeRelationsCount).Error())
+		Where("child_group_id NOT IN(?)", changedIDsList).WithExclusiveWriteLock().Count(&activeRelationsCount).Error())
 	var invitationsCount int
 	mustNotBeError(dataStore.GroupPendingRequests().
 		Where("group_id = ?", parentGroupID).
 		Where("type = 'invitation'").Where("member_id NOT IN(?)", changedIDsList).
-		WithWriteLock().Count(&invitationsCount).Error())
+		WithExclusiveWriteLock().Count(&invitationsCount).Error())
 
 	membersCount := activeRelationsCount + invitationsCount
 	for _, itemAction := range idsChanged {
@@ -606,7 +606,7 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 		}
 		var cycleIDs []int64
 		mustNotBeError(s.GroupAncestors().
-			WithWriteLock().
+			WithExclusiveWriteLock().
 			Where("child_group_id = ? AND ancestor_group_id IN (?)", parentGroupID, idsToCheckCycleSlice).
 			Pluck("ancestor_group_id", &cycleIDs).Error())
 

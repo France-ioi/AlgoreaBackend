@@ -122,7 +122,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			MessageCount  int
 		}
 		err = store.
-			WithWriteLock().
+			WithExclusiveWriteLock().
 			Threads().
 			GetThreadInfo(participantID, itemID, &oldThread)
 		if !gorm.IsRecordNotFoundError(err) {

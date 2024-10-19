@@ -38,13 +38,14 @@ type ParentChild struct {
 }
 
 // CreateRelation creates a direct relation between two groups.
+// On success, it creates new groups ancestors and schedules permissions propagation.
 func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
 	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
 		found, err := s.GroupAncestors().
-			WithWriteLock().
+			WithExclusiveWriteLock().
 			// do not allow cycles even via expired relations
 			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
 			HasRows()
@@ -98,7 +99,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) error {
 		// check if parent_group_id is the only parent of child_group_id
 		var shouldDeleteChildGroup bool
-		shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithWriteLock().
+		shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithExclusiveWriteLock().
 			Where("child_group_id = ?", childGroupID).
 			Where("parent_group_id != ?", parentGroupID).HasRows()
 		mustNotBeError(err)
@@ -131,7 +132,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// Candidates for deletion are all groups that are descendants of groupID filtered by type
 	var candidatesForDeletion []int64
-	mustNotBeError(s.Groups().WithWriteLock().
+	mustNotBeError(s.Groups().WithExclusiveWriteLock().
 		Joins(`
 			JOIN groups_ancestors_active AS ancestors ON
 				ancestors.child_group_id = groups.id AND
@@ -151,7 +152,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// whose ancestors list consists only of groupID descendants
 	// (since they became orphans)
 	if len(candidatesForDeletion) > 0 {
-		mustNotBeError(s.Groups().WithWriteLock().
+		mustNotBeError(s.Groups().WithExclusiveWriteLock().
 			Joins(`
 				LEFT JOIN(
 					SELECT groups_ancestors_active.child_group_id

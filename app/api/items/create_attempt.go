@@ -119,7 +119,7 @@ func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID
 	var allowsMultipleAttempts bool
 	err := store.Items().ByID(itemID).
 		Where("items.type IN('Task','Chapter')").
-		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).WithWriteLock().Error()
+		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).WithExclusiveWriteLock().Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -128,7 +128,7 @@ func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID
 	if !allowsMultipleAttempts {
 		var found bool
 		found, err = store.Results().
-			Where("participant_id = ?", groupID).Where("item_id = ?", itemID).WithWriteLock().HasRows()
+			Where("participant_id = ?", groupID).Where("item_id = ?", itemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			return service.ErrUnprocessableEntity(errors.New("the item doesn't allow multiple attempts"))

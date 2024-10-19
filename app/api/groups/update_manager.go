@@ -73,7 +73,7 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) s
 		var found bool
 		// 1) the authenticated user should have can_manage:memberships_and_group permission on the groupID
 		// 2) there should be a row in group_managers for the given groupID-managerID pair
-		found, err = store.Groups().ManagedBy(user).WithWriteLock().
+		found, err = store.Groups().ManagedBy(user).WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).
 			Joins(`
 				JOIN group_managers AS this_manager

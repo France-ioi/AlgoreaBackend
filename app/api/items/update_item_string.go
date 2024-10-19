@@ -92,7 +92,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		}
 
 		var found bool
-		found, err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
+		found, err = store.Permissions().MatchingUserAncestors(user).WithExclusiveWriteLock().
 			Where("item_id = ?", itemID).
 			WherePermissionIsAtLeast("view", "content").
 			WherePermissionIsAtLeast("edit", "all").
@@ -104,9 +104,9 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		}
 
 		if useDefaultLanguage {
-			service.MustNotBeError(store.Items().ByID(itemID).WithWriteLock().PluckFirst("default_language_tag", &languageTag).Error())
+			service.MustNotBeError(store.Items().ByID(itemID).WithExclusiveWriteLock().PluckFirst("default_language_tag", &languageTag).Error())
 		} else {
-			found, err = store.Languages().ByTag(languageTag).WithWriteLock().HasRows()
+			found, err = store.Languages().ByTag(languageTag).WithExclusiveWriteLock().HasRows()
 			service.MustNotBeError(err)
 			if !found {
 				apiError = service.ErrInvalidRequest(errors.New("no such language"))

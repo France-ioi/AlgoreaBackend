@@ -139,7 +139,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 			Where("results.item_id = ?", itemID)
 
 		// load the result data
-		err = resultScope.WithWriteLock().
+		err = resultScope.WithExclusiveWriteLock().
 			Select("hints_requested, hints_cached, validated").
 			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 			Where("NOW() < attempts.allows_submissions_until").

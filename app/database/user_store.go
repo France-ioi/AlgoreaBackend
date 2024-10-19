@@ -88,7 +88,7 @@ func (s *UserStore) deleteWithTraps(userScope *DB) int {
 	userIDs := make([]int64, 0, deleteWithTrapsBatchSize)
 
 	mustNotBeError(
-		userScope.WithWriteLock().Select("group_id").Limit(deleteWithTrapsBatchSize).
+		userScope.WithExclusiveWriteLock().Select("group_id").Limit(deleteWithTrapsBatchSize).
 			ScanIntoSlices(&userIDs).Error())
 
 	if len(userIDs) == 0 {

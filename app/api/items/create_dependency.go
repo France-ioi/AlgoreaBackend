@@ -90,7 +90,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 
 	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		if !user.CanViewItemInfo(store.WithWriteLock(), prerequisiteItemID) {
+		if !user.CanViewItemInfo(store.WithExclusiveWriteLock(), prerequisiteItemID) {
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error // rollback
 		}
@@ -98,7 +98,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 		permissionsQuery := store.Permissions().
 			AggregatedPermissionsForItemsOnWhichGroupHasPermission(user.GroupID, "edit", "all").
 			Where("item_id = ?", dependentItemID).
-			WithWriteLock()
+			WithExclusiveWriteLock()
 		if input.GrantContentView {
 			permissionsQuery = permissionsQuery.HavingMaxPermissionAtLeast("grant_view", "content")
 		}

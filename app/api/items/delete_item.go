@@ -59,14 +59,14 @@ func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) service.A
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		var found bool
 		found, err = s.Permissions().MatchingUserAncestors(user).Where("item_id = ?", itemID).
-			Where("is_owner_generated").WithWriteLock().HasRows()
+			Where("is_owner_generated").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
 		}
 
-		found, err = s.ItemItems().ChildrenOf(itemID).WithWriteLock().HasRows()
+		found, err = s.ItemItems().ChildrenOf(itemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			apiErr = service.ErrUnprocessableEntity(errors.New("the item must not have children"))

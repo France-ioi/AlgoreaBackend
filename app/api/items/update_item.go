@@ -54,7 +54,7 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 		}
 	}
 	var count int64
-	service.MustNotBeError(store.ItemAncestors().WithWriteLock().
+	service.MustNotBeError(store.ItemAncestors().WithExclusiveWriteLock().
 		Where("child_item_id = ?", itemID).
 		Where("ancestor_item_id IN (?)", ids).Count(&count).Error())
 	return count == 0
@@ -134,7 +134,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			Duration              *string
 			RequiresExplicitEntry bool
 		}
-		err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
+		err = store.Permissions().MatchingUserAncestors(user).WithExclusiveWriteLock().
 			Joins("JOIN items ON items.id = item_id").
 			Where("item_id = ?", itemID).
 			HavingMaxPermissionAtLeast("view", "content").

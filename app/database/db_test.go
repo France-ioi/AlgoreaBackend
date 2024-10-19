@@ -549,9 +549,9 @@ func TestDB_QueryConstructors(t *testing.T) {
 			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
 				var queryExpr interface{}
 				mustNotBeError(db.inTransaction(func(db *DB) error {
-					dbTwo := db.Table("otherTable").WithWriteLock()
+					dbTwo := db.Table("otherTable").WithExclusiveWriteLock()
 					dbs = append(dbs, dbTwo)
-					queryExpr = db.WithWriteLock().With("t1", dbTwo).QueryExpr()
+					queryExpr = db.WithExclusiveWriteLock().With("t1", dbTwo).QueryExpr()
 					return nil
 				}))
 				newDB = db.Raw("?", queryExpr)
@@ -1583,7 +1583,7 @@ func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestDB_WithWriteLock(t *testing.T) {
+func TestDB_WithExclusiveWriteLock(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1594,7 +1594,7 @@ func TestDB_WithWriteLock(t *testing.T) {
 
 	db = db.Table("myTable")
 	err := db.inTransaction(func(db *DB) error {
-		newDB := db.WithWriteLock()
+		newDB := db.WithExclusiveWriteLock()
 		assert.NotEqual(t, newDB, db)
 		assert.NoError(t, newDB.Error())
 		var result []interface{}
@@ -1606,11 +1606,11 @@ func TestDB_WithWriteLock(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_WithWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
+func TestDB_WithExclusiveWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	assert.PanicsWithValue(t, ErrNoTransaction, func() { db.WithWriteLock() })
+	assert.PanicsWithValue(t, ErrNoTransaction, func() { db.WithExclusiveWriteLock() })
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

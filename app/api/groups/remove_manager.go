@@ -66,7 +66,7 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 				Where("group_id = ?", groupID).
 				Where("manager_id = ?", managerID).HasRows()
 		} else {
-			found, err = store.Groups().ManagedBy(user).WithWriteLock().
+			found, err = store.Groups().ManagedBy(user).WithExclusiveWriteLock().
 				Where("groups.id = ?", groupID).
 				Joins(`
 				JOIN group_managers AS this_manager

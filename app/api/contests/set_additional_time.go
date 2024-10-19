@@ -89,7 +89,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 
 	err = store.InTransaction(func(store *database.DataStore) error {
-		err = store.Items().ContestManagedByUser(itemID, user).WithWriteLock().
+		err = store.Items().ContestManagedByUser(itemID, user).WithExclusiveWriteLock().
 			Select(`
 				TIME_TO_SEC(items.duration) AS duration_in_seconds,
 				items.entry_participant_type = 'Team' AS is_team_only_contest,
@@ -140,7 +140,7 @@ func setAdditionalTimeForGroupInContest(
 ) {
 	groupContestItemStore := store.GroupContestItems()
 	scope := groupContestItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
-	found, err := scope.WithWriteLock().HasRows()
+	found, err := scope.WithExclusiveWriteLock().HasRows()
 	service.MustNotBeError(err)
 	if found {
 		service.MustNotBeError(scope.UpdateColumn("additional_time",
@@ -193,7 +193,7 @@ func setAdditionalTimeForGroupInContest(
 					MIN(contest_participations.started_at),
 					INTERVAL (? + IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)) SECOND
 				) AS expires_at`, durationInSeconds).
-			WithWriteLock().QueryExpr()).Error())
+			WithExclusiveWriteLock().QueryExpr()).Error())
 
 	// we always modify groups_groups.expires_at, no matter if it has been expired or not
 	result := store.Exec(`

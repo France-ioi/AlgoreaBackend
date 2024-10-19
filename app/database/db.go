@@ -641,8 +641,11 @@ func (conn *DB) mustBeInTransaction() {
 	}
 }
 
-// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
-func (conn *DB) WithWriteLock() *DB {
+// WithExclusiveWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire an exclusive lock on them, preventing other transactions from modifying them and
+// even from getting exclusive/shared locks on them. For non-existing rows, it works similarly to a shared lock (FOR SHARE).
+func (conn *DB) WithExclusiveWriteLock() *DB {
 	conn.mustBeInTransaction()
 	return conn.Set("gorm:query_option", "FOR UPDATE")
 }

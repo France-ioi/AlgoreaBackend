@@ -421,7 +421,7 @@ func extractOptionalParameter(query url.Values, paramName string, requestData ma
 
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
 	var groupID int64
-	err := s.WithWriteLock().
+	err := s.WithExclusiveWriteLock().
 		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
 
 	userData["latest_login_at"] = database.Now()
@@ -454,7 +454,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 	service.MustNotBeError(err)
 
-	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.AllUsersGroupID).
+	found, err := s.GroupGroups().WithExclusiveWriteLock().Where("parent_group_id = ?", domainConfig.AllUsersGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	groupsToCreate := make([]map[string]interface{}, 0, 2)

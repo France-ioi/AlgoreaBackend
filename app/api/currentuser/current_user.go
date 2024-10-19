@@ -171,7 +171,7 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	if action == leaveGroupAction {
 		var groupType string
 		groupStore := store.Groups()
-		service.MustNotBeError(groupStore.ByID(groupID).WithWriteLock().PluckFirst("type", &groupType).Error())
+		service.MustNotBeError(groupStore.ByID(groupID).WithExclusiveWriteLock().PluckFirst("type", &groupType).Error())
 		if groupType == team {
 			var ok bool
 			ok, err = groupStore.CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true, true)
@@ -203,7 +203,7 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 ) service.APIError {
 	// The group should exist (and optionally should have `is_public` = 1)
 	query := store.Groups().ByID(groupID).
-		Where("type != 'User'").Select("type, frozen_membership").WithWriteLock()
+		Where("type != 'User'").Select("type, frozen_membership").WithExclusiveWriteLock()
 	if action == createGroupJoinRequestAction {
 		query = query.Where("is_public")
 	}

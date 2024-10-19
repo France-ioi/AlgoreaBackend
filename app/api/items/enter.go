@@ -100,7 +100,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 
 		service.MustNotBeError(store.Items().ByID(entryState.itemID).
 			Select("NOW() AS now, items.duration, items.participants_group_id").
-			WithWriteLock().Take(&itemInfo).Error())
+			WithExclusiveWriteLock().Take(&itemInfo).Error())
 
 		var totalAdditionalTime int64
 		service.MustNotBeError(store.ActiveGroupAncestors().
@@ -110,14 +110,14 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 						ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
 							groups_contest_items.item_id = ?`, entryState.itemID).
 			Group("groups_ancestors_active.child_group_id").
-			WithWriteLock().
+			WithExclusiveWriteLock().
 			PluckFirst("IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)", &totalAdditionalTime).
 			Error())
 
 		user := srv.GetUser(r)
 		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
 			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
-				Where("participant_id = ?", entryState.groupID).WithWriteLock().SubQuery()),
+				Where("participant_id = ?", entryState.groupID).WithExclusiveWriteLock().SubQuery()),
 			"participant_id": entryState.groupID, "created_at": itemInfo.Now,
 			"creator_id": user.GroupID, "parent_attempt_id": parentAttemptID, "root_item_id": entryState.itemID,
 			"allows_submissions_until": gorm.Expr("IFNULL(DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND), '9999-12-31 23:59:59')",

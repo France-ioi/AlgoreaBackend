@@ -198,7 +198,7 @@ func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupI
 }
 
 func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groupsToCheck []int64) []int64 {
-	found, err := store.Groups().ByID(parentGroupID).Where("type = 'Team'").WithWriteLock().HasRows()
+	found, err := store.Groups().ByID(parentGroupID).Where("type = 'Team'").WithExclusiveWriteLock().HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return nil
@@ -207,7 +207,7 @@ func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groups
 	contestsQuery := store.Attempts().
 		Where("participant_id = ?", parentGroupID).
 		Where("root_item_id IS NOT NULL").
-		Group("root_item_id").WithWriteLock()
+		Group("root_item_id").WithExclusiveWriteLock()
 
 	var otherTeamsMembers []int64
 	service.MustNotBeError(store.ActiveGroupGroups().Where("child_group_id IN (?)", groupsToCheck).
@@ -224,7 +224,7 @@ func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groups
 		Where(`
 			(teams_contests.is_active AND NOW() < attempts.allows_submissions_until AND attempts.ended_at IS NULL) OR
 			NOT items.allows_multiple_attempts`).
-		WithWriteLock().Pluck("child_group_id", &otherTeamsMembers).Error())
+		WithExclusiveWriteLock().Pluck("child_group_id", &otherTeamsMembers).Error())
 
 	return otherTeamsMembers
 }

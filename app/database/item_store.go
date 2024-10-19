@@ -110,8 +110,8 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 		groupsManagedByParticipant.Select("groups.root_skill_id"))
 
 	if withWriteLock {
-		rootActivities = rootActivities.WithWriteLock()
-		rootSkills = rootSkills.WithWriteLock()
+		rootActivities = rootActivities.WithExclusiveWriteLock()
+		rootSkills = rootSkills.WithExclusiveWriteLock()
 	}
 
 	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).
@@ -283,8 +283,8 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 	visibleItems := s.visibleItemsFromListForGroupQuery(ids, groupID)
 
 	if withWriteLock {
-		subQuery = subQuery.WithWriteLock()
-		visibleItems = visibleItems.WithWriteLock()
+		subQuery = subQuery.WithExclusiveWriteLock()
+		visibleItems = visibleItems.WithExclusiveWriteLock()
 	}
 	return subQuery.With("visible_items", visibleItems)
 }
@@ -298,7 +298,7 @@ func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAcces
 	var readOnly bool
 	err = s.WhereGroupHasPermissionOnItems(participantID, "view", "content").
 		Where("id = ?", itemID).
-		WithWriteLock().
+		WithExclusiveWriteLock().
 		PluckFirst("read_only", &readOnly).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, errors.New("no access to the task item"), nil

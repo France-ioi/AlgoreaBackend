@@ -72,7 +72,7 @@ func (s *GroupStore) loadKnownBadgeGroups(badges []Badge) map[string]int64 {
 		ID     int64
 		TextID string
 	}
-	mustNotBeError(s.Where("text_id IN(?)", badgeURLs).WithWriteLock().Select("id, text_id").Scan(&dbBadgeGroups).Error())
+	mustNotBeError(s.Where("text_id IN(?)", badgeURLs).WithExclusiveWriteLock().Select("id, text_id").Scan(&dbBadgeGroups).Error())
 	knownBadgeGroups := make(map[string]int64, len(badgeURLs))
 	for _, dbBadgeGroup := range dbBadgeGroups {
 		knownBadgeGroups[dbBadgeGroup.TextID] = dbBadgeGroup.ID

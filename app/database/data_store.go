@@ -281,9 +281,12 @@ func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc
 	})
 }
 
-// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
-func (s *DataStore) WithWriteLock() *DataStore {
-	return NewDataStore(s.DB.WithWriteLock())
+// WithExclusiveWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire an exclusive lock on them, preventing other transactions from modifying them and
+// even from getting exclusive/shared locks on them. For non-existing rows, it works similarly to a shared lock (FOR SHARE).
+func (s *DataStore) WithExclusiveWriteLock() *DataStore {
+	return NewDataStore(s.DB.WithExclusiveWriteLock())
 }
 
 // ByID returns a composable query for filtering by _table_.id.

@@ -169,7 +169,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
 		groupsManagedByParticipant.Select("groups.root_skill_id"))
 
-	query := store.Table("items as items0").WithWriteLock()
+	query := store.Table("items as items0").WithExclusiveWriteLock()
 	for i := 0; i < len(ids); i++ {
 		query = query.Where(fmt.Sprintf("items%d.id = ?", i), ids[i])
 	}

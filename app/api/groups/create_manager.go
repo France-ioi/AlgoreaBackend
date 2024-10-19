@@ -82,7 +82,7 @@ func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) s
 		var found bool
 		// managerID should exist and the authenticated user should have
 		//	can_manage:memberships_and_group permission on the groupID
-		found, err = store.Groups().ManagedBy(user).WithWriteLock().
+		found, err = store.Groups().ManagedBy(user).WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).
 			Joins("JOIN `groups` as manager ON manager.id = ?", managerID).
 			Where("can_manage = 'memberships_and_group'").HasRows()

@@ -152,7 +152,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 		// MAX() is used so that a row with the default values is returned even if no row exists.
 		var currentPermissions userPermissions
 		err = s.PermissionsGranted().
-			WithWriteLock().
+			WithExclusiveWriteLock().
 			Where("group_id = ?", groupID).
 			Where("item_id = ?", itemID).
 			Where("source_group_id = ?", sourceGroupID).

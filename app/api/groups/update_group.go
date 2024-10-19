@@ -175,7 +175,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 				groups.max_participants, groups.enforce_max_participants, groups.require_personal_info_access_approval,
 				groups.require_lock_membership_approval_until, groups.require_watch_approval,
 				groups.require_members_to_join_parent,
-				MAX(can_manage_value) AS can_manage_value`).WithWriteLock().
+				MAX(can_manage_value) AS can_manage_value`).WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).Group("groups.id").Scan(&currentGroupData).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			apiErr = service.InsufficientAccessRightsError
@@ -263,7 +263,7 @@ func validateRootActivityIDAndIsOfficial(
 		if rootActivityIDToCheck == nil {
 			return service.ErrInvalidRequest(errors.New("the root_activity_id should be set for official sessions"))
 		}
-		found, err := store.PermissionsGranted().WithWriteLock().
+		found, err := store.PermissionsGranted().WithExclusiveWriteLock().
 			Joins(`
 				JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_granted.group_id AND
 				     groups_ancestors_active.child_group_id = ?`, user.GroupID).
@@ -280,7 +280,7 @@ func validateRootActivityIDAndIsOfficial(
 
 func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) service.APIError {
 	if rootActivityIDToCheck != nil {
-		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithWriteLock().
+		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithExclusiveWriteLock().
 			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
 		service.MustNotBeError(errorInTransaction)
 		if !found {
@@ -302,7 +302,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 			found, errorInTransaction := store.Items().
 				ByID(*newRootSkillID).
 				Where("type = 'Skill'").
-				WithWriteLock().
+				WithExclusiveWriteLock().
 				WhereUserHasViewPermissionOnItems(user, "info").
 				HasRows()
 			service.MustNotBeError(errorInTransaction)

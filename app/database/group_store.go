@@ -125,8 +125,8 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 		Select("child_group_id")
 
 	if withLock {
-		activeTeamParticipationsQuery = activeTeamParticipationsQuery.WithWriteLock()
-		updatedMemberIDsQuery = updatedMemberIDsQuery.WithWriteLock()
+		activeTeamParticipationsQuery = activeTeamParticipationsQuery.WithExclusiveWriteLock()
+		updatedMemberIDsQuery = updatedMemberIDsQuery.WithExclusiveWriteLock()
 	}
 
 	if isAdding {
@@ -153,7 +153,7 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 				0) AS can_enter`)
 
 	if withLock {
-		membersPreconditionsQuery = membersPreconditionsQuery.WithWriteLock()
+		membersPreconditionsQuery = membersPreconditionsQuery.WithExclusiveWriteLock()
 	}
 
 	return s.Raw(`

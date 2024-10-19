@@ -102,7 +102,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		itemID := ids[len(ids)-1]
 		var found bool
 		found, err = store.Items().ByID(itemID).
-			Where("NOT items.requires_explicit_entry").WithWriteLock().HasRows()
+			Where("NOT items.requires_explicit_entry").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError
