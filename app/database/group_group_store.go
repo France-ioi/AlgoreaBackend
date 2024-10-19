@@ -43,26 +43,26 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
-		found, err := s.GroupAncestors().
-			WithExclusiveWriteLock().
-			// do not allow cycles even via expired relations
-			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
-			HasRows()
-		mustNotBeError(err)
-		if found {
-			return ErrRelationCycle
-		}
+	found, err := s.GroupAncestors().
+		// this "FOR SHARE" prevents other sessions from creating this row in groups_ancestors concurrently
+		// so there's no need to use a named lock here
+		WithSharedWriteLock().
+		// do not allow cycles even via expired relations
+		Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
+		HasRows()
+	mustNotBeError(err)
+	if found {
+		return ErrRelationCycle
+	}
 
-		groupGroupStore := s.GroupGroups()
-		mustNotBeError(groupGroupStore.Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
-		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
+	groupGroupStore := s.GroupGroups()
+	mustNotBeError(groupGroupStore.Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
+	mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
-		groupGroupStore.createRelation(parentGroupID, childGroupID)
-		groupGroupStore.createNewAncestors()
-		s.ScheduleResultsPropagation()
-		return nil
-	}))
+	groupGroupStore.createRelation(parentGroupID, childGroupID)
+	groupGroupStore.createNewAncestors()
+	s.ScheduleResultsPropagation()
+
 	return err
 }
 
