@@ -96,36 +96,33 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) error {
-		// check if parent_group_id is the only parent of child_group_id
-		var shouldDeleteChildGroup bool
-		shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithExclusiveWriteLock().
-			Where("child_group_id = ?", childGroupID).
-			Where("parent_group_id != ?", parentGroupID).HasRows()
-		mustNotBeError(err)
-		shouldDeleteChildGroup = (!shouldDeleteChildGroup) && shouldDeleteOrphans
+	// check if parent_group_id is the only parent of child_group_id
+	var shouldDeleteChildGroup bool
+	shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithExclusiveWriteLock().
+		Where("child_group_id = ?", childGroupID).
+		Where("parent_group_id != ?", parentGroupID).HasRows()
+	mustNotBeError(err)
+	shouldDeleteChildGroup = (!shouldDeleteChildGroup) && shouldDeleteOrphans
 
-		if shouldDeleteChildGroup {
-			s.GroupGroups().deleteGroupAndOrphanedDescendants(childGroupID)
-		} else {
-			// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
-			mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
+	if shouldDeleteChildGroup {
+		s.GroupGroups().deleteGroupAndOrphanedDescendants(childGroupID)
+	} else {
+		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
+		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
 
-			permissionsResult := s.PermissionsGranted().
-				Delete("origin = 'group_membership' AND source_group_id = ? AND group_id = ?", parentGroupID, childGroupID)
-			mustNotBeError(permissionsResult.Error())
-			shouldPropagatePermissions := permissionsResult.RowsAffected() > 0
+		permissionsResult := s.PermissionsGranted().
+			Delete("origin = 'group_membership' AND source_group_id = ? AND group_id = ?", parentGroupID, childGroupID)
+		mustNotBeError(permissionsResult.Error())
+		shouldPropagatePermissions := permissionsResult.RowsAffected() > 0
 
-			// recalculate relations
-			s.GroupGroups().createNewAncestors()
+		// recalculate relations
+		s.GroupGroups().createNewAncestors()
 
-			if shouldPropagatePermissions {
-				s.SchedulePermissionsPropagation()
-			}
+		if shouldPropagatePermissions {
+			s.SchedulePermissionsPropagation()
 		}
+	}
 
-		return nil
-	}))
 	return nil
 }
 
