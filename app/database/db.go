@@ -20,6 +20,7 @@ import (
 
 	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type cte struct {
@@ -656,6 +657,39 @@ func (conn *DB) WithExclusiveWriteLock() *DB {
 func (conn *DB) WithSharedWriteLock() *DB {
 	conn.mustBeInTransaction()
 	return conn.Set("gorm:query_option", "FOR SHARE")
+}
+
+// WithCustomWriteLocks converts "SELECT ..." statement into "SELECT ... FOR SHARE OF ... FOR UPDATE ..." statement.
+// For existing rows, it will read the latest committed data for the listed tables
+// (instead of the data from the repeatable-read snapshot) and acquire shared/exclusive locks on them,
+// preventing other transactions from modifying them.
+func (conn *DB) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DB {
+	conn.mustBeInTransaction()
+
+	var builder strings.Builder
+	if shared.Size() > 0 {
+		builder.WriteString("FOR SHARE OF ")
+		for index, sharedTable := range shared.Values() {
+			if index != 0 {
+				builder.WriteString(", ")
+			}
+			builder.WriteString(QuoteName(sharedTable))
+		}
+	}
+	if exclusive.Size() > 0 {
+		if shared.Size() > 0 {
+			builder.WriteString(" ")
+		}
+		builder.WriteString("FOR UPDATE OF ")
+		for index, exclusiveTable := range exclusive.Values() {
+			if index != 0 {
+				builder.WriteString(", ")
+			}
+			builder.WriteString(QuoteName(exclusiveTable))
+		}
+	}
+
+	return conn.Set("gorm:query_option", builder.String())
 }
 
 const keyTriesCount = 10

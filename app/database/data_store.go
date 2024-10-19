@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // DataStore gather all stores for database operations on business data.
@@ -294,6 +295,14 @@ func (s *DataStore) WithExclusiveWriteLock() *DataStore {
 // and acquire a shared lock on them, preventing other transactions from modifying them.
 func (s *DataStore) WithSharedWriteLock() *DataStore {
 	return NewDataStore(s.DB.WithSharedWriteLock())
+}
+
+// WithCustomWriteLocks converts "SELECT ..." statement into "SELECT ... FOR SHARE OF ... FOR UPDATE ..." statement.
+// For existing rows, it will read the latest committed data for the listed tables
+// (instead of the data from the repeatable-read snapshot) and acquire shared/exclusive locks on them,
+// preventing other transactions from modifying them.
+func (s *DataStore) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DataStore {
+	return NewDataStore(s.DB.WithCustomWriteLocks(shared, exclusive))
 }
 
 // ByID returns a composable query for filtering by _table_.id.
