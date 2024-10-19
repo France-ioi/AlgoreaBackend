@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
-	"time"
 
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
@@ -148,9 +147,6 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 
 	mock.MatchExpectationsInOrder(true)
 	mock.ExpectBegin()
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
-		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
 
 	mock.ExpectExec("^"+
 		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `parent_group_id`) "+
@@ -161,9 +157,6 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 	mock.MatchExpectationsInOrder(false)
 	setMockExpectationsForCreateNewAncestors(mock)
 
-	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs("groups_groups").
-		WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectCommit()
 
 	err := db.inTransaction(func(db *DB) error {

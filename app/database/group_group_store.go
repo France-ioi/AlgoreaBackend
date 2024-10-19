@@ -82,12 +82,10 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
-		groupGroupStore := s.GroupGroups()
-		mustNotBeError(s.InsertMaps(relations))
-		groupGroupStore.createNewAncestors()
-		return nil
-	}))
+	groupGroupStore := s.GroupGroups()
+	mustNotBeError(s.InsertMaps(relations))
+	groupGroupStore.createNewAncestors()
+
 	return err
 }
 
