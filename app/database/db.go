@@ -650,6 +650,14 @@ func (conn *DB) WithExclusiveWriteLock() *DB {
 	return conn.Set("gorm:query_option", "FOR UPDATE")
 }
 
+// WithSharedWriteLock converts "SELECT ..." statement into "SELECT ... FOR SHARE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire a shared lock on them, preventing other transactions from modifying them.
+func (conn *DB) WithSharedWriteLock() *DB {
+	conn.mustBeInTransaction()
+	return conn.Set("gorm:query_option", "FOR SHARE")
+}
+
 const keyTriesCount = 10
 
 func (conn *DB) retryOnDuplicatePrimaryKeyError(f func(db *DB) error) error {

@@ -455,6 +455,37 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDataStore_WithSharedWriteLock(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR SHARE").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	dataStore := NewDataStoreWithTable(db, "myTable")
+	err := dataStore.inTransaction(func(db *DB) error {
+		newDataStore := db.WithSharedWriteLock()
+		assert.NotEqual(t, newDataStore, dataStore)
+		assert.NoError(t, newDataStore.Error())
+		var result []interface{}
+		assert.NoError(t, newDataStore.Scan(&result).Error())
+		return nil
+	})
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithSharedWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() { NewDataStore(db).WithSharedWriteLock() })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()

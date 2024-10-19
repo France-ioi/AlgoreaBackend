@@ -289,6 +289,13 @@ func (s *DataStore) WithExclusiveWriteLock() *DataStore {
 	return NewDataStore(s.DB.WithExclusiveWriteLock())
 }
 
+// WithSharedWriteLock converts "SELECT ..." statement into "SELECT ... FOR SHARE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire a shared lock on them, preventing other transactions from modifying them.
+func (s *DataStore) WithSharedWriteLock() *DataStore {
+	return NewDataStore(s.DB.WithSharedWriteLock())
+}
+
 // ByID returns a composable query for filtering by _table_.id.
 func (s *DataStore) ByID(id int64) *DB {
 	if s.tableName == "" {
