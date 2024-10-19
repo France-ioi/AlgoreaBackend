@@ -130,6 +130,7 @@ func checkThatUserHasRightsForDirectRelation(
 	}
 
 	query := groupStore.ManagedBy(user).
+		WithExclusiveWriteLock().
 		Select("groups.id, type").
 		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
 		Where("IF(groups.id = ?, group_managers.can_manage != 'none', 1)", parentGroupID)
