@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.23.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.1...v2.23.2) - 2024-10-21
+- rework groups propagation: get rid of the named lock, use more granular locking, speed up the propagation a bit
+
 ## [v2.23.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.0...v2.23.1) - 2024-10-17
 - increase the timeout on item/group ancestor recomputation to prevent error 500 on the authentication service
 
