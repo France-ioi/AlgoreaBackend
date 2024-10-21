@@ -19,7 +19,6 @@ Feature: Create item - robustness
       | 26 | false    | fr                   | Skill   | null           |
       | 27 | false    | fr                   | Chapter | null           |
       | 28 | false    | fr                   | Chapter | existingTextId |
-
     And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
@@ -40,7 +39,6 @@ Feature: Create item - robustness
       | 11       | 4       | solution | 11              | children |
       | 11       | 21      | solution | 11              | children |
       | 11       | 23      | solution | 11              | none     |
-    And the groups ancestors are computed
     And the database has the following table "languages":
       | tag |
       | sl  |

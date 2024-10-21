@@ -110,6 +110,8 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		WHERE
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`) // #nosec
 	if objectName == groups {
+		recomputeQueries[0] += `
+			AND groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id` // do not delete group ancestors with is_self=1
 		recomputeQueries[1] += `
 				AND NOW() < groups_groups.expires_at AND
 				NOW() < LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at)
@@ -119,18 +121,6 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			FOR SHARE OF parent
 			ON DUPLICATE KEY UPDATE
 				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at))`
-		recomputeQueries = append(recomputeQueries, `
-			INSERT IGNORE INTO `+objectName+`_ancestors
-			(
-				ancestor_`+singleObjectName+`_id,
-				child_`+singleObjectName+`_id
-			)
-			SELECT
-				groups_propagate.id AS ancestor_group_id,
-				groups_propagate.id AS child_group_id
-			FROM groups_propagate
-			WHERE groups_propagate.ancestors_computation_state = 'processing'
-			FOR UPDATE`) // #nosec
 	} else {
 		recomputeQueries[1] += `
 			FOR UPDATE OF ` + objectName + `_propagate

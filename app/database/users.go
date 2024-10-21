@@ -16,7 +16,7 @@ func (s *DataStore) CheckIfTeamParticipationsConflictWithExistingUserMemberships
 		Where("attempts.participant_id = ?", teamID).Where("root_item_id IS NOT NULL").
 		Group("root_item_id")
 	if withLock {
-		contestsQuery = contestsQuery.WithWriteLock()
+		contestsQuery = contestsQuery.WithExclusiveWriteLock()
 	}
 
 	query := s.ActiveGroupGroups().Where("child_group_id = ?", userGroupID).
@@ -29,7 +29,7 @@ func (s *DataStore) CheckIfTeamParticipationsConflictWithExistingUserMemberships
 		Where("parent_group_id != ?", teamID).
 		Where("(teams_contests.is_active AND NOW() < attempts.allows_submissions_until) OR NOT items.allows_multiple_attempts")
 	if withLock {
-		query = query.WithWriteLock()
+		query = query.WithExclusiveWriteLock()
 	}
 	return query.HasRows()
 }

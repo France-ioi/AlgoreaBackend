@@ -65,7 +65,7 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		var found bool
 		found, err = s.Groups().ManagedBy(user).
-			WithWriteLock().
+			WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).
 			Where("group_managers.can_manage = 'memberships_and_group'").
 			Where("groups.type != 'User'").HasRows()
@@ -74,7 +74,7 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
 		}
-		found, err = s.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithWriteLock().HasRows()
+		found, err = s.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			apiErr = service.ErrNotFound(errors.New("the group must be empty"))

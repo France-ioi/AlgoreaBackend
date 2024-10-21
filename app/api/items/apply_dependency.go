@@ -66,7 +66,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 		found, err = store.ItemDependencies().
 			Where("dependent_item_id = ?", dependentItemID).
 			Where("item_id = ?", prerequisiteItemID).
-			Where("grant_content_view").WithWriteLock().HasRows()
+			Where("grant_content_view").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.ErrNotFound(errors.New("no such dependency"))
@@ -74,7 +74,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 		}
 		found, err = store.Permissions().AggregatedPermissionsForItemsOnWhichGroupHasPermission(user.GroupID, "edit", "all").
 			HavingMaxPermissionAtLeast("grant_view", "content").
-			Where("item_id = ?", dependentItemID).WithWriteLock().HasRows()
+			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError

@@ -1015,6 +1015,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 					- {id: 111}
 				users:
 					- {group_id: 111}
+				groups_propagate: [{id: 3, ancestors_computation_state: todo}]
 				group_pending_requests:
 					- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00.001,
 					   personal_info_view_approved: %d, lock_membership_approved: %d, watch_approved: %d}`,
@@ -1160,6 +1161,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 					- {id: 111}
 				users:
 					- {group_id: 111}
+				groups_propagate: [{id: 3, ancestors_computation_state: todo}]
 				group_pending_requests:
 					- {group_id: 20, member_id: 3, type: invitation, at: 2019-05-30 11:00:00.001}`,
 				tt.requirePersonalInfoAccessApproval, tt.requireLockMembershipApprovalUntil, tt.requireWatchApproval))

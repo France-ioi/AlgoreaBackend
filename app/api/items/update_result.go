@@ -87,7 +87,7 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 			Where("attempt_id = ?", attemptID).
 			Where("item_id = ?", itemID)
 		var found bool
-		found, err = resultScope.WithWriteLock().HasRows()
+		found, err = resultScope.WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError

@@ -25,7 +25,6 @@ Feature: Update a group (groupEdit) - robustness
       | 17       | 21         | memberships           |
       | 17       | 31         | none                  |
       | 17       | 41         | memberships_and_group |
-    And the groups ancestors are computed
     And the database table "groups_ancestors" has also the following rows:
       | ancestor_group_id | child_group_id | expires_at          |
       | 17                | 21             | 2019-05-30 11:00:00 |

@@ -15,14 +15,9 @@ import (
 const joinsPermissionsForGroupToItemsFixture = `
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
 		groups_ancestors:
-			- {ancestor_group_id: 1, child_group_id: 1}
 			- {ancestor_group_id: 1, child_group_id: 5}
-			- {ancestor_group_id: 2, child_group_id: 2}
 			- {ancestor_group_id: 2, child_group_id: 5, expires_at: 2019-05-30 11:00:00}
-			- {ancestor_group_id: 3, child_group_id: 3}
 			- {ancestor_group_id: 3, child_group_id: 5}
-			- {ancestor_group_id: 4, child_group_id: 4}
-			- {ancestor_group_id: 5, child_group_id: 5}
 		items: [{id: 2, default_language_tag: 2}, {id: 3, default_language_tag: 2}, {id: 4, default_language_tag: 2}]
 		permissions_generated:
 			- {group_id: 1, item_id: 2, can_view_generated: none, can_grant_view_generated: content, can_watch_generated: answer,

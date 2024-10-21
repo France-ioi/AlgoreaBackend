@@ -7,7 +7,6 @@ Feature: Create a group (groupCreate)
     And the database has the following table "users":
       | login | temp_user | group_id | first_name  | last_name |
       | owner | 0         | 21       | Jean-Michel | Blanquer  |
-    And the groups ancestors are computed
 
   Scenario Outline: Create a group
     Given I am the user with id "21"

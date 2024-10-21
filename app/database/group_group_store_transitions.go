@@ -369,125 +369,123 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	results = make(map[int64]GroupGroupTransitionResult, len(childGroupIDs))
 	approvalsToRequest = make(map[int64]GroupApprovals, len(childGroupIDs))
 
-	mustNotBeError(s.WithGroupsRelationsLock(func(dataStore *DataStore) error {
-		var oldActions []stateInfo
-		var groupRequiredApprovalsAndLimits requiredApprovalsAndLimits
+	var oldActions []stateInfo
+	var groupRequiredApprovalsAndLimits requiredApprovalsAndLimits
+	dataStore := s.DataStore
 
-		mustNotBeError(dataStore.Groups().ByID(parentGroupID).
-			Select(`
+	mustNotBeError(dataStore.Groups().ByID(parentGroupID).
+		Select(`
 				require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
 				NOW() < IFNULL(require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
 				require_watch_approval, enforce_max_participants, max_participants`).
-			WithWriteLock().Scan(&groupRequiredApprovalsAndLimits).Error())
+		WithSharedWriteLock().Scan(&groupRequiredApprovalsAndLimits).Error())
 
-		// Here we get current states for each childGroupID:
-		// the current state can be one of
-		// ("", "invitation_created", "join_request_created", "is_member", "is_member,leave_request_created")
-		// where "is_member" means that childGroupID is a member of the parentGroupID
-		mustNotBeError(
-			dataStore.Raw(`
-				SELECT child_group_id, GROUP_CONCAT(action) AS action,
-					MAX(personal_info_view_approved_at) AS personal_info_view_approved_at,
-					MAX(lock_membership_approved_at) AS lock_membership_approved_at, MAX(watch_approved_at) AS watch_approved_at
-					FROM ((? FOR UPDATE) UNION (? FOR UPDATE)) AS statuses
-					GROUP BY child_group_id`,
-				dataStore.ActiveGroupGroups().
-					Select(`
-						child_group_id, 'is_member' AS action,
-						NULL AS personal_info_view_approved_at,
-						NULL AS lock_membership_approved_at,
-						NULL AS watch_approved_at`).
-					Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).QueryExpr(),
-				dataStore.GroupPendingRequests().
-					Select(`
-						member_id,
-						CASE group_pending_requests.type
-							WHEN 'invitation' THEN 'invitation_created'
-							WHEN 'join_request' THEN 'join_request_created'
-							WHEN 'leave_request' THEN 'leave_request_created'
-							ELSE group_pending_requests.type
-						END,
-						IF(personal_info_view_approved, at, NULL) AS personal_info_view_approved_at,
-						IF(lock_membership_approved, at, NULL) AS lock_membership_approved_at,
-						IF(watch_approved, at, NULL) AS watch_approved_at`).
-					Joins("JOIN `groups` ON `groups`.`id` = group_pending_requests.group_id").
-					Where("group_id = ? AND member_id IN (?)", parentGroupID, childGroupIDs).QueryExpr()).
-				Scan(&oldActions).Error())
+	// Here we get current states for each childGroupID:
+	// the current state can be one of
+	// ("", "invitation_created", "join_request_created", "is_member", "is_member,leave_request_created")
+	// where "is_member" means that childGroupID is a member of the parentGroupID
+	mustNotBeError(
+		dataStore.Raw(`
+			SELECT child_group_id, GROUP_CONCAT(action) AS action,
+				MAX(personal_info_view_approved_at) AS personal_info_view_approved_at,
+				MAX(lock_membership_approved_at) AS lock_membership_approved_at, MAX(watch_approved_at) AS watch_approved_at
+				FROM ((? FOR SHARE) UNION (? FOR UPDATE)) AS statuses
+				GROUP BY child_group_id`,
+			dataStore.ActiveGroupGroups().
+				Select(`
+					child_group_id, 'is_member' AS action,
+					NULL AS personal_info_view_approved_at,
+					NULL AS lock_membership_approved_at,
+					NULL AS watch_approved_at`).
+				Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).QueryExpr(),
+			dataStore.GroupPendingRequests().
+				Select(`
+					member_id,
+					CASE group_pending_requests.type
+						WHEN 'invitation' THEN 'invitation_created'
+						WHEN 'join_request' THEN 'join_request_created'
+						WHEN 'leave_request' THEN 'leave_request_created'
+						ELSE group_pending_requests.type
+					END,
+					IF(personal_info_view_approved, at, NULL) AS personal_info_view_approved_at,
+					IF(lock_membership_approved, at, NULL) AS lock_membership_approved_at,
+					IF(watch_approved, at, NULL) AS watch_approved_at`).
+				Where("group_id = ? AND member_id IN (?)", parentGroupID, childGroupIDs).QueryExpr()).
+			Scan(&oldActions).Error())
 
-		oldActionsMap := make(map[int64]stateInfo, len(childGroupIDs))
-		for _, oldAction := range oldActions {
-			oldActionsMap[oldAction.ChildGroupID] = oldAction
+	oldActionsMap := make(map[int64]stateInfo, len(childGroupIDs))
+	for _, oldAction := range oldActions {
+		oldActionsMap[oldAction.ChildGroupID] = oldAction
+	}
+
+	// build the transition plan depending on the current states (oldActionsMap)
+	idsToInsertPending, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
+		idsToDeleteRelation, idsChanged := buildTransitionsPlan(
+		parentGroupID, childGroupIDs, results, oldActionsMap, &groupRequiredApprovalsAndLimits, approvals, approvalsToRequest, action)
+
+	performCyclesChecking(dataStore, idsToCheckCycle, parentGroupID, results, idsToInsertPending, idsToInsertRelation,
+		idsToDeletePending, idsToDeleteRelation, idsChanged)
+
+	enforceMaxSize(dataStore, action, parentGroupID, &groupRequiredApprovalsAndLimits, results, idsToInsertPending,
+		idsToInsertRelation, idsToDeletePending, idsToDeleteRelation, idsChanged)
+
+	shouldCreateNewAncestors := false
+	shouldPropagatePermissions := false
+	if len(idsToDeletePending) > 0 {
+		idsToDeleteSlice := make([]int64, 0, len(idsToDeletePending))
+		for id := range idsToDeletePending {
+			idsToDeleteSlice = append(idsToDeleteSlice, id)
 		}
-
-		// build the transition plan depending on the current states (oldActionsMap)
-		idsToInsertPending, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
-			idsToDeleteRelation, idsChanged := buildTransitionsPlan(
-			parentGroupID, childGroupIDs, results, oldActionsMap, &groupRequiredApprovalsAndLimits, approvals, approvalsToRequest, action)
-
-		performCyclesChecking(dataStore, idsToCheckCycle, parentGroupID, results, idsToInsertPending, idsToInsertRelation,
-			idsToDeletePending, idsToDeleteRelation, idsChanged)
-
-		enforceMaxSize(dataStore, action, parentGroupID, &groupRequiredApprovalsAndLimits, results, idsToInsertPending,
-			idsToInsertRelation, idsToDeletePending, idsToDeleteRelation, idsChanged)
-
-		shouldCreateNewAncestors := false
-		shouldPropagatePermissions := false
-		if len(idsToDeletePending) > 0 {
-			idsToDeleteSlice := make([]int64, 0, len(idsToDeletePending))
-			for id := range idsToDeletePending {
-				idsToDeleteSlice = append(idsToDeleteSlice, id)
-			}
-			mustNotBeError(dataStore.GroupPendingRequests().Delete("group_id = ? AND member_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
+		mustNotBeError(dataStore.GroupPendingRequests().Delete("group_id = ? AND member_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
+	}
+	if len(idsToDeleteRelation) > 0 {
+		idsToDeleteSlice := make([]int64, 0, len(idsToDeleteRelation))
+		for id := range idsToDeleteRelation {
+			idsToDeleteSlice = append(idsToDeleteSlice, id)
 		}
-		if len(idsToDeleteRelation) > 0 {
-			idsToDeleteSlice := make([]int64, 0, len(idsToDeleteRelation))
-			for id := range idsToDeleteRelation {
-				idsToDeleteSlice = append(idsToDeleteSlice, id)
-			}
-			mustNotBeError(dataStore.GroupGroups().Delete("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
-			result := dataStore.PermissionsGranted().
-				Delete("origin = 'group_membership' AND source_group_id = ? AND group_id IN (?)", parentGroupID, idsToDeleteSlice)
-			mustNotBeError(result.Error())
-			shouldCreateNewAncestors = true
-			shouldPropagatePermissions = result.RowsAffected() > 0
+		mustNotBeError(dataStore.GroupGroups().Delete("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
+		result := dataStore.PermissionsGranted().
+			Delete("origin = 'group_membership' AND source_group_id = ? AND group_id IN (?)", parentGroupID, idsToDeleteSlice)
+		mustNotBeError(result.Error())
+		shouldCreateNewAncestors = true
+		shouldPropagatePermissions = result.RowsAffected() > 0
+	}
+
+	insertGroupPendingRequests(dataStore, idsToInsertPending, parentGroupID, approvals)
+
+	if len(idsToInsertRelation) > 0 {
+		insertQuery := `
+			INSERT INTO groups_groups (
+				parent_group_id, child_group_id, personal_info_view_approved_at,
+				lock_membership_approved_at, watch_approved_at
+			)`
+		valuesTemplate := `(?, ?, ?, ?, ?)`
+		insertQuery += " VALUES " +
+			strings.Repeat(valuesTemplate+", ", len(idsToInsertRelation)-1) +
+			valuesTemplate // #nosec
+		insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
+		values := make([]interface{}, 0, len(idsToInsertRelation)*6)
+		for id := range idsToInsertRelation {
+			personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt := resolveApprovalTimesForGroupsGroups(
+				oldActionsMap, id, approvals,
+			)
+			values = append(values, parentGroupID, id,
+				personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt)
 		}
+		shouldCreateNewAncestors = true
+		mustNotBeError(dataStore.Exec(insertQuery, values...).Error())
+	}
 
-		insertGroupPendingRequests(dataStore, idsToInsertPending, parentGroupID, approvals)
+	insertGroupMembershipChanges(dataStore, idsChanged, parentGroupID, performedByUserID)
 
-		if len(idsToInsertRelation) > 0 {
-			insertQuery := `
-				INSERT INTO groups_groups (
-					parent_group_id, child_group_id, personal_info_view_approved_at,
-					lock_membership_approved_at, watch_approved_at
-				)`
-			valuesTemplate := `(?, ?, ?, ?, ?)`
-			insertQuery += " VALUES " +
-				strings.Repeat(valuesTemplate+", ", len(idsToInsertRelation)-1) +
-				valuesTemplate // #nosec
-			insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
-			values := make([]interface{}, 0, len(idsToInsertRelation)*6)
-			for id := range idsToInsertRelation {
-				personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt := resolveApprovalTimesForGroupsGroups(
-					oldActionsMap, id, approvals,
-				)
-				values = append(values, parentGroupID, id,
-					personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt)
-			}
-			shouldCreateNewAncestors = true
-			mustNotBeError(dataStore.Exec(insertQuery, values...).Error())
+	if shouldCreateNewAncestors {
+		dataStore.GroupGroups().createNewAncestors()
+		if shouldPropagatePermissions {
+			dataStore.SchedulePermissionsPropagation()
 		}
+		dataStore.ScheduleResultsPropagation()
+	}
 
-		insertGroupMembershipChanges(dataStore, idsChanged, parentGroupID, performedByUserID)
-
-		if shouldCreateNewAncestors {
-			dataStore.GroupGroups().createNewAncestors()
-			if shouldPropagatePermissions {
-				dataStore.SchedulePermissionsPropagation()
-			}
-			dataStore.ScheduleResultsPropagation()
-		}
-		return nil
-	}))
 	return results, approvalsToRequest, nil
 }
 
@@ -510,12 +508,12 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 	mustNotBeError(dataStore.ActiveGroupGroups().Where("parent_group_id = ?", parentGroupID).
 		Joins("JOIN `groups` ON groups.id = child_group_id").
 		Where("groups.type IN ('User', 'Team')").
-		Where("child_group_id NOT IN(?)", changedIDsList).WithWriteLock().Count(&activeRelationsCount).Error())
+		Where("child_group_id NOT IN(?)", changedIDsList).WithSharedWriteLock().Count(&activeRelationsCount).Error())
 	var invitationsCount int
 	mustNotBeError(dataStore.GroupPendingRequests().
 		Where("group_id = ?", parentGroupID).
 		Where("type = 'invitation'").Where("member_id NOT IN(?)", changedIDsList).
-		WithWriteLock().Count(&invitationsCount).Error())
+		WithSharedWriteLock().Count(&invitationsCount).Error())
 
 	membersCount := activeRelationsCount + invitationsCount
 	for _, itemAction := range idsChanged {
@@ -606,7 +604,7 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 		}
 		var cycleIDs []int64
 		mustNotBeError(s.GroupAncestors().
-			WithWriteLock().
+			WithSharedWriteLock().
 			Where("child_group_id = ? AND ancestor_group_id IN (?)", parentGroupID, idsToCheckCycleSlice).
 			Pluck("ancestor_group_id", &cycleIDs).Error())
 

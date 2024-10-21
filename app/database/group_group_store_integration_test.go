@@ -38,6 +38,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "3", "child_group_id": "3"},
 				{"ancestor_group_id": "4", "child_group_id": "4"},
 				{"ancestor_group_id": "5", "child_group_id": "5"},
+				{"ancestor_group_id": "111", "child_group_id": "111"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -67,6 +68,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "2", "child_group_id": "2"},
 				{"ancestor_group_id": "3", "child_group_id": "2"},
 				{"ancestor_group_id": "3", "child_group_id": "3"},
+				{"ancestor_group_id": "111", "child_group_id": "111"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -91,6 +93,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "1", "child_group_id": "1"},
 				{"ancestor_group_id": "3", "child_group_id": "3"},
 				{"ancestor_group_id": "4", "child_group_id": "4"},
+				{"ancestor_group_id": "111", "child_group_id": "111"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -119,6 +122,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "10", "child_group_id": "3"},
 				{"ancestor_group_id": "10", "child_group_id": "5"},
 				{"ancestor_group_id": "10", "child_group_id": "10"},
+				{"ancestor_group_id": "111", "child_group_id": "111"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -144,6 +148,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 				{"ancestor_group_id": "8", "child_group_id": "8"},
 				{"ancestor_group_id": "9", "child_group_id": "9"},
 				{"ancestor_group_id": "11", "child_group_id": "11"},
+				{"ancestor_group_id": "111", "child_group_id": "111"},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -240,14 +245,11 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
 
-	totalRemainingGroupIDs := make([]int64, 0, len(remainingGroupIDs)+1)
-	totalRemainingGroupIDs = append(totalRemainingGroupIDs, remainingGroupIDs...)
-	totalRemainingGroupIDs = append(totalRemainingGroupIDs, int64(111))
-	assert.NoError(t, dataStore.Table("groups_propagate").Order("id").
-		Pluck("id", &ids).Error())
-	assert.Equal(t, totalRemainingGroupIDs, ids)
-
 	var cnt int64
+	assert.NoError(t, dataStore.Table("groups_propagate").
+		Where("ancestors_computation_state <> 'done'").Count(&cnt).Error())
+	assert.Zero(t, cnt)
+
 	assert.NoError(t, dataStore.Table("permissions_propagate").Count(&cnt).Error())
 	assert.Zero(t, cnt)
 }

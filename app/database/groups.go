@@ -23,7 +23,7 @@ func (s *DataStore) GetGroupJoiningByCodeInfoByCode(code string, withLock bool) 
 			id AS group_id, type, code_expires_at IS NULL AS code_expires_at_is_null,
 			code_lifetime IS NULL AS code_lifetime_is_null, frozen_membership`)
 	if withLock {
-		query = query.WithWriteLock()
+		query = query.WithExclusiveWriteLock()
 	}
 	err := query.Take(&info).Error()
 	if gorm.IsRecordNotFoundError(err) {

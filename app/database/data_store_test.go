@@ -12,6 +12,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
@@ -452,6 +454,72 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
 		InsertOrUpdateMaps(dataRows, []string{"sField", "sNullField"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithSharedWriteLock(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR SHARE").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	dataStore := NewDataStoreWithTable(db, "myTable")
+	err := dataStore.inTransaction(func(db *DB) error {
+		newDataStore := NewDataStore(db).WithSharedWriteLock()
+		assert.NotEqual(t, newDataStore, dataStore)
+		assert.NoError(t, newDataStore.Error())
+		var result []interface{}
+		assert.NoError(t, newDataStore.Scan(&result).Error())
+		return nil
+	})
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithSharedWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() { NewDataStore(db).WithSharedWriteLock() })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithCustomWriteLock(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(
+		"SELECT `t1`.\\* FROM `t1` JOIN `t2` JOIN `t3` JOIN `t4` FOR SHARE OF `t1`, `t2` FOR UPDATE OF `t3`, `t4`").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	dataStore := NewDataStoreWithTable(db, "t1").Joins("JOIN `t2`").Joins("JOIN `t3`").Joins("JOIN `t4`")
+	err := dataStore.inTransaction(func(db *DB) error {
+		newDataStore := NewDataStore(db).WithCustomWriteLocks(golang.NewSet("t1", "t2"), golang.NewSet("t3", "t4"))
+		assert.NotEqual(t, newDataStore, dataStore)
+		assert.NoError(t, newDataStore.Error())
+		var result []interface{}
+		assert.NoError(t, newDataStore.Scan(&result).Error())
+		return nil
+	})
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithCustomWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		NewDataStore(db).WithCustomWriteLocks(
+			golang.NewSet[string](), golang.NewSet[string]())
+	})
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

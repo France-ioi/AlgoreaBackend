@@ -15,7 +15,6 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 13       | 21         | true                   | true              |
       | 14       | 21         | true                   | false             |
       | 15       | 21         | false                  | true              |
-    And the groups ancestors are computed
     And the database has the following table "items":
       | id | duration | default_language_tag |
       | 50 | 00:00:00 | fr                   |

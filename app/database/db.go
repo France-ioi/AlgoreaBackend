@@ -20,6 +20,7 @@ import (
 
 	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type cte struct {
@@ -641,10 +642,58 @@ func (conn *DB) mustBeInTransaction() {
 	}
 }
 
-// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
-func (conn *DB) WithWriteLock() *DB {
+// WithExclusiveWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire an exclusive lock on them, preventing other transactions from modifying them and
+// even from getting exclusive/shared locks on them. For non-existing rows, it works similarly to a shared lock (FOR SHARE).
+func (conn *DB) WithExclusiveWriteLock() *DB {
 	conn.mustBeInTransaction()
 	return conn.Set("gorm:query_option", "FOR UPDATE")
+}
+
+// WithSharedWriteLock converts "SELECT ..." statement into "SELECT ... FOR SHARE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire a shared lock on them, preventing other transactions from modifying them.
+func (conn *DB) WithSharedWriteLock() *DB {
+	conn.mustBeInTransaction()
+	return conn.Set("gorm:query_option", "FOR SHARE")
+}
+
+// WithCustomWriteLocks converts "SELECT ..." statement into "SELECT ... FOR SHARE OF ... FOR UPDATE ..." statement.
+// For existing rows, it will read the latest committed data for the listed tables
+// (instead of the data from the repeatable-read snapshot) and acquire shared/exclusive locks on them,
+// preventing other transactions from modifying them.
+func (conn *DB) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DB {
+	conn.mustBeInTransaction()
+
+	var builder strings.Builder
+	if shared.Size() > 0 {
+		builder.WriteString("FOR SHARE OF ")
+		tables := shared.Values()
+		sort.Strings(tables)
+		for index, sharedTable := range tables {
+			if index != 0 {
+				builder.WriteString(", ")
+			}
+			builder.WriteString(QuoteName(sharedTable))
+		}
+	}
+	if exclusive.Size() > 0 {
+		if shared.Size() > 0 {
+			builder.WriteString(" ")
+		}
+		builder.WriteString("FOR UPDATE OF ")
+		tables := exclusive.Values()
+		sort.Strings(tables)
+		for index, exclusiveTable := range tables {
+			if index != 0 {
+				builder.WriteString(", ")
+			}
+			builder.WriteString(QuoteName(exclusiveTable))
+		}
+	}
+
+	return conn.Set("gorm:query_option", builder.String())
 }
 
 const keyTriesCount = 10

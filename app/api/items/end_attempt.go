@@ -64,7 +64,7 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 			Where("id = ?", attemptID).
 			Where("allows_submissions_until > NOW()").
 			Where("ended_at IS NULL").
-			WithWriteLock().HasRows()
+			WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.ErrForbidden(errors.New("active attempt not found"))

@@ -421,7 +421,7 @@ func extractOptionalParameter(query url.Values, paramName string, requestData ma
 
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
 	var groupID int64
-	err := s.WithWriteLock().
+	err := s.WithExclusiveWriteLock().
 		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
 
 	userData["latest_login_at"] = database.Now()
@@ -437,7 +437,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	defer func() { userData["badges"] = badges }()
 
 	if gorm.IsRecordNotFoundError(err) {
-		selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
+		selfGroupID := createGroupFromLogin(s.Groups(), userData["login"].(string), domainConfig)
 		userData["temp_user"] = 0
 		userData["registered_at"] = database.Now()
 		userData["group_id"] = selfGroupID
@@ -454,10 +454,10 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 	service.MustNotBeError(err)
 
-	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.AllUsersGroupID).
+	found, err := s.GroupGroups().WithExclusiveWriteLock().Where("parent_group_id = ?", domainConfig.AllUsersGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
-	groupsToCreate := make([]map[string]interface{}, 0, 2)
+	groupsToCreate := make([]map[string]interface{}, 0, 1)
 	if !found {
 		groupsToCreate = append(groupsToCreate,
 			map[string]interface{}{"parent_group_id": domainConfig.AllUsersGroupID, "child_group_id": groupID})
@@ -469,7 +469,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	return groupID
 }
 
-func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.CtxConfig) (selfGroupID int64) {
+func createGroupFromLogin(store *database.GroupStore, login string, domainConfig *domain.CtxConfig) (selfGroupID int64) {
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{

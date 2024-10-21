@@ -11,6 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // Service is the mount point for services related to `groups`.
@@ -130,7 +131,7 @@ func checkThatUserHasRightsForDirectRelation(
 	}
 
 	query := groupStore.ManagedBy(user).
-		WithWriteLock().
+		WithCustomWriteLocks(golang.NewSet("groups"), golang.NewSet[string]()).
 		Select("groups.id, type").
 		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
 		Where("IF(groups.id = ?, group_managers.can_manage != 'none', 1)", parentGroupID)

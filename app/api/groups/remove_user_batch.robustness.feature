@@ -24,7 +24,6 @@ Feature: Remove user batch (userBatchRemove) - robustness
       | group_id | manager_id | can_manage  |
       | 13       | 13         | memberships |
       | 13       | 22         | none        |
-    And the groups ancestors are computed
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 13              | 21             | null                        |

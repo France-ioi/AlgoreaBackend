@@ -64,15 +64,14 @@ func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []dom
 	groupStore := store.Groups()
 	groupGroupStore := store.GroupGroups()
 	var relationsToCreate []map[string]interface{}
-	var inserted bool
 	for _, domainConfig := range domainsConfig {
 		domainConfig := domainConfig
-		insertedForDomain := insertRootGroups(groupStore, &domainConfig)
-		inserted = inserted || insertedForDomain
+		insertRootGroups(groupStore, &domainConfig)
 		for _, spec := range []map[string]interface{}{
 			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.TempUsersGroup},
 		} {
 			found, err := groupGroupStore.
+				WithExclusiveWriteLock().
 				Where("parent_group_id = ?", spec["parent_group_id"]).
 				Where("child_group_id = ?", spec["child_group_id"]).
 				Limit(1).
@@ -85,15 +84,14 @@ func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []dom
 		}
 	}
 
-	if len(relationsToCreate) > 0 || inserted {
+	if len(relationsToCreate) > 0 {
 		return groupStore.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
 	}
 
 	return nil
 }
 
-func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.ConfigItem) bool {
-	var inserted bool
+func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.ConfigItem) {
 	for _, spec := range []struct {
 		name string
 		id   int64
@@ -103,6 +101,7 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 	} {
 		found, err := groupStore.
 			ByID(spec.id).
+			WithExclusiveWriteLock().
 			Where("type = 'Base'").
 			Where("name = ?", spec.name).
 			Where("text_id = ?", spec.name).
@@ -111,15 +110,11 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 		mustNotBeError(err)
 
 		if !found {
-			err = groupStore.InsertMap(map[string]interface{}{
+			mustNotBeError(groupStore.InsertMap(map[string]interface{}{
 				"id": spec.id, "type": "Base", "name": spec.name, "text_id": spec.name,
-			})
-			mustNotBeError(err)
-
-			inserted = true
+			}))
 		}
 	}
-	return inserted
 }
 
 func mustNotBeError(err error) {

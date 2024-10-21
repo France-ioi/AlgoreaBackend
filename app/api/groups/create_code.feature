@@ -12,7 +12,6 @@ Feature: Create a new code for the given group
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    And the groups ancestors are computed
 
   Scenario: User is a manager of the group
     Given I am the user with id "21"

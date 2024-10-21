@@ -348,7 +348,7 @@ func init() { //nolint:gochecknoinits,gocyclo,gocognit
 			for i := 0; i < usersNumber/batchSize; i++ {
 				<-done
 				if i%100 == 99 {
-					// run store.GroupsGroups().createNewAncestors()
+					// run store.GroupGroups().createNewAncestors()
 					if err := store.InTransaction(func(txStore *database.DataStore) error {
 						return txStore.GroupGroups().DeleteRelation(1, 200, true)
 					}); err != nil {
@@ -360,7 +360,7 @@ func init() { //nolint:gochecknoinits,gocyclo,gocognit
 				}
 				<-limiter
 			}
-			// run store.GroupsGroups().createNewAncestors()
+			// run store.GroupGroups().createNewAncestors()
 			if err := store.InTransaction(func(txStore *database.DataStore) error {
 				return txStore.GroupGroups().DeleteRelation(1, 200, true)
 			}); err != nil {

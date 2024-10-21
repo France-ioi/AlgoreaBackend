@@ -202,7 +202,7 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 		Where("attempts.root_item_id = ?", itemID).
 		Where("attempts.participant_id = ?", groupID)
 	if lock {
-		itemParticipationQuery = itemParticipationQuery.WithWriteLock()
+		itemParticipationQuery = itemParticipationQuery.WithExclusiveWriteLock()
 	}
 	var participationInfo struct {
 		IsStarted bool
@@ -300,7 +300,7 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, teamCanEnter).
 			WithPersonalInfoViewApprovals(user)
 		if lock {
-			canEnterQuery = canEnterQuery.WithWriteLock()
+			canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
 		}
 		service.MustNotBeError(canEnterQuery.Scan(&otherMembers).Error())
 		membersCount = int32(len(otherMembers))
@@ -314,7 +314,7 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 			Group("groups_groups_active.child_group_id").
 			Having("MAX(NOW() < attempts.allows_submissions_until) OR NOT MAX(items.allows_multiple_attempts)")
 		if lock {
-			participatingSomewhereElseQuery = participatingSomewhereElseQuery.WithWriteLock()
+			participatingSomewhereElseQuery = participatingSomewhereElseQuery.WithExclusiveWriteLock()
 		}
 		var usersViolatingAttemptsRestriction []int64
 		service.MustNotBeError(participatingSomewhereElseQuery.
@@ -352,7 +352,7 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 					AND permissions_granted.item_id = items.id`).
 			Group("groups_ancestors_active.child_group_id")
 		if lock {
-			canEnterQuery = canEnterQuery.WithWriteLock()
+			canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
 		}
 
 		service.MustNotBeError(canEnterQuery.
@@ -383,7 +383,7 @@ func discoverIfTeamCanEnter(groupID, itemID int64, store *database.DataStore, lo
 					permissions_granted.item_id = ?`, itemID).
 		Joins("JOIN items ON items.id = ?", itemID)
 	if lock {
-		teamCanEnterQuery = teamCanEnterQuery.WithWriteLock()
+		teamCanEnterQuery = teamCanEnterQuery.WithExclusiveWriteLock()
 	}
 	service.MustNotBeError(teamCanEnterQuery.PluckFirst(`
 			IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND

@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"time"
 )
 
 // GroupGroupStore implements database operations on `groups_groups`
@@ -29,8 +28,6 @@ func (s *GroupGroupStore) createNewAncestors() {
 // create a cycle in the groups_groups graph.
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
-const groupsRelationsLockTimeout = 50 * time.Second
-
 // ParentChild represents a (ParentID, ChildID) pair.
 type ParentChild struct {
 	ParentID int64
@@ -38,30 +35,31 @@ type ParentChild struct {
 }
 
 // CreateRelation creates a direct relation between two groups.
+// On success, it creates new groups ancestors and schedules permissions propagation.
 func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
-		found, err := s.GroupAncestors().
-			WithWriteLock().
-			// do not allow cycles even via expired relations
-			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
-			HasRows()
-		mustNotBeError(err)
-		if found {
-			return ErrRelationCycle
-		}
+	found, err := s.GroupAncestors().
+		// this "FOR SHARE" prevents other sessions from creating this row in groups_ancestors concurrently
+		// so there's no need to use a named lock here
+		WithSharedWriteLock().
+		// do not allow cycles even via expired relations
+		Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
+		HasRows()
+	mustNotBeError(err)
+	if found {
+		return ErrRelationCycle
+	}
 
-		groupGroupStore := s.GroupGroups()
-		mustNotBeError(groupGroupStore.Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
-		mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
+	groupGroupStore := s.GroupGroups()
+	mustNotBeError(groupGroupStore.Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
+	mustNotBeError(s.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
-		groupGroupStore.createRelation(parentGroupID, childGroupID)
-		groupGroupStore.createNewAncestors()
-		s.ScheduleResultsPropagation()
-		return nil
-	}))
+	groupGroupStore.createRelation(parentGroupID, childGroupID)
+	groupGroupStore.createNewAncestors()
+	s.ScheduleResultsPropagation()
+
 	return err
 }
 
@@ -81,12 +79,10 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) (err error) {
-		groupGroupStore := s.GroupGroups()
-		mustNotBeError(s.InsertMaps(relations))
-		groupGroupStore.createNewAncestors()
-		return nil
-	}))
+	groupGroupStore := s.GroupGroups()
+	mustNotBeError(s.InsertMaps(relations))
+	groupGroupStore.createNewAncestors()
+
 	return err
 }
 
@@ -95,43 +91,40 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.WithGroupsRelationsLock(func(s *DataStore) error {
-		// check if parent_group_id is the only parent of child_group_id
-		var shouldDeleteChildGroup bool
-		shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithWriteLock().
-			Where("child_group_id = ?", childGroupID).
-			Where("parent_group_id != ?", parentGroupID).HasRows()
-		mustNotBeError(err)
-		shouldDeleteChildGroup = (!shouldDeleteChildGroup) && shouldDeleteOrphans
+	// check if parent_group_id is the only parent of child_group_id
+	var shouldDeleteChildGroup bool
+	shouldDeleteChildGroup, err = s.ActiveGroupGroups().WithExclusiveWriteLock().
+		Where("child_group_id = ?", childGroupID).
+		Where("parent_group_id != ?", parentGroupID).HasRows()
+	mustNotBeError(err)
+	shouldDeleteChildGroup = (!shouldDeleteChildGroup) && shouldDeleteOrphans
 
-		if shouldDeleteChildGroup {
-			s.GroupGroups().deleteGroupAndOrphanedDescendants(childGroupID)
-		} else {
-			// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
-			mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
+	if shouldDeleteChildGroup {
+		s.GroupGroups().deleteGroupAndOrphanedDescendants(childGroupID)
+	} else {
+		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
+		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
 
-			permissionsResult := s.PermissionsGranted().
-				Delete("origin = 'group_membership' AND source_group_id = ? AND group_id = ?", parentGroupID, childGroupID)
-			mustNotBeError(permissionsResult.Error())
-			shouldPropagatePermissions := permissionsResult.RowsAffected() > 0
+		permissionsResult := s.PermissionsGranted().
+			Delete("origin = 'group_membership' AND source_group_id = ? AND group_id = ?", parentGroupID, childGroupID)
+		mustNotBeError(permissionsResult.Error())
+		shouldPropagatePermissions := permissionsResult.RowsAffected() > 0
 
-			// recalculate relations
-			s.GroupGroups().createNewAncestors()
+		// recalculate relations
+		s.GroupGroups().createNewAncestors()
 
-			if shouldPropagatePermissions {
-				s.SchedulePermissionsPropagation()
-			}
+		if shouldPropagatePermissions {
+			s.SchedulePermissionsPropagation()
 		}
+	}
 
-		return nil
-	}))
 	return nil
 }
 
 func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// Candidates for deletion are all groups that are descendants of groupID filtered by type
 	var candidatesForDeletion []int64
-	mustNotBeError(s.Groups().WithWriteLock().
+	mustNotBeError(s.Groups().WithExclusiveWriteLock().
 		Joins(`
 			JOIN groups_ancestors_active AS ancestors ON
 				ancestors.child_group_id = groups.id AND
@@ -151,7 +144,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// whose ancestors list consists only of groupID descendants
 	// (since they became orphans)
 	if len(candidatesForDeletion) > 0 {
-		mustNotBeError(s.Groups().WithWriteLock().
+		mustNotBeError(s.Groups().WithExclusiveWriteLock().
 			Joins(`
 				LEFT JOIN(
 					SELECT groups_ancestors_active.child_group_id
@@ -204,10 +197,4 @@ func (s *GroupGroupStore) CreateNewAncestors() (err error) {
 
 	s.createNewAncestors()
 	return nil
-}
-
-// WithGroupsRelationsLock wraps the given function in GET_LOCK/RELEASE_LOCK
-// specific for modifying relations between groups.
-func (s *GroupGroupStore) WithGroupsRelationsLock(txFunc func(*DataStore) error) error {
-	return s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, txFunc)
 }

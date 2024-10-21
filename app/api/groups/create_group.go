@@ -30,7 +30,6 @@ type createGroupRequest struct {
 //
 //
 //		Also, the service sets the authenticated user as a manager of the group with the highest level of permissions.
-//		After everything, it propagates group ancestors.
 //
 //
 //		The user should not be temporary, otherwise the "forbidden" response is returned.

@@ -57,7 +57,7 @@ func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Reque
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("edit", "all").
-			Where("item_id = ?", dependentItemID).WithWriteLock().HasRows()
+			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError

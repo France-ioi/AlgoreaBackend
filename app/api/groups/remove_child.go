@@ -94,7 +94,7 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 
 		// Check that the relation exists
 		var result []struct{}
-		service.MustNotBeError(s.ActiveGroupGroups().WithWriteLock().
+		service.MustNotBeError(s.ActiveGroupGroups().WithExclusiveWriteLock().
 			Where("parent_group_id = ?", parentGroupID).
 			Where("child_group_id = ?", childGroupID).
 			Take(&result).Error())

@@ -10,7 +10,6 @@ Feature: Get group children (groupChildrenView) - robustness
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 13       | 21         |
-    And the groups ancestors are computed
 
   Scenario: The group is invisible
     Given I am the user with id "21"

@@ -57,7 +57,6 @@ func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 }
 
 // CreateNew creates a new group with given name and type.
-// It also runs GroupGroupStore.createNewAncestors().
 func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -78,7 +77,7 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 			"created_at":     Now(),
 		}))
 	}
-	s.GroupGroups().createNewAncestors()
+
 	return groupID, nil
 }
 
@@ -126,8 +125,8 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 		Select("child_group_id")
 
 	if withLock {
-		activeTeamParticipationsQuery = activeTeamParticipationsQuery.WithWriteLock()
-		updatedMemberIDsQuery = updatedMemberIDsQuery.WithWriteLock()
+		activeTeamParticipationsQuery = activeTeamParticipationsQuery.WithExclusiveWriteLock()
+		updatedMemberIDsQuery = updatedMemberIDsQuery.WithExclusiveWriteLock()
 	}
 
 	if isAdding {
@@ -154,7 +153,7 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 				0) AS can_enter`)
 
 	if withLock {
-		membersPreconditionsQuery = membersPreconditionsQuery.WithWriteLock()
+		membersPreconditionsQuery = membersPreconditionsQuery.WithExclusiveWriteLock()
 	}
 
 	return s.Raw(`
@@ -173,10 +172,7 @@ func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.GroupGroups().WithGroupsRelationsLock(func(s *DataStore) error {
-		s.GroupGroups().deleteGroupAndOrphanedDescendants(groupID)
-		return nil
-	}))
+	s.GroupGroups().deleteGroupAndOrphanedDescendants(groupID)
 	return nil
 }
 
