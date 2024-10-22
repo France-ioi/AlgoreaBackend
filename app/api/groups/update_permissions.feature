@@ -56,11 +56,11 @@ Feature: Change item access rights for a group
 
   Scenario Outline: Create a new permissions_granted row (with results propagation)
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 21       | 103     | solution           | solution                 | answer              | all                | true               |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | source_group_id | latest_update_at    |
       | 21       | 102     | solution | solution_with_grant | answer_with_grant | all_with_grant | 23              | 2019-05-30 11:00:00 |
       | 23       | 102     | none     | none                | none              | none           | 23              | 2019-05-30 11:00:00 |
@@ -101,11 +101,11 @@ Feature: Change item access rights for a group
 
   Scenario Outline: Create a new permissions_granted row (without results propagation)
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 21       | 103     | solution           | solution                 | answer              | all                | true               |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | source_group_id | latest_update_at    |
       | 21       | 102     | solution | solution_with_grant | answer_with_grant | all_with_grant | 23              | 2019-05-30 11:00:00 |
       | 23       | 102     | none     | none                | none              | none           | 23              | 2019-05-30 11:00:00 |
@@ -139,11 +139,11 @@ Feature: Change item access rights for a group
 
   Scenario Outline: Update an existing permissions_granted row
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 23       | 102     | none               | none                     | none                | none               | false              |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | is_owner | origin           | source_group_id | latest_update_at    |
       | 21       | 102     | solution | solution_with_grant | answer_with_grant | all_with_grant | true     | group_membership | 23              | 2019-05-30 11:00:00 |
       | 23       | 102     | none     | none                | none              | none           | false    | group_membership | 23              | 2019-05-30 11:00:00 |
@@ -184,14 +184,14 @@ Feature: Change item access rights for a group
 
   Scenario: Create a new permissions_granted row (the group has only 'content' access on the item's parent)
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
       | 21       | 103     | none               | none                     | none                | none               | 0                  |
       | 31       | 101     | content            | none                     | none                | none               | 0                  |
       | 31       | 102     | none               | none                     | none                | none               | 0                  |
       | 31       | 103     | none               | none                     | none                | none               | 0                  |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 102     | none     | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 101     | content  | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
@@ -228,7 +228,7 @@ Feature: Change item access rights for a group
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has full access to the item itself)
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated       | can_grant_view_generated | is_owner_generated |
       | 21       | 100     | solution                 | solution                 | 1                  |
       | 21       | 101     | none                     | none                     | 0                  |
@@ -238,7 +238,7 @@ Feature: Change item access rights for a group
       | 31       | 101     | content_with_descendants | none                     | 0                  |
       | 31       | 102     | content_with_descendants | none                     | 0                  |
       | 31       | 103     | content_with_descendants | none                     | 0                  |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view                 | can_grant_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 100     | solution                 | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | content_with_descendants | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
@@ -280,7 +280,7 @@ Feature: Change item access rights for a group
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has 'content' access to the item itself)
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
       | 21       | 100     | solution           | solution                 | 1                  |
       | 21       | 101     | none               | none                     | 0                  |
@@ -290,7 +290,7 @@ Feature: Change item access rights for a group
       | 31       | 101     | content            | none                     | 0                  |
       | 31       | 102     | content            | none                     | 0                  |
       | 31       | 103     | content            | none                     | 0                  |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 100     | none     | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | content  | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
@@ -332,7 +332,7 @@ Feature: Change item access rights for a group
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has info access to the item itself)
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
       | 21       | 100     | solution           | solution                 | 1                  |
       | 21       | 101     | none               | none                     | 0                  |
@@ -342,7 +342,7 @@ Feature: Change item access rights for a group
       | 31       | 101     | info               | none                     | 0                  |
       | 31       | 102     | info               | none                     | 0                  |
       | 31       | 103     | info               | none                     | 0                  |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_at    |
       | 21       | 100     | none     | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | info     | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
@@ -384,11 +384,11 @@ Feature: Change item access rights for a group
 
   Scenario: Drops invalid permissions from an existing permissions_granted row
     Given I am the user with id "21"
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 23       | 102     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | false              |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | can_make_session_official | is_owner | origin           | source_group_id | latest_update_at    |
       | 21       | 102     | solution | solution_with_grant | answer_with_grant | all_with_grant | true                      | true     | group_membership | 23              | 2019-05-30 11:00:00 |
       | 23       | 102     | none     | none                | none              | none           | false                     | false    | group_membership | 23              | 2019-05-30 11:00:00 |
@@ -421,20 +421,20 @@ Feature: Change item access rights for a group
 
   Scenario Outline: There are no item's parents visible to the group, but the item is a root activity of one of the group's ancestors
     Given I am the user with id "21"
-    And the database table "items" has also the following row:
+    And the database table "items" also has the following row:
       | id  | default_language_tag |
       | 104 | fr                   |
-    And the database table "groups" has also the following row:
+    And the database table "groups" also has the following rows:
       | id | name                 | type  | root_activity_id   | root_skill_id   |
       | 40 | Group with root item | Class | <root_activity_id> | <root_skill_id> |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 40              | 23             |
     And the groups ancestors are computed
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | can_view | can_grant_view      | can_watch         | can_edit       | can_make_session_official | is_owner | origin           | source_group_id | latest_update_at    |
       | 21       | 104     | solution | solution_with_grant | answer_with_grant | all_with_grant | true                      | true     | group_membership | 23              | 2019-05-30 11:00:00 |
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 104     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
     When I send a PUT request to "/groups/25/permissions/23/104" with the following body:

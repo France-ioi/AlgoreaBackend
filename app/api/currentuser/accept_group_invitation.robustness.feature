@@ -85,7 +85,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the database has the following table "items":
       | id | default_language_tag | entry_max_team_size |
       | 2  | fr                   | 0                   |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 16             | 1  | 2            |
     And the database has the following table "results":

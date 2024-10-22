@@ -54,7 +54,7 @@ Feature: Get group by groupID (groupView)
     And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 17             | 1  | 2            |
     And the database has the following table "results":

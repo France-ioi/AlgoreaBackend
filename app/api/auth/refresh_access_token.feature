@@ -114,7 +114,7 @@ Feature: Create a new access token
   Scenario Outline: >
       Accepts access_token cookie and removes it if cookie attributes differ for a normal user,
       since old tokens are used, the most recent one is returned
-    Given the database table "access_tokens" has also the following rows:
+    Given the database table "access_tokens" also has the following rows:
       | session_id | issued_at           | expires_at          | token           |
       | 2          | 2020-01-01 01:00:00 | 2020-01-01 03:00:00 | jane_old1_token |
       | 2          | 2020-01-01 01:00:00 | 2020-01-01 03:00:00 | jane_old2_token |
@@ -144,7 +144,7 @@ Feature: Create a new access token
 
   Scenario Outline: Accepts access_token cookie and removes it if cookie attributes differ for a temporary user
     Given the generated auth key is "tmp_new_token"
-    And the database table "access_tokens" has also the following rows:
+    And the database table "access_tokens" also has the following rows:
       | session_id | issued_at           | expires_at          | token          |
       | 1          | 2020-01-01 01:00:00 | 2020-01-01 03:00:00 | tmp_old1_token |
       | 1          | 2020-01-01 01:00:00 | 2020-01-01 03:00:00 | tmp_old2_token |

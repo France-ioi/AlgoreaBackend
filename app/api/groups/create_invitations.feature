@@ -116,13 +116,13 @@ Feature: Invite users
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    And the database table "groups_groups" has also the following rows:
+    And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id |
       | 444             | 21             |
       | 444             | 101            |
       | 444             | 102            |
     And the groups ancestors are computed
-    And the database table "attempts" has also the following rows:
+    And the database table "attempts" also has the following rows:
       | participant_id | id | root_item_id |
       | 13             | 1  | 1234         |
       | 444            | 2  | 1234         |
@@ -159,7 +159,7 @@ Feature: Invite users
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 555      | 21         | memberships_and_group |
-    And the database table "group_pending_requests" has also the following rows:
+    And the database table "group_pending_requests" also has the following rows:
       | group_id | member_id | type         | personal_info_view_approved | at                  |
       | 555      | 101       | join_request | 1                           | 2019-05-30 11:00:00 |
       | 555      | 102       | join_request | 0                           | 2019-05-30 11:00:00 |

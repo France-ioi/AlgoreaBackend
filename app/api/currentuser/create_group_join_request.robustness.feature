@@ -80,7 +80,7 @@ Feature: User sends a request to join a group - robustness
     And the database has the following table "items":
       | id | default_language_tag | entry_max_team_size |
       | 2  | fr                   | 0                   |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | <team_id>      | 1  | 2            |
     And the database has the following table "results":
@@ -205,7 +205,7 @@ Feature: User sends a request to join a group - robustness
 
   Scenario: Can't send request to a group when an approval is missing even while being a group manager
     Given I am the user with id "23"
-    And the database table "group_managers" has also the following rows:
+    And the database table "group_managers" also has the following rows:
       | group_id | manager_id | can_manage  |
       | 16       | 21         | memberships |
     When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,lock_membership"
@@ -228,7 +228,7 @@ Feature: User sends a request to join a group - robustness
 
   Scenario: Can't send request to a user even while being a group manager
     Given I am the user with id "23"
-    And the database table "group_managers" has also the following rows:
+    And the database table "group_managers" also has the following rows:
       | group_id | manager_id | can_manage  |
       | 23       | 23         | memberships |
     When I send a POST request to "/current-user/group-requests/23?approvals=personal_info_view,lock_membership"
@@ -263,7 +263,7 @@ Feature: User sends a request to join a group - robustness
 
   Scenario: Can't send request to a group with frozen membership even while being a group manager
     Given I am the user with id "23"
-    And the database table "group_managers" has also the following rows:
+    And the database table "group_managers" also has the following rows:
       | group_id | manager_id | can_manage  |
       | 18       | 21         | memberships |
     When I send a POST request to "/current-user/group-requests/18"

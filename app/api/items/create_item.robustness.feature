@@ -495,10 +495,10 @@ Feature: Create item - robustness
 
   Scenario Outline: Parent item cannot have children
     Given I am the user with id "11"
-    And the database table "items" has also the following row:
+    And the database table "items" also has the following row:
       | id | default_language_tag | type   |
       | 90 | fr                   | <type> |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 90      | content            | children           |
     When I send a POST request to "/items" with the following body:
@@ -640,10 +640,10 @@ Feature: Create item - robustness
 
   Scenario Outline: Not enough permissions for setting propagation in children items_items
     Given I am the user with id "11"
-    And the database table "items" has also the following row:
+    And the database table "items" also has the following row:
       | id | default_language_tag |
       | 90 | fr                   |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | <permission_column> | can_view_generated |
       | 11       | 90      | <permission_value>  | info               |
     When I send a POST request to "/items" with the following body:

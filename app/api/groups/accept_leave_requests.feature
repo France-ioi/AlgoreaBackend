@@ -165,7 +165,7 @@ Feature: Accept requests to leave a group
     And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | Half                             |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 14              | 111            |
     And the groups ancestors are computed

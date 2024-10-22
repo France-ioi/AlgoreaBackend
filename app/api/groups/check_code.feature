@@ -101,7 +101,7 @@ Feature: Check if the group code is valid
     And the database has the following table "items":
       | id | default_language_tag | allows_multiple_attempts |
       | 2  | fr                   | false                    |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 3              | 1  | 2            |
       | 11             | 1  | 2            |
@@ -128,7 +128,7 @@ Feature: Check if the group code is valid
     And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 12             | 1  | 2            |
     And the database has the following table "results":

@@ -45,7 +45,7 @@ Feature: Get permissions granted to group
       | 102      | en           | Chapter B  |
       | 102      | fr           | Chapitre B |
       | 104      | fr           | Chapitre C |
-    And the database table "permissions_granted" has also the following rows:
+    And the database table "permissions_granted" also has the following rows:
       | group_id | item_id | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | is_owner | can_request_help_to | can_make_session_official | can_enter_from      | can_enter_until     |
       | 31       | 102     | 10              | group_membership | info     | none           | none      | none     | false    | null                | false                     | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
       | 25       | 101     | 25              | group_membership | none     | none           | none      | none     | false    | null                | false                     | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
@@ -65,7 +65,7 @@ Feature: Get permissions granted to group
       | 25       | 101     | 10              | group_membership | none     | none           | none      | none     | false    | null                | false                     | 9999-12-31 23:59:59 | 3999-12-31 23:59:59 |
       | 25       | 103     | 25              | group_membership | content  | none           | none      | none     | false    | null                | false                     | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
       | 31       | 101     | 27              | group_membership | content  | none           | none      | none     | false    | null                | false                     | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
-    And the database table "permissions_generated" has also the following rows:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_grant_view_generated | can_watch_generated | can_edit_generated |
       | 8        | 101     | enter                    | none                | none               |
       | 21       | 102     | none                     | answer_with_grant   | none               |
@@ -172,7 +172,7 @@ Feature: Get permissions granted to group
 
   Scenario: can_grant_group_access=1 for a ancestor group
     Given I am the user with id "21"
-    And the database table "group_managers" has also the following rows:
+    And the database table "group_managers" also has the following rows:
       | group_id | manager_id | can_grant_group_access |
       | 9        | 8          | 1                      |
     When I send a GET request to "/groups/25/granted_permissions"
@@ -326,7 +326,7 @@ Feature: Get permissions granted to group
 
   Scenario: can_grant_group_access=1 for the group's ancestor, descendants=1
     Given I am the user with id "21"
-    And the database table "group_managers" has also the following rows:
+    And the database table "group_managers" also has the following rows:
       | group_id | manager_id | can_grant_group_access |
       | 9        | 8          | 1                      |
     When I send a GET request to "/groups/25/granted_permissions?descendants=1"
@@ -372,7 +372,7 @@ Feature: Get permissions granted to group
 
   Scenario: can_grant_group_access=1 for the group's ancestor, descendants=1, order by group.name, source_group.name, item.title
     Given I am the user with id "21"
-    And the database table "group_managers" has also the following rows:
+    And the database table "group_managers" also has the following rows:
       | group_id | manager_id | can_grant_group_access |
       | 9        | 8          | 1                      |
     When I send a GET request to "/groups/25/granted_permissions?descendants=1&sort=group.name,source_group.name,item.title"

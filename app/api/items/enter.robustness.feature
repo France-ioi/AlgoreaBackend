@@ -179,7 +179,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table "items":
       | id | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag |
       | 60 | 1                       | Team                   | All                              | 3                   | fr                   |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 |
       | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -205,10 +205,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
       | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id | expires_at   |
       | 99              | 31             | <expires_at> |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database has the following table "permissions_generated":
@@ -241,10 +241,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
       | 60 | 01:01:01 | 1                       | Team                   | None                             | 10                  | 99                    | fr                   |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 99              | 11             |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
     And the database has the following table "permissions_generated":

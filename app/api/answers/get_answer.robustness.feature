@@ -110,7 +110,7 @@ Feature: Get user's answer by id
     And there is a user @Participant
     And there is a thread with "item_id=200,participant_id=@User,helper_group_id=@Helper,status=closed,latest_update_at={{relativeTimeDBMs("-1h")}}"
     And there is a thread with "item_id=210,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"
@@ -124,7 +124,7 @@ Feature: Get user's answer by id
     And I have a validated result on the item 200
     And there is a user @Participant
     And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Helper,status=closed,latest_update_at={{relativeTimeDB("-336h")}}"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"
@@ -135,12 +135,12 @@ Feature: Get user's answer by id
     Given I am @User
     And I am a member of the group @Helper
     And I have the watch permission set to "result" on the item 200
-    And the database table "results" has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | validated_at |
       | 2          | @User          | 200     | null         |
     And there is a user @Participant
     And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"
@@ -157,7 +157,7 @@ Feature: Get user's answer by id
     And there is a thread with "item_id=200,participant_id=@User,helper_group_id=@Helper,status=waiting_for_participant"
     And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Participant,status=waiting_for_participant"
     And there is a thread with "item_id=210,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"

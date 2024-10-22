@@ -220,17 +220,17 @@ Feature: Accept group requests
 
   Scenario: Accept requests for a team while skipping members of other teams participating in the same contests
     Given I am the user with id "21"
-    And the database table "groups" has also the following row:
+    And the database table "groups" also has the following row:
       | id  | type |
       | 444 | Team |
-    And the database table "groups_groups" has also the following rows:
+    And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id |
       | 444             | 31             |
     And the groups ancestors are computed
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
-    And the database table "attempts" has also the following rows:
+    And the database table "attempts" also has the following rows:
       | participant_id | id | root_item_id |
       | 13             | 1  | 1234         |
       | 444            | 2  | 1234         |

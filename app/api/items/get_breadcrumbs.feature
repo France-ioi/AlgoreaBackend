@@ -170,7 +170,7 @@ Scenario: Content access to all items except for last for which we have info acc
     And the database has the following table "group_managers":
       | manager_id | group_id |
       | 14         | 16       |
-    And the database table "groups" has also the following row:
+    And the database table "groups" also has the following row:
       | id | name    | root_activity_id |
       | 16 | Managed | 26               |
     And the groups ancestors are computed
@@ -191,7 +191,7 @@ Scenario: Content access to all items except for last for which we have info acc
     And the database has the following table "group_managers":
       | manager_id | group_id |
       | 14         | 16       |
-    And the database table "groups" has also the following row:
+    And the database table "groups" also has the following row:
       | id | name    | root_skill_id |
       | 16 | Managed | 26            |
     And the groups ancestors are computed
@@ -212,11 +212,11 @@ Scenario: Content access to all items except for last for which we have info acc
     And the database has the following table "group_managers":
       | manager_id | group_id |
       | 15         | 16       |
-    And the database table "groups" has also the following row:
+    And the database table "groups" also has the following rows:
       | id | name     | root_activity_id |
       | 16 | Ancestor | null             |
       | 17 | Managed  | 26               |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 16              | 17             |
     And the groups ancestors are computed
@@ -237,11 +237,11 @@ Scenario: Content access to all items except for last for which we have info acc
     And the database has the following table "group_managers":
       | manager_id | group_id |
       | 15         | 16       |
-    And the database table "groups" has also the following row:
+    And the database table "groups" also has the following rows:
       | id | name     | root_skill_id |
       | 16 | Ancestor | null          |
       | 17 | Managed  | 26            |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 16              | 17             |
     And the groups ancestors are computed

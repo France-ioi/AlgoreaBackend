@@ -85,7 +85,7 @@ Feature: Find an item path
 
   Scenario: Finds a path with started result
     Given I am the user with id "101"
-    And the database table "results" has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
       | 1          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
     When I send a GET request to "/items/60/path-from-root?as_team_id=102"

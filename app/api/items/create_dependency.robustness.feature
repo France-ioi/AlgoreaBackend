@@ -161,7 +161,7 @@ Feature: Create an item dependency - robustness
 
   Scenario: The dependency already exists
     Given I am the user with id "11"
-    And the database table "item_dependencies" has also the following row:
+    And the database table "item_dependencies" also has the following row:
       | item_id | dependent_item_id | score | grant_content_view |
       | 210     | 210               | 22    | true               |
     When I send a POST request to "/items/210/prerequisites/210" with the following body:

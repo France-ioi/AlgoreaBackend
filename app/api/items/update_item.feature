@@ -111,7 +111,7 @@ Background:
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
-    And the database table "results" has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 112     | 50             |
       | 0          | 11             | 134     | 60             |
@@ -215,7 +215,7 @@ Background:
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
-    And the database table "results" has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 112     | 50             |
       | 0          | 11             | 134     | 60             |
@@ -512,7 +512,7 @@ Background:
     And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 112     | info               | <can_grant_view>         | none                | none               | 0                  |
     When I send a PUT request to "/items/21" with the following body:
@@ -567,7 +567,7 @@ Background:
     And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | <parent_permission_column> |
       | 11       | 112     | info               | <parent_permission_value>  |
     When I send a PUT request to "/items/21" with the following body:
@@ -617,7 +617,7 @@ Background:
       | 125 | fr                   |
       | 126 | fr                   |
       | 127 | fr                   |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_grant_view_generated | can_view_generated |
       | 11       | 112     | content                  | content            |
       | 11       | 113     | content                  | content            |
@@ -721,13 +721,13 @@ Background:
 
   Scenario Outline: Allows setting items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation/watch_propagation/edit_propagation to the same of a lower value
     Given I am the user with id "11"
-    And the database table "items" has also the following rows:
+    And the database table "items" also has the following rows:
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table "items_items" has also the following rows:
+    And the database table "items_items" also has the following rows:
       | parent_item_id | child_item_id | child_order | <field_name> |
       | 21             | 112           | 1           | <old_value>  |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated |
       | 11       | 112     | info               |
     When I send a PUT request to "/items/21" with the following body:
@@ -757,10 +757,10 @@ Background:
 
   Scenario: Allows keeping old values in items_items
     Given I am the user with id "11"
-    And the database table "items" has also the following rows:
+    And the database table "items" also has the following rows:
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table "items_items" has also the following rows:
+    And the database table "items_items" also has the following rows:
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 112           | 1           | Challenge | 2            | as_content               | as_is                         | true                   | true              | true             |
     When I send a PUT request to "/items/21" with the following body:

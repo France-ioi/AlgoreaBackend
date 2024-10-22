@@ -38,19 +38,19 @@ Feature: List user descendants of the group (groupUserDescendantView)
     And the groups ancestors are computed
 
   Scenario: One group with 5 grand children (different parents)
-    Given the database table "groups" has also the following rows:
+    Given the database table "groups" also has the following rows:
       | id | type | name  | grade |
       | 51 | User | johna | -2    |
       | 53 | User | johnb | -2    |
       | 55 | User | johnc | -2    |
       | 57 | User | jackd | -2    |
-    And the database table "users" has also the following rows:
+    And the database table "users" also has the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |
       | johnb | 53       | John       | Baker     | null  |
       | johnc | 55       | John       | null      | 3     |
       | jackd | 57       | Jack       | Doe       | 3     |
-    And the database table "groups_groups" has also the following rows:
+    And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 11              | 51             | null                           |
       | 11              | 21             | null                           |
@@ -137,13 +137,13 @@ Feature: List user descendants of the group (groupUserDescendantView)
     """
 
   Scenario: Non-descendant parents should not appear (one group with 1 grand child, having also a parent which is not descendant)
-    Given the database table "groups" has also the following rows:
+    Given the database table "groups" also has the following rows:
       | id | type | name  | grade |
       | 51 | User | johna | -2    |
-    And the database table "users" has also the following rows:
+    And the database table "users" also has the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |
-    And the database table "groups_groups" has also the following rows:
+    And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 11              | 51             | 2019-05-30 11:00:00            |
       | 13              | 51             | null                           |
@@ -164,13 +164,13 @@ Feature: List user descendants of the group (groupUserDescendantView)
     """
 
   Scenario: Only actual memberships count
-    Given the database table "groups" has also the following rows:
+    Given the database table "groups" also has the following rows:
       | id | type | name  | grade |
       | 51 | User | johna | -2    |
-    And the database table "users" has also the following rows:
+    And the database table "users" also has the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | John       | Adams     | 1     |
-    And the database table "groups_groups" has also the following rows:
+    And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 51             | 2019-05-30 11:00:00 |
     And the groups ancestors are computed
@@ -184,13 +184,13 @@ Feature: List user descendants of the group (groupUserDescendantView)
     """
 
   Scenario: No duplication (one group with 1 grand children connected through 2 different parents)
-    Given the database table "groups" has also the following rows:
+    Given the database table "groups" also has the following rows:
       | id | type | name  | grade |
       | 51 | User | johna | -2    |
-    And the database table "users" has also the following rows:
+    And the database table "users" also has the following rows:
       | login | group_id | first_name | last_name | grade |
       | johna | 51       | null       | Adams     | 1     |
-    And the database table "groups_groups" has also the following rows:
+    And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id |
       | 11              | 51             |
       | 14              | 51             |

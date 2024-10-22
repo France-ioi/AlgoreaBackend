@@ -96,7 +96,7 @@ Feature: Create an attempt for an item - robustness
 
   Scenario: There is an attempt for the (group, item) pair already, but items.allows_multiple_attempts = 0
     Given I am the user with id "101"
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated |
       | 104      | 50      | content            |
     And the database has the following table "attempts":
@@ -112,7 +112,7 @@ Feature: Create an attempt for an item - robustness
 
   Scenario: Not enough permissions for the last item in the path
     Given I am the user with id "101"
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated |
       | 104      | 50      | info               |
     When I send a POST request to "/items/50/attempts?as_team_id=104&parent_attempt_id=0"

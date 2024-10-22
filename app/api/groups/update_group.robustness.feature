@@ -25,7 +25,7 @@ Feature: Update a group (groupEdit) - robustness
       | 17       | 21         | memberships           |
       | 17       | 31         | none                  |
       | 17       | 41         | memberships_and_group |
-    And the database table "groups_ancestors" has also the following rows:
+    And the database table "groups_ancestors" also has the following rows:
       | ancestor_group_id | child_group_id | expires_at          |
       | 17                | 21             | 2019-05-30 11:00:00 |
     And the database has the following table "items":
@@ -332,20 +332,20 @@ Feature: Update a group (groupEdit) - robustness
   Scenario Outline: Should return an error if a require_* field is strengthened, and there is at least one user in the group, but approval_change_action is not given
     Given I am the user with id "21"
     And the server time now is "2020-01-01T01:00:00Z"
-    And the database table "groups" has also the following rows:
+    And the database table "groups" also has the following rows:
       | id  | name  | grade | description | created_at          | type  | root_activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       | max_participants | enforce_max_participants |
       | 101 | Group | 1     | Group       | 2020-01-01 00:00:00 | Class | null             | true                | true    | true      | null | null          | 2020-01-01 00:00:00 | true                       | 0                 | <require_personal_info_access_approval_old> | <require_lock_membership_approval_until_old> | <require_watch_approval_old> | 1                | false                    |
       | 110 | Team  | 1     | Team        | 2020-01-01 00:00:00 | Team  | null             | true                | true    | true      | null | null          | 2020-01-01 00:00:00 | true                       | 0                 | <require_personal_info_access_approval_old> | <require_lock_membership_approval_until_old> | <require_watch_approval_old> | 1                | false                    |
-    And the database table "group_managers" has also the following rows:
+    And the database table "group_managers" also has the following rows:
       | group_id | manager_id | can_manage            |
       | 101      | 21         | memberships_and_group |
     # There must be at least one user in the group. Otherwise it's not considered a strengthening.
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 101             | 110            |
     And the groups ancestors are computed
     # There is at least one user in the group
-    And the database table "groups_ancestors" has also the following rows:
+    And the database table "groups_ancestors" also has the following rows:
       | ancestor_group_id | child_group_id | expires_at          |
       | 101               | 21             | 2021-01-01 00:00:00 |
     When I send a PUT request to "/groups/101" with the following body:

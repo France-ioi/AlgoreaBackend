@@ -478,11 +478,11 @@ Feature: Get item view information
 
   Scenario Outline: With watched_group_id
     Given I am the user with id "11"
-    And the database table "group_managers" has also the following row:
+    And the database table "group_managers" also has the following row:
       | manager_id | group_id | can_watch_members | can_grant_group_access            |
       | 11         | 15       | false             | <can_grant_group_access>          |
       | 27         | 28       | true              | <can_grant_group_access_ancestor> |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
       | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
@@ -565,11 +565,11 @@ Feature: Get item view information
 
   Scenario Outline: With watched_group_id and as_team_id
     Given I am the user with id "11"
-    And the database table "group_managers" has also the following row:
+    And the database table "group_managers" also has the following row:
       | manager_id | group_id | can_watch_members | can_grant_group_access            |
       | 11         | 15       | false             | <can_grant_group_access>          |
       | 27         | 28       | true              | <can_grant_group_access_ancestor> |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
       | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
