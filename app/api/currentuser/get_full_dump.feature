@@ -16,7 +16,7 @@ Feature: Export the current user's data
       | 11 | User    | user self          |                        |
       | 21 | User    | jack               |                        |
       | 31 | User    | jane               |                        |
-    And the database has the following table "users":
+    And the database has the following users:
       | login | group_id | first_name | last_name | grade |
       | user  | 11       | John       | Doe       | 1     |
       | jack  | 21       | Jack       | Smith     | 2     |

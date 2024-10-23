@@ -1,27 +1,22 @@
 Feature: Update thread
   Background:
     Given the database has the following table "groups":
-      | id | name    | type  |
-      | 1  | john    | User  |
-      | 2  | manager | User  |
-      | 3  | jack    | User  |
-      | 4  | jess    | User  |
-      | 5  | owner   | User  |
-      | 10 | Class   | Class |
-      | 11 | School  | Class |
-      | 12 | Region  | Class |
-      | 20 | Group   | Class |
-      | 30 | Group   | Class |
-      | 50 | Group   | Class |
-      | 51 | Group   | Class |
-      | 60 | Group   | Class |
-    And the database has the following table "users":
-      | login   | group_id |
-      | john    | 1        |
-      | manager | 2        |
-      | jack    | 3        |
-      | jess    | 4        |
-      | owner   | 5        |
+      | id | name   | type  |
+      | 10 | Class  | Class |
+      | 11 | School | Class |
+      | 12 | Region | Class |
+      | 20 | Group  | Class |
+      | 30 | Group  | Class |
+      | 50 | Group  | Class |
+      | 51 | Group  | Class |
+      | 60 | Group  | Class |
+    And the database has the following users:
+      | group_id | login   |
+      | 1        | john    |
+      | 2        | manager |
+      | 3        | jack    |
+      | 4        | jess    |
+      | 5        | owner   |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 2              |

@@ -3,10 +3,9 @@ Feature: Create item
     Given the database has the following table "groups":
       | id | name    | type    | root_activity_id | root_skill_id |
       | 10 | Friends | Friends | null             | null          |
-      | 11 | jdoe    | User    | null             | null          |
-    And the database has the following table "users":
-      | login | temp_user | group_id |
-      | jdoe  | 0         | 11       |
+    And the database has the following user:
+      | group_id | login |
+      | 11       | jdoe  |
     And the database has the following table "items":
       | id | entry_frozen_teams | no_score | default_language_tag |
       | 21 | true               | false    | fr                   |

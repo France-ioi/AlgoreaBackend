@@ -10,12 +10,12 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 51 | jack         | User                | null             |
       | 98 | item60-group | ContestParticipants | null             |
       | 99 | item50-group | ContestParticipants | null             |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | john  | 31       | John        | Doe       |
-      | jane  | 41       | Jane        | null      |
-      | jack  | 51       | Jack        | Daniel    |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 31       | john  | John        | Doe       |
+      | 41       | jane  | Jane        | null      |
+      | 51       | jack  | Jack        | Daniel    |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 31             |

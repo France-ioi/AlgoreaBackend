@@ -12,10 +12,7 @@ Feature: Check if the group code is valid
       | 16 | Class | dcef123492 | null                | null          | false             | Our Class      | 2037-01-02 12:30:55                    | none                                  | true                   | null             | 5678          |
       | 18 | Team  | 5987654abc | null                | null          | false             | One More Team  | null                                   | none                                  | false                  | null             | null          |
       | 19 | Team  | 87654abcde | null                | null          | true              | Somewhat Team  | null                                   | none                                  | false                  | null             | null          |
-      | 21 | User  | null       | null                | null          | false             | john           | null                                   | none                                  | false                  | null             | null          |
-      | 22 | User  | 3333333333 | null                | null          | false             | tmp            | null                                   | none                                  | false                  | null             | null          |
-      | 23 | User  | null       | null                | null          | false             | jane           | null                                   | none                                  | false                  | null             | null          |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login | temp_user | first_name | last_name |
       | 21       | john  | false     | null       | null      |
       | 22       | tmp   | true      | null       | null      |

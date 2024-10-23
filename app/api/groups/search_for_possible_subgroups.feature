@@ -15,9 +15,9 @@ Feature: Search for possible subgroups
       | 11 | User    | Another amazing User                  | Another user group     |
       | 12 | Club    | Club                                  | Parent group           |
       | 21 | User    | amazing user self                     |                        |
-    And the database has the following table "users":
-      | login | temp_user | group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 5               | 21             |

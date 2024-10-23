@@ -14,11 +14,11 @@ Feature: Get group by name (contestGetGroupByName)
       | 31 | john    | User  |
       | 41 | jane    | User  |
       | 50 | Group D | Class |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
-      | john  | 31       |
-      | jane  | 41       |
+    And the database has the following users:
+      | group_id | login |
+      | 21       | owner |
+      | 31       | john  |
+      | 41       | jane  |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 6        | 21         | false                  | true              |

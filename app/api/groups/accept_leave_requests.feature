@@ -5,7 +5,6 @@ Feature: Accept requests to leave a group
       | 11  | Class   |
       | 13  | Friends |
       | 14  | Team    |
-      | 21  | User    |
       | 31  | User    |
       | 111 | User    |
       | 121 | User    |
@@ -16,9 +15,9 @@ Feature: Accept requests to leave a group
       | 151 | User    |
       | 161 | User    |
       | 444 | Team    |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | grade |
-      | owner | 21       | Jean-Michel | Blanquer  | 3     |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 13              | 31             | 9999-12-31 23:59:59 |

@@ -2,18 +2,18 @@ Feature: Get item breadcrumbs
 
 Background:
   Given the database has the following table "groups":
-    | id | name    | grade | type  | root_activity_id | root_skill_id |
-    | 11 | jdoe    | -2    | User  | 22               | null          |
-    | 13 | Group B | -2    | Class | 21               | null          |
-    | 14 | Team B  | -2    | Team  | 23               | 25            |
-    | 15 | Group C | -2    | Class | 21               | null          |
+    | id | name    | type  | root_activity_id | root_skill_id |
+    | 11 | jdoe    | User  | 22               | null          |
+    | 13 | Group B | Class | 21               | null          |
+    | 14 | Team B  | Team  | 23               | 25            |
+    | 15 | Group C | Class | 21               | null          |
   And the database has the following table "languages":
     | tag |
     | en  |
     | fr  |
-  And the database has the following table "users":
-    | login | group_id | default_language |
-    | jdoe  | 11       | fr               |
+  And the database has the following user:
+    | group_id | login | default_language |
+    | 11       | jdoe  | fr               |
   And the database has the following table "items":
     | id | type    | default_language_tag | allows_multiple_attempts |
     | 21 | Task    | en                   | 0                        |

@@ -1,14 +1,13 @@
 Feature: Get root skills for a participant group - robustness
   Background:
     Given the database has the following table "groups":
-      | id | name      | grade | type  | root_activity_id | created_at          |
-      | 11 | jdoe      | -2    | User  | null             | 2019-01-30 08:26:48 |
-      | 13 | Group B   | -2    | Team  | 230              | 2019-01-30 08:26:46 |
-      | 14 | Group C   | -2    | Team  | 230              | 2019-01-30 08:26:46 |
+      | id | name      | type  | root_activity_id | created_at          |
+      | 13 | Group B   | Team  | 230              | 2019-01-30 08:26:46 |
+      | 14 | Group C   | Team  | 230              | 2019-01-30 08:26:46 |
     And the database has the following table "languages":
       | tag |
       | fr  |
-    And the database has the following table "users":
+    And the database has the following user:
       | login     | temp_user | group_id |
       | jdoe      | 0         | 11       |
     And the database has the following table "groups_groups":

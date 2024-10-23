@@ -14,30 +14,19 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 17 | Other   | A custom group |
       | 18 | Club    | Our Club       |
       | 20 | Friends | My Friends     |
-      | 21 | User    | owner          |
-      | 51 | User    | johna          |
-      | 53 | User    | johnb          |
-      | 55 | User    | johnc          |
-      | 57 | User    | johnd          |
-      | 59 | User    | johne          |
-      | 61 | User    | janea          |
-      | 63 | User    | janeb          |
-      | 65 | User    | janec          |
-      | 67 | User    | janed          |
-      | 69 | User    | janee          |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
-      | johna | 51       |
-      | johnb | 53       |
-      | johnc | 55       |
-      | johnd | 57       |
-      | johne | 59       |
-      | janea | 61       |
-      | janeb | 63       |
-      | janec | 65       |
-      | janed | 67       |
-      | janee | 69       |
+    And the database has the following users:
+      | group_id | login |
+      | 21       | owner |
+      | 51       | johna |
+      | 53       | johnb |
+      | 55       | johnc |
+      | 57       | johnd |
+      | 59       | johne |
+      | 61       | janea |
+      | 63       | janeb |
+      | 65       | janec |
+      | 67       | janed |
+      | 69       | janee |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 1        | 4          | true              |

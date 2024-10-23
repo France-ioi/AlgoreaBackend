@@ -2,15 +2,12 @@ Feature: Change item access rights for a group
   Background:
     Given the database has the following table "groups":
       | id | name       | type  |
-      | 21 | owner      | User  |
-      | 23 | user       | User  |
       | 25 | some class | Class |
-      | 31 | jane       | User  |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | user  | 23       | John        | Doe       |
-      | jane  | 31       | Jane        | Doe       |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 23       | user  | John        | Doe       |
+      | 31       | jane  | Jane        | Doe       |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access |
       | 25       | 21         | 1                      |

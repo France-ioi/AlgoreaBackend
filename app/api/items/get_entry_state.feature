@@ -7,18 +7,13 @@ Feature: Get entry state (itemGetEntryState)
       | 12 | Team 3 | Team  | 0                 |
       | 13 | Club   | Club  | 0                 |
       | 14 | School | Other | 0                 |
-      | 21 | owner  | User  | 0                 |
-      | 31 | john   | User  | 0                 |
-      | 41 | jane   | User  | 0                 |
-      | 51 | jack   | User  | 0                 |
-      | 61 | mark   | User  | 0                 |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | john  | 31       | John        | Doe       |
-      | jane  | 41       | Jane        | null      |
-      | jack  | 51       | Jack        | Daniel    |
-      | mark  | 61       | Mark        | Moe       |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 31       | john  | John        | Doe       |
+      | 41       | jane  | Jane        | null      |
+      | 51       | jack  | Jack        | Daniel    |
+      | 61       | mark  | Mark        | Moe       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 10              | 31             | null                           |

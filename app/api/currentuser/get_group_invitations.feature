@@ -13,18 +13,15 @@ Feature: Get group invitations for the current user
       | 9  | Friends | Some other friends            | Another friends group         | none                                  | null                                   | false                  |
       | 10 | Other   | Secret group                  | Our secret group              | none                                  | null                                   | false                  |
       | 11 | Club    | Secret club                   | Our secret club               | none                                  | null                                   | false                  |
-      | 12 | User    | user self                     |                               | none                                  | null                                   | false                  |
-      | 13 | User    | another user                  |                               | none                                  | null                                   | false                  |
-      | 21 | User    | owner self                    |                               | none                                  | null                                   | false                  |
       | 33 | Class   | Other group with invitation   | Other group with invitation   | view                                  | null                                   | false                  |
       | 34 | Class   | Other group with invitation 2 | Other group with invitation 2 | edit                                  | null                                   | false                  |
       | 35 | Class   | Group with broken change log  | Group with broken change log  | edit                                  | null                                   | false                  |
       | 36 | Class   | Group without inviting user   | Group without inviting user   | edit                                  | null                                   | false                  |
-    And the database has the following table "users":
-      | login       | temp_user | group_id | first_name  | last_name | grade |
-      | owner       | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-      | user        | 0         | 12       | John        | Doe       | 1     |
-      | anotheruser | 0         | 13       | Another     | User      | 1     |
+    And the database has the following users:
+      | group_id | login       | first_name  | last_name | grade |
+      | 21       | owner       | Jean-Michel | Blanquer  | 3     |
+      | 12       | user        | John        | Doe       | 1     |
+      | 13       | anotheruser | Another     | User      | 1     |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 5               | 21             |

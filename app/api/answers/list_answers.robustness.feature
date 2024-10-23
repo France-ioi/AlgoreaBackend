@@ -1,11 +1,8 @@
 Feature: List answers - robustness
 Background:
-  Given the database has the following table "groups":
-    | id | name | type |
-    | 1  | jdoe | User |
-  And the database has the following table "users":
-    | login | temp_user | group_id |
-    | jdoe  | 0         | 1        |
+  Given the database has the following user:
+    | group_id | login |
+    | 1        | jdoe  |
   And the database has the following table "items":
     | id  | type    | no_score | default_language_tag |
     | 190 | Chapter | false    | fr                   |

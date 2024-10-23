@@ -1,13 +1,12 @@
 Feature: List user batches (userBatchesView) - robustness
   Background:
     Given the database has the following table "groups":
-      | id | name   | grade | type  |
-      | 13 | class  | -2    | Class |
-      | 14 | class2 | -2    | Class |
-      | 21 | user   | -2    | User  |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
+      | id | name   | type  |
+      | 13 | class  | Class |
+      | 14 | class2 | Class |
+    And the database has the following user:
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |

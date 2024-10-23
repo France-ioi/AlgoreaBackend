@@ -1,15 +1,13 @@
 Feature: List answers by attempt_id
 Background:
   Given the database has the following table "groups":
-    | id | name    | grade | type  |
-    | 11 | jdoe    | -2    | User  |
-    | 13 | Group B | -2    | Class |
-    | 21 | owner   | -2    | User  |
-    | 41 | Group C | -2    | Class |
-  And the database has the following table "users":
-    | login | temp_user | group_id | first_name  | last_name |
-    | jdoe  | 0         | 11       | John        | Doe       |
-    | owner | 0         | 21       | Jean-Michel | Blanquer  |
+    | id | name    | type  |
+    | 13 | Group B | Class |
+    | 41 | Group C | Class |
+  And the database has the following users:
+    | group_id | login | first_name  | last_name |
+    | 11       | jdoe  | John        | Doe       |
+    | 21       | owner | Jean-Michel | Blanquer  |
   And the database has the following table "group_managers":
     | group_id | manager_id |
     | 13       | 21         |

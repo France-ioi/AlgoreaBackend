@@ -30,10 +30,10 @@ Feature: Publish a result to LTI - robustness
       | 1          | 21             | 123     | 15.6           |
       | 1          | 21             | 124     | 20.1           |
       | 1          | 31             | 123     | 9.5            |
-    And the database has the following table "users":
-      | temp_user | login | group_id | login_id |
-      | 0         | john  | 21       | 1234567  |
-      | 1         | jane  | 31       | null     |
+    And the database has the following users:
+      | group_id | temp_user | login | login_id |
+      | 21       | 0         | john  | 1234567  |
+      | 31       | 1         | jane  | null     |
 
   Scenario: Invalid item_id
     Given I am the user with id "21"

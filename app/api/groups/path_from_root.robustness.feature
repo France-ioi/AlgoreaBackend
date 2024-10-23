@@ -39,16 +39,12 @@ Feature: Find a group path - robustness
       | 35 | U3                                       | User    | false     |
       | 36 | U3                                       | User    | false     |
       | 38 | Public                                   | Friends | true      |
-      | 41 | owner                                    | User    | false     |
-      | 49 | jack                                     | User    | false     |
-      | 50 | jane                                     | User    | false     |
-      | 51 | john                                     | User    | false     |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 41       | Jean-Michel | Blanquer  |
-      | jack  | 49       | Jack        | Smith     |
-      | jane  | 50       | Jane        | Doe       |
-      | john  | 51       | John        | Doe       |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 41       | owner | Jean-Michel | Blanquer  |
+      | 49       | jack  | Jack        | Smith     |
+      | 50       | jane  | Jane        | Doe       |
+      | 51       | john  | John        | Doe       |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 41         |

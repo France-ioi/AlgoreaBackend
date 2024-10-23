@@ -10,10 +10,10 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 19 | Other | 987654abcd | null                | null          | 0                      | false             | 0                | true                     |
       | 21 | User  | null       | null                | null          | 0                      | false             | 0                | false                    |
       | 22 | User  | 3333333333 | null                | null          | 0                      | false             | 0                | false                    |
-    And the database has the following table "users":
-      | login | group_id | temp_user |
-      | john  | 21       | false     |
-      | tmp   | 22       | true      |
+    And the database has the following users:
+      | group_id | login | temp_user |
+      | 21       | john  | false     |
+      | 22       | tmp   | true      |
     And the database has the following table "items":
       | id   | default_language_tag |
       | 1234 | fr                   |

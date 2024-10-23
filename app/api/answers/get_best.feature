@@ -2,20 +2,16 @@ Feature: Get a current answer
 Background:
   Given the database has the following table "groups":
     | id  | name         | type  |
-    | 11  | jdoe         | User  |
-    | 12  | jdoenoanswer | User  |
     | 13  | Team         | Team  |
     | 14  | Group B      | Class |
     | 15  | TeamNoAnswer | Team     |
-    | 21  | manager      | User  |
     | 23  | Group C      | Class |
-    | 100 | top          | User  |
-  And the database has the following table "users":
-    | login        | group_id | first_name   | last_name |
-    | jdoe         | 11       | John         | Doe       |
-    | jdoenoanswer | 12       | JohnNoAnswer | Doe       |
-    | manager      | 21       | Man          | Ager      |
-    | top          | 100      | Top          | Score     |
+  And the database has the following users:
+    | group_id | login        | first_name   | last_name |
+    | 11       | jdoe         | John         | Doe       |
+    | 12       | jdoenoanswer | JohnNoAnswer | Doe       |
+    | 21       | manager      | Man          | Ager      |
+    | 100      | top          | Top          | Score     |
   And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 14              | 11             |

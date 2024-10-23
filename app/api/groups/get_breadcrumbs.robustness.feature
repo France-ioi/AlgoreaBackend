@@ -4,12 +4,11 @@ Feature: Get breadcrumbs (groupBreadcrumbsView) - robustness
       | id | name                | type                | is_public |
       | 1  | Team                | Team                | true      |
       | 2  | Managed By Team     | Class               | false     |
-      | 41 | user                | User                | true      |
       | 42 | ContestParticipants | ContestParticipants | false     |
       | 43 | Another Team        | Team                | false     |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 41       | Jean-Michel | Blanquer  |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 41       | owner | Jean-Michel | Blanquer  |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 1          |

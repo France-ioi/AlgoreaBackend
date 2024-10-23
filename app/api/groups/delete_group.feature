@@ -17,9 +17,9 @@ Feature: Delete a group
           domains: [127.0.0.1]
           allUsersGroup: 31
       """
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 14       | 21         | none                  |

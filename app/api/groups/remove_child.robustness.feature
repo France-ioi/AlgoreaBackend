@@ -7,15 +7,13 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 14 | Group C  | Class |
       | 15 | Team     | Team  |
       | 16 | Group D  | Class |
-      | 21 | owner    | User  |
       | 22 | Group    | Class |
-      | 23 | teacher  | User  |
       | 53 | AllUsers | Base  |
       | 55 | User     | User  |
-    And the database has the following table "users":
-      | login   | group_id | first_name  | last_name |
-      | owner   | 21       | Jean-Michel | Blanquer  |
-      | teacher | 23       | John        | Smith     |
+    And the database has the following users:
+      | group_id | login   | first_name  | last_name |
+      | 21       | owner   | Jean-Michel | Blanquer  |
+      | 23       | teacher | John        | Smith     |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |

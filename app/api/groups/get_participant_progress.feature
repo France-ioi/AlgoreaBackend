@@ -15,32 +15,20 @@ Feature: Display the current progress of a participant on children of an item (g
       | 18 | Club    | Our Club       |
       | 19 | Club    | Another Club   |
       | 20 | Friends | My Friends     |
-      | 21 | User    | owner          |
-      | 22 | User    | owner2         |
-      | 51 | User    | johna          |
-      | 53 | User    | johnb          |
-      | 55 | User    | johnc          |
-      | 57 | User    | johnd          |
-      | 59 | User    | johne          |
-      | 61 | User    | janea          |
-      | 63 | User    | janeb          |
-      | 65 | User    | janec          |
-      | 67 | User    | janed          |
-      | 69 | User    | janee          |
-    And the database has the following table "users":
-      | login  | group_id | default_language |
-      | owner  | 21       | en               |
-      | owner2 | 22       | en               |
-      | johna  | 51       | fr               |
-      | johnb  | 53       | fr               |
-      | johnc  | 55       | fr               |
-      | johnd  | 57       | fr               |
-      | johne  | 59       | fr               |
-      | janea  | 61       | fr               |
-      | janeb  | 63       | fr               |
-      | janec  | 65       | fr               |
-      | janed  | 67       | fr               |
-      | janee  | 69       | fr               |
+    And the database has the following users:
+      | group_id | login  | default_language |
+      | 21       | owner  | en               |
+      | 22       | owner2 | en               |
+      | 51       | johna  | fr               |
+      | 53       | johnb  | fr               |
+      | 55       | johnc  | fr               |
+      | 57       | johnd  | fr               |
+      | 59       | johne  | fr               |
+      | 61       | janea  | fr               |
+      | 63       | janeb  | fr               |
+      | 65       | janec  | fr               |
+      | 67       | janed  | fr               |
+      | 69       | janee  | fr               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 1        | 21         | true              |

@@ -12,22 +12,15 @@ Feature: Get group by groupID (groupView)
       | 17 | Team 1  | -4    | Team 1          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | true                   | 3019-05-30 11:00:00                    | false             |
       | 18 | Team 2  | -4    | Team 2          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | view                                  | false                  | 2019-05-30 11:00:00                    | true              |
       | 19 | Team 3  | -4    | Team 3          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | edit                                  | false                  | null                                   | false             |
-      | 21 | owner   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 31 | john    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 41 | jane    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 51 | rick    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 61 | ian     | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 71 | dirk    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 81 | chuck   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
-      | john  | 31       |
-      | jane  | 41       |
-      | rick  | 51       |
-      | ian   | 61       |
-      | dirk  | 71       |
-      | chuck | 81       |
+    And the database has the following users:
+      | group_id | login |
+      | 21       | owner |
+      | 31       | john  |
+      | 41       | jane  |
+      | 51       | rick  |
+      | 61       | ian   |
+      | 71       | dirk  |
+      | 81       | chuck |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 8               | 9              | null                        |

@@ -5,12 +5,10 @@ Feature: Remove a group manager (groupManagerDelete)
       | id | name  | type  |
       | 1  | Group | Class |
       | 2  | Team  | Team  |
-      | 21 | owner | User  |
-      | 22 | john  | User  |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | john  | 22       | John        | Doe       |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 22       | john  | John        | Doe       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 2              |

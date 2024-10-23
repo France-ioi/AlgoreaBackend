@@ -4,8 +4,7 @@ Feature: User withdraws a request to leave a group
       | id |
       | 11 |
       | 14 |
-      | 21 |
-    And the database has the following table "users":
+    And the database has the following user:
       | group_id |
       | 21       |
     And the database has the following table "groups_groups":

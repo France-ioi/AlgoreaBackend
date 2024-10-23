@@ -2,7 +2,6 @@ Feature: Get group parents (groupParentsView) - robustness
   Background:
     Given the database has the following table "groups":
       | id  | name                                       | type                | is_public |
-      | 21  | owner                                      | User                | false     |
       | 151 | Grand-parent of a joined group             | Club                | false     |
       | 152 | Parent of a joined group                   | Club                | false     |
       | 153 | Joined group                               | Class               | false     |
@@ -34,12 +33,11 @@ Feature: Get group parents (groupParentsView) - robustness
       | 263 | Child of a managed group 2                 | Class               | false     |
       | 264 | Grand-child of a managed group 2           | Class               | false     |
       | 265 | Public group 2                             | Club                | true      |
-      | 400 | jack                                       | User                | false     |
       | 500 | Owner's group                              | Club                | false     |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | jack  | 400      | Jack        | Smith     |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 400      | jack  | Jack        | Smith     |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access |
       | 158      | 21         | false                  |

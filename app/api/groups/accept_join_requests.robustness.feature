@@ -2,12 +2,9 @@ Feature: Accept group requests - robustness
   Background:
     Given the database has the following table "groups":
       | id  | type  | frozen_membership |
-      | 11  | User  | false             |
-      | 12  | User  | false             |
       | 13  | Club  | false             |
       | 14  | Class | false             |
       | 15  | Team  | false             |
-      | 21  | User  | false             |
       | 31  | Class | true              |
       | 111 | User  | false             |
       | 121 | User  | false             |
@@ -15,11 +12,11 @@ Feature: Accept group requests - robustness
       | 123 | User  | false             |
       | 131 | User  | false             |
       | 141 | User  | false             |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | grade |
-      | owner | 21       | Jean-Michel | Blanquer  | 3     |
-      | user  | 11       | John        | Doe       | 1     |
-      | jane  | 12       | Jane        | Doe       | 1     |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 11       | user  | John        | Doe       |
+      | 12       | jane  | Jane        | Doe       |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 12       | 12         | memberships |

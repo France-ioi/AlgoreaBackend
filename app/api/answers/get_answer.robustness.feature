@@ -1,18 +1,14 @@
 Feature: Get user's answer by id
   Background:
-    Given the database has the following table "groups":
+    Given the database has the following users:
+      | group_id | login |
+      | 11       | jdoe  |
+      | 14       | jane  |
+      | 15       | bill  |
+      | 16       | jeff  |
+    And the database has the following table "groups":
       | id | name | type |
-      | 11 | jdoe | User |
       | 13 | team | Team |
-      | 14 | jane | User |
-      | 15 | bill | User |
-      | 16 | jeff | User |
-    And the database has the following table "users":
-      | login | group_id |
-      | jdoe  | 11       |
-      | jane  | 14       |
-      | bill  | 15       |
-      | jeff  | 16       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 14             |

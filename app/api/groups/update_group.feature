@@ -15,11 +15,11 @@ Feature: Update a group (groupEdit)
       | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 41 | john    | -4    | john            | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 50 | Admins  | -4    | Admins          | 2019-04-06 09:26:40 | Club    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
-    And the database has the following table "users":
-      | login | temp_user | group_id | first_name  | last_name | default_language |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
-      | other | 0         | 24       | John        | Doe       | en               |
-      | jane  | 0         | 25       | Jane        | Doe       | en               |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name | default_language |
+      | 21       | owner | Jean-Michel | Blanquer  | fr               |
+      | 24       | other | John        | Doe       | en               |
+      | 25       | jane  | Jane        | Doe       | en               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
@@ -325,15 +325,14 @@ Feature: Update a group (groupEdit)
 
   Scenario: Should be able to update the description, root_activity_id and root_skill_id from a value to null
     Given I am the user with id "100"
-    And the database has the following table "users":
-      | login   | group_id |
-      | manager | 100      |
+    And the database has the following users:
+      | group_id | login   |
+      | 100      | manager |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 101      | 100        | memberships_and_group |
-    And the database has the following table "groups":
+    And the database table "groups" also has the following row:
       | id  | name    | description       | root_activity_id | root_skill_id |
-      | 100 | manager |                   | null             | null          |
       | 101 | Group   | Group description | 200              | 100           |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |

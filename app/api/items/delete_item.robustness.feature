@@ -1,12 +1,11 @@
 Feature: Delete an item - robustness
   Background:
     Given the database has the following table "groups":
-      | id | name    | type    | root_activity_id | root_skill_id |
-      | 10 | Friends | Friends | null             | null          |
-      | 11 | jdoe    | User    | null             | null          |
-    And the database has the following table "users":
-      | login | temp_user | group_id |
-      | jdoe  | 0         | 11       |
+      | id | name    | type    |
+      | 10 | Friends | Friends |
+    And the database has the following user:
+      | group_id | login |
+      | 11       | jdoe  |
     And the database has the following table "items_propagate":
       | id | ancestors_computation_state |
       | 20 | done                        |

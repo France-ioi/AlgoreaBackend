@@ -1,24 +1,20 @@
 Feature: Get navigation for an item
   Background:
     Given the database has the following table "groups":
-      | id | name      | grade | type  |
-      | 1  | all       | -2    | Base  |
-      | 11 | jdoe      | -2    | User  |
-      | 12 | Group A   | -2    | Class |
-      | 13 | Group B   | -2    | Team  |
-      | 14 | info_root | -2    | User  |
-      | 16 | info_mid  | -2    | User  |
-      | 18 | french    | -2    | User  |
-      | 19 | Group C   | -2    | Team  |
+      | id | name      | type  |
+      | 1  | all       | Base  |
+      | 12 | Group A   | Class |
+      | 13 | Group B   | Team  |
+      | 19 | Group C   | Team  |
     And the database has the following table "languages":
       | tag |
       | fr  |
-    And the database has the following table "users":
-      | login     | temp_user | group_id | default_language |
-      | jdoe      | 0         | 11       |                  |
-      | info_root | 0         | 14       |                  |
-      | info_mid  | 0         | 16       |                  |
-      | fr_user   | 0         | 18       | fr               |
+    And the database has the following users:
+      | group_id | login     | default_language |
+      | 11       | jdoe      |                  |
+      | 14       | info_root |                  |
+      | 16       | info_mid  |                  |
+      | 18       | fr_user   | fr               |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 12             |
@@ -222,12 +218,9 @@ Feature: Get navigation for an item
       """
 
   Scenario: Should only return Skills and compute has_visible children on Skills only when we get navigation on a Skill
-    Given the database has the following table "groups":
-      | id   | name | type |
-      | 1000 | user | User |
-    And the database has the following table "users":
-      | login | temp_user | group_id |
-      | user  | 0         | 1000     |
+    Given the database has the following user:
+      | login | group_id |
+      | user  | 1000     |
     And the database has the following table "items":
       | id   | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
       | 1000 | Skill   | en                   | false    | false                   | User                   |

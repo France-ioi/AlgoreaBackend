@@ -8,10 +8,10 @@ Feature: Start a result for an item
       | 101 | User  | null             | null          |
       | 102 | Team  | 60               | null          |
       | 111 | User  | null             | 80            |
-    And the database has the following table "users":
-      | login | group_id |
-      | john  | 101      |
-      | jane  | 111      |
+    And the database has the following users:
+      | group_id | login |
+      | 101      | john  |
+      | 111      | jane  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 90              | 111            |

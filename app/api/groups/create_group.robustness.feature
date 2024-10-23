@@ -1,18 +1,11 @@
 Feature: Create a group (groupCreate) - robustness
 
   Background:
-    Given the database has the following table "groups":
-      | id | name  | type |
-      | 21 | owner | User |
-      | 31 | tmp12 | User |
-      | 51 | john  | User |
-    And the database has the following table "users":
-      | login  | temp_user | group_id |
-      | owner  | 0         | 21       |
-      | tmp12  | 1         | 31       |
-      | john   | 0         | 51       |
-    And the database has the following table "groups_groups":
-      | parent_group_id | child_group_id |
+    Given the database has the following users:
+      | group_id | login  | temp_user |
+      | 21       | owner  | 0         |
+      | 31       | tmp12  | 1         |
+      | 51       | john   | 0         |
     And the groups ancestors are computed
 
   Scenario: No name

@@ -3,20 +3,15 @@ Feature: Invite users
     Given the database has the following table "groups":
       | id  | type  | require_personal_info_access_approval | enforce_max_participants | max_participants |
       | 13  | Team  | none                                  | true                     | 2                |
-      | 21  | User  | none                                  | false                    | null             |
-      | 101 | User  | none                                  | false                    | null             |
-      | 102 | User  | none                                  | false                    | null             |
-      | 103 | User  | none                                  | false                    | null             |
-      | 104 | User  | none                                  | false                    | null             |
       | 444 | Team  | none                                  | false                    | null             |
       | 555 | Class | view                                  | false                    | null             |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | temp_user |
-      | owner | 21       | Jean-Michel | Blanquer  | false     |
-      | john  | 101      | John        | Doe       | false     |
-      | jane  | 102      | Jane        | Doe       | false     |
-      | Jane  | 103      | Jane        | Smith     | false     |
-      | tmp   | 104      | Temp        | User      | true      |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name | temp_user |
+      | 21       | owner | Jean-Michel | Blanquer  | false     |
+      | 101      | john  | John        | Doe       | false     |
+      | 102      | jane  | Jane        | Doe       | false     |
+      | 103      | Jane  | Jane        | Smith     | false     |
+      | 104      | tmp   | Temp        | User      | true      |
     And the groups ancestors are computed
     And the database has the following table "items":
       | id   | default_language_tag |

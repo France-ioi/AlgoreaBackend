@@ -1,14 +1,12 @@
 Feature: List answers by attempt_id - robustness
 Background:
   Given the database has the following table "groups":
-    | id | name    | grade | type  |
-    | 11 | jdoe    | -2    | User  |
-    | 13 | Group B | -2    | Class |
-    | 21 | guest   | -2    | User  |
-  And the database has the following table "users":
-    | login | temp_user | group_id |
-    | jdoe  | 0         | 11       |
-    | guest | 0         | 21       |
+    | id | name    | type  |
+    | 13 | Group B | Class |
+  And the database has the following user:
+    | group_id | login |
+    | 11       | jdoe  |
+    | 21       | guest |
   And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 13              | 11             |

@@ -8,8 +8,7 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 15 | Team  | 987654321a | null                | null          | 1                      |
       | 16 | Class | 2345668999 | null                | null          | 0                      |
       | 17 | Team  | null       | null                | null          | 0                      |
-      | 21 | User  | null       | null                | null          | 0                      |
-    And the database has the following table "users":
+    And the database has the following user:
       | group_id |
       | 21       |
     And the database has the following table "groups_groups":

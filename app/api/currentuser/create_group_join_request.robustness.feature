@@ -14,7 +14,7 @@ Feature: User sends a request to join a group - robustness
       | 21 | 0         | User    | none                                  | null                                   | 0                      | false             | false                    | 0                |
       | 22 | 0         | User    | none                                  | null                                   | 0                      | false             | false                    | 0                |
       | 23 | 1         | User    | none                                  | null                                   | 0                      | false             | false                    | 0                |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login | temp_user |
       | 21       | john  | false     |
       | 22       | tmp   | true      |

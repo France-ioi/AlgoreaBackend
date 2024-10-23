@@ -8,14 +8,11 @@ Feature: Update a group (groupEdit) - robustness
       | 15 | Group D | -2    | Group D is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 | none                                  | null                                   | false                  | null             | false                    |
       | 16 | Group E | -2    | Group E is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 | edit                                  | 2019-05-30 11:00:00                    | true                   | 10               | true                     |
       | 17 | Group F | -2    | Group F is here | 2019-03-06 09:26:40 | Class | null                | true                | true    | true      | null       | null          | 2017-10-14 05:39:48 | true                       | 0                 | none                                  | null                                   | false                  | 1                | false                    |
-      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 | none                                  | null                                   | false                  | null             | false                    |
-      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 | none                                  | null                                   | false                  | null             | false                    |
-      | 41 | user    | -4    | owner           | 2019-04-06 09:26:40 | User  | null                | false               | false   | false     | null       | null          | null                | false                      | 0                 | none                                  | null                                   | false                  | null             | false                    |
-    And the database has the following table "users":
-      | login | temp_user | group_id | first_name  | last_name |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  |
-      | user  | 0         | 31       | John        | Doe       |
-      | jane  | 0         | 41       | Jane        | Doe       |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 31       | user  | John        | Doe       |
+      | 41       | jane  | Jane        | Doe       |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |

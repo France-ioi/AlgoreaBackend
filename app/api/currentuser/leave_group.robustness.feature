@@ -7,9 +7,7 @@ Feature: User leaves a group - robustness
       | 15 | Club  | 2037-04-29                             | false             |
       | 16 | Club  | null                                   | true              |
       | 17 | Base  | null                                   | false             |
-      | 21 | User  | null                                   | false             |
-      | 31 | User  | null                                   | false             |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login |
       | 21       | john  |
       | 31       | jane  |

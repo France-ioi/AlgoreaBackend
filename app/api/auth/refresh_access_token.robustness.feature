@@ -1,12 +1,9 @@
 Feature: Refresh an access token - robustness
   Background:
     Given the DB time now is "2020-01-01 01:00:00"
-    And the database has the following table "groups":
-      | id | name        | type |
-      | 13 | jane        | User |
-    And the database has the following table "users":
-      | group_id | login       | temp_user |
-      | 13       | jane        | false     |
+    And the database has the following user:
+      | group_id | login |
+      | 13       | jane  |
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token |
       | 1          | 13      |               |

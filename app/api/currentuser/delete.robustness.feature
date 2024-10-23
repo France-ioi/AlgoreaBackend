@@ -13,9 +13,9 @@ Feature: Delete the current user - robustness
       | 2               | 21             | null                        |
       | 50              | 21             | 2019-05-30 11:00:00         |
     And the groups ancestors are computed
-    And the database has the following table "users":
-      | temp_user | login | group_id | login_id |
-      | 0         | user  | 21       | 1234567  |
+    And the database has the following user:
+      | group_id | temp_user | login | login_id |
+      | 21       | 0         | user  | 1234567  |
     And the application config is:
       """
       auth:

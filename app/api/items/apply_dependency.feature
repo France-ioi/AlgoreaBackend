@@ -1,22 +1,17 @@
 Feature: Apply an item dependency
   Background:
     Given the database has the following table "groups":
-      | id | name       | grade | type  |
-      | 11 | jdoe       | -2    | User  |
-      | 13 | Group B    | -2    | Team  |
-      | 14 | nosolution | -2    | User  |
-      | 15 | Group C    | -2    | Class |
-      | 17 | fr         | -2    | User  |
-      | 22 | info       | -2    | User  |
-      | 23 | jane       | -2    | User  |
-      | 26 | team       | -2    | Team  |
-    And the database has the following table "users":
-      | login      | temp_user | group_id | default_language |
-      | jdoe       | 0         | 11       |                  |
-      | nosolution | 0         | 14       |                  |
-      | fr         | 0         | 17       | fr               |
-      | info       | 0         | 22       |                  |
-      | jane       | 0         | 23       |                  |
+      | id | name    | type  |
+      | 13 | Group B | Team  |
+      | 15 | Group C | Class |
+      | 26 | team    | Team  |
+    And the database has the following users:
+      | group_id | login      | default_language |
+      | 11       | jdoe       |                  |
+      | 14       | nosolution |                  |
+      | 17       | fr         | fr               |
+      | 22       | info       |                  |
+      | 23       | jane       |                  |
     And the database has the following table "items":
       | id  | type    | default_language_tag | requires_explicit_entry |
       | 100 | Task    | en                   | true                    |

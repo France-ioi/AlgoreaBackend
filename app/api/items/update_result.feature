@@ -2,17 +2,14 @@ Feature: Update an attempt result
   Background:
     Given the database has the following table "groups":
       | id | name    | type  |
-      | 11 | jdoe    | User  |
       | 13 | Group B | Class |
-      | 21 | other   | User  |
       | 23 | Group C | Team  |
-      | 24 | jane    | User  |
       | 25 | Group D | Club  |
-    And the database has the following table "users":
-      | login | group_id | first_name | last_name |
-      | jdoe  | 11       | John       | Doe       |
-      | other | 21       | George     | Bush      |
-      | jane  | 24       | Jane       | Joe       |
+    And the database has the following users:
+      | group_id | login | first_name | last_name |
+      | 11       | jdoe  | John       | Doe       |
+      | 21       | other | George     | Bush      |
+      | 24       | jane  | Jane       | Joe       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 13              | 11             | null                           |

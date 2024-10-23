@@ -1,16 +1,16 @@
 Feature: Get root activities for a participant group - robustness
   Background:
     Given the database has the following table "groups":
-      | id | name      | grade | type  | root_activity_id | created_at          |
-      | 11 | jdoe      | -2    | User  | null             | 2019-01-30 08:26:48 |
-      | 13 | Group B   | -2    | Team  | 230              | 2019-01-30 08:26:46 |
-      | 14 | Group C   | -2    | Team  | 230              | 2019-01-30 08:26:46 |
+      | id | name      | type  | root_activity_id | created_at          |
+      | 11 | jdoe      | User  | null             | 2019-01-30 08:26:48 |
+      | 13 | Group B   | Team  | 230              | 2019-01-30 08:26:46 |
+      | 14 | Group C   | Team  | 230              | 2019-01-30 08:26:46 |
     And the database has the following table "languages":
       | tag |
       | fr  |
-    And the database has the following table "users":
-      | login     | temp_user | group_id |
-      | jdoe      | 0         | 11       |
+    And the database has the following user:
+      | group_id | login |
+      | 11       | jdoe  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 11             |

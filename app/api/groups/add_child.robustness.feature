@@ -8,17 +8,14 @@ Feature: Add a parent-child relation between two groups - robustness
       | 16 | AllUsers | Base  |
       | 18 | User     | User  |
       | 19 | Team     | Team  |
-      | 21 | owner    | User  |
-      | 25 | student  | User  |
-      | 27 | admin    | User  |
       | 77 | Group C  | Class |
       | 78 | Group D  | Class |
       | 79 | Group E  | Class |
-    And the database has the following table "users":
-      | login   | group_id | first_name  | last_name |
-      | owner   | 21       | Jean-Michel | Blanquer  |
-      | student | 25       | Jane        | Doe       |
-      | admin   | 27       | John        | Doe       |
+    And the database has the following users:
+      | group_id | login   | first_name  | last_name |
+      | 21       | owner   | Jean-Michel | Blanquer  |
+      | 25       | student | Jane        | Doe       |
+      | 27       | admin   | John        | Doe       |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 11       | 21         | memberships_and_group |

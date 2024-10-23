@@ -1,12 +1,9 @@
 Feature: Update an item string entry - robustness
 
   Background:
-    Given the database has the following table "groups":
-      | id | name | type |
-      | 11 | jdoe | User |
-    And the database has the following table "users":
-      | login | temp_user | group_id |
-      | jdoe  | 0         | 11       |
+    Given the database has the following user:
+      | group_id | login |
+      | 11       | jdoe  |
     And the database has the following table "items":
       | id | default_language_tag |
       | 21 | en                   |

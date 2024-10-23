@@ -3,10 +3,9 @@ Background:
   Given the database has the following table "groups":
     | id | name | type |
     | 10 | Club | Club |
-    | 11 | jdoe | User |
-  And the database has the following table "users":
-    | login | temp_user | group_id |
-    | jdoe  | 0         | 11       |
+  And the database has the following user:
+    | group_id | login |
+    | 11       | jdoe  |
   And the database has the following table "items":
     | id | type    | url                  | options   | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
     | 21 | Chapter | http://someurl1.com/ | {"opt":1} | en                   | 1        | Task1   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |

@@ -25,19 +25,19 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 65 | User    | janec          | -2    |
       | 67 | User    | janed          | -2    |
       | 69 | User    | janee          | -2    |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | grade |
-      | owner | 21       | Jean-Michel | Blanquer  | 10    |
-      | johna | 51       | John        | Adams     | 1     |
-      | johnb | 53       | John        | Baker     | 2     |
-      | johnc | 55       | John        | null      | 3     |
-      | johnd | 57       | null        | Davis     | -1    |
-      | johne | 59       | John        | Edwards   | null  |
-      | janea | 61       | Jane        | Adams     | 3     |
-      | janeb | 63       | Jane        | Baker     | null  |
-      | janec | 65       | Jane        | null      | 4     |
-      | janed | 67       | Jane        | Doe       | -2    |
-      | janee | 69       | Jane        | Edwards   | null  |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name | grade |
+      | 21       | owner | Jean-Michel | Blanquer  | 10    |
+      | 51       | johna | John        | Adams     | 1     |
+      | 53       | johnb | John        | Baker     | 2     |
+      | 55       | johnc | John        | null      | 3     |
+      | 57       | johnd | null        | Davis     | -1    |
+      | 59       | johne | John        | Edwards   | null  |
+      | 61       | janea | Jane        | Adams     | 3     |
+      | 63       | janeb | Jane        | Baker     | null  |
+      | 65       | janec | Jane        | null      | 4     |
+      | 67       | janed | Jane        | Doe       | -2    |
+      | 69       | janee | Jane        | Edwards   | null  |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 1        | 21         |

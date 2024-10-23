@@ -2,16 +2,14 @@ Feature: End an attempt (itemAttemptEnd) - robustness
   Background:
     Given the database has the following table "groups":
       | id  | type                |
-      | 101 | User                |
       | 102 | Team                |
-      | 111 | User                |
       | 201 | ContestParticipants |
       | 202 | ContestParticipants |
       | 203 | ContestParticipants |
-    And the database has the following table "users":
-      | login | group_id |
-      | john  | 101      |
-      | jane  | 111      |
+    And the database has the following users:
+      | group_id | login |
+      | 101      | john  |
+      | 111      | jane  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 102             | 101            | 9999-12-31 23:59:59 |

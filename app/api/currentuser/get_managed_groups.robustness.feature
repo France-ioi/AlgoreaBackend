@@ -1,11 +1,8 @@
 Feature: List groups managed by the current user - robustness
   Background:
-    Given the database has the following table "groups":
-      | id | name          | type  | description |
-      | 21 | owner         | User  | null        |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
+    Given the database has the following user:
+      | group_id | login |
+      | 21       | owner |
 
   Scenario: Wrong sort
     Given I am the user with id "21"

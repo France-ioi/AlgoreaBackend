@@ -2,26 +2,18 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
   Background:
     Given the database has the following table "groups":
       | id | type  |
-      | 11 | User  |
-      | 12 | User  |
-      | 13 | User  |
-      | 14 | User  |
-      | 15 | User  |
-      | 16 | User  |
-      | 17 | User  |
-      | 19 | User  |
       | 20 | Team  |
       | 21 | Class |
-    And the database has the following table "users":
-      | login  | group_id |
-      | owner  | 11       |
-      | user   | 12       |
-      | jane   | 13       |
-      | john   | 14       |
-      | jack   | 15       |
-      | james  | 16       |
-      | jeremy | 17       |
-      | jacob  | 19       |
+    And the database has the following users:
+      | group_id | login  |
+      | 11       | owner  |
+      | 12       | user   |
+      | 13       | jane   |
+      | 14       | john   |
+      | 15       | jack   |
+      | 16       | james  |
+      | 17       | jeremy |
+      | 19       | jacob  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 21              | 19             |

@@ -7,13 +7,11 @@ Feature: Find all breadcrumbs to an item
       | 92  | Club  | 80               | null          |
       | 93  | Class | null             | 90            |
       | 94  | Club  | null             | null          |
-      | 101 | User  | null             | null          |
       | 102 | Team  | 100              | 60            |
-      | 111 | User  | null             | null          |
-    And the database has the following table "users":
-      | login | group_id | default_language |
-      | john  | 101      | en               |
-      | jane  | 111      | fr               |
+    And the database has the following users:
+      | group_id | login | default_language |
+      | 101      | john  | en               |
+      | 111      | jane  | fr               |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 90              | 111            |
@@ -111,12 +109,11 @@ Feature: Find all breadcrumbs to an item
     | /items/by-text-id/id90/breadcrumbs-from-roots                                                                 | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
 
   Scenario: Should return a breadcrumb when there are missing results, like path-from-root
-    Given the database has the following table "users":
-      | login | group_id | default_language |
-      | user  | 1000     | en               |
+    Given the database has the following user:
+      | group_id | login | default_language |
+      | 1000     | user  | en               |
     And the database has the following table "groups":
       | id   | type  | root_activity_id |
-      | 1000 | User  | null             |
       | 1001 | Class | 1010             |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |

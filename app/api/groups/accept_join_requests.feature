@@ -5,7 +5,6 @@ Feature: Accept group requests
       | 11  | Class   | none                                  | false                    | null             |
       | 13  | Team    | none                                  | false                    | null             |
       | 14  | Friends | view                                  | true                     | 7                |
-      | 21  | User    | none                                  | false                    | null             |
       | 31  | User    | none                                  | false                    | null             |
       | 111 | User    | none                                  | false                    | null             |
       | 121 | User    | none                                  | false                    | null             |
@@ -15,9 +14,9 @@ Feature: Accept group requests
       | 141 | User    | none                                  | false                    | null             |
       | 151 | User    | none                                  | false                    | null             |
       | 161 | User    | none                                  | false                    | null             |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | grade |
-      | owner | 21       | Jean-Michel | Blanquer  | 3     |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
     And the database has the following table "items":
       | id   | default_language_tag |
       | 1234 | fr                   |

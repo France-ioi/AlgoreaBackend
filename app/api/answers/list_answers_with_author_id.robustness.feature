@@ -2,13 +2,12 @@ Feature: List answers by (item_id, author_id) pair - robustness
 Background:
   Given the database has the following table "groups":
     | id  | name    | grade | type  |
-    | 11  | jdoe    | -2    | User  |
     | 13  | Group B | -2    | Class |
     | 404 | guest   | -2    | Class |
-  And the database has the following table "users":
-    | login | temp_user | group_id |
-    | jdoe  | 0         | 11       |
-    | guest | 0         | 404      |
+  And the database has the following users:
+    | group_id | login |
+    | 11       | jdoe  |
+    | 404      | guest |
   And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 13              | 11             |

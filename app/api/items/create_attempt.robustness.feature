@@ -2,13 +2,12 @@ Feature: Create an attempt for an item - robustness
   Background:
     Given the database has the following table "groups":
       | id  | type  | root_activity_id | root_skill_id |
-      | 101 | User  | null             | null          |
       | 102 | Team  | null             | null          |
       | 103 | Class | 50               | 90            |
       | 104 | Team  | 50               | 90            |
-    And the database has the following table "users":
-      | login | group_id |
-      | john  | 101      |
+    And the database has the following user:
+      | group_id | login |
+      | 101      | john  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 103             | 101            |

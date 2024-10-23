@@ -4,8 +4,7 @@ Feature: User leaves a group
       | id | require_lock_membership_approval_until |
       | 11 | 2019-08-20 00:00:00                    |
       | 14 | 2019-08-20 00:00:00                    |
-      | 21 | null                                   |
-    And the database has the following table "users":
+    And the database has the following user:
       | group_id |
       | 21       |
     And the database has the following table "groups_groups":

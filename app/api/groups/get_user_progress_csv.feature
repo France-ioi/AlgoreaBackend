@@ -15,30 +15,19 @@ Feature: Export the current progress of users on a subset of items as CSV (group
       | 18 | Club    | Our Club       |
       | 19 | Club    | Another Club   |
       | 20 | Friends | My Friends     |
-      | 21 | User    | owner          |
-      | 51 | User    | johna          |
-      | 53 | User    | johnb          |
-      | 55 | User    | johnc          |
-      | 57 | User    | johnd          |
-      | 59 | User    | johne          |
-      | 61 | User    | janea          |
-      | 63 | User    | janeb          |
-      | 65 | User    | janec          |
-      | 67 | User    | janed          |
-      | 69 | User    | janee          |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | default_language |
-      | owner | 21       | Jean-Michel | Blanquer  | en               |
-      | johna | 51       | John        | Adams     | fr               |
-      | johnb | 53       | John        | Black     | fr               |
-      | johnc | 55       | John        | Cook      | fr               |
-      | johnd | 57       | John        | null      | fr               |
-      | johne | 59       | null        | Eliot     | fr               |
-      | janea | 61       | null        | null      | fr               |
-      | janeb | 63       | null        | null      | fr               |
-      | janec | 65       | null        | null      | fr               |
-      | janed | 67       | null        | null      | fr               |
-      | janee | 69       | Jane        | Ebbot     | fr               |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name | default_language |
+      | 21       | owner | Jean-Michel | Blanquer  | en               |
+      | 51       | johna | John        | Adams     | fr               |
+      | 53       | johnb | John        | Black     | fr               |
+      | 55       | johnc | John        | Cook      | fr               |
+      | 57       | johnd | John        | null      | fr               |
+      | 59       | johne | null        | Eliot     | fr               |
+      | 61       | janea | null        | null      | fr               |
+      | 63       | janeb | null        | null      | fr               |
+      | 65       | janec | null        | null      | fr               |
+      | 67       | janed | null        | null      | fr               |
+      | 69       | janee | Jane        | Ebbot     | fr               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 1        | 21         | true              |

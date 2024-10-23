@@ -1,9 +1,9 @@
 Feature: Display the current progress of a participant on children of an item (groupParticipantProgress) - robustness
   Background:
     Given the database has the following users:
-      | login | group_id |
-      | owner | 21       |
-      | user  | 11       |
+      | group_id | login |
+      | 21       | owner |
+      | 11       | user  |
     And the database has the following table "groups":
       | id | type |
       | 13 | Base |

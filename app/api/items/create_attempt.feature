@@ -4,13 +4,11 @@ Feature: Create an attempt for an item
       | id  | type  | root_activity_id |
       | 99  | Other | 50               |
       | 100 | Class | 10               |
-      | 101 | User  | null             |
       | 102 | Team  | 60               |
-      | 111 | User  | null             |
-    And the database has the following table "users":
-      | login | group_id |
-      | john  | 101      |
-      | jane  | 111      |
+    And the database has the following users:
+      | group_id | login |
+      | 101      | john  |
+      | 111      | jane  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 99              | 111            |
