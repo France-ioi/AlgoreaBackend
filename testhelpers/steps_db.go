@@ -24,11 +24,6 @@ const (
 	deleted
 )
 
-const (
-	groupIDColumnName = "group_id"
-	loginColumnName   = "login"
-)
-
 // DBHasTable inserts the data from the Godog table into the database table.
 func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 	if len(data.Rows) > 1 {
@@ -224,6 +219,15 @@ func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []
 	return nil
 }
 
+func getColumnIndex(table *godog.Table, columnName string) int {
+	for i, cell := range table.Rows[0].Cells {
+		if cell.Value == columnName {
+			return i
+		}
+	}
+	return -1
+}
+
 // DBHasUsers inserts the data from the Godog table into the users and groups tables.
 func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 	if len(data.Rows) > 1 {
@@ -232,33 +236,27 @@ func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 		}
 		groupsToCreate.Rows[0] = &messages.PickleTableRow{
 			Cells: []*messages.PickleTableCell{
-				{Value: "id"}, {Value: "name"}, {Value: "description"}, {Value: "type"},
+				{Value: "id"}, {Value: "name"}, {Value: "type"},
 			},
 		}
-		head := data.Rows[0].Cells
-		groupIDColumnNumber := -1
-		loginColumnNumber := -1
-		for number, cell := range head {
-			if cell.Value == groupIDColumnName {
-				groupIDColumnNumber = number
-				continue
-			}
-			if cell.Value == loginColumnName {
-				loginColumnNumber = number
-				continue
-			}
-		}
+
+		groupIDColumnIndex := getColumnIndex(data, "group_id")
+		loginColumnIndex := getColumnIndex(data, "login")
 
 		for i := 1; i < len(data.Rows); i++ {
-			login := tableValueNull
-			if loginColumnNumber != -1 {
-				login = data.Rows[i].Cells[loginColumnNumber].Value
+			var login string
+			if loginColumnIndex != -1 {
+				login = data.Rows[i].Cells[loginColumnIndex].Value
 			}
 
-			if groupIDColumnNumber != -1 {
+			if groupIDColumnIndex != -1 &&
+				ctx.getDBTableRowIndexForPrimaryKey(
+					"groups",
+					map[string]string{"id": data.Rows[i].Cells[groupIDColumnIndex].Value},
+				) == -1 {
 				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleTableRow{
 					Cells: []*messages.PickleTableCell{
-						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "User"},
+						{Value: data.Rows[i].Cells[groupIDColumnIndex].Value}, {Value: login}, {Value: "User"},
 					},
 				})
 			}
