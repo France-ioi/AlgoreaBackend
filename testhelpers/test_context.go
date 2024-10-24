@@ -157,19 +157,18 @@ func (ctx *TestContext) tearDownApp() {
 }
 
 // ScenarioTeardown is called after each scenario to remove stubs.
-func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) {
+func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) (err error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()
 	ctx.logsRestoreFunc()
 
 	defer func() {
-		if err := httpmock.AllStubsCalled(); err != nil {
-			panic(err) // godog doesn't allow to return errors from handlers (see https://github.com/cucumber/godog/issues/88)
-		}
+		err = httpmock.AllStubsCalled()
 		httpmock.DeactivateAndReset()
 	}()
 
 	ctx.tearDownApp()
+	return nil
 }
 
 // openDB opens a connection to the database.

@@ -143,7 +143,10 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		ctx.TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns)
 
 	s.After(func(contextCtx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		ctx.ScenarioTeardown(sc, err)
+		tearDownErr := ctx.ScenarioTeardown(sc, err)
+		if err == nil {
+			err = tearDownErr
+		}
 		if restoreFunc != nil { // If we captured the output, restore it
 			restoreFunc(err != nil) // Pass through the output if the test failed
 		}
@@ -153,6 +156,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 				*parentOutputRestorerFunc = nil
 			}
 		}
-		return contextCtx, nil
+		return contextCtx, tearDownErr
 	})
 }
