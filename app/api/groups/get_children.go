@@ -151,12 +151,12 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				),
 				0
 			) AS user_count,
-			IF(manager_permissions.found,
-				(SELECT COUNT(*) = 0
-				   FROM groups_groups_active
-				  WHERE groups_groups_active.parent_group_id = groups.id
-					  AND groups_groups_active.child_group_id != groups.id
-				),
+			IF(manager_permissions.found, (
+					SELECT 1
+					FROM groups_groups_active
+					WHERE groups_groups_active.parent_group_id = groups.id
+					LIMIT 1
+				) IS NULL,
 				NULL
 			) AS is_empty,
 			manager_permissions.found AS current_user_is_manager,
