@@ -1,10 +1,10 @@
 Feature: Get activity log - robustness
   Background:
     Given the database has the following users:
-      | login   | temp_user | group_id | first_name  | last_name |
-      | someone | 0         | 21       | Bill        | Clinton   |
-      | user    | 0         | 11       | John        | Doe       |
-      | owner   | 0         | 23       | Jean-Michel | Blanquer  |
+      | group_id | login   | first_name  | last_name |
+      | 21       | someone | Bill        | Clinton   |
+      | 11       | user    | John        | Doe       |
+      | 23       | owner   | Jean-Michel | Blanquer  |
     And the database has the following table "groups":
       | id | type  |
       | 13 | Class |

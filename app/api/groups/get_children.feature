@@ -26,13 +26,13 @@ Feature: Get group children (groupChildrenView)
       | 101 | Managed group       | 0     | Class   | true    | true      | managedgrp |
       | 102 | Managed subgroup    | 0     | Class   | true    | true      | managedsub |
       | 103 | Managed subsubgroup | 0     | Class   | true    | true      | managedssb |
-    And the database has the following table "users":
-      | login   | group_id | first_name  | last_name |
-      | owner   | 21       | Jean-Michel | Blanquer  |
-      | jack    | 29       | Jack        | Smith     |
-      | john    | 51       | John        | Doe       |
-      | jane    | 53       | Jane        | Doe       |
-      | manager | 100      | Manager     | Manager   |
+    And the database has the following users:
+      | group_id | login   | first_name  | last_name |
+      | 21       | owner   | Jean-Michel | Blanquer  |
+      | 29       | jack    | Jack        | Smith     |
+      | 51       | john    | John        | Doe       |
+      | 53       | jane    | Jane        | Doe       |
+      | 100      | manager | Manager     | Manager   |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 13       | 11         | memberships           | true                   | false             |
@@ -41,10 +41,6 @@ Feature: Get group children (groupChildrenView)
       | 28       | 21         | memberships_and_group | false                  | true              |
       | 30       | 21         | memberships           | true                   | false             |
       | 101      | 100        | memberships_and_group | true                   | true              |
-    # The group AllUsers should contain all users.
-    # But in this test file, this behavior is not implemented.
-    # Because this test file doesn't use the new Gherkin test system (steps_app_language).
-    # That's why we return "is_empty": false for this group.
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 11              | 29             |

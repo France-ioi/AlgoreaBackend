@@ -10,10 +10,10 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 19 | Other | 987654abcd | null                | null          | 0                      | false             | 0                | true                     |
       | 21 | User  | null       | null                | null          | 0                      | false             | 0                | false                    |
       | 22 | User  | 3333333333 | null                | null          | 0                      | false             | 0                | false                    |
-    And the database has the following table "users":
-      | login | group_id | temp_user |
-      | john  | 21       | false     |
-      | tmp   | 22       | true      |
+    And the database has the following users:
+      | group_id | login | temp_user |
+      | 21       | john  | false     |
+      | 22       | tmp   | true      |
     And the database has the following table "items":
       | id   | default_language_tag |
       | 1234 | fr                   |
@@ -158,7 +158,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 12             | 1  | 2            |
     And the database has the following table "results":

@@ -7,9 +7,7 @@ Feature: User leaves a group - robustness
       | 15 | Club  | 2037-04-29                             | false             |
       | 16 | Club  | null                                   | true              |
       | 17 | Base  | null                                   | false             |
-      | 21 | User  | null                                   | false             |
-      | 31 | User  | null                                   | false             |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login |
       | 21       | john  |
       | 31       | jane  |
@@ -84,7 +82,7 @@ Feature: User leaves a group - robustness
     And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 14             | 1  | 2            |
     And the database has the following table "results":

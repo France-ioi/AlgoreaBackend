@@ -14,10 +14,10 @@ Feature: Export the short version of the current user's data
       | 9  | Friends | Some other friends | Another friends group  |
       | 11 | User    | user self          |                        |
       | 31 | User    | jane               |                        |
-    And the database has the following table "users":
-      | login | group_id | first_name | last_name | grade |
-      | user  | 11       | John       | Doe       | 1     |
-      | jane  | 31       | Jane       | Doe       | 2     |
+    And the database has the following users:
+      | group_id | login | first_name | last_name | grade |
+      | 11       | user  | John       | Doe       | 1     |
+      | 31       | jane  | Jane       | Doe       | 2     |
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token    |
       | 1          | 11      | refreshTokenFor1 |

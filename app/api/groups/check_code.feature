@@ -12,10 +12,7 @@ Feature: Check if the group code is valid
       | 16 | Class | dcef123492 | null                | null          | false             | Our Class      | 2037-01-02 12:30:55                    | none                                  | true                   | null             | 5678          |
       | 18 | Team  | 5987654abc | null                | null          | false             | One More Team  | null                                   | none                                  | false                  | null             | null          |
       | 19 | Team  | 87654abcde | null                | null          | true              | Somewhat Team  | null                                   | none                                  | false                  | null             | null          |
-      | 21 | User  | null       | null                | null          | false             | john           | null                                   | none                                  | false                  | null             | null          |
-      | 22 | User  | 3333333333 | null                | null          | false             | tmp            | null                                   | none                                  | false                  | null             | null          |
-      | 23 | User  | null       | null                | null          | false             | jane           | null                                   | none                                  | false                  | null             | null          |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login | temp_user | first_name | last_name |
       | 21       | john  | false     | null       | null      |
       | 22       | tmp   | true      | null       | null      |
@@ -101,7 +98,7 @@ Feature: Check if the group code is valid
     And the database has the following table "items":
       | id | default_language_tag | allows_multiple_attempts |
       | 2  | fr                   | false                    |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 3              | 1  | 2            |
       | 11             | 1  | 2            |
@@ -128,7 +125,7 @@ Feature: Check if the group code is valid
     And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 12             | 1  | 2            |
     And the database has the following table "results":

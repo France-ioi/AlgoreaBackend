@@ -6,10 +6,9 @@ Feature: List user-batch prefixes (userBatchPrefixesView)
       | 14 | class2  | Class   |
       | 15 | friends | Friends |
       | 16 | class3  | Class   |
-      | 21 | user    | User    |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
+    And the database has the following user:
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |

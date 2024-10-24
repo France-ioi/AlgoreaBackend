@@ -6,10 +6,9 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 13 | Group B |
       | 14 | Group C |
       | 15 | Group D |
-      | 21 | owner   |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
+    And the database has the following user:
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 13       | 21         | true                   | true              |

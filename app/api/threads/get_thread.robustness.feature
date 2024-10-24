@@ -2,18 +2,14 @@ Feature: Get thread - robustness
   Background:
     Given the database has the following table "groups":
       | id | name       | type  |
-      | 1  | john       | User  |
-      | 2  | manager    | User  |
-      | 3  | jack       | User  |
-      | 4  | helper     | User  |
       | 10 | Group      | Class |
       | 20 | Help group | Class |
-    And the database has the following table "users":
-      | login   | group_id |
-      | john    | 1        |
-      | manager | 2        |
-      | jack    | 3        |
-      | helper  | 4        |
+    And the database has the following users:
+      | group_id | login   |
+      | 1        | john    |
+      | 2        | manager |
+      | 3        | jack    |
+      | 4        | helper  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 20              | 4              |

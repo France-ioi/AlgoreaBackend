@@ -4,9 +4,7 @@ Feature: User withdraws a request to leave a group - robustness
       | id |
       | 11 |
       | 14 |
-      | 21 |
-      | 22 |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login |
       | 21       | john  |
       | 22       | jane  |

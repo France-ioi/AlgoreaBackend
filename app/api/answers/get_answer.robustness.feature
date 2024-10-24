@@ -1,18 +1,14 @@
 Feature: Get user's answer by id
   Background:
-    Given the database has the following table "groups":
+    Given the database has the following users:
+      | group_id | login |
+      | 11       | jdoe  |
+      | 14       | jane  |
+      | 15       | bill  |
+      | 16       | jeff  |
+    And the database has the following table "groups":
       | id | name | type |
-      | 11 | jdoe | User |
       | 13 | team | Team |
-      | 14 | jane | User |
-      | 15 | bill | User |
-      | 16 | jeff | User |
-    And the database has the following table "users":
-      | login | group_id |
-      | jdoe  | 11       |
-      | jane  | 14       |
-      | bill  | 15       |
-      | jeff  | 16       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 14             |
@@ -110,7 +106,7 @@ Feature: Get user's answer by id
     And there is a user @Participant
     And there is a thread with "item_id=200,participant_id=@User,helper_group_id=@Helper,status=closed,latest_update_at={{relativeTimeDBMs("-1h")}}"
     And there is a thread with "item_id=210,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"
@@ -124,7 +120,7 @@ Feature: Get user's answer by id
     And I have a validated result on the item 200
     And there is a user @Participant
     And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Helper,status=closed,latest_update_at={{relativeTimeDB("-336h")}}"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"
@@ -135,12 +131,12 @@ Feature: Get user's answer by id
     Given I am @User
     And I am a member of the group @Helper
     And I have the watch permission set to "result" on the item 200
-    And the database table "results" has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | validated_at |
       | 2          | @User          | 200     | null         |
     And there is a user @Participant
     And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"
@@ -157,7 +153,7 @@ Feature: Get user's answer by id
     And there is a thread with "item_id=200,participant_id=@User,helper_group_id=@Helper,status=waiting_for_participant"
     And there is a thread with "item_id=200,participant_id=@Participant,helper_group_id=@Participant,status=waiting_for_participant"
     And there is a thread with "item_id=210,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
-    And the database table "answers" has also the following rows:
+    And the database table "answers" also has the following rows:
       | id  | author_id    | participant_id | attempt_id | item_id | type       | state  | answer   | created_at          |
       | 105 | @Participant | @Participant   | 2          | 200     | Submission | State1 | print(3) | 2017-05-29 06:38:39 |
     When I send a GET request to "/answers/105"

@@ -2,11 +2,10 @@ Feature: List official sessions for item_id - robustness
   Background:
     Given the database has the following table "groups":
       | id | name    |
-      | 11 | jdoe    |
       | 13 | Group B |
-    And the database has the following table "users":
-      | login | group_id | first_name | last_name |
-      | jdoe  | 11       | John       | Doe       |
+    And the database has the following user:
+      | group_id | login | first_name | last_name |
+      | 11       | jdoe  | John       | Doe       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |

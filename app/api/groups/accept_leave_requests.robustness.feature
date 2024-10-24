@@ -5,7 +5,6 @@ Feature: Accept requests to leave a group - robustness
       | 11  | Class   | false             |
       | 13  | Team    | false             |
       | 14  | Friends | true              |
-      | 21  | User    | false             |
       | 31  | User    | false             |
       | 111 | User    | false             |
       | 121 | User    | false             |
@@ -16,9 +15,9 @@ Feature: Accept requests to leave a group - robustness
       | 151 | User    | false             |
       | 161 | User    | false             |
       | 444 | Team    | false             |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | grade |
-      | owner | 21       | Jean-Michel | Blanquer  | 3     |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 31             |

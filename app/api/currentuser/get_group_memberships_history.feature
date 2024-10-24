@@ -11,14 +11,11 @@ Feature: Get group memberships history for the current user
       | 7  | Team    | Another Team       |
       | 8  | Club    | Another Club       |
       | 9  | Friends | Some other friends |
-      | 11 | User    | user               |
-      | 13 | User    | jane               |
-      | 21 | User    | owner              |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | grade | notifications_read_at |
-      | owner | 21       | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38   |
-      | user  | 11       | John        | Doe       | 1     | null                  |
-      | jane  | 13       | Jane        | Doe       | 2     | 2019-06-29 06:38:38   |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name | notifications_read_at |
+      | 21       | owner | Jean-Michel | Blanquer  | 2017-06-29 06:38:38   |
+      | 11       | user  | John        | Doe       | null                  |
+      | 13       | jane  | Jane        | Doe       | 2019-06-29 06:38:38   |
     And the database has the following table "group_membership_changes":
       | group_id | member_id | action                | at                      |
       | 1        | 21        | invitation_created    | 2017-02-28 06:38:38.001 |

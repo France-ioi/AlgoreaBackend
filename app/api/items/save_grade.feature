@@ -1,6 +1,6 @@
 Feature: Save grading result
   Background:
-    Given the database has the following users:
+    Given the database has the following user:
       | login | group_id |
       | john  | 101      |
     And the database has the following table "groups":

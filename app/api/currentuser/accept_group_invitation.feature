@@ -5,9 +5,8 @@ Feature: User accepts an invitation to join a group
       | 11 | none                                  |
       | 14 | none                                  |
       | 15 | view                                  |
-      | 21 | none                                  |
       | 22 | none                                  |
-    Given the database has the following table "users":
+    Given the database has the following user:
       | group_id |
       | 21       |
     And the database has the following table "groups_groups":

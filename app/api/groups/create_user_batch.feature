@@ -6,9 +6,9 @@ Feature: Create a user batch
       | 3  | Club    | Club     | 2017-08-10 12:34:55 | view                                  | 3030-01-01 00:00:00                    | 1                      |
       | 4  | Friends | Friends  | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
       | 21 | User    | owner    | 2016-08-10 12:34:55 | none                                  | null                                   | 0                      |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | default_language |
-      | owner | 21       | Jean-Michel | Blanquer  | en               |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name | default_language |
+      | 21       | owner | Jean-Michel | Blanquer  | en               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 3        | 21         | memberships           |

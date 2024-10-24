@@ -1,11 +1,11 @@
 Feature: Get pending requests for managed groups
   Background:
     Given the database has the following users:
-      | login   | temp_user | group_id | first_name  | last_name | grade |
-      | owner   | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-      | user    | 0         | 11       | John        | Doe       | 1     |
-      | jane    | 0         | 31       | Jane        | Doe       | 2     |
-      | richard | 0         | 41       | Richard     | Roe       | 2     |
+      | group_id | login   | first_name  | last_name | grade |
+      | 21       | owner   | Jean-Michel | Blanquer  | 3     |
+      | 11       | user    | John        | Doe       | 1     |
+      | 31       | jane    | Jane        | Doe       | 2     |
+      | 41       | richard | Richard     | Roe       | 2     |
     And the database has the following table "groups":
       | id  | name       |
       | 1   | Root       |

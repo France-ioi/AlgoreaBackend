@@ -4,13 +4,11 @@ Feature: Find all breadcrumbs to an item - robustness
       | id  | type  | root_activity_id | root_skill_id |
       | 90  | Class | 10               | null          |
       | 91  | Other | 50               | null          |
-      | 101 | User  | null             | null          |
       | 102 | Team  | 60               | null          |
-      | 111 | User  | null             | null          |
-    And the database has the following table "users":
-      | login | group_id | default_language |
-      | john  | 101      | en               |
-      | jane  | 111      | fr               |
+    And the database has the following users:
+      | group_id | login | default_language |
+      | 101      | john  | en               |
+      | 111      | jane  | fr               |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 90              | 102            |

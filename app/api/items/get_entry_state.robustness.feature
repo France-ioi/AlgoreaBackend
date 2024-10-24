@@ -4,16 +4,12 @@ Feature: Get entry state (itemGetEntryState) - robustness
       | id | name   | type |
       | 10 | Team 1 | Team |
       | 11 | Team 2 | Team |
-      | 21 | owner  | User |
-      | 31 | john   | User |
-      | 41 | jane   | User |
-      | 51 | jack   | User |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | john  | 31       | John        | Doe       |
-      | jane  | 41       | Jane        | null      |
-      | jack  | 51       | Jack        | Daniel    |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 31       | john  | John        | Doe       |
+      | 41       | jane  | Jane        | null      |
+      | 51       | jack  | Jack        | Daniel    |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 10              | 31             |

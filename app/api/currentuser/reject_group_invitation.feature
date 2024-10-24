@@ -5,7 +5,7 @@ Feature: User rejects an invitation to join a group
       | 11 |
       | 14 |
       | 21 |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id |
       | 21       |
     And the groups ancestors are computed

@@ -1,12 +1,9 @@
 Feature: Create a group (groupCreate)
 
   Background:
-    Given the database has the following table "groups":
-      | id | name  | type |
-      | 21 | owner | User |
-    And the database has the following table "users":
-      | login | temp_user | group_id | first_name  | last_name |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  |
+    Given the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
 
   Scenario Outline: Create a group
     Given I am the user with id "21"

@@ -2,15 +2,12 @@ Feature: Remove members from a group (groupRemoveMembers)
   Background:
     Given the database has the following table "groups":
       | id | type |
-      | 11 | User |
       | 13 | Club |
-      | 21 | User |
-      | 31 | User |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name | grade |
-      | owner | 21       | Jean-Michel | Blanquer  | 3     |
-      | user  | 11       | John        | Doe       | 1     |
-      | jane  | 31       | Jane        | Doe       | 1     |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 11       | user  | John        | Doe       |
+      | 31       | jane  | Jane        | Doe       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |

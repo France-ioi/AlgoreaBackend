@@ -8,9 +8,7 @@ Feature: User accepts an invitation to join a group - robustness
       | 15 | Team    | none                                  | false             |
       | 16 | Team    | view                                  | false             |
       | 17 | Team    | none                                  | true              |
-      | 21 | User    | none                                  | false             |
-      | 22 | User    | none                                  | false             |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login | temp_user |
       | 21       | john  | false     |
       | 22       | tmp   | true      |
@@ -85,7 +83,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the database has the following table "items":
       | id | default_language_tag | entry_max_team_size |
       | 2  | fr                   | 0                   |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 16             | 1  | 2            |
     And the database has the following table "results":

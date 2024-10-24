@@ -142,12 +142,12 @@ Feature: Update the local user info cache
       }
       """
     And the table "groups" should be:
-      | id                  | name                                 | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
-      | 11                  | mohammed                             | User  | mohammed    | false                                             | false   | false       | null                                    |
-      | 13                  | john                                 | User  | john        | false                                             | false   | false       | null                                    |
-      | 5577006791947779410 | Example #1                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
-      | 6129484611666145821 | Example badges                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
-      | 8674665223082153551 | Example badges with multiple parents | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
+      | id                  | name                                 | type  | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 11                  | mohammed                             | User  | false                                             | false   | false       | null                                    |
+      | 13                  | john                                 | User  | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | Example #1                           | Other | true                                              | false   | false       | https://badges.example.com/examples/one |
+      | 6129484611666145821 | Example badges                       | Other | true                                              | false   | false       | https://badges.example.com/             |
+      | 8674665223082153551 | Example badges with multiple parents | Other | true                                              | false   | false       | https://badges.example.com/parents      |
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
       | 5577006791947779410 | 11                  |

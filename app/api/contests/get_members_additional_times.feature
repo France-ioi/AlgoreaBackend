@@ -14,13 +14,13 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 41 | jane        | User    |
       | 51 | jack        | User    |
       | 61 | jack        | User    |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
-      | john  | 31       |
-      | jane  | 41       |
-      | jack  | 51       |
-      | paul  | 61       |
+    And the database has the following users:
+      | group_id | login |
+      | 21       | owner |
+      | 31       | john  |
+      | 41       | jane  |
+      | 51       | jack  |
+      | 61       | paul  |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 11       | 21         | true                   | true              |

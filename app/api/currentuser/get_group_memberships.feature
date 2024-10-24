@@ -11,15 +11,13 @@ Feature: Get group memberships for the current user
       | 7  | Team                | Another Team               | Another team group         | false             | null                                   |
       | 8  | Club                | Another Club               | Another club group         | false             | null                                   |
       | 9  | Friends             | Some other friends         | Another friends group      | false             | null                                   |
-      | 11 | User                | user self                  |                            | false             | null                                   |
-      | 21 | User                | owner self                 |                            | false             | null                                   |
       | 30 | Team                | Frozen Team                | Frozen Team                | true              | null                                   |
       | 31 | Team                | Team With Entry Conditions | Team With Entry Conditions | false             | null                                   |
       | 32 | ContestParticipants |                            |                            | false             | null                                   |
-    And the database has the following table "users":
-      | login | temp_user | group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-      | user  | 0         | 11       | John        | Doe       | 1     |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 11       | user  | John        | Doe       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 5               | 21             | 2019-05-30 11:00:00         |
@@ -45,7 +43,7 @@ Feature: Get group memberships for the current user
     And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 31             | 1  | 2            |
     And the database has the following table "results":

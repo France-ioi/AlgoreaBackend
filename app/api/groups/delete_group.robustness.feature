@@ -1,15 +1,13 @@
 Feature: Delete a group - robustness
   Background:
     Given the database has the following table "groups":
-      | id | name     | type  |
-      | 11 | Group A  | Class |
-      | 21 | owner    | User  |
-      | 23 | teacher  | User  |
-      | 55 | User     | User  |
-    And the database has the following table "users":
-      | login   | group_id | first_name  | last_name |
-      | owner   | 21       | Jean-Michel | Blanquer  |
-      | teacher | 23       | John        | Smith     |
+      | id | name    | type  |
+      | 11 | Group A | Class |
+      | 55 | User    | User  |
+    And the database has the following users:
+      | group_id | login   | first_name  | last_name |
+      | 21       | owner   | Jean-Michel | Blanquer  |
+      | 23       | teacher | John        | Smith     |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 11       | 21         | memberships_and_group |

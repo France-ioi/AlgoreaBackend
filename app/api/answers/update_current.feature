@@ -3,7 +3,7 @@ Feature: Update the 'current' answer
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database table "groups" has also the following row:
+    And the database table "groups" also has the following row:
       | id | type |
       | 13 | Team |
     And the database has the following table "groups_groups":

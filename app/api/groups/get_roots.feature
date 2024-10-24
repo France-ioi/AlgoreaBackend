@@ -36,17 +36,13 @@ Feature: Get root groups (groupRootsView)
       | 32 | U2                                       | User    |
       | 33 | U3                                       | User    |
       | 34 | U3                                       | User    |
-      | 41 | owner                                    | User    |
-      | 49 | jack                                     | User    |
-      | 50 | jane                                     | User    |
-      | 51 | john                                     | User    |
       | 52 | AllUsers                                 | Base    |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 41       | Jean-Michel | Blanquer  |
-      | jack  | 49       | Jack        | Smith     |
-      | jane  | 50       | Jane        | Doe       |
-      | john  | 51       | John        | Doe       |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 41       | owner | Jean-Michel | Blanquer  |
+      | 49       | jack  | Jack        | Smith     |
+      | 50       | jane  | Jane        | Doe       |
+      | 51       | john  | John        | Doe       |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 41         |

@@ -6,7 +6,7 @@ Feature: User rejects an invitation to join a group - robustness
       | 13 |
       | 14 |
       | 21 |
-    And the database has the following table "users":
+    And the database has the following user:
       | group_id | login |
       | 21       | john  |
     And the groups ancestors are computed

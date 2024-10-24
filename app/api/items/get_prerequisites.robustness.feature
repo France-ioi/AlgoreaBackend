@@ -1,14 +1,13 @@
 Feature: Get item prerequisites - robustness
 Background:
   Given the database has the following table "groups":
-    | id | name    | grade | type  |
-    | 11 | jdoe    | -2    | User  |
-    | 13 | Group B | -2    | Class |
-    | 14 | Team    | -2    | Team  |
-    | 15 | Team2   | -2    | Team  |
-  And the database has the following table "users":
-    | login | temp_user | group_id |
-    | jdoe  | 0         | 11       |
+    | id | name    | type  |
+    | 13 | Group B | Class |
+    | 14 | Team    | Team  |
+    | 15 | Team2   | Team  |
+  And the database has the following user:
+    | group_id | login |
+    | 11       | jdoe  |
   And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 13              | 11             |

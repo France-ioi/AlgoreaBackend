@@ -27,8 +27,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the template constant "([^"]+)" is:$`, ctx.TheTemplateConstantIsDocString)
 
 	s.Step(`^the database has the following table "([^"]+)":$`, ctx.DBHasTable)
-	s.Step(`^the database table "([^"]+)" has also the following rows?:$`, ctx.DBHasTable)
-	s.Step(`^the database has the following users:$`, ctx.DBHasUsers)
+	s.Step(`^the database table "([^"]+)"(?: also)? has the following rows?:$`, ctx.DBHasTable)
+	s.Step(`^the database(?: also)? has the following users?:$`, ctx.DBHasUsers)
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
 
 	ctx.registerFeaturesForSessions(s)

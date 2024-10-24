@@ -1,11 +1,11 @@
 Feature: Get activity log
   Background:
     Given the database has the following users:
-      | login | temp_user | group_id | first_name  | last_name | default_language |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
-      | user  | 0         | 11       | John        | Doe       | en               |
-      | jane  | 0         | 31       | Jane        | Doe       | en               |
-      | paul  | 0         | 41       | Paul        | Smith     | en               |
+      | login | group_id | first_name  | last_name | default_language |
+      | owner | 21       | Jean-Michel | Blanquer  | fr               |
+      | user  | 11       | John        | Doe       | en               |
+      | jane  | 31       | Jane        | Doe       | en               |
+      | paul  | 41       | Paul        | Smith     | en               |
     And the database has the following table "groups":
       | id | type  | name       |
       | 13 | Class | Our Class  |

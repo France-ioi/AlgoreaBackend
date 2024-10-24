@@ -2,11 +2,10 @@ Feature: Get a current answer - robustness
   Background:
     Given the database has the following table "groups":
       | id | name | type |
-      | 11 | jdoe | User |
       | 13 | team | Team |
-    And the database has the following table "users":
-      | login | group_id |
-      | jdoe  | 11       |
+    And the database has the following user:
+      | group_id | login |
+      | 11       | jdoe  |
     And the database has the following table "items":
       | id  | entry_participant_type | default_language_tag |
       | 200 | User                   | fr                   |

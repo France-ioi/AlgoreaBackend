@@ -4,8 +4,7 @@ Feature: User sends a request to join a group
       | id | is_public | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
       | 11 | 1         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
       | 14 | 1         | none                                  | null                                   | 0                      |
-      | 21 | 0         | none                                  | null                                   | 0                      |
-    And the database has the following table "users":
+    And the database has the following user:
       | group_id |
       | 21       |
     And the groups ancestors are computed

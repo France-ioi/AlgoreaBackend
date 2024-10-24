@@ -5,9 +5,7 @@ Feature: User creates a request to leave a group - robustness
       | 11 | 2019-05-30 11:00:00                    | false             |
       | 14 | null                                   | false             |
       | 15 | null                                   | true              |
-      | 21 | null                                   | false             |
-      | 22 | null                                   | false             |
-    And the database has the following table "users":
+    And the database has the following users:
       | group_id | login |
       | 21       | john  |
       | 22       | jane  |

@@ -1,9 +1,9 @@
 Feature: Export the current progress of teams on a subset of items as CSV (groupTeamProgressCSV) - robustness
   Background:
     Given the database has the following users:
-      | login | group_id |
-      | owner | 21       |
-      | user  | 11       |
+      | group_id | login |
+      | 21       | owner |
+      | 11       | user  |
     And the database has the following table "groups":
       | id |
       | 13 |

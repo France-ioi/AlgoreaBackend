@@ -8,10 +8,10 @@ Feature: Start a result for an item
       | 101 | User  | null             | null          |
       | 102 | Team  | 60               | null          |
       | 111 | User  | null             | 80            |
-    And the database has the following table "users":
-      | login | group_id |
-      | john  | 101      |
-      | jane  | 111      |
+    And the database has the following users:
+      | group_id | login |
+      | 101      | john  |
+      | 111      | jane  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 90              | 111            |
@@ -151,7 +151,7 @@ Feature: Start a result for an item
 
   Scenario: Keeps the previous started_at value
     Given I am the user with id "101"
-    And the database table "results" has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
       | 1          | 102            | 60      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
     When I send a POST request to "/items/10/60/start-result?as_team_id=102&attempt_id=1"
@@ -184,7 +184,7 @@ Feature: Start a result for an item
 
   Scenario: Sets started_at of an existing result
     Given I am the user with id "101"
-    And the database table "results" has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | started_at | latest_activity_at  |
       | 1          | 102            | 60      | null       | 2019-05-30 11:00:00 |
     When I send a POST request to "/items/10/60/start-result?as_team_id=102&attempt_id=1"

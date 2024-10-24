@@ -270,10 +270,10 @@ Feature: Save grading result - robustness
     And the table "attempts" should stay unchanged
 
   Scenario: The answer has been already graded
-    Given the database table "attempts" has also the following row:
+    Given the database table "attempts" also has the following row:
       | id | participant_id |
       | 1  | 101            |
-    And the database table "results" has also the following row:
+    And the database table "results" also has the following row:
       | attempt_id | participant_id | item_id | validated_at        |
       | 1          | 101            | 80      | 2018-05-29 06:38:38 |
     And the database has the following table "answers":

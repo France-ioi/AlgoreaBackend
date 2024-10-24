@@ -1,31 +1,25 @@
 Feature: Update thread - robustness
   Background:
     Given the database has the following table "groups":
-      | id  | name           | type  |
-      | 1   | john           | User  |
-      | 2   | manager        | User  |
-      | 3   | jack           | User  |
-      | 4   | managernowatch | User  |
-      | 5   | jess           | User  |
-      | 6   | owner          | User  |
-      | 10  | Class          | Class |
-      | 11  | School         | Class |
-      | 12  | Region         | Class |
-      | 20  | Group          | Class |
-      | 40  | Group          | Class |
-      | 50  | Group          | Class |
-      | 60  | Group          | Class |
-      | 100 | Group          | Class |
-      | 300 | Group          | Class |
-      | 310 | Group          | Class |
-    And the database has the following table "users":
-      | login          | group_id |
-      | john           | 1        |
-      | manager        | 2        |
-      | jack           | 3        |
-      | managernowatch | 4        |
-      | jess           | 5        |
-      | owner          | 6        |
+      | id  | name   | type  |
+      | 10  | Class  | Class |
+      | 11  | School | Class |
+      | 12  | Region | Class |
+      | 20  | Group  | Class |
+      | 40  | Group  | Class |
+      | 50  | Group  | Class |
+      | 60  | Group  | Class |
+      | 100 | Group  | Class |
+      | 300 | Group  | Class |
+      | 310 | Group  | Class |
+    And the database has the following users:
+      | group_id | login          |
+      | 1        | john           |
+      | 2        | manager        |
+      | 3        | jack           |
+      | 4        | managernowatch |
+      | 5        | jess           |
+      | 6        | owner          |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 12              | 11             |

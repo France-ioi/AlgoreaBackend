@@ -4,32 +4,21 @@ Feature: Remove members from a group (groupRemoveMembers)
       | id  |
       | 13  |
       | 14  |
-      | 21  |
-      | 31  |
-      | 41  |
-      | 51  |
-      | 61  |
-      | 71  |
-      | 81  |
-      | 91  |
-      | 101 |
-      | 111 |
-      | 121 |
       | 131 |
       | 132 |
-    And the database has the following table "users":
-      | login  | group_id |
-      | owner  | 21       |
-      | john   | 31       |
-      | jane   | 41       |
-      | jack   | 51       |
-      | james  | 61       |
-      | jacob  | 71       |
-      | janis  | 81       |
-      | jeff   | 91       |
-      | jenna  | 101      |
-      | jannet | 111      |
-      | judith | 121      |
+    And the database has the following users:
+      | group_id | login  |
+      | 21       | owner  |
+      | 31       | john   |
+      | 41       | jane   |
+      | 51       | jack   |
+      | 61       | james  |
+      | 71       | jacob  |
+      | 81       | janis  |
+      | 91       | jeff   |
+      | 101      | jenna  |
+      | 111      | jannet |
+      | 121      | judith |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 51             |

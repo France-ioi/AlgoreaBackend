@@ -2,15 +2,13 @@ Feature: Get a current answer
 Background:
   Given the database has the following table "groups":
     | id | name    | type  |
-    | 11 | jdoe    | User  |
     | 13 | Team    | Team  |
     | 14 | Group B | Class |
-    | 21 | other   | User  |
     | 23 | Group C | Class |
-  And the database has the following table "users":
-    | login | temp_user | group_id | first_name | last_name |
-    | jdoe  | 0         | 11       | John       | Doe       |
-    | other | 0         | 21       | George     | Bush      |
+  And the database has the following users:
+    | group_id | login |first_name | last_name |
+    | 11       | jdoe  |John       | Doe       |
+    | 21       | other |George     | Bush      |
   And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 14              | 11             |

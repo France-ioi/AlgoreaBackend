@@ -1,25 +1,18 @@
 Feature: Remove user batch (userBatchRemove) - robustness
   Background:
     Given the database has the following table "groups":
-      | id | name                      | type  | require_lock_membership_approval_until |
-      | 13 | class                     | Class | null                                   |
-      | 14 | class2                    | Class | 9999-12-31 23:59:59                    |
-      | 21 | user                      | User  | null                                   |
-      | 22 | test_custom_user          | User  | null                                   |
-      | 23 | test_custom_another_user  | User  | null                                   |
-      | 24 | test_custom1_user         | User  | null                                   |
-      | 25 | test_custom1_another_user | User  | null                                   |
-      | 26 | test1_custom_user         | User  | null                                   |
-      | 27 | test1_custom_another_user | User  | null                                   |
-    And the database has the following table "users":
-      | login                     | group_id |
-      | owner                     | 21       |
-      | test1_custom_another_user | 27       |
-      | test1_custom_user         | 26       |
-      | test_custom1_another_user | 25       |
-      | test_custom1_user         | 24       |
-      | test_custom_another_user  | 23       |
-      | test_custom_user          | 22       |
+      | id | name   | type  | require_lock_membership_approval_until |
+      | 13 | class  | Class | null                                   |
+      | 14 | class2 | Class | 9999-12-31 23:59:59                    |
+    And the database has the following users:
+      | group_id | login                     |
+      | 21       | owner                     |
+      | 22       | test_custom_user          |
+      | 23       | test_custom_another_user  |
+      | 24       | test_custom1_user         |
+      | 25       | test_custom1_another_user |
+      | 26       | test1_custom_user         |
+      | 27       | test1_custom_another_user |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 13         | memberships |

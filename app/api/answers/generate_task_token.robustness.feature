@@ -1,19 +1,15 @@
 Feature: Generate a read-only task token for an item from an answer - robustness
   Background:
     Given the database has the following table "groups":
-      | id  | name | type |
-      | 101 | john     | User |
-      | 102 | team     | Team |
-      | 103 | jack     | User |
-      | 104 | jess     | User |
-      | 105 | jim      | User |
+      | id  | name     | type  |
+      | 102 | team     | Team  |
       | 106 | Groupe A | Class |
-    And the database has the following table "users":
-      | login | group_id |
-      | john  | 101      |
-      | jack  | 103      |
-      | jess  | 104      |
-      | jim   | 105      |
+    And the database has the following users:
+      | group_id | login |
+      | 101      | john  |
+      | 103      | jack  |
+      | 104      | jess  |
+      | 105      | jim   |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 102             | 101            |

@@ -21,10 +21,10 @@ Feature: Delete the current user
       | group_id | member_id | at                      |
       | 100      | 21        | 2019-05-30 11:00:00.001 |
       | 100      | 31        | 2019-05-30 11:00:00.001 |
-    And the database has the following table "users":
-      | temp_user | login    | group_id | login_id |
-      | 0         | user     | 21       | 1234567  |
-      | 1         | tmp-1234 | 31       | null     |
+    And the database has the following users:
+      | group_id | temp_user | login    | login_id |
+      | 21       | 0         | user     | 1234567  |
+      | 31       | 1         | tmp-1234 | null     |
     And the application config is:
       """
       auth:

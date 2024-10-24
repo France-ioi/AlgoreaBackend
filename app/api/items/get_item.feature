@@ -1,22 +1,18 @@
 Feature: Get item view information
   Background:
     Given the database has the following table "groups":
-      | id | name       | grade | type  |
-      | 11 | jdoe       | -2    | User  |
-      | 13 | Group B    | -2    | Team  |
-      | 14 | nosolution | -2    | User  |
-      | 15 | Group C    | -2    | Class |
-      | 17 | fr         | -2    | User  |
-      | 22 | info       | -2    | User  |
-      | 26 | team       | -2    | Team  |
-      | 27 | Group D    | -2    | Class |
-      | 28 | Group E    | -2    | Class |
-    And the database has the following table "users":
-      | login      | temp_user | group_id | default_language |
-      | jdoe       | 0         | 11       |                  |
-      | nosolution | 0         | 14       |                  |
-      | fr         | 0         | 17       | fr               |
-      | info       | 0         | 22       |                  |
+      | id | name       | type  |
+      | 13 | Group B    | Team  |
+      | 15 | Group C    | Class |
+      | 26 | team       | Team  |
+      | 27 | Group D    | Class |
+      | 28 | Group E    | Class |
+    And the database has the following users:
+      | group_id | login      | default_language |
+      | 11       | jdoe       |                  |
+      | 14       | nosolution |                  |
+      | 17       | fr         | fr               |
+      | 22       | info       |                  |
     And the database has the following table "items":
       | id  | type    | default_language_tag | no_score | text_id  | display_details_in_parent | validation_type | requires_explicit_entry | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | prompt_to_join_group_by_code | title_bar_visible | read_only | full_screen | children_layout | show_user_infos | url            | options | uses_api | hints_allowed |
       | 200 | Task    | en                   | true     | Task_30c | true                      | All             | true                    | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true                         | true              | true      | forceYes    | List            | true            | http://someurl | {}      | true     | true          |
@@ -478,11 +474,11 @@ Feature: Get item view information
 
   Scenario Outline: With watched_group_id
     Given I am the user with id "11"
-    And the database table "group_managers" has also the following row:
+    And the database table "group_managers" also has the following row:
       | manager_id | group_id | can_watch_members | can_grant_group_access            |
       | 11         | 15       | false             | <can_grant_group_access>          |
       | 27         | 28       | true              | <can_grant_group_access_ancestor> |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
       | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
@@ -565,11 +561,11 @@ Feature: Get item view information
 
   Scenario Outline: With watched_group_id and as_team_id
     Given I am the user with id "11"
-    And the database table "group_managers" has also the following row:
+    And the database table "group_managers" also has the following row:
       | manager_id | group_id | can_watch_members | can_grant_group_access            |
       | 11         | 15       | false             | <can_grant_group_access>          |
       | 27         | 28       | true              | <can_grant_group_access_ancestor> |
-    And the database table "permissions_generated" has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
       | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |

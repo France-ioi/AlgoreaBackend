@@ -8,9 +8,9 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 15 | Group A | Team |
       | 21 | owner   | User |
       | 31 | john    | User |
-    And the database has the following table "users":
-      | login | group_id |
-      | owner | 21       |
+    And the database has the following user:
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access | can_watch_members |
       | 13       | 21         | true                   | true              |

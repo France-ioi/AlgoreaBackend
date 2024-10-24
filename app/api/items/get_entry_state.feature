@@ -7,18 +7,13 @@ Feature: Get entry state (itemGetEntryState)
       | 12 | Team 3 | Team  | 0                 |
       | 13 | Club   | Club  | 0                 |
       | 14 | School | Other | 0                 |
-      | 21 | owner  | User  | 0                 |
-      | 31 | john   | User  | 0                 |
-      | 41 | jane   | User  | 0                 |
-      | 51 | jack   | User  | 0                 |
-      | 61 | mark   | User  | 0                 |
-    And the database has the following table "users":
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | john  | 31       | John        | Doe       |
-      | jane  | 41       | Jane        | null      |
-      | jack  | 51       | Jack        | Daniel    |
-      | mark  | 61       | Mark        | Moe       |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 31       | john  | John        | Doe       |
+      | 41       | jane  | Jane        | null      |
+      | 51       | jack  | Jack        | Daniel    |
+      | 61       | mark  | Mark        | Moe       |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 10              | 31             | null                           |
@@ -72,7 +67,7 @@ Feature: Get entry state (itemGetEntryState)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | default_language_tag |
       | 50 | 00:00:00 | 1                       | User                   | <entry_min_admitted_members_ratio> | fr                   |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 31              | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
     And the database has the following table "permissions_generated":
@@ -150,7 +145,7 @@ Feature: Get entry state (itemGetEntryState)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag | entering_time_min   | entering_time_max   |
       | 60 | 00:00:00 | 1                       | Team                   | All                              | 3                   | fr                   | <entering_time_min> | <entering_time_max> |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 31              | <can_enter_from>    | <can_enter_until>   |
     And the database has the following table "permissions_generated":
@@ -201,7 +196,7 @@ Feature: Get entry state (itemGetEntryState)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 3                   | fr                   |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 11              | 9999-01-01 10:21:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -253,7 +248,7 @@ Feature: Get entry state (itemGetEntryState)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 3                   | fr                   |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -304,7 +299,7 @@ Feature: Get entry state (itemGetEntryState)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 3                   | fr                   |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -356,7 +351,7 @@ Feature: Get entry state (itemGetEntryState)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 2                   | fr                   |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 41              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -408,7 +403,7 @@ Feature: Get entry state (itemGetEntryState)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag | entering_time_min   | entering_time_max   |
       | 60 | 00:00:00 | 1                       | Team                   | None                             | 2                   | fr                   | <entering_time_min> | <entering_time_max> |
-    And the database table "permissions_granted" has also the following row:
+    And the database table "permissions_granted" also has the following row:
       | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
       | 11       | 60      | 31              | <can_enter_from>    | <can_enter_until>   |
       | 31       | 60      | 31              | 2007-01-01 10:21:21 | 9999-12-31 23:59:59 |
@@ -459,7 +454,7 @@ Feature: Get entry state (itemGetEntryState)
     | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 | not_ready      | false           |
 
   Scenario Outline: State is already_started for an individual contest
-    Given the database table "groups" has also the following row:
+    Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table "items":
@@ -474,7 +469,7 @@ Feature: Get entry state (itemGetEntryState)
     And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
       | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 100             | 31             |
     And I am the user with id "31"
@@ -499,7 +494,7 @@ Feature: Get entry state (itemGetEntryState)
       | One                              |
 
   Scenario Outline: State is already_started for a team-only contest
-    Given the database table "groups" has also the following row:
+    Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table "items":
@@ -512,7 +507,7 @@ Feature: Get entry state (itemGetEntryState)
     And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 100             | 11             |
     And I am the user with id "31"
@@ -555,7 +550,7 @@ Feature: Get entry state (itemGetEntryState)
       | One                              |
 
   Scenario: State is not_ready for an individual contest because the participation has expired
-    Given the database table "groups" has also the following row:
+    Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table "items":
@@ -570,7 +565,7 @@ Feature: Get entry state (itemGetEntryState)
     And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 1  | 31             | 2019-05-30 15:00:00 | 31         | 0                 | 50           | 2019-05-30 20:00:00      |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 31             | 2019-05-30 20:00:00 |
     And I am the user with id "31"
@@ -589,7 +584,7 @@ Feature: Get entry state (itemGetEntryState)
     """
 
   Scenario: State is ready for a team-only contest because the participation has expired
-    Given the database table "groups" has also the following row:
+    Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table "items":
@@ -602,7 +597,7 @@ Feature: Get entry state (itemGetEntryState)
     And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 100             | 11             | 2019-05-30 20:00:00 |
     And I am the user with id "31"
@@ -639,7 +634,7 @@ Feature: Get entry state (itemGetEntryState)
     """
 
   Scenario: State is ready for a team-only contest because the all its started attempts has expired
-    Given the database table "groups" has also the following row:
+    Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table "items":
@@ -654,7 +649,7 @@ Feature: Get entry state (itemGetEntryState)
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
       | 2  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
       | 3  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 100             | 11             |
     And I am the user with id "31"
@@ -691,7 +686,7 @@ Feature: Get entry state (itemGetEntryState)
     """
 
   Scenario: State is not ready for a team-only contest because the team's users have a conflicting participation
-    Given the database table "groups" has also the following row:
+    Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
     And the database has the following table "items":
@@ -706,10 +701,10 @@ Feature: Get entry state (itemGetEntryState)
       | 1  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
       | 2  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
       | 3  | 11             | 2019-05-30 15:00:00 | 31         | 0                 | 60           | 2019-05-30 20:00:00      |
-    And the database table "groups_groups" has also the following row:
+    And the database table "groups_groups" also has the following row:
       | parent_group_id | child_group_id |
       | 100             | 11             |
-    And the database table "attempts" has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 10             | 1  | 60           |
     And I am the user with id "31"
