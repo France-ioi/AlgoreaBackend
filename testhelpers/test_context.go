@@ -17,6 +17,7 @@ import (
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
@@ -47,6 +48,7 @@ type TestContext struct {
 	currentThreadKey                map[string]string
 	allUsersGroup                   string
 	needPopulateDatabase            bool
+	previousRandSource              interface{}
 	previousGeneratedGroupCodeIndex int
 	generatedGroupCodeIndex         int
 }
@@ -61,6 +63,14 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
 	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
+	database.SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {
+		ctx.previousGeneratedGroupCodeIndex = ctx.generatedGroupCodeIndex
+		ctx.previousRandSource = rand.GetSource()
+	})
+	database.SetOnForcefulRetryOfTransactionHook(func() {
+		ctx.generatedGroupCodeIndex = ctx.previousGeneratedGroupCodeIndex
+		rand.SetSource(ctx.previousRandSource)
+	})
 
 	ctx.setupApp()
 	ctx.userID = 0 // not set

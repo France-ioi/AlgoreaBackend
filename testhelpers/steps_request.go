@@ -3,10 +3,14 @@
 package testhelpers
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 
 	"github.com/cucumber/godog"
+	"github.com/go-chi/chi"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
@@ -43,7 +47,13 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	// app server
-	testServer := httptest.NewServer(ctx.application.HTTPHandler)
+	httpHandler := chi.NewRouter().With(func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx.application.HTTPHandler.ServeHTTP(w, r.WithContext(database.ContextWithTransactionRetrying(r.Context())))
+		})
+	})
+	httpHandler.Mount("/", ctx.application.HTTPHandler)
+	testServer := httptest.NewServer(httpHandler)
 	defer testServer.Close()
 
 	var headers map[string][]string
