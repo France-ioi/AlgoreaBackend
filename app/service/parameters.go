@@ -1,7 +1,9 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -210,4 +212,16 @@ func ResolveURLQueryPathInt64SliceFieldWithLimit(r *http.Request, paramName stri
 		return nil, fmt.Errorf("no more than %d %s expected", limit, paramName)
 	}
 	return ids, nil
+}
+
+// ResolveJSONBodyIntoMap reads the request body and parses it as JSON into a map.
+// As it reads out the body, it can only be called once.
+func ResolveJSONBodyIntoMap(r *http.Request) (map[string]interface{}, APIError) {
+	var rawRequestData map[string]interface{}
+	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
+	err := json.NewDecoder(r.Body).Decode(&rawRequestData)
+	if err != nil {
+		return nil, ErrInvalidRequest(fmt.Errorf("invalid input JSON: %v", err))
+	}
+	return rawRequestData, NoError
 }
