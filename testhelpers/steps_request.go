@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
@@ -55,6 +56,17 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	httpHandler.Mount("/", ctx.application.HTTPHandler)
 	testServer := httptest.NewServer(httpHandler)
 	defer testServer.Close()
+
+	database.SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {
+		ctx.previousGeneratedGroupCodeIndex = ctx.generatedGroupCodeIndex
+		ctx.previousRandSource = rand.GetSource()
+	})
+	defer database.SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {})
+	database.SetOnForcefulRetryOfTransactionHook(func() {
+		ctx.generatedGroupCodeIndex = ctx.previousGeneratedGroupCodeIndex
+		rand.SetSource(ctx.previousRandSource)
+	})
+	defer database.SetOnForcefulRetryOfTransactionHook(func() {})
 
 	var headers map[string][]string
 	if ctx.userID != 0 {
