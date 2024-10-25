@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -71,22 +70,23 @@ func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error {
 	return nil
 }
 
-var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
-
 // TheGeneratedGroupCodesAre stubs groups.GenerateGroupCode to generate the provided codes instead of random ones.
 // generatedCodes is in the following form:
 // example for three codes: "code1","code2","code3"
 // with an arbitrary number of codes.
 func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error {
-	currentIndex := 0
+	ctx.generatedGroupCodeIndex = -1
+	var parsedGeneratedCode []string
+	if err := json.Unmarshal([]byte(fmt.Sprintf("[%s]", generatedCodes)), &parsedGeneratedCode); err != nil {
+		return err
+	}
 	monkey.Patch(groups.GenerateGroupCode, func() (string, error) {
-		currentIndex++
-		code := multipleStringsRegexp.FindStringSubmatch(generatedCodes)
-		if code == nil {
+		ctx.generatedGroupCodeIndex++
+
+		if ctx.generatedGroupCodeIndex >= len(parsedGeneratedCode) {
 			return "", errors.New("not enough generated codes")
 		}
-		generatedCodes = generatedCodes[len(code[1]):]
-		return code[2], nil
+		return parsedGeneratedCode[ctx.generatedGroupCodeIndex], nil
 	})
 	return nil
 }
