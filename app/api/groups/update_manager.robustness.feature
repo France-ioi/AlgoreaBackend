@@ -42,7 +42,7 @@ Feature: Update the group manager's permissions (groupManagerEdit) - robustness
       {
       """
     Then the response code should be 400
-    And the response error message should contain "Unexpected EOF"
+    And the response error message should contain "Invalid input JSON: unexpected EOF"
     And the table "group_managers" should stay unchanged
 
   Scenario: manager_id doesn't exist

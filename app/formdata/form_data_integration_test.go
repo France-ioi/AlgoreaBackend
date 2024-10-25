@@ -40,7 +40,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			"invalid JSON",
 			&struct{}{},
 			`{id:123, name:"John"}`,
-			"invalid character 'i' looking for beginning of object key string",
+			"invalid input JSON: invalid character 'i' looking for beginning of object key string",
 			nil,
 		},
 		{
