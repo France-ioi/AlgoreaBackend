@@ -216,6 +216,60 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 	assert.Equal(t, 1, callsCount)
 }
 
+func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectRollback()
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	store := NewDataStoreWithContext(ContextWithTransactionRetrying(context.Background()), db)
+	gotError := store.InTransaction(func(s *DataStore) error {
+		var result []interface{}
+		return s.Raw("SELECT 1").Scan(&result).Error()
+	})
+
+	assert.NoError(t, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes_Hooks(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	var called []string
+	SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {
+		called = append(called, "start")
+	})
+	defer SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {})
+	SetOnForcefulRetryOfTransactionHook(func() {
+		called = append(called, "retry")
+	})
+	defer SetOnForcefulRetryOfTransactionHook(func() {})
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectRollback()
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	store := NewDataStoreWithContext(ContextWithTransactionRetrying(context.Background()), db)
+	gotError := store.InTransaction(func(s *DataStore) error {
+		var result []interface{}
+		called = append(called, "1")
+		return s.Raw("SELECT 1").Scan(&result).Error()
+	})
+
+	assert.NoError(t, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, []string{"start", "1", "retry", "1"}, called)
+}
+
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
