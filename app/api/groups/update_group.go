@@ -183,7 +183,9 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 		service.MustNotBeError(err)
 
-		groupHasParticipants := groupStore.HasParticipants(groupID)
+		var groupHasParticipants bool
+		groupHasParticipants, err = groupStore.HasParticipants(groupID)
+		service.MustNotBeError(err)
 
 		var formData *formdata.FormData
 		formData, err = validateUpdateGroupInput(r, groupHasParticipants, &currentGroupData, s)
