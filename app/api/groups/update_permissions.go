@@ -140,7 +140,9 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	}
 
 	user := srv.GetUser(r)
-	apiErr := service.NoError
+
+	rawRequestData, apiErr := service.ResolveJSONBodyIntoMap(r)
+	service.MustBeNoError(apiErr)
 
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		apiErr = checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s, user, sourceGroupID, groupID, itemID)
@@ -187,7 +189,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 
 		var dataMap map[string]interface{}
 		var modified bool
-		dataMap, modified, apiErr = parsePermissionsInputData(s, &managerPermissions, &currentPermissions, user, groupID, r)
+		dataMap, modified, apiErr = parsePermissionsInputData(s, &managerPermissions, &currentPermissions, user, groupID, rawRequestData)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
@@ -229,14 +231,14 @@ func parsePermissionsInputData(
 	currentPermissions *userPermissions,
 	user *database.User,
 	groupID int64,
-	r *http.Request,
+	rawRequestData map[string]interface{},
 ) (
 	dataMap map[string]interface{}, modified bool, apiError service.APIError,
 ) {
 	data := formdata.NewFormData(&updatePermissionsInput{})
 	modifiedPtr := registerPermissionsValidators(s, managerPermissions, currentPermissions, user, groupID, data)
 
-	err := data.ParseJSONRequestData(r)
+	err := data.ParseMapData(rawRequestData)
 	if err != nil {
 		return nil, false, service.ErrInvalidRequest(err)
 	}

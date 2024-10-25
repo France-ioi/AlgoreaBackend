@@ -212,6 +212,11 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError service.APIError, err error) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
+
+	var rawRequestData map[string]interface{}
+	rawRequestData, apiError = service.ResolveJSONBodyIntoMap(r)
+	service.MustBeNoError(apiError)
+
 	err = store.InTransaction(func(store *database.DataStore) error {
 		input := NewItemRequest{}
 		formData := formdata.NewFormData(&input)
@@ -220,7 +225,7 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		var childrenInfoMap map[int64]permissionAndType
 		registerAddItemValidators(formData, store, user, &parentInfo, &childrenInfoMap)
 
-		err = formData.ParseJSONRequestData(r)
+		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
 			apiError = service.ErrInvalidRequest(err)
 			return err // rollback

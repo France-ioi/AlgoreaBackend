@@ -83,16 +83,15 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 
 	input := itemStringUpdateRequest{}
 	data := formdata.NewFormData(&input)
+	err = data.ParseJSONRequestData(r)
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
 	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		err = data.ParseJSONRequestData(r)
-		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
-		}
-
 		var found bool
-		found, err = store.Permissions().MatchingUserAncestors(user).WithExclusiveWriteLock().
+		found, err = store.Permissions().MatchingUserAncestors(user).WithSharedWriteLock().
 			Where("item_id = ?", itemID).
 			WherePermissionIsAtLeast("view", "content").
 			WherePermissionIsAtLeast("edit", "all").
@@ -104,9 +103,9 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		}
 
 		if useDefaultLanguage {
-			service.MustNotBeError(store.Items().ByID(itemID).WithExclusiveWriteLock().PluckFirst("default_language_tag", &languageTag).Error())
+			service.MustNotBeError(store.Items().ByID(itemID).WithSharedWriteLock().PluckFirst("default_language_tag", &languageTag).Error())
 		} else {
-			found, err = store.Languages().ByTag(languageTag).WithExclusiveWriteLock().HasRows()
+			found, err = store.Languages().ByTag(languageTag).WithSharedWriteLock().HasRows()
 			service.MustNotBeError(err)
 			if !found {
 				apiError = service.ErrInvalidRequest(errors.New("no such language"))

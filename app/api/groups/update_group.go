@@ -158,7 +158,8 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 	user := srv.GetUser(r)
 
-	apiErr := service.NoError
+	rawRequestData, apiErr := service.ResolveJSONBodyIntoMap(r)
+	service.MustBeNoError(apiErr)
 
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		groupStore := s.Groups()
@@ -188,7 +189,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(err)
 
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(r, groupHasParticipants, &currentGroupData, s)
+		formData, err = validateUpdateGroupInput(rawRequestData, groupHasParticipants, &currentGroupData, s)
 		if err != nil {
 			apiErr = service.ErrInvalidRequest(err)
 			return apiErr.Error // rollback
@@ -398,7 +399,7 @@ func shouldRefuseGroupPendingRequests(
 }
 
 func validateUpdateGroupInput(
-	r *http.Request, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
+	rawRequestData map[string]interface{}, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
 ) (*formdata.FormData, error) {
 	input := &groupUpdateInput{}
 	formData := formdata.NewFormData(input)
@@ -430,7 +431,7 @@ func validateUpdateGroupInput(
 
 	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
 
-	err := formData.ParseJSONRequestData(r)
+	err := formData.ParseMapData(rawRequestData)
 	return formData, err
 }
 

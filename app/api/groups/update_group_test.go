@@ -2,8 +2,6 @@ package groups
 
 import (
 	"errors"
-	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -19,15 +17,15 @@ import (
 func Test_validateUpdateGroupInput(t *testing.T) {
 	tests := []struct {
 		name    string
-		json    string
+		jsonMap map[string]interface{}
 		wantErr bool
 	}{
-		{"code_lifetime=2147483647", `{"code_lifetime":2147483647}`, false},
-		{"code_lifetime=0", `{"code_lifetime":0}`, false},
-		{"code_lifetime=null", `{"code_lifetime":null}`, false},
+		{"code_lifetime=2147483647", map[string]interface{}{"code_lifetime": 2147483647}, false},
+		{"code_lifetime=0", map[string]interface{}{"code_lifetime": 0}, false},
+		{"code_lifetime=null", map[string]interface{}{"code_lifetime": nil}, false},
 
-		{"code_lifetime=2147483648", `{"code_lifetime":2147483648}`, true},
-		{"code_lifetime=", `{"code_lifetime":""}`, true},
+		{"code_lifetime=2147483648", map[string]interface{}{"code_lifetime": 2147483648}, true},
+		{"code_lifetime=", map[string]interface{}{"code_lifetime": ""}, true},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -39,8 +37,7 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 			defer database.ClearAllDBEnums()
 
 			store := database.NewDataStore(db)
-			r, _ := http.NewRequest("PUT", "/", strings.NewReader(tt.json))
-			_, err := validateUpdateGroupInput(r, true, &groupUpdateInput{
+			_, err := validateUpdateGroupInput(tt.jsonMap, true, &groupUpdateInput{
 				CanManageValue: store.GroupManagers().CanManageIndexByName("memberships_and_group"),
 			}, store)
 			if (err != nil) != tt.wantErr {
