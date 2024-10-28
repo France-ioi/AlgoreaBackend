@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.23.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.2...v2.23.3) - 2024-10-28
+- make all the services compatible with transactions retrying
+- optimize the groupChildrenView service
+- fix/improve testing
+
 ## [v2.23.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.1...v2.23.2) - 2024-10-21
 - rework groups propagation: get rid of the named lock, use more granular locking, speed up the propagation a bit
 
