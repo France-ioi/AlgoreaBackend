@@ -52,3 +52,19 @@ func TestString(t *testing.T) {
 	Seed(1)
 	assert.Equal(t, "BpLnfgDsc2W", String(11))
 }
+
+func TestGetSource_SetSource(t *testing.T) {
+	Seed(1)
+	Int63()
+	Float64()
+	oldSource := GetSource()
+	values := make([]interface{}, 0, 4)
+	values = append(values, Float64(), Int63(), Float64(), Int63())
+	SetSource(oldSource)
+	newValues := make([]interface{}, 0, 4)
+	newValues = append(newValues, Float64(), Int63(), Float64(), Int63())
+	assert.Equal(t, values, newValues)
+	SetSource(oldSource)
+	newValues = []interface{}{Float64(), Int63(), Float64(), Int63()}
+	assert.Equal(t, values, newValues)
+}

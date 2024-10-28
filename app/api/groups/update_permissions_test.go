@@ -2,10 +2,8 @@ package groups
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -631,7 +629,7 @@ func Test_IsOwnerValidator_AllowsSettingIsOwnerToFalseOrSameValue(t *testing.T) 
 
 	currentPermissions := &userPermissions{}
 	dataMap, modified, apiError := parsePermissionsInputData(dataStore, &managerGeneratedPermissions{}, currentPermissions,
-		&database.User{}, 0, &http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":false}`))})
+		&database.User{}, 0, map[string]interface{}{"is_owner": false})
 	assert.Equal(t, service.NoError, apiError)
 	assert.False(t, modified)
 	assert.Equal(t, &userPermissions{}, currentPermissions)
@@ -639,24 +637,21 @@ func Test_IsOwnerValidator_AllowsSettingIsOwnerToFalseOrSameValue(t *testing.T) 
 
 	currentPermissions = &userPermissions{IsOwner: true}
 	dataMap, modified, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
-		currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":false}`))})
+		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": false})
 	assert.Equal(t, service.NoError, apiError)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": false}, dataMap)
 
 	currentPermissions = &userPermissions{IsOwner: true}
 	dataMap, modified, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
-		currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
+		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
 	assert.Equal(t, service.NoError, apiError)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": true}, dataMap)
 
 	currentPermissions = &userPermissions{}
 	_, _, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
-		currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
+		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -670,13 +665,13 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 	currentPermissions := &userPermissions{}
 	_, _, apiError := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{IsOwnerGenerated: false}, currentPermissions,
-		&database.User{}, 0, &http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
+		&database.User{}, 0, map[string]interface{}{"is_owner": true})
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	currentPermissions = &userPermissions{}
 	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{IsOwnerGenerated: true}, currentPermissions,
-		&database.User{}, 0, &http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
+		&database.User{}, 0, map[string]interface{}{"is_owner": true})
 	assert.Equal(t, service.NoError, apiError)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": true}, dataMap)
@@ -721,7 +716,7 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 				currentPermissions := currentPermissionsGenerator(currentValue, permissionGrantedStore)
 				dataMap, modified, apiError := parsePermissionsInputData(dataStore,
 					&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-					&http.Request{Body: ioutil.NopCloser(strings.NewReader(fmt.Sprintf(`{%q:%#v}`, fieldName, newValue)))})
+					map[string]interface{}{fieldName: newValue})
 				assert.Equal(t, service.NoError, apiError)
 				assert.Equal(t, newValue != currentValue, modified)
 				assert.Equal(t, map[string]interface{}{fieldName: newValue}, dataMap)
@@ -734,10 +729,10 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 }
 
 func Test_CanViewValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_view":"info"}`, checkIfPossibleToModifyCanView)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_view": "info"}, checkIfPossibleToModifyCanView)
 }
 
-func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, body string, checkFunc interface{}) {
+func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string]interface{}, checkFunc interface{}) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	dataStore := database.NewDataStore(db)
@@ -749,8 +744,7 @@ func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, body string, checkFun
 	defer pg.Unpatch()
 
 	_, _, apiError := parsePermissionsInputData(dataStore,
-		&managerGeneratedPermissions{}, &userPermissions{}, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(body))})
+		&managerGeneratedPermissions{}, &userPermissions{}, &database.User{}, 0, parsedBody)
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -765,7 +759,7 @@ func Test_CanGrantViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *
 }
 
 func Test_CanGrantViewValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_grant_view":"info"}`, checkIfPossibleToModifyCanGrantView)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_grant_view": "info"}, checkIfPossibleToModifyCanGrantView)
 }
 
 func Test_CanWatchValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
@@ -777,7 +771,7 @@ func Test_CanWatchValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *test
 }
 
 func Test_CanWatchValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_watch":"result"}`, checkIfPossibleToModifyCanWatch)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_watch": "result"}, checkIfPossibleToModifyCanWatch)
 }
 
 func Test_CanEditValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
@@ -789,7 +783,7 @@ func Test_CanEditValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testi
 }
 
 func Test_CanEditValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_edit":"all"}`, checkIfPossibleToModifyCanEdit)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_edit": "all"}, checkIfPossibleToModifyCanEdit)
 }
 
 func Test_CanMakeSessionOfficialValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
@@ -801,7 +795,8 @@ func Test_CanMakeSessionOfficialValidator_SetsModifiedFlagAndUpdatesCurrentPermi
 }
 
 func Test_CanMakeSessionOfficialValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_make_session_official":false}`, checkIfPossibleToModifyCanMakeSessionOfficial)
+	testValidatorFailsWhenCheckReturnsFalse(
+		t, map[string]interface{}{"can_make_session_official": false}, checkIfPossibleToModifyCanMakeSessionOfficial)
 }
 
 func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
@@ -818,16 +813,14 @@ func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
 	currentPermissions := &userPermissions{CanEnterFrom: database.Time(tmPlus)}
 	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_from":%q}`, "2019-05-30T11:00:00Z")))})
+		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:00Z"})
 	assert.Equal(t, service.NoError, apiError)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"can_enter_from": tm}, dataMap)
 
 	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_from":%q}`, "2019-05-30T11:00:01Z")))})
+		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:01Z"})
 	assert.Equal(t, service.NoError, apiError)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{"can_enter_from": tmPlus}, dataMap)
@@ -836,7 +829,8 @@ func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
 }
 
 func Test_CanEnterFromValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_enter_from":"2019-05-30T11:00:00Z"}`, checkIfPossibleToModifyCanEnterFrom)
+	testValidatorFailsWhenCheckReturnsFalse(
+		t, map[string]interface{}{"can_enter_from": "2019-05-30T11:00:00Z"}, checkIfPossibleToModifyCanEnterFrom)
 }
 
 func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
@@ -853,8 +847,7 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 	}
 	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_until":%q}`, "2019-05-30T11:00:00Z")))})
+		map[string]interface{}{"can_enter_until": "2019-05-30T11:00:00Z"})
 	assert.Equal(t, service.NoError, apiError)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{
@@ -863,8 +856,7 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 
 	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_until":%q}`, "2019-05-30T11:00:01Z")))})
+		map[string]interface{}{"can_enter_until": "2019-05-30T11:00:01Z"})
 	assert.Equal(t, service.NoError, apiError)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{
@@ -875,7 +867,8 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 }
 
 func Test_CanEnterUntilValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_enter_until":"2019-05-30T11:00:00Z"}`, checkIfPossibleToModifyCanEnterUntil)
+	testValidatorFailsWhenCheckReturnsFalse(
+		t, map[string]interface{}{"can_enter_until": "2019-05-30T11:00:00Z"}, checkIfPossibleToModifyCanEnterUntil)
 }
 
 func Test_parsePermissionsInputData_ChecksCanViewFirstAndUsesItsNewValue(t *testing.T) {
@@ -895,13 +888,13 @@ func Test_parsePermissionsInputData_ChecksCanViewFirstAndUsesItsNewValue(t *test
 			CanWatchGeneratedValue:     permissionGrantedStore.WatchIndexByName(answerWithGrant),
 			CanEditGeneratedValue:      permissionGrantedStore.EditIndexByName(allWithGrant),
 		}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{
-			"can_view": "solution",
-			"can_grant_view": "solution_with_grant",
-			"can_watch": "answer_with_grant",
-			"can_edit": "all_with_grant",
-			"can_make_session_official": true
-		}`))})
+		map[string]interface{}{
+			"can_view":                  "solution",
+			"can_grant_view":            "solution_with_grant",
+			"can_watch":                 "answer_with_grant",
+			"can_edit":                  "all_with_grant",
+			"can_make_session_official": true,
+		})
 	assert.Equal(t, service.NoError, apiError)
 	assert.True(t, modified)
 	assert.Equal(t, &userPermissions{

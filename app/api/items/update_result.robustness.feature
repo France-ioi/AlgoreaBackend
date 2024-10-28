@@ -66,7 +66,12 @@ Feature: Update an attempt result - robustness
 
   Scenario: No result with given participant_id, attempt_id, item_id
     Given I am the user with id "11"
-    When I send a PUT request to "/items/200/attempts/3"
+    When I send a PUT request to "/items/200/attempts/3" with the following body:
+      """
+      {
+        "help_requested": true
+      }
+      """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 

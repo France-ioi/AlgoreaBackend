@@ -4,6 +4,7 @@ package rand
 import (
 	mr "math/rand"
 	"sync"
+	"unsafe"
 )
 
 var (
@@ -51,4 +52,43 @@ func String(n int) string {
 		s[i] = letters[globalRand.Intn(len(letters))]
 	}
 	return string(s)
+}
+
+const rngLen = 607
+
+type rngSource struct {
+	_ int           // index into vec
+	_ int           // index into vec
+	_ [rngLen]int64 // current feedback register
+}
+
+type sourceInterface struct {
+	typ unsafe.Pointer
+	val *rngSource
+}
+
+type rnd struct {
+	src   sourceInterface
+	src64 sourceInterface
+}
+
+// GetSource returns a copy of the current source of the random number generator.
+func GetSource() interface{} {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+
+	source := ((*rnd)(unsafe.Pointer(globalRand))).src64.val //nolint:gosec // G103: Valid use of unsafe call
+
+	sourceCopy := &rngSource{}
+	*sourceCopy = *source
+	return sourceCopy
+}
+
+// SetSource sets the source of the random number generator to a copy of the given source.
+func SetSource(newSource interface{}) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+
+	source := ((*rnd)(unsafe.Pointer(globalRand))).src64.val //nolint:gosec // G103: Valid use of unsafe call
+	*source = *newSource.(*rngSource)
 }

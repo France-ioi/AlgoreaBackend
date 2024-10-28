@@ -120,13 +120,14 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		return service.ErrInvalidRequest(err)
 	}
 
-	input := updateItemRequest{}
-	formData := formdata.NewFormData(&input)
+	rawRequestData, apiError := service.ResolveJSONBodyIntoMap(r)
+	service.MustBeNoError(apiError)
 
 	var propagationsToRun []string
 
-	apiError := service.NoError
 	err = store.InTransaction(func(store *database.DataStore) error {
+		input := updateItemRequest{}
+		formData := formdata.NewFormData(&input)
 		var itemInfo struct {
 			ParticipantsGroupID   *int64
 			Type                  string
@@ -165,7 +166,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		formData.RegisterValidation("options", constructItemOptionsValidator())
 		formData.RegisterTranslation("null|options", "options should be a valid JSON or null")
 
-		err = formData.ParseJSONRequestData(r)
+		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
 			apiError = service.ErrInvalidRequest(err)
 			return err // rollback
@@ -198,9 +199,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		return err
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustBeNoError(apiError)
 	service.MustNotBeError(err)
 
 	service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)

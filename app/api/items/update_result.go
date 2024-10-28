@@ -79,6 +79,10 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 
 	input := resultUpdateRequest{}
 	formData := formdata.NewFormData(&input)
+	err = formData.ParseJSONRequestData(r)
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
 
 	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
@@ -92,12 +96,6 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 		if !found {
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error // rollback
-		}
-
-		err = formData.ParseJSONRequestData(r)
-		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
 		}
 
 		data := formData.ConstructMapForDB()

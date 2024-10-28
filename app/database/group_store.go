@@ -257,18 +257,17 @@ func (s *GroupStore) GetDirectParticipantIDsOf(groupID int64) (participantIDs []
 }
 
 // HasParticipants checks whether a group has participants.
-func (s *GroupStore) HasParticipants(groupID int64) bool {
-	hasParticipants, err := s.
+// Must be called inside a transaction.
+func (s *GroupStore) HasParticipants(groupID int64) (hasParticipants bool, err error) {
+	return s.
 		Joins("JOIN groups_groups ON groups_groups.parent_group_id = groups.id").
 		Joins("JOIN `groups` AS participants ON participants.id = groups_groups.child_group_id").
 		Where("groups.id = ?", groupID).
 		Where("participants.type = 'User' OR participants.type = 'Team'").
+		WithSharedWriteLock().
 		Select("1").
 		Limit(1).
 		HasRows()
-	mustNotBeError(err)
-
-	return hasParticipants
 }
 
 // PossibleSubgroupsBySearchString returns a query for searching for possible subgroups of a user.

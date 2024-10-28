@@ -127,6 +127,7 @@ func (f *FormData) AllowUnknownFields() {
 }
 
 // ParseJSONRequestData parses and validates JSON from the request according to the structure definition.
+// As it reads out the request body, it should be called only once.
 func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 	if err := f.decodeRequestJSONDataIntoStruct(r); err != nil {
 		return err
@@ -221,7 +222,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawData)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid input JSON: %v", err)
 	}
 	f.decodeMapIntoStruct(rawData)
 	return nil

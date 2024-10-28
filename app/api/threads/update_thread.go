@@ -114,7 +114,9 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
+	rawRequestData, apiError := service.ResolveJSONBodyIntoMap(r)
+	service.MustBeNoError(apiError)
+
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var oldThread struct {
 			Status        string
@@ -152,7 +154,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		formData.RegisterTranslation("can_request_help_to_when_own_thread",
 			"the group must be descendant of a group the participant can request help to")
 
-		err = formData.ParseJSONRequestData(r)
+		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
 			apiError = service.ErrInvalidRequest(err)
 			return apiError.Error

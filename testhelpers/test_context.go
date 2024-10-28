@@ -29,24 +29,27 @@ type dbquery struct {
 
 // TestContext implements context for tests.
 type TestContext struct {
-	application          *app.Application // do NOT call it directly, use `app()`
-	userID               int64            // userID that will be used for the next requests
-	user                 string           // user reference of the logged user
-	featureQueries       []dbquery
-	lastResponse         *http.Response
-	lastResponseBody     string
-	logsHook             *loggingtest.Hook
-	logsRestoreFunc      func()
-	inScenario           bool
-	db                   *sql.DB
-	dbTableData          map[string]*godog.Table
-	templateSet          *jet.Set
-	requestHeaders       map[string][]string
-	referenceToIDMap     map[string]int64
-	idToReferenceMap     map[int64]string
-	currentThreadKey     map[string]string
-	allUsersGroup        string
-	needPopulateDatabase bool
+	application                     *app.Application // do NOT call it directly, use `app()`
+	userID                          int64            // userID that will be used for the next requests
+	user                            string           // user reference of the logged user
+	featureQueries                  []dbquery
+	lastResponse                    *http.Response
+	lastResponseBody                string
+	logsHook                        *loggingtest.Hook
+	logsRestoreFunc                 func()
+	inScenario                      bool
+	db                              *sql.DB
+	dbTableData                     map[string]*godog.Table
+	templateSet                     *jet.Set
+	requestHeaders                  map[string][]string
+	referenceToIDMap                map[string]int64
+	idToReferenceMap                map[int64]string
+	currentThreadKey                map[string]string
+	allUsersGroup                   string
+	needPopulateDatabase            bool
+	previousRandSource              interface{}
+	previousGeneratedGroupCodeIndex int
+	generatedGroupCodeIndex         int
 }
 
 const (

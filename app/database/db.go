@@ -101,7 +101,7 @@ func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOption
 
 const (
 	transactionRetriesLimit        = 30
-	transactionDelayBetweenRetries = 1000 * time.Millisecond
+	transactionDelayBetweenRetries = 50 * time.Millisecond
 )
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
@@ -109,9 +109,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		return errors.New("transaction retries limit exceeded")
 	}
 
-	if count > 0 {
-		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
-	}
+	conn.sleepBeforeStartingTransactionIfNeeded(count)
 
 	txOpts := &sql.TxOptions{}
 	if len(txOptions) > 0 {
@@ -147,6 +145,12 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 	}()
 	err = txFunc(newDB(conn.ctx, txDB, nil))
 	return err
+}
+
+func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
+	if count > 0 && conn.ctx.Value(retryEachTransactionContextKey) == nil {
+		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
+	}
 }
 
 func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,

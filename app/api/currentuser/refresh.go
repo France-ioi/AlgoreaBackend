@@ -30,9 +30,10 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), accessToken)
 	service.MustNotBeError(err)
+	badges := userProfile["badges"].([]database.Badge)
 
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), user.GroupID, false))
+		service.MustNotBeError(store.Groups().StoreBadges(badges, user.GroupID, false))
 		userProfile["latest_activity_at"] = database.Now()
 		userProfile["latest_profile_sync_at"] = database.Now()
 		delete(userProfile, "default_language")

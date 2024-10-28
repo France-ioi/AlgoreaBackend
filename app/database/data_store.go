@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
@@ -214,16 +217,41 @@ type dbContextKey string
 const (
 	awaitingPropagationsContextKey   = dbContextKey("awaitingPropagations")
 	prohibitedPropagationsContextKey = dbContextKey("prohibitedPropagations")
+	retryEachTransactionContextKey   = dbContextKey("retryEachTransaction")
+)
+
+var (
+	onStartOfTransactionToBeRetriedForcefullyHook = func() {}
+	onForcefulRetryOfTransactionHook              = func() {}
 )
 
 // InTransaction executes the given function in a transaction and commits.
 // If a propagation is scheduled, it will be run after the transaction commit,
 // so we can run each step of the propagation in a separate transaction.
+//
+// For testing purposes, it is possible to force this method to retry the transaction once
+// by providing a context created with ContextWithTransactionRetrying.
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
 	s.DB.ctx = context.WithValue(s.DB.ctx, awaitingPropagationsContextKey, &propagationsBitField{})
+	var retried bool
+
 	err := s.inTransaction(func(db *DB) error {
+		shouldForceTransactionRetry := s.DB.ctx.Value(retryEachTransactionContextKey) != nil && !retried
+
 		dataStore := NewDataStoreWithTable(db, s.tableName)
+		if shouldForceTransactionRetry {
+			onStartOfTransactionToBeRetriedForcefullyHook()
+		}
+
 		err := txFunc(dataStore)
+
+		if err == nil && shouldForceTransactionRetry {
+			retried = true
+			onForcefulRetryOfTransactionHook()
+			return &mysql.MySQLError{
+				Number: uint16(mysqldb.DeadlockError),
+			}
+		}
 
 		return err
 	}, txOptions...)
@@ -244,6 +272,20 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 	}
 
 	return err
+}
+
+// SetOnStartOfTransactionToBeRetriedForcefullyHook sets a hook to be called on the start
+// of a transaction that will be forcefully retried.
+// For testing purposes only.
+func SetOnStartOfTransactionToBeRetriedForcefullyHook(hook func()) {
+	onStartOfTransactionToBeRetriedForcefullyHook = hook
+}
+
+// SetOnForcefulRetryOfTransactionHook sets a hook to be called on the retry
+// of a forcefully retried transaction.
+// For testing purposes only.
+func SetOnForcefulRetryOfTransactionHook(hook func()) {
+	onForcefulRetryOfTransactionHook = hook
 }
 
 // ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
@@ -353,4 +395,10 @@ func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColu
 // If updateColumns is nil, all the columns in dataMaps will be updated.
 func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateColumns []string) error {
 	return s.DB.insertOrUpdateMaps(s.tableName, dataMap, updateColumns)
+}
+
+// ContextWithTransactionRetrying wraps the given context with a flag to retry each transaction once.
+// Use it for testing purposes only.
+func ContextWithTransactionRetrying(ctx context.Context) context.Context {
+	return context.WithValue(ctx, retryEachTransactionContextKey, true)
 }

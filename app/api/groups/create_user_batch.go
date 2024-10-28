@@ -256,11 +256,12 @@ type resultRow struct {
 func createBatchUsersInDB(store *database.DataStore, input createUserBatchRequest, r *http.Request, numberOfUsersToBeCreated int,
 	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User,
 ) []*resultRow {
-	result := make([]*resultRow, 0, len(subgroupsApprovals))
+	var finalResult []*resultRow
 
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		domainConfig := domain.ConfigFromContext(r.Context())
 
+		result := make([]*resultRow, 0, len(subgroupsApprovals))
 		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated)
 		usersToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
 		attemptsToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
@@ -344,7 +345,11 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 		}
 		service.MustNotBeError(store.Users().InsertMaps(usersToCreate))
 		service.MustNotBeError(store.Attempts().InsertMaps(attemptsToCreate))
-		return store.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+		err := store.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+		service.MustNotBeError(err)
+		finalResult = result
+
+		return nil
 	}))
-	return result
+	return finalResult
 }
