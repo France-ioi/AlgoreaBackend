@@ -16,6 +16,8 @@ import (
 )
 
 func TestGetParticipantIDFromRequest(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1, type: Class}, {id: 2, type: Team}, {id: 3, type: Team}, {id: 4, type: User}, {id: 5, type: User}]
 		users: [{group_id: 4, login: john}, {group_id: 5, login: jane}]
@@ -59,6 +61,8 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
+		testhelpers.SuppressOutputIfPasses(t)
+
 		test := test
 		participantID, apiError := service.GetParticipantIDFromRequest(
 			&http.Request{URL: &url.URL{RawQuery: test.query}}, &database.User{GroupID: 4}, store)

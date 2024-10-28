@@ -17,6 +17,8 @@ import (
 )
 
 func TestBase_ResolveWatchedGroupID(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1, type: Class}, {id: 2, type: Team}, {id: 3, type: Other}, {id: 4, type: User}, {id: 5, type: User}, {id: 6, type: Team}]
 		groups_groups:
@@ -58,6 +60,8 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+
 			req, _ := http.NewRequest("GET", tt.url, http.NoBody)
 			watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(req)
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)
