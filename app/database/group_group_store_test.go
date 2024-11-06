@@ -169,10 +169,14 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 
 func setMockExpectationsForCreateNewAncestors(mock sqlmock.Sqlmock) {
 	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
+	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectPrepare("")
 	mock.ExpectPrepare("")
 	mock.ExpectPrepare("")
 	mock.ExpectPrepare("")
+	mock.ExpectPrepare("")
+	mock.ExpectPrepare("")
+	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(-1, 0))
