@@ -363,3 +363,16 @@ func Test_GroupStore_DeleteGroup(t *testing.T) {
 	assert.NoError(t, groupStore.Table("groups_propagate").Pluck("id", &ids).Error())
 	assert.Empty(t, ids)
 }
+
+func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1}]`)
+	defer func() { _ = db.Close() }()
+
+	const expectedErrorMessage = "Error 1644: Unable to change immutable groups.type"
+
+	groupGroupStore := database.NewDataStore(db).Groups()
+	result := groupGroupStore.ByID(1).UpdateColumn("type", "Team")
+	assert.EqualError(t, result.Error(), expectedErrorMessage)
+}

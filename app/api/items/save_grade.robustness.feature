@@ -3,10 +3,6 @@ Feature: Save grading result - robustness
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
-    And the database has the following table "groups_groups":
-      | parent_group_id | child_group_id |
-      | 22              | 13             |
-    And the groups ancestors are computed
     And the database has the following table "platforms":
       | id | regexp                                             | priority | public_key                |
       | 10 | http://taskplatform.mblockelet.info/task.html\?.*  | 2        | {{taskPlatformPublicKey}} |

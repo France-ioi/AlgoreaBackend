@@ -29,5 +29,6 @@ func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 		{106, 1, 2},
 		{107, 1, 2},
 		{108, 1, 2},
+		{109, 1, 2},
 	})
 }

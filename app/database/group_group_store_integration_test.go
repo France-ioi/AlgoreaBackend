@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -265,14 +266,16 @@ const (
 		- {ancestor_item_id: 1, child_item_id: 2}
 		- {ancestor_item_id: 1, child_item_id: 3}
 		- {ancestor_item_id: 2, child_item_id: 3}
-	groups: [{id: 101}, {id: 102}, {id: 103}, {id: 104}, {id: 105}, {id: 106}, {id: 107}, {id: 108}]
+	groups: [{id: 101}, {id: 102}, {id: 103}, {id: 104}, {id: 105}, {id: 106}, {id: 107}, {id: 108}, {id: 109, type: Team}]
 	groups_groups:
 		- {parent_group_id: 101, child_group_id: 102}
 		- {parent_group_id: 101, child_group_id: 103}
 		- {parent_group_id: 101, child_group_id: 104}
 		- {parent_group_id: 101, child_group_id: 105}
 		- {parent_group_id: 101, child_group_id: 106}
+		- {parent_group_id: 101, child_group_id: 109}
 		- {parent_group_id: 102, child_group_id: 103}
+		- {parent_group_id: 102, child_group_id: 109}
 		- {parent_group_id: 104, child_group_id: 105}
 		- {parent_group_id: 107, child_group_id: 105}
 		- {parent_group_id: 108, child_group_id: 104, expires_at: 2019-05-30 11:00:00}
@@ -291,6 +294,7 @@ const (
 		- {id: 1, participant_id: 106}
 		- {id: 1, participant_id: 107}
 		- {id: 1, participant_id: 108}
+		- {id: 1, participant_id: 109}
 	results:
 		- {attempt_id: 1, participant_id: 101, item_id: 1}
 		- {attempt_id: 1, participant_id: 102, item_id: 1}
@@ -300,6 +304,7 @@ const (
 		- {attempt_id: 1, participant_id: 106, item_id: 1}
 		- {attempt_id: 1, participant_id: 107, item_id: 1}
 		- {attempt_id: 1, participant_id: 108, item_id: 1}
+		- {attempt_id: 1, participant_id: 109, item_id: 1}
 		- {attempt_id: 1, participant_id: 101, item_id: 2}
 		- {attempt_id: 1, participant_id: 102, item_id: 2}
 		- {attempt_id: 1, participant_id: 103, item_id: 2}
@@ -308,6 +313,7 @@ const (
 		- {attempt_id: 1, participant_id: 106, item_id: 2}
 		- {attempt_id: 1, participant_id: 107, item_id: 2}
 		- {attempt_id: 1, participant_id: 108, item_id: 2}
+		- {attempt_id: 1, participant_id: 109, item_id: 2}
 		- {attempt_id: 1, participant_id: 101, item_id: 3}
 		- {attempt_id: 1, participant_id: 102, item_id: 3}
 		- {attempt_id: 1, participant_id: 103, item_id: 3}
@@ -315,7 +321,8 @@ const (
 		- {attempt_id: 1, participant_id: 105, item_id: 3}
 		- {attempt_id: 1, participant_id: 106, item_id: 3}
 		- {attempt_id: 1, participant_id: 107, item_id: 3}
-		- {attempt_id: 1, participant_id: 108, item_id: 3}`
+		- {attempt_id: 1, participant_id: 108, item_id: 3}
+		- {attempt_id: 1, participant_id: 109, item_id: 3}`
 )
 
 func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
@@ -343,6 +350,13 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 			parentGroupID:   103,
 			childGroupID:    104,
 			expiresAt:       "2019-05-30 11:00:00",
+			expectedChanged: []resultPrimaryKey{},
+		},
+		{
+			name:            "group joins a group, but the relation is a team membership",
+			parentGroupID:   109,
+			childGroupID:    104,
+			expiresAt:       "9999-12-31 23:59:59",
 			expectedChanged: []resultPrimaryKey{},
 		},
 		{
@@ -408,6 +422,13 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			},
 		},
 		{
+			name:            "restore an expired relation for a team membership",
+			parentGroupID:   109,
+			childGroupID:    104,
+			expiresAt:       "9999-12-31 23:59:59",
+			expectedChanged: []resultPrimaryKey{},
+		},
+		{
 			name:            "expire the relation",
 			parentGroupID:   103,
 			childGroupID:    104,
@@ -453,9 +474,9 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 				expiresAt = maxDateTime
 			}
 			db := testhelpers.SetupDBWithFixtureString(
+				groupGroupMarksResultsAsChangedFixture,
 				fmt.Sprintf("groups_groups: [{parent_group_id: %d, child_group_id: %d, expires_at: %s}]",
-					test.parentGroupID, test.childGroupID, expiresAt),
-				groupGroupMarksResultsAsChangedFixture)
+					test.parentGroupID, test.childGroupID, expiresAt))
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -479,14 +500,15 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 	}
 }
 
-func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChildGroupID(t *testing.T) {
+func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChildGroupIDOrIsTeamMembership(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1}, {id: 2}]
 		groups_groups: [{parent_group_id: 1, child_group_id: 2}]
 	`)
 	defer func() { _ = db.Close() }()
 
-	const expectedErrorMessage = "Error 1644: Unable to change immutable " +
-		"groups_groups.parent_group_id and/or groups_groups.child_group_id"
+	const expectedErrorMessage = "Error 1644: Unable to change immutable columns of groups_groups " +
+		"(parent_group_id/child_group_id/is_team_membership)"
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	result := groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
@@ -494,6 +516,9 @@ func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChild
 	assert.EqualError(t, result.Error(), expectedErrorMessage)
 	result = groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
 		UpdateColumn("child_group_id", 3)
+	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	result = groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
+		UpdateColumn("is_team_membership", 1)
 	assert.EqualError(t, result.Error(), expectedErrorMessage)
 }
 
@@ -546,4 +571,41 @@ func queryResultsAndStatesForTests(t *testing.T, s *database.ResultStore, result
 			Union(resultStore.Select(columns).
 				Joins("RIGHT JOIN results_propagate USING(participant_id, attempt_id, item_id)")).
 			Order("participant_id, attempt_id, item_id").Scan(result).Error())
+}
+
+func TestGroupGroupStore_TriggerBeforeDelete(t *testing.T) {
+	testhelpers.SuppressOutputIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1}, {id: 2}, {id: 3, type: Team}, {id: 4}]
+		groups_groups: [{parent_group_id: 1, child_group_id: 2}, {parent_group_id: 3, child_group_id: 4}]`)
+
+	dataStore := database.NewDataStore(db)
+	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+		return store.GroupGroups().CreateNewAncestors()
+	}))
+
+	found, err := dataStore.Table("groups_propagate").Where("ancestors_computation_state != 'done'").HasRows()
+	require.NoError(t, err)
+	require.False(t, found)
+
+	require.NoError(t, dataStore.GroupGroups().Delete("parent_group_id = 1 AND child_group_id = 2").Error())
+
+	type id struct {
+		ID int64
+	}
+	var marked []id
+	require.NoError(t, dataStore.Table("groups_propagate").Where("ancestors_computation_state = 'todo'").Scan(&marked).Error())
+	assert.Equal(t, []id{{2}}, marked)
+	require.NoError(t, dataStore.Table("groups_propagate").
+		Where("ancestors_computation_state = 'todo'").
+		UpdateColumn("ancestors_computation_state", "done").Error())
+	found, err = dataStore.Table("groups_propagate").Where("ancestors_computation_state != 'done'").HasRows()
+	require.NoError(t, err)
+	require.False(t, found)
+
+	require.NoError(t, dataStore.GroupGroups().Delete("parent_group_id = 3 AND child_group_id = 4").Error())
+	found, err = dataStore.Table("groups_propagate").Where("ancestors_computation_state != 'done'").HasRows()
+	require.NoError(t, err)
+	assert.False(t, found)
 }

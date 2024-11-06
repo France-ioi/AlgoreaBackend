@@ -2,6 +2,7 @@ Feature: Get root activities for a participant group - robustness
   Background:
     Given the database has the following table "groups":
       | id | name      | type  | root_activity_id | created_at          |
+      | 1  | Class     | Class | null             | 2019-01-30 08:26:46 |
       | 11 | jdoe      | User  | null             | 2019-01-30 08:26:48 |
       | 13 | Group B   | Team  | 230              | 2019-01-30 08:26:46 |
       | 14 | Group C   | Team  | 230              | 2019-01-30 08:26:46 |
