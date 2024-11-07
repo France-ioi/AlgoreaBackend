@@ -306,11 +306,13 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 		membersCount = int32(len(otherMembers))
 
 		participatingSomewhereElseQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
-			Joins("JOIN groups_groups_active AS all_teams_relations ON all_teams_relations.child_group_id = groups_groups_active.child_group_id").
-			Joins("JOIN `groups` AS groups_to_check ON groups_to_check.id = all_teams_relations.parent_group_id AND groups_to_check.type = 'Team'").
+			Joins(`
+				JOIN groups_groups_active AS all_teams_relations
+				  ON all_teams_relations.child_group_id = groups_groups_active.child_group_id AND
+				     all_teams_relations.is_team_membership = 1`).
 			Joins("JOIN items ON items.id = ?", itemID).
-			Joins("JOIN attempts ON attempts.participant_id = groups_to_check.id AND attempts.root_item_id = items.id").
-			Where("groups_to_check.id != groups_groups_active.parent_group_id"). // except for this team
+			Joins("JOIN attempts ON attempts.participant_id = all_teams_relations.parent_group_id AND attempts.root_item_id = items.id").
+			Where("all_teams_relations.parent_group_id != groups_groups_active.parent_group_id"). // except for this team
 			Group("groups_groups_active.child_group_id").
 			Having("MAX(NOW() < attempts.allows_submissions_until) OR NOT MAX(items.allows_multiple_attempts)")
 		if lock {

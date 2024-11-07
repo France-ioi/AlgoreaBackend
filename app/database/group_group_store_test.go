@@ -257,3 +257,23 @@ func TestGroupGroupStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestGroupGroupStore_TeamGroupForTeamItemAndUser(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mockUser := &User{GroupID: 2, DefaultLanguage: "fr"}
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups_groups_active`.* FROM `groups_groups_active` "+
+		"JOIN attempts ON attempts.participant_id = groups_groups_active.parent_group_id AND attempts.root_item_id = ? AND "+
+		"NOW() < attempts.allows_submissions_until "+
+		"WHERE (groups_groups_active.is_team_membership = 1) AND (groups_groups_active.child_group_id = ?) "+
+		"ORDER BY groups_groups_active.parent_group_id LIMIT 1")).
+		WithArgs(1234, 2).
+		WillReturnRows(mock.NewRows([]string{"id"}))
+
+	var result []interface{}
+	err := NewDataStore(db).ActiveGroupGroups().TeamGroupForTeamItemAndUser(1234, mockUser).Scan(&result).Error()
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

@@ -206,10 +206,9 @@ func joinUserProgressResults(db *database.DB, userID interface{}) *database.DB {
 	return db.
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT STRAIGHT_JOIN groups.id
+				SELECT STRAIGHT_JOIN groups_groups_active.parent_group_id AS id
 				FROM groups_groups_active
-				JOIN `+"`groups`"+` ON groups.id = groups_groups_active.parent_group_id
-				WHERE groups.type = 'Team' AND groups_groups_active.child_group_id = ?
+				WHERE groups_groups_active.is_team_membership = 1 AND groups_groups_active.child_group_id = ?
 			) teams ON 1`, userID).
 		Joins(`
 			LEFT JOIN LATERAL (

@@ -211,15 +211,14 @@ func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groups
 
 	var otherTeamsMembers []int64
 	service.MustNotBeError(store.ActiveGroupGroups().Where("child_group_id IN (?)", groupsToCheck).
-		Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id").
 		Joins("JOIN (?) AS teams_contests",
 			contestsQuery. // all the team's attempts (not only active ones)
 					Select(`
 					  root_item_id AS item_id,
 					  MAX(NOW() < attempts.allows_submissions_until AND attempts.ended_at IS NULL) AS is_active`).QueryExpr()).
 		Joins("JOIN items ON items.id = teams_contests.item_id").
-		Joins("JOIN attempts ON attempts.participant_id = groups.id AND attempts.root_item_id = items.id").
-		Where("groups.type = 'Team'").
+		Joins("JOIN attempts ON attempts.participant_id = groups_groups_active.parent_group_id AND attempts.root_item_id = items.id").
+		Where("groups_groups_active.is_team_membership = 1").
 		Where("parent_group_id != ?", parentGroupID).
 		Where(`
 			(teams_contests.is_active AND NOW() < attempts.allows_submissions_until AND attempts.ended_at IS NULL) OR

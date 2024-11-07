@@ -63,8 +63,8 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 	userAndHisTeamsQuery := store.Raw("SELECT id FROM ? `teams` UNION ALL SELECT ?",
 		store.ActiveGroupGroups().
 			WhereUserIsMember(user).
-			Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id AND groups.type='Team'").
-			Select("groups.id").SubQuery(),
+			Where("groups_groups_active.is_team_membership = 1").
+			Select("groups_groups_active.parent_group_id AS id").SubQuery(),
 		user.GroupID)
 
 	// a participant should have at least 'content' access to the answers.item_id
@@ -77,7 +77,7 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 		Joins("JOIN `groups_ancestors_active` ON groups_ancestors_active.ancestor_group_id = permissions.group_id").
 		Joins("JOIN `groups_groups_active` ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id").
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).
-		Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id AND groups.type='Team'").
+		Where("groups_groups_active.is_team_membership = 1").
 		WherePermissionIsAtLeast("view", "content").
 		Where("permissions.item_id = answers.item_id").
 		Select("1").Limit(1).SubQuery()
