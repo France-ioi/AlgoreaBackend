@@ -13,7 +13,6 @@ const groups = "groups"
 //
 // Note: rows in *_propagate tables with `ancestors_computation_state`="todo"
 // are added in the database in SQL triggers:
-// - after_insert_items
 // - after_update_groups_groups
 // - before_insert_items_items/groups_groups
 // - before_delete_items_items/groups_groups.
