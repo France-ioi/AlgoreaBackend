@@ -17,6 +17,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
@@ -125,6 +126,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(tt.fixtures...)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)

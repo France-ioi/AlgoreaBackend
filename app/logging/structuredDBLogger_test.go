@@ -11,9 +11,12 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestStructuredDBLogger_Print_SQL(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	assert := assertlib.New(t)
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
@@ -44,6 +47,8 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 }
 
 func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	assert := assertlib.New(t)
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
@@ -65,6 +70,8 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 }
 
 func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	assert := assertlib.New(t)
 	var hook *test.Hook
 	logging.SharedLogger, hook = logging.NewMockLogger()
@@ -97,6 +104,8 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 }
 
 func TestStructuredDBLogger_Print_RawSQLWithDuration(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	assert := assertlib.New(t)
 	var hook *test.Hook
 	logging.SharedLogger.Logger, hook = test.NewNullLogger()

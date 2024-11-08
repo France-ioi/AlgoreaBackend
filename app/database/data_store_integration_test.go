@@ -9,9 +9,12 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	rawDB, err := testhelpers.OpenRawDBConnection()
 	if err != nil {
 		assert.FailNow(t, err.Error())

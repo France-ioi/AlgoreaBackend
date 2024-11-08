@@ -10,6 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/items"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func Test_getDataForResultPathStart(t *testing.T) {
@@ -438,7 +439,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(globalFixture, tt.fixture)
 			defer func() { _ = db.Close() }()

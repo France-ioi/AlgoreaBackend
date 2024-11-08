@@ -10,9 +10,13 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	someError := errors.New("some error")
 
 	var patch *monkey.PatchGuard
@@ -41,6 +45,8 @@ func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
 }
 
 func TestNewDBMock_ExitsOnGettingErrorFromOpen(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	someError := errors.New("some error")
 
 	monkey.Patch(Open, func(interface{}) (*DB, error) { return nil, someError })

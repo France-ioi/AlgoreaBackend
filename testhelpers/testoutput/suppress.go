@@ -1,4 +1,5 @@
-package testhelpers
+// Package testoutput provides SuppressIfPasses function that mutes output of the test.
+package testoutput
 
 import (
 	"testing"
@@ -6,7 +7,7 @@ import (
 	"github.com/zenovich/flowmingo"
 )
 
-// SuppressOutputIfPasses immediately mutes output (to both STDOUT and STDERR) of the test
+// SuppressIfPasses immediately mutes output (to both STDOUT and STDERR) of the test
 // so that the output will only be shown if the test fails.
 // The cleanup part is scheduled to be run automatically,
 // no need to clean up manually.
@@ -17,7 +18,7 @@ import (
 // After the output is suppressed, t.Parallel() for the test will panic.
 //
 // Note: This function does nothing if the test is run in verbose mode.
-func SuppressOutputIfPasses(t *testing.T) { //nolint:gocritic
+func SuppressIfPasses(t *testing.T) { //nolint:gocritic
 	if testing.Verbose() {
 		return
 	}

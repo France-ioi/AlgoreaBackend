@@ -9,6 +9,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestUser_CanSeeAnswer(t *testing.T) {
@@ -72,7 +73,7 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
 				groups: [{id: 101}, {id: 102}, {id: 111}, {id: 121}]

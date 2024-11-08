@@ -13,6 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type groupGroup struct {
@@ -800,6 +801,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixture("group_group_store/transition/")
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)
@@ -1008,6 +1011,8 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 	for _, tt := range generateApprovalsTests(expectedTime) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(fmt.Sprintf(`
 				groups:
 					- {id: 3}
@@ -1077,6 +1082,8 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				groups:
 					- {id: 3}
@@ -1113,6 +1120,8 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEnoughApprovalsInJoinRequestOnCreatingInvitation(
 	t *testing.T,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups:
 			- {id: 3}
@@ -1154,6 +1163,8 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 	for _, tt := range generateApprovalsTests(expectedTime) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(fmt.Sprintf(`
 				groups:
 					- {id: 3}

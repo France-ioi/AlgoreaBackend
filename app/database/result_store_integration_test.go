@@ -11,10 +11,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		attempts:
@@ -52,7 +53,7 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				hintsInfo, err := store.Results().GetHintsInfoForActiveAttempt(test.participantID, test.attemptID, test.itemID)
@@ -65,7 +66,7 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 }
 
 func TestResultStore_Propagate(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	tests := []struct {
 		name    string
@@ -80,7 +81,7 @@ func TestResultStore_Propagate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
 				s.ScheduleResultsPropagation()

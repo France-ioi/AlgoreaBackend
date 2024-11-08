@@ -9,9 +9,12 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name     string
 		code     string
@@ -96,6 +99,8 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			store := database.NewDataStore(db)
 			var got *database.GroupJoiningByCodeInfo
 			var err error

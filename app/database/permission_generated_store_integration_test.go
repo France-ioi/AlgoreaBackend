@@ -10,10 +10,11 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
@@ -97,7 +98,7 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
@@ -193,7 +194,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			fixures := make([]string, 0, 2)
 			if !test.updateExisting {
@@ -225,7 +226,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 }
 
 func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrItemID(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}]

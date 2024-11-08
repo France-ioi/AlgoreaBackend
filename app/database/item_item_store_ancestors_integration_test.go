@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type itemAncestorsResultRow struct {
@@ -23,7 +24,7 @@ type itemPropagateResultRow struct {
 }
 
 func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
@@ -58,7 +59,7 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common", "item_item_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
@@ -86,7 +87,7 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()

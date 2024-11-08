@@ -11,6 +11,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGroupStore_CreateNew(t *testing.T) {
@@ -23,6 +24,8 @@ func TestGroupStore_CreateNew(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.groupType, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString()
 			defer func() { _ = db.Close() }()
 
@@ -324,12 +327,16 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 		},
 	}
 	for _, tt := range tests {
+		testoutput.SuppressIfPasses(t)
+
 		tt := tt
 		db := testhelpers.SetupDBWithFixtureString(mainFixture, tt.fixture)
 		defer func() { _ = db.Close() }()
 		for _, withLock := range []bool{true, false} {
 			withLock := withLock
 			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
+				testoutput.SuppressIfPasses(t)
+
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					if err := store.GroupGroups().CreateNewAncestors(); err != nil {
 						return err
@@ -351,6 +358,8 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 }
 
 func Test_GroupStore_DeleteGroup(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1234}]`)
 	defer func() { _ = db.Close() }()
 	groupStore := database.NewDataStore(db).Groups()
@@ -365,7 +374,7 @@ func Test_GroupStore_DeleteGroup(t *testing.T) {
 }
 
 func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1}]`)
 	defer func() { _ = db.Close() }()

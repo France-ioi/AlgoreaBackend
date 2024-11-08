@@ -13,6 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestSchedulePropagation(t *testing.T) {
@@ -64,7 +65,7 @@ func TestSchedulePropagation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
 				groups:
