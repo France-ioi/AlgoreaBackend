@@ -28,13 +28,14 @@ import (
 //							 3. [`permissions_granted`, `permissions_generated`, `attempts`]
 //									having `group_id` = `users.group_id`;
 //
-//							 4. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
-//							 5. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
+//							 4. `permissions_granted` having `source_group_id` = `users.group_id`;
+//							 5. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
+//							 6. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
 //									to `users.group_id`;
-//							 6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
+//							 7. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
 //									to `users.group_id`;
-//							 7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`;
-//							 8. `users` having `group_id` = `users.group_id`.
+//							 8. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`;
+//							 9. `users` having `group_id` = `users.group_id`.
 //
 //
 //							 The deletion is rejected if the user is a member of at least one group with
@@ -70,7 +71,7 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 		service.MustNotBeError(store.Users().ByID(user.GroupID).
 			PluckFirst("login_id", &loginID).Error())
 	}
-	service.MustNotBeError(store.Users().DeleteWithTraps(user))
+	service.MustNotBeError(store.Users().DeleteWithTraps(user, user.IsTempUser))
 
 	if !user.IsTempUser {
 		var result bool

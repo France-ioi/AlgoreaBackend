@@ -120,7 +120,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}
 	service.MustNotBeError(store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
 		return store.Users().Where("login LIKE CONCAT(?, '\\_', ?, '\\_%')", groupPrefix, customPrefix)
-	}))
+	}, false))
 	service.MustNotBeError(
 		store.UserBatches().
 			Where("group_prefix = ?", groupPrefix).
