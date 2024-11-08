@@ -365,14 +365,36 @@ func Test_GroupStore_DeleteGroup(t *testing.T) {
 }
 
 func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	const expectedErrorMessage = "Error 1644: Unable to change groups.type from/to User/Team"
 
-	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1}]`)
-	defer func() { _ = db.Close() }()
+	for _, test := range []struct {
+		oldType     string
+		newType     string
+		expectError bool
+	}{
+		{oldType: "User", newType: "Team", expectError: true},
+		{oldType: "Team", newType: "User", expectError: true},
+		{oldType: "Class", newType: "User", expectError: true},
+		{oldType: "Class", newType: "Team", expectError: true},
+		{oldType: "User", newType: "Class", expectError: true},
+		{oldType: "Team", newType: "Class", expectError: true},
+		{oldType: "Team", newType: "Team", expectError: false},
+		{oldType: "User", newType: "User", expectError: false},
+		{oldType: "Other", newType: "Club", expectError: false},
+	} {
+		test := test
+		t.Run(fmt.Sprintf("%s to %s", test.oldType, test.newType), func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+			db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, type: ` + test.oldType + `}]`)
+			defer func() { _ = db.Close() }()
 
-	const expectedErrorMessage = "Error 1644: Unable to change immutable groups.type"
-
-	groupGroupStore := database.NewDataStore(db).Groups()
-	result := groupGroupStore.ByID(1).UpdateColumn("type", "Team")
-	assert.EqualError(t, result.Error(), expectedErrorMessage)
+			groupGroupStore := database.NewDataStore(db).Groups()
+			result := groupGroupStore.ByID(1).UpdateColumn("type", test.newType)
+			if test.expectError {
+				assert.EqualError(t, result.Error(), expectedErrorMessage)
+			} else {
+				assert.NoError(t, result.Error())
+			}
+		})
+	}
 }
